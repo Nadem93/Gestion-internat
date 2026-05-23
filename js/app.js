@@ -104,7 +104,7 @@ function fileToBase64(file) {
 
 function residentPhoto(r, size = 48) {
   if (r && r.photo) {
-    return `<img src="${r.photo}" alt="${r.prenom||''} ${r.nom||''}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"/>`;
+    return `<img src="${escHtml(r.photo)}" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"/>`;
   }
   const bg = r?.color || 'var(--blue)';
   const fs = size < 36 ? '.65rem' : size < 48 ? '.75rem' : size < 64 ? '1rem' : '1.4rem';
@@ -209,7 +209,7 @@ function categoryBadge(catId) {
   const cats = DB.get(DB.keys.categories) || [];
   const cat = cats.find(c => c.id == catId);
   if (!cat) return '<span class="badge badge-gray">—</span>';
-  return `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${cat.name}</span>`;
+  return `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${escHtml(cat.name)}</span>`;
 }
 
 // ── CONFIRM DIALOG ──

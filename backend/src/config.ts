@@ -3,6 +3,6 @@ dotenv.config();
 
 export const config = {
   port: parseInt(process.env.PORT || '3001'),
-  jwtSecret: process.env.JWT_SECRET || 'dev-secret',
+  jwtSecret: process.env.JWT_SECRET,
   uploadDir: process.env.UPLOAD_DIR || './uploads',
 };

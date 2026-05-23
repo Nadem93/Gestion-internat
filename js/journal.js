@@ -49,17 +49,17 @@ function renderEntries() {
     const cat = cats.find(c => String(c.id) === String(e.categorie));
     return `<div class="entry-card ${e.id === selectedEntryId ? 'selected' : ''}" onclick="selectEntry('${e.id}')">
       <div class="entry-header">
-        <div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(e.resident||'?')[0].toUpperCase()}</div>
+        <div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            <span style="font-weight:700;font-size:.875rem">${e.resident||'—'}</span>
-            ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${cat.name}</span>` : ''}
+            <span style="font-weight:700;font-size:.875rem">${escHtml(e.resident)||'—'}</span>
+            ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
             ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
           </div>
           <div class="entry-meta">${formatDateTime(e.date)}</div>
         </div>
       </div>
-      <div class="entry-preview">${e.contenu||''}</div>
+      <div class="entry-preview">${escHtml(e.contenu)||''}</div>
       ${(e.replies||[]).length ? `<div style="font-size:.7rem;color:var(--blue);margin-top:.4rem;font-weight:600">💬 ${e.replies.length} réponse${e.replies.length>1?'s':''}</div>` : ''}
     </div>`;
   }).join('');
@@ -72,13 +72,13 @@ function renderReplies(e) {
     <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Réponses (${replies.length})</div>
     ${replies.map(r => `
       <div style="display:flex;gap:.6rem;padding:.6rem .75rem;background:var(--g50);border-radius:var(--r-sm);margin-bottom:.5rem;border:1px solid var(--border)">
-        <div class="avatar sm" style="background:var(--accent);flex-shrink:0;width:24px;height:24px;font-size:.55rem">${(r.author||'?')[0].toUpperCase()}</div>
+        <div class="avatar sm" style="background:var(--accent);flex-shrink:0;width:24px;height:24px;font-size:.55rem">${(escHtml(r.author)||'?')[0].toUpperCase()}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem">
-            <span style="font-weight:700;font-size:.78rem">${r.author}</span>
+            <span style="font-weight:700;font-size:.78rem">${escHtml(r.author)}</span>
             <span style="font-size:.65rem;color:var(--muted)">${formatDateTime(r.createdAt)}</span>
           </div>
-          <p style="font-size:.82rem;line-height:1.6;margin-top:3px;white-space:pre-wrap">${r.content}</p>
+          <p style="font-size:.82rem;line-height:1.6;margin-top:3px;white-space:pre-wrap">${escHtml(r.content)}</p>
         </div>
       </div>`).join('')}
   </div>`;
@@ -102,11 +102,11 @@ function selectEntry(id) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;gap:.5rem">
         <div>
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <span style="font-weight:800;font-size:1rem">${e.resident||'—'}</span>
-            ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${cat.name}</span>` : ''}
+            <span style="font-weight:800;font-size:1rem">${escHtml(e.resident)||'—'}</span>
+            ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${escHtml(cat.name)}</span>` : ''}
           </div>
           <div style="font-size:.78rem;color:var(--muted)">${formatDateTime(e.date)} · ${vis[e.visibilite]||''}</div>
-          ${obj ? `<div style="font-size:.78rem;color:var(--purple);margin-top:3px">Objectif : ${obj.name}</div>` : ''}
+          ${obj ? `<div style="font-size:.78rem;color:var(--purple);margin-top:3px">Objectif : ${escHtml(obj.name)}</div>` : ''}
         </div>
         <div style="display:flex;gap:.4rem;flex-shrink:0">
           <button class="btn btn-ghost btn-sm" onclick="editEntry('${e.id}')">Modifier</button>
@@ -114,11 +114,11 @@ function selectEntry(id) {
         </div>
       </div>
       <div class="divider"></div>
-      <p style="font-size:.9rem;line-height:1.8;white-space:pre-wrap;color:var(--text)">${e.contenu||''}</p>
+      <p style="font-size:.9rem;line-height:1.8;white-space:pre-wrap;color:var(--text)">${escHtml(e.contenu)||''}</p>
       ${renderReplies(e)}
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
         <div style="display:flex;gap:.6rem">
-          <div class="avatar sm" style="background:var(--accent);flex-shrink:0;width:28px;height:28px;font-size:.65rem">${(userName||'?')[0].toUpperCase()}</div>
+          <div class="avatar sm" style="background:var(--accent);flex-shrink:0;width:28px;height:28px;font-size:.65rem">${(escHtml(userName)||'?')[0].toUpperCase()}</div>
           <div style="flex:1;display:flex;gap:.5rem">
             <textarea id="replyContent" rows="2" style="flex:1;font-size:.82rem;padding:.5rem .75rem" placeholder="Écrire une réponse…"></textarea>
             <button class="btn btn-primary btn-sm" style="align-self:flex-end" onclick="addReply('${e.id}')">Répondre</button>

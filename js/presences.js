@@ -87,12 +87,12 @@ function renderPresenceTable() {
             <div style="display:flex;align-items:center;gap:.75rem">
               <div class="avatar sm" style="background:${r.color||'var(--blue)'}">${initials(r.prenom,r.nom)}</div>
               <div>
-                <div style="font-weight:600">${r.prenom||''} ${r.nom||''}</div>
+                <div style="font-weight:600">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
                 <div style="font-size:.72rem;color:var(--muted)">${r.dob ? age(r.dob) : ''}</div>
               </div>
             </div>
           </td>
-          <td style="padding:.85rem 1rem">${r.chambre || '—'}</td>
+          <td style="padding:.85rem 1rem">${escHtml(r.chambre) || '—'}</td>
           <td style="padding:.85rem 1rem;text-align:center">
             <span style="display:inline-block;padding:.3rem .75rem;border-radius:var(--r-full);font-size:.8rem;${statusStyle[s]}">${statusLabel[s]}</span>
           </td>

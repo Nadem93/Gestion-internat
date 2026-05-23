@@ -29,7 +29,7 @@ function populateResidentSelect() {
   if (!sel) return;
   const residents = DB.get(DB.keys.residents) || [];
   sel.innerHTML = '<option value="">— Aucun —</option>' + residents.map(r =>
-    `<option value="${r.id}">${r.prenom||''} ${r.nom||''}</option>`
+    `<option value="${r.id}">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</option>`
   ).join('');
 }
 

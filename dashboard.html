@@ -407,8 +407,8 @@
         const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
         return `<div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
           <div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html'">
-            <div style="font-weight:600;font-size:.875rem">${p.residentName||'?'}</div>
-            <div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs · ${p.dateRedaction||'—'}</div>
+            <div style="font-weight:600;font-size:.875rem">${escHtml(p.residentName||'?')}</div>
+            <div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs · ${escHtml(p.dateRedaction||'—')}</div>
           </div>
           <span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
         </div>`;
@@ -427,10 +427,10 @@
         return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">
-              <span style="font-weight:600;font-size:.875rem">${e.resident||'—'}</span>
-              ${cat?`<span class="badge" style="background:${cat.color}22;color:${cat.color}">${cat.name}</span>`:''}
+              <span style="font-weight:600;font-size:.875rem">${escHtml(e.resident||'—')}</span>
+              ${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}
             </div>
-            <div style="font-size:.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${e.contenu||''}</div>
+            <div style="font-size:.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(e.contenu||'')}</div>
             <div style="font-size:.72rem;color:var(--g400);margin-top:3px">${formatDateTime(e.date)}</div>
           </div>
         </div>`;

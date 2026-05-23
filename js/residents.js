@@ -125,10 +125,10 @@ function renderDocList(residentId) {
     <div class="doc-item">
       <div class="doc-type-icon">${docTypeIcon(d.mimeType)}</div>
       <div class="doc-info">
-        <div class="doc-name">${d.name}</div>
+        <div class="doc-name">${escHtml(d.name)}</div>
         <div class="doc-meta">
-          <span class="badge badge-gray" style="font-size:.68rem">${DOC_CAT_LABELS[d.category]||d.category}</span>
-          ${fmtSize(d.size)} · ${formatDate(d.uploadedAt)} · ${d.uploadedBy}
+          <span class="badge badge-gray" style="font-size:.68rem">${DOC_CAT_LABELS[d.category]||escHtml(d.category)}</span>
+          ${fmtSize(d.size)} · ${formatDate(d.uploadedAt)} · ${escHtml(d.uploadedBy)}
         </div>
       </div>
       <div class="doc-actions">
@@ -169,7 +169,7 @@ function renderObjectifsCheckboxes(selected = []) {
   el.innerHTML = objs.map(o => `
     <label class="checkbox-wrap" style="padding:.65rem .75rem;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:background var(--t)">
       <input type="checkbox" name="objectif" value="${o.id}" ${selected.includes(String(o.id)) ? 'checked' : ''}/>
-      <div><div style="font-weight:600;font-size:.875rem">${o.name}</div><div style="font-size:.75rem;color:var(--muted)">${o.description||''}</div></div>
+      <div><div style="font-weight:600;font-size:.875rem">${escHtml(o.name)}</div><div style="font-size:.75rem;color:var(--muted)">${escHtml(o.description||'')}</div></div>
     </label>`).join('');
 }
 
@@ -221,7 +221,7 @@ function statusBadge(s) {
 function residentCard(r) {
   const coverColor = r.color || 'var(--primary)';
   const photoEl = r.photo
-    ? `<img src="${r.photo}" class="res-card-photo" alt="${r.prenom||''} ${r.nom||''}"/>`
+    ? `<img src="${r.photo}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
     : `<div class="res-card-photo" style="background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
 
   const docCount = ((DB.get(DB.keys.documents)||{})[r.id]||[]).length;
@@ -233,8 +233,8 @@ function residentCard(r) {
     <div class="res-card-cover" style="background:${coverColor}"></div>
     <div class="res-card-body">
       ${photoEl}
-      <div class="res-card-name">${r.prenom||''} ${r.nom||''}</div>
-      <div class="res-card-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. '+r.chambre : ''}</div>
+      <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
+      <div class="res-card-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
       <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:center;margin-top:.25rem">
         ${statusBadge(presenceStatus)}
         ${docCount?`<span class="badge" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">📎 ${docCount}</span>`:''}
@@ -256,12 +256,12 @@ function residentRow(r) {
   const session = Auth.getSession();
   const canEdit = session && (session.role === 'admin' || session.role === 'moderator');
   return `<tr>
-    <td><div style="display:flex;align-items:center;gap:.6rem">${photoEl}<span style="font-weight:600">${r.prenom||''} ${r.nom||''}</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:.6rem">${photoEl}<span style="font-weight:600">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</span></div></td>
     <td>${r.dob ? age(r.dob)+' ('+formatDate(r.dob)+')' : '—'}</td>
     <td>${r.entree ? formatDate(r.entree) : '—'}</td>
-    <td>${r.chambre||'—'}</td>
+    <td>${escHtml(r.chambre||'—')}</td>
     <td>${statusBadge(r.statut)}</td>
-    <td><div style="display:flex;gap:.3rem;flex-wrap:wrap">${resObjs.map(o=>`<span class="badge badge-gray">${o}</span>`).join('')||'—'}</div></td>
+    <td><div style="display:flex;gap:.3rem;flex-wrap:wrap">${resObjs.map(o=>`<span class="badge badge-gray">${escHtml(o)}</span>`).join('')||'—'}</div></td>
     <td><div class="table-actions">
       <button class="btn btn-ghost btn-sm" onclick="window.location.href='resident.html?id=${r.id}'">Voir</button>
       ${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="quickEditResident('${r.id}')">Modifier</button>` : ''}
@@ -288,12 +288,12 @@ function showDetail(id) {
       ${(r.tuteur||r.tuteurTel||r.ecole) ? `<div class="divider"></div>
       <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple);margin-bottom:.75rem">Informations enfant</div>
       <div class="grid grid-2" style="gap:.75rem">
-        ${r.tuteur ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Tuteur légal</div><div style="font-weight:600;font-size:.875rem">${r.tuteur}</div></div>` : ''}
-        ${r.tuteurTel ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Tél. tuteur</div><div style="font-weight:600;font-size:.875rem">${r.tuteurTel}</div></div>` : ''}
-        ${r.ecole ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Établissement scolaire</div><div style="font-weight:600;font-size:.875rem">${r.ecole}</div></div>` : ''}
-        ${r.classe ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Classe</div><div style="font-weight:600;font-size:.875rem">${r.classe}</div></div>` : ''}
-        ${r.organisme ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Organisme</div><div style="font-weight:600;font-size:.875rem">${r.organisme.toUpperCase()}</div></div>` : ''}
-        ${r.dossier ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">N° dossier</div><div style="font-weight:600;font-size:.875rem">${r.dossier}</div></div>` : ''}
+        ${r.tuteur ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Tuteur légal</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.tuteur)}</div></div>` : ''}
+        ${r.tuteurTel ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Tél. tuteur</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.tuteurTel)}</div></div>` : ''}
+        ${r.ecole ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Établissement scolaire</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.ecole)}</div></div>` : ''}
+        ${r.classe ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Classe</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.classe)}</div></div>` : ''}
+        ${r.organisme ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Organisme</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.organisme).toUpperCase()}</div></div>` : ''}
+        ${r.dossier ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">N° dossier</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.dossier)}</div></div>` : ''}
       </div>` : ''}`;
   }
   if (type === 'adultes' || type === 'mixte') {
@@ -301,10 +301,10 @@ function showDetail(id) {
       ${(r.situationPro||r.ressources||r.organismeA) ? `<div class="divider"></div>
       <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin-bottom:.75rem">Informations adulte</div>
       <div class="grid grid-2" style="gap:.75rem">
-        ${r.situationPro ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Situation pro.</div><div style="font-weight:600;font-size:.875rem">${r.situationPro}</div></div>` : ''}
-        ${r.ressources ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Ressources</div><div style="font-weight:600;font-size:.875rem">${r.ressources.toUpperCase()}</div></div>` : ''}
-        ${r.organismeA ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Organisme</div><div style="font-weight:600;font-size:.875rem">${r.organismeA.toUpperCase()}</div></div>` : ''}
-        ${r.situationAdmin ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Situation admin.</div><div style="font-weight:600;font-size:.875rem">${r.situationAdmin}</div></div>` : ''}
+        ${r.situationPro ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Situation pro.</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.situationPro)}</div></div>` : ''}
+        ${r.ressources ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Ressources</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.ressources).toUpperCase()}</div></div>` : ''}
+        ${r.organismeA ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Organisme</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.organismeA).toUpperCase()}</div></div>` : ''}
+        ${r.situationAdmin ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Situation admin.</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.situationAdmin)}</div></div>` : ''}
       </div>` : ''}`;
   }
 
@@ -313,33 +313,33 @@ function showDetail(id) {
     <div style="display:flex;gap:1.25rem;align-items:flex-start">
       ${photoEl}
       <div style="flex:1">
-        <h3 style="font-size:1.25rem;font-weight:800">${r.prenom||''} ${r.nom||''}</h3>
+        <h3 style="font-size:1.25rem;font-weight:800">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</h3>
         <div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
           ${statusBadge(r.statut)}
           ${r.genre ? `<span class="badge badge-gray">${r.genre==='M'?'Masculin':r.genre==='F'?'Féminin':'Autre'}</span>` : ''}
           ${r.dob ? `<span class="badge badge-gray">${age(r.dob)}</span>` : ''}
         </div>
-        ${r.referent ? `<div style="font-size:.78rem;color:var(--muted);margin-top:.4rem">Référent : <strong>${r.referent}</strong></div>` : ''}
+        ${r.referent ? `<div style="font-size:.78rem;color:var(--muted);margin-top:.4rem">Référent : <strong>${escHtml(r.referent)}</strong></div>` : ''}
       </div>
     </div>
     <div class="divider"></div>
     <div class="grid grid-2" style="gap:.75rem">
       <div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px">Date de naissance</div><div style="font-weight:600;font-size:.875rem">${r.dob ? formatDate(r.dob) : '—'}</div></div>
       <div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px">Date d'entrée</div><div style="font-weight:600;font-size:.875rem">${r.entree ? formatDate(r.entree) : '—'}</div></div>
-      <div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px">Chambre / Unité</div><div style="font-weight:600;font-size:.875rem">${r.chambre||'—'}</div></div>
+      <div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px">Chambre / Unité</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.chambre||'—')}</div></div>
     </div>
     ${extraFields}
-    ${resObjs.length ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Objectifs assignés</div><div style="display:flex;flex-direction:column;gap:.4rem">${resObjs.map(o=>`<div style="padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><div style="font-weight:600;font-size:.875rem">${o.name}</div>${o.description?`<div style="font-size:.75rem;color:var(--muted)">${o.description}</div>`:''}</div>`).join('')}</div>` : ''}
-    ${r.notes ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem">Notes</div><p style="font-size:.875rem;white-space:pre-wrap;line-height:1.7">${r.notes}</p>` : ''}
-    ${r.contacts ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem">Contacts d'urgence</div><p style="font-size:.875rem;white-space:pre-wrap">${r.contacts}</p>` : ''}
+    ${resObjs.length ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Objectifs assignés</div><div style="display:flex;flex-direction:column;gap:.4rem">${resObjs.map(o=>`<div style="padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><div style="font-weight:600;font-size:.875rem">${escHtml(o.name)}</div>${o.description?`<div style="font-size:.75rem;color:var(--muted)">${escHtml(o.description)}</div>`:''}</div>`).join('')}</div>` : ''}
+    ${r.notes ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem">Notes</div><p style="font-size:.875rem;white-space:pre-wrap;line-height:1.7">${escHtml(r.notes)}</p>` : ''}
+    ${r.contacts ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem">Contacts d'urgence</div><p style="font-size:.875rem;white-space:pre-wrap">${escHtml(r.contacts)}</p>` : ''}
     ${(r.medecin||r.allergies||r.nss) ? `<div class="divider"></div>
     <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#16a34a;margin-bottom:.75rem">Informations médicales</div>
     <div class="grid grid-2" style="gap:.75rem">
-      ${r.medecin ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Médecin traitant</div><div style="font-weight:600;font-size:.875rem">${r.medecin}${r.medecinTel?' · '+r.medecinTel:''}</div></div>` : ''}
-      ${r.allergies ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Allergies / CI</div><div style="font-weight:600;font-size:.875rem;color:var(--red)">${r.allergies}</div></div>` : ''}
-      ${r.nss ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">N° Sécurité sociale</div><div style="font-weight:600;font-size:.875rem;font-family:monospace">${r.nss}</div></div>` : ''}
+      ${r.medecin ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Médecin traitant</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.medecin)}${r.medecinTel?' · '+escHtml(r.medecinTel):''}</div></div>` : ''}
+      ${r.allergies ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Allergies / CI</div><div style="font-weight:600;font-size:.875rem;color:var(--red)">${escHtml(r.allergies)}</div></div>` : ''}
+      ${r.nss ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">N° Sécurité sociale</div><div style="font-weight:600;font-size:.875rem;font-family:monospace">${escHtml(r.nss)}</div></div>` : ''}
     </div>` : ''}
-    ${(() => { const docs = (DB.get(DB.keys.documents)||{})[id]||[]; return docs.length ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Documents joints (${docs.length})</div><div style="display:flex;flex-direction:column;gap:.4rem">${docs.map(d=>`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><span style="font-size:1.1rem">${docTypeIcon(d.mimeType)}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div><div style="font-size:.7rem;color:var(--muted)">${DOC_CAT_LABELS[d.category]||d.category} · ${fmtSize(d.size)}</div></div><button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${id}')">↓</button></div>`).join('')}</div>` : ''; })()}
+    ${(() => { const docs = (DB.get(DB.keys.documents)||{})[id]||[]; return docs.length ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Documents joints (${docs.length})</div><div style="display:flex;flex-direction:column;gap:.4rem">${docs.map(d=>`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><span style="font-size:1.1rem">${docTypeIcon(d.mimeType)}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(d.name)}</div><div style="font-size:.7rem;color:var(--muted)">${DOC_CAT_LABELS[d.category]||escHtml(d.category)} · ${fmtSize(d.size)}</div></div><button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${id}')">↓</button></div>`).join('')}</div>` : ''; })()}
   `;
   document.getElementById('detailEditBtn').onclick = () => { closeAllModals(); editResident(id); };
   openModal('modalDetail');

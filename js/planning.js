@@ -58,7 +58,7 @@ function renderWeek() {
         ${days.map(d => {
           const dayEvents = events.filter(e => eventOnDay(e, dateStr(d)) && (e.heure||e.time) && parseInt(e.heure||e.time) === h);
           return `<div style="border-left:1px solid var(--border);border-top:1px solid var(--g100);padding:2px;position:relative;cursor:pointer" onclick="quickAddEvent('${dateStr(d)}','${h}:00')">
-            ${dayEvents.map(ev => `<div class="cal-event" style="background:${ev.color||TYPE_COLORS[ev.type]||'#3b82f6'}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?ev.residentName+' — ':''}${ev.titre}">${ev.residentName?'<span style="font-weight:400;opacity:.85">'+ev.residentName+'</span> ':''}${ev.titre}</div>`).join('')}
+            ${dayEvents.map(ev => `<div class="cal-event" style="background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}">${ev.residentName?'<span style="font-weight:400;opacity:.85">'+escHtml(ev.residentName)+'</span> ':''}${escHtml(ev.titre)}</div>`).join('')}
           </div>`;
         }).join('')}
       </div>`).join('')}
@@ -90,7 +90,7 @@ function renderMonth() {
         const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
         return `<div style="min-height:90px;padding:.4rem;border:1px solid var(--border);${isTod?'background:#eff6ff':''}" onclick="quickAddEvent('${dateStr(d)}','')">
           <div style="font-size:.8rem;font-weight:700;${isTod?'background:var(--blue);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:3px':'color:var(--text);margin-bottom:3px'}">${d.getDate()}</div>
-          ${dayEvs.slice(0,3).map(ev=>`<div style="background:${ev.color||TYPE_COLORS[ev.type]||'#3b82f6'};color:#fff;border-radius:3px;padding:1px 5px;font-size:.68rem;font-weight:600;cursor:pointer;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="event.stopPropagation();editEvent('${ev.id}')">${ev.residentName?ev.residentName+' ':' '}${ev.titre}</div>`).join('')}
+          ${dayEvs.slice(0,3).map(ev=>`<div style="background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};color:#fff;border-radius:3px;padding:1px 5px;font-size:.68rem;font-weight:600;cursor:pointer;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="event.stopPropagation();editEvent('${ev.id}')">${ev.residentName?escHtml(ev.residentName)+' ':' '}${escHtml(ev.titre)}</div>`).join('')}
           ${dayEvs.length>3?`<div style="font-size:.68rem;color:var(--muted)">+${dayEvs.length-3} autres</div>`:''}
         </div>`;
       }).join('')}
@@ -111,8 +111,8 @@ function renderListView() {
     return;
   }
   tbody.innerHTML = events.map(ev => `<tr>
-    <td><span style="display:inline-flex;align-items:center;gap:.4rem"><span style="width:10px;height:10px;border-radius:50%;background:${ev.color||TYPE_COLORS[ev.type]||'#3b82f6'};flex-shrink:0"></span><strong>${ev.residentName?ev.residentName+' — ':''}${ev.titre}</strong></span></td>
-    <td>${ev.residentName||'Tous'}</td>
+    <td><span style="display:inline-flex;align-items:center;gap:.4rem"><span style="width:10px;height:10px;border-radius:50%;background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};flex-shrink:0"></span><strong>${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</strong></span></td>
+    <td>${escHtml(ev.residentName)||'Tous'}</td>
     <td>${ev.date ? formatDate(ev.date) : '—'}</td>
     <td>${ev.heure||ev.time||'—'}</td>
     <td><span class="badge badge-gray">${TYPE_LABELS[ev.type]||ev.type||'—'}</span></td>

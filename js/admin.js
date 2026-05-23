@@ -153,8 +153,8 @@ function renderCats() {
   el.innerHTML = cats.map(c => `
     <div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
       <span style="width:14px;height:14px;border-radius:4px;background:${c.color};flex-shrink:0"></span>
-      <span style="flex:1;font-weight:600;font-size:.875rem">${c.name}</span>
-      <span class="badge" style="background:${c.color}22;color:${c.color}">${c.name}</span>
+      <span style="flex:1;font-weight:600;font-size:.875rem">${escHtml(c.name)}</span>
+      <span class="badge" style="background:${c.color}22;color:${c.color}">${escHtml(c.name)}</span>
       <button class="btn btn-ghost btn-sm" onclick="editCat(${c.id})">Modifier</button>
     </div>`).join('');
 }
@@ -223,10 +223,10 @@ function renderObjs() {
   el.innerHTML = objs.map(o => `
     <div style="padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-weight:700;font-size:.875rem">${o.name}</span>
+        <span style="font-weight:700;font-size:.875rem">${escHtml(o.name)}</span>
         <button class="btn btn-ghost btn-sm" onclick="editObj(${o.id})">Modifier</button>
       </div>
-      ${o.description ? `<div style="font-size:.78rem;color:var(--muted);margin-top:2px">${o.description}</div>` : ''}
+      ${o.description ? `<div style="font-size:.78rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}
     </div>`).join('');
 }
 
@@ -297,8 +297,8 @@ function renderEducateurs() {
     <div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
       <div class="avatar sm" style="background:var(--blue)">${initials(u.prenom||'', u.nom||'') || u.username[0].toUpperCase()}</div>
       <div style="flex:1">
-        <div style="font-weight:600;font-size:.875rem">${[u.prenom, u.nom].filter(Boolean).join(' ') || u.username}</div>
-        <div style="font-size:.75rem;color:var(--muted)">${u.fonction ? u.fonction+' · ' : ''}@${u.username}</div>
+        <div style="font-weight:600;font-size:.875rem">${escHtml([u.prenom, u.nom].filter(Boolean).join(' ') || u.username)}</div>
+        <div style="font-size:.75rem;color:var(--muted)">${u.fonction ? escHtml(u.fonction)+' · ' : ''}@${escHtml(u.username)}</div>
       </div>
       <span class="badge" style="background:#eff6ff;color:var(--blue)">Utilisateur</span>
       <button class="btn btn-ghost btn-sm" onclick="editEducateur(${u.id})">Modifier</button>
