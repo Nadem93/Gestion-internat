@@ -242,7 +242,10 @@ function residentCard(r) {
     </div>
     <div class="res-card-footer">
       <span style="font-size:.72rem;color:var(--muted)">${r.entree ? 'Entré le '+formatDate(r.entree) : ''}</span>
-      ${canEdit ? `<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .45rem" onclick="event.stopPropagation();quickEditResident('${r.id}')">✎ Modifier</button>` : ''}
+      <div style="display:flex;gap:.25rem">
+        <button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .45rem" onclick="event.stopPropagation();window.location.href='dashboard-resident.html?id=${r.id}'" title="Dashboard résident">📊</button>
+        ${canEdit ? `<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .45rem" onclick="event.stopPropagation();quickEditResident('${r.id}')">✎ Modifier</button>` : ''}
+      </div>
     </div>
   </div>`;
 }
@@ -264,6 +267,7 @@ function residentRow(r) {
     <td><div style="display:flex;gap:.3rem;flex-wrap:wrap">${resObjs.map(o=>`<span class="badge badge-gray">${escHtml(o)}</span>`).join('')||'—'}</div></td>
     <td><div class="table-actions">
       <button class="btn btn-ghost btn-sm" onclick="window.location.href='resident.html?id=${r.id}'">Voir</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.location.href='dashboard-resident.html?id=${r.id}'" title="Dashboard">📊</button>
       ${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="quickEditResident('${r.id}')">Modifier</button>` : ''}
     </div></td>
   </tr>`;

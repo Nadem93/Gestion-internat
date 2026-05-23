@@ -9,7 +9,8 @@ const DB = {
     settings:'ftr_settings', user:'ftr_user', branding:'ftr_branding',
     users:'ftr_users', session:'ftr_session', vehicules:'ftr_vehicules',
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
-    repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe'
+    repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
+    loginHistory:'ftr_login_history'
   }
 };
 
@@ -54,6 +55,22 @@ function initDefaults() {
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
 }
 
+// ── LOGIN HISTORY ──
+function logConnexion(action, user) {
+  const log = DB.get(DB.keys.loginHistory) || [];
+  log.unshift({
+    id: genId(),
+    action: action,
+    username: user.username || '?',
+    prenom: user.prenom || '',
+    nom: user.nom || '',
+    role: user.role || '',
+    date: new Date().toISOString()
+  });
+  if (log.length > 500) log.length = 500;
+  DB.set(DB.keys.loginHistory, log);
+}
+
 // ── AUTH ──
 const Auth = {
   getSession() { return DB.get(DB.keys.session); },
@@ -62,9 +79,12 @@ const Auth = {
     const user = users.find(u => u.username === username.trim() && u.password === password);
     if (!user) return false;
     DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, prenom: user.prenom || '', nom: user.nom || '' });
+    logConnexion('login', user);
     return true;
   },
   logout() {
+    const s = DB.get(DB.keys.session);
+    if (s) logConnexion('logout', s);
     DB.remove(DB.keys.session);
     window.location.href = 'index.html';
   },

@@ -469,6 +469,27 @@ function resetData(type) {
   });
 }
 
+function renderLoginHistory() {
+  const log = DB.get(DB.keys.loginHistory) || [];
+  const tbody = document.getElementById('loginHistoryBody');
+  if (!log.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Aucune connexion enregistrée</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.slice(0, 200).map(e => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+    const timeStr = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const actionLabel = e.action === 'login' ? 'Connexion' : e.action === 'logout' ? 'Déconnexion' : e.action;
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:.6rem 1rem;white-space:nowrap">${escHtml(dateStr)} <span style="color:var(--muted)">${escHtml(timeStr)}</span></td>
+      <td style="padding:.6rem 1rem">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')} <span style="color:var(--muted);font-size:.75rem">(${escHtml(e.username)})</span></td>
+      <td style="padding:.6rem 1rem"><span class="badge ${e.action === 'login' ? 'badge-green' : 'badge-gray'}">${actionLabel}</span></td>
+      <td style="padding:.6rem 1rem">${escHtml(e.role||'—')}</td>
+    </tr>`;
+  }).join('');
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab').forEach(t => {
@@ -483,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderObjs();
   renderEducateurs();
   initLogoUpload();
+  renderLoginHistory();
 
   ['setEtab','setVille','setFiness','setTel','setEmail'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', updatePreview);

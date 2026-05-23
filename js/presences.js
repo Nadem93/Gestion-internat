@@ -115,6 +115,48 @@ function updateDateLabel() {
   document.getElementById('presenceDateLabel').textContent = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 }
 
+function openExportModal() {
+  const end = today();
+  const start = new Date(); start.setDate(start.getDate()-30);
+  document.getElementById('exportStart').value = start.toISOString().slice(0,10);
+  document.getElementById('exportEnd').value = end;
+  openModal('modalExportAbs');
+}
+
+function exportAbsencesCSV() {
+  const start = document.getElementById('exportStart').value;
+  const end = document.getElementById('exportEnd').value;
+  if (!start || !end) { toast('Sélectionnez une période', 'error'); return; }
+  const mode = document.getElementById('exportType').value;
+  const allPresences = DB.get(DB.keys.presences) || {};
+  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residentMap = {};
+  residents.forEach(r => { residentMap[r.id] = r; });
+  const rows = [['Date','Résident','Prénom','Nom','Statut']];
+  const startD = new Date(start + 'T00:00:00');
+  const endD = new Date(end + 'T00:00:00');
+  for (let d = new Date(startD); d <= endD; d.setDate(d.getDate()+1)) {
+    const ds = d.toISOString().slice(0,10);
+    const day = allPresences[ds];
+    if (!day) continue;
+    for (const [rid, status] of Object.entries(day)) {
+      if (mode === 'absent' && status !== 'absent') continue;
+      const r = residentMap[rid];
+      rows.push([ds, r ? `${r.prenom} ${r.nom}` : rid, r ? r.prenom : '', r ? r.nom : '', status]);
+    }
+  }
+  if (rows.length === 1) { toast('Aucune donnée pour cette période', 'info'); return; }
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `export-absences-${start}_${end}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  closeModal('modalExportAbs');
+  toast('Export CSV téléchargé');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('presenceDate').value = today();
   updateDateLabel();

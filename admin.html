@@ -302,6 +302,24 @@
             </div>
           </div>
         </div>
+
+        <!-- Historique connexions -->
+        <div class="card" style="margin-top:1.5rem">
+          <div class="card-header"><span class="card-title">Historique des connexions</span><button class="btn btn-ghost btn-sm" onclick="renderLoginHistory()" style="margin-left:auto" title="Rafraîchir">↻</button></div>
+          <div class="card-body" style="padding:0;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+              <thead style="background:var(--g50)">
+                <tr>
+                  <th style="padding:.6rem 1rem;text-align:left;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Date</th>
+                  <th style="padding:.6rem 1rem;text-align:left;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Utilisateur</th>
+                  <th style="padding:.6rem 1rem;text-align:left;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Action</th>
+                  <th style="padding:.6rem 1rem;text-align:left;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Rôle</th>
+                </tr>
+              </thead>
+              <tbody id="loginHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </main>
   </div>

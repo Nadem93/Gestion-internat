@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard résident — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo"><img class="sidebar-logo-img" src="" style="display:none" alt="Logo"/><div class="logo-icon">FTR</div><div class="logo-text"><span id="sidebarEtab">Foyer Trois Rivières</span><strong>Administration</strong></div></a>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Principal</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau de bord</a>
+      <a href="residents.html" class="nav-item" data-page="residents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Résidents</a>
+      <a href="journal.html" class="nav-item" data-page="journal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Journal de bord</a>
+      <a href="ppe.html" class="nav-item" data-page="ppe.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Avenants</a>
+      <a href="planning.html" class="nav-item" data-page="planning.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planning</a>
+      <a href="presences.html" class="nav-item" data-page="presences.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Présences</a>
+      <a href="vehicules.html" class="nav-item" data-page="vehicules.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg>Véhicules</a>
+      <a href="incidents.html" class="nav-item" data-page="incidents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Incidents</a>
+      <a href="messages.html" class="nav-item" data-page="messages.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Messages</a>
+      <a href="repertoire.html" class="nav-item" data-page="repertoire.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Répertoire</a>
+    </div>
+    <div class="sidebar-section"><div class="sidebar-label">Paramètres</div><a href="admin.html" class="nav-item admin-only" data-page="admin.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>Administration</a></div>
+    <div class="sidebar-footer">
+      <div class="user-card"><div class="avatar" id="sidebarAvatar">A</div><div><div class="user-name" id="sidebarUserName">Administrateur</div><div class="user-role" id="sidebarUserRole">Admin</div></div></div>
+      <a href="#" onclick="Auth.logout()" class="nav-item" style="margin-top:.25rem;color:rgba(255,255,255,.4)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="header" id="drHeader">
+      <div><div class="header-title" id="drTitle">Dashboard résident</div><div class="header-sub" id="drSub">Vue d'ensemble</div></div>
+      <div class="header-right">
+        <button class="btn btn-ghost btn-sm" onclick="window.history.back()">← Retour</button>
+      </div>
+    </header>
+
+    <main class="content" id="drContent">
+      <div id="drLoading" class="empty" style="padding:4rem 2rem"><div class="empty-icon" style="font-size:2rem">⏳</div><h3>Chargement...</h3></div>
+    </main>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script>Auth.requireAuth();</script>
+<script src="js/dashboard-resident.js"></script>
+</body>
+</html>
