@@ -76,8 +76,8 @@ function renderConvs() {
     return `<div class="chat-conv ${currentConvId===conv.id?'active':''}" onclick="selectConv('${conv.id}')">
       <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
       <div class="chat-conv-info">
-        <div class="chat-conv-name">${escapeHtml(name)}${unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0"></span>' : ''}</div>
-        <div class="chat-conv-preview">${escapeHtml(preview)}</div>
+        <div class="chat-conv-name">${escHtml(name)}${unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0"></span>' : ''}</div>
+        <div class="chat-conv-preview">${escHtml(preview)}</div>
       </div>
       <div class="chat-conv-right">
         <div class="chat-conv-time">${time}</div>
@@ -139,8 +139,8 @@ function renderComposeUsers() {
       <div class="ck ${sel?'checked':''}"></div>
       <div class="avatar" style="background:${u.role==='admin'?'#5856d6':'#007aff'}">${initials||'?'}</div>
       <div class="chat-overlay-user-info">
-        <div class="chat-overlay-user-name">${escapeHtml(name)}</div>
-        <div class="chat-overlay-user-role">${escapeHtml(role)}</div>
+        <div class="chat-overlay-user-name">${escHtml(name)}</div>
+        <div class="chat-overlay-user-role">${escHtml(role)}</div>
       </div>
     </div>`;
   }).join('');
@@ -251,9 +251,9 @@ function renderChat() {
 
     html += `<div class="chat-row ${isOwn ? 'own' : 'other'}">
       <div class="chat-bubble">
-        ${!isOwn && otherIds.length > 1 ? `<div class="chat-bubble-author">${escapeHtml(authorName)}</div>` : ''}
+        ${!isOwn && otherIds.length > 1 ? `<div class="chat-bubble-author">${escHtml(authorName)}</div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:6px">
-          <span>${escapeHtml(m.body)}</span>
+          <span>${escHtml(m.body)}</span>
           <span class="chat-bubble-time">${time}</span>
         </div>
       </div>
@@ -327,15 +327,74 @@ function formatConvTime(date) {
   return d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
 }
 
-function escapeHtml(s) {
-  if (!s) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+// ── AI Assist Message ──
+async function aiAssistMessage(action) {
+  const input = document.getElementById('chatInput');
+  if (!input || input.disabled) return;
+  const current = input.value || '';
+  const hasKey = !!getAiKey();
+  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
+
+  if (hasKey) {
+    let system = '';
+    let prompt = '';
+    if (action === 'redaction') {
+      system = 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.';
+      prompt = 'Rédige un message professionnel court pour communiquer avec un collègue en ESMS.' + (current ? '\n\nComplète ce message :\n' + current : '');
+    } else if (action === 'correction') {
+      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+      system = 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.';
+      prompt = 'Corrige ce message :\n\n' + current;
+    } else if (action === 'reformulation') {
+      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+      system = 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.';
+      prompt = 'Reformule ce message de manière professionnelle :\n\n' + current;
+    }
+    const result = await callMistral(prompt, system);
+    if (result) {
+      input.value = result;
+      autoResizeTextarea(input);
+      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
+      return;
+    }
+    toast('API Mistral indisponible, mode local', 'warning');
+  }
+
+  // Fallback local
+  let result = '';
+  if (action === 'redaction') {
+    const templates = [
+      'Bonjour, je vous confirme le rendez-vous de demain après-midi.',
+      'Pour information, l\'atelier de jeudi est maintenu.',
+      'Suite à notre échange, voici les points à retenir pour la réunion de demain.'
+    ];
+    result = current ? current + '\n\n' + templates[Math.floor(Math.random() * templates.length)] : templates[Math.floor(Math.random() * templates.length)];
+  } else if (action === 'correction') {
+    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+    result = current.replace(/\bils on\b/g, 'ils ont').replace(/\belle on\b/g, 'elle a').replace(/\bau jour d\'aujourd\'hui\b/g, 'actuellement');
+  } else if (action === 'reformulation') {
+    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+    result = current.replace(/\bveut\b/g, 'souhaite').replace(/\bpeut\b/g, 'est en mesure de').replace(/\bva\b/g, 'envisage de');
+  }
+
+  if (result) {
+    input.value = result;
+    autoResizeTextarea(input);
+    toast('✓ ' + labels[action] + ' (mode local)', 'success');
+  }
+}
+
+function autoResizeTextarea(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.max(36, el.scrollHeight) + 'px';
 }
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    chatInput.addEventListener('input', () => autoResizeTextarea(chatInput));
+  }
   renderConvs();
   renderChat();
 });

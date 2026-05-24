@@ -31,9 +31,9 @@
     .chat-main-header-name{font-weight:600;font-size:.82rem}
     .chat-main-header-status{font-size:.68rem;color:var(--muted)}
 
-    .chat-input{display:flex;gap:.5rem;align-items:center;padding:.5rem .75rem;border-top:1px solid var(--border);background:#fff}
-    .chat-input input{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:.45rem .75rem;font-size:.82rem;outline:none}
-    .chat-input input:focus{border-color:var(--blue)}
+    .chat-input{display:flex;gap:.5rem;align-items:flex-end;padding:.5rem .75rem;border-top:1px solid var(--border);background:#fff}
+    .chat-input textarea{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:.45rem .75rem;font-size:.82rem;outline:none;resize:none;min-height:36px;font-family:inherit}
+    .chat-input textarea:focus{border-color:var(--blue)}
     .chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:2rem}
     .chat-empty svg{width:40px;height:40px;opacity:.25;margin-bottom:.5rem}
     .chat-empty p{font-size:.85rem;margin:0}
@@ -111,7 +111,14 @@
             </div>
           </div>
           <div class="chat-input" id="chatInputBar">
-            <input type="text" id="chatInput" placeholder="Message" onkeydown="if(event.key==='Enter') sendChatMsg()" disabled/>
+            <div style="display:flex;flex-direction:column;flex:1;gap:.25rem">
+              <div style="display:flex;gap:.25rem">
+                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('redaction')" title="Rédiger">✍</button>
+                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('correction')" title="Corriger">✓</button>
+                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('reformulation')" title="Reformuler">🏛</button>
+              </div>
+              <textarea id="chatInput" rows="1" placeholder="Message" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}" disabled style="width:100%;box-sizing:border-box"></textarea>
+            </div>
             <button class="btn btn-primary btn-sm" onclick="sendChatMsg()" id="sendBtn" disabled>Envoyer</button>
           </div>
           <div class="chat-overlay" id="composeOverlay" style="display:none">

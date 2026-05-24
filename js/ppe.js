@@ -100,6 +100,8 @@ function backToList() {
 }
 
 function renderAvenantFull(p) {
+  const existing = document.getElementById('avenantFullView');
+  if (existing) existing.remove();
   const container = document.getElementById('avenantList');
   container.style.display = 'none';
   const div = document.createElement('div');

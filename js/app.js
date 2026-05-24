@@ -410,17 +410,43 @@ async function callMistral(prompt, system) {
   const key = getAiKey();
   if (!key) return null;
   system = system || 'Tu es un rédacteur de bilans socio-éducatifs en ESMS. Réponds en français, de manière professionnelle et institutionnelle.';
-  const base = API_URL || 'http://localhost:3001';
+
+  // Essai 1 : appel direct à l'API Mistral (fonctionne si CORS accepté)
   try {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'mistral-small-latest',
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content?.trim() || null;
+    }
+  } catch (_) { /* direct call failed, try proxy */ }
+
+  // Essai 2 : proxy local (backend requis sur http://localhost:3001)
+  try {
+    const base = API_URL || 'http://localhost:3001';
     const res = await fetch(base + '/api/ai/mistral', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, system, apiKey: key })
     });
-    if (!res.ok) { const err = await res.text(); console.error('Proxy error', err); return null; }
-    const data = await res.json();
-    return data.result || null;
-  } catch (e) { console.error('Mistral proxy error', e); return null; }
+    if (res.ok) {
+      const data = await res.json();
+      return data.result || null;
+    }
+  } catch (_) { /* proxy failed */ }
+
+  return null;
 }
 
 // ── INIT ──
