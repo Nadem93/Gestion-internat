@@ -52,12 +52,18 @@ const DEFAULTS = {
   ],
   aiPrompts: {
     ppe: {
+      redaction: { system: 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.' },
+      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
       reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.' }
     },
     journal: {
+      redaction: { system: 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.' },
+      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
       reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.' }
     },
     messages: {
+      redaction: { system: 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.' },
+      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.' },
       reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.' }
     }
   }

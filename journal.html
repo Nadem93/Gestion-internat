@@ -87,7 +87,9 @@
       </div>
       <div class="form-group"><label class="required">Contenu</label>
         <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal()" title="Reformulation institutionnelle">🏛 Reformuler</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal('redaction')" title="Rédiger une entrée">✍ Rédiger</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal('correction')" title="Corriger le texte">✓ Corriger</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal('reformulation')" title="Reformulation institutionnelle">🏛 Reformuler</button>
         </div>
         <textarea id="eContenu" rows="6" placeholder="Décrivez l'événement, l'observation ou l'intervention…"></textarea>
       </div>

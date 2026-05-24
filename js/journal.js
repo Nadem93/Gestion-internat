@@ -253,39 +253,74 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── AI Assist Journal ──
-async function aiAssistJournal() {
+async function aiAssistJournal(action) {
   const ta = document.getElementById('eContenu');
   if (!ta) return;
   const current = ta.value || '';
-  if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+  const residentId = document.getElementById('eResident')?.value || '';
+  const residents = DB.get(DB.keys.residents) || [];
+  const resident = residents.find(r => r.id === residentId);
+  const residentName = resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '';
   const hasKey = !!getAiKey();
+  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
 
   if (hasKey) {
-    const customSystem = getAiPrompt('journal', 'reformulation');
-    const system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.';
-    const prompt = 'Reformule ce texte de manière professionnelle et institutionnelle :\n\n' + current;
+    const customSystem = getAiPrompt('journal', action);
+    let system = '';
+    let prompt = '';
+    if (action === 'redaction') {
+      system = customSystem || 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.';
+      prompt = `Rédige une courte observation de journal de bord${residentName ? ' pour le résident ' + residentName : ''}. Décris une journée type, une intervention éducative ou un fait notable.` + (current ? '\n\nTexte existant à compléter :\n' + current : '');
+    } else if (action === 'correction') {
+      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
+      prompt = 'Corrige ce texte de journal de bord :\n\n' + current;
+    } else if (action === 'reformulation') {
+      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.';
+      prompt = 'Reformule ce texte de manière professionnelle et institutionnelle :\n\n' + current;
+    }
     const result = await callMistral(prompt, system);
     if (result) {
       ta.value = result;
       ta.dispatchEvent(new Event('input'));
-      toast('✓ Reformulation (Mistral AI)', 'success');
+      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
       return;
     }
     toast('API Mistral indisponible, mode local', 'warning');
   }
 
   // Fallback local
-  const result = current
-    .replace(/\bgère\b/g, 'assure la gestion de')
-    .replace(/\ba besoin de\b/g, 'nécessite')
-    .replace(/\bveut\b/g, 'souhaite')
-    .replace(/\bpeut\b/g, 'est en mesure de')
-    .replace(/\bfait\b/g, 'réalise')
-    .replace(/\bva\b/g, 'envisage de');
+  let result = '';
+  if (action === 'redaction') {
+    const templates = [
+      `Observation éducative du jour : le résident a participé aux activités proposées avec un intérêt marqué pour les ateliers créatifs.`,
+      `Suivi quotidien : bonne intégration au sein du groupe, interactions sociales positives avec les pairs.`,
+      `Point d'étape : le résident fait preuve d'autonomie dans les gestes du quotidien, à encourager dans la continuité.`
+    ];
+    result = current ? current + '\n\n' + templates[Math.floor(Math.random() * templates.length)] : templates[Math.floor(Math.random() * templates.length)];
+  } else if (action === 'correction') {
+    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+    result = current
+      .replace(/\bils on\b/g, 'ils ont')
+      .replace(/\belle on\b/g, 'elle a')
+      .replace(/\bje suis allé\b/g, 'je me suis rendu')
+      .replace(/\bil a étais\b/g, 'il a été')
+      .replace(/\bau jour d'aujourd'hui\b/g, 'actuellement');
+  } else if (action === 'reformulation') {
+    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+    result = current
+      .replace(/\bgère\b/g, 'assure la gestion de')
+      .replace(/\ba besoin de\b/g, 'nécessite')
+      .replace(/\bveut\b/g, 'souhaite')
+      .replace(/\bpeut\b/g, 'est en mesure de')
+      .replace(/\bfait\b/g, 'réalise')
+      .replace(/\bva\b/g, 'envisage de');
+  }
 
   if (result) {
     ta.value = result;
     ta.dispatchEvent(new Event('input'));
-    toast('✓ Reformulation (mode local)', 'success');
+    toast('✓ ' + labels[action] + ' (mode local)', 'success');
   }
 }
