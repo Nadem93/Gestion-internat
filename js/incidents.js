@@ -102,7 +102,7 @@ function renderIncidents() {
   const filterGravite = document.getElementById('filterGravite')?.value || '';
   const filterStatut = document.getElementById('filterStatut')?.value || '';
   const session = Auth.getSession();
-  const isAdmin = session && session.role === 'admin';
+  const isAdmin = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
 
   list = list.filter(i => {
     if (filterType && i.type !== filterType) return false;
@@ -132,7 +132,7 @@ function renderIncidents() {
     const icon = INCIDENT_ICONS[i.type] || '📋';
     const dateStr = i.date ? formatDate(i.date) : '—';
     const timeStr = i.heure ? i.heure.slice(0,5) : '';
-    const canValidate = isAdmin && (i.statut === 'declare' || i.statut === 'cours');
+    const canValidate = session && (session.role === 'admin' || session.role === 'moderator' || canValidateIncidents(session.userId)) && (i.statut === 'declare' || i.statut === 'cours');
 
     return `<div class="incident-card">
       <div class="top">
@@ -170,7 +170,7 @@ function viewIncident(id) {
   const i = list.find(x => x.id === id);
   if (!i) return;
   const session = Auth.getSession();
-  const isAdmin = session && session.role === 'admin';
+  const isAdmin = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
   const typeLabel = INCIDENT_TYPES[i.type] || i.type;
   const gravLabel = GRAVITE_LABELS[i.gravite] || i.gravite;
   const statLabel = STATUT_LABELS[i.statut] || i.statut;

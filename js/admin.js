@@ -1,7 +1,7 @@
 // ── TABS ──
 function activateTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  ['etablissement','personnalisation','categories','objectifs','educateurs','compte','donnees'].forEach(n => {
+  ['etablissement','personnalisation','categories','objectifs','fonctions','educateurs','compte','donnees'].forEach(n => {
     const el = document.getElementById('tab-'+n);
     if (el) el.style.display = n === name ? '' : 'none';
   });
@@ -115,6 +115,7 @@ function loadSettings() {
   document.getElementById('setTel').value = s.tel || '';
   document.getElementById('setEmail').value = s.email || '';
   document.getElementById('setAdresse').value = s.adresse || '';
+  document.getElementById('setAiKey').value = getAiKey();
   updatePreview();
 }
 
@@ -137,6 +138,8 @@ function saveSettings() {
     typeStructure: (DB.get(DB.keys.settings) || {}).typeStructure || 'mixte'
   };
   DB.set(DB.keys.settings, data);
+  const aiKey = document.getElementById('setAiKey').value.trim();
+  setAiKey(aiKey);
   updatePreview();
   renderUserInfo();
   toast('Paramètres enregistrés');
@@ -281,6 +284,94 @@ function resetObjForm() {
   document.getElementById('objDesc').value = '';
   document.getElementById('modalObjTitle').textContent = 'Nouvel objectif';
   document.getElementById('btnDeleteObj').style.display = 'none';
+}
+
+// ── FONCTIONS ──
+function renderFonctions() {
+  const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+  const el = document.getElementById('fonctionList');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = `<div class="empty" style="padding:2rem"><p>Aucune fonction définie</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(f => {
+    const perms = (f.permissions || []).map(p => `<span class="badge" style="background:var(--green)12;color:var(--green);font-size:.65rem">${escHtml(PERMISSION_LABELS[p]||p)}</span>`).join('');
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
+      <span style="width:14px;height:14px;border-radius:4px;background:${f.color};flex-shrink:0"></span>
+      <span style="flex:1;font-weight:600;font-size:.875rem">${escHtml(f.fonction)}</span>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap">${perms}</div>
+      <button class="btn btn-ghost btn-sm" onclick="editFonction(${f.id})">Modifier</button>
+    </div>`;
+  }).join('');
+}
+
+function renderFonctionPermissions(selected) {
+  const el = document.getElementById('fonctionPermissions');
+  if (!el) return;
+  selected = selected || [];
+  el.innerHTML = Object.entries(PERMISSION_LABELS).map(([key, label]) => `
+    <label style="display:flex;align-items:center;gap:.6rem;font-size:.875rem;cursor:pointer;padding:.3rem 0">
+      <input type="checkbox" value="${key}" ${selected.includes(key)?'checked':''} style="accent-color:var(--accent);width:16px;height:16px"/>
+      ${escHtml(label)}
+    </label>`).join('');
+}
+
+function editFonction(id) {
+  const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+  const f = list.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('modalFonctionTitle').textContent = 'Modifier la fonction';
+  document.getElementById('fonctionId').value = id;
+  document.getElementById('fonctionName').value = f.fonction;
+  document.getElementById('fonctionColor').value = f.color;
+  renderFonctionPermissions(f.permissions || []);
+  document.getElementById('btnDeleteFonction').style.display = '';
+  openModal('modalFonction');
+}
+
+function saveFonction() {
+  const name = document.getElementById('fonctionName').value.trim();
+  if (!name) { toast('Le nom est requis', 'error'); return; }
+  const color = document.getElementById('fonctionColor').value;
+  const permEls = document.querySelectorAll('#fonctionPermissions input[type="checkbox"]');
+  const permissions = Array.from(permEls).filter(cb => cb.checked).map(cb => cb.value);
+  let list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+  const id = document.getElementById('fonctionId').value;
+  if (id) {
+    list = list.map(f => String(f.id) === String(id) ? { ...f, fonction: name, color, permissions } : f);
+    toast('Fonction mise à jour');
+  } else {
+    const newId = Math.max(0, ...list.map(f => f.id)) + 1;
+    list.push({ id: newId, fonction: name, color, permissions });
+    toast('Fonction ajoutée');
+  }
+  DB.set(DB.keys.fonctionColors, list);
+  closeAllModals();
+  resetFonctionForm();
+  renderFonctions();
+}
+
+function deleteFonction() {
+  const id = document.getElementById('fonctionId').value;
+  confirmDialog('Supprimer cette fonction ?', () => {
+    let list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+    list = list.filter(f => String(f.id) !== String(id));
+    DB.set(DB.keys.fonctionColors, list);
+    closeAllModals();
+    resetFonctionForm();
+    renderFonctions();
+    toast('Fonction supprimée', 'info');
+  });
+}
+
+function resetFonctionForm() {
+  document.getElementById('fonctionId').value = '';
+  document.getElementById('fonctionName').value = '';
+  document.getElementById('fonctionColor').value = '#3b82f6';
+  renderFonctionPermissions([]);
+  document.getElementById('modalFonctionTitle').textContent = 'Nouvelle fonction';
+  document.getElementById('btnDeleteFonction').style.display = 'none';
 }
 
 // ── UTILISATEURS ──
@@ -502,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadTypeStructure();
   renderCats();
   renderObjs();
+  renderFonctions();
   renderEducateurs();
   initLogoUpload();
   renderLoginHistory();
@@ -516,5 +608,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('modalCat').querySelector('.modal-close').addEventListener('click', resetCatForm);
   document.getElementById('modalObj').querySelector('.modal-close').addEventListener('click', resetObjForm);
+  document.getElementById('modalFonction')?.querySelector('.modal-close')?.addEventListener('click', resetFonctionForm);
   document.getElementById('modalEdu').querySelector('.modal-close').addEventListener('click', resetEducateurForm);
 });

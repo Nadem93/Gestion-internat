@@ -68,6 +68,13 @@ function generateDemo() {
 
   // ── JOURNAL ──
   const journal = [];
+  const journalAuthors = [
+    { id: 2, name: 'Sophie Martin' }, { id: 3, name: 'Pierre Dubois' },
+    { id: 4, name: 'Camille Legrand' }, { id: 5, name: 'Julien Fontaine' },
+    { id: 6, name: 'Nathalie Petit' }, { id: 7, name: 'Antoine Leroy' },
+    { id: 8, name: 'Mélanie Roux' }, { id: 9, name: 'David Moreau' },
+    { id: 10, name: 'Élodie Fournier' }, { id: 11, name: 'Sébastien Girard' }
+  ];
   const entries = [
     { resid: 0, cat: 1, content: 'Entretien individuel avec Amine. Il exprime le souhait de suivre une formation en mécanique. Nous allons contacter l\'AFPA pour un stage d\'orientation.' },
     { resid: 1, cat: 1, content: 'Sofia a eu un entretien à Pôle Emploi. Son CV est à jour. Prochaine étape : préparation aux entretiens.' },
@@ -94,6 +101,7 @@ function generateDemo() {
   entries.forEach((e, i) => {
     const res = resList[e.resid];
     const d = new Date(now.getTime() - (entries.length - i) * 86400000 * 2);
+    const a = journalAuthors[i % journalAuthors.length];
     journal.push({
       id: 'dj-' + (i+1),
       residentId: res.id,
@@ -104,6 +112,8 @@ function generateDemo() {
       contenu: e.content,
       visibilite: 'equipe',
       objectif: '',
+      author: a.name,
+      authorId: a.id,
       createdAt: d.toISOString(),
       updatedAt: d.toISOString()
     });
@@ -350,7 +360,7 @@ function generateDemo() {
     { organisme: 'ESAT Les Ateliers du Val', nom: 'M. Franck Morel', tel: '01 48 90 12 34', email: 'f.morel@esat-val.fr', fonction: 'Directeur adjoint', adresse: 'Route de la Vallée, 94120 Fontenay-sous-Bois', notes: 'Stage possible pour Fatima.' },
     { organisme: 'MDPH Val-de-Marne', nom: 'Mme Sophie Leroy', tel: '09 72 12 34 56', email: 'sophie.leroy@mdph94.fr', fonction: 'Chargée de dossier', adresse: '1 Place de la Préfecture, 94000 Créteil', notes: 'Dossier Sarah en cours. N° dossier : MDPH-2024-188.' },
     { organisme: 'CCAS Paris 10e', nom: 'M. David Cohen', tel: '01 45 67 89 50', email: 'd.cohen@ccas-paris.fr', fonction: 'Travailleur social', adresse: '10 Rue de la Grange aux Belles, 75010 Paris', notes: 'Suit Fatima et Emma pour le logement social.' }
-  ].map(c => ({ id: 'dc-' + Math.random().toString(36).slice(2,8), ...c }));
+  ].map(c => ({ id: 'dc-' + Math.random().toString(36).slice(2,8), updatedAt: new Date(now.getTime() - Math.random() * 30 * 86400000).toISOString(), ...c }));
   DB.set(DB.keys.repertoire, contacts);
   log('✅ ' + contacts.length + ' contacts répertoire créés');
 

@@ -163,6 +163,11 @@ function renderSectionCard(p, domaine) {
       <div style="display:flex;gap:.5rem;align-items:flex-start">
         <div style="flex:1">
           <label style="font-size:.7rem;color:var(--muted);font-weight:600">Bilan</label>
+          <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
+            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','redaction')" title="Rédiger un bilan">✍ Rédiger</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','correction')" title="Corriger le texte">✓ Corriger</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','reformulation')" title="Reformulation institutionnelle">🏛 Reformuler</button>
+          </div>
           <textarea class="input" style="min-height:60px;width:100%" onchange="updateSectionField('${p.id}','${domaine.id}','bilan',this.value)" placeholder="Bilan du domaine…">${escHtml(s.bilan||'')}</textarea>
         </div>
         <button class="btn btn-ghost btn-sm" style="margin-top:1.2rem" onclick="addSectionObj('${p.id}','${domaine.id}')">+ Objectif</button>
@@ -184,6 +189,11 @@ function renderSectionCard(p, domaine) {
       ${s.objectifs.length ? `<button class="btn btn-ghost btn-sm" style="align-self:flex-start" onclick="addSectionObj('${p.id}','${domaine.id}')">+ Ajouter une ligne</button>` : ''}
       <div style="margin-top:.25rem">
         <label style="font-size:.7rem;color:var(--muted);font-weight:600">Expression et souhaits du résident</label>
+        <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','expression','redaction')" title="Rédiger">✍ Rédiger</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','expression','correction')" title="Corriger">✓ Corriger</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','expression','reformulation')" title="Reformulation">🏛 Reformuler</button>
+        </div>
         <textarea class="input" style="min-height:50px;width:100%" onchange="updateSectionField('${p.id}','${domaine.id}','expression',this.value)" placeholder="Expression et souhaits…">${escHtml(s.expression||'')}</textarea>
       </div>
     </div>
@@ -203,6 +213,97 @@ function updateSectionField(ppeId, domId, field, value) {
   if (!p.sections[domId]) p.sections[domId] = emptySection();
   p.sections[domId][field] = value;
   savePpe(list);
+}
+
+async function aiAssist(ppeId, domId, field, action) {
+  const list = getPpe();
+  const p = list.find(x => x.id === ppeId);
+  if (!p) return;
+  if (!p.sections[domId]) p.sections[domId] = emptySection();
+  const domaine = DOMAINES.find(d => d.id === domId);
+  const label = domaine ? domaine.label : domId;
+  const current = p.sections[domId][field] || '';
+  const hasKey = !!getAiKey();
+  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
+
+  if (hasKey) {
+    let system = '';
+    let prompt = '';
+    if (action === 'redaction') {
+      system = 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.';
+      prompt = `Rédige un bilan concis pour le domaine "${label}" d'un résident en établissement médico-social.${current ? '\n\nTexte existant à compléter :\n' + current : ''}`;
+    } else if (action === 'correction') {
+      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+      system = 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
+      prompt = 'Corrige ce texte :\n\n' + current;
+    } else if (action === 'reformulation') {
+      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+      system = 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.';
+      prompt = 'Reformule ce texte de manière institutionnelle :\n\n' + current;
+    }
+    const result = await callMistral(prompt, system);
+    if (result) {
+      p.sections[domId][field] = result;
+      savePpe(list);
+      renderAvenantFull(p);
+      const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+      if (bodyEl) bodyEl.style.display = '';
+      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
+      return;
+    }
+    toast('API Mistral indisponible, mode local', 'warning');
+  }
+
+  // Fallback local
+  let result = '';
+  if (action === 'redaction') {
+    const templates = {
+      bilan: [
+        `Concernant le domaine "${label}", la situation évolue de manière positive.`,
+        `Dans le cadre du suivi personnalisé, il convient de noter que ce domaine nécessite une attention particulière.`,
+        `L'évaluation dans le domaine "${label}" fait apparaître des progrès significatifs.`
+      ],
+      expression: [
+        `Le résident exprime une satisfaction quant aux accompagnements proposés.`,
+        `Il/elle souhaite être davantage impliqué(e) dans les décisions le/la concernant.`,
+        `Il/elle fait part de son désir de gagner en autonomie dans ce domaine.`
+      ]
+    };
+    const pool = templates[field] || templates.bilan;
+    result = current ? current + '\n\n' + pool[Math.floor(Math.random() * pool.length)] : pool[Math.floor(Math.random() * pool.length)];
+  } else if (action === 'correction') {
+    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+    result = current
+      .replace(/\bils on\b/g, 'ils ont')
+      .replace(/\belle on\b/g, 'elle a')
+      .replace(/\bje suis allé\b/g, 'je me suis rendu')
+      .replace(/\bil a étais\b/g, 'il a été')
+      .replace(/\bcomme même\b/g, 'quand même')
+      .replace(/\bau jour d'aujourd'hui\b/g, 'actuellement')
+      .replace(/\bpar contre\b/g, 'en revanche')
+      .replace(/\bpeut être\b/g, 'peut-être')
+      .replace(/\bentraine\b/g, 'entraîne')
+      .replace(/\bgràce\b/g, 'grâce');
+  } else if (action === 'reformulation') {
+    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
+    result = current
+      .replace(/\bgère\b/g, 'assure la gestion de')
+      .replace(/\ba besoin de\b/g, 'nécessite')
+      .replace(/\bveut\b/g, 'souhaite')
+      .replace(/\bpeut\b/g, 'est en mesure de')
+      .replace(/\bfait\b/g, 'réalise')
+      .replace(/\bva\b/g, 'envisage de')
+      .replace(/\bdoit\b/g, 'se doit de');
+  }
+
+  if (result) {
+    p.sections[domId][field] = result;
+    savePpe(list);
+    renderAvenantFull(p);
+    const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+    if (bodyEl) bodyEl.style.display = '';
+    toast('✓ ' + labels[action] + ' (mode local)', 'success');
+  }
 }
 
 function addSectionObj(ppeId, domId) {

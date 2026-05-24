@@ -226,7 +226,7 @@ function residentCard(r) {
 
   const docCount = ((DB.get(DB.keys.documents)||{})[r.id]||[]).length;
   const session = Auth.getSession();
-  const canEdit = session && (session.role === 'admin' || session.role === 'moderator');
+  const canEdit = session && (session.role === 'admin' || session.role === 'moderator' || canEditResidents(session.userId));
   const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
   const presenceStatus = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
   return `<div class="res-card" onclick="window.location.href='resident.html?id=${r.id}'">
@@ -257,7 +257,7 @@ function residentRow(r) {
     ? `<img src="${r.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border)" alt=""/>`
     : `<div style="width:32px;height:32px;border-radius:50%;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:#fff;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
   const session = Auth.getSession();
-  const canEdit = session && (session.role === 'admin' || session.role === 'moderator');
+  const canEdit = session && (session.role === 'admin' || session.role === 'moderator' || canEditResidents(session.userId));
   return `<tr>
     <td><div style="display:flex;align-items:center;gap:.6rem">${photoEl}<span style="font-weight:600">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</span></div></td>
     <td>${r.dob ? age(r.dob)+' ('+formatDate(r.dob)+')' : '—'}</td>

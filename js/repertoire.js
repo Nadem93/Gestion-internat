@@ -98,7 +98,8 @@ function saveContact() {
     email: document.getElementById('cEmail').value.trim(),
     fonction: document.getElementById('cFonction').value.trim(),
     adresse: document.getElementById('cAdresse').value.trim(),
-    notes: document.getElementById('cNotes').value.trim()
+    notes: document.getElementById('cNotes').value.trim(),
+    updatedAt: new Date().toISOString()
   };
 
   const contacts = getContacts();

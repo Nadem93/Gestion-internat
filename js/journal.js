@@ -56,7 +56,7 @@ function renderEntries() {
             ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
             ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
           </div>
-          <div class="entry-meta">${formatDateTime(e.date)}</div>
+          <div class="entry-meta">${formatDateTime(e.date)} · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span></div>
         </div>
       </div>
       <div class="entry-preview">${escHtml(e.contenu)||''}</div>
@@ -105,7 +105,7 @@ function selectEntry(id) {
             <span style="font-weight:800;font-size:1rem">${escHtml(e.resident)||'—'}</span>
             ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${escHtml(cat.name)}</span>` : ''}
           </div>
-          <div style="font-size:.78rem;color:var(--muted)">${formatDateTime(e.date)} · ${vis[e.visibilite]||''}</div>
+          <div style="font-size:.78rem;color:var(--muted)">${formatDateTime(e.date)} · ${vis[e.visibilite]||''} · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.72rem">${escHtml(getJournalAuthor(e))}</span></div>
           ${obj ? `<div style="font-size:.78rem;color:var(--purple);margin-top:3px">Objectif : ${escHtml(obj.name)}</div>` : ''}
         </div>
         <div style="display:flex;gap:.4rem;flex-shrink:0">
@@ -170,6 +170,8 @@ function editEntry(id) {
 }
 
 function saveEntry() {
+  const session = Auth.getSession();
+  const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   const residentId = document.getElementById('eResident').value;
   const contenu = document.getElementById('eContenu').value.trim();
   if (!residentId) { toast('Sélectionnez un résident', 'error'); return; }
@@ -188,6 +190,8 @@ function saveEntry() {
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
+    author: userName,
+    authorId: session?.userId,
     updatedAt: new Date().toISOString()
   };
 

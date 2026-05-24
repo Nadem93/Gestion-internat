@@ -65,11 +65,13 @@
           <div class="stat-change">Aujourd'hui</div>
         </div>
 
-        <a href="ppe.html" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit" title="Avenants actifs">
-          <div class="stat-card-top"><span class="stat-label">Avenants actifs</span><div class="stat-icon" style="background:#f0fdf4;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div></div>
-          <div class="stat-value" id="statPpeInfo">0</div>
-          <div class="stat-detail" id="statPpeDetail">Aucun avenant actif</div>
+        <a href="incidents.html" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit" title="Incidents non traités" id="statIncidentCard">
+          <div class="stat-card-top"><span class="stat-label">Incidents non traités</span><div class="stat-icon" style="background:#fef2f2;color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
+          <div class="stat-value" id="statIncidentInfo">0</div>
+          <div class="stat-detail" id="statIncidentDetail">Incidents en cours</div>
         </a>
+
+
         <a href="vehicules.html" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit" title="Réserver un véhicule">
           <div class="stat-card-top"><span class="stat-label">Véhicules</span><div class="stat-icon" style="background:#eef2ff;color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg></div></div>
           <div id="statVehiculeList" style="width:100%">
@@ -77,10 +79,10 @@
           </div>
         </a>
 
-        <a href="planning.html?filter=avenant" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit" title="Voir les avenants">
-          <div class="stat-card-top"><span class="stat-label">Prochain Avenant</span><div class="stat-icon" style="background:#fefce8;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div></div>
-          <div style="font-size:.9rem;font-weight:700;color:var(--g800);margin:.25rem 0 .1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="statAvenantInfo">Aucun</div>
-          <div style="font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="statAvenantDetail">Prochain avenant</div>
+        <a href="residents.html" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit" title="Anniversaires du mois">
+          <div class="stat-card-top"><span class="stat-label">Anniversaires du mois</span><div class="stat-icon" style="background:#fdf2f8;color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+          <div style="font-size:.9rem;font-weight:700;color:var(--g800);margin:.25rem 0 .1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="statAnnivInfo">Aucun</div>
+          <div style="font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="statAnnivDetail">Anniversaires ce mois-ci</div>
         </a>
       </div>
 
@@ -113,6 +115,46 @@
         <div class="card-body" style="padding:0" id="dashboardAvenants">
           <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div><p>Aucun avenant</p><a href="ppe.html" class="btn btn-outline btn-sm">Créer un avenant</a></div>
         </div>
+      </div>
+
+      <!-- CARTES SUPPLÉMENTAIRES -->
+      <div class="grid grid-3" style="gap:1.5rem;margin-top:1.5rem">
+
+        <!-- RÉSIDENTS SANS AVENANT -->
+        <div class="card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#8b5cf6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span class="card-title">Sans avenant actif</span>
+            <a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Créer</a>
+          </div>
+          <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto" id="dashboardSansAvenant">
+            <div class="empty" style="padding:1.5rem"><p>Aucun</p></div>
+          </div>
+        </div>
+
+        <!-- ALERTES ÉCHÉANCES -->
+        <div class="card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#f59e0b"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="card-title">Alertes échéances</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto" id="dashboardAlertes">
+            <div class="empty" style="padding:1.5rem"><p>Tout est à jour</p></div>
+          </div>
+        </div>
+
+        <!-- RÉPERTOIRE RÉCENT -->
+        <div class="card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#06b6d4"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="card-title">Répertoire récent</span>
+            <a href="repertoire.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a>
+          </div>
+          <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto" id="dashboardRepertoire">
+            <div class="empty" style="padding:1.5rem"><p>Aucun contact</p></div>
+          </div>
+        </div>
+
       </div>
 
       <!-- RACCOURCIS -->
@@ -366,13 +408,59 @@
       iconEl.style.color = '';
     }
     document.getElementById('statJournal').textContent = s.todayEntries;
-    // PPE stats
-    const ppeList = DB.get(DB.keys.ppe) || [];
-    const ppeActifs = ppeList.filter(p => p.statut === 'actif').length;
-    const ppeInfo = document.getElementById('statPpeInfo');
-    const ppeDetail = document.getElementById('statPpeDetail');
-    ppeInfo.textContent = ppeActifs;
-    ppeDetail.textContent = ppeActifs ? `${ppeList.filter(p=>p.statut==='actif').length} avenant${ppeActifs>1?'s':''} en cours` : 'Aucun avenant actif';
+
+    // Incidents non traités
+    const allIncidents = DB.get(DB.keys.incidents) || [];
+    const curSession = Auth.getSession();
+    const canViewAll = curSession && (curSession.role === 'admin' || curSession.role === 'moderator' || canViewAllIncidents(curSession.userId));
+    const visibleIncidents = canViewAll ? allIncidents : allIncidents.filter(i => i.declaredById === curSession?.userId);
+    const openIncidents = visibleIncidents.filter(i => i.statut === 'declare' || i.statut === 'cours');
+    const incCard = document.getElementById('statIncidentCard');
+    const incInfo = document.getElementById('statIncidentInfo');
+    const incDetail = document.getElementById('statIncidentDetail');
+    if (!canViewAll) {
+      incCard.style.display = 'none';
+    } else {
+      incCard.style.display = '';
+      incInfo.textContent = openIncidents.length;
+      if (openIncidents.length) {
+        incDetail.textContent = `${openIncidents.length} incident${openIncidents.length>1?'s':''} non traités`;
+        incCard.style.borderLeft = '3px solid #dc2626';
+      } else {
+        incDetail.textContent = 'Aucun incident en cours';
+        incCard.style.borderLeft = '';
+      }
+    }
+
+    // Anniversaires du mois
+    const nowDate = new Date();
+    const thisMonth = nowDate.getMonth();
+    const annivResidents = allResidents.filter(r => {
+      if (!r.dob) return false;
+      const d = new Date(r.dob);
+      return d.getMonth() === thisMonth;
+    });
+    const annivInfo = document.getElementById('statAnnivInfo');
+    const annivDetail = document.getElementById('statAnnivDetail');
+    if (annivResidents.length) {
+      if (annivResidents.length === 1) {
+        const first = annivResidents[0];
+        const dob = new Date(first.dob);
+        const dayStr = dob.toLocaleDateString('fr-FR', { day:'numeric', month:'long' });
+        annivInfo.textContent = first.prenom || '';
+        annivInfo.style.fontSize = '1.15rem';
+        annivDetail.textContent = dayStr;
+      } else {
+        const names = annivResidents.map(r => r.prenom).filter(Boolean).join(', ');
+        annivInfo.textContent = annivResidents.length + ' anniversaires';
+        annivInfo.style.fontSize = '';
+        annivDetail.textContent = names;
+      }
+    } else {
+      annivInfo.textContent = 'Aucun';
+      annivInfo.style.fontSize = '';
+      annivDetail.textContent = 'Ce mois-ci';
+    }
 
     // Réservations véhicules (imminentes ou en cours)
     const vehList = document.getElementById('statVehiculeList');
@@ -400,26 +488,71 @@
       vehList.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Aucune réservation imminente</div>';
     }
 
-    // Avenants dans les 7 prochains jours
-    const avenantInfo = document.getElementById('statAvenantInfo');
-    const avenantDetail = document.getElementById('statAvenantDetail');
-    const nextAvenants = planning
-      .filter(e => e.type === 'avenant' && (e.date > todayStr || (e.date === todayStr && e.time >= now.toTimeString().slice(0,5))))
-      .sort((a,b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''));
-    const avenants7j = nextAvenants.filter(e => {
-      const d = new Date(e.date + 'T' + (e.time || '00:00'));
-      return (d.getTime() - now.getTime()) <= 7 * 24 * 60 * 60 * 1000;
-    });
-    if (avenants7j.length) {
-      const a = avenants7j[0];
-      avenantInfo.textContent = `${a.titre||'Avenant'}${a.residentName ? ' · '+a.residentName : ''}`;
-      avenantDetail.textContent = a.date ? `${formatDate(a.date)} · ${a.time ? a.time.slice(0,5) : '—'}` : '—';
-    } else if (nextAvenants.length) {
-      avenantInfo.textContent = 'Aucun dans les 7 jours';
-      avenantDetail.textContent = nextAvenants[0].date ? `Prochain : ${formatDate(nextAvenants[0].date)}` : '—';
+    // Résidents sans avenant actif
+    const ppeList = DB.get(DB.keys.ppe) || [];
+    const residentsWithPpe = new Set(ppeList.filter(p => p.statut === 'actif').map(p => p.residentId));
+    const sansAvenant = allResidents.filter(r => !residentsWithPpe.has(r.id));
+    const saEl = document.getElementById('dashboardSansAvenant');
+    if (sansAvenant.length) {
+      saEl.innerHTML = sansAvenant.slice(0, 10).map(r => `
+        <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem">
+          <div class="avatar sm" style="background:${r.color||'var(--blue)'};flex-shrink:0;width:26px;height:26px;font-size:.6rem">${(r.prenom||'?')[0].toUpperCase()}</div>
+          <span style="font-weight:600;flex:1">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</span>
+          <a href="ppe.html?residentId=${r.id}" class="btn btn-ghost btn-sm" style="font-size:.7rem">+ Avenant</a>
+        </div>`).join('');
     } else {
-      avenantInfo.textContent = 'Aucun avenant';
-      avenantDetail.textContent = 'Aucun avenant planifié';
+      saEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Tous les résidents ont un avenant actif</p></div>';
+    }
+
+    // Alertes échéances
+    const nowDate2 = new Date();
+    const alertes = [];
+    // Avenants avec révision dans < 30j
+    ppeList.filter(p => p.statut === 'actif' && p.dateRevision).forEach(p => {
+      const d = new Date(p.dateRevision + 'T00:00:00');
+      const diff = Math.round((d - nowDate2) / 86400000);
+      if (diff >= 0 && diff <= 30) alertes.push({ type: 'avenant', label: `Révision avenant : ${p.residentName||'?'}`, date: p.dateRevision, jours: diff });
+    });
+    // Incidents non validés depuis > 7j
+    (DB.get(DB.keys.incidents)||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
+      if (i.date) {
+        const d = new Date(i.date + (i.heure ? 'T'+i.heure : 'T00:00:00'));
+        const diff = Math.round((nowDate2 - d) / 86400000);
+        if (diff >= 7) alertes.push({ type: 'incident', label: `Incident non traité : ${i.residentName||'?'}`, date: i.date, jours: -diff, gravite: i.gravite });
+      }
+    });
+    alertes.sort((a,b) => a.type === 'avenant' ? a.jours - b.jours : b.jours - a.jours);
+    const alEl = document.getElementById('dashboardAlertes');
+    if (alertes.length) {
+      alEl.innerHTML = alertes.slice(0, 8).map(a => {
+        const isUrgent = a.type === 'avenant' ? a.jours <= 7 : a.jours <= -7;
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;${isUrgent?'background:#fef2f2':''}">
+          <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${a.type==='avenant'?'#f59e0b':'#dc2626'}"></span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(a.label)}</span>
+          <span style="font-size:.7rem;color:var(--muted);white-space:nowrap">${a.type==='avenant' ? `J-${a.jours}` : `J+${Math.abs(a.jours)}`}</span>
+        </div>`;
+      }).join('');
+    } else {
+      alEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Tout est à jour</p></div>';
+    }
+
+    // Répertoire récent
+    const contacts = (DB.get(DB.keys.repertoire)||[]).filter(c => c.updatedAt).sort((a,b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5);
+    const repEl = document.getElementById('dashboardRepertoire');
+    if (contacts.length) {
+      repEl.innerHTML = contacts.map(c => {
+        const initiale = (c.organisme||'?')[0].toUpperCase();
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem">
+          <div class="avatar sm" style="background:#06b6d4;flex-shrink:0;width:26px;height:26px;font-size:.6rem">${initiale}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(c.organisme)}</div>
+            <div style="font-size:.7rem;color:var(--muted)">${escHtml(c.nom||'')}</div>
+          </div>
+          <span style="font-size:.65rem;color:var(--muted);white-space:nowrap">${c.updatedAt ? formatDate(c.updatedAt) : ''}</span>
+        </div>`;
+      }).join('');
+    } else {
+      repEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun contact récent</p></div>';
     }
 
     // Avenants récents (dashboard cards)
@@ -452,6 +585,7 @@
             <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">
               <span style="font-weight:600;font-size:.875rem">${escHtml(e.resident||'—')}</span>
               ${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}
+              <span style="font-size:.7rem;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 7px;border-radius:10px;margin-left:auto">${escHtml(getJournalAuthor(e))}</span>
             </div>
             <div style="font-size:.8rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(e.contenu||'')}</div>
             <div style="font-size:.72rem;color:var(--g400);margin-top:3px">${formatDateTime(e.date)}</div>

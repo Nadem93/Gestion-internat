@@ -10,9 +10,12 @@ const DB = {
     users:'ftr_users', session:'ftr_session', vehicules:'ftr_vehicules',
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
-    loginHistory:'ftr_login_history'
+    loginHistory:'ftr_login_history', fonctionColors:'ftr_fonction_colors',
+    aiKey:'ftr_ai_key'
   }
 };
+
+const API_URL = 'http://localhost:3001';
 
 // ── DEFAULT DATA ──
 const DEFAULTS = {
@@ -35,7 +38,18 @@ const DEFAULTS = {
   settings: { etablissement:'Foyer d\'Hébergement Les Trois Rivières', ville:'', tel:'', email:'', capacite:'', typeStructure:'mixte' },
   branding: { primaryColor:'#0f2b4a', accentColor:'#e85d04', logo:'' },
   users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin' }],
-  vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy']
+  vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
+  fonctionColors: [
+    { id: 1, fonction: 'Éducateur', color: '#3b82f6', permissions: [] },
+    { id: 2, fonction: 'Psychologue', color: '#8b5cf6', permissions: [] },
+    { id: 3, fonction: 'Infirmier', color: '#ef4444', permissions: [] },
+    { id: 4, fonction: 'Social', color: '#10b981', permissions: [] },
+    { id: 5, fonction: 'Chef de service', color: '#f59e0b', permissions: ['edit_residents', 'view_all_incidents', 'validate_incidents'] },
+    { id: 6, fonction: 'Veilleur de nuit', color: '#6366f1', permissions: [] },
+    { id: 7, fonction: 'Sportif', color: '#06b6d4', permissions: [] },
+    { id: 8, fonction: 'Secrétaire', color: '#ec4899', permissions: [] },
+    { id: 9, fonction: 'Admin', color: '#dc2626', permissions: ['edit_residents', 'view_all_incidents', 'validate_incidents', 'access_admin', 'manage_users'] }
+  ]
 };
 
 function initDefaults() {
@@ -53,6 +67,8 @@ function initDefaults() {
   if (!DB.get(DB.keys.documents)) DB.set(DB.keys.documents, {});
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
+  if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
+  setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
 }
 
 // ── LOGIN HISTORY ──
@@ -96,12 +112,13 @@ const Auth = {
   requireAdmin() {
     const s = this.requireAuth();
     if (!s) return null;
-    if (s.role !== 'admin') { window.location.href = 'dashboard.html'; return null; }
+    if (s.role !== 'admin' && !canAccessAdmin(s.userId)) { window.location.href = 'dashboard.html'; return null; }
     return s;
   },
   isAdmin() {
     const s = this.getSession();
-    return !!(s && s.role === 'admin');
+    if (!s) return false;
+    return s.role === 'admin' || canAccessAdmin(s.userId);
   }
 };
 
@@ -304,6 +321,107 @@ function escHtml(s) {
 }
 
 const STATUT_PPE_LABEL = { brouillon:'Brouillon', actif:'Actif', termine:'Terminé' };
+
+const DEMO_AUTHORS = [
+  'Sarah Martin', 'Lucas Dubois', 'Emma Bernard', 'Hugo Leroy',
+  'Chloé Moreau', 'Nathan Petit', 'Léa Robert', 'Mathis Richard',
+  'Manon Simon', 'Enzo Durand', 'Camille Lambert', 'Raphaël Girard'
+];
+
+function getAuthorColor(e) {
+  if (e.authorId) {
+    const users = DB.get(DB.keys.users) || [];
+    const u = users.find(x => x.id === e.authorId);
+    if (u && u.fonction) {
+      const f = u.fonction.toLowerCase();
+      const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+      for (const item of list) {
+        if (f.includes(item.fonction.toLowerCase())) return item.color;
+      }
+    }
+  }
+  return 'var(--accent)';
+}
+
+function getJournalAuthor(e) {
+  if (e.author) return e.author;
+  if (e.authorId) {
+    const users = DB.get(DB.keys.users) || [];
+    const u = users.find(x => x.id === e.authorId);
+    if (u) return [u.prenom, u.nom].filter(Boolean).join(' ') || u.username;
+  }
+  const idx = (e.id || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % DEMO_AUTHORS.length;
+  return DEMO_AUTHORS[idx];
+}
+
+const PERMISSION_LABELS = {
+  edit_residents: 'Modifier les résidents',
+  view_all_incidents: 'Voir tous les incidents',
+  validate_incidents: 'Valider les incidents',
+  access_admin: 'Accéder à l\'administration',
+  manage_users: 'Gérer les utilisateurs'
+};
+
+function hasPermission(userId, perm) {
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => x.id === userId);
+  if (!u || !u.fonction) return false;
+  const f = u.fonction.toLowerCase();
+  const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+  for (const item of list) {
+    if (f.includes(item.fonction.toLowerCase())) {
+      return (item.permissions || []).includes(perm);
+    }
+  }
+  return false;
+}
+
+function canEditResidents(userId) {
+  return hasPermission(userId, 'edit_residents');
+}
+
+function canViewAllIncidents(userId) {
+  if (hasPermission(userId, 'view_all_incidents')) return true;
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => x.id === userId);
+  return u && (u.role === 'admin' || u.role === 'moderator');
+}
+
+function canValidateIncidents(userId) {
+  if (hasPermission(userId, 'validate_incidents')) return true;
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => x.id === userId);
+  return u && (u.role === 'admin' || u.role === 'moderator');
+}
+
+function canAccessAdmin(userId) {
+  return hasPermission(userId, 'access_admin');
+}
+
+function canManageUsers(userId) {
+  return hasPermission(userId, 'manage_users');
+}
+
+// ── AI ──
+function getAiKey() { return DB.get(DB.keys.aiKey) || ''; }
+function setAiKey(key) { DB.set(DB.keys.aiKey, key); }
+
+async function callMistral(prompt, system) {
+  const key = getAiKey();
+  if (!key) return null;
+  system = system || 'Tu es un rédacteur de bilans socio-éducatifs en ESMS. Réponds en français, de manière professionnelle et institutionnelle.';
+  const base = API_URL || 'http://localhost:3001';
+  try {
+    const res = await fetch(base + '/api/ai/mistral', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, system, apiKey: key })
+    });
+    if (!res.ok) { const err = await res.text(); console.error('Proxy error', err); return null; }
+    const data = await res.json();
+    return data.result || null;
+  } catch (e) { console.error('Mistral proxy error', e); return null; }
+}
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {

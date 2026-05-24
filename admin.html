@@ -41,6 +41,7 @@
         <button class="tab" data-tab="personnalisation">Personnalisation</button>
         <button class="tab" data-tab="categories">Catégories</button>
         <button class="tab" data-tab="objectifs">Objectifs</button>
+        <button class="tab" data-tab="fonctions">Fonctions</button>
         <button class="tab" data-tab="educateurs">Utilisateurs</button>
         <button class="tab" data-tab="compte">Mon compte</button>
         <button class="tab" data-tab="donnees">Données</button>
@@ -62,6 +63,14 @@
                 <div class="form-group"><label>Email</label><input type="email" id="setEmail" placeholder="contact@foyer.fr"/></div>
               </div>
               <div class="form-group"><label>Adresse</label><textarea id="setAdresse" rows="2" placeholder="Adresse complète…"></textarea></div>
+              <div class="divider" style="margin:.5rem 0"></div>
+              <div class="form-group"><label>Clé API Mistral (IA)</label>
+                <div style="display:flex;gap:.5rem">
+                  <input type="password" id="setAiKey" placeholder="Entrez votre clé API Mistral" style="flex:1"/>
+                  <button class="btn btn-ghost btn-sm" onclick="const e=document.getElementById('setAiKey');e.type=e.type==='password'?'text':'password'">👁</button>
+                </div>
+                <span style="font-size:.72rem;color:var(--muted)">Optionnelle. Active l'assistant IA pour la rédaction des bilans. <a href="https://console.mistral.ai" target="_blank">Obtenir une clé</a></span>
+              </div>
               <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
             </div>
           </div>
@@ -217,6 +226,37 @@
         </div>
       </div>
 
+      <!-- TAB: FONCTIONS -->
+      <div id="tab-fonctions" style="display:none" class="fade-in">
+        <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Fonctions et couleurs</span>
+              <button class="btn btn-accent btn-sm" style="margin-left:auto" onclick="openModal('modalFonction')">+ Ajouter</button>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div id="fonctionList"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">À propos des fonctions</span></div>
+            <div class="card-body">
+              <p style="font-size:.875rem;color:var(--muted);line-height:1.7">Associez une couleur à chaque fonction d'utilisateur. Cette couleur sera utilisée comme fond du badge du rédacteur dans le journal de bord et le tableau de bord.</p>
+              <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.5rem;font-size:.825rem">
+                <div style="display:flex;align-items:center;gap:.5rem"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#3b82f6"></span> Éducateur</div>
+                <div style="display:flex;align-items:center;gap:.5rem"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#8b5cf6"></span> Psychologue</div>
+                <div style="display:flex;align-items:center;gap:.5rem"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#ef4444"></span> Infirmier</div>
+                <div style="display:flex;align-items:center;gap:.5rem"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#10b981"></span> Social</div>
+              </div>
+              <div class="alert alert-info" style="margin-top:1rem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                La correspondance se fait par mot-clé : si la fonction d'un utilisateur contient le nom, la couleur s'applique automatiquement.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB: UTILISATEURS -->
       <div id="tab-educateurs" style="display:none" class="fade-in">
         <div class="grid grid-2" style="gap:1.5rem;align-items:start">
@@ -322,6 +362,24 @@
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- MODAL FONCTION -->
+<div class="modal-overlay" id="modalFonction">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="modalFonctionTitle">Nouvelle fonction</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="fonctionId"/>
+      <div class="form-group"><label class="required">Nom de la fonction</label><input type="text" id="fonctionName" placeholder="Ex : Éducateur, Psychologue…"/></div>
+      <div class="form-group"><label>Couleur du badge</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="fonctionColor" value="#3b82f6" style="width:48px"/><span style="font-size:.8rem;color:var(--muted)">Couleur d'affichage dans le journal</span></div></div>
+      <div class="form-group"><label>Permissions</label><div id="fonctionPermissions" style="display:flex;flex-direction:column;gap:.5rem"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
+      <button class="btn btn-danger btn-sm" id="btnDeleteFonction" style="margin-right:auto;display:none" onclick="deleteFonction()">Supprimer</button>
+      <button class="btn btn-primary" onclick="saveFonction()">Enregistrer</button>
+    </div>
   </div>
 </div>
 
