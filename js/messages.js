@@ -336,18 +336,19 @@ async function aiAssistMessage(action) {
   const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
 
   if (hasKey) {
+    const customSystem = getAiPrompt('messages', action);
     let system = '';
     let prompt = '';
     if (action === 'redaction') {
-      system = 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.';
+      system = customSystem || 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.';
       prompt = 'Rédige un message professionnel court pour communiquer avec un collègue en ESMS.' + (current ? '\n\nComplète ce message :\n' + current : '');
     } else if (action === 'correction') {
       if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.';
+      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.';
       prompt = 'Corrige ce message :\n\n' + current;
     } else if (action === 'reformulation') {
       if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.';
+      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.';
       prompt = 'Reformule ce message de manière professionnelle :\n\n' + current;
     }
     const result = await callMistral(prompt, system);

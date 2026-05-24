@@ -265,18 +265,19 @@ async function aiAssistJournal(action) {
   const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
 
   if (hasKey) {
+    const customSystem = getAiPrompt('journal', action);
     let system = '';
     let prompt = '';
     if (action === 'redaction') {
-      system = 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.';
+      system = customSystem || 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.';
       prompt = `Rédige une courte observation de journal de bord${residentName ? ' pour le résident ' + residentName : ''}. Décris une journée type, une intervention éducative ou un fait notable.` + (current ? '\n\nTexte existant à compléter :\n' + current : '');
     } else if (action === 'correction') {
       if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
+      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
       prompt = 'Corrige ce texte de journal de bord :\n\n' + current;
     } else if (action === 'reformulation') {
       if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.';
+      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.';
       prompt = 'Reformule ce texte de manière professionnelle et institutionnelle :\n\n' + current;
     }
     const result = await callMistral(prompt, system);

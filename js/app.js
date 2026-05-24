@@ -11,7 +11,7 @@ const DB = {
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
     loginHistory:'ftr_login_history', fonctionColors:'ftr_fonction_colors',
-    aiKey:'ftr_ai_key'
+    aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts'
   }
 };
 
@@ -49,7 +49,24 @@ const DEFAULTS = {
     { id: 7, fonction: 'Sportif', color: '#06b6d4', permissions: [] },
     { id: 8, fonction: 'Secrétaire', color: '#ec4899', permissions: [] },
     { id: 9, fonction: 'Admin', color: '#dc2626', permissions: ['edit_residents', 'view_all_incidents', 'validate_incidents', 'access_admin', 'manage_users'] }
-  ]
+  ],
+  aiPrompts: {
+    ppe: {
+      redaction: { system: 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.' },
+      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
+      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.' }
+    },
+    journal: {
+      redaction: { system: 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.' },
+      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
+      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.' }
+    },
+    messages: {
+      redaction: { system: 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.' },
+      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.' },
+      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.' }
+    }
+  }
 };
 
 function initDefaults() {
@@ -68,6 +85,7 @@ function initDefaults() {
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
+  if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
   setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
 }
 
@@ -405,6 +423,19 @@ function canManageUsers(userId) {
 // ── AI ──
 function getAiKey() { return DB.get(DB.keys.aiKey) || ''; }
 function setAiKey(key) { DB.set(DB.keys.aiKey, key); }
+
+function getAiPrompt(module, action) {
+  const prompts = DB.get(DB.keys.aiPrompts) || {};
+  return prompts[module]?.[action]?.system || DEFAULTS.aiPrompts[module]?.[action]?.system || '';
+}
+
+function setAiPrompt(module, action, system) {
+  const prompts = DB.get(DB.keys.aiPrompts) || {};
+  if (!prompts[module]) prompts[module] = {};
+  if (!prompts[module][action]) prompts[module][action] = {};
+  prompts[module][action].system = system;
+  DB.set(DB.keys.aiPrompts, prompts);
+}
 
 async function callMistral(prompt, system) {
   const key = getAiKey();

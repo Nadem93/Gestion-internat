@@ -71,6 +71,14 @@
                 </div>
                 <span style="font-size:.72rem;color:var(--muted)">Optionnelle. Active l'assistant IA pour la rédaction des bilans. <a href="https://console.mistral.ai" target="_blank">Obtenir une clé</a></span>
               </div>
+              <div class="divider" style="margin:.5rem 0"></div>
+              <details style="font-size:.85rem">
+                <summary style="cursor:pointer;font-weight:600;padding:.25rem 0">Instructions IA personnalisées</summary>
+                <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:1rem">
+                  <p style="font-size:.78rem;color:var(--muted)">Personnalisez les instructions système envoyées à l'IA pour chaque module et action. Laissez vide pour utiliser les instructions par défaut.</p>
+                  <div id="aiPromptsContainer"></div>
+                </div>
+              </details>
               <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
             </div>
           </div>

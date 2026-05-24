@@ -116,6 +116,7 @@ function loadSettings() {
   document.getElementById('setEmail').value = s.email || '';
   document.getElementById('setAdresse').value = s.adresse || '';
   document.getElementById('setAiKey').value = getAiKey();
+  renderAiPrompts();
   updatePreview();
 }
 
@@ -140,9 +141,56 @@ function saveSettings() {
   DB.set(DB.keys.settings, data);
   const aiKey = document.getElementById('setAiKey').value.trim();
   setAiKey(aiKey);
+  saveAiPrompts();
   updatePreview();
   renderUserInfo();
   toast('Paramètres enregistrés');
+}
+
+// ── AI PROMPTS ──
+function renderAiPrompts() {
+  const container = document.getElementById('aiPromptsContainer');
+  if (!container) return;
+  const modules = [
+    { id:'ppe', label:'Avenants (PPE)' },
+    { id:'journal', label:'Journal de bord' },
+    { id:'messages', label:'Messages' }
+  ];
+  const actions = [
+    { id:'redaction', label:'Rédaction', icon:'✍' },
+    { id:'correction', label:'Correction', icon:'✓' },
+    { id:'reformulation', label:'Reformulation', icon:'🏛' }
+  ];
+  const prompts = DB.get(DB.keys.aiPrompts) || {};
+  let html = '';
+  for (const mod of modules) {
+    html += `<details style="margin-bottom:.5rem;border:1px solid var(--border);border-radius:var(--r-sm)">
+      <summary style="cursor:pointer;font-weight:600;font-size:.8rem;padding:.5rem .75rem;background:var(--b50)">${mod.label}</summary>
+      <div style="padding:.5rem .75rem;display:flex;flex-direction:column;gap:.6rem">`;
+    for (const act of actions) {
+      const val = prompts[mod.id]?.[act.id]?.system || '';
+      html += `<div>
+        <label style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:2px;display:block">${act.icon} ${act.label}</label>
+        <textarea class="input" style="min-height:40px;font-size:.78rem" data-module="${mod.id}" data-action="${act.id}" placeholder="Instruction système par défaut…">${escHtml(val)}</textarea>
+      </div>`;
+    }
+    html += `</div></details>`;
+  }
+  container.innerHTML = html;
+}
+
+function saveAiPrompts() {
+  const textareas = document.querySelectorAll('#aiPromptsContainer textarea[data-module]');
+  const prompts = DB.get(DB.keys.aiPrompts) || {};
+  textareas.forEach(ta => {
+    const mod = ta.dataset.module;
+    const act = ta.dataset.action;
+    const val = ta.value.trim();
+    if (!prompts[mod]) prompts[mod] = {};
+    if (!prompts[mod][act]) prompts[mod][act] = {};
+    prompts[mod][act].system = val || null; // null = use default
+  });
+  DB.set(DB.keys.aiPrompts, prompts);
 }
 
 // ── CATÉGORIES ──

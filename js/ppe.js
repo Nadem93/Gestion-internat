@@ -229,18 +229,19 @@ async function aiAssist(ppeId, domId, field, action) {
   const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
 
   if (hasKey) {
+    const customSystem = getAiPrompt('ppe', action);
     let system = '';
     let prompt = '';
     if (action === 'redaction') {
-      system = 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.';
+      system = customSystem || 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.';
       prompt = `Rédige un bilan concis pour le domaine "${label}" d'un résident en établissement médico-social.${current ? '\n\nTexte existant à compléter :\n' + current : ''}`;
     } else if (action === 'correction') {
       if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
+      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
       prompt = 'Corrige ce texte :\n\n' + current;
     } else if (action === 'reformulation') {
       if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.';
+      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.';
       prompt = 'Reformule ce texte de manière institutionnelle :\n\n' + current;
     }
     const result = await callMistral(prompt, system);
