@@ -113,9 +113,7 @@
           <div class="chat-input" id="chatInputBar">
             <div style="display:flex;flex-direction:column;flex:1;gap:.25rem">
               <div style="display:flex;gap:.25rem">
-                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('redaction')" title="Rédiger">✍</button>
-                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('correction')" title="Corriger">✓</button>
-                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('reformulation')" title="Reformuler">🏛</button>
+                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage()" title="Reformuler">🏛</button>
               </div>
               <textarea id="chatInput" rows="1" placeholder="Message" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}" disabled style="width:100%;box-sizing:border-box"></textarea>
             </div>

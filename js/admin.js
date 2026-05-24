@@ -157,8 +157,6 @@ function renderAiPrompts() {
     { id:'messages', label:'Messages' }
   ];
   const actions = [
-    { id:'redaction', label:'Rédaction', icon:'✍' },
-    { id:'correction', label:'Correction', icon:'✓' },
     { id:'reformulation', label:'Reformulation', icon:'🏛' }
   ];
   const prompts = DB.get(DB.keys.aiPrompts) || {};

@@ -328,60 +328,34 @@ function formatConvTime(date) {
 }
 
 // ── AI Assist Message ──
-async function aiAssistMessage(action) {
+async function aiAssistMessage() {
   const input = document.getElementById('chatInput');
   if (!input || input.disabled) return;
   const current = input.value || '';
+  if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
   const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
 
   if (hasKey) {
-    const customSystem = getAiPrompt('messages', action);
-    let system = '';
-    let prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.';
-      prompt = 'Rédige un message professionnel court pour communiquer avec un collègue en ESMS.' + (current ? '\n\nComplète ce message :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.';
-      prompt = 'Corrige ce message :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.';
-      prompt = 'Reformule ce message de manière professionnelle :\n\n' + current;
-    }
+    const customSystem = getAiPrompt('messages', 'reformulation');
+    const system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.';
+    const prompt = 'Reformule ce message de manière professionnelle :\n\n' + current;
     const result = await callMistral(prompt, system);
     if (result) {
       input.value = result;
       autoResizeTextarea(input);
-      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
+      toast('✓ Reformulation (Mistral AI)', 'success');
       return;
     }
     toast('API Mistral indisponible, mode local', 'warning');
   }
 
   // Fallback local
-  let result = '';
-  if (action === 'redaction') {
-    const templates = [
-      'Bonjour, je vous confirme le rendez-vous de demain après-midi.',
-      'Pour information, l\'atelier de jeudi est maintenu.',
-      'Suite à notre échange, voici les points à retenir pour la réunion de demain.'
-    ];
-    result = current ? current + '\n\n' + templates[Math.floor(Math.random() * templates.length)] : templates[Math.floor(Math.random() * templates.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bils on\b/g, 'ils ont').replace(/\belle on\b/g, 'elle a').replace(/\bau jour d\'aujourd\'hui\b/g, 'actuellement');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bveut\b/g, 'souhaite').replace(/\bpeut\b/g, 'est en mesure de').replace(/\bva\b/g, 'envisage de');
-  }
+  const result = current.replace(/\bveut\b/g, 'souhaite').replace(/\bpeut\b/g, 'est en mesure de').replace(/\bva\b/g, 'envisage de');
 
   if (result) {
     input.value = result;
     autoResizeTextarea(input);
-    toast('✓ ' + labels[action] + ' (mode local)', 'success');
+    toast('✓ Reformulation (mode local)', 'success');
   }
 }
 
