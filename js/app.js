@@ -337,18 +337,55 @@ function initMenuPopup() {
 
   // Add user avatar to header-right
   const hr = header.querySelector('.header-right');
-  if (hr) {
-    if (!document.getElementById('headerUserBox')) {
-      const session = Auth.getSession();
-      const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
-      const initial = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
-      const userBox = document.createElement('div');
-      userBox.id = 'headerUserBox';
-      userBox.style.cssText = 'display:flex;align-items:center;gap:.5rem;margin-left:1rem';
-      userBox.innerHTML = `<span id="headerUserName" style="font-size:.78rem;font-weight:600;color:var(--g700)">${name}</span>
-        <div id="headerUserAvatar" style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem">${initial}</div>`;
-      hr.appendChild(userBox);
-    }
+  if (hr && !document.getElementById('headerUserBox')) {
+    const session = Auth.getSession();
+    const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
+    const initial = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
+    const userBox = document.createElement('div');
+    userBox.id = 'headerUserBox';
+    userBox.style.cssText = 'display:flex;align-items:center;gap:.5rem;margin-left:1rem;cursor:pointer;position:relative';
+    userBox.title = 'Profil';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.id = 'headerUserName';
+    nameSpan.style.cssText = 'font-size:.78rem;font-weight:600;color:var(--g700)';
+    nameSpan.textContent = name;
+
+    const avatarDiv = document.createElement('div');
+    avatarDiv.id = 'headerUserAvatar';
+    avatarDiv.style.cssText = 'width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem';
+    avatarDiv.textContent = initial;
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'userDropdown';
+    dropdown.style.cssText = 'display:none;position:absolute;top:100%;right:0;margin-top:6px;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:1000;min-width:180px;padding:.35rem';
+
+    const ddName = document.createElement('div');
+    ddName.style.cssText = 'padding:.6rem .85rem;border-bottom:1px solid var(--border);font-size:.8rem;font-weight:600;color:var(--g700)';
+    ddName.textContent = name;
+
+    const logoutBtn = document.createElement('div');
+    logoutBtn.id = 'userLogoutBtn';
+    logoutBtn.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.6rem .85rem;cursor:pointer;border-radius:6px;color:#ef4444;font-size:.82rem;font-weight:500';
+    logoutBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Déconnexion';
+
+    dropdown.appendChild(ddName);
+    dropdown.appendChild(logoutBtn);
+    userBox.appendChild(nameSpan);
+    userBox.appendChild(avatarDiv);
+    userBox.appendChild(dropdown);
+
+    userBox.onclick = (e) => {
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      e.stopPropagation();
+    };
+    logoutBtn.onclick = (e) => {
+      e.stopPropagation();
+      Auth.logout();
+      location.href = 'index.html';
+    };
+
+    hr.appendChild(userBox);
   }
 
   // Create popup if not exists (skip on accueil page)
@@ -391,6 +428,11 @@ function initMenuPopup() {
     };
     document.getElementById('menuPopupBackdrop').onclick = () => popup.classList.remove('open');
   }
+
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('userDropdown');
+    if (dd && !e.target.closest('#headerUserBox')) dd.style.display = 'none';
+  });
 }
 
 function positionPopup() {

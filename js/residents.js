@@ -184,11 +184,9 @@ function populateFilterObjectifs() {
 // ── FILTRES ──
 function getResidents() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  const statut = document.getElementById('filterStatut')?.value || '';
   const objectif = document.getElementById('filterObjectif')?.value || '';
   let list = DB.get(DB.keys.residents) || [];
   if (q) list = list.filter(r => `${r.prenom} ${r.nom}`.toLowerCase().includes(q));
-  if (statut) list = list.filter(r => r.statut === statut);
   if (objectif) list = list.filter(r => (r.objectifs || []).includes(String(objectif)));
   return list;
 }
@@ -472,7 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderResidents();
 
   document.getElementById('searchInput').addEventListener('input', renderResidents);
-  document.getElementById('filterStatut').addEventListener('change', renderResidents);
   document.getElementById('filterObjectif').addEventListener('change', renderResidents);
   document.getElementById('viewGrid').addEventListener('click', () => { currentView='grid'; renderResidents(); });
   document.getElementById('viewList').addEventListener('click', () => { currentView='list'; renderResidents(); });

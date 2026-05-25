@@ -32,12 +32,9 @@ function renderContacts() {
     return;
   }
   container.innerHTML = `<div class="grid grid-5" style="gap:.75rem">${contacts.map(c => {
-    const color = contactColor(c.organisme);
-    const init = initialsOrg(c.organisme);
-    return `<div class="res-card" style="border-color:${color};background:${color}08" onclick="openEditContact('${c.id}')">
-      <div class="res-card-cover" style="background:${color}"></div>
+    return `<div class="res-card" style="border:1px solid #cbd5e1;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.08)" onclick="openEditContact('${c.id}')">
+      <div class="res-card-cover" style="background:#64748b;opacity:.5"></div>
       <div class="res-card-body">
-        <div class="res-card-photo" style="background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#fff">${init}</div>
         <div class="res-card-name" style="font-size:.82rem">${escapeHtml(c.organisme)}</div>
         <div class="res-card-meta">${escapeHtml(c.nom)}${c.fonction ? ' · '+escapeHtml(c.fonction) : ''}</div>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:center;margin-top:.25rem">

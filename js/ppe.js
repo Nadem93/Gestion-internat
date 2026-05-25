@@ -482,29 +482,25 @@ function renderAvenant() {
   }
 
   const residents = DB.get(DB.keys.residents) || [];
-  container.innerHTML = `<div class="grid grid-5" style="gap:.75rem">${list.map(p => {
+  container.innerHTML = `<table class="table" style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Résident</th>
+      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Date</th>
+      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Statut</th>
+      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Référent</th>
+      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Actions</th>
+    </tr></thead>
+    <tbody>${list.map((p, i) => {
     const r = residents.find(x => x.id === p.residentId);
-    const coverColor = r?.color || (p.statut === 'actif' ? '#16a34a' : p.statut === 'termine' ? '#ef4444' : '#94a3b8');
-    const photoEl = r?.photo
-      ? `<img src="${r.photo}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
-      : `<div class="res-card-photo" style="background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff">${initials(r?.prenom||'', r?.nom||'') || (p.residentName||'?')[0].toUpperCase()}</div>`;
-    const ageStr = r?.dob ? (() => { const a = Math.floor((Date.now()-new Date(r.dob).getTime())/31557600000); return a+' ans'; })() : '';
-    return `<div class="res-card" style="border-color:${coverColor};background:${coverColor}08" onclick="openAvenant('${p.id}')">
-      <div class="res-card-cover" style="background:${coverColor}"></div>
-      <div class="res-card-body">
-        ${photoEl}
-        <div class="res-card-name">${escHtml(p.residentName)}</div>
-        <div class="res-card-meta">${ageStr}${r?.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}${p.referent ? ' · Réf. '+escHtml(p.referent) : ''}</div>
-        <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:center;margin-top:.25rem">
-          <span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
-          <span class="badge badge-blue" style="font-size:.65rem">📅 ${formatDate(p.dateRedaction)}</span>
-        </div>
-      </div>
-      <div class="res-card-footer" style="justify-content:center">
-        <span style="font-size:.7rem;color:var(--muted)">Avenant · ${formatDate(p.dateRedaction)}</span>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+    const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
+    return `<tr style="cursor:pointer;border-bottom:1px solid var(--border);background:${i%2===0?'transparent':'#eef2ff'};transition:background .15s" onmouseenter="this.style.background='#dbeafe'" onmouseleave="this.style.background='${i%2===0?'transparent':'#eef2ff'}'" onclick="openAvenant('${p.id}')">
+      <td style="padding:.7rem .75rem"><div style="display:flex;align-items:center;gap:.6rem"><div style="width:28px;height:28px;border-radius:50%;background:${r?.color||'var(--primary)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.6rem;color:#fff;flex-shrink:0">${initials(r?.prenom, r?.nom)}</div><span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
+      <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${formatDate(p.dateRedaction)}</td>
+      <td style="padding:.7rem .75rem"><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></td>
+      <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${p.referent ? escHtml(p.referent) : '—'}</td>
+      <td style="padding:.7rem .75rem"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAvenant('${p.id}')">Voir</button></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
 }
 
 function editAvenant(id) {
