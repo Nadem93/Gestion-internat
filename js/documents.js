@@ -79,7 +79,7 @@ function renderDocuments() {
         <td style="padding:.6rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
         <td style="padding:.6rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
         <td style="padding:.6rem .75rem;text-align:center;white-space:nowrap">
-          <button class="btn btn-sm" style="background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:.25rem .5rem" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg width="16" height="16" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6 v14 m-5 -5 l5 5 5 -5"/><path d="m10 28 v4 h 20 v-4"/></svg></button>
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:.25rem .5rem" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg width="18" height="18" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path class="dl-arrow" d="m20 6 v14 m-5 -5 l5 5 5 -5"/><path class="dl-base" d="m10 28 v4 h 20 v-4"/></svg></button>
           <button class="btn btn-sm admin-only" style="background:#ef4444;color:#fff;margin-left:.35rem;display:inline-flex;align-items:center;justify-content:center;padding:.25rem .5rem;font-size:1rem;line-height:1" onclick="deleteDocument('${d.id}','${d.residentId}')" title="Supprimer">✕</button>
         </td>
       </tr>`;
