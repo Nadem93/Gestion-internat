@@ -56,25 +56,35 @@ function renderDocuments() {
     return;
   }
 
-  container.innerHTML = `<div class="grid grid-4" style="gap:.85rem">${filtered.map(d => {
+  container.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
+    <thead>
+      <tr style="text-align:left;border-bottom:2px solid var(--border);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">
+        <th style="padding:.5rem .75rem">Document</th>
+        <th style="padding:.5rem .75rem">Résident</th>
+        <th style="padding:.5rem .75rem">Date</th>
+        <th style="padding:.5rem .75rem">Échéance</th>
+        <th style="padding:.5rem .75rem;text-align:center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>${filtered.map(d => {
     const overdue = d.dueDate && d.dueDate < today() && !d.done;
-    return `<div class="card" style="border-color:${overdue ? '#ef4444' : 'var(--border)'}">
-      <div class="card-body" style="padding:1rem">
-        <div style="font-size:2rem;margin-bottom:.5rem;text-align:center">${docTypeIcon(d.mimeType)}</div>
-        <div style="font-weight:600;font-size:.85rem;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(d.name)}">${escHtml(d.name)}</div>
-        <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:2px">${escHtml(d.residentName)}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin-top:.5rem;font-size:.7rem;color:var(--muted)">
-          ${d.docDate ? `<span>📅 ${formatDate(d.docDate)}</span>` : ''}
-          ${d.dueDate ? `<span style="color:${overdue ? '#ef4444' : 'var(--muted)'}">⏰ ${formatDate(d.dueDate)}${overdue ? ' (Expiré)' : ''}</span>` : ''}
-        </div>
-        <div style="display:flex;gap:.35rem;margin-top:.75rem;justify-content:center;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${d.residentId}')">📥</button>
-          <button class="btn btn-ghost btn-sm" onclick="editDocModal('${d.id}','${d.residentId}')">✎</button>
-          <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocument('${d.id}','${d.residentId}')">✕</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+    return `<tr style="border-bottom:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+        <td style="padding:.6rem .75rem">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:1.2rem">${docTypeIcon(d.mimeType)}</span>
+            <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
+          </div>
+        </td>
+        <td style="padding:.6rem .75rem;color:var(--muted)">${escHtml(d.residentName)}</td>
+        <td style="padding:.6rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
+        <td style="padding:.6rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
+        <td style="padding:.6rem .75rem;text-align:center">
+          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger">📥</button>
+          <button class="btn btn-ghost btn-sm" onclick="editDocModal('${d.id}','${d.residentId}')" title="Modifier">✎</button>
+          <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocument('${d.id}','${d.residentId}')" title="Supprimer">✕</button>
+        </td>
+      </tr>`;
+  }).join('')}</tbody></table>`;
 }
 
 function openDocModal(residentId) {
