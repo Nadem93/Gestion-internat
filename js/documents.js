@@ -79,7 +79,7 @@ function renderDocuments() {
         <td style="padding:.6rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
         <td style="padding:.6rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
         <td style="padding:.6rem .75rem;text-align:center;white-space:nowrap">
-          <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="40" height="40" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
+          <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="28" height="28" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
         </td>
       </tr>`;
   }).join('')}</tbody></table>`;
