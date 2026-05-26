@@ -69,9 +69,43 @@ function renderDocuments() {
         <th style="padding:.5rem .75rem;text-align:center">Télécharger</th>
       </tr>
     </thead>
-    <tbody>${filtered.map((d, i) => {
-    const overdue = d.dueDate && d.dueDate < today() && !d.done;
-    return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${i%2===0?'var(--g50)':'var(--g100)'}'">
+    <tbody>${(() => {
+    const filterRes = document.getElementById('docFilterResident')?.value;
+    const groupByCat = !!filterRes;
+    let catRows = '';
+    if (groupByCat) {
+      const groups = {};
+      filtered.forEach(d => { const c = d.category || 'autre'; if(!groups[c]) groups[c] = []; groups[c].push(d); });
+      const catOrder = ['administratif','medical','scolaire','judiciaire','contrat','autre'];
+      const catLabels = {administratif:'Administratif',medical:'Médical',scolaire:'Scolaire',judiciaire:'Judiciaire',contrat:'Contrat',autre:'Autre'};
+      let idx = 0;
+      catOrder.forEach(cat => {
+        const docs = groups[cat]; if(!docs) return;
+        catRows += `<tr style="background:var(--g300);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)"><td colspan="6" style="padding:.3rem .75rem">${catLabels[cat]||cat}</td></tr>`;
+        docs.forEach(d => {
+          const overdue = d.dueDate && d.dueDate < today() && !d.done;
+          catRows += `<tr style="border-bottom:1px solid var(--border);background:${idx%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${idx%2===0?'var(--g50)':'var(--g100)'}'">
+        <td style="padding:.35rem .75rem">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:1.2rem">${docTypeIcon(d.mimeType)}</span>
+            <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
+          </div>
+        </td>
+        <td style="padding:.35rem .75rem;color:var(--muted)">${escHtml(d.residentName)}</td>
+        <td style="padding:.35rem .75rem;color:var(--muted)">${catLabels[cat]||d.category||'—'}</td>
+        <td style="padding:.35rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
+        <td style="padding:.35rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
+        <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
+          <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
+        </td>
+      </tr>`;
+          idx++;
+        });
+      });
+    } else {
+      filtered.forEach((d, i) => {
+        const overdue = d.dueDate && d.dueDate < today() && !d.done;
+        catRows += `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${i%2===0?'var(--g50)':'var(--g100)'}'">
         <td style="padding:.35rem .75rem">
           <div style="display:flex;align-items:center;gap:.5rem">
             <span style="font-size:1.2rem">${docTypeIcon(d.mimeType)}</span>
@@ -86,7 +120,10 @@ function renderDocuments() {
           <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
         </td>
       </tr>`;
-  }).join('')}</tbody></table>`;
+      });
+    }
+    return catRows;
+  })()}</tbody></table>`;
 }
 
 function openDocModal(residentId) {
