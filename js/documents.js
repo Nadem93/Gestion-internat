@@ -62,6 +62,7 @@ function renderDocuments() {
     <thead>
       <tr style="text-align:left;border-bottom:2px solid var(--border);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">
         <th style="padding:.5rem .75rem">Document</th>
+        <th style="padding:.5rem .75rem">Catégorie</th>
         <th style="padding:.5rem .75rem">Résident</th>
         <th style="padding:.5rem .75rem">Date</th>
         <th style="padding:.5rem .75rem">Échéance</th>
@@ -77,6 +78,7 @@ function renderDocuments() {
             <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
           </div>
         </td>
+        <td style="padding:.35rem .75rem;color:var(--muted)">${d.category ? escHtml(d.category.charAt(0).toUpperCase()+d.category.slice(1)) : '—'}</td>
         <td style="padding:.35rem .75rem;color:var(--muted)">${escHtml(d.residentName)}</td>
         <td style="padding:.35rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
         <td style="padding:.35rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
