@@ -346,29 +346,7 @@ function renderDashboard() {
   const jEl = document.getElementById('recentJournal');
   const cats = DB.get(DB.keys.categories)||[];
   if (journal.length) {
-    const session = Auth.getSession();
-    const allJRes = DB.get(DB.keys.residents)||[];
-    jEl.innerHTML = journal.map(e => {
-      const cat = cats.find(c=>c.id==e.categorie);
-      const unread = session && (!e.readBy || !e.readBy.includes(session.userId));
-      const jRes = allJRes.find(r=>r.id===e.residentId);
-      const ringColor = e.residentColor||'#3b82f6';
-      const avatar = jRes?.photo
-        ? `<img src="${jRes.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:3px solid ${unread?ringColor:'transparent'};box-shadow:${unread?'0 0 12px 2px '+ringColor:'none'}" alt=""/>`
-        : `<div style="width:36px;height:36px;border-radius:50%;background:${ringColor};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0;box-shadow:${unread?'0 0 12px 2px '+ringColor:'none'}">${(e.resident||'?')[0].toUpperCase()}</div>`;
-      return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid rgba(0,0,0,.08);${unread?'background:#fff7e6':''}">
-        ${avatar}
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">
-            <span style="font-weight:600;font-size:.875rem;color:#1e293b">${escHtml(e.resident||'—')}</span>
-            ${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}
-            <span style="font-size:.7rem;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 7px;border-radius:10px;margin-left:auto">${escHtml(getJournalAuthor(e))}</span>
-          </div>
-          <div style="font-size:.8rem;color:rgba(0,0,0,.5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(e.contenu||'')}</div>
-          <div style="font-size:.72rem;color:rgba(0,0,0,.35);margin-top:3px">${formatDateTime(e.date)}</div>
-        </div>
-      </div>`;
-    }).join('');
+    jEl.innerHTML = journal.map(e=>{ const cat = cats.find(c=>c.id==e.categorie); return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid rgba(0,0,0,.08)"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px"><span style="font-weight:600;font-size:.875rem;color:#1e293b">${escHtml(e.resident||'—')}</span>${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}<span style="font-size:.7rem;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 7px;border-radius:10px;margin-left:auto">${escHtml(getJournalAuthor(e))}</span></div><div style="font-size:.8rem;color:rgba(0,0,0,.5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(e.contenu||'')}</div><div style="font-size:.72rem;color:rgba(0,0,0,.35);margin-top:3px">${formatDateTime(e.date)}</div></div></div>`; }).join('');
   }
 }
 renderDashboard();

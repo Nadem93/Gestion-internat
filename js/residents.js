@@ -52,7 +52,7 @@ function updatePhotoPreview(src) {
   const removeBtn = document.getElementById('photoRemoveBtn');
   if (!preview) return;
   if (src) {
-    preview.innerHTML = `<img src="${src}" alt="Photo" style="width:72px;height:72px;border-radius:8px;object-fit:cover;border:2px solid var(--border)"/>`;
+    preview.innerHTML = `<img src="${src}" alt="Photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"/>`;
     if (removeBtn) removeBtn.style.display = '';
   } else {
     preview.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="1.5" style="width:32px;height:32px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
@@ -240,8 +240,8 @@ function residentRow(r) {
   const objs = DB.get(DB.keys.objectives) || [];
   const resObjs = (r.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))?.name).filter(Boolean);
   const photoEl = r.photo
-    ? `<img src="${r.photo}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid var(--border)" alt=""/>`
-    : `<div style="width:32px;height:32px;border-radius:8px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:#fff;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
+    ? `<img src="${r.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border)" alt=""/>`
+    : `<div style="width:32px;height:32px;border-radius:50%;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:#fff;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
   const session = Auth.getSession();
   const canEdit = session && (session.role === 'admin' || session.role === 'moderator' || canEditResidents(session.userId));
   return `<tr>
@@ -269,8 +269,8 @@ function showDetail(id) {
   const type = getStructureType();
 
   const photoEl = r.photo
-    ? `<img src="${r.photo}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:3px solid var(--border);box-shadow:var(--shadow-md)" alt=""/>`
-    : `<div style="width:80px;height:80px;border-radius:8px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
+    ? `<img src="${r.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border);box-shadow:var(--shadow-md)" alt=""/>`
+    : `<div style="width:80px;height:80px;border-radius:50%;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
 
   let extraFields = '';
   if (type === 'enfants' || type === 'mixte') {
@@ -498,7 +498,7 @@ function qeUpdatePhotoPreview(src) {
   const el = document.getElementById('qePhotoPreview');
   if (!el) return;
   if (src) {
-    el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>`;
+    el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
     document.getElementById('qePhotoRemove').style.display = '';
   } else {
     el.innerHTML = '—';

@@ -74,7 +74,7 @@ function renderConvs() {
     const time = lastMsg ? formatConvTime(new Date(lastMsg.date)) : '';
     const preview = lastMsg ? (lastMsg.body||'') : '';
 
-    return `<div class="chat-conv ${currentConvId===conv.id?'active':''}${unread?' unread':''}" onclick="selectConv('${conv.id}')">
+    return `<div class="chat-conv ${currentConvId===conv.id?'active':''}" onclick="selectConv('${conv.id}')">
       <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
       <div class="chat-conv-info">
         <div class="chat-conv-name">${escHtml(name)}${unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0"></span>' : ''}</div>
