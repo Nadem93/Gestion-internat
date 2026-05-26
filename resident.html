@@ -70,8 +70,8 @@ function renderViewMode(r) {
   const presenceStatus = todayPresences[currentResidentId] || (r.statut === 'sorti' ? 'sorti' : r.statut);
 
   const photoEl = r.photo
-    ? `<img src="${r.photo}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:var(--shadow-md)" alt=""/>`
-    : `<div style="width:96px;height:96px;border-radius:50%;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#fff;box-shadow:var(--shadow-md)">${initials(r.prenom,r.nom)}</div>`;
+    ? `<img src="${r.photo}" style="width:96px;height:96px;border-radius:12px;object-fit:cover;border:3px solid #fff;box-shadow:var(--shadow-md)" alt=""/>`
+    : `<div style="width:96px;height:96px;border-radius:12px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#fff;box-shadow:var(--shadow-md)">${initials(r.prenom,r.nom)}</div>`;
 
   const infoRow = (label, value) => value ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${escHtml(value)}</div></div>` : '';
 
