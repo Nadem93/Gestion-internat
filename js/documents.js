@@ -78,9 +78,9 @@ function renderDocuments() {
         <td style="padding:.6rem .75rem;color:var(--muted)">${escHtml(d.residentName)}</td>
         <td style="padding:.6rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
         <td style="padding:.6rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
-        <td style="padding:.6rem .75rem;text-align:center">
-          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger">📥</button>
-          <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocument('${d.id}','${d.residentId}')" title="Supprimer">✕</button>
+        <td style="padding:.6rem .75rem;text-align:center;white-space:nowrap">
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff" onclick="downloadDoc('${d.id}','${d.residentId}')">📥 Télécharger</button>
+          <button class="btn btn-sm admin-only" style="background:#ef4444;color:#fff;margin-left:.35rem" onclick="deleteDocument('${d.id}','${d.residentId}')">✕ Supprimer</button>
         </td>
       </tr>`;
   }).join('')}</tbody></table>`;
