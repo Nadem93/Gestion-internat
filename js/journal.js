@@ -44,12 +44,18 @@ function renderEntries() {
     el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Aucune entrée</h3><p>Commencez à documenter les événements.</p></div>`;
     return;
   }
+  const session = Auth.getSession();
   el.innerHTML = list.map(e => {
     const cat = cats.find(c => String(c.id) === String(e.categorie));
     const jRes = journalResidents.find(r => r.id === e.residentId);
+    const unread = session && (!e.readBy || !e.readBy.includes(session.userId));
+    const ringColor = e.residentColor||'#3b82f6';
+    const avatar = jRes?.photo
+      ? `<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${ringColor};box-shadow:0 0 8px ${ringColor}" alt=""/>`
+      : `<div style="width:32px;height:32px;border-radius:8px;background:${e.residentColor||'var(--blue)'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;flex-shrink:0;box-shadow:0 0 8px ${ringColor}">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`;
     return `<div class="entry-card ${e.id === selectedEntryId ? 'selected' : ''}" onclick="selectEntry('${e.id}')">
       <div class="entry-header">
-        ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
+        ${avatar}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
             <span style="font-weight:700;font-size:.875rem">${escHtml(e.resident)||'—'}</span>
