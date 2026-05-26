@@ -314,9 +314,13 @@ function renderChat() {
           const f = ru.fonction.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
           const match = fc.find(x => {
             const key = x.fonction.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return f.includes(key) || key.split(' ').some(w => w.length > 3 && f.includes(w));
+            return f.includes(key) || key.split(' ').some(kw => kw.length > 3 && f.includes(kw)) || f.split(' ').some(fw => key.includes(fw));
           });
           if (match) rColor = match.color;
+        }
+        if (rColor === '#8e8e93') {
+          const pool = ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#6366f1','#dc2626','#14b8a6'];
+          rColor = pool[Math.abs(rid) % pool.length];
         }
         return `<div style="width:16px;height:16px;border-radius:50%;background:${rColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:.45rem;font-weight:700;border:1.5px solid ${isOwn?'#007aff':'#e5e5ea'}" title="${escHtml(ru?.['prenom']||'') + ' ' + escHtml(ru?.['nom']||'')}">${rInit}</div>`;
       }).join('')}
