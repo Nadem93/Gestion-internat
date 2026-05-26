@@ -63,7 +63,7 @@ function renderDocuments() {
         <th style="padding:.5rem .75rem">Résident</th>
         <th style="padding:.5rem .75rem">Date</th>
         <th style="padding:.5rem .75rem">Échéance</th>
-        <th style="padding:.5rem .75rem;text-align:center">Actions</th>
+        <th style="padding:.5rem .75rem;text-align:center">Télécharger</th>
       </tr>
     </thead>
     <tbody>${filtered.map((d, i) => {
