@@ -308,12 +308,15 @@ function renderChat() {
       ${readers.map(rid => {
         const ru = users.find(x => String(x.id) === String(rid));
         const rInit = ((ru?.prenom||'')[0]||'') + ((ru?.nom||'')[0]||'') || '?';
-        const pool = ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#6366f1','#dc2626','#14b8a6'];
-        let rColor = pool[Math.abs(rid) % pool.length];
+        let rColor = '#8e8e93';
         if (ru?.fonction) {
           const fc = DB.get(DB.keys.fonctionColors) || [];
-          const f = fc.find(x => ru.fonction.toLowerCase().includes(x.fonction.toLowerCase()));
-          if (f) rColor = f.color;
+          const f = ru.fonction.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const match = fc.find(x => {
+            const key = x.fonction.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            return f.includes(key) || key.split(' ').some(w => w.length > 3 && f.includes(w));
+          });
+          if (match) rColor = match.color;
         }
         return `<div style="width:16px;height:16px;border-radius:50%;background:${rColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:.45rem;font-weight:700;border:1.5px solid ${isOwn?'#007aff':'#e5e5ea'}" title="${escHtml(ru?.['prenom']||'') + ' ' + escHtml(ru?.['nom']||'')}">${rInit}</div>`;
       }).join('')}
