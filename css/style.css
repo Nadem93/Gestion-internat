@@ -42,7 +42,7 @@
 }
 
 html{scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,#b8b0d4,#f5f0fc);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
 ::selection{background:rgba(59,130,246,.15);color:var(--text)}
 
 /* ── LAYOUT ── */
@@ -113,6 +113,62 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .stat-change{font-size:.72rem;color:var(--muted)}
 .stat-change.up{color:var(--green)}
 .stat-change.down{color:var(--red)}
+
+/* ── STAT CARD GLASS (CodePen-inspired) ── */
+.stat-card-glass{
+  background:rgba(255,255,255,.65);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:2px solid rgba(255,255,255,.5);
+  border-radius:20px;
+  padding:1.25rem;
+  display:flex;flex-direction:column;gap:.625rem;
+  color:#1e293b;
+  transition:transform .3s ease,box-shadow .3s ease,background .3s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);
+}
+.stat-card-glass:hover{
+  transform:scale(1.04) rotate(-.8deg);
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  background:rgba(255,255,255,.8);
+}
+.stat-card-glass .stat-label{color:rgba(0,0,0,.55);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.stat-card-glass .stat-card-top{display:flex;align-items:flex-start;justify-content:space-between}
+.stat-card-glass .stat-num{font-size:1.5rem;font-weight:800;color:#1e293b;line-height:1}
+.stat-card-glass .stat-change{font-size:.68rem;color:rgba(0,0,0,.5)}
+.stat-card-glass .stat-icon{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 10px currentColor;
+}
+.stat-card-glass .stat-icon svg{width:20px;height:20px}
+.stat-card-glass .stat-icon.blue{background:rgba(59,130,246,.2);color:var(--blue)}
+.stat-card-glass .stat-icon.green{background:rgba(16,185,129,.2);color:var(--green)}
+.stat-card-glass .stat-icon.orange{background:rgba(232,93,4,.2);color:var(--accent)}
+.stat-card-glass .stat-icon.purple{background:rgba(139,92,246,.2);color:var(--purple)}
+.stat-card-glass .stat-icon.red{background:rgba(239,68,68,.2);color:var(--red)}
+.stat-card-glass .stat-icon.teal{background:rgba(6,182,212,.2);color:var(--teal)}
+
+/* ── CARD GLASS ── */
+.card-glass{
+  background:rgba(255,255,255,.65);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:2px solid rgba(255,255,255,.5);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);
+  transition:transform .3s ease,box-shadow .3s ease,background .3s ease;
+}
+.card-glass:hover{box-shadow:0 8px 24px rgba(0,0,0,.2);background:rgba(255,255,255,.8)}
+.card-glass .card-header{
+  padding:1.15rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex;align-items:center;gap:.75rem;
+}
+.card-glass .card-title{font-size:.9rem;font-weight:700;color:#1e293b}
+.card-glass .card-body{padding:1.5rem}
+.card-glass .card-body > .empty p{color:rgba(0,0,0,.5)}
+.card-glass .card-body > .empty svg{color:rgba(0,0,0,.35)}
+.card-glass .btn-ghost,.stat-card-glass .btn-ghost{color:rgba(0,0,0,.6)}
+.card-glass .btn-ghost:hover,.stat-card-glass .btn-ghost:hover{background:rgba(0,0,0,.06);color:#1e293b}
 
 /* ── GRIDS ── */
 .grid{display:grid;gap:1.5rem}
@@ -385,20 +441,24 @@ tbody tr:hover{background:var(--g50)}
 .photo-remove { font-size:.72rem;color:var(--red);cursor:pointer;background:none;border:none;padding:0;margin-top:3px;display:block;font-weight:600;transition:opacity var(--t)}
 .photo-remove:hover { opacity:.7;text-decoration:underline }
 
-/* ── RESIDENT CARD v2 ── */
+/* ── RESIDENT CARD v4 (Glassmorphism — CodePen NPWmbEM) ── */
 .res-card {
-  background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);
-  overflow:hidden;cursor:pointer;transition:box-shadow var(--t),transform var(--t),border-color var(--t);
+  border:2px solid rgba(255,255,255,.5);border-radius:20px;
+  overflow:hidden;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease,background .3s ease;
   display:flex;flex-direction:column;
+  background:rgba(255,255,255,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:#1e293b;box-shadow:0 4px 16px rgba(0,0,0,.15);
+  aspect-ratio:1.6/1;min-width:0;
 }
-.res-card .res-card-body{flex:1}
-.res-card:hover { box-shadow:var(--shadow-xl);transform:translateY(-3px);border-color:transparent; }
-.res-card-cover { height:6px;background:var(--blue); }
-.res-card-body { padding:1.1rem 1.25rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.4rem; }
-.res-card-photo { width:68px;height:68px;border-radius:50%;border:3px solid #fff;box-shadow:var(--shadow-md);flex-shrink:0;object-fit:cover; }
-.res-card-name { font-weight:800;font-size:.9rem;color:var(--text); }
-.res-card-meta { font-size:.72rem;color:var(--muted); }
-.res-card-footer { padding:.625rem 1.25rem;background:var(--g50);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center; }
+.res-card .res-card-body{flex:1;display:flex;flex-direction:row;align-items:center;padding:.75rem 1rem;gap:.85rem}
+.res-card:hover { transform:scale(1.04) rotate(-.8deg);box-shadow:0 8px 24px rgba(0,0,0,.2);background:rgba(255,255,255,.8); }
+.res-card-cover { display:none }
+.res-card-photo { width:80px;height:80px;border-radius:50%;border:3px solid var(--card-color,#f7c59f);box-shadow:0 0 14px var(--card-color,#f7c59f);flex-shrink:0;object-fit:cover;transition:transform .5s ease; }
+.res-card:hover .res-card-photo { transform:rotate(360deg); }
+.res-card-body .res-card-info { display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:0 }
+.res-card-name { font-weight:800;font-size:.85rem;color:var(--card-color,#1e293b); }
+.res-card-meta { font-size:.7rem;color:rgba(0,0,0,.55); }
+.res-card-footer { display:none }
 
 /* ── TYPE BADGE ── */
 .type-pill { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--r-full);font-size:.72rem;font-weight:700;border:1px solid; }

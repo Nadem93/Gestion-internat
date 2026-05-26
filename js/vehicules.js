@@ -143,3 +143,4 @@ function escapeAttr(s) {
 }
 
 document.addEventListener('DOMContentLoaded', initVehicules);
+if (typeof registerPageInit === 'function') registerPageInit('vehicules', initVehicules);

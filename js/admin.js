@@ -630,11 +630,10 @@ function renderLoginHistory() {
 }
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded', () => {
+function initAdmin() {
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => activateTab(t.dataset.tab));
   });
-
   loadSettings();
   loadUser();
   loadBranding();
@@ -645,17 +644,16 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEducateurs();
   initLogoUpload();
   renderLoginHistory();
-
   ['setEtab','setVille','setFiness','setTel','setEmail'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', updatePreview);
   });
-
   document.querySelectorAll('input[name="typeStructure"]').forEach(r => {
     r.addEventListener('change', highlightTypeSelected);
   });
-
   document.getElementById('modalCat').querySelector('.modal-close').addEventListener('click', resetCatForm);
   document.getElementById('modalObj').querySelector('.modal-close').addEventListener('click', resetObjForm);
   document.getElementById('modalFonction')?.querySelector('.modal-close')?.addEventListener('click', resetFonctionForm);
   document.getElementById('modalEdu').querySelector('.modal-close').addEventListener('click', resetEducateurForm);
-});
+}
+document.addEventListener('DOMContentLoaded', initAdmin);
+if (typeof registerPageInit === 'function') registerPageInit('admin', initAdmin);

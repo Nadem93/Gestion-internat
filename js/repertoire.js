@@ -135,3 +135,4 @@ function escapeHtml(s) {
 }
 
 document.addEventListener('DOMContentLoaded', renderContacts);
+if (typeof registerPageInit === 'function') registerPageInit('repertoire', renderContacts);

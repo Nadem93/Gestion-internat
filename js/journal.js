@@ -41,15 +41,17 @@ function renderEntries() {
   const countEl = document.getElementById('journalCount');
   countEl.textContent = `${list.length} entrée${list.length > 1 ? 's' : ''}`;
   const cats = DB.get(DB.keys.categories) || [];
+  const journalResidents = DB.get(DB.keys.residents) || [];
   if (!list.length) {
     el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Aucune entrée</h3><p>Commencez à documenter les événements.</p></div>`;
     return;
   }
   el.innerHTML = list.map(e => {
     const cat = cats.find(c => String(c.id) === String(e.categorie));
+    const jRes = journalResidents.find(r => r.id === e.residentId);
     return `<div class="entry-card ${e.id === selectedEntryId ? 'selected' : ''}" onclick="selectEntry('${e.id}')">
       <div class="entry-header">
-        <div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>
+        ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
             <span style="font-weight:700;font-size:.875rem">${escHtml(e.resident)||'—'}</span>
@@ -276,7 +278,7 @@ function resetEntryForm() {
   document.getElementById('btnDeleteEntry').style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initJournal() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   populateSelects();
   renderEntries();
@@ -284,7 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id)?.addEventListener('input', renderEntries);
     document.getElementById(id)?.addEventListener('change', renderEntries);
   });
-});
+}
+document.addEventListener('DOMContentLoaded', initJournal);
+if (typeof registerPageInit === 'function') registerPageInit('journal', initJournal);
 
 // ── AI Assist Journal ──
 async function aiAssistJournal(action) {

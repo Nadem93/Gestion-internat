@@ -274,7 +274,6 @@ function escHtml(s) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initIncidents();
-  // Track visit for notifications
   const session = Auth.getSession();
   if (session) localStorage.setItem('ftr_last_visit_incidents_' + session.userId, Date.now());
   ['searchIncident','filterType','filterGravite','filterStatut'].forEach(id => {
@@ -282,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.addEventListener('input', renderIncidents);
   });
 });
+if (typeof registerPageInit === 'function') registerPageInit('incidents', initIncidents);
 
 // Re-render when modal closes
 const _origCloseInc = closeModal;

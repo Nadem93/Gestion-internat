@@ -196,7 +196,7 @@ function deleteDocument(docId, resId) {
   renderDocuments();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initDocumentsPage() {
   initDocuments();
   document.getElementById('docSearchInput')?.addEventListener('input', renderDocuments);
   document.getElementById('docFilterResident')?.addEventListener('change', renderDocuments);
@@ -207,4 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sel) { sel.value = residentId; }
     renderDocuments();
   }
-});
+}
+document.addEventListener('DOMContentLoaded', initDocumentsPage);
+if (typeof registerPageInit === 'function') registerPageInit('documents', initDocumentsPage);

@@ -248,7 +248,7 @@ function populateVehiculeList() {
   list.innerHTML = vehicules.map(v => `<option value="${escHtml(v)}"/>`).join('');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initPlanning() {
   document.getElementById('evDate').value = today();
   populateResidentSelect();
   populateVehiculeList();
@@ -260,7 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('viewWeek').onclick = () => { currentView='week'; setViewBtn('viewWeek'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewMonth').onclick = () => { currentView='month'; setViewBtn('viewMonth'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewList').onclick = () => { currentView='list'; setViewBtn('viewList'); render(); };
-});
+}
+document.addEventListener('DOMContentLoaded', initPlanning);
+if (typeof registerPageInit === 'function') registerPageInit('planning', initPlanning);
 
 function setViewBtn(active) {
   ['viewWeek','viewMonth','viewList'].forEach(id => {

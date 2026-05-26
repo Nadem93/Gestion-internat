@@ -1,0 +1,41 @@
+<div class="header-right" style="display:contents">
+  <button class="btn btn-accent btn-sm" onclick="openAddContact()">+ Nouveau contact</button>
+</div>
+<main class="content">
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+    <div style="flex:1;position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchRepertoire" placeholder="Rechercher un organisme, un nom, une fonction…" oninput="renderContacts()" style="width:100%;padding:.7rem .7rem .7rem 2.3rem;border:1px solid #000;border-radius:8px;font-size:.85rem;outline:none;background:#eef4ff">
+    </div>
+    <span id="contactCount" style="font-size:.8rem;color:var(--muted);white-space:nowrap"></span>
+  </div>
+  <div id="contactList"></div>
+</main>
+
+<div class="modal-overlay" id="modalContact">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalContactTitle">Nouveau contact</span>
+      <button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <input type="hidden" id="contactId"/>
+      <div class="form-row">
+        <div class="form-group"><label class="required">Organisme / Partenaire</label><input type="text" id="cOrganisme" placeholder="Nom de l'organisme"/></div>
+        <div class="form-group"><label class="required">Nom du contact</label><input type="text" id="cNom" placeholder="Prénom et nom"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Téléphone</label><input type="tel" id="cTel" placeholder="06 00 00 00 00"/></div>
+        <div class="form-group"><label>Email</label><input type="email" id="cEmail" placeholder="contact@exemple.fr"/></div>
+      </div>
+      <div class="form-group"><label>Fonction / Service</label><input type="text" id="cFonction" placeholder="Ex : Assistante sociale, Médecin…"/></div>
+      <div class="form-group"><label>Adresse</label><textarea id="cAdresse" rows="2" placeholder="Adresse complète"></textarea></div>
+      <div class="form-group"><label>Notes</label><textarea id="cNotes" rows="2" placeholder="Informations complémentaires"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
+      <button class="btn btn-danger btn-sm" id="btnDeleteContact" style="margin-right:auto;display:none" onclick="deleteContact()">Supprimer</button>
+      <button class="btn btn-primary" onclick="saveContact()">Enregistrer</button>
+    </div>
+  </div>
+</div>

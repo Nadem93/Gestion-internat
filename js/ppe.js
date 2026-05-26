@@ -108,7 +108,7 @@ function renderAvenantFull(p) {
   div.id = 'avenantFullView';
   div.innerHTML = `<div style="max-width:800px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <button class="btn btn-ghost btn-sm" onclick="backToList()">← Retour à la liste</button>
+      <button class="btn btn-outline btn-sm" onclick="backToList()">← Retour à la liste</button>
       <div style="display:flex;gap:.5rem">
         <button class="btn btn-outline btn-sm" onclick="editAvenant('${p.id}')">Modifier infos</button>
         <button class="btn btn-outline btn-sm" onclick="changeAvenantStatut('${p.id}')">${p.statut==='brouillon'?'Activer':p.statut==='actif'?'Terminer':'—'}</button>
@@ -482,7 +482,7 @@ function renderAvenant() {
   }
 
   const residents = DB.get(DB.keys.residents) || [];
-  container.innerHTML = `<table class="table" style="width:100%;border-collapse:collapse">
+  container.innerHTML = `<div class="table-wrap"><table class="table" style="width:100%;border-collapse:separate;border-spacing:0 6px">
     <thead><tr>
       <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Résident</th>
       <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Date</th>
@@ -493,14 +493,14 @@ function renderAvenant() {
     <tbody>${list.map((p, i) => {
     const r = residents.find(x => x.id === p.residentId);
     const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
-    return `<tr style="cursor:pointer;border-bottom:1px solid var(--border);background:${i%2===0?'transparent':'#eef2ff'};transition:background .15s" onmouseenter="this.style.background='#dbeafe'" onmouseleave="this.style.background='${i%2===0?'transparent':'#eef2ff'}'" onclick="openAvenant('${p.id}')">
-      <td style="padding:.7rem .75rem"><div style="display:flex;align-items:center;gap:.6rem"><div style="width:28px;height:28px;border-radius:50%;background:${r?.color||'var(--primary)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.6rem;color:#fff;flex-shrink:0">${initials(r?.prenom, r?.nom)}</div><span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
+    return `<tr style="cursor:pointer;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.04);background:${i%2===0?'#fff':'#f8fafc'};transition:background .15s,box-shadow .15s" onmouseenter="this.style.background='#eef2ff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseleave="this.style.background='${i%2===0?'#fff':'#f8fafc'}';this.style.boxShadow='0 2px 6px rgba(0,0,0,.04)'" onclick="openAvenant('${p.id}')">
+      <td style="padding:.7rem .75rem;border-radius:12px 0 0 12px"><div style="display:flex;align-items:center;gap:.6rem">${r?.photo?`<img src="${r.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div style="width:28px;height:28px;border-radius:50%;background:${r?.color||'var(--primary)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.6rem;color:#fff;flex-shrink:0">${initials(r?.prenom, r?.nom)}</div>`}<span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
       <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${formatDate(p.dateRedaction)}</td>
       <td style="padding:.7rem .75rem"><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></td>
       <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${p.referent ? escHtml(p.referent) : '—'}</td>
-      <td style="padding:.7rem .75rem"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAvenant('${p.id}')">Voir</button></td>
+      <td style="padding:.7rem .75rem;border-radius:0 12px 12px 0"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAvenant('${p.id}')">Voir</button></td>
     </tr>`;
-  }).join('')}</tbody></table>`;
+  }).join('')}</tbody></table></div>`;
 }
 
 function editAvenant(id) {
@@ -557,9 +557,8 @@ function resetAvenantModal() {
   document.getElementById('fAvEntreeEsat').value = '';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initPpePage() {
   initPpe();
-  // Track visit for notifications
   const session = Auth.getSession();
   if (session) localStorage.setItem('ftr_last_visit_ppe_' + session.userId, Date.now());
   document.getElementById('modalAvenant')?.addEventListener('open', resetAvenantModal);
@@ -567,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', renderAvenant);
   });
-  // Open specific avenant from URL param
   const params = new URLSearchParams(window.location.search);
   const avenantId = params.get('id');
   if (avenantId) {
@@ -580,4 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => openAvenant(avenantId), 300);
     }
   }
-});
+}
+document.addEventListener('DOMContentLoaded', initPpePage);
+if (typeof registerPageInit === 'function') registerPageInit('ppe', initPpePage);

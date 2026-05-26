@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FTR — Gestion</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    #app-view.loading { opacity:.5; transition:opacity .15s }
+    #app-view { transition:opacity .15s }
+    [data-nav] { cursor:pointer }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="main">
+    <header class="header">
+      <div><div class="header-title" id="pageTitle">Accueil</div><div class="header-sub" id="pageSub"></div></div>
+      <div class="header-right"></div>
+    </header>
+    <main id="app-view" class="content"></main>
+  </div>
+</div>
+<div id="app-modals"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script>Auth.requireAuth();</script>
+<script src="js/router.js"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -14,6 +15,9 @@ import { establishmentsRouter } from './routes/establishments';
 import { aiRouter } from './routes/ai';
 
 const app = express();
+
+// Gzip compression
+app.use(compression());
 
 // Security headers
 app.use(helmet());

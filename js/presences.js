@@ -85,7 +85,7 @@ function renderPresenceTable() {
         return `<tr style="border-bottom:1px solid var(--border)">
           <td style="padding:.85rem 1.25rem">
             <div style="display:flex;align-items:center;gap:.75rem">
-              <div class="avatar sm" style="width:36px;height:36px;font-size:.75rem;background:${r.color||'var(--blue)'}">${initials(r.prenom,r.nom)}</div>
+              ${r.photo?`<img src="${r.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="width:36px;height:36px;font-size:.75rem;background:${r.color||'var(--blue)'}">${initials(r.prenom,r.nom)}</div>`}
               <div>
                 <div style="font-weight:600">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
                 <div style="font-size:.72rem;color:var(--muted)">${r.dob ? age(r.dob) : ''}</div>
@@ -157,12 +157,11 @@ function exportAbsencesCSV() {
   toast('Export CSV téléchargé');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initPresences() {
   document.getElementById('presenceDate').value = today();
   updateDateLabel();
   renderStats();
   renderPresenceTable();
-
   document.getElementById('presenceDate').addEventListener('change', () => { updateDateLabel(); renderStats(); renderPresenceTable(); });
   document.getElementById('prevDay').addEventListener('click', () => {
     const d = new Date(getDateStr()); d.setDate(d.getDate()-1);
@@ -178,4 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('presenceDate').value = today();
     updateDateLabel(); renderStats(); renderPresenceTable();
   });
-});
+}
+document.addEventListener('DOMContentLoaded', initPresences);
+if (typeof registerPageInit === 'function') registerPageInit('presences', initPresences);

@@ -204,7 +204,7 @@ function renderResidents() {
   }
 
   if (currentView === 'grid') {
-    container.innerHTML = `<div class="grid grid-5" style="gap:.85rem">${list.map(residentCard).join('')}</div>`;
+    container.innerHTML = `<div class="grid grid-4" style="gap:1.25rem">${list.map(residentCard).join('')}</div>`;
   } else {
     container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Résident</th><th>Âge / Naissance</th><th>Entrée</th><th>Chambre</th><th>Statut</th><th>Objectifs</th><th>Actions</th></tr></thead><tbody>${list.map(residentRow).join('')}</tbody></table></div>`;
   }
@@ -219,26 +219,20 @@ function statusBadge(s) {
 function residentCard(r) {
   const coverColor = r.color || 'var(--primary)';
   const photoEl = r.photo
-    ? `<img src="${r.photo}" class="res-card-photo" style="width:80px;height:80px" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
-    : `<div class="res-card-photo" style="width:80px;height:80px;background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.4rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
+    ? `<img src="${r.photo}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
+    : `<div class="res-card-photo" style="background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
 
-  const docCount = ((DB.get(DB.keys.documents)||{})[r.id]||[]).length;
-  const session = Auth.getSession();
-  const canEdit = session && (session.role === 'admin' || session.role === 'moderator' || canEditResidents(session.userId));
   const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
   const presenceStatus = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-  return `<div class="res-card" style="border-color:${coverColor};background:${coverColor}08" onclick="window.location.href='resident.html?id=${r.id}'">
-    <div class="res-card-cover" style="background:${coverColor}"></div>
+  return `<div class="res-card" style="--card-color:${coverColor}" onclick="window.location.href='resident.html?id=${r.id}'">
     <div class="res-card-body">
       ${photoEl}
-      <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
-      <div class="res-card-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
-      <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:center;margin-top:.25rem">
-        ${statusBadge(presenceStatus)}
-        ${docCount?`<span class="badge" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">📎 ${docCount}</span>`:''}
+      <div class="res-card-info">
+        <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
+        <div class="res-card-meta">${r.dob ? age(r.dob)+' ans' : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
+        <div>${statusBadge(presenceStatus)}</div>
       </div>
     </div>
-    <div class="res-card-footer"><span style="font-size:.7rem;color:var(--muted)">Entré le ${r.entree ? formatDate(r.entree) : '—'}</span></div>
   </div>`;
 }
 
@@ -460,8 +454,9 @@ function activateTab(name) {
 }
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('rEntree').value = today();
+function initResidents() {
+  const entree = document.getElementById('rEntree');
+  if (entree) entree.value = today();
   updateAdaptiveSections();
   populateFilterObjectifs();
   renderObjectifsCheckboxes([]);
@@ -469,12 +464,17 @@ document.addEventListener('DOMContentLoaded', () => {
   initDocUpload();
   renderResidents();
 
-  document.getElementById('searchInput').addEventListener('input', renderResidents);
-  document.getElementById('filterObjectif').addEventListener('change', renderResidents);
-  document.getElementById('viewGrid').addEventListener('click', () => { currentView='grid'; renderResidents(); });
-  document.getElementById('viewList').addEventListener('click', () => { currentView='list'; renderResidents(); });
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.addEventListener('input', renderResidents);
+  const filterObj = document.getElementById('filterObjectif');
+  if (filterObj) filterObj.addEventListener('change', renderResidents);
+  const viewGrid = document.getElementById('viewGrid');
+  if (viewGrid) viewGrid.addEventListener('click', () => { currentView='grid'; renderResidents(); });
+  const viewList = document.getElementById('viewList');
+  if (viewList) viewList.addEventListener('click', () => { currentView='list'; renderResidents(); });
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
-  document.getElementById('modalResident').addEventListener('click', e => {
+  const modalRes = document.getElementById('modalResident');
+  if (modalRes) modalRes.addEventListener('click', e => {
     if (e.target.id === 'modalResident') { closeAllModals(); resetForm(); }
   });
 
@@ -486,7 +486,10 @@ document.addEventListener('DOMContentLoaded', () => {
   } else if (params.get('new') === 'true') {
     setTimeout(() => openModal('modalResident'), 100);
   }
-});
+}
+
+document.addEventListener('DOMContentLoaded', initResidents);
+if (typeof registerPageInit === 'function') registerPageInit('residents', initResidents);
 
 // ── ÉDITION RAPIDE (CARTE) ──
 let qePendingPhoto = null;

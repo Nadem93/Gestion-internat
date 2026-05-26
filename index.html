@@ -55,13 +55,13 @@
   <script src="js/app.js"></script>
   <script>
     initDefaults();
-    if (Auth.getSession()) window.location.href = 'accueil.html';
+    if (Auth.getSession()) window.location.href = 'app.html';
     document.getElementById('loginForm').addEventListener('submit', e => {
       e.preventDefault();
       const username = document.getElementById('login').value;
       const password = document.getElementById('pw').value;
       if (Auth.login(username, password)) {
-        window.location.href = 'accueil.html';
+        window.location.href = 'app.html';
       } else {
         document.getElementById('loginError').style.display = '';
         document.getElementById('pw').value = '';

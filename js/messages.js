@@ -467,12 +467,11 @@ function autoResizeTextarea(el) {
 }
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded', () => {
+function initMessages() {
   const chatInput = document.getElementById('chatInput');
   if (chatInput) {
     chatInput.addEventListener('input', () => autoResizeTextarea(chatInput));
   }
-  // Migrate old messages: ensure readBy exists on all messages
   const session = Auth.getSession();
   let allMsgs = getMessages();
   let changed = false;
@@ -485,4 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (changed) setMessages(allMsgs);
   renderConvs();
   renderChat();
-});
+}
+document.addEventListener('DOMContentLoaded', initMessages);
+if (typeof registerPageInit === 'function') registerPageInit('messages', initMessages);
