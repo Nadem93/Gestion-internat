@@ -68,7 +68,7 @@ function renderDocuments() {
     </thead>
     <tbody>${filtered.map((d, i) => {
     const overdue = d.dueDate && d.dueDate < today() && !d.done;
-    return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--g50)':'#ffffff'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${i%2===0?'var(--g50)':'#ffffff'}'">
+    return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${i%2===0?'var(--g50)':'var(--g100)'}'">
         <td style="padding:.6rem .75rem">
           <div style="display:flex;align-items:center;gap:.5rem">
             <span style="font-size:1.2rem">${docTypeIcon(d.mimeType)}</span>
