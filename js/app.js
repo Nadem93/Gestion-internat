@@ -642,4 +642,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!Auth.isAdmin()) {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
+  // Glassmorphism bg shapes + fade-in
+  if (!document.querySelector('.bg-shapes')) {
+    const div = document.createElement('div');
+    div.className = 'bg-shapes';
+    for (let i = 1; i <= 4; i++) {
+      const s = document.createElement('div');
+      s.className = 'bg-shape bg-shape-' + i;
+      div.appendChild(s);
+    }
+    document.body.prepend(div);
+  }
+  setTimeout(() => document.body.classList.add('loaded'), 100);
 });
