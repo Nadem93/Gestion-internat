@@ -80,7 +80,6 @@ function renderDocuments() {
         <td style="padding:.6rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
         <td style="padding:.6rem .75rem;text-align:center">
           <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger">📥</button>
-          <button class="btn btn-ghost btn-sm" onclick="editDocModal('${d.id}','${d.residentId}')" title="Modifier">✎</button>
           <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocument('${d.id}','${d.residentId}')" title="Supprimer">✕</button>
         </td>
       </tr>`;
