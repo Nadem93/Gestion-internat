@@ -81,7 +81,7 @@ function renderDocuments() {
       let idx = 0;
       catOrder.forEach(cat => {
         const docs = groups[cat]; if(!docs) return;
-        catRows += `<tr style="background:var(--g300);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)"><td colspan="6" style="padding:.3rem .75rem">${catLabels[cat]||cat}</td></tr>`;
+        catRows += `<tr style="background:var(--g300);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)"><td colspan="6" style="padding:.3rem .75rem;text-align:center">${catLabels[cat]||cat}</td></tr>`;
         docs.forEach(d => {
           const overdue = d.dueDate && d.dueDate < today() && !d.done;
           catRows += `<tr style="border-bottom:1px solid var(--border);background:${idx%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${idx%2===0?'var(--g50)':'var(--g100)'}'">
