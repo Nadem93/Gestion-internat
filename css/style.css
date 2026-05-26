@@ -643,9 +643,9 @@ tbody tr:hover{background:var(--g50)}
 @keyframes badgePop{0%{transform:scale(0)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 
 /* ── DOWNLOAD ANIMATION ── */
-.btn-download-svg{background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:.25rem .5rem;border:none;border-radius:var(--r-sm);cursor:pointer}
-.btn-download-svg svg{width:18px;height:18px;display:block}
-.btn-download-svg .dl-arrow{animation:dlArrow 1.4s ease infinite}
-.btn-download-svg .dl-base{transform-origin:20px 28px;animation:dlBase 1.4s ease-in-out infinite}
+.btn-dl{background:none;border:none;cursor:pointer;padding:0;display:inline-flex;vertical-align:middle}
+.dl-svg{background:#282828;border-radius:16%;fill:none;stroke:#ff861a;stroke-width:2px;stroke-linejoin:round;stroke-linecap:round;display:block}
+.dl-arrow{animation:dlArrow 1.4s ease infinite}
+.dl-base{transform-origin:20px 28px;animation:dlBase 1.4s ease-in-out infinite}
 @keyframes dlArrow{0%{transform:translateY(0)}35%{transform:translateY(10px)}50%{transform:translateY(0);opacity:0}100%{transform:translateY(0);opacity:0}}
 @keyframes dlBase{0%{transform:scaleX(1)}15%{transform:scaleX(1)}23%{transform:scaleX(1.1)}29%{transform:scaleX(.9)}31%{transform:scaleX(1)}100%{transform:scaleX(1)}}
