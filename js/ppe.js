@@ -23,6 +23,13 @@ function initPpe() {
   if (!session) return;
   populateAvenantSelects();
   renderAvenant();
+  const params = new URLSearchParams(window.location.search);
+  const rid = params.get('residentId');
+  if (rid) {
+    const sel = document.getElementById('filterResidentAvenant');
+    if (sel) { sel.value = rid; sel.dispatchEvent(new Event('change')); }
+    window.history.replaceState({}, '', window.location.pathname);
+  }
 }
 
 function populateAvenantSelects() {

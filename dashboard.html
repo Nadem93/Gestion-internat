@@ -523,8 +523,8 @@
     if (avenants.length) {
       da.innerHTML = avenants.map(p => {
         const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
-        return `<div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
-          <div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html'">
+        return `<div class="avenant-row" style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s ease" onclick="window.location='ppe.html?residentId=${p.residentId}'">
+          <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:.875rem">${escHtml(p.residentName||'?')}</div>
             <div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs · ${escHtml(p.dateRedaction||'—')}</div>
           </div>

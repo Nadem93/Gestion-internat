@@ -667,3 +667,7 @@ tbody tr:hover{background:var(--g50)}
   top:-4px;right:-4px;min-width:22px;height:22px;
   font-size:11px;border-width:2.5px;
 }
+
+/* ── AVENANT ROW HOVER ── */
+.avenant-row:hover{background:var(--g50)}
+.avenant-row:active{background:var(--g100)}
