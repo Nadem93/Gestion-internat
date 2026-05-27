@@ -16,7 +16,6 @@
         <input type="date" id="presenceDate" style="width:auto;font-weight:600"/>
         <button class="btn btn-outline btn-sm" id="nextDay">&#8594;</button>
         <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
-        <button class="btn btn-accent btn-sm" onclick="markAllPresent()">Tous présents</button>
       </div>
     </header>
 
@@ -34,6 +33,7 @@
           <span class="card-title">Feuille de présence</span>
           <span id="presenceDateLabel" style="font-size:.8rem;color:var(--muted);margin-left:.5rem"></span>
           <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center">
+            <button class="btn btn-accent btn-sm" onclick="markAllPresent()">Marquer tous présents</button>
             <div style="display:flex;gap:.5rem;font-size:.75rem;color:var(--muted);align-items:center">
               <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#ecfdf5;border:1px solid #a7f3d0"></span>Présent</span>
               <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#fef2f2;border:1px solid #fecaca"></span>Absent</span>

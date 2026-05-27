@@ -207,7 +207,7 @@ function renderResidents() {
   if (currentView === 'grid') {
     container.innerHTML = `<div class="grid grid-4" style="gap:1.25rem">${list.map(residentCard).join('')}</div>`;
   } else {
-    container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Résident</th><th>Âge / Naissance</th><th>Entrée</th><th>Chambre</th><th>Statut</th><th>Objectifs</th><th>Actions</th></tr></thead><tbody>${list.map(residentRow).join('')}</tbody></table></div>`;
+    container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Résident</th><th>Âge / Naissance</th><th>Entrée</th><th>Chambre</th><th>Actions</th><th>Statut</th><th>Objectifs</th></tr></thead><tbody>${list.map(residentRow).join('')}</tbody></table></div>`;
   }
 }
 
@@ -250,13 +250,13 @@ function residentRow(r) {
     <td>${r.dob ? age(r.dob)+' ('+formatDate(r.dob)+')' : '—'}</td>
     <td>${r.entree ? formatDate(r.entree) : '—'}</td>
     <td>${escHtml(r.chambre||'—')}</td>
-    <td>${statusBadge(r.statut)}</td>
-    <td><div style="display:flex;gap:.3rem;flex-wrap:wrap">${resObjs.map(o=>`<span class="badge badge-gray">${escHtml(o)}</span>`).join('')||'—'}</div></td>
     <td><div class="table-actions">
       <button class="btn btn-ghost btn-sm" onclick="window.location.href='resident.html?id=${r.id}'">Voir</button>
       <button class="btn btn-ghost btn-sm" onclick="window.location.href='resident.html?id=${r.id}'" title="Dashboard">📊</button>
       ${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="quickEditResident('${r.id}')">Modifier</button>` : ''}
     </div></td>
+    <td>${statusBadge(r.statut)}</td>
+    <td><div style="display:flex;gap:.3rem;flex-wrap:wrap">${resObjs.map(o=>`<span class="badge badge-gray">${escHtml(o)}</span>`).join('')||'—'}</div></td>
   </tr>`;
 }
 

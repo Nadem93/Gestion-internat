@@ -649,3 +649,21 @@ tbody tr:hover{background:var(--g50)}
 .dl-base{transform-origin:20px 28px;animation:dlBase 1.4s ease-in-out infinite}
 @keyframes dlArrow{0%{transform:translateY(0)}35%{transform:translateY(10px)}50%{transform:translateY(0);opacity:0}100%{transform:translateY(0);opacity:0}}
 @keyframes dlBase{0%{transform:scaleX(1)}15%{transform:scaleX(1)}23%{transform:scaleX(1.1)}29%{transform:scaleX(.9)}31%{transform:scaleX(1)}100%{transform:scaleX(1)}}
+
+/* ── FLOAT ACTION BUTTON (INTERVENTIONS) ── */
+.accueil-fab{
+  position:fixed;top:5.5rem;right:1rem;z-index:100;
+  width:44px;height:44px;border-radius:var(--r);
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 4px 16px rgba(232,93,4,.35);
+  transition:all var(--t);
+  border:none;
+}
+.accueil-fab:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(232,93,4,.45);}
+.accueil-fab:active{transform:scale(.95)}
+.accueil-fab svg{width:20px;height:20px}
+.accueil-fab .notif-badge{
+  top:-4px;right:-4px;min-width:22px;height:22px;
+  font-size:11px;border-width:2.5px;
+}

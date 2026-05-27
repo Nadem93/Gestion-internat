@@ -34,8 +34,29 @@
 </style>
 
 <div class="admin-content">
+  <!-- Demandes d'intervention -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-header">
+      <span class="card-title">🔧 Demandes d'intervention</span>
+      <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="spaIntTotal"></span>
+    </div>
+    <div class="card-body" style="padding:.75rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div>
+          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 .25rem .5rem;border-bottom:2px solid var(--amber)">En attente</div>
+          <div id="spaIntOuvertes" style="display:flex;flex-direction:column;gap:0"></div>
+        </div>
+        <div>
+          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 .25rem .5rem;border-bottom:2px solid var(--g300)">Historique</div>
+          <div id="spaIntHistorique" style="display:flex;flex-direction:column;gap:0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Tabs -->
   <div class="admin-tabs">
+    <a href="accueil.html" class="admin-tab home-tab" title="Accueil" style="text-decoration:none">🏠</a>
     <button class="admin-tab active" data-tab="etablissement" onclick="adminNavSPA(this)">Établissement</button>
     <button class="admin-tab" data-tab="categories" onclick="adminNavSPA(this)">Catégories</button>
     <button class="admin-tab" data-tab="objectifs" onclick="adminNavSPA(this)">Objectifs</button>
@@ -49,7 +70,7 @@
   <div class="admin-stats-row">
     <div class="adm-stat"><div class="adm-stat-ring violet">👥</div><div><div class="adm-stat-num" id="aStat1">—</div><div class="adm-stat-lbl">Résidents actifs</div></div></div>
     <div class="adm-stat"><div class="adm-stat-ring green">✅</div><div><div class="adm-stat-num" id="aStat2">—</div><div class="adm-stat-lbl">Présents aujourd'hui</div></div></div>
-    <div class="adm-stat"><div class="adm-stat-ring orange">📓</div><div><div class="adm-stat-num" id="aStat3">—</div><div class="adm-stat-lbl">Entrées journal</div></div></div>
+    <div class="adm-stat"><div class="adm-stat-ring orange">📓</div><div><div class="adm-stat-num" id="aStat3">—</div><div class="adm-stat-lbl">Nouvelle admission ce mois</div></div></div>
     <div class="adm-stat"><div class="adm-stat-ring blue">🔑</div><div><div class="adm-stat-num" id="aStat4">—</div><div class="adm-stat-lbl">Comptes utilisateurs</div></div></div>
   </div>
 
@@ -218,14 +239,58 @@ function adminNavSPA(btn) {
 }
 
 function refreshAdminStats() {
-  const r = (DB.get(DB.keys.residents)||[]).filter(x => x.statut !== 'sorti');
-  const j = DB.get(DB.keys.journal)||[];
+  const all = DB.get(DB.keys.residents)||[];
+  const r = all.filter(x => x.statut !== 'sorti');
   const t = today();
+  const m = t.slice(0, 7);
   const p = (DB.get(DB.keys.presences)||{})[t]||{};
   const pc = Object.values(p).filter(v => v === 'present').length;
   const u = DB.get(DB.keys.users)||[];
-  ['aStat1','aStat2','aStat3','aStat4'].forEach(id => { const el=document.getElementById(id); if(id==='aStat1') el.textContent=r.length; else if(id==='aStat2') el.textContent=pc; else if(id==='aStat3') el.textContent=j.filter(e=>e.date&&e.date.startsWith(t)).length; else el.textContent=u.length; });
+  ['aStat1','aStat2','aStat3','aStat4'].forEach(id => { const el=document.getElementById(id); if(id==='aStat1') el.textContent=r.length; else if(id==='aStat2') el.textContent=pc; else if(id==='aStat3') el.textContent=all.filter(x=>x.entree&&x.entree.startsWith(m)).length; else el.textContent=u.length; });
 }
 
 refreshAdminStats();
+
+function renderSpaInterventions() {
+  const total = document.getElementById('spaIntTotal');
+  const elO = document.getElementById('spaIntOuvertes');
+  const elH = document.getElementById('spaIntHistorique');
+  if (!elO || !elH) return;
+  const list = DB.get(DB.keys.interventions) || [];
+  const ouvertes = list.filter(i => i.statut === 'ouverte').reverse();
+  const traitees = list.filter(i => i.statut === 'traitee').reverse().slice(0, 20);
+  if (total) total.textContent = ouvertes.length > 0 ? ouvertes.length + ' en attente' : 'Aucune';
+  function itemHTML(i) {
+    const date = new Date(i.date);
+    const dateStr = date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    const timeStr = date.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const couleurs = { basse:'#94a3b8', normale:'#3b82f6', haute:'#f59e0b', critique:'#ef4444' };
+    const icones = { basse:'⬇️', normale:'➡️', haute:'⚠️', critique:'🚨' };
+    const c = couleurs[i.urgence] || '#94a3b8';
+    const ic = icones[i.urgence] || '➡️';
+    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' +
+      '<span style="font-size:.85rem">' + ic + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' +
+          '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' +
+          '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span>' +
+        '</div>' +
+        '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' +
+        '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div>' +
+      '</div>' +
+      (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreSpaIntervention(' + i.id + ')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') +
+    '</div>';
+  }
+  elO.innerHTML = ouvertes.length ? ouvertes.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Tout est traité ✓</div>';
+  elH.innerHTML = traitees.length ? traitees.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Aucun historique</div>';
+}
+function cloreSpaIntervention(id) {
+  const list = DB.get(DB.keys.interventions) || [];
+  const idx = list.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  list[idx].statut = 'traitee';
+  DB.set(DB.keys.interventions, list);
+  renderSpaInterventions();
+}
+renderSpaInterventions();
 </script>

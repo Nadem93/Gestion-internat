@@ -73,6 +73,8 @@
     .atb-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-top:1px}
     .atb-right{display:flex;align-items:center;gap:.75rem}
     .atb-badge{display:flex;align-items:center;gap:.45rem;padding:.42rem .8rem;border-radius:var(--r-full);background:var(--av-l);color:var(--av);font-size:.74rem;font-weight:700}
+    .atb-home{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--g100);color:var(--muted);transition:all .15s;text-decoration:none}
+    .atb-home:hover{background:var(--av-l);color:var(--av)}
     .atb-av{width:36px;height:36px;border-radius:50%;background:var(--av);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.76rem}
 
     /* ── CIRCULAR STATS (SkillPath style) ── */
@@ -244,6 +246,9 @@
       <div class="atb-title" id="atbTitle">Statistiques</div>
     </div>
     <div class="atb-right">
+      <a href="accueil.html" class="atb-home" title="Accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </a>
       <div class="atb-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
         <span id="atbBadge">Tableau de bord admin</span>
@@ -395,6 +400,26 @@
         </div>
         <div class="card-body" style="padding:.9rem 1.25rem">
           <div id="journalCatBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
+        </div>
+      </div>
+
+      <!-- Demandes d'intervention -->
+      <div class="card" style="margin-top:1.25rem">
+        <div class="card-header">
+          <span class="card-title">🔧 Demandes d'intervention</span>
+          <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="intTotal"></span>
+        </div>
+        <div class="card-body" style="padding:.75rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 .25rem .5rem;border-bottom:2px solid var(--amber)">En attente</div>
+              <div id="intOuvertes" style="display:flex;flex-direction:column;gap:0"></div>
+            </div>
+            <div>
+              <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 .25rem .5rem;border-bottom:2px solid var(--g300)">Historique</div>
+              <div id="intHistorique" style="display:flex;flex-direction:column;gap:0"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -894,6 +919,9 @@ function refreshAllStats() {
   // ── Catégories journal ──
   const activeFreq = document.querySelector('.btn-freq.active')?.dataset?.freq || 'semaine';
   renderJournalCatBars(journal, activeFreq);
+
+  // ── Demandes d'intervention ──
+  renderInterventions();
 }
 
 /* Bar chart: taux de présence (jour / semaine / mois) */
@@ -969,6 +997,8 @@ function renderResidentStatuts(residents) {
   const counts = {};
   residents.forEach(r => { const s = r.statut || 'present'; counts[s] = (counts[s] || 0) + 1; });
   const total = residents.length || 1;
+  const mois = today().slice(0, 7);
+  const entreesMois = residents.filter(r => r.entree && r.entree.slice(0, 7) === mois).length;
   el.innerHTML = Object.entries(statuts).map(([key, cfg]) => {
     const count = counts[key] || 0;
     const pct = Math.round((count / total) * 100);
@@ -985,7 +1015,16 @@ function renderResidentStatuts(residents) {
       </div>
       <span style="font-size:.7rem;color:var(--muted);min-width:32px;text-align:right">${pct}%</span>
     </div>`;
-  }).join('');
+  }).join('') + `
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0;border-top:1px solid var(--g200);margin-top:.25rem">
+      <span style="font-size:1rem">📋</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.25rem">
+          <span style="font-size:.78rem;font-weight:600;color:var(--text)">Nouvelle admission ce mois</span>
+          <span style="font-size:.78rem;font-weight:700;color:#6366f1">${entreesMois}</span>
+        </div>
+      </div>
+    </div>`;
 }
 
 /* Connexions récentes */
@@ -1055,6 +1094,49 @@ function renderJournalCatBars(journal, freq) {
       <span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span>
     </div>`;
   }).join('');
+}
+
+/* Demandes d'intervention */
+function renderInterventions() {
+  const total = document.getElementById('intTotal');
+  const elO = document.getElementById('intOuvertes');
+  const elH = document.getElementById('intHistorique');
+  if (!elO || !elH) return;
+  const list = DB.get(DB.keys.interventions) || [];
+  const ouvertes = list.filter(i => i.statut === 'ouverte').reverse();
+  const traitees = list.filter(i => i.statut === 'traitee').reverse().slice(0, 20);
+  if (total) total.textContent = ouvertes.length > 0 ? ouvertes.length + ' en attente' : 'Aucune';
+  function itemHTML(i) {
+    const date = new Date(i.date);
+    const dateStr = date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    const timeStr = date.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const couleurs = { basse:'#94a3b8', normale:'#3b82f6', haute:'#f59e0b', critique:'#ef4444' };
+    const icones = { basse:'⬇️', normale:'➡️', haute:'⚠️', critique:'🚨' };
+    const c = couleurs[i.urgence] || '#94a3b8';
+    const ic = icones[i.urgence] || '➡️';
+    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' +
+      '<span style="font-size:.85rem">' + ic + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' +
+          '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' +
+          '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span>' +
+        '</div>' +
+        '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' +
+        '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div>' +
+      '</div>' +
+      (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(' + i.id + ')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') +
+    '</div>';
+  }
+  elO.innerHTML = ouvertes.length ? ouvertes.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Tout est traité ✓</div>';
+  elH.innerHTML = traitees.length ? traitees.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Aucun historique</div>';
+}
+function cloreIntervention(id) {
+  const list = DB.get(DB.keys.interventions) || [];
+  const idx = list.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  list[idx].statut = 'traitee';
+  DB.set(DB.keys.interventions, list);
+  renderInterventions();
 }
 
 /* ═══════════ SIDEBAR USER & BRANDING ═══════════ */

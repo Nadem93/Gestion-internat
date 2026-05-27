@@ -16,6 +16,11 @@
     </div>
   </div>
 </main>
+
+<div class="accueil-fab" data-module="interventions" onclick="localStorage.setItem('ftr_last_visit_interventions_'+Auth.getSession().userId,Date.now());openModal('modalIntervention')" title="Demande d'intervention">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+</div>
+
 <script>
 function updateNotifs() {
   const session = Auth.getSession();
@@ -39,7 +44,11 @@ function updateNotifs() {
   const lastInc = localStorage.getItem('ftr_last_visit_incidents_' + session.userId);
   const incidents = DB.get(DB.keys.incidents) || [];
   const newIncidents = lastInc === null ? 0 : incidents.filter(e => e.statut !== 'classe' && new Date(e.createdAt).getTime() > Number(lastInc)).length;
-  const counts = { messages: unreadMsgs, journal: unreadJournal, ppe: newPpe, incidents: newIncidents };
+  const lastInt = localStorage.getItem('ftr_last_visit_interventions_' + session.userId);
+  const interventions = DB.get(DB.keys.interventions) || [];
+  const newInt = lastInt === null ? 0 : interventions.filter(e => e.statut === 'ouverte' && new Date(e.date).getTime() > Number(lastInt)).length;
+
+  const counts = { messages: unreadMsgs, journal: unreadJournal, ppe: newPpe, incidents: newIncidents, interventions: newInt };
   document.querySelectorAll('[data-module]').forEach(el => {
     const mod = el.dataset.module;
     let badge = el.querySelector('.notif-badge');
@@ -62,8 +71,63 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) upda
 window.addEventListener('focus', updateNotifs);
 window.addEventListener('pageshow', updateNotifs);
 window.addEventListener('storage', e => {
-  if (e.key === DB.keys.messages || e.key === DB.keys.journal || e.key === DB.keys.ppe || e.key === DB.keys.incidents) updateNotifs();
+  if (e.key === DB.keys.messages || e.key === DB.keys.journal || e.key === DB.keys.ppe || e.key === DB.keys.incidents || e.key === DB.keys.interventions) updateNotifs();
 });
-if (window._notifInterval) clearInterval(window._notifInterval);
+  if (window._notifInterval) clearInterval(window._notifInterval);
 window._notifInterval = setInterval(updateNotifs, 10000);
+
+function loadChambres() {
+  const r = DB.get(DB.keys.residents) || [];
+  const chambres = [...new Set(r.map(x => x.chambre).filter(Boolean))].sort();
+  const dl = document.getElementById('chambresList');
+  if (dl) dl.innerHTML = chambres.map(c => `<option value="${c}">`).join('');
+}
+function saveIntervention() {
+  const lieu = document.getElementById('intLieu').value.trim();
+  const desc = document.getElementById('intDesc').value.trim();
+  const urgence = document.getElementById('intUrgence').value;
+  if (!lieu || !desc) { alert('Veuillez remplir le lieu et la description.'); return; }
+  const list = DB.get(DB.keys.interventions) || [];
+  list.push({ id: Date.now(), lieu, desc, urgence, date: new Date().toISOString(), statut: 'ouverte' });
+  DB.set(DB.keys.interventions, list);
+  closeModal('modalIntervention');
+  document.getElementById('intLieu').value = '';
+  document.getElementById('intDesc').value = '';
+  document.getElementById('intUrgence').value = 'normale';
+  alert('Demande d\'intervention envoyée ✓');
+}
+loadChambres();
 </script>
+
+<div class="modal-overlay" id="modalIntervention" onclick="closeModal('modalIntervention')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">🔧 Demande d'intervention</span>
+      <button class="modal-close" onclick="closeModal('modalIntervention')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Chambre / Lieu</label>
+        <input type="text" id="intLieu" class="form-control" placeholder="Ex: Chambre 12, Salle commune…" list="chambresList"/>
+        <datalist id="chambresList"></datalist>
+      </div>
+      <div class="form-group">
+        <label>Description du problème</label>
+        <textarea id="intDesc" class="form-control" rows="4" placeholder="Décrivez le problème à résoudre…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Urgence</label>
+        <select id="intUrgence" class="form-control">
+          <option value="basse">Basse</option>
+          <option value="normale" selected>Normale</option>
+          <option value="haute">Haute</option>
+          <option value="critique">Critique</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalIntervention')">Annuler</button>
+      <button class="btn btn-accent" onclick="saveIntervention()">Envoyer la demande</button>
+    </div>
+  </div>
+</div>
