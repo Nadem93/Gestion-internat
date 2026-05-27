@@ -422,51 +422,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Réservation véhicule -->
-      <div class="card" style="margin-top:1.25rem">
-        <div class="card-header">
-          <span class="card-title">🚗 Réservation véhicule</span>
-        </div>
-        <div class="card-body" style="padding:1rem 1.25rem">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Date & heure de départ</label>
-              <input type="datetime-local" id="mvDateAller"/>
-            </div>
-            <div class="form-group">
-              <label>Durée</label>
-              <select id="mvDuree">
-                <option value="30">30 min</option>
-                <option value="60" selected>1 h</option>
-                <option value="90">1 h 30</option>
-                <option value="120">2 h</option>
-                <option value="180">3 h</option>
-                <option value="240">4 h</option>
-                <option value="360">6 h</option>
-                <option value="480">8 h</option>
-                <option value="journee">Journée</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Véhicule</label>
-              <input type="text" id="mvVehicule" list="mvVehiculesList" placeholder="Sélectionner ou saisir"/>
-              <datalist id="mvVehiculesList"></datalist>
-            </div>
-            <div class="form-group">
-              <label>Destination</label>
-              <input type="text" id="mvDestination" placeholder="Lieu de destination"/>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Motif (optionnel)</label>
-            <input type="text" id="mvMotif" placeholder="Objet du déplacement"/>
-          </div>
-          <button class="btn btn-accent" onclick="saveReservationAdmin()" style="margin-top:.5rem">🚗 Confirmer la réservation</button>
-        </div>
-      </div>
     </div>
 
     <!-- ═══ ÉTABLISSEMENT ═══ -->
@@ -1183,53 +1138,6 @@ function cloreIntervention(id) {
   DB.set(DB.keys.interventions, list);
   renderInterventions();
 }
-
-/* Réservation véhicule */
-function loadVehiculesAdmin() {
-  const v = DB.get(DB.keys.vehicules) || ['Renault Kangoo','Citroën Berlingo','Peugeot Partner','Volkswagen Caddy'];
-  const dl = document.getElementById('mvVehiculesList');
-  if (dl) dl.innerHTML = v.map(x => '<option value="' + escHtml(x) + '">').join('');
-}
-function saveReservationAdmin() {
-  const dateAller = document.getElementById('mvDateAller').value;
-  const dureeVal = document.getElementById('mvDuree').value;
-  const vehicule = document.getElementById('mvVehicule').value.trim();
-  const destination = document.getElementById('mvDestination').value.trim();
-  const motif = document.getElementById('mvMotif').value.trim();
-  if (!dateAller || !vehicule || !destination) { alert('Veuillez remplir la date, le véhicule et la destination.'); return; }
-  let dateRetour;
-  if (dureeVal === 'journee') { const d = new Date(dateAller); dateRetour = d.toISOString().slice(0,10) + 'T23:59'; }
-  else { const d = new Date(new Date(dateAller).getTime() + parseInt(dureeVal) * 60000); dateRetour = d.toISOString().slice(0,16); }
-  const allPlan = DB.get(DB.keys.planning) || [];
-  const conflit = allPlan.some(e => {
-    if (e.type !== 'vehicule' || e.vehicule !== vehicule) return false;
-    const s = new Date(e.date + 'T' + (e.time || '00:00'));
-    const en = new Date(e.dateEnd + 'T' + (e.timeEnd || '23:59'));
-    const dA = new Date(dateAller), dR = new Date(dateRetour);
-    return dA < en && dR > s;
-  });
-  if (conflit) { alert('❌ ' + vehicule + ' déjà réservé pour cette période.'); return; }
-  const session = Auth.getSession();
-  const prenom = session?.prenom || '';
-  const nom = session?.nom || '';
-  const userName = [prenom, nom].filter(Boolean).join(' ') || session?.username || 'Inconnu';
-  const planning = DB.get(DB.keys.planning) || [];
-  planning.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    titre: 'Véhicule — ' + vehicule,
-    date: dateAller.slice(0,10), dateEnd: dateRetour.slice(0,10),
-    time: dateAller.slice(11,16), timeEnd: dateRetour.slice(11,16),
-    desc: 'Réservé par : ' + userName + (motif ? '\nMotif : ' + motif : '') + '\nVéhicule : ' + vehicule + '\nDestination : ' + destination,
-    color: '#6366f1', type: 'vehicule', vehicule, destination, reservedBy: userName, reservedPrenom: prenom
-  });
-  DB.set(DB.keys.planning, planning);
-  document.getElementById('mvDateAller').value = '';
-  document.getElementById('mvVehicule').value = '';
-  document.getElementById('mvDestination').value = '';
-  document.getElementById('mvMotif').value = '';
-  alert('🚗 ' + vehicule + ' réservé par ' + (prenom || userName) + ' vers ' + destination);
-}
-document.addEventListener('DOMContentLoaded', loadVehiculesAdmin);
 
 /* ═══════════ SIDEBAR USER & BRANDING ═══════════ */
 function refreshSidebarUser() {
