@@ -668,6 +668,19 @@ tbody tr:hover{background:var(--g50)}
   font-size:11px;border-width:2.5px;
 }
 
+/* ── DASHBOARD FAB ── */
+.dash-fab{
+  position:fixed;bottom:2rem;right:2rem;z-index:100;
+  width:56px;height:56px;border-radius:var(--r-full);
+  background:#6366f1;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.35);
+  transition:all var(--t);border:none;
+}
+.dash-fab:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(99,102,241,.45);}
+.dash-fab:active{transform:scale(.95)}
+.dash-fab svg{width:24px;height:24px}
+
 /* ── AVENANT ROW HOVER ── */
 .avenant-row:hover{background:var(--g50)}
 .avenant-row:active{background:var(--g100)}
