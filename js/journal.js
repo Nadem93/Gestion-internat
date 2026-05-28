@@ -22,127 +22,6 @@ function populateSelects() {
   objs.forEach(o => { const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.name; oSel.appendChild(opt); });
 }
 
-function renderEntryForm() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
-  const cats = DB.get(DB.keys.categories) || [];
-  const objs = DB.get(DB.keys.objectives) || [];
-  const html = `
-    <div class="entry-detail" style="padding:1.5rem">
-      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:1.25rem">Nouvelle entrée</div>
-      <div class="form-group"><label class="required">Résident concerné</label>
-        <select id="iResident" class="form-control"><option value="">— Sélectionner —</option>
-          ${residents.map(r => `<option value="${r.id}">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Catégorie</label>
-          <select id="iCategorie" class="form-control"><option value="">— Sélectionner —</option>
-            ${cats.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group"><label>Objectif lié</label>
-          <select id="iObjectif" class="form-control"><option value="">— Aucun —</option>
-            ${objs.map(o => `<option value="${o.id}">${escHtml(o.name)}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="form-group"><label>Date et heure</label><input type="datetime-local" id="iDate" class="form-control" value="${new Date().toISOString().slice(0,16)}"/></div>
-      <div class="form-group"><label class="required">Contenu</label>
-        <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournalInline('redaction')">✍ Rédiger</button>
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournalInline('correction')">✓ Corriger</button>
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournalInline('reformulation')">🏛 Reformuler</button>
-        </div>
-        <textarea id="iContenu" class="form-control" rows="5" placeholder="Décrivez l'événement…"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Visibilité</label>
-        <div style="display:flex;gap:1rem">
-          <label class="checkbox-wrap"><input type="radio" name="iVisibilite" value="equipe" checked/> Équipe uniquement</label>
-          <label class="checkbox-wrap"><input type="radio" name="iVisibilite" value="tous"/> Tous</label>
-          <label class="checkbox-wrap"><input type="radio" name="iVisibilite" value="confidentiel"/> Confidentiel</label>
-        </div>
-      </div>
-      <button class="btn btn-primary" onclick="saveInlineEntry()" style="margin-top:.5rem">Enregistrer</button>
-    </div>`;
-  document.getElementById('entryDetail').innerHTML = html;
-}
-
-function saveInlineEntry() {
-  const session = Auth.getSession();
-  const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
-  const residentId = document.getElementById('iResident').value;
-  const contenu = document.getElementById('iContenu').value.trim();
-  if (!residentId) { toast('Sélectionnez un résident', 'error'); return; }
-  if (!contenu) { toast('Le contenu est requis', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
-  const res = residents.find(r => r.id === residentId);
-  const visEl = document.querySelector('input[name="iVisibilite"]:checked');
-  const entries = DB.get(DB.keys.journal) || [];
-  entries.push({
-    id: genId(), residentId,
-    resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
-    residentColor: res?.color || 'var(--blue)',
-    categorie: document.getElementById('iCategorie').value,
-    date: document.getElementById('iDate').value || new Date().toISOString(),
-    objectif: document.getElementById('iObjectif').value,
-    contenu, visibilite: visEl?.value || 'equipe',
-    author: userName, authorId: session?.userId,
-    replies: [], readBy: [session?.userId],
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-  });
-  DB.set(DB.keys.journal, entries);
-  toast('Entrée ajoutée ✓');
-  renderEntryForm();
-  renderEntries();
-}
-
-async function aiAssistJournalInline(action) {
-  const ta = document.getElementById('iContenu');
-  if (!ta) return;
-  const current = ta.value || '';
-  const residentId = document.getElementById('iResident')?.value || '';
-  const residents = DB.get(DB.keys.residents) || [];
-  const resident = residents.find(r => r.id === residentId);
-  const residentName = resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '';
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-
-  if (hasKey) {
-    const customSystem = getAiPrompt('journal', action);
-    let system = '';
-    let prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un éducateur spécialisé rédigeant une observation. Écris en français, professionnel et factuel.';
-      prompt = `Rédige une courte observation${residentName ? ' pour ' + residentName : ''}.` + (current ? '\n\nTexte à compléter :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Corrige les fautes sans changer le style.';
-      prompt = 'Corrige :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Reformule de manière professionnelle.';
-      prompt = 'Reformule :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) { ta.value = result; toast('✓ ' + labels[action], 'success'); return; }
-    toast('API indisponible, mode local', 'warning');
-  }
-  // Fallback local
-  let result = '';
-  if (action === 'redaction') {
-    const tpl = ['Observation : le résident a participé activement aux ateliers.','Suivi : bonne intégration et interactions positives.','Point d\'étape : autonomie croissante dans le quotidien.'];
-    result = current ? current + '\n\n' + tpl[Math.floor(Math.random()*tpl.length)] : tpl[Math.floor(Math.random()*tpl.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bils on\b/g,'ils ont').replace(/\bil a étais\b/g,'il a été');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bgère\b/g,'assure la gestion de').replace(/\ba besoin de\b/g,'nécessite').replace(/\bveut\b/g,'souhaite');
-  }
-  if (result) { ta.value = result; toast('✓ ' + labels[action] + ' (local)', 'success'); }
-}
-
 function getEntries() {
   const q = (document.getElementById('jSearch')?.value || '').toLowerCase();
   const res = document.getElementById('jFilterResident')?.value || '';
@@ -367,7 +246,6 @@ function saveEntry() {
   resetEntryForm();
   renderEntries();
   if (id) selectEntry(id);
-  else renderEntryForm();
 }
 
 function deleteEntry() { deleteEntryById(document.getElementById('entryId').value); }
@@ -379,7 +257,8 @@ function deleteEntryById(id) {
     DB.set(DB.keys.journal, entries);
     closeAllModals();
     selectedEntryId = null;
-    renderEntryForm();
+    document.getElementById('entryDetail').innerHTML = `<div class="entry-detail" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin-bottom:1rem;opacity:.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><p style="font-size:.875rem">Sélectionnez une entrée pour la lire</p></div>`;
+    resetEntryForm();
     renderEntries();
     toast('Entrée supprimée', 'info');
   });
@@ -400,7 +279,6 @@ function resetEntryForm() {
 function initJournal() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   populateSelects();
-  renderEntryForm();
   renderEntries();
   ['jSearch','jFilterResident','jFilterCat','jFilterDate'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', renderEntries);

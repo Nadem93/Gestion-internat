@@ -167,7 +167,32 @@ function docsHtml(docs) {
     </div>`;
   }).join('');
   return `<div class="card"><div class="card-header"><span class="card-title">Fichiers joints</span></div><div class="card-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>
-`;
+    <div class="card" style="margin-top:1rem">
+      <div class="card-header"><span class="card-title">Ajouter un document</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
+        <div class="form-group"><label>Nom du document</label><input type="text" id="pageDocName" class="form-input" placeholder="ex: Contrat de séjour"/></div>
+        <div class="grid grid-2" style="gap:.75rem">
+          <div class="form-group"><label>Date du document</label><input type="date" id="pageDocDate" class="form-input"/></div>
+          <div class="form-group"><label>Date d'échéance</label><input type="date" id="pageDocDueDate" class="form-input"/></div>
+        </div>
+        <div class="form-group"><label>Catégorie</label><select id="pageDocCategory" class="form-input"><option value="">—</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="autre">Autre</option></select></div>
+        <div class="doc-upload-zone" onclick="document.getElementById('pageDocFileInput').click()" style="cursor:pointer;padding:1.5rem;text-align:center;border:2px dashed var(--border);border-radius:var(--r);background:var(--g50)">
+          <div style="font-size:2rem;margin-bottom:.5rem">📎</div>
+          <div style="font-weight:600;font-size:.875rem">Cliquez pour sélectionner un fichier</div>
+          <div style="font-size:.78rem;color:var(--muted)">PDF, Word, image — max 3 Mo</div>
+        </div>
+        <input type="file" id="pageDocFileInput" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp"/>
+        <div id="pageDocPending" style="display:none;padding:.75rem 1rem;border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;gap:.75rem">
+          <span style="font-size:1.2rem">📎</span>
+          <div style="flex:1;min-width:0">
+            <div id="pageDocPendingName" style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="pageDocPendingSize" style="font-size:.72rem;color:var(--muted)"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="cancelPageDoc()" style="color:var(--red)">✕</button>
+        </div>
+        <button class="btn btn-primary" onclick="uploadDocFromPage()" style="align-self:flex-end">Ajouter</button>
+      </div>
+    </div>`;
 }
 
 function inputField(id, label, value, type) {
