@@ -42,15 +42,19 @@ const DEFAULTS = {
   users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin' }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
-    { id: 1, fonction: 'Éducateur', color: '#3b82f6', permissions: [] },
-    { id: 2, fonction: 'Psychologue', color: '#8b5cf6', permissions: [] },
-    { id: 3, fonction: 'Infirmier', color: '#ef4444', permissions: [] },
-    { id: 4, fonction: 'Social', color: '#10b981', permissions: [] },
-    { id: 5, fonction: 'Chef de service', color: '#f59e0b', permissions: ['edit_residents', 'view_all_incidents', 'validate_incidents'] },
-    { id: 6, fonction: 'Veilleur de nuit', color: '#6366f1', permissions: [] },
-    { id: 7, fonction: 'Sportif', color: '#06b6d4', permissions: [] },
-    { id: 8, fonction: 'Secrétaire', color: '#ec4899', permissions: [] },
-    { id: 9, fonction: 'Admin', color: '#dc2626', permissions: ['edit_residents', 'view_all_incidents', 'validate_incidents', 'access_admin', 'manage_users'] }
+    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: [] },
+    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: [] },
+    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: [] },
+    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: [] },
+    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: [] },
+    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: [] },
+    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: [] },
+    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: [] },
+    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: [] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['edit_residents', 'view_incidents', 'validate_incidents'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: [] },
+    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: [] },
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['edit_residents', 'view_incidents', 'validate_incidents', 'access_admin', 'manage_users'] }
   ],
   aiPrompts: {
     ppe: {
@@ -87,8 +91,21 @@ function initDefaults() {
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
+  else migrateFonctionColors();
   if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
   setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
+}
+function migrateFonctionColors() {
+  const existing = DB.get(DB.keys.fonctionColors) || [];
+  const existingNames = new Set(existing.map(f => f.fonction));
+  let changed = false;
+  DEFAULTS.fonctionColors.forEach((f, i) => {
+    if (!existingNames.has(f.fonction)) {
+      existing.push({ ...f, id: 1000 + i });
+      changed = true;
+    }
+  });
+  if (changed) DB.set(DB.keys.fonctionColors, existing);
 }
 
 // ── LOGIN HISTORY ──
@@ -524,10 +541,18 @@ function getJournalAuthor(e) {
 }
 
 const PERMISSION_LABELS = {
+  view_dashboard: 'Tableau de bord',
+  view_residents: 'Consulter les résidents',
   edit_residents: 'Modifier les résidents',
-  view_all_incidents: 'Voir tous les incidents',
+  access_journal: 'Journal de bord',
+  access_presences: 'Présences & planning',
+  view_incidents: 'Voir les incidents',
   validate_incidents: 'Valider les incidents',
-  access_admin: 'Accéder à l\'administration',
+  access_documents: 'Documents',
+  access_vehicules: 'Véhicules',
+  access_interventions: 'Interventions',
+  access_admin: 'Administration',
+  access_employes: 'Employés',
   manage_users: 'Gérer les utilisateurs'
 };
 
@@ -550,7 +575,7 @@ function canEditResidents(userId) {
 }
 
 function canViewAllIncidents(userId) {
-  if (hasPermission(userId, 'view_all_incidents')) return true;
+  if (hasPermission(userId, 'view_all_incidents') || hasPermission(userId, 'view_incidents')) return true;
   const users = DB.get(DB.keys.users) || [];
   const u = users.find(x => x.id === userId);
   return u && (u.role === 'admin' || u.role === 'moderator');
@@ -571,15 +596,14 @@ function canManageUsers(userId) {
   return hasPermission(userId, 'manage_users');
 }
 
-// ── MODULE PERMISSIONS (par poste) ──
+// ── MODULE PERMISSIONS (par fonction) ──
 function canAccessModule(moduleKey) {
   const s = Auth.getSession();
   if (!s) return false;
   if (s.role === 'admin') return true;
   const perms = JSON.parse(localStorage.getItem('ftr_permissions') || '{}');
-  const postePerms = perms[s.fonction];
-  if (!postePerms || typeof postePerms !== 'object') return false;
-  return postePerms[moduleKey] === true;
+  const allowedRole = perms[moduleKey] || 'admin';
+  return allowedRole === 'educ' && s.role === 'educ';
 }
 
 // ── AI ──

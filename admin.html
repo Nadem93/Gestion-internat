@@ -173,6 +173,9 @@
     /* Danger */
     .danger-zone{border:1.5px solid #fecaca!important}
     .danger-zone .card-header{background:#fef2f2}
+    .perm-btn{display:inline-flex;align-items:center;justify-content:center;padding:.35rem .7rem;border-radius:var(--r);border:1.5px solid var(--g200);background:#fff;color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .12s;gap:.3rem}
+    .perm-btn:hover{border-color:var(--av);color:var(--av)}
+    .perm-btn.active{background:var(--av-l);border-color:var(--av);color:var(--av);box-shadow:0 0 0 2px var(--av-l)}
   </style>
 </head>
 <body>
@@ -543,33 +546,9 @@
     <!-- ═══ FONCTIONS & CATÉGORIES ═══ -->
     <div id="tab-fonctions" class="admin-panel" style="display:none">
       <div class="panel-header">
-        <div><div class="panel-title">Fonctions &amp; Catégories du journal</div><div class="panel-sub">Gérez les rôles, permissions et catégories dans un seul espace</div></div>
+        <div><div class="panel-title">Catégories &amp; Objectifs</div><div class="panel-sub">Gérez les catégories du journal et les objectifs des résidents</div></div>
       </div>
-      <div class="fonc-grid">
-
-        <!-- Fonctions -->
-        <div style="display:flex;flex-direction:column;gap:1rem">
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">🎭 Fonctions &amp; permissions</span>
-              <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalFonction')">+ Ajouter</button>
-            </div>
-            <div id="fonctionList" style="min-height:80px"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">💡 À propos des permissions</span></div>
-            <div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7">
-              <p>Chaque fonction peut avoir des permissions spécifiques. La correspondance se fait par mot-clé dans la fonction de l'utilisateur.</p>
-              <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.35rem">
-                <div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur</div>
-                <div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div>
-                <div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div>
-                <div class="rights-item"><span class="rights-dot" style="background:#10b981"></span>Social</div>
-                <div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
 
         <!-- Catégories du journal -->
         <div style="display:flex;flex-direction:column;gap:1rem">
@@ -591,30 +570,30 @@
             </div>
           </div>
         </div>
-      </div> <!-- /fonc-grid -->
 
-      <!-- Objectifs personnalisés -->
-      <div style="margin-top:1.25rem">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">🎯 Objectifs personnalisés</span>
-            <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 260px;gap:1rem;padding:1rem">
-            <div id="objList" style="min-height:60px"></div>
-            <div class="card" style="border:none;box-shadow:none;background:var(--g50)">
-              <div class="card-body" style="padding:0;font-size:.82rem;color:var(--muted);line-height:1.7">
-                <p>Les objectifs sont assignés aux résidents pour structurer leur accompagnement.</p>
-                <div class="alert alert-info" style="margin-top:.75rem">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Les objectifs supprimés restent assignés aux résidents existants.
+        <!-- Objectifs personnalisés -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🎯 Objectifs personnalisés</span>
+              <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr;gap:1rem;padding:1rem">
+              <div id="objList" style="min-height:60px"></div>
+              <div class="card" style="border:none;box-shadow:none;background:var(--g50)">
+                <div class="card-body" style="padding:0;font-size:.82rem;color:var(--muted);line-height:1.7">
+                  <p>Les objectifs sont assignés aux résidents pour structurer leur accompagnement.</p>
+                  <div class="alert alert-info" style="margin-top:.75rem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Les objectifs supprimés restent assignés aux résidents existants.
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div> <!-- /tab-fonctions -->
 
     <!-- ═══ UTILISATEURS ═══ -->
@@ -653,12 +632,27 @@
     <!-- ═══ PERMISSIONS ═══ -->
     <div id="tab-permissions" class="admin-panel" style="display:none">
       <div class="panel-header">
-        <div><div class="panel-title">Permissions par poste</div><div class="panel-sub">Définissez les accès de chaque métier aux différents modules</div></div>
+        <div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Associez couleurs et droits à chaque rôle</div></div>
+        <button class="btn btn-violet btn-sm" onclick="openModal('modalFonction')">+ Ajouter</button>
       </div>
-      <div class="card">
-        <div class="card-body" style="padding:1.5rem">
-          <div style="overflow-x:auto" id="permList"></div>
-          <div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Le rôle <strong>admin</strong> a toujours accès à tous les modules, indépendamment de son poste.</div>
+      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+        <div class="card"><div class="card-body" style="padding:0"><div id="fonctionList"></div></div></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">💡 À propos des permissions</span></div>
+          <div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7">
+            <p>Chaque fonction peut avoir une couleur distincte dans le journal et des permissions spécifiques sur la plateforme.</p>
+            <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.4rem">
+              <div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur spécialisé</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#14b8a6"></span>Agent hôtelier</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#ec4899"></span>Maître / Maîtresse de maison</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#0ea5e9"></span>Veilleur de nuit</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#78716c"></span>Secrétaire / Assistant</div>
+            </div>
+            <div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> La correspondance se fait par mot-clé dans la fonction de l'utilisateur.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -749,7 +743,7 @@
     <div class="modal-header"><span class="modal-title" id="modalFonctionTitle">Nouvelle fonction</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body">
       <input type="hidden" id="fonctionId"/>
-      <div class="form-group"><label class="required">Nom de la fonction</label><input type="text" id="fonctionName" placeholder="Ex : Éducateur, Psychologue…"/></div>
+      <div class="form-group"><label class="required">Nom de la fonction</label><input type="text" id="fonctionName" placeholder="Ex : Éducateur spécialisé, Veilleur de nuit…"/></div>
       <div class="form-group"><label>Couleur du badge</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="fonctionColor" value="#3b82f6" style="width:48px;border-radius:8px"/><span style="font-size:.8rem;color:var(--muted)">Couleur dans le journal</span></div></div>
       <div class="form-group"><label>Permissions</label><div id="fonctionPermissions" style="display:flex;flex-direction:column;gap:.5rem"></div></div>
     </div>
@@ -802,7 +796,7 @@
         <div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom"/></div>
         <div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom"/></div>
       </div>
-      <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option><option value="Éducateur spécialisé">Éducateur spécialisé</option><option value="Éducateur de jeunes enfants">Éducateur de jeunes enfants</option><option value="Assistant de service social">Assistant de service social</option><option value="Conseiller en économie sociale">Conseiller en économie sociale</option><option value="Psychologue">Psychologue</option><option value="Infirmier">Infirmier</option><option value="Aide-soignant">Aide-soignant</option><option value="Moniteur-éducateur">Moniteur-éducateur</option><option value="Accompagnant éducatif et social">Accompagnant éducatif et social</option><option value="Animateur social">Animateur social</option><option value="Médiateur social">Médiateur social</option><option value="Chef de service">Chef de service</option><option value="Directeur d'établissement">Directeur d'établissement</option><option value="Coordonnateur de parcours">Coordonnateur de parcours</option><option value="Agent de développement social">Agent de développement social</option><option value="Technicien d'intervention sociale">Technicien d'intervention sociale</option><option value="Chargé d'insertion">Chargé d'insertion</option><option value="Autre">Autre</option></select></div>
+      <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option><optgroup label="Équipe éducative &amp; sociale"><option value="Éducateur spécialisé">Éducateur spécialisé</option><option value="Éducateur de jeunes enfants">Éducateur de jeunes enfants</option><option value="Moniteur-éducateur">Moniteur-éducateur</option><option value="Accompagnant éducatif et social">Accompagnant éducatif et social</option><option value="Assistant de service social">Assistant de service social</option><option value="Conseiller en économie sociale">Conseiller en économie sociale</option><option value="Médiateur social">Médiateur social</option><option value="Animateur social">Animateur social</option><option value="Chargé d'insertion">Chargé d'insertion</option><option value="Agent de développement social">Agent de développement social</option></optgroup><optgroup label="Soins &amp; santé"><option value="Psychologue">Psychologue</option><option value="Infirmier">Infirmier</option><option value="Aide-soignant">Aide-soignant</option></optgroup><optgroup label="Direction &amp; coordination"><option value="Directeur d'établissement">Directeur d'établissement</option><option value="Chef de service">Chef de service</option><option value="Coordonnateur de parcours">Coordonnateur de parcours</option><option value="Responsable hébergement">Responsable hébergement</option></optgroup><optgroup label="Hébergement &amp; intendance"><option value="Maître / Maîtresse de maison">Maître / Maîtresse de maison</option><option value="Agent hôtelier">Agent hôtelier</option><option value="Veilleur de nuit">Veilleur de nuit</option><option value="Agent d'entretien">Agent d'entretien</option><option value="Cuisinier / Agent de restauration">Cuisinier / Agent de restauration</option><option value="Technicien de maintenance">Technicien de maintenance</option><option value="Chauffeur / Accompagnateur">Chauffeur / Accompagnateur</option><option value="Agent de sécurité">Agent de sécurité</option></optgroup><optgroup label="Administration"><option value="Secrétaire / Assistant administratif">Secrétaire / Assistant administratif</option><option value="Comptable / Gestionnaire">Comptable / Gestionnaire</option><option value="Agent d'accueil">Agent d'accueil</option></optgroup></select></div>
       <div class="form-row">
         <div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div>
         <div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div>
@@ -849,7 +843,7 @@
 /* ═══════════ NAVIGATION ═══════════ */
 const PANEL_NAMES = {
   stats:'Statistiques', etablissement:'Établissement & personnalisation',
-  fonctions:'Fonctions & Catégories',
+  fonctions:'Catégories & Objectifs',
   employes:'Employés', educateurs:'Utilisateurs', permissions:'Permissions', compte:'Mon compte', donnees:'Données'
 };
 const ALL_TABS = ['stats','etablissement','fonctions','employes','educateurs','permissions','compte','donnees'];
@@ -863,7 +857,6 @@ function adminNav(btn) {
     el.style.display = n === name ? '' : 'none';
     el.classList.toggle('active', n === name);
   });
-  if (name === 'permissions') renderPermissions();
   if (name === 'employes') renderEmployes();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
@@ -971,55 +964,6 @@ function renderEmployes() {
       <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="padding:4px 8px">✎</button>
     </div>`;
   }).join('');
-}
-
-/* ═══════════ PERMISSIONS (par poste) ═══════════ */
-const POSTES = [
-  'Éducateur spécialisé','Éducateur de jeunes enfants','Assistant de service social',
-  'Conseiller en économie sociale','Psychologue','Infirmier','Aide-soignant',
-  'Moniteur-éducateur','Accompagnant éducatif et social','Animateur social',
-  'Médiateur social','Chef de service','Directeur d\'établissement',
-  'Coordonnateur de parcours','Agent de développement social',
-  'Technicien d\'intervention sociale','Chargé d\'insertion','Autre'
-];
-const PERM_MODULES = [
-  { key:'incidents', label:'Incidents', icon:'⚠️' },
-  { key:'documents', label:'Documents', icon:'📁' },
-  { key:'vehicules', label:'Véhicules', icon:'🚗' },
-  { key:'admin', label:'Admin', icon:'⚙️' }
-];
-function getPermPostes() {
-  return JSON.parse(localStorage.getItem('ftr_permissions') || '{}');
-}
-function savePermPoste(posteIdx, moduleKey, allowed) {
-  const poste = POSTES[posteIdx];
-  const p = getPermPostes();
-  if (!p[poste] || typeof p[poste] !== 'object') p[poste] = {};
-  p[poste][moduleKey] = allowed;
-  localStorage.setItem('ftr_permissions', JSON.stringify(p));
-  renderPermissions();
-}
-function renderPermissions() {
-  const el = document.getElementById('permList');
-  if (!el) return;
-  const perms = getPermPostes();
-  el.innerHTML =
-    `<div style="display:grid;grid-template-columns:180px repeat(${PERM_MODULES.length},1fr);gap:0;font-size:.78rem;border-bottom:2px solid var(--border);padding-bottom:.5rem;margin-bottom:.5rem;font-weight:600;color:var(--muted)">
-      <div>Poste</div>
-      ${PERM_MODULES.map(m => `<div style="text-align:center">${m.icon} ${m.label}</div>`).join('')}
-    </div>` +
-    POSTES.map((poste, i) => {
-      const p = perms[poste] || {};
-      return `<div style="display:grid;grid-template-columns:180px repeat(${PERM_MODULES.length},1fr);gap:0;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--g100)">
-        <div style="font-weight:500;font-size:.78rem">${escHtml(poste)}</div>
-        ${PERM_MODULES.map(m => {
-          const checked = p[m.key] === true;
-          return `<div style="text-align:center">
-            <input type="checkbox" ${checked?'checked':''} onchange="savePermPoste(${i},'${m.key}',this.checked)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent)">
-          </div>`;
-        }).join('')}
-      </div>`;
-    }).join('');
 }
 
 /* ═══════════ CIRCULAR PROGRESS ═══════════ */

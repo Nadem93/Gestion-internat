@@ -334,11 +334,8 @@ function renderFonctionPermissions(selected) {
   const el = document.getElementById('fonctionPermissions');
   if (!el) return;
   selected = selected || [];
-  el.innerHTML = Object.entries(PERMISSION_LABELS).map(([key, label]) => `
-    <label style="display:flex;align-items:center;gap:.6rem;font-size:.875rem;cursor:pointer;padding:.3rem 0">
-      <input type="checkbox" value="${key}" ${selected.includes(key)?'checked':''} style="accent-color:var(--accent);width:16px;height:16px"/>
-      ${escHtml(label)}
-    </label>`).join('');
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:.4rem">` + Object.entries(PERMISSION_LABELS).map(([key, label]) => `
+    <button type="button" class="perm-btn ${selected.includes(key)?'active':''}" data-key="${key}" onclick="this.classList.toggle('active')">${escHtml(label)}</button>`).join('') + `</div>`;
 }
 
 function editFonction(id) {
@@ -358,8 +355,8 @@ function saveFonction() {
   const name = document.getElementById('fonctionName').value.trim();
   if (!name) { toast('Le nom est requis', 'error'); return; }
   const color = document.getElementById('fonctionColor').value;
-  const permEls = document.querySelectorAll('#fonctionPermissions input[type="checkbox"]');
-  const permissions = Array.from(permEls).filter(cb => cb.checked).map(cb => cb.value);
+  const permEls = document.querySelectorAll('#fonctionPermissions .perm-btn');
+  const permissions = Array.from(permEls).filter(btn => btn.classList.contains('active')).map(btn => btn.dataset.key);
   let list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
   const id = document.getElementById('fonctionId').value;
   if (id) {
