@@ -619,7 +619,7 @@ tbody tr:hover{background:var(--g50)}
   transition:box-shadow var(--t),transform var(--t);
   cursor:pointer;
 }
-.accueil-home-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-2px);border-color:transparent}
+.accueil-home-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-2px);border-color:transparent;outline:2px solid var(--c,var(--accent))}
 .accueil-home-icon{
   width:48px;height:48px;border-radius:var(--r-sm);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
