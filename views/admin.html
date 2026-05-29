@@ -58,9 +58,7 @@
   <div class="admin-tabs">
     <a href="accueil.html" class="admin-tab home-tab" title="Accueil" style="text-decoration:none">🏠</a>
     <button class="admin-tab active" data-tab="etablissement" onclick="adminNavSPA(this)">Établissement</button>
-    <button class="admin-tab" data-tab="categories" onclick="adminNavSPA(this)">Catégories</button>
-    <button class="admin-tab" data-tab="objectifs" onclick="adminNavSPA(this)">Objectifs</button>
-    <button class="admin-tab" data-tab="fonctions" onclick="adminNavSPA(this)">Fonctions</button>
+    <button class="admin-tab" data-tab="fonctions" onclick="adminNavSPA(this)">Fonctions &amp; Objectifs</button>
     <button class="admin-tab" data-tab="employes" onclick="adminNavSPA(this)">Employés</button>
     <button class="admin-tab" data-tab="educateurs" onclick="adminNavSPA(this)">Utilisateurs</button>
     <button class="admin-tab" data-tab="permissions" onclick="adminNavSPA(this)">Permissions</button>
@@ -136,30 +134,75 @@
     </div></div>
   </div>
 
-  <!-- ═══ CATÉGORIES ═══ -->
-  <div id="tab-categories" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Catégories du journal</div><div class="panel-sub">Classifiez les entrées du journal de bord</div></div><button class="btn btn-violet btn-sm" onclick="openModal('modalCat')">+ Ajouter</button></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div class="card"><div class="card-body" style="padding:0"><div id="catList"></div></div></div>
-      <div class="card"><div class="card-header"><span class="card-title">À propos</span></div><div class="card-body"><p style="font-size:.875rem;color:var(--muted);line-height:1.7">Les catégories permettent de classifier les entrées du journal. Chaque entrée peut être associée à une catégorie pour faciliter le filtrage et l'analyse.</p><div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Supprimer une catégorie n'affecte pas les entrées existantes.</div></div></div>
-    </div>
-  </div>
 
-  <!-- ═══ OBJECTIFS ═══ -->
-  <div id="tab-objectifs" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Objectifs personnalisés</div><div class="panel-sub">Structurez l'accompagnement des résidents</div></div><button class="btn btn-violet btn-sm" onclick="openModal('modalObj')">+ Ajouter</button></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div class="card"><div class="card-body" style="padding:0"><div id="objList"></div></div></div>
-      <div class="card"><div class="card-header"><span class="card-title">À propos</span></div><div class="card-body"><p style="font-size:.875rem;color:var(--muted);line-height:1.7">Les objectifs sont assignés aux résidents pour structurer leur accompagnement. Créez des objectifs adaptés à votre établissement.</p><div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Les objectifs supprimés restent assignés aux résidents existants.</div></div></div>
-    </div>
-  </div>
 
-  <!-- ═══ FONCTIONS ═══ -->
+  <!-- ═══ FONCTIONS, CATÉGORIES & OBJECTIFS ═══ -->
   <div id="tab-fonctions" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Associez couleurs et droits à chaque rôle</div></div><button class="btn btn-violet btn-sm" onclick="openModal('modalFonction')">+ Ajouter</button></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div class="card"><div class="card-body" style="padding:0"><div id="fonctionList"></div></div></div>
-      <div class="card"><div class="card-header"><span class="card-title">À propos</span></div><div class="card-body"><p style="font-size:.875rem;color:var(--muted);line-height:1.7">Chaque fonction peut avoir une couleur distincte dans le journal et des permissions spécifiques sur la plateforme.</p><div style="margin-top:1rem;display:flex;flex-direction:column;gap:.4rem"><div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur</div><div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div><div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div><div class="rights-item"><span class="rights-dot" style="background:#10b981"></span>Social</div><div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div></div><div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> La correspondance se fait par mot-clé dans la fonction de l'utilisateur.</div></div></div>
+    <div class="panel-header"><div><div class="panel-title">Fonctions, catégories &amp; objectifs</div><div class="panel-sub">Gérez les rôles, les catégories du journal et les objectifs dans un seul espace</div></div></div>
+
+    <!-- Fonctions -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start;margin-bottom:1.25rem">
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🎭 Fonctions &amp; permissions</span>
+            <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalFonction')">+ Ajouter</button>
+          </div>
+          <div class="card-body" style="padding:0"><div id="fonctionList"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">💡 À propos des permissions</span></div>
+          <div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7">
+            <p>Chaque fonction peut avoir des permissions spécifiques. La correspondance se fait par mot-clé dans la fonction de l'utilisateur.</p>
+            <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.35rem">
+              <div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#10b981"></span>Social</div>
+              <div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📂 Catégories du journal</span>
+            <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalCat')">+ Ajouter</button>
+          </div>
+          <div class="card-body" style="padding:0"><div id="catList"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">💡 À propos des catégories</span></div>
+          <div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7">
+            <p>Les catégories classifient les entrées du journal de bord. Chaque entrée peut être associée à une catégorie pour faciliter le filtrage et l'analyse.</p>
+            <div class="alert alert-info" style="margin-top:.75rem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Supprimer une catégorie n'affecte pas les entrées existantes.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Objectifs -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🎯 Objectifs personnalisés</span>
+        <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:1rem;padding:1rem">
+        <div id="objList" style="min-height:60px"></div>
+        <div class="card" style="border:none;box-shadow:none;background:var(--g50)">
+          <div class="card-body" style="padding:0;font-size:.82rem;color:var(--muted);line-height:1.7">
+            <p>Les objectifs sont assignés aux résidents pour structurer leur accompagnement.</p>
+            <div class="alert alert-info" style="margin-top:.75rem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Les objectifs supprimés restent assignés aux résidents existants.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -385,12 +428,12 @@ function adminNavSPA(btn) {
   document.querySelectorAll('.admin-tab').forEach(i => i.classList.toggle('active', i === btn));
   if (name === 'permissions') renderPermissions();
   if (name === 'employes') renderEmployesSPA();
-  ['etablissement','categories','objectifs','fonctions','educateurs','employes','permissions','compte','donnees'].forEach(n => {
+  ['etablissement','fonctions','educateurs','employes','permissions','compte','donnees'].forEach(n => {
     const el = document.getElementById('tab-' + n);
     if (el) { el.style.display = n === name ? '' : 'none'; if (n === name) el.classList.add('active'); else el.classList.remove('active'); }
   });
   document.getElementById('pageTitle').textContent = 'Administration';
-  const labels = {etablissement:'Établissement & personnalisation',categories:'Catégories',objectifs:'Objectifs',fonctions:'Fonctions',employes:'Employés',educateurs:'Utilisateurs',permissions:'Permissions',compte:'Mon compte',donnees:'Données'};
+  const labels = {etablissement:'Établissement & personnalisation',fonctions:'Fonctions & Objectifs',employes:'Employés',educateurs:'Utilisateurs',permissions:'Permissions',compte:'Mon compte',donnees:'Données'};
   const sub = document.getElementById('pageSub');
   if (sub) sub.textContent = labels[name] || name;
 }

@@ -205,10 +205,7 @@
       <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
       Fonctions &amp; Catégories
     </button>
-    <button class="asb-item tab" data-tab="objectifs" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-      Objectifs
-    </button>
+
     <div class="asb-lbl">Ressources</div>
     <button class="asb-item tab" data-tab="employes" onclick="adminNav(this)">
       <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
@@ -595,23 +592,29 @@
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- ═══ OBJECTIFS ═══ -->
-    <div id="tab-objectifs" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Objectifs personnalisés</div><div class="panel-sub">Structurez l'accompagnement des résidents</div></div>
-        <button class="btn btn-violet btn-sm" onclick="openModal('modalObj')">+ Ajouter</button>
-      </div>
-      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-        <div class="card"><div class="card-body" style="padding:0"><div id="objList"></div></div></div>
+      <!-- Objectifs personnalisés -->
+      <div style="grid-column:1/-1;margin-top:.25rem">
         <div class="card">
-          <div class="card-header"><span class="card-title">À propos</span></div>
-          <div class="card-body"><p style="font-size:.875rem;color:var(--muted);line-height:1.7">Les objectifs sont assignés aux résidents pour structurer leur accompagnement.</p><div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Les objectifs supprimés restent assignés aux résidents existants.</div></div>
+          <div class="card-header">
+            <span class="card-title">🎯 Objectifs personnalisés</span>
+            <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 260px;gap:1rem;padding:1rem">
+            <div id="objList" style="min-height:60px"></div>
+            <div class="card" style="border:none;box-shadow:none;background:var(--g50)">
+              <div class="card-body" style="padding:0;font-size:.82rem;color:var(--muted);line-height:1.7">
+                <p>Les objectifs sont assignés aux résidents pour structurer leur accompagnement.</p>
+                <div class="alert alert-info" style="margin-top:.75rem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Les objectifs supprimés restent assignés aux résidents existants.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+    </div> <!-- /tab-fonctions -->
 
     <!-- ═══ UTILISATEURS ═══ -->
     <div id="tab-educateurs" class="admin-panel" style="display:none">
@@ -843,10 +846,10 @@
 /* ═══════════ NAVIGATION ═══════════ */
 const PANEL_NAMES = {
   stats:'Statistiques', etablissement:'Établissement & personnalisation',
-  fonctions:'Fonctions & Catégories', objectifs:'Objectifs',
+  fonctions:'Fonctions & Catégories',
   employes:'Employés', educateurs:'Utilisateurs', permissions:'Permissions', compte:'Mon compte', donnees:'Données'
 };
-const ALL_TABS = ['stats','etablissement','fonctions','objectifs','employes','educateurs','permissions','compte','donnees'];
+const ALL_TABS = ['stats','etablissement','fonctions','employes','educateurs','permissions','compte','donnees'];
 
 function adminNav(btn) {
   const name = btn.dataset.tab;
