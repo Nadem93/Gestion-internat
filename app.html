@@ -27,5 +27,50 @@
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
 <script src="js/router.js"></script>
+
+<!-- First-login password change modal -->
+<div class="modal-overlay" id="modalFirstPw" style="z-index:9999">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><span class="modal-title">Première connexion</span></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
+      <p style="font-size:.85rem;color:var(--muted);line-height:1.6">Bienvenue ! Pour des raisons de sécurité, veuillez définir votre mot de passe personnel.</p>
+      <div class="form-group"><label>Nouveau mot de passe</label>
+        <div style="position:relative">
+          <input type="password" id="fpwNew" placeholder="8 caractères minimum" autocomplete="new-password" style="width:100%;padding-right:2.4rem"/>
+          <button type="button" onclick="const i=document.getElementById('fpwNew');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem">👁</button>
+        </div>
+      </div>
+      <div class="form-group"><label>Confirmer le mot de passe</label>
+        <input type="password" id="fpwConfirm" placeholder="Répétez le mot de passe" autocomplete="new-password" style="width:100%"/>
+      </div>
+      <div id="fpwError" style="color:var(--red);font-size:.78rem;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-violet" onclick="saveFirstPassword()" style="width:100%;justify-content:center">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script>
+(function() {
+  const s = Auth.getSession();
+  if (!s || !s.mustChangePassword) return;
+  document.getElementById('modalFirstPw').style.display = 'flex';
+})();
+function saveFirstPassword() {
+  const pw = document.getElementById('fpwNew').value;
+  const confirm = document.getElementById('fpwConfirm').value;
+  const errEl = document.getElementById('fpwError');
+  if (pw.length < 3) { errEl.textContent = 'Le mot de passe doit faire au moins 3 caractères'; errEl.style.display = ''; return; }
+  if (pw !== confirm) { errEl.textContent = 'Les mots de passe ne correspondent pas'; errEl.style.display = ''; return; }
+  const s = Auth.getSession();
+  let users = JSON.parse(localStorage.getItem('ftr_users') || '[]');
+  users = users.map(u => u.id === s.userId ? { ...u, password: pw, mustChangePassword: false } : u);
+  localStorage.setItem('ftr_users', JSON.stringify(users));
+  const session = Auth.getSession();
+  if (session) { session.mustChangePassword = false; localStorage.setItem('ftr_session', JSON.stringify(session)); }
+  document.getElementById('modalFirstPw').style.display = 'none';
+  toast('Mot de passe modifié avec succès');
+}
+</script>
 </body>
 </html>

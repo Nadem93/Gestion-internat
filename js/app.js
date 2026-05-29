@@ -114,7 +114,7 @@ const Auth = {
     const users = DB.get(DB.keys.users) || DEFAULTS.users;
     const user = users.find(u => u.username === username.trim() && u.password === password);
     if (!user) return false;
-    DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, prenom: user.prenom || '', nom: user.nom || '' });
+    DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, prenom: user.prenom || '', nom: user.nom || '', mustChangePassword: user.mustChangePassword || false });
     logConnexion('login', user);
     return true;
   },
