@@ -300,10 +300,12 @@
       <div class="form-group"><label>Date d'embauche</label><input type="date" id="spaEmpDate"/></div>
       <div class="form-group"><label>Notes</label><textarea id="spaEmpNotes" rows="2" placeholder="Observations…"></textarea></div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="flex-wrap:wrap;gap:.5rem">
       <button class="btn btn-outline" onclick="closeModal('modalEmploye')">Annuler</button>
       <button class="btn btn-danger btn-sm" id="spaBtnDeleteEmp" style="margin-right:auto;display:none" onclick="deleteEmployeSPA()">Supprimer</button>
+      <button class="btn btn-outline btn-sm" onclick="createUserFromEmployeSPA()" style="border-color:var(--accent);color:var(--accent)">🔑 Créer un compte</button>
       <button class="btn btn-violet" onclick="saveEmployeSPA()">Enregistrer</button>
+      <div id="spaEmpCreatedAccount" style="width:100%;font-size:.75rem;color:var(--accent);display:none"></div>
     </div>
   </div>
 </div>
@@ -320,10 +322,29 @@ function resetEmployeFormSPA() {
   document.getElementById('spaEmpDate').value = '';
   document.getElementById('spaBtnDeleteEmp').style.display = 'none';
   document.getElementById('modalEmployeTitle').textContent = 'Nouvel employé';
+  document.getElementById('spaEmpCreatedAccount').style.display = 'none';
+  document.getElementById('spaEmpCreatedAccount').textContent = '';
 }
 function genPassword(len=8) {
   const c = 'abcdefghjkmnpqrstuvwxyz23456789';
   return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join('');
+}
+function createUserFromEmployeSPA() {
+  const prenom = document.getElementById('spaEmpPrenom').value.trim();
+  const nom = document.getElementById('spaEmpNom').value.trim();
+  const poste = document.getElementById('spaEmpPoste').value;
+  if (!prenom || !nom) { toast('Renseignez le prénom et le nom d\'abord', 'error'); return; }
+  const base = (prenom+nom[0]).toLowerCase().replace(/[^a-z0-9]/g,'');
+  let users = JSON.parse(localStorage.getItem('ftr_users') || '[]');
+  let username = base, suffix = 1;
+  while (users.some(u => u.username === username)) username = base + (suffix++);
+  const pw = genPassword();
+  users.push({ id: Math.max(0,...users.map(u=>u.id))+1, prenom, nom, fonction: poste, username, password: pw, role:'educateur', mustChangePassword: true });
+  localStorage.setItem('ftr_users', JSON.stringify(users));
+  const info = document.getElementById('spaEmpCreatedAccount');
+  info.style.display = '';
+  info.innerHTML = `✅ Compte créé — <strong>${username}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(noté, sera masqué à la fermeture)</span>`;
+  toast(`Compte créé : ${username} / ${pw}`);
 }
 function saveEmployeSPA() {
   const id = document.getElementById('spaEmpId').value;
@@ -341,15 +362,6 @@ function saveEmployeSPA() {
     if (idx >= 0) list[idx] = { ...list[idx], prenom, nom, poste, telephone, email, dateEmbauche, notes };
   } else {
     list.unshift({ id:genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo:'', notes, createdAt:new Date().toISOString() });
-    // Create user account automatically
-    const base = (prenom+nom[0]).toLowerCase().replace(/[^a-z0-9]/g,'');
-    let users = JSON.parse(localStorage.getItem('ftr_users') || '[]');
-    let username = base, suffix = 1;
-    while (users.some(u => u.username === username)) username = base + (suffix++);
-    const pw = genPassword();
-    users.push({ id: Math.max(0,...users.map(u=>u.id))+1, prenom, nom, fonction: poste, username, password: pw, role:'educateur', mustChangePassword: true });
-    localStorage.setItem('ftr_users', JSON.stringify(users));
-    setTimeout(() => toast(`Compte créé — Identifiant: ${username} / Mot de passe: ${pw}`, 'success', 8000), 600);
   }
   saveEmployes(list);
   closeModal('modalEmploye');
@@ -379,6 +391,7 @@ function editEmployeSPA(id) {
   document.getElementById('spaEmpNotes').value = e.notes || '';
   document.getElementById('spaBtnDeleteEmp').style.display = '';
   document.getElementById('modalEmployeTitle').textContent = 'Modifier employé';
+  document.getElementById('spaEmpCreatedAccount').style.display = 'none';
   openModal('modalEmploye');
 }
 function renderEmployesSPA() {
