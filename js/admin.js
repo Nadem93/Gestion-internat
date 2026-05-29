@@ -610,6 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCats();
   renderObjs();
   renderFonctions();
+  resetFonctionForm();
   renderEducateurs();
   initLogoUpload();
   renderLoginHistory();
