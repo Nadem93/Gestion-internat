@@ -396,25 +396,26 @@
         </div>
       </div>
 
-      <!-- Catégories journal -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">📂 Répartition des entrées du journal par catégorie</span>
-          <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="journalCatTotal"></span>
+      <!-- Catégories journal + Incidents -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📂 Catégories journal</span>
+            <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="journalCatTotal"></span>
+          </div>
+          <div class="card-body" style="padding:.9rem 1.25rem">
+            <div id="journalCatBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
+          </div>
         </div>
-        <div class="card-body" style="padding:.9rem 1.25rem">
-          <div id="journalCatBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
-        </div>
-      </div>
 
-      <!-- Répartition des types d'incidents -->
-      <div class="card" style="margin-top:1.25rem">
-        <div class="card-header">
-          <span class="card-title">⚠️ Répartition des incidents par type</span>
-          <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="incidentTypeTotal"></span>
-        </div>
-        <div class="card-body" style="padding:.9rem 1.25rem">
-          <div id="incidentTypeBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚠️ Types d'incidents</span>
+            <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="incidentTypeTotal"></span>
+          </div>
+          <div class="card-body" style="padding:.9rem 1.25rem">
+            <div id="incidentTypeBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
+          </div>
         </div>
       </div>
 
