@@ -123,7 +123,7 @@ function openExportModal() {
   openModal('modalExportAbs');
 }
 
-function exportAbsencesCSV() {
+function exportPresencesPDF() {
   const start = document.getElementById('exportStart').value;
   const end = document.getElementById('exportEnd').value;
   if (!start || !end) { toast('Sélectionnez une période', 'error'); return; }
@@ -132,7 +132,7 @@ function exportAbsencesCSV() {
   const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
   const residentMap = {};
   residents.forEach(r => { residentMap[r.id] = r; });
-  const rows = [['Date','Résident','Prénom','Nom','Statut']];
+  const rows = [];
   const startD = new Date(start + 'T00:00:00');
   const endD = new Date(end + 'T00:00:00');
   for (let d = new Date(startD); d <= endD; d.setDate(d.getDate()+1)) {
@@ -142,19 +142,40 @@ function exportAbsencesCSV() {
     for (const [rid, status] of Object.entries(day)) {
       if (mode === 'absent' && status !== 'absent') continue;
       const r = residentMap[rid];
-      rows.push([ds, r ? `${r.prenom} ${r.nom}` : rid, r ? r.prenom : '', r ? r.nom : '', status]);
+      rows.push({ date: ds, resident: r ? `${r.prenom} ${r.nom}` : rid, status });
     }
   }
-  if (rows.length === 1) { toast('Aucune donnée pour cette période', 'info'); return; }
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `export-absences-${start}_${end}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  if (!rows.length) { toast('Aucune donnée pour cette période', 'info'); return; }
+  const etab = DB.get(DB.keys.settings)?.etablissement || 'FTR';
+  const now = new Date().toLocaleDateString('fr-FR');
+  const statusLabels = { present:'Présent', absent:'Absent', sortie:'Sorti', permission:'Permission', malade:'Malade', '':'-' };
+  const statusColors = { present:'#16a34a', absent:'#dc2626', sortie:'#ca8a04', permission:'#2563eb', malade:'#9333ea' };
+  const printWin = window.open('', '_blank', 'width=900,height=700');
+  printWin.document.write(`
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Export Présences</title>
+<style>
+  @page{size:A4 landscape;margin:1.5cm}
+  body{font-family:Inter,system-ui,sans-serif;font-size:10px;color:#1e293b}
+  h1{font-size:18px;margin:0 0 2px}
+  .sub{font-size:11px;color:#64748b;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#1e293b;color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.04em}
+  td{padding:5px 8px;border-bottom:1px solid #e2e8f0}
+  tr:nth-child(even){background:#f8fafc}
+  .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;color:#fff}
+  .footer{position:fixed;bottom:0;font-size:9px;color:#94a3b8;text-align:center;width:100%;padding:8px 0;border-top:1px solid #e2e8f0}
+</style></head><body>
+<h1>${escHtml(etab)}</h1>
+<div class="sub">Export des présences du ${start} au ${end} • ${rows.length} entrée(s) • Généré le ${now}</div>
+<table>
+  <thead><tr><th>Date</th><th>Résident</th><th>Statut</th></tr></thead>
+  <tbody>${rows.map(r => `<tr><td>${r.date}</td><td>${escHtml(r.resident)}</td><td><span class="tag" style="background:${statusColors[r.status]||'#94a3b8'}">${escHtml(statusLabels[r.status]||r.status)}</span></td></tr>`).join('')}</tbody>
+</table>
+<div class="footer">Document généré automatiquement</div>
+<script>window.onload=function(){window.print();window.close()}<\/script>
+</body></html>`);
+  printWin.document.close();
   closeModal('modalExportAbs');
-  toast('Export CSV téléchargé');
 }
 
 function initPresences() {
