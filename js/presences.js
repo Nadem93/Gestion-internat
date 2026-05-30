@@ -124,64 +124,42 @@ function openExportModal() {
 }
 
 function exportPresencesPDF() {
-  const start = document.getElementById('exportStart').value;
-  const end = document.getElementById('exportEnd').value;
-  if (!start || !end) { toast('Sélectionnez une période', 'error'); return; }
-  const mode = document.getElementById('exportType').value;
-  const allPresences = DB.get(DB.keys.presences) || {};
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
-  const residentMap = {};
-  residents.forEach(r => { residentMap[r.id] = r; });
-  const rows = [];
-  const startD = new Date(start + 'T00:00:00');
-  const endD = new Date(end + 'T00:00:00');
-  for (let d = new Date(startD); d <= endD; d.setDate(d.getDate()+1)) {
-    const ds = d.toISOString().slice(0,10);
-    const day = allPresences[ds];
-    if (!day) continue;
-    for (const [rid, status] of Object.entries(day)) {
-      if (mode === 'absent' && status !== 'absent') continue;
-      const r = residentMap[rid];
-      rows.push({ date: ds, resident: r ? `${r.prenom} ${r.nom}` : rid, status });
+  try {
+    const start = document.getElementById('exportStart').value;
+    const end = document.getElementById('exportEnd').value;
+    if (!start || !end) { toast('Sélectionnez une période', 'error'); return; }
+    const mode = document.getElementById('exportType').value;
+    const allPresences = DB.get(DB.keys.presences) || {};
+    const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+    const residentMap = {};
+    residents.forEach(r => { residentMap[r.id] = r; });
+    const rows = [];
+    const startD = new Date(start + 'T00:00:00');
+    const endD = new Date(end + 'T00:00:00');
+    for (let d = new Date(startD); d <= endD; d.setDate(d.getDate()+1)) {
+      const ds = d.toISOString().slice(0,10);
+      const day = allPresences[ds];
+      if (!day) continue;
+      for (const [rid, status] of Object.entries(day)) {
+        if (mode === 'absent' && status !== 'absent') continue;
+        const r = residentMap[rid];
+        rows.push({ date: ds, resident: r ? `${r.prenom} ${r.nom}` : rid, status });
+      }
     }
-  }
-  if (!rows.length) { toast('Aucune donnée pour cette période', 'info'); return; }
-  const etab = DB.get(DB.keys.settings)?.etablissement || 'FTR';
-  const now = new Date().toLocaleDateString('fr-FR');
-  const statusLabels = { present:'Présent', absent:'Absent', sortie:'Sorti', permission:'Permission', malade:'Malade', '':'-' };
-  const statusColors = { present:'#16a34a', absent:'#dc2626', sortie:'#ca8a04', permission:'#2563eb', malade:'#9333ea' };
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Export Présences</title>
-<style>
-  @page{size:A4 landscape;margin:1.5cm}
-  body{font-family:Inter,system-ui,sans-serif;font-size:10px;color:#1e293b;padding:0;margin:0}
-  .page{padding:1.5cm}
-  h1{font-size:18px;margin:0 0 2px}
-  .sub{font-size:11px;color:#64748b;margin-bottom:16px}
-  table{width:100%;border-collapse:collapse}
-  th{background:#1e293b;color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.04em}
-  td{padding:5px 8px;border-bottom:1px solid #e2e8f0;color:#000}
-  tr:nth-child(even){background:#f8fafc}
-  .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:600;color:#fff}
-</style></head><body onload="window.print()">
-<div class="page">
-<h1>${escHtml(etab)}</h1>
-<div class="sub">Export des présences du ${start} au ${end} &bull; ${rows.length} entr&eacute;e(s) &bull; G&eacute;n&eacute;r&eacute; le ${now}</div>
-<table><thead><tr><th>Date</th><th>R&eacute;sident</th><th>Statut</th></tr></thead>
-<tbody>${rows.map(r => `<tr><td>${r.date}</td><td>${escHtml(r.resident)}</td><td><span class="tag" style="background:${statusColors[r.status]||'#94a3b8'}">${escHtml(statusLabels[r.status]||r.status)}</span></td></tr>`).join('')}</tbody>
-</table>
-</div></body></html>`;
-  closeModal('modalExportAbs');
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url, '_blank');
-  if (!w) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'export-presences.html';
-    a.click();
-  }
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-  toast('Export généré');
+    if (!rows.length) { toast('Aucune donnée pour cette période', 'info'); return; }
+    const etab = DB.get(DB.keys.settings)?.etablissement || 'FTR';
+    const now = new Date().toLocaleDateString('fr-FR');
+    const s = { present:'Présent', absent:'Absent', sortie:'Sorti', permission:'Permission', malade:'Malade', '':'-' };
+    const c = { present:'#16a34a', absent:'#dc2626', sortie:'#ca8a04', permission:'#2563eb', malade:'#9333ea' };
+    const rowsHtml = rows.map(r => `<tr><td>${r.date}</td><td>${r.resident}</td><td><span style="background:${c[r.status]||'#94a3b8'};color:#fff;padding:1px 8px;border-radius:10px;font-size:9px;font-weight:600">${s[r.status]||r.status}</span></td></tr>`).join('');
+    const printEl = document.createElement('div');
+    printEl.id = 'printExport';
+    printEl.innerHTML = `<style nonce>#printExport{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;padding:40px;font-family:Inter,system-ui,sans-serif;font-size:11px;color:#1e293b;overflow:auto}#printExport h1{font-size:20px;margin:0 0 4px}#printExport .sub{font-size:12px;color:#64748b;margin-bottom:20px}#printExport table{width:100%;border-collapse:collapse}#printExport th{background:#1e293b;color:#fff;padding:7px 10px;text-align:left;font-size:10px}#printExport td{padding:6px 10px;border-bottom:1px solid #e2e8f0}@media print{body>*:not(#printExport){display:none!important}#printExport{position:static!important;padding:0!important}}</style><h1>${etab}</h1><div class="sub">Export présences du ${start} au ${end} &mdash; ${rows.length} entr&eacute;e(s) &mdash; ${now}</div><table><thead><tr><th>Date</th><th>R&eacute;sident</th><th>Statut</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    document.body.appendChild(printEl);
+    closeModal('modalExportAbs');
+    setTimeout(() => { window.focus(); window.print(); setTimeout(() => printEl.remove(), 300); }, 200);
+    toast('Export en cours...');
+  } catch(e) { toast('Erreur: '+e.message, 'error'); console.error(e); }
 }
 
 function initPresences() {
