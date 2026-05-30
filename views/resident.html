@@ -25,7 +25,6 @@ function loadResident() {
   const r = getResident();
   if (!r) { document.getElementById('residentContent').innerHTML = '<div class="empty"><h3>Résident introuvable</h3><p>Ce résident n\'existe pas ou a été supprimé.</p><a href="residents.html" class="btn btn-accent">← Retour aux résidents</a></div>'; return; }
   document.getElementById('pageTitle').textContent = `${r.prenom||''} ${r.nom||''}`;
-  document.getElementById('pageSub').textContent = 'Fiche résident';
   if (pageEditMode) { renderEditMode(r); return; }
   renderViewMode(r);
 }

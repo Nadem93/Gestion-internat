@@ -422,8 +422,6 @@ function adminNavSPA(btn) {
   });
   document.getElementById('pageTitle').textContent = 'Administration';
   const labels = {etablissement:'Établissement & personnalisation',fonctions:'Catégories & Objectifs',employes:'Employés',educateurs:'Utilisateurs',permissions:'Fonctions & permissions',compte:'Mon compte',donnees:'Données'};
-  const sub = document.getElementById('pageSub');
-  if (sub) sub.textContent = labels[name] || name;
 }
 
 function refreshAdminStats() {

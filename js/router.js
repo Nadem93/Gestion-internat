@@ -1,19 +1,19 @@
 // ── SPA ROUTER ──
 const ROUTES = {
-  'accueil':     { view:'accueil',     title:'Accueil',          sub:'',                      js:'' },
-  'resident':    { view:'resident',    title:'Fiche résident',   sub:'',                      js:'js/residents.js' },
-  'dashboard':   { view:'dashboard',   title:'Tableau de bord',  sub:'Vue d\'ensemble',        js:'' },
-  'journal':     { view:'journal',     title:'Journal',          sub:'',                      js:'js/journal.js' },
-  'planning':    { view:'planning',    title:'Planning',         sub:'Activités & sorties',     js:'js/planning.js' },
-  'presences':   { view:'presences',   title:'Présences',        sub:'Pointage des résidents',  js:'js/presences.js' },
-  'ppe':         { view:'ppe',         title:'PPE',              sub:'Projets Personnalisés',   js:'js/ppe.js' },
-  'incidents':   { view:'incidents',   title:'Incidents',        sub:'Registre des incidents',  js:'js/incidents.js' },
-  'messages':    { view:'messages',    title:'Messages',         sub:'Messagerie interne',     js:'js/messages.js' },
-  'documents':   { view:'documents',   title:'Documents',        sub:'GED résidents',          js:'js/documents.js' },
-  'repertoire':  { view:'repertoire',  title:'Répertoire',       sub:'Contacts utiles',         js:'js/repertoire.js' },
-  'vehicules':   { view:'vehicules',   title:'Véhicules',        sub:'Réservations véhicules',  js:'js/vehicules.js' },
-  'employe':     { view:'employe',     title:'Fiche employé',    sub:'',                      js:'' },
-  'admin':       { view:'admin',       title:'Administration',   sub:'Paramètres',              js:'js/admin.js' }
+  'accueil':     { view:'accueil',     title:'Accueil',          sub:'', js:'' },
+  'resident':    { view:'resident',    title:'Fiche résident',   sub:'', js:'js/residents.js' },
+  'dashboard':   { view:'dashboard',   title:'Tableau de bord',  sub:'', js:'' },
+  'journal':     { view:'journal',     title:'Journal',          sub:'', js:'js/journal.js' },
+  'planning':    { view:'planning',    title:'Planning',         sub:'', js:'js/planning.js' },
+  'presences':   { view:'presences',   title:'Présences',        sub:'', js:'js/presences.js' },
+  'ppe':         { view:'ppe',         title:'PPE',              sub:'', js:'js/ppe.js' },
+  'incidents':   { view:'incidents',   title:'Incidents',        sub:'', js:'js/incidents.js' },
+  'messages':    { view:'messages',    title:'Messages',         sub:'', js:'js/messages.js' },
+  'documents':   { view:'documents',   title:'Documents',        sub:'', js:'js/documents.js' },
+  'repertoire':  { view:'repertoire',  title:'Répertoire',       sub:'', js:'js/repertoire.js' },
+  'vehicules':   { view:'vehicules',   title:'Véhicules',        sub:'', js:'js/vehicules.js' },
+  'employe':     { view:'employe',     title:'Fiche employé',    sub:'', js:'' },
+  'admin':       { view:'admin',       title:'Administration',   sub:'', js:'js/admin.js' }
 };
 
 const FILE_TO_ROUTE = {};
@@ -60,7 +60,6 @@ async function loadView(routeKey, route, path) {
   const viewEl = document.getElementById('app-view');
   const modalsEl = document.getElementById('app-modals');
   const titleEl = document.getElementById('pageTitle');
-  const subEl = document.getElementById('pageSub');
   if (!viewEl) return;
 
   viewEl.classList.add('loading');
@@ -94,9 +93,8 @@ async function loadView(routeKey, route, path) {
       existingHR.innerHTML = '';
     }
 
-    // Update title/sub
+    // Update title
     if (titleEl) titleEl.textContent = route.title;
-    if (subEl) subEl.textContent = route.sub || '';
 
     // Extract content and separate scripts from HTML
     const contentEl = doc.querySelector('main') || doc.body;

@@ -10,7 +10,7 @@
 <div class="app-layout">
   <div class="main">
     <header class="header">
-      <div class="header-info"><div class="header-title" id="pageTitle">Fiche employé</div><div class="header-sub" id="pageSub">Chargement…</div></div>
+      <div class="header-info"><div class="header-title" id="pageTitle">Fiche employé</div></div>
       <div class="header-right">
         <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
         <button class="btn btn-accent btn-sm" id="btnEdit" onclick="togglePageEdit()">✎ Modifier</button>
@@ -66,7 +66,6 @@ function loadEmploye() {
   const e = getEmploye();
   if (!e) { document.getElementById('employeContent').innerHTML = '<div class="empty"><h3>Employé introuvable</h3><p>Cet employé n\'existe pas ou a été supprimé.</p><a href="accueil.html" class="btn btn-accent">← Retour</a></div>'; return; }
   document.getElementById('pageTitle').textContent = `${e.prenom||''} ${e.nom||''}`;
-  document.getElementById('pageSub').textContent = 'Fiche employé';
   const editBtn = document.getElementById('btnEdit');
   if (editBtn) {
     if (!canEditEmploye()) { editBtn.style.display = 'none'; }

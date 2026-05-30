@@ -104,8 +104,7 @@ body{
   line-height:1.2;letter-spacing:-.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.header-title + .header-sub{margin-top:1px}
-.header-sub{
+.header-date{
   font-size:.72rem;color:var(--muted);font-weight:400;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
@@ -770,7 +769,6 @@ tbody tr:hover .table-actions{opacity:1}
   /* Header */
   .header{padding:0 .875rem;gap:.5rem}
   .header-title{font-size:.875rem}
-  .header-sub{display:none}
   .header-btn{width:34px;height:34px}
   .header-right{gap:.375rem}
 

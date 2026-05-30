@@ -46,7 +46,6 @@ function loadEmploye() {
   const e = getEmploye();
   if (!e) { document.getElementById('employeContent').innerHTML = '<div class="empty"><h3>Employé introuvable</h3><p>Cet employé n\'existe pas ou a été supprimé.</p><a href="accueil.html" class="btn btn-accent">← Retour</a></div>'; return; }
   document.getElementById('pageTitle').textContent = `${e.prenom||''} ${e.nom||''}`;
-  document.getElementById('pageSub').textContent = 'Fiche employé';
   const editBtn = document.getElementById('btnEdit');
   if (editBtn) {
     if (!canEditEmploye()) { editBtn.style.display = 'none'; }

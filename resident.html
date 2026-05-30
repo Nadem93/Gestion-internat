@@ -10,7 +10,7 @@
 <div class="app-layout">
   <div class="main">
     <header class="header">
-      <div class="header-info"><div class="header-title" id="pageTitle">Fiche résident</div><div class="header-sub" id="pageSub">Chargement…</div></div>
+      <div class="header-info"><div class="header-title" id="pageTitle">Fiche résident</div></div>
       <div class="header-right">
         <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
         <button class="btn btn-accent btn-sm" id="btnEdit" onclick="togglePageEdit()">✎ Modifier</button>
@@ -48,7 +48,6 @@ function loadResident() {
   const r = getResident();
   if (!r) { document.getElementById('residentContent').innerHTML = '<div class="empty"><h3>Résident introuvable</h3><p>Ce résident n\'existe pas ou a été supprimé.</p><a href="residents.html" class="btn btn-accent">← Retour aux résidents</a></div>'; return; }
   document.getElementById('pageTitle').textContent = `${r.prenom||''} ${r.nom||''}`;
-  document.getElementById('pageSub').textContent = 'Fiche résident';
 
   const editBtn = document.getElementById('btnEdit');
   if (editBtn) {
