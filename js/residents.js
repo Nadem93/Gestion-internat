@@ -9,6 +9,11 @@ const DOC_CAT_LABELS = {
   rapport:'Rapport social', ase:'ASE', pjj:'PJJ', identite:"Pièce d'identité", autre:'Autre'
 };
 
+const PROTECTION_LABELS = {
+  tutelle:'Tutelle', curatelle:'Curatelle', sauvegarde:'Sauvegarde de justice',
+  habilitation:'Habilitation familiale', masp:'MASP', autre:'Autre'
+};
+
 function docTypeIcon(mime) {
   if (!mime) return '📎';
   if (mime.includes('pdf')) return '📄';
@@ -231,7 +236,7 @@ function residentCard(r) {
       <div class="res-card-info">
         <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
         <div class="res-card-meta">${r.dob ? age(r.dob)+' ans' : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
-        ${r.referent ? `<div class="res-card-ref">Réf. ${escHtml(r.referent)}</div>` : ''}
+        ${r.protection ? `<div class="res-card-ref">${PROTECTION_LABELS[r.protection] || r.protection}</div>` : ''}
         <div>${statusBadge(presenceStatus)}</div>
       </div>
     </div>
@@ -297,6 +302,7 @@ function showDetail(id) {
         ${r.ressources ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Ressources</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.ressources).toUpperCase()}</div></div>` : ''}
         ${r.organismeA ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Organisme</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.organismeA).toUpperCase()}</div></div>` : ''}
         ${r.situationAdmin ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Situation admin.</div><div style="font-weight:600;font-size:.875rem">${escHtml(r.situationAdmin)}</div></div>` : ''}
+        ${r.protection ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Mesure de protection</div><div style="font-weight:600;font-size:.875rem">${PROTECTION_LABELS[r.protection] || r.protection}</div></div>` : ''}
       </div>` : ''}`;
   }
 
@@ -364,7 +370,7 @@ function editResident(id) {
   setV('rTuteur', r.tuteur); setV('rTuteurTel', r.tuteurTel); setV('rEcole', r.ecole);
   setV('rClasse', r.classe); setV('rOrganisme', r.organisme); setV('rDossier', r.dossier);
   setV('rSituationPro', r.situationPro); setV('rRessources', r.ressources);
-  setV('rOrganismeA', r.organismeA); setV('rDossierA', r.dossierA); setV('rSituationAdmin', r.situationAdmin);
+  setV('rOrganismeA', r.organismeA); setV('rDossierA', r.dossierA); setV('rSituationAdmin', r.situationAdmin); setV('rProtection', r.protection);
   document.getElementById('btnDelete').style.display = '';
   updatePhotoPreview(pendingPhoto);
   renderObjectifsCheckboxes(r.objectifs || []);
@@ -392,6 +398,7 @@ function saveResident() {
     classe: gV('rClasse'), organisme: gV('rOrganisme'), dossier: gV('rDossier'),
     situationPro: gV('rSituationPro'), ressources: gV('rRessources'),
     organismeA: gV('rOrganismeA'), dossierA: gV('rDossierA'), situationAdmin: gV('rSituationAdmin'),
+    protection: gV('rProtection'),
     updatedAt: new Date().toISOString()
   };
   let residents = DB.get(DB.keys.residents) || [];
@@ -434,7 +441,7 @@ function resetForm() {
   if (docListEl) docListEl.innerHTML = '';
   const badge = document.getElementById('tabDocCount');
   if (badge) badge.style.display = 'none';
-  ['rGenre','rOrganisme','rOrganismeA','rSituationPro','rRessources','rSituationAdmin'].forEach(id => {
+  ['rGenre','rOrganisme','rOrganismeA','rSituationPro','rRessources','rSituationAdmin','rProtection'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('rEntree').value = today();
