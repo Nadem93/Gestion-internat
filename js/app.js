@@ -552,6 +552,8 @@ const PERMISSION_LABELS = {
   access_documents: 'Documents',
   access_vehicules: 'Véhicules',
   access_interventions: 'Interventions',
+  access_ppe: 'PPE / Avenants',
+  access_repertoire: 'Répertoire',
   access_admin: 'Administration',
   access_employes: 'Employés',
   manage_users: 'Gérer les utilisateurs'
