@@ -17,11 +17,6 @@ function canEditResident() {
   return session && (session.role === 'admin' || session.role === 'moderator');
 }
 
-const PROTECTION_LABELS = {
-  tutelle:'Tutelle', curatelle:'Curatelle', sauvegarde:'Sauvegarde de justice',
-  habilitation:'Habilitation familiale', masp:'MASP', autre:'Autre'
-};
-
 function loadResident() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
