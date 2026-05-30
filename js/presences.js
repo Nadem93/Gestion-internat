@@ -116,10 +116,10 @@ function updateDateLabel() {
 }
 
 function openExportModal() {
-  const end = today();
-  const start = new Date(); start.setDate(start.getDate()-30);
-  document.getElementById('exportStart').value = start.toISOString().slice(0,10);
-  document.getElementById('exportEnd').value = end;
+  const start = today();
+  const end = new Date(); end.setDate(end.getDate()+1);
+  document.getElementById('exportStart').value = start;
+  document.getElementById('exportEnd').value = end.toISOString().slice(0,10);
   openModal('modalExportAbs');
 }
 
@@ -128,7 +128,6 @@ function exportPresencesPDF() {
     const start = document.getElementById('exportStart').value;
     const end = document.getElementById('exportEnd').value;
     if (!start || !end) { toast('Sélectionnez une période', 'error'); return; }
-    const mode = document.getElementById('exportType').value;
     const allPresences = DB.get(DB.keys.presences) || {};
     const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
     const residentMap = {};
@@ -141,7 +140,6 @@ function exportPresencesPDF() {
       const day = allPresences[ds];
       if (!day) continue;
       for (const [rid, status] of Object.entries(day)) {
-        if (mode === 'absent' && status !== 'absent') continue;
         const r = residentMap[rid];
         rows.push({ date: ds, resident: r ? `${r.prenom} ${r.nom}` : rid, status });
       }
