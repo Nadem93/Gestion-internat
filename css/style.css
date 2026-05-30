@@ -97,7 +97,6 @@ body{
   padding:0 1.75rem;
   position:sticky;top:0;z-index:50;
   box-shadow:0 1px 0 rgba(15,43,74,.06),0 4px 20px rgba(15,43,74,.04);
-  overflow:hidden;
 }
 .header-info{min-width:0;flex:1;overflow:hidden}
 .header-title{
