@@ -679,3 +679,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
 });
+
+function getPosteOptions() {
+  const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
+  return [['','— Sélectionner —'], ...list.map(f => [f.fonction, f.fonction])];
+}

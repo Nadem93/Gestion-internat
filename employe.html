@@ -182,7 +182,7 @@ function renderEditMode(e) {
           ${inputField('eNom','Nom',e.nom)}
         </div>
         <div class="grid grid-2" style="gap:.75rem">
-          ${inputField('ePoste','Poste',e.poste)}
+          ${selectField('ePoste','Poste',e.poste, getPosteOptions())}
           ${selectField('eStatut','Statut',e.statut, [['actif','Actif'],['inactif','Inactif']])}
         </div>
         <div class="grid grid-2" style="gap:.75rem">
