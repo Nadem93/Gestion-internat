@@ -625,6 +625,7 @@ tbody tr:hover .table-actions{opacity:1}
 .res-card-body .res-card-info{display:flex;flex-direction:column;gap:.12rem;flex:1;min-width:0}
 .res-card-name{font-weight:650;font-size:.78rem;color:var(--text)}
 .res-card-meta{font-size:.65rem;color:var(--muted)}
+.res-card-ref{font-size:.6rem;color:var(--muted);font-weight:500}
 .res-card-footer{display:none}
 
 /* ══════════════════════════════════════════

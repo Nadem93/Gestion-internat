@@ -231,6 +231,7 @@ function residentCard(r) {
       <div class="res-card-info">
         <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
         <div class="res-card-meta">${r.dob ? age(r.dob)+' ans' : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
+        ${r.referent ? `<div class="res-card-ref">Réf. ${escHtml(r.referent)}</div>` : ''}
         <div>${statusBadge(presenceStatus)}</div>
       </div>
     </div>
