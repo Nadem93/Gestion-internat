@@ -31,7 +31,7 @@ p{color:#64748b;margin-bottom:2rem;line-height:1.6}
 <div class="card">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;color:#e85d04;margin-bottom:1rem"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
   <h1>Génération des données de démonstration</h1>
-  <p>100 résidents avec photos, journal (50 entrées par catégorie), planning, présences, avenants, incidents, messagerie, répertoire — tout sera généré automatiquement.</p>
+  <p>100 résidents avec photos, journal (10 entrées par catégorie), planning, présences, avenants, incidents, messagerie, répertoire — tout sera généré automatiquement.</p>
 
   <div class="stat-grid">
     <div class="stat-item"><div class="stat-num">100</div><div class="stat-label">RÉSIDENTS</div></div>
@@ -204,7 +204,7 @@ function generateDemo() {
   DB.set(DB.keys.categories, cats);
   log('<span class="ok">✅ 8 catégories créées</span>');
 
-  // ── JOURNAL (50 entrées × 8 catégories = 400 entrées) ──
+  // ── JOURNAL (10 entrées × 8 catégories = 80 entrées) ──
   const journal = [];
   const journalAuthors = [
     { id: 2, name: 'Sophie Martin' }, { id: 3, name: 'Pierre Dubois' },
@@ -269,7 +269,7 @@ function generateDemo() {
 
   let entryId = 0;
   cats.forEach(cat => {
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 10; i++) {
       entryId++;
       const res = resList[(entryId - 1) % resList.length];
       const d = new Date(now.getTime() - rand(0, 365) * 86400000);
@@ -295,7 +295,7 @@ function generateDemo() {
     }
   });
   DB.set(DB.keys.journal, journal);
-  log('<span class="ok">✅ ' + journal.length + ' entrées journal créées (50 × ' + cats.length + ' catégories)</span>');
+  log('<span class="ok">✅ ' + journal.length + ' entrées journal créées (10 × ' + cats.length + ' catégories)</span>');
 
   // ── PLANNING (70 events) ──
   const planning = [];
