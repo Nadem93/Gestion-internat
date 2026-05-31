@@ -410,13 +410,10 @@ function renderEtabCheckboxes(userEtabIds = []) {
   if (!el || !group) return;
   if (etabs.length <= 1) { group.style.display = 'none'; return; }
   group.style.display = '';
-  el.innerHTML = etabs.map(e => `
-    <label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;padding:.4rem .6rem;border-radius:var(--r-sm);border:1px solid var(--border)">
-      <input type="checkbox" name="etabAssign" value="${e.id}" ${userEtabIds.includes(String(e.id)) ? 'checked' : ''}/>
-      <div style="width:12px;height:12px;border-radius:3px;background:${e.color||'#0f2b4a'};flex-shrink:0"></div>
-      <span style="font-size:.85rem;font-weight:600">${escHtml(e.nom)}</span>
-      <span style="font-size:.72rem;color:var(--muted);margin-left:auto">${etabTypeLabel(e.type)}</span>
-    </label>`).join('');
+  el.innerHTML = `<select id="etabAssignSelect" class="form-control" multiple style="height:${Math.min(etabs.length * 38, 150)}px">
+    ${etabs.map(e => `<option value="${e.id}" ${userEtabIds.includes(String(e.id)) ? 'selected' : ''}>${escHtml(e.nom)}</option>`).join('')}
+  </select>
+  <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs établissements</div>`;
 }
 
 function renderEducateurs() {
@@ -491,7 +488,8 @@ function saveEducateur() {
   }
   DB.set(DB.keys.users, users);
   // Synchroniser avec les établissements sélectionnés
-  const selectedEtabs = [...document.querySelectorAll('input[name="etabAssign"]:checked')].map(cb => cb.value);
+  const sel = document.getElementById('etabAssignSelect');
+  const selectedEtabs = sel ? [...sel.selectedOptions].map(o => o.value) : [];
   const allEtabs = getEtabs();
   const savedUser = (DB.get(DB.keys.users) || []).find(u => u.username === username);
   allEtabs.forEach(e => {
