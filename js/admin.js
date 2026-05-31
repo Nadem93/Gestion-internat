@@ -410,10 +410,10 @@ function renderEtabCheckboxes(userEtabIds = []) {
   if (!el || !group) return;
   if (etabs.length <= 1) { group.style.display = 'none'; return; }
   group.style.display = '';
-  el.innerHTML = `<select id="etabAssignSelect" class="form-control" multiple style="height:${Math.min(etabs.length * 38, 150)}px">
+  el.innerHTML = `<select id="etabAssignSelect" class="form-control">
+    <option value="">— Sélectionner un établissement —</option>
     ${etabs.map(e => `<option value="${e.id}" ${userEtabIds.includes(String(e.id)) ? 'selected' : ''}>${escHtml(e.nom)}</option>`).join('')}
-  </select>
-  <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs établissements</div>`;
+  </select>`;
 }
 
 function renderEducateurs() {

@@ -83,6 +83,40 @@ function addUserToAllEtabs(user) {
   });
 }
 
+const ETAB_BG = {
+  foyer_hebergement: ['#b8b0d4','#d4cfe8','#f5f0fc'],  // violet
+  foyer_vie:         ['#b0b8d4','#cfd4e8','#f0f2fc'],  // bleu lavande
+  foyer_jeunes:      ['#d4c8b0','#e8dfc0','#fcf7e8'],  // ocre chaud
+  mecs:              ['#b0d4c8','#cfe8df','#f0fcf8'],  // teal
+  lhss:              ['#c8b0d4','#dfc8e8','#f8f0fc'],  // mauve
+  ime:               ['#b0c4d4','#cfdae8','#f0f5fc'],  // bleu ciel
+  itep:              ['#b0d4b8','#cfe8d4','#f0fce8'],  // vert menthe
+  sessad:            ['#b0c8d4','#cfdfe8','#f0f8fc'],  // bleu clair
+  camsp:             ['#d4b0c8','#e8cfe0','#fcf0f8'],  // rose poudré
+  esat:              ['#d4c4b0','#e8d8c8','#fcf5ec'],  // beige chaud
+  mas:               ['#d4b0b0','#e8c8c8','#fcf0f0'],  // saumon clair
+  fam:               ['#d4b4b0','#e8ccc8','#fce8e8'],  // pêche
+  savs:              ['#b0d4b4','#c8e8cc','#ecfcec'],  // vert doux
+  samsah:            ['#b0d4c0','#c8e8d4','#edfcf4'],  // vert menthe clair
+  saj:               ['#d4d0b0','#e8e4c8','#fcfae8'],  // jaune crème
+  pead:              ['#c4b0d4','#d8cfe8','#f4f0fc'],  // violet clair
+  aemo:              ['#b4b0d4','#cccfe8','#f0f0fc'],  // lilas
+  cea:               ['#d4b0c0','#e8c8d4','#fcf0f4'],  // rose poudré
+  cef:               ['#d4b8b0','#e8ccc8','#fcf2f0'],  // saumon
+  chrs:              ['#b0b4d4','#c8cce8','#f0f0fc'],  // bleu pervenche
+  cada:              ['#d4c4b0','#e8d8c8','#faf0e8'],  // terracotta clair
+  siao:              ['#b8d4b0','#d0e8c8','#f0fcec'],  // vert sauge
+  autre:             ['#c4c4c4','#d8d8d8','#f0f0f0'],  // gris neutre
+};
+
+function applyEtabBackground() {
+  const etab = getCurrentEtab();
+  if (!etab) return;
+  const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
+  document.body.style.background = `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`;
+  document.body.style.backgroundAttachment = 'fixed';
+}
+
 function etabTypeLabel(type) {
   const labels = {
     foyer_hebergement:"Foyer d'hébergement", foyer_vie:"Foyer de vie", foyer_jeunes:"FJT",
@@ -247,11 +281,12 @@ const Auth = {
         return null;
       }
     }
-    // Appliquer la terminologie selon le type d'établissement
+    // Appliquer terminologie et fond selon le type d'établissement
+    const _applyAll = () => { applyTerminology(); applyEtabBackground(); };
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', applyTerminology);
+      document.addEventListener('DOMContentLoaded', _applyAll);
     } else {
-      setTimeout(applyTerminology, 0);
+      setTimeout(_applyAll, 0);
     }
     return s;
   },
