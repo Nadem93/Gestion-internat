@@ -21,6 +21,7 @@
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="docSearchInput" placeholder="Rechercher un document…"/>
     </div>
+    <select id="docFilterType" style="width:auto"><option value="">Tous les types</option><option value="resident">Résidents</option><option value="resource">Ressources</option></select>
     <select id="docFilterResident" style="width:auto"><option value="">Tous les résidents</option></select>
     <select id="docFilterCategory" style="width:auto"><option value="">Toutes catégories</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="autre">Autre</option></select>
   </div>
@@ -32,7 +33,8 @@
     <div class="modal-header"><span id="docModalTitle">Ajouter un document</span></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
       <input type="hidden" id="docFormId"/>
-      <div class="form-group"><label>Résident *</label><select id="docFormResident" class="form-input"></select></div>
+      <div class="form-group"><label>Type de document</label><div style="display:flex;gap:.75rem;padding:.25rem 0"><label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="docType" value="resident" checked onchange="toggleDocType('resident')"/> Résident</label><label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="docType" value="resource" onchange="toggleDocType('resource')"/> Ressource</label></div></div>
+      <div class="form-group" id="docFormResidentGroup"><label>Résident *</label><select id="docFormResident" class="form-input"></select></div>
       <div class="form-group"><label>Nom du document</label><input type="text" id="docFormName" class="form-input" placeholder="ex: Contrat de séjour"/></div>
       <div class="form-group"><label>Date du document</label><input type="date" id="docFormDate" class="form-input"/></div>
       <div class="form-group"><label>Date d'échéance</label><input type="date" id="docFormDueDate" class="form-input"/></div>

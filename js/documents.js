@@ -18,8 +18,12 @@ function getAllDocuments() {
   const residents = DB.get(DB.keys.residents) || [];
   const list = [];
   for (const [resId, docs] of Object.entries(all)) {
-    const r = residents.find(x => x.id === resId);
-    docs.forEach(d => list.push({ ...d, residentId: resId, residentName: r ? `${r.prenom||''} ${r.nom||''}` : 'Inconnu' }));
+    if (resId === '_resources') {
+      docs.forEach(d => list.push({ ...d, residentId: '_resources', residentName: '📁 Ressource', type: 'resource' }));
+    } else {
+      const r = residents.find(x => x.id === resId);
+      docs.forEach(d => list.push({ ...d, residentId: resId, residentName: r ? `${r.prenom||''} ${r.nom||''}` : 'Inconnu', type: 'resident' }));
+    }
   }
   return list.sort((a, b) => (b.docDate || b.date || '').localeCompare(a.docDate || a.date || ''));
 }
@@ -48,9 +52,11 @@ function renderDocuments() {
   const search = (document.getElementById('docSearchInput')?.value || '').toLowerCase();
   const filterRes = document.getElementById('docFilterResident')?.value || '';
   const filterCat = document.getElementById('docFilterCategory')?.value || '';
+  const filterType = document.getElementById('docFilterType')?.value || '';
 
   let filtered = list;
   if (filterRes) filtered = filtered.filter(d => d.residentId === filterRes);
+  if (filterType) filtered = filtered.filter(d => (d.type || 'resident') === filterType);
   if (filterCat) filtered = filtered.filter(d => d.category === filterCat);
   if (search) filtered = filtered.filter(d => (d.name||'').toLowerCase().includes(search) || (d.residentName||'').toLowerCase().includes(search));
 
@@ -138,23 +144,32 @@ function openDocModal(residentId) {
     const id = residentId || new URLSearchParams(window.location.search).get('residentId');
     if (id) sel.value = id;
   }
+  toggleDocType('resident');
   document.getElementById('docFormDate').value = today();
   document.getElementById('docModalTitle').textContent = 'Ajouter un document';
   document.getElementById('docFormId').value = '';
   openModal('docModal');
 }
 
+function toggleDocType(type) {
+  const resGroup = document.getElementById('docFormResidentGroup');
+  if (resGroup) resGroup.style.display = type === 'resource' ? 'none' : '';
+}
+
 function editDocModal(docId, resId) {
   const allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
   const doc = (allDocs[resId]||[]).find(d => d.id === docId);
   if (!doc) return;
+  toggleDocType(doc.type === 'resource' ? 'resource' : 'resident');
   document.getElementById('docModalTitle').textContent = 'Modifier le document';
   document.getElementById('docFormId').value = docId;
-  document.getElementById('docFormResident').value = resId;
+  document.getElementById('docFormResident').value = resId === '_resources' ? '' : resId;
   document.getElementById('docFormName').value = doc.name || '';
   document.getElementById('docFormDate').value = doc.docDate || '';
   document.getElementById('docFormDueDate').value = doc.dueDate || '';
   document.getElementById('docFormCategory').value = doc.category || '';
+  const radio = document.querySelector(`[name="docType"][value="${doc.type === 'resource' ? 'resource' : 'resident'}"]`);
+  if (radio) radio.checked = true;
   openModal('docModal');
 }
 
@@ -172,7 +187,8 @@ function resetDocForm() {
 
 async function saveDocument() {
   const id = document.getElementById('docFormId').value;
-  const residentId = document.getElementById('docFormResident').value;
+  const docType = document.querySelector('[name="docType"]:checked')?.value || 'resident';
+  const residentId = docType === 'resource' ? '_resources' : document.getElementById('docFormResident').value;
   const name = document.getElementById('docFormName').value.trim();
   const docDate = document.getElementById('docFormDate').value;
   const dueDate = document.getElementById('docFormDueDate').value;
@@ -205,7 +221,8 @@ async function saveDocument() {
         docDate,
         dueDate,
         date: new Date().toISOString(),
-        data: base64
+        data: base64,
+        type: docType
       };
       allDocs[residentId].push(doc);
     } catch { toast('Erreur lors de la lecture du fichier', 'error'); return; }
@@ -238,9 +255,10 @@ function cancelDocFile() {
 function deleteDocument(docId, resId) {
   if (!confirm('Supprimer ce document ?')) return;
   let allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
-  if (!allDocs[resId]) return;
-  allDocs[resId] = allDocs[resId].filter(d => d.id !== docId);
-  if (!allDocs[resId].length) delete allDocs[resId];
+  const key = resId || '_resources';
+  if (!allDocs[key]) return;
+  allDocs[key] = allDocs[key].filter(d => d.id !== docId);
+  if (!allDocs[key].length) delete allDocs[key];
   localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(allDocs));
   toast('Document supprimé', 'success');
   renderDocuments();
@@ -251,6 +269,7 @@ function initDocumentsPage() {
   document.getElementById('docSearchInput')?.addEventListener('input', renderDocuments);
   document.getElementById('docFilterResident')?.addEventListener('change', renderDocuments);
   document.getElementById('docFilterCategory')?.addEventListener('change', renderDocuments);
+  document.getElementById('docFilterType')?.addEventListener('change', renderDocuments);
   const params = new URLSearchParams(window.location.search);
   const residentId = params.get('residentId');
   if (residentId) {
