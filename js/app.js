@@ -204,7 +204,9 @@ function applyBranding() {
 }
 
 function adjustColor(hex, amount) {
-  const num = parseInt(hex.replace('#',''), 16);
+  let h = hex.replace('#','');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const num = parseInt(h, 16);
   const r = Math.min(255, (num>>16) + amount);
   const g = Math.min(255, ((num>>8)&0xff) + amount);
   const b = Math.min(255, (num&0xff) + amount);
