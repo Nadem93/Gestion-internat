@@ -269,6 +269,12 @@ function getEntries() {
   const cat = document.getElementById('jFilterCat')?.value || '';
   const date = document.getElementById('jFilterDate')?.value || '';
   let list = (DB.get(DB.keys.journal) || []).slice().reverse();
+  // Filtrer selon la visibilité : confidentiel → uniquement admin ou auteur
+  const isAdmin = session?.role === 'admin';
+  list = list.filter(e => {
+    if (e.visibilite !== 'confidentiel') return true;
+    return isAdmin || String(e.authorId) === String(session?.userId);
+  });
   if (q) list = list.filter(e => (e.contenu || '').toLowerCase().includes(q) || (e.resident || '').toLowerCase().includes(q));
   if (res) list = list.filter(e => e.residentId === res);
   if (cat) list = list.filter(e => String(e.categorie) === String(cat));
