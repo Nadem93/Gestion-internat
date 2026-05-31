@@ -416,12 +416,9 @@ function showMainAccueil() {
   const fab = document.getElementById('etabFab');
   const fabLbl = document.getElementById('etabFabLabel');
   if (fab && etab) {
-    const etabs = getEtabs();
-    if (etabs.length > 1) {
-      fab.style.display = '';
-      fab.style.background = etab.color || '#0f2b4a';
-      if (fabLbl) fabLbl.textContent = etab.nom.slice(0,2).toUpperCase();
-    }
+    fab.style.display = '';
+    fab.style.background = etab.color || '#0f2b4a';
+    if (fabLbl) fabLbl.textContent = etab.nom.slice(0,2).toUpperCase();
   }
   applyTerminology();
   applyEtabBackground();

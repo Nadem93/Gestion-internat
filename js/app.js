@@ -107,6 +107,8 @@ const ETAB_BG = {
   cada:              ['#d4c4b0','#e8d8c8','#faf0e8'],  // terracotta clair
   siao:              ['#b8d4b0','#d0e8c8','#f0fcec'],  // vert sauge
   autre:             ['#c4c4c4','#d8d8d8','#f0f0f0'],  // gris neutre
+  adultes:           ['#b8b0d4','#d4cfe8','#f5f0fc'],  // violet (legacy)
+  enfants:           ['#b0d4b8','#cfe8d4','#f0fce8'],  // vert (legacy)
 };
 
 function applyEtabBackground() {
