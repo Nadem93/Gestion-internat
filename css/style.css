@@ -774,6 +774,7 @@ tbody tr:hover .table-actions{opacity:1}
   .header-right{gap:.375rem}
   .btn-add-label{display:none}
   .btn-add-resident{padding:.3rem .55rem;gap:0}
+  .planning-view-switch{display:none}
 
   /* Éléments injectés par app.js */
   #headerBrand{font-size:.75rem!important;letter-spacing:.1em!important}
