@@ -22,20 +22,20 @@
     <main class="content">
       <!-- VUE LISTE -->
       <div id="journalListView">
-        <div class="toolbar" style="margin-bottom:1.5rem">
+        <div class="toolbar" style="margin-bottom:1.5rem;justify-content:center;max-width:760px;margin-left:auto;margin-right:auto">
           <div class="search-box">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="jSearch" placeholder="Rechercher…"/>
           </div>
-          <select id="jFilterResident" style="width:auto"><option value="">Tous les résidents</option></select>
+          <select id="jFilterResident" style="display:none"><option value="">Tous les résidents</option></select>
           <select id="jFilterCat" style="width:auto"><option value="">Toutes les catégories</option></select>
-          <input type="date" id="jFilterDate" style="width:auto"/>
+          <input type="date" id="jFilterDate" style="display:none"/>
           <button class="btn btn-ghost btn-sm" id="btnUnreadFilter" onclick="toggleUnreadFilter()" style="white-space:nowrap">
             <span id="unreadDot" style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block;flex-shrink:0"></span>
             Non lus <span id="unreadCount" style="background:var(--blue);color:#fff;border-radius:var(--r-full);padding:1px 6px;font-size:.7rem;margin-left:2px">0</span>
           </button>
         </div>
-        <div id="entriesList" style="display:flex;flex-direction:column;gap:.75rem"></div>
+        <div id="entriesList" style="display:flex;flex-direction:column;gap:.75rem;max-width:760px;margin:0 auto"></div>
       </div>
 
       <!-- VUE FORMULAIRE -->
@@ -52,7 +52,7 @@
 
 <!-- MODAL NOUVELLE ENTRÉE -->
 <div class="modal-overlay" id="modalEntry">
-  <div class="modal lg">
+  <div class="modal lg" style="max-width:960px">
     <div class="modal-header">
       <span class="modal-title" id="modalEntryTitle">Nouvelle entrée</span>
       <button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -85,9 +85,9 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
+      <button class="btn btn-outline btn-sm" onclick="closeAllModals()">Annuler</button>
       <button class="btn btn-danger btn-sm" id="btnDeleteEntry" style="margin-right:auto;display:none" onclick="deleteEntry()">Supprimer</button>
-      <button class="btn btn-primary" onclick="saveEntry()">Enregistrer</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEntry()">Enregistrer</button>
     </div>
   </div>
 </div>
