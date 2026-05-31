@@ -72,7 +72,7 @@ const PRENOMS_M = ['Amine','Thomas','Lucas','Yanis','Hugo','Moussa','Mehdi','Kwa
 const PRENOMS_F = ['Sofia','Fatima','Clara','Emma','Leila','Sarah','Océane','Inès','Chloé','Nora','Lina','Manon','Zara','Elena','Camille','Selma','Romane','Jade','Assia','Juliette','Louna','Léa','Chloé','Mélissa','Amina','Nour','Sarah','Aïcha','Yasmine','Imane','Sandra','Laura','Marine','Céline','Audrey','Julie','Sophie','Caroline','Valérie','Stéphanie','Justine','Marion','Mathilde','Clémence','Morgane','Émilie','Laurine','Maeva','Elisa','Amélie'];
 const NOMS = ['Benali','Petit','Leroy','Zahra','Moreau','Bernard','Diallo','Garcia','Rousseau','Haddad','Martin','Cohen','Diara','Fabre','Bouaziz','Martinez','Ndiaye','Dubois','Bouchard','Ferrari','Rossi','Traoré','Girard','Da Silva','Fournier','Simon','Mercier','Renard','Fontaine','Lambert','Dupont','Gauthier','Lefevre','Roux','Morel','Garnier','Perrin','Chevallier','Bonnet','Caron','Gauthier','Moulin','Renard','Marchand','Legrand','Rivière','Schneider','Blanc','Weber','Durand'];
 const COULEURS = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#e11d48','#d946ef','#f97316','#14b8a6','#0ea5e9','#84cc16','#dc2626','#a855f7','#ec4899','#7c3aed','#2563eb','#ca8a04','#65a30d','#db2777','#4f46e5','#7e22ce','#059669','#0d9488','#d97706','#b45309','#0284c7','#9333ea','#0891b2','#6366f1'];
-const STATUTS = ['present','present','present','present','present','present','present','present','present','sorti','sorti'];
+const STATUTS = ['permanent','permanent','permanent','permanent','permanent','permanent','temporaire','temporaire','stage','urgence','urgence'];
 const SITPROS = ['formation','recherche','emploi','inactif','formation','recherche','emploi'];
 const RESSOURCES = ['','rsa','aah','salaire','bourse','rsa','aah','salaire'];
 const ORGANISMES = ['ase','ase','pjj','','ase','pjj','','ase'];
@@ -376,7 +376,6 @@ function generateDemo() {
     const ds = d.toISOString().slice(0,10);
     const dayPresences = {};
     resList.forEach(r => {
-      if (r.statut === 'sorti') { dayPresences[r.id] = 'sorti'; return; }
       const rnd = Math.random();
       dayPresences[r.id] = rnd < .7 ? 'present' : rnd < .85 ? 'absent' : 'sortie';
     });
@@ -414,8 +413,10 @@ function generateDemo() {
       id: i + 2, ...p, password: 'educ123', role: 'educ'
     }));
     DB.set(DB.keys.users, users);
+    // Ajouter tous les utilisateurs dans chaque établissement
+    users.forEach(u => addUserToAllEtabs(u));
   }
-  log('<span class="ok">✅ ' + users.length + ' utilisateurs (admin + 20 profils)</span>');
+  log('<span class="ok">✅ ' + users.length + ' utilisateurs ajoutés dans tous les établissements</span>');
 
   // ── Messages (8 conversations, ~55 messages) ──
   const conversations = {};

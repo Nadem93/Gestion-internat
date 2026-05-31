@@ -1,8 +1,12 @@
 // ── STORAGE HELPERS ──
+const DB_GLOBAL_KEYS = new Set(['ftr_etablissements','ftr_session']);
+
 const DB = {
-  get: k => JSON.parse(localStorage.getItem(k) || 'null'),
-  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-  remove: k => localStorage.removeItem(k),
+  _id: () => sessionStorage.getItem('ftr_current_etab'),
+  _k(k) { const id = this._id(); return (id && !DB_GLOBAL_KEYS.has(k)) ? `${k}__${id}` : k; },
+  get(k) { return JSON.parse(localStorage.getItem(this._k(k)) || 'null'); },
+  set(k, v) { localStorage.setItem(this._k(k), JSON.stringify(v)); },
+  remove(k) { localStorage.removeItem(this._k(k)); },
   keys: {
     residents:'ftr_residents', categories:'ftr_categories', objectives:'ftr_objectives',
     journal:'ftr_journal', presences:'ftr_presences', planning:'ftr_planning',
@@ -12,10 +16,85 @@ const DB = {
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
     loginHistory:'ftr_login_history', fonctionColors:'ftr_fonction_colors',
     aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
-    interventions:'ftr_interventions',
-    employes:'ftr_employes'
+    interventions:'ftr_interventions', employes:'ftr_employes',
+    etablissements:'ftr_etablissements'
   }
 };
+
+// ── MULTI-ÉTABLISSEMENT ──
+function getEtabs() { return JSON.parse(localStorage.getItem('ftr_etablissements') || '[]'); }
+function saveEtabs(list) { localStorage.setItem('ftr_etablissements', JSON.stringify(list)); }
+function getCurrentEtab() { const id = DB._id(); return getEtabs().find(e => String(e.id) === String(id)) || null; }
+
+function initEtabs() {
+  let etabs = getEtabs();
+  if (etabs.length > 0) return;
+  const s = localStorage.getItem('ftr_settings');
+  const sObj = s ? JSON.parse(s) : DEFAULTS.settings;
+  const etab1 = { id: 1, nom: sObj.etablissement || 'Établissement principal', type: 'adultes', color: '#0f2b4a', createdAt: new Date().toISOString() };
+  saveEtabs([etab1]);
+  // Migrer les données existantes vers l'établissement 1
+  Object.values(DB.keys).filter(k => !DB_GLOBAL_KEYS.has(k)).forEach(k => {
+    const existing = localStorage.getItem(k);
+    if (existing && !localStorage.getItem(`${k}__1`)) localStorage.setItem(`${k}__1`, existing);
+  });
+}
+
+function createEtab(nom, type, color) {
+  const etabs = getEtabs();
+  const id = Date.now();
+  const etab = { id, nom, type: type || 'adultes', color: color || '#0f2b4a', createdAt: new Date().toISOString() };
+  etabs.push(etab);
+  saveEtabs(etabs);
+  // Initialiser les données par défaut pour ce nouvel établissement
+  const prefix = id;
+  const initKey = (k, val) => { if (!localStorage.getItem(`${k}__${prefix}`)) localStorage.setItem(`${k}__${prefix}`, JSON.stringify(val)); };
+  initKey(DB.keys.residents, []);
+  initKey(DB.keys.categories, DEFAULTS.categories);
+  initKey(DB.keys.objectives, DEFAULTS.objectives);
+  initKey(DB.keys.journal, []);
+  initKey(DB.keys.presences, {});
+  initKey(DB.keys.planning, []);
+  initKey(DB.keys.settings, { ...DEFAULTS.settings, etablissement: nom });
+  initKey(DB.keys.branding, DEFAULTS.branding);
+  initKey(DB.keys.users, DEFAULTS.users);
+  initKey(DB.keys.vehicules, DEFAULTS.vehicules);
+  initKey(DB.keys.documents, {});
+  initKey(DB.keys.incidents, []);
+  initKey(DB.keys.ppe, []);
+  initKey(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
+  initKey(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
+  return etab;
+}
+
+function deleteEtab(id) {
+  const etabs = getEtabs().filter(e => String(e.id) !== String(id));
+  saveEtabs(etabs);
+}
+
+function addUserToAllEtabs(user) {
+  getEtabs().forEach(etab => {
+    const k = `${DB.keys.users}__${etab.id}`;
+    const users = JSON.parse(localStorage.getItem(k) || '[]');
+    if (!users.find(u => u.username === user.username)) {
+      users.push({ ...user, id: genId ? genId() : Date.now() });
+      localStorage.setItem(k, JSON.stringify(users));
+    }
+  });
+}
+
+function applyTerminology() {
+  const etab = getCurrentEtab();
+  if (!etab || etab.type !== 'enfants') return;
+  const replacements = [['Résidents','Jeunes'],['Résident','Jeune'],['résidents','jeunes'],['résident','jeune']];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.nodeName !== 'SCRIPT' && n.parentNode.nodeName !== 'STYLE' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+  let node;
+  while ((node = walker.nextNode())) {
+    let v = node.nodeValue;
+    replacements.forEach(([from, to]) => { v = v.replace(new RegExp(from, 'g'), to); });
+    if (v !== node.nodeValue) node.nodeValue = v;
+  }
+}
 
 const API_URL = 'http://localhost:3001';
 
@@ -76,6 +155,7 @@ const DEFAULTS = {
 };
 
 function initDefaults() {
+  initEtabs();
   if (!DB.get(DB.keys.categories)) DB.set(DB.keys.categories, DEFAULTS.categories);
   if (!DB.get(DB.keys.objectives)) DB.set(DB.keys.objectives, DEFAULTS.objectives);
   if (!DB.get(DB.keys.residents)) DB.set(DB.keys.residents, []);

@@ -40,7 +40,7 @@
       <div class="header-info"><div class="header-title" id="pageTitle">Fiche résident</div></div>
       <div class="header-right">
         <button class="btn btn-outline btn-sm btn-add-resident" onclick="history.back()">←<span class="btn-add-label"> Retour</span></button>
-        <button class="btn btn-ghost btn-sm btn-add-resident" onclick="printResident()" title="Télécharger la fiche">
+        <button class="btn btn-ghost btn-sm btn-add-resident" id="btnDownload" onclick="printResident()" title="Télécharger la fiche">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span class="btn-add-label"> Télécharger</span>
         </button>
@@ -227,7 +227,7 @@ function renderEditMode(r) {
           ${inputField('eChambre','Chambre / Unité',r.chambre)}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
-          ${selectField('eStatut','Statut',r.statut, [['present','Présent'],['absent','Absent'],['sortie','Sortie temp.'],['sorti','Sorti']])}
+          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent']])}
           ${inputField('eReferent','Référent',r.referent)}
           ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
         </div>
@@ -310,6 +310,8 @@ function cancelPageEdit() {
 
 function togglePageEdit() {
   pageEditMode = !pageEditMode;
+  const dl = document.getElementById('btnDownload');
+  if (dl) dl.style.display = pageEditMode ? 'none' : '';
   loadResident();
 }
 

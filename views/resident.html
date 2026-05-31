@@ -132,7 +132,7 @@ function renderEditMode(r) {
           ${inputField('eChambre','Chambre / Unité',r.chambre)}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
-          ${selectField('eStatut','Statut',r.statut, [['present','Présent'],['absent','Absent'],['sortie','Sortie temp.'],['sorti','Sorti']])}
+          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent']])}
           ${inputField('eReferent','Référent',r.referent)}
           ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
         </div>

@@ -217,9 +217,10 @@ function renderResidents() {
 }
 
 function statusBadge(s) {
-  const map = { present:'badge-green', absent:'badge-red', sortie:'badge-amber', sorti:'badge-gray' };
-  const labels = { present:'Présent', absent:'Absent', sortie:'Sortie temp.', sorti:'Sorti' };
-  return `<span class="badge ${map[s]||'badge-gray'}">${labels[s]||s||'—'}</span>`;
+  const colors = { urgence:'#ef4444', stage:'#f97316', temporaire:'#3b82f6', permanent:'#10b981', present:'#10b981', absent:'#ef4444', sortie:'#f59e0b', sorti:'#94a3b8' };
+  const labels = { present:'Présent', absent:'Absent', sortie:'Sortie temp.', sorti:'Sorti', urgence:'Urgence', stage:'Stage', temporaire:'Temporaire', permanent:'Permanent' };
+  const c = colors[s] || '#94a3b8';
+  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${labels[s]||s||'—'}</span>`;
 }
 
 function residentCard(r) {
@@ -357,7 +358,7 @@ function editResident(id) {
   document.getElementById('rDob').value = r.dob || '';
   document.getElementById('rGenre').value = r.genre || '';
   document.getElementById('rEntree').value = r.entree || '';
-  document.getElementById('rStatut').value = r.statut || 'present';
+  document.getElementById('rStatut').value = r.statut || 'permanent';
   document.getElementById('rChambre').value = r.chambre || '';
   document.getElementById('rReferent').value = r.referent || '';
   document.getElementById('rColor').value = r.color || '#3b82f6';
@@ -445,7 +446,7 @@ function resetForm() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('rEntree').value = today();
-  document.getElementById('rStatut').value = 'present';
+  document.getElementById('rStatut').value = 'permanent';
   document.getElementById('rColor').value = '#3b82f6';
   document.getElementById('btnDelete').style.display = 'none';
   document.getElementById('rPhotoInput').value = '';
@@ -544,7 +545,7 @@ function quickEditResident(id) {
   document.getElementById('qeNom').value = r.nom || '';
   document.getElementById('qePrenom').value = r.prenom || '';
   document.getElementById('qeDob').value = r.dob || '';
-  document.getElementById('qeStatut').value = r.statut || 'present';
+  document.getElementById('qeStatut').value = r.statut || 'permanent';
   document.getElementById('qeEntree').value = r.entree || '';
   document.getElementById('qeChambre').value = r.chambre || '';
   document.getElementById('qeColor').value = r.color || '#3b82f6';
