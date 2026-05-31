@@ -76,6 +76,7 @@ body{
   background-attachment:fixed;
   color:var(--text);line-height:1.6;min-height:100vh;
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
 }
 ::selection{background:rgba(15,43,74,.12);color:var(--text)}
 
@@ -891,6 +892,22 @@ tbody tr:hover .table-actions{opacity:1}
 
   /* Tags */
   .tags{min-height:36px}
+
+  /* Accueil — 2 colonnes pour que les labels ne wrappent pas */
+  .accueil-home-grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
+  .accueil-home-main{padding:1rem;padding-top:calc(var(--header-h) + .875rem)}
+  .accueil-home-card{padding:1rem .5rem}
+
+  /* Overflow — éléments larges scrollables */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .form-row,.form-row-3{grid-template-columns:1fr}
+  .toolbar{flex-wrap:wrap;gap:.5rem}
+
+  /* Grilles générales — 1 colonne */
+  .grid-2,.grid-3,.grid-5{grid-template-columns:1fr}
+
+  /* Textes longs — éviter le débordement */
+  .page-title h1,.card-title,.stat-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
 /* ── 480px: Small phone ── */
