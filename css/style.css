@@ -772,6 +772,8 @@ tbody tr:hover .table-actions{opacity:1}
   .header-title{font-size:.875rem}
   .header-btn{width:34px;height:34px}
   .header-right{gap:.375rem}
+  .btn-add-label{display:none}
+  .btn-add-resident{padding:.3rem .55rem;gap:0}
 
   /* Éléments injectés par app.js */
   #headerBrand{font-size:.75rem!important;letter-spacing:.1em!important}
