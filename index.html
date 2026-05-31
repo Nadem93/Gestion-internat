@@ -4,138 +4,267 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>INTERNALIS — Connexion</title>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"/>
   <style>
+    :root {
+      --first-color: hsl(263,64%,48%);
+      --first-color-alt: hsl(263,64%,38%);
+      --border-color: hsl(0,0%,35%);
+      --title-color: hsl(0,0%,95%);
+      --text-color: hsl(0,0%,55%);
+      --body-color: hsl(0,0%,4%);
+      --container-color: hsl(0,0%,9%);
+      --error-color: hsl(0,70%,55%);
+    }
+
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
     body {
+      font-family:'Syne',sans-serif;
+      font-size:.938rem;
+      font-weight:600;
+      background-color:var(--body-color);
+      color:var(--text-color);
       min-height:100vh;
-      display:flex;
+      display:grid;
       align-items:center;
       justify-content:center;
-      background:linear-gradient(135deg,#b8b0d4 0%,#d4cfe8 45%,#f5f0fc 100%);
-      background-attachment:fixed;
       padding:1.5rem;
     }
-    .login-wrap {
+
+    a { text-decoration:none; }
+    input, button { border:none; outline:none; font-family:'Syne',sans-serif; font-size:.938rem; }
+
+    /* ── Wrap ── */
+    .login {
       width:100%;
       max-width:400px;
       display:flex;
       flex-direction:column;
-      gap:2rem;
+      gap:2.5rem;
     }
-    .login-brand {
+
+    /* ── Brand ── */
+    .login__brand {
       text-align:center;
     }
-    .login-brand-name {
-      font-family:'Playfair Display',serif;
-      font-size:2.4rem;
-      font-weight:900;
-      color:#1e40af;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      line-height:1;
-    }
-    .login-brand-sub {
-      font-size:.78rem;
-      color:#64748b;
-      margin-top:.5rem;
-      letter-spacing:.06em;
-      text-transform:uppercase;
-      font-weight:500;
-    }
-    .login-card {
-      background:rgba(255,255,255,.88);
-      backdrop-filter:blur(20px);
-      -webkit-backdrop-filter:blur(20px);
-      border:1px solid rgba(255,255,255,.7);
-      border-radius:20px;
-      padding:2rem;
-      box-shadow:0 8px 32px rgba(15,43,74,.12),0 2px 8px rgba(15,43,74,.06);
-    }
-    .login-card h2 {
-      font-size:1.25rem;
+    .login__brand-name {
+      font-size:2rem;
       font-weight:800;
-      color:#1e293b;
-      margin-bottom:.3rem;
+      color:var(--title-color);
+      letter-spacing:.22em;
+      text-transform:uppercase;
     }
-    .login-card p {
-      font-size:.85rem;
-      color:#64748b;
-      margin-bottom:1.75rem;
+    .login__brand-name span {
+      color:var(--first-color);
     }
-    .login-footer {
+    .login__brand-sub {
+      font-size:.75rem;
+      color:var(--text-color);
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      margin-top:.4rem;
+    }
+
+    /* ── Card ── */
+    .login__card {
+      background:var(--container-color);
+      border-radius:1.5rem;
+      padding:2.5rem 2rem;
+      box-shadow:0 4px 32px hsla(263,45%,2%,.6);
+    }
+
+    .login__title {
+      font-size:1.5rem;
+      font-weight:800;
+      color:var(--title-color);
+      text-align:center;
+      margin-bottom:2rem;
+    }
+
+    /* ── Fields ── */
+    .login__group {
+      display:grid;
+      row-gap:1rem;
+      margin-bottom:1rem;
+    }
+
+    .login__box {
+      position:relative;
+      height:64px;
+      background:var(--container-color);
+      border:2px solid var(--border-color);
+      border-radius:4rem;
+      display:flex;
+      align-items:center;
+      transition:border-color .3s;
+    }
+    .login__box:focus-within {
+      border-color:var(--first-color);
+    }
+
+    .login__icon {
+      position:absolute;
+      left:1.25rem;
+      font-size:1.4rem;
+      color:var(--text-color);
+      transition:color .3s;
+    }
+    .login__box:focus-within .login__icon {
+      color:var(--first-color);
+    }
+
+    .login__label {
+      position:absolute;
+      left:3.25rem;
+      color:var(--text-color);
+      pointer-events:none;
+      transition:opacity .3s;
+    }
+
+    .login__input {
+      width:100%;
+      height:100%;
+      padding-left:3.25rem;
+      padding-right:1.25rem;
+      background:transparent;
+      color:var(--title-color);
+      font-weight:600;
+      z-index:2;
+    }
+    .login__input:focus + .login__label,
+    .login__input:not(:placeholder-shown) + .login__label {
+      opacity:0;
+    }
+    .login__input:-webkit-autofill,
+    .login__input:-webkit-autofill:focus {
+      transition:background-color 6000s, color 6000s;
+    }
+
+    /* ── Forgot ── */
+    .login__forgot {
+      display:block;
+      width:max-content;
+      margin:0 0 2rem auto;
+      color:var(--title-color);
+      font-size:.8rem;
+      opacity:.7;
+      transition:opacity .2s;
+    }
+    .login__forgot:hover { opacity:1; }
+
+    /* ── Button ── */
+    .login__button {
+      width:100%;
+      height:64px;
+      background:var(--first-color);
+      color:var(--title-color);
+      border-radius:4rem;
+      font-weight:700;
+      font-size:1rem;
+      font-family:'Syne',sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:.5rem;
+      cursor:pointer;
+      transition:background-color .3s, transform .15s;
+      letter-spacing:.04em;
+    }
+    .login__button:hover { background:var(--first-color-alt); }
+    .login__button:active { transform:scale(.98); }
+
+    /* ── Error ── */
+    .login__error {
+      display:none;
+      margin-top:.75rem;
+      padding:.75rem 1.25rem;
+      border-radius:4rem;
+      background:hsla(0,70%,55%,.12);
+      border:1px solid hsla(0,70%,55%,.3);
+      color:hsl(0,70%,65%);
+      font-size:.82rem;
+      text-align:center;
+    }
+
+    /* ── Footer ── */
+    .login__footer {
       text-align:center;
       font-size:.72rem;
-      color:#94a3b8;
+      color:hsl(0,0%,30%);
+    }
+
+    @media (width >= 540px) {
+      .login { max-width:420px; }
     }
   </style>
 </head>
 <body>
-  <div class="login-wrap fade-in">
-    <!-- Marque INTERNALIS -->
-    <div class="login-brand">
-      <div class="login-brand-name">INTERNALIS</div>
-      <div class="login-brand-sub">Plateforme de gestion médico-sociale</div>
-    </div>
 
-    <!-- Carte de connexion -->
-    <div class="login-card">
-      <h2>Bon retour 👋</h2>
-      <p>Connectez-vous à votre espace</p>
-
-      <form id="loginForm" style="display:flex;flex-direction:column;gap:1rem">
-        <div class="form-group">
-          <label for="login">Identifiant</label>
-          <div class="input-with-icon">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-            <input type="text" id="login" placeholder="Votre identifiant" autocomplete="username"/>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="pw" style="display:flex;justify-content:space-between">
-            Mot de passe
-            <a href="#" style="font-weight:400;color:var(--blue);font-size:.78rem">Oublié ?</a>
-          </label>
-          <div class="input-with-icon">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password"/>
-          </div>
-        </div>
-        <div class="checkbox-wrap">
-          <input type="checkbox" id="remember"/>
-          <label for="remember" style="font-size:.875rem;color:var(--muted);font-weight:400;cursor:pointer">Se souvenir de moi</label>
-        </div>
-        <div id="loginError" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:.75rem 1rem;border-radius:var(--r);font-size:.85rem">
-          Identifiant ou mot de passe incorrect.
-        </div>
-        <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:.25rem">Se connecter</button>
-      </form>
-    </div>
-
-    <div class="login-footer">© INTERNALIS · Tous droits réservés</div>
+<div class="login">
+  <!-- INTERNALIS -->
+  <div class="login__brand">
+    <div class="login__brand-name">INTER<span>NALIS</span></div>
+    <div class="login__brand-sub">Plateforme de gestion médico-sociale</div>
   </div>
 
-  <script src="js/app.js"></script>
-  <script>
-    initDefaults();
-    if (Auth.getSession()) window.location.href = 'app.html';
-    document.getElementById('loginForm').addEventListener('submit', e => {
-      e.preventDefault();
-      const username = document.getElementById('login').value;
-      const password = document.getElementById('pw').value;
-      if (Auth.login(username, password)) {
-        window.location.href = 'app.html';
-      } else {
-        document.getElementById('loginError').style.display = '';
-        document.getElementById('pw').value = '';
-        document.getElementById('pw').focus();
-      }
+  <!-- Card -->
+  <div class="login__card">
+    <h2 class="login__title">Bon retour 👋</h2>
+
+    <form id="loginForm">
+      <div class="login__group">
+        <div class="login__box">
+          <i class="ri-user-3-fill login__icon"></i>
+          <input type="text" id="login" class="login__input" placeholder=" " autocomplete="username"/>
+          <label for="login" class="login__label">Identifiant</label>
+        </div>
+        <div class="login__box">
+          <i class="ri-lock-2-fill login__icon"></i>
+          <input type="password" id="pw" class="login__input" placeholder=" " autocomplete="current-password"/>
+          <label for="pw" class="login__label">Mot de passe</label>
+        </div>
+      </div>
+
+      <a href="#" class="login__forgot">Mot de passe oublié ?</a>
+
+      <button type="submit" class="login__button">
+        Se connecter <i class="ri-send-plane-2-fill"></i>
+      </button>
+
+      <div id="loginError" class="login__error">
+        Identifiant ou mot de passe incorrect.
+      </div>
+    </form>
+  </div>
+
+  <div class="login__footer">© INTERNALIS · Tous droits réservés</div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  initDefaults();
+  if (Auth.getSession()) window.location.href = 'app.html';
+
+  document.getElementById('loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const username = document.getElementById('login').value;
+    const password = document.getElementById('pw').value;
+    if (Auth.login(username, password)) {
+      window.location.href = 'app.html';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('pw').value = '';
+      document.getElementById('pw').focus();
+    }
+  });
+
+  ['login','pw'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      document.getElementById('loginError').style.display = 'none';
     });
-    ['login','pw'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
-        document.getElementById('loginError').style.display = 'none';
-      });
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
