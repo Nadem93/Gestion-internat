@@ -225,7 +225,7 @@ function statusBadge(s) {
 function residentCard(r) {
   const coverColor = r.color || 'var(--primary)';
   const photoEl = r.photo
-    ? `<img src="${r.photo}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
+    ? `<img src="${sanitizeUrl(r.photo)}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
     : `<div class="res-card-photo" style="background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
 
   const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
@@ -247,7 +247,7 @@ function residentRow(r) {
   const objs = DB.get(DB.keys.objectives) || [];
   const resObjs = (r.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))?.name).filter(Boolean);
   const photoEl = r.photo
-    ? `<img src="${r.photo}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid var(--border)" alt=""/>`
+    ? `<img src="${sanitizeUrl(r.photo)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid var(--border)" alt=""/>`
     : `<div style="width:32px;height:32px;border-radius:8px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:#fff;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
   const session = Auth.getSession();
   const canEdit = session && (session.role === 'admin' || session.role === 'moderator' || canEditResidents(session.userId));
@@ -276,7 +276,7 @@ function showDetail(id) {
   const type = getStructureType();
 
   const photoEl = r.photo
-    ? `<img src="${r.photo}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:3px solid var(--border);box-shadow:var(--shadow-md)" alt=""/>`
+    ? `<img src="${sanitizeUrl(r.photo)}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:3px solid var(--border);box-shadow:var(--shadow-md)" alt=""/>`
     : `<div style="width:80px;height:80px;border-radius:8px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
 
   let extraFields = '';

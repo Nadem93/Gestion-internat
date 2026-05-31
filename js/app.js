@@ -278,6 +278,12 @@ function age(dob) {
   return Math.floor(diff / 31557600000) + ' ans';
 }
 
+function sanitizeUrl(url) {
+  if (!url) return '';
+  if (/^\s*javascript\s*:/i.test(url)) return '';
+  return url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // ── CATEGORY BADGE ──
 function categoryBadge(catId) {
   const cats = DB.get(DB.keys.categories) || [];

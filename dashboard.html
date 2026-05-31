@@ -458,7 +458,7 @@
     if (sansAvenant.length) {
       saEl.innerHTML = sansAvenant.slice(0, 10).map(r => `
         <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem">
-          ${r.photo?`<img src="${r.photo}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${r.color||'var(--blue)'};flex-shrink:0;width:26px;height:26px;font-size:.6rem">${(r.prenom||'?')[0].toUpperCase()}</div>`}
+          ${r.photo?`<img src="${sanitizeUrl(r.photo)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${r.color||'var(--blue)'};flex-shrink:0;width:26px;height:26px;font-size:.6rem">${(r.prenom||'?')[0].toUpperCase()}</div>`}
           <span style="font-weight:600;flex:1">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</span>
           <a href="ppe.html?residentId=${r.id}" class="btn btn-ghost btn-sm" style="font-size:.7rem">+ Avenant</a>
         </div>`).join('');
