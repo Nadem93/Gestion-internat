@@ -236,23 +236,6 @@ const Auth = {
   requireAuth() {
     const s = this.getSession();
     if (!s) { window.location.href = 'index.html'; return null; }
-    // Vérifier qu'un établissement est sélectionné
-    const etabId = sessionStorage.getItem('ftr_current_etab');
-    const etabs = getEtabs();
-    if (!etabId || !etabs.find(e => String(e.id) === etabId)) {
-      if (etabs.length === 1) {
-        sessionStorage.setItem('ftr_current_etab', etabs[0].id);
-      } else {
-        window.location.href = 'accueil.html';
-        return null;
-      }
-    }
-    // Appliquer la terminologie selon le type d'établissement
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', applyTerminology);
-    } else {
-      applyTerminology();
-    }
     return s;
   },
   requireAdmin() {
