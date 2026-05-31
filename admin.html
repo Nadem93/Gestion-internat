@@ -418,6 +418,19 @@
     </div>
   </header>
 
+  <!-- ══════════ ÉTABLISSEMENT ACTIF ══════════ -->
+  <div id="etabBanner" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 2rem .25rem;flex-wrap:wrap">
+    <div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
+    <div>
+      <span id="etabBannerNom" style="font-weight:800;font-size:.95rem;color:var(--primary)">—</span>
+      <span id="etabBannerType" class="badge" style="margin-left:.5rem;background:#0891b220;color:#0891b2;font-size:.68rem"></span>
+    </div>
+    <a href="accueil.html" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
+      Changer d'établissement
+    </a>
+  </div>
+
   <!-- ══════════ CIRCULAR STATS STRIP (always visible) ══════════ -->
   <div class="stats-strip" id="statsStrip">
     <!-- Card 1 : Taux de présence -->
@@ -1640,6 +1653,19 @@ function adminDeleteEtab(id) {
 document.addEventListener('DOMContentLoaded', () => {
   refreshSidebarUser();
   renderEtabAdminList();
+
+  // Afficher l'établissement sélectionné
+  const etab = getCurrentEtab();
+  if (etab) {
+    const nom = document.getElementById('etabBannerNom');
+    const type = document.getElementById('etabBannerType');
+    if (nom) nom.textContent = etab.nom;
+    if (type) type.textContent = etabTypeLabel(etab.type);
+    const badge = document.getElementById('atbBadge');
+    if (badge) badge.textContent = etab.nom;
+    const brandName = document.getElementById('asbBrandName');
+    if (brandName) brandName.textContent = etab.nom;
+  }
   // Show stats strip and detail by default
   const strip = document.getElementById('statsStrip');
   if (strip) strip.style.display = '';
