@@ -901,9 +901,12 @@ tbody tr:hover .table-actions{opacity:1}
   .presence-actions{width:100%;justify-content:flex-start!important}
 
   /* Accueil — 2 colonnes pour que les labels ne wrappent pas */
-  .accueil-home-grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
-  .accueil-home-main{padding:1rem;padding-top:calc(var(--header-h) + .875rem)}
-  .accueil-home-card{padding:1rem .5rem}
+  .accueil-home-grid{grid-template-columns:repeat(4,1fr);gap:.5rem;max-width:100%}
+  .accueil-home-main{padding:.75rem;padding-top:calc(var(--header-h) + .75rem)}
+  .accueil-home-card{padding:.6rem .25rem;border-radius:14px}
+  .accueil-home-icon{width:40px;height:40px;border-radius:10px}
+  .accueil-home-icon svg{width:20px;height:20px}
+  .accueil-home-label{font-size:.65rem}
 
   /* Overflow — éléments larges scrollables */
   .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
@@ -929,9 +932,11 @@ tbody tr:hover .table-actions{opacity:1}
   .res-card-photo{width:44px;height:44px;border-radius:7px}
 
   /* Accueil grid — 2 cols */
-  .accueil-home-grid{grid-template-columns:repeat(2,1fr);gap:.625rem}
-  .accueil-home-icon{width:40px;height:40px}
-  .accueil-home-card{padding:.875rem .4rem}
+  .accueil-home-grid{grid-template-columns:repeat(4,1fr);gap:.4rem;max-width:100%}
+  .accueil-home-icon{width:36px;height:36px;border-radius:9px}
+  .accueil-home-icon svg{width:18px;height:18px}
+  .accueil-home-card{padding:.5rem .2rem;border-radius:12px}
+  .accueil-home-label{font-size:.6rem}
 
   /* Stat cards — 2 cols even on small phones */
   .grid-4{grid-template-columns:repeat(2,1fr)}
