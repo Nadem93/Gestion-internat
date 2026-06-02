@@ -3,242 +3,64 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>INTERNALIS — Connexion</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"/>
+  <title>Connexion — FTR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
-    :root {
-      --first-color: hsl(263,64%,48%);
-      --first-color-alt: hsl(263,64%,38%);
-      --border-color: hsl(0,0%,82%);
-      --title-color: hsl(0,0%,10%);
-      --text-color: hsl(0,0%,45%);
-      --body-color: hsl(250,35%,95%);
-      --container-color: hsl(0,0%,100%);
-      --error-color: hsl(0,70%,55%);
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:Inter,sans-serif;font-size:.938rem;color:#334155;
+      background:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;
     }
+    input,button{border:none;outline:none;font-family:inherit;font-size:.938rem}
 
-    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-
-    body {
-      font-family:'Syne',sans-serif;
-      font-size:.938rem;
-      font-weight:600;
-      background-color:var(--body-color);
-      color:var(--text-color);
-      min-height:100vh;
-      display:grid;
-      align-items:center;
-      justify-content:center;
-      padding:1.5rem;
+    .lc{width:100%;max-width:360px;display:flex;flex-direction:column;gap:2rem}
+    .lc-brand{text-align:center}
+    .lc-brand-name{font-size:1.6rem;font-weight:800;color:#0f2b4a;letter-spacing:-.02em}
+    .lc-card{background:#fff;border-radius:12px;padding:2rem;box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
+    .lc-title{font-size:1rem;font-weight:700;color:#0f2b4a;margin-bottom:1.25rem;text-align:center}
+    .lc-field{margin-bottom:.85rem}
+    .lc-field label{display:block;font-size:.78rem;font-weight:600;color:#64748b;margin-bottom:.3rem}
+    .lc-field input{
+      width:100%;height:44px;padding:0 .85rem;border:1.5px solid #e2e8f0;border-radius:8px;
+      background:#f8fafc;color:#0f2b4a;font-weight:500;transition:border-color .15s,box-shadow .15s
     }
-
-    a { text-decoration:none; }
-    input, button { border:none; outline:none; font-family:'Syne',sans-serif; font-size:.938rem; }
-
-    /* ── Wrap ── */
-    .login {
-      width:100%;
-      max-width:400px;
-      display:flex;
-      flex-direction:column;
-      gap:2.5rem;
+    .lc-field input:focus{border-color:#0f2b4a;box-shadow:0 0 0 3px rgba(15,43,74,.1);background:#fff}
+    .lc-btn{
+      width:100%;height:44px;background:#0f2b4a;color:#fff;border-radius:8px;
+      font-weight:600;font-size:.875rem;cursor:pointer;transition:background .15s,transform .1s;margin-top:.25rem
     }
-
-    /* ── Brand ── */
-    .login__brand {
-      text-align:center;
+    .lc-btn:hover{background:#1a4a7a}
+    .lc-btn:active{transform:scale(.98)}
+    .lc-error{
+      display:none;margin-top:.75rem;padding:.6rem .85rem;border-radius:8px;
+      background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:.8rem;text-align:center
     }
-    .login__brand-name {
-      font-size:2rem;
-      font-weight:800;
-      color:var(--first-color);
-      letter-spacing:.22em;
-      text-transform:uppercase;
-    }
-    .login__brand-sub {
-      font-size:.75rem;
-      color:var(--text-color);
-      letter-spacing:.1em;
-      text-transform:uppercase;
-      margin-top:.4rem;
-    }
-
-    /* ── Card ── */
-    .login__card {
-      background:rgba(255,255,255,.55);
-      backdrop-filter:blur(20px);
-      -webkit-backdrop-filter:blur(20px);
-      border-radius:1.5rem;
-      padding:2rem 0;
-      box-shadow:0 8px 32px rgba(0,0,0,.08);
-      border:1px solid rgba(255,255,255,.7);
-    }
-
-    .login__title {
-      font-size:1.5rem;
-      font-weight:800;
-      color:var(--title-color);
-      text-align:center;
-      margin-bottom:2rem;
-    }
-
-    /* ── Fields ── */
-    .login__group {
-      display:grid;
-      row-gap:1rem;
-      margin-bottom:1rem;
-    }
-
-    .login__box {
-      position:relative;
-      height:48px;
-      background:var(--container-color);
-      border:2px solid var(--border-color);
-      border-radius:4rem;
-      display:flex;
-      align-items:center;
-      transition:border-color .3s;
-    }
-    .login__box:focus-within {
-      border-color:var(--first-color);
-    }
-
-    .login__icon {
-      position:absolute;
-      left:1.25rem;
-      font-size:1.4rem;
-      color:var(--text-color);
-      transition:color .3s;
-    }
-    .login__box:focus-within .login__icon {
-      color:var(--first-color);
-    }
-
-    .login__label {
-      position:absolute;
-      left:3.25rem;
-      color:var(--text-color);
-      pointer-events:none;
-      transition:opacity .3s;
-    }
-
-    .login__input {
-      width:100%;
-      height:100%;
-      padding-left:3.25rem;
-      padding-right:1.25rem;
-      background:transparent;
-      color:var(--title-color);
-      font-weight:600;
-      z-index:2;
-    }
-    .login__input:focus + .login__label,
-    .login__input:not(:placeholder-shown) + .login__label {
-      opacity:0;
-    }
-    .login__input:-webkit-autofill,
-    .login__input:-webkit-autofill:focus {
-      transition:background-color 6000s, color 6000s;
-    }
-
-    /* ── Forgot ── */
-    .login__forgot {
-      display:block;
-      width:max-content;
-      margin:0 0 2rem auto;
-      color:var(--title-color);
-      font-size:.8rem;
-      opacity:.7;
-      transition:opacity .2s;
-    }
-    .login__forgot:hover { opacity:1; }
-
-    /* ── Button ── */
-    .login__button {
-      width:100%;
-      height:48px;
-      background:var(--first-color);
-      color:#fff;
-      border-radius:4rem;
-      font-weight:700;
-      font-size:1rem;
-      font-family:'Syne',sans-serif;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:.5rem;
-      cursor:pointer;
-      transition:background-color .3s, transform .15s;
-      letter-spacing:.04em;
-    }
-    .login__button:hover { background:var(--first-color-alt); }
-    .login__button:active { transform:scale(.98); }
-
-    /* ── Error ── */
-    .login__error {
-      display:none;
-      margin-top:.75rem;
-      padding:.75rem 1.25rem;
-      border-radius:4rem;
-      background:hsla(0,70%,55%,.12);
-      border:1px solid hsla(0,70%,55%,.3);
-      color:hsl(0,70%,65%);
-      font-size:.82rem;
-      text-align:center;
-    }
-
-    /* ── Footer ── */
-    .login__footer {
-      text-align:center;
-      font-size:.72rem;
-      color:hsl(0,0%,30%);
-    }
-
-    @media (width >= 540px) {
-      .login { max-width:420px; }
-    }
+    .lc-footer{text-align:center;font-size:.72rem;color:#94a3b8}
+    @media(width>=540px){.lc{max-width:380px}}
   </style>
 </head>
 <body>
 
-<div class="login">
-  <!-- INTERNALIS -->
-  <div class="login__brand">
-    <div class="login__brand-name">INTERNALIS</div>
-    <div class="login__brand-sub">Plateforme de gestion médico-sociale</div>
-  </div>
+<div class="lc">
+  <div class="lc-brand"><div class="lc-brand-name">INTERNALIS</div></div>
 
-  <!-- Card -->
-  <div class="login__card">
-
-    <form id="loginForm" style="padding:0 1.5rem">
-      <div class="login__group">
-        <div class="login__box">
-          <i class="ri-user-3-fill login__icon"></i>
-          <input type="text" id="login" class="login__input" placeholder=" " autocomplete="username"/>
-          <label for="login" class="login__label">Identifiant</label>
-        </div>
-        <div class="login__box">
-          <i class="ri-lock-2-fill login__icon"></i>
-          <input type="password" id="pw" class="login__input" placeholder=" " autocomplete="current-password"/>
-          <label for="pw" class="login__label">Mot de passe</label>
-        </div>
+  <div class="lc-card">
+    <div class="lc-title">Connexion</div>
+    <form id="loginForm">
+      <div class="lc-field">
+        <label for="login">Identifiant</label>
+        <input type="text" id="login" placeholder="ex: admin" autocomplete="username"/>
       </div>
-
-      <a href="#" class="login__forgot">Mot de passe oublié ?</a>
-
-      <button type="submit" class="login__button">
-        Se connecter <i class="ri-send-plane-2-fill"></i>
-      </button>
-
-      <div id="loginError" class="login__error">
-        Identifiant ou mot de passe incorrect.
+      <div class="lc-field">
+        <label for="pw">Mot de passe</label>
+        <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password"/>
       </div>
+      <button type="submit" class="lc-btn">Se connecter</button>
+      <div id="loginError" class="lc-error">Identifiant ou mot de passe incorrect.</div>
     </form>
   </div>
 
-  <div class="login__footer">© INTERNALIS · Tous droits réservés</div>
+  <div class="lc-footer">© INTERNALIS</div>
 </div>
 
 <script src="js/app.js"></script>
