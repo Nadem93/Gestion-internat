@@ -222,10 +222,10 @@ function generateForCurrentEtab() {
   const usedNames = new Set();
   const resList = [];
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 100; i++) {
     let prenom, nom, key;
     do {
-      prenom = i < 10 ? pick(PRENOMS_M) : pick(PRENOMS_F);
+      prenom = i < 50 ? pick(PRENOMS_M) : pick(PRENOMS_F);
       nom = pick(NOMS);
       key = prenom + '_' + nom;
     } while (usedNames.has(key));
@@ -254,7 +254,7 @@ function generateForCurrentEtab() {
       tuteur: '', tuteurTel: '', ecole: pick(ECOLES), classe: pick(CLASSES),
       organisme: pick(ORGANISMES), dossier: '',
       situationPro: pick(SITPROS), ressources: pick(RESSOURCES),
-      organismeA: '', dossierA: '', situationAdmin: pick(SITUADMIN),
+      organismeA: '', dossierA: '', situationAdmin: pick(SITUADMIN), protection: pick(['aucune','tutelle','curatelle','sauvegarde','accompagnement']),
       allergies: Math.random() < .15 ? pick(['Arachides','Lactose','Gluten','Pollen']) : '',
       nss: Math.random() < .3 ? String(rand(1000000000000, 2999999999999)) : '',
       objectifs: [String(rand(1,7)), String(rand(1,7))],
@@ -567,6 +567,81 @@ function generateForCurrentEtab() {
     return { id: Date.now() + i, lieu: inc.lieu, desc: inc.desc, urgence: inc.urgence, date: d.toISOString(), statut };
   });
   localStorage.setItem('ftr_interventions', JSON.stringify(intervsList));
+
+  const users = DB.get(DB.keys.users) || [];
+  if (users.length <= 1) {
+    const profils = [
+      { prenom:'Sophie', nom:'Martin', fonction:'Éducatrice spécialisée', username:'smartin' },
+      { prenom:'Pierre', nom:'Dubois', fonction:'Éducateur jeunesse', username:'pdubois' },
+      { prenom:'Camille', nom:'Legrand', fonction:'Psychologue', username:'clegrand' },
+      { prenom:'Julien', nom:'Fontaine', fonction:'Moniteur éducateur', username:'jfontaine' },
+      { prenom:'Nathalie', nom:'Petit', fonction:'Chef de service', username:'npetit' },
+      { prenom:'Antoine', nom:'Leroy', fonction:'Éducateur sportif', username:'aleroy' },
+      { prenom:'Mélanie', nom:'Roux', fonction:'Assistante sociale', username:'mroux' },
+      { prenom:'David', nom:'Moreau', fonction:'Infirmier', username:'dmoreau' },
+      { prenom:'Élodie', nom:'Fournier', fonction:'Éducatrice jeunes enfants', username:'efournier' },
+      { prenom:'Sébastien', nom:'Girard', fonction:'VEilleur de nuit', username:'sgirard' },
+      { prenom:'Caroline', nom:'Bonnet', fonction:'Psychomotricienne', username:'cbonnet' },
+      { prenom:'Alexandre', nom:'Dupont', fonction:'Médiateur social', username:'adupont' },
+      { prenom:'Virginie', nom:'Lambert', fonction:'CESF', username:'vlambert' },
+      { prenom:'Romain', nom:'Chevallier', fonction:'Animateur socioculturel', username:'rchevallier' },
+      { prenom:'Isabelle', nom:'Perrin', fonction:'Coordinatrice de parcours', username:'iperrin' },
+      { prenom:'Laurent', nom:'Gauthier', fonction:'Éducateur technique', username:'lgauthier' },
+      { prenom:'Stéphanie', nom:'Caron', fonction:'Secrétaire médico-sociale', username:'scaron' },
+      { prenom:'Grégory', nom:'Moulin', fonction:'Agent de maintien', username:'gmoulin' },
+      { prenom:'Audrey', nom:'Renard', fonction:'Référente ASE', username:'arenard' },
+      { prenom:'Florian',nom:'Marchand', fonction:'Stagiaire éducateur', username:'fmarchand' }
+    ];
+    profils.forEach((p, i) => users.push({
+      id: i + 2, ...p, password: 'educ123', role: 'educ'
+    }));
+    DB.set(DB.keys.users, users);
+    users.forEach(u => addUserToAllEtabs(u));
+  }
+
+  const conversations = {};
+  const allMsgs = [];
+  const convDefs = [
+    { users: [1,2,3], msgs: ['Bonjour à tous, réunion d équipe demain à 14h. Merci de confirmer.','Présente, merci !','Présent également. Je dois faire le point sur le suivi.','Parfait. Préparez un rapport.','OK, je m en occupe.','J ai croisé sa référente, elle dit qu il progresse.','Bien, continuez comme ça.']},
+    { users: [1,4], msgs: ['Bonjour, RDV CMP pour Sarah confirmé demain 15h.','Merci. Le transport est organisé ?','Oui, j ai réservé le Kangoo.','Très bien. Tenez-moi au courant.','RDV passé. Le médecin ajuste son traitement.','Parfait. Et pour Enzo ?','Premier RDV programmé jeudi prochain.']},
+    { users: [2,3,4,5], msgs: ['Info : Fatima a trouvé un stage en crèche !','Super nouvelle ! Suivi rapproché la première semaine.','Je peux m en charger.','Parfait. Leila a aussi eu son stage.','Génial ! Bonne semaine pour les stages.','On prévoit un atelier préparation entretien ?','Bonne idée. Je peux animer jeudi.']},
+    { users: [1,6,14], msgs: ['Bonjour, point sur les budgets. Plusieurs dépassements.','Oui, Ryan a tout dépensé en une semaine.','On met un suivi renforcé ? Virginie tu prends ?','Bien sûr. Atelier budget 2x/semaine.','Parfait. Budget sorties collectives dans le vert.']},
+    { users: [12,13,15], msgs: ['Je propose un atelier psychomotricité pour Lucas et Mehdi.','Bonne idée. Je les prépare en amont.','Je veux bien co-animer.','Super ! Je propose mardi 14h.','Je confirme ma disponibilité.']},
+    { users: [8,10,18], msgs: ['Bonjour, point MDPH. Elena et Sarah à renouveler.','Il manque le certificat médical pour Elena.','Je relance le Dr Moreau.','Parfait. Et pour le logement d Assia ?','Commission d attribution le 15.','J ai préparé le dossier renouvellement contrat jeune majeur.']},
+    { users: [7,17,19], msgs: ['On organise un tournoi de foot inter-foyers ?','Excellente idée ! Je prépare les jeunes.','Je gère la logistique.','On vise samedi dans 3 semaines.','Sofiane et Amine sont chauds.','On inscrit aussi Kylian ?','Bonne idée, je valide avec son référent.']},
+    { users: [1,2], msgs: ['Nouvel arrivant prévu lundi. Chambre 105 à préparer.','OK, je m en occupe. Il faut commander un lit ?','Oui, vérifie le stock. Sinon bon de commande.','Compris. Briefing équipe demain matin ?','À 9h en salle de réunion. Présents : Sophie, Pierre, Julien.','Noté. Je prépare le dossier d accueil.']}
+  ];
+  convDefs.forEach((cd, ci) => {
+    const convId = cd.users.sort((a,b)=>a-b).join('_');
+    conversations[convId] = { id: convId, userIds: cd.users, createdAt: new Date(now.getTime() - (convDefs.length - ci) * 86400000*2).toISOString() };
+    cd.msgs.forEach((body, mi) => {
+      const d = new Date(now.getTime() - ((cd.msgs.length - mi) + (convDefs.length - ci) * 7) * 86400000);
+      d.setHours(rand(8, 18), rand(0, 59), 0, 0);
+      allMsgs.push({ id: 'dm-' + (ci + 1) + '-' + (mi + 1), convId, from: cd.users[mi % cd.users.length], body, date: d.toISOString(), readBy: [cd.users[mi % cd.users.length]] });
+    });
+  });
+  DB.set(DB.keys.messages, allMsgs);
+  localStorage.setItem('ftr_conversations', JSON.stringify(conversations));
+
+  const contacts = [
+    { organisme:'CMP Maison Blanche', nom:'Dr Anne Moreau', tel:'01 45 67 89 01', email:'anne.moreau@gh-paris.fr', fonction:'Pédopsychiatre', adresse:'15 Rue de la Santé, 75014 Paris', notes:'Suivi de Lucas et Sarah.' },
+    { organisme:'ASE Paris', nom:'Mme Valérie Legrand', tel:'01 23 45 67 10', email:'valerie.legrand@paris.fr', fonction:'Référente ASE', adresse:'12 Rue du Château, 75010 Paris', notes:'' },
+    { organisme:'PJJ Paris', nom:'M. Christophe Fontaine', tel:'01 23 45 67 20', email:'christophe.fontaine@justice.fr', fonction:'Éducateur PJJ', adresse:'3 Boulevard du Palais, 75001 Paris', notes:'' },
+    { organisme:'Mission Locale Paris Centre', nom:'Mme Karima Saadi', tel:'01 45 78 90 12', email:'k.saadi@ml-paris.fr', fonction:'Conseillère insertion', adresse:'8 Rue de la Paix, 75002 Paris', notes:'' },
+    { organisme:'CIDFF Paris', nom:'Mme Laure Blanc', tel:'01 45 67 89 34', email:'l.blanc@cidff.fr', fonction:'Psychologue', adresse:'20 Rue de la Roquette, 75011 Paris', notes:'' },
+    { organisme:'Hôpital Saint-Antoine', nom:'Dr Paul Lefèvre', tel:'01 49 28 20 00', email:'paul.lefevre@aphp.fr', fonction:'Psychiatre', adresse:'184 Rue du Faubourg Saint-Antoine, 75012 Paris', notes:'' },
+    { organisme:'OFII Paris', nom:'M. Amadou Ba', tel:'01 40 77 25 00', email:'amadou.ba@ofii.fr', fonction:'Référent intégration', adresse:'44 Rue Bargue, 75015 Paris', notes:'' },
+    { organisme:'École Élémentaire Jules Ferry', nom:'Mme Christine Petit', tel:'01 43 56 78 90', email:'ce.0751234a@ac-paris.fr', fonction:'Directrice', adresse:'2 Rue Jules Ferry, 75011 Paris', notes:'' },
+    { organisme:'Collège Victor Hugo', nom:'M. Laurent Roux', tel:'01 43 56 78 91', email:'ce.0751235b@ac-paris.fr', fonction:'CPE', adresse:'5 Rue Victor Hugo, 75011 Paris', notes:'' },
+    { organisme:'ESAT Les Ateliers du Val', nom:'M. Franck Morel', tel:'01 48 90 12 34', email:'f.morel@esat-val.fr', fonction:'Directeur adjoint', adresse:'Route de la Vallée, 94120 Fontenay', notes:'' },
+    { organisme:'MDPH Val-de-Marne', nom:'Mme Sophie Leroy', tel:'09 72 12 34 56', email:'sophie.leroy@mdph94.fr', fonction:'Chargée de dossier', adresse:'1 Place de la Préfecture, 94000 Créteil', notes:'' },
+    { organisme:'CCAS Paris 10e', nom:'M. David Cohen', tel:'01 45 67 89 50', email:'d.cohen@ccas-paris.fr', fonction:'Travailleur social', adresse:'10 Rue de la Grange aux Belles, 75010 Paris', notes:'' },
+    { organisme:'Service Solideo', nom:'Mme Fatou Ba', tel:'06 12 34 56 13', email:'f.ba@solideo.org', fonction:'Travailleuse sociale', adresse:'18 Rue des Martyrs, 75009 Paris', notes:'' },
+    { organisme:'Lycée Hôtelier Guillaume Tirel', nom:'M. Jean-Claude Roux', tel:'01 44 14 77 77', email:'jc.roux@ac-paris.fr', fonction:'Chef des travaux', adresse:'18 Rue Guillaume Tirel, 75014 Paris', notes:'' },
+    { organisme:'CMP Enfants-Ados Paris 13e', nom:'Dr Catherine Lefèvre', tel:'01 45 85 45 85', email:'catherine.lefevre@gh-paris.fr', fonction:'Pédopsychiatre', adresse:'43 Rue de la Santé, 75013 Paris', notes:'' },
+    { organisme:'GRETA Paris', nom:'Mme Sylvie Mercier', tel:'01 44 62 36 00', email:'s.mercier@greta-paris.fr', fonction:'Coordinatrice', adresse:'164 Rue de Rivoli, 75001 Paris', notes:'' }
+  ].map(c => ({ id:'dc-'+rand(100000,999999).toString(36), updatedAt:new Date(now.getTime()-rand(0,60)*86400000).toISOString(), ...c }));
+  DB.set(DB.keys.repertoire, contacts);
 
   return resList.length;
 }
