@@ -31,11 +31,6 @@
         <div style="font-size:.82rem;font-weight:700;color:rgba(0,0,0,.6);margin:.25rem 0 .1rem">Aucune réservation</div>
       </div>
     </a>
-    <a href="accueil.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none" title="Changer d'établissement">
-      <div class="stat-card-top"><span class="stat-label">Établissement</span><div class="stat-icon" style="background:rgba(15,43,74,.15);color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div></div>
-      <div class="stat-num" style="font-size:.9rem" id="statEtabName">—</div>
-      <div class="stat-change" id="statEtabInfo">Changer d'établissement</div>
-    </a>
     <a href="residents.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none" title="Anniversaires du mois">
       <div class="stat-card-top"><span class="stat-label">Anniversaires du mois</span><div class="stat-icon" style="background:rgba(236,72,153,.2);color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
       <div class="stat-num" style="font-size:.9rem" id="statAnnivInfo">Aucun</div>
@@ -305,16 +300,6 @@ function renderDashboard() {
       return `<div style="display:flex;align-items:center;gap:.5rem;padding:2px 0;font-size:.75rem;border-bottom:1px solid rgba(0,0,0,.08)"><span style="font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b">${r.vehicule||'?'}</span><span style="color:rgba(0,0,0,.5)">${shortName(r.reservedBy)}</span><span style="color:rgba(0,0,0,.5);white-space:nowrap;font-size:.7rem">${dureeLabel}</span></div>`;
     }).join('');
   } else { vehList.innerHTML = '<div style="font-size:.78rem;color:rgba(0,0,0,.5)">Aucune réservation imminente</div>'; }
-  const curEtab = getCurrentEtab();
-  const enEl = document.getElementById('statEtabName');
-  const eiEl = document.getElementById('statEtabInfo');
-  if (curEtab) {
-    enEl.textContent = curEtab.nom;
-    eiEl.textContent = 'Changer d\'établissement';
-  } else {
-    enEl.textContent = '—';
-    eiEl.textContent = 'Sélectionner';
-  }
   const ppeList = DB.get(DB.keys.ppe) || [];
   const residentsWithPpe = new Set(ppeList.filter(p => p.statut === 'actif').map(p => p.residentId));
   const sansAvenant = allResidents.filter(r => !residentsWithPpe.has(r.id));
