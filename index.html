@@ -3,45 +3,60 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Connexion — FTR</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <title>Connexion — INTERNALIS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet"/>
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    *{box-sizing:border-box;margin:0;padding:0}
     body{
-      font-family:Inter,sans-serif;font-size:.938rem;color:#334155;
-      background:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;
+      background:#F3EBF6;font-family:'Ubuntu',sans-serif;
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
     }
-    input,button{border:none;outline:none;font-family:inherit;font-size:.938rem}
+    input,button{border:none;outline:none;font-family:'Ubuntu',sans-serif}
 
-    .lc{width:100%;max-width:360px;display:flex;flex-direction:column;gap:2rem}
-    .lc-brand{text-align:center}
-    .lc-brand-name{font-size:1.6rem;font-weight:800;color:#e85d04;letter-spacing:-.02em}
-    .lc-card{background:#fff;border-radius:12px;padding:2rem;box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);border:1.5px solid #0f2b4a}
-    .lc-title{font-size:1rem;font-weight:700;color:#0f2b4a;margin-bottom:1.25rem;text-align:center}
-    .lc-field{margin-bottom:.85rem}
-    .lc-field label{display:block;font-size:.78rem;font-weight:600;color:#64748b;margin-bottom:.3rem}
+    .lc-wrap{width:100%;max-width:400px;padding:1.5rem}
+    .lc-brand{text-align:center;margin-bottom:1.5rem}
+    .lc-brand-name{font-size:1.8rem;font-weight:700;color:#8C55AA;letter-spacing:-.02em}
+
+    .lc-card{
+      background:#fff;border-radius:1.5em;padding:2.5rem 2rem;
+      box-shadow:0 11px 35px 2px rgba(0,0,0,.14);
+    }
+    .lc-title{
+      color:#8C55AA;font-weight:700;font-size:23px;text-align:center;padding-top:10px;margin-bottom:1.5rem;
+    }
+    .lc-field{margin-bottom:1.5rem}
+    .lc-field label{display:block;font-size:.8rem;font-weight:500;color:#8C55AA;margin-bottom:.4rem;text-align:center}
     .lc-field input{
-      width:100%;height:44px;padding:0 .85rem;border:1.5px solid #e2e8f0;border-radius:8px;
-      background:#f8fafc;color:#0f2b4a;font-weight:500;transition:border-color .15s,box-shadow .15s
+      width:100%;padding:12px 20px;border-radius:20px;text-align:center;
+      background:rgba(136,126,126,.04);border:2px solid rgba(0,0,0,.02);
+      font-size:14px;font-weight:500;color:#263238;letter-spacing:1px;
+      transition:border-color .2s,background .2s;
     }
-    .lc-field input:focus{border-color:#0f2b4a;box-shadow:0 0 0 3px rgba(15,43,74,.1);background:#fff}
+    .lc-field input:focus{
+      border-color:rgba(0,0,0,.18)!important;background:rgba(136,126,126,.08);
+    }
     .lc-btn{
-      width:100%;height:44px;background:#0f2b4a;color:#fff;border-radius:8px;
-      font-weight:600;font-size:.875rem;cursor:pointer;transition:background .15s,transform .1s;margin-top:.25rem
+      display:block;cursor:pointer;border-radius:5em;color:#fff;
+      background:linear-gradient(to right,#9C27B0,#E040FB);
+      padding:12px 40px;font-size:14px;font-weight:500;
+      box-shadow:0 0 20px 1px rgba(0,0,0,.04);
+      transition:transform .15s,box-shadow .15s;
+      margin:0 auto;min-width:160px;
     }
-    .lc-btn:hover{background:#1a4a7a}
-    .lc-btn:active{transform:scale(.98)}
+    .lc-btn:hover{box-shadow:0 0 25px 3px rgba(156,39,176,.25)}
+    .lc-btn:active{transform:scale(.97)}
     .lc-error{
-      display:none;margin-top:.75rem;padding:.6rem .85rem;border-radius:8px;
-      background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:.8rem;text-align:center
+      display:none;margin:1rem auto 0;padding:10px 16px;border-radius:20px;
+      background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:.82rem;text-align:center;max-width:260px;
     }
-    .lc-footer{text-align:center;font-size:.72rem;color:#94a3b8}
-    @media(width>=540px){.lc{max-width:380px}}
+    .lc-footer{text-align:center;font-size:.75rem;color:#E1BEE7;margin-top:1.5rem}
+    .lc-footer a{color:#E1BEE7;text-decoration:none}
+    .lc-footer a:hover{text-decoration:underline}
   </style>
 </head>
 <body>
 
-<div class="lc">
+<div class="lc-wrap">
   <div class="lc-brand"><div class="lc-brand-name">INTERNALIS</div></div>
 
   <div class="lc-card">

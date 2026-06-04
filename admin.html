@@ -8,7 +8,6 @@
   <style>
     :root {
       --av:#0f2b4a; --av-l:#dce8f4; --av-d:#071a2f; --av-2:#f1f5f9;
-      --aw:258px;
       --glass:rgba(255,255,255,.82);
       --glass-border:rgba(255,255,255,.6);
       --glass-shadow:0 4px 24px rgba(15,43,74,.09),0 1px 4px rgba(15,43,74,.05);
@@ -16,86 +15,11 @@
       --blur:blur(14px);
     }
 
-    /* ── BODY / BACKGROUND ── */
     body{
       background:linear-gradient(135deg,#b8b0d4 0%,#d4cfe8 45%,#f5f0fc 100%);
       background-attachment:fixed;
       min-height:100vh;
     }
-    .admin-shell{display:flex;min-height:100vh}
-
-    /* ── SIDEBAR ── */
-    .admin-sidebar{
-      width:var(--aw);
-      background:linear-gradient(170deg,rgba(7,26,47,.97) 0%,rgba(9,30,60,.95) 55%,rgba(15,43,74,.96) 100%);
-      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-      display:flex;flex-direction:column;
-      position:fixed;top:0;left:0;height:100vh;z-index:200;
-      box-shadow:4px 0 40px rgba(7,26,47,.4),1px 0 0 rgba(255,255,255,.06);
-      border-right:1px solid rgba(255,255,255,.07);
-    }
-    .asb-head{
-      padding:1.5rem 1.25rem 1.25rem;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;align-items:center;gap:.9rem;
-      background:rgba(255,255,255,.04);
-    }
-    .asb-logo{
-      width:44px;height:44px;border-radius:12px;
-      background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.08));
-      border:1px solid rgba(255,255,255,.18);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-size:1.05rem;font-weight:900;flex-shrink:0;overflow:hidden;
-      box-shadow:0 2px 14px rgba(0,0,0,.25);
-    }
-    .asb-logo img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-    .asb-brand{color:#fff}
-    .asb-brand-name{font-size:.88rem;font-weight:800;line-height:1.2;letter-spacing:-.01em}
-    .asb-brand-sub{font-size:.62rem;opacity:.5;margin-top:2px;letter-spacing:.03em}
-    .asb-nav{flex:1;padding:1.1rem .75rem;display:flex;flex-direction:column;gap:.06rem;overflow-y:auto}
-    .asb-nav::-webkit-scrollbar{width:3px}
-    .asb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}
-    .asb-lbl{font-size:.57rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);padding:.9rem .6rem .3rem}
-    .asb-item{
-      display:flex;align-items:center;gap:.7rem;
-      padding:.58rem .88rem;border-radius:10px;cursor:pointer;
-      color:rgba(255,255,255,.6);font-size:.82rem;font-weight:500;
-      transition:all .18s ease;border:none;background:transparent;width:100%;text-align:left;
-      position:relative;
-    }
-    .asb-item:hover{background:rgba(255,255,255,.10);color:#fff}
-    .asb-item.active{
-      background:rgba(255,255,255,.13);color:#fff;font-weight:600;
-      box-shadow:0 2px 14px rgba(0,0,0,.15);
-      border:1px solid rgba(255,255,255,.12);
-    }
-    .asb-item.active::before{
-      content:'';position:absolute;left:0;top:20%;bottom:20%;
-      width:3px;background:#e85d04;border-radius:0 3px 3px 0;
-    }
-    .asb-icon{
-      width:28px;height:28px;border-radius:8px;
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-      background:rgba(255,255,255,.10);transition:background .18s;
-    }
-    .asb-item.active .asb-icon{background:rgba(232,93,4,.22);color:#ff8c42}
-    .asb-icon svg{width:14px;height:14px}
-    .asb-foot{padding:.85rem .75rem;border-top:1px solid rgba(255,255,255,.10);display:flex;flex-direction:column;gap:.3rem;background:rgba(255,255,255,.03)}
-    .asb-user{display:flex;align-items:center;gap:.65rem;padding:.5rem .6rem;border-radius:10px;background:rgba(255,255,255,.07)}
-    .asb-av{
-      width:32px;height:32px;border-radius:50%;
-      background:linear-gradient(135deg,#e85d04,#f97316);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-size:.72rem;font-weight:700;flex-shrink:0;
-      box-shadow:0 2px 10px rgba(232,93,4,.35);
-    }
-    .asb-uname{font-size:.78rem;font-weight:600;color:#fff}
-    .asb-urole{font-size:.62rem;color:rgba(255,255,255,.42);margin-top:1px}
-    .asb-back{display:flex;align-items:center;gap:.55rem;padding:.5rem .88rem;border-radius:10px;color:rgba(255,255,255,.48);font-size:.77rem;text-decoration:none;transition:all .18s;cursor:pointer;border:none;background:transparent;width:100%}
-    .asb-back:hover{background:rgba(255,255,255,.09);color:#fff}
-
-    /* ── MAIN ── */
-    .admin-main{margin-left:var(--aw);flex:1;display:flex;flex-direction:column;min-height:100vh}
 
     /* ── TOPBAR ── */
     .admin-topbar{
@@ -106,8 +30,16 @@
       position:sticky;top:0;z-index:50;
       box-shadow:0 1px 0 rgba(15,43,74,.07),0 4px 20px rgba(15,43,74,.05);
     }
-    .atb-greeting{font-size:.6rem;font-weight:700;color:var(--av);text-transform:uppercase;letter-spacing:.10em;opacity:.7}
-    .atb-title{font-size:1.05rem;font-weight:800;color:var(--text);margin-top:1px}
+    .atb-left{display:flex;align-items:center;gap:.75rem}
+    .atb-back{
+      display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
+      background:rgba(255,255,255,.85);border:1px solid rgba(15,43,74,.12);
+      color:var(--muted);transition:all .18s;text-decoration:none;cursor:pointer;
+      box-shadow:0 1px 4px rgba(0,0,0,.06);
+    }
+    .atb-back:hover{background:var(--av-l);color:var(--av);border-color:var(--av)}
+    .atb-title{font-size:1.05rem;font-weight:800;color:var(--text)}
+    .atb-sub{font-size:.6rem;font-weight:700;color:var(--av);text-transform:uppercase;letter-spacing:.10em;opacity:.7}
     .atb-right{display:flex;align-items:center;gap:.75rem}
     .atb-badge{
       display:flex;align-items:center;gap:.45rem;
@@ -116,15 +48,9 @@
       font-size:.73rem;font-weight:700;
       border:1px solid rgba(15,43,74,.12);
     }
-    .atb-home{
-      display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
-      background:rgba(255,255,255,.85);border:1px solid rgba(15,43,74,.12);
-      color:var(--muted);transition:all .18s;text-decoration:none;
-      box-shadow:0 1px 4px rgba(0,0,0,.06);
-    }
-    .atb-home:hover{background:var(--av-l);color:var(--av);border-color:var(--av)}
+
     /* ── CIRCULAR STATS ── */
-    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:1.5rem 2rem 0}
+    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:0 2rem}
     .stat-circ-card{
       background:var(--glass);
       backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
@@ -139,16 +65,10 @@
     .circ-svg{width:88px;height:88px;transform:rotate(-90deg)}
     .circ-track{fill:none;stroke:rgba(15,43,74,.07);stroke-width:8}
     .circ-bar{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)}
-    .circ-label{
-      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      font-size:1.15rem;font-weight:800;color:var(--text);line-height:1;
-    }
+    .circ-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.15rem;font-weight:800;color:var(--text);line-height:1}
     .circ-sub{font-size:.6rem;color:var(--muted);margin-top:1px}
     .stat-circ-name{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.3rem}
-    .stat-circ-badge{
-      display:inline-flex;align-items:center;gap:.3rem;
-      padding:.22rem .65rem;border-radius:var(--r-full);font-size:.68rem;font-weight:700;margin-top:.15rem;
-    }
+    .stat-circ-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:var(--r-full);font-size:.68rem;font-weight:700;margin-top:.15rem}
     .scb-green{background:#dcfce7;color:#16a34a}
     .scb-yellow{background:#fef9c3;color:#a16207}
     .scb-red{background:#fee2e2;color:#dc2626}
@@ -157,42 +77,21 @@
 
     /* ── STATS DÉTAILS ── */
     .stats-detail{display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem;padding:1rem 2rem 0}
-    .sdcard{
-      background:var(--glass);
-      backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-      border-radius:16px;
-      box-shadow:var(--glass-shadow);
-      border:1px solid var(--glass-border);
-    }
-    .sdcard-head{
-      padding:.9rem 1.25rem;
-      border-bottom:1px solid rgba(15,43,74,.07);
-      display:flex;align-items:center;justify-content:space-between;
-    }
+    .sdcard{background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:16px;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border)}
+    .sdcard-head{padding:.9rem 1.25rem;border-bottom:1px solid rgba(15,43,74,.07);display:flex;align-items:center;justify-content:space-between}
     .sdcard-title{font-size:.82rem;font-weight:700;color:var(--text)}
     .sdcard-body{padding:1rem 1.25rem}
-
-    /* Bar chart */
     .bar-chart{display:flex;align-items:flex-end;gap:.4rem;height:130px;padding-bottom:.25rem}
     .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;position:relative}
     .bar-fill{width:100%;border-radius:5px 5px 0 0;min-height:4px;transition:height .8s ease;position:relative;cursor:pointer}
-    .bar-fill:hover::after{
-      content:attr(data-count);position:absolute;top:-28px;left:50%;transform:translateX(-50%);
-      background:var(--av);color:#fff;font-size:.65rem;font-weight:600;
-      padding:2px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:10;
-      box-shadow:0 2px 8px rgba(15,43,74,.2);
-    }
+    .bar-fill:hover::after{content:attr(data-count);position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--av);color:#fff;font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:10;box-shadow:0 2px 8px rgba(15,43,74,.2)}
     .bar-lbl{font-size:.58rem;color:var(--muted);font-weight:500;white-space:nowrap}
     .btn-freq:hover{color:var(--text)!important}
     .btn-freq.active{color:var(--av)!important;background:rgba(15,43,74,.09)!important;border-radius:6px}
-
-    /* Quick stat rows */
     .qstat-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(15,43,74,.06)}
     .qstat-row:last-child{border-bottom:none}
     .qstat-label{font-size:.77rem;color:var(--muted)}
     .qstat-value{font-size:.88rem;font-weight:700;color:var(--text)}
-
-    /* PPE progress */
     .ppe-bar-wrap{margin-top:.5rem}
     .ppe-bar-track{height:7px;border-radius:var(--r-full);background:rgba(15,43,74,.07);overflow:hidden;margin-bottom:.3rem}
     .ppe-bar-fill{height:100%;border-radius:var(--r-full);transition:width 1s ease}
@@ -219,100 +118,35 @@
       background:rgba(255,255,255,.88);
       backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     }
-    .admin-content .card-header{
-      border-radius:16px 16px 0 0;padding:.9rem 1.3rem;
-      background:rgba(255,255,255,.55);
-      border-bottom:1px solid rgba(15,43,74,.06);
-    }
-
-    /* Fonctions + Catégories layout */
+    .admin-content .card-header{border-radius:16px 16px 0 0;padding:.9rem 1.3rem;background:rgba(255,255,255,.55);border-bottom:1px solid rgba(15,43,74,.06)}
     .fonc-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
-
-    /* List items */
     .adm-row{display:flex;align-items:center;gap:.8rem;padding:.85rem 1.3rem;border-bottom:1px solid rgba(15,43,74,.05);transition:background .15s}
     .adm-row:hover{background:rgba(15,43,74,.03)}
     .adm-row:last-child{border-bottom:none}
-
-    /* Rights */
     .rights-item{display:flex;align-items:center;gap:.6rem;padding:.45rem 0;font-size:.82rem;border-bottom:1px solid rgba(15,43,74,.06)}
     .rights-item:last-child{border-bottom:none}
     .rights-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-    /* Color row */
     .color-row{display:flex;align-items:center;gap:.75rem}
-
-    /* Buttons */
-    .btn-violet{
-      background:linear-gradient(135deg,var(--av),#1a4a7a);
-      color:#fff;border:none;
-      box-shadow:0 2px 10px rgba(15,43,74,.25);
-      transition:all .18s ease;
-    }
-    .btn-violet:hover{
-      background:linear-gradient(135deg,#1a4a7a,var(--av));
-      box-shadow:0 4px 16px rgba(15,43,74,.35);
-      transform:translateY(-1px);
-    }
-
-    /* Inputs */
-    .admin-content input:focus,.admin-content textarea:focus,.admin-content select:focus{
-      border-color:var(--av);box-shadow:0 0 0 3px rgba(15,43,74,.12);outline:none;
-    }
-
-    /* Danger */
+    .btn-violet{background:linear-gradient(135deg,var(--av),#1a4a7a);color:#fff;border:none;box-shadow:0 2px 10px rgba(15,43,74,.25);transition:all .18s ease}
+    .btn-violet:hover{background:linear-gradient(135deg,#1a4a7a,var(--av));box-shadow:0 4px 16px rgba(15,43,74,.35);transform:translateY(-1px)}
+    .admin-content input:focus,.admin-content textarea:focus,.admin-content select:focus{border-color:var(--av);box-shadow:0 0 0 3px rgba(15,43,74,.12);outline:none}
     .danger-zone{border:1.5px solid #fecaca!important}
     .danger-zone .card-header{background:rgba(254,242,242,.85)!important}
-    .perm-btn{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:.35rem .7rem;border-radius:var(--r);
-      border:1.5px solid rgba(15,43,74,.14);
-      background:rgba(255,255,255,.8);color:var(--muted);
-      font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;gap:.3rem;
-    }
+    .perm-btn{display:inline-flex;align-items:center;justify-content:center;padding:.35rem .7rem;border-radius:var(--r);border:1.5px solid rgba(15,43,74,.14);background:rgba(255,255,255,.8);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;gap:.3rem}
     .perm-btn:hover{border-color:var(--av);color:var(--av);background:#fff}
     .perm-btn.active{background:var(--av-l);border-color:var(--av);color:var(--av);box-shadow:0 0 0 2px var(--av-l)}
 
-    /* ── SCROLLBAR GLOBAL ── */
-    .admin-main::-webkit-scrollbar{width:5px}
-    .admin-main::-webkit-scrollbar-thumb{background:rgba(15,43,74,.18);border-radius:5px}
-
-    /* ── MOBILE RESPONSIVE ── */
-    .asb-overlay{
-      display:none;position:fixed;inset:0;
-      background:rgba(15,43,74,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-      z-index:205;cursor:pointer;
-    }
-    .asb-overlay.open{display:block}
-    .mob-menu-btn{
-      display:none;align-items:center;justify-content:center;
-      width:36px;height:36px;border-radius:8px;flex-shrink:0;
-      border:1px solid rgba(15,43,74,.12);
-      background:rgba(255,255,255,.8);
-      color:var(--muted);cursor:pointer;
-      transition:all .18s;margin-right:.5rem;
-    }
-    .mob-menu-btn:hover{background:#fff;color:var(--av)}
-    .mob-menu-btn svg{width:17px;height:17px}
-
+    /* ── RESPONSIVE ── */
     @media(max-width:900px){
-      .admin-sidebar{
-        transform:translateX(-100%);
-        transition:transform .28s cubic-bezier(.4,0,.2,1);
-        z-index:210;
-      }
-      .admin-sidebar.open{transform:translateX(0)}
-      .admin-main{margin-left:0}
-      .mob-menu-btn{display:flex}
-      .admin-topbar{padding:.85rem 1.1rem}
-      .atb-badge{display:none}
-      .stats-strip{grid-template-columns:repeat(2,1fr);padding:1rem 1rem 0}
+      .stats-strip{grid-template-columns:repeat(2,1fr);padding:0 1rem}
       .stats-detail{grid-template-columns:1fr;padding:.75rem 1rem 0}
       .admin-content{padding:1rem 1rem 3rem}
+      .admin-topbar{padding:.85rem 1.1rem}
       .fonc-grid{grid-template-columns:1fr}
+      .atb-badge{display:none}
     }
-
     @media(max-width:480px){
-      .stats-strip{gap:.625rem;padding:.75rem .75rem 0}
+      .stats-strip{gap:.625rem;padding:0 .75rem}
       .admin-content{padding:.75rem .75rem 3rem}
       .admin-topbar{padding:.7rem .75rem}
       .atb-title{font-size:.9rem}
@@ -326,690 +160,344 @@
   </style>
 </head>
 <body>
-<div class="admin-shell">
 
-<!-- ══════════ SIDEBAR ══════════ -->
-<aside class="admin-sidebar">
-  <div class="asb-head">
-    <div class="asb-logo" id="asbLogo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="width:20px;height:20px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-    </div>
-    <div class="asb-brand">
-      <div class="asb-brand-name" id="asbBrandName">Administration</div>
-      <div class="asb-brand-sub">Paramètres plateforme</div>
-    </div>
-  </div>
-  <nav class="asb-nav">
-    <div class="asb-lbl">Vue d'ensemble</div>
-    <button class="asb-item tab active" data-tab="stats" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-      Statistiques
-    </button>
-    <div class="asb-lbl">Configuration</div>
-    <button class="asb-item tab" data-tab="etablissement" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-      Établissement &amp; perso.
-    </button>
-    <div class="asb-lbl">Contenu</div>
-    <button class="asb-item tab" data-tab="fonctions" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
-      Fonctions &amp; Catégories
-    </button>
-
-    <div class="asb-lbl">Ressources</div>
-    <button class="asb-item tab" data-tab="employes" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-      Employés
-    </button>
-    <div class="asb-lbl">Accès</div>
-    <button class="asb-item tab" data-tab="educateurs" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-      Utilisateurs
-    </button>
-    <button class="asb-item tab" data-tab="permissions" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-      Permissions
-    </button>
-    <button class="asb-item tab" data-tab="compte" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-      Mon compte
-    </button>
-    <div class="asb-lbl">Système</div>
-    <button class="asb-item tab" data-tab="donnees" onclick="adminNav(this)">
-      <span class="asb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>
-      Données
-    </button>
-  </nav>
-  <div class="asb-foot">
-    <div class="asb-user">
-      <div class="asb-av" id="asbAvatar">A</div>
-      <div><div class="asb-uname" id="asbUserName">Administrateur</div><div class="asb-urole">Admin</div></div>
-    </div>
-    <button class="asb-back" onclick="window.location.href='accueil.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
-      Retour à l'accueil
-    </button>
-  </div>
-</aside>
-
-<!-- ══════════ MAIN ══════════ -->
-<div class="admin-main">
-
-  <!-- Overlay mobile sidebar -->
-  <div class="asb-overlay" id="asbOverlay" onclick="closeSidebar()"></div>
-
-  <!-- Topbar -->
-  <header class="admin-topbar">
-    <button class="mob-menu-btn" onclick="toggleSidebar()" aria-label="Menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
+<!-- ══════════ TOPBAR ══════════ -->
+<header class="admin-topbar">
+  <div class="atb-left">
+    <a href="admin-modules.html" class="atb-back" title="Modules admin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
     <div>
-      <div class="atb-greeting">Administration</div>
+      <div class="atb-sub">Administration</div>
       <div class="atb-title" id="atbTitle">Statistiques</div>
     </div>
-    <div class="atb-right">
-      <a href="accueil.html" class="atb-home" title="Accueil">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-      </a>
-      <div class="atb-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
-        <span id="atbBadge">Tableau de bord admin</span>
-      </div>
-    </div>
-  </header>
-
-  <!-- ══════════ ÉTABLISSEMENT ACTIF ══════════ -->
-  <div id="etabBanner" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 2rem .25rem;flex-wrap:wrap">
-    <div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
-    <div>
-      <span id="etabBannerNom" style="font-weight:800;font-size:.95rem;color:var(--primary)">—</span>
-      <span id="etabBannerType" class="badge" style="margin-left:.5rem;background:#0891b220;color:#0891b2;font-size:.68rem"></span>
-    </div>
-    <a href="accueil.html" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
-      Changer d'établissement
-    </a>
   </div>
-
-  <!-- ══════════ CIRCULAR STATS STRIP (always visible) ══════════ -->
-  <div class="stats-strip" id="statsStrip">
-    <!-- Card 1 : Taux de présence -->
-    <div class="stat-circ-card">
-      <div class="circ-wrap">
-        <svg class="circ-svg" viewBox="0 0 88 88">
-          <circle class="circ-track" cx="44" cy="44" r="36"/>
-          <circle class="circ-bar" id="c1bar" cx="44" cy="44" r="36" stroke="#7C6FCD"
-            stroke-dasharray="226" stroke-dashoffset="226"/>
-        </svg>
-        <div class="circ-label"><span id="c1pct">0</span><span style="font-size:.6rem">%</span></div>
-      </div>
-      <div class="stat-circ-name">Taux de présence</div>
-      <div style="font-size:.7rem;color:var(--muted)" id="c1sub">— / — résidents</div>
-      <span class="stat-circ-badge scb-violet" id="c1badge">—</span>
-    </div>
-
-    <!-- Card 2 : Taux d'occupation -->
-    <div class="stat-circ-card">
-      <div class="circ-wrap">
-        <svg class="circ-svg" viewBox="0 0 88 88">
-          <circle class="circ-track" cx="44" cy="44" r="36"/>
-          <circle class="circ-bar" id="c2bar" cx="44" cy="44" r="36" stroke="#10b981"
-            stroke-dasharray="226" stroke-dashoffset="226"/>
-        </svg>
-        <div class="circ-label"><span id="c2pct">0</span><span style="font-size:.6rem">%</span></div>
-      </div>
-      <div class="stat-circ-name">Taux d'occupation</div>
-      <div style="font-size:.7rem;color:var(--muted)" id="c2sub">— / — places</div>
-      <span class="stat-circ-badge scb-green" id="c2badge">—</span>
-    </div>
-
-    <!-- Card 3 : Journal (7 jours) -->
-    <div class="stat-circ-card">
-      <div class="circ-wrap">
-        <svg class="circ-svg" viewBox="0 0 88 88">
-          <circle class="circ-track" cx="44" cy="44" r="36"/>
-          <circle class="circ-bar" id="c3bar" cx="44" cy="44" r="36" stroke="#f59e0b"
-            stroke-dasharray="226" stroke-dashoffset="226"/>
-        </svg>
-        <div class="circ-label" style="font-size:.9rem"><span id="c3val">0</span></div>
-      </div>
-      <div class="stat-circ-name">Journal (7 jours)</div>
-      <div style="font-size:.7rem;color:var(--muted)" id="c3sub">entrées cette semaine</div>
-      <span class="stat-circ-badge scb-yellow" id="c3badge">—</span>
-    </div>
-
-    <!-- Card 4 : Incidents -->
-    <div class="stat-circ-card">
-      <div class="circ-wrap">
-        <svg class="circ-svg" viewBox="0 0 88 88">
-          <circle class="circ-track" cx="44" cy="44" r="36"/>
-          <circle class="circ-bar" id="c4bar" cx="44" cy="44" r="36" stroke="#ef4444"
-            stroke-dasharray="226" stroke-dashoffset="226"/>
-        </svg>
-        <div class="circ-label" style="font-size:.9rem"><span id="c4val">0</span></div>
-      </div>
-      <div class="stat-circ-name">Incidents actifs</div>
-      <div style="font-size:.7rem;color:var(--muted)" id="c4sub">non traités</div>
-      <span class="stat-circ-badge scb-red" id="c4badge">—</span>
-    </div>
+  <div class="atb-right">
+    <div class="atb-badge" id="atbBadge">Tableau de bord admin</div>
   </div>
+</header>
 
-  <!-- ══════════ DETAIL STATS (panel stats uniquement) ══════════ -->
-  <div class="stats-detail" id="statsDetail" style="display:none">
-    <!-- Taux de présence mensuel (barres) -->
-    <div class="sdcard">
-      <div class="sdcard-head">
-        <span class="sdcard-title">📊 Taux de présence</span>
-        <div style="display:flex;align-items:center;gap:.4rem;margin-left:auto">
-          <button class="btn-freq" data-freq="jour" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Jour</button>
-          <button class="btn-freq" data-freq="semaine" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Semaine</button>
-          <button class="btn-freq active" data-freq="mois" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Mois</button>
-          <span style="font-size:.7rem;color:var(--muted);margin-left:.2rem" id="presenceFreqAvg">—</span>
-        </div>
-      </div>
-      <div class="sdcard-body">
-        <div class="bar-chart" id="barPresenceMonth"></div>
+<!-- ══════════ ÉTABLISSEMENT ACTIF ══════════ -->
+<div id="etabBanner" style="display:flex;align-items:center;gap:.75rem;padding:.5rem 2rem 0;flex-wrap:wrap">
+  <div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
+  <div>
+    <span id="etabBannerNom" style="font-weight:800;font-size:.95rem;color:var(--primary)">—</span>
+    <span id="etabBannerType" class="badge" style="margin-left:.5rem;background:#0891b220;color:#0891b2;font-size:.68rem"></span>
+  </div>
+  <a href="accueil.html" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
+    Changer d'établissement
+  </a>
+</div>
+
+<!-- ══════════ CIRCULAR STATS STRIP ══════════ -->
+<div class="stats-strip" id="statsStrip">
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c1bar" cx="44" cy="44" r="36" stroke="#7C6FCD" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label"><span id="c1pct">0</span><span style="font-size:.6rem">%</span></div>
+    </div>
+    <div class="stat-circ-name">Taux de présence</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c1sub">— / — résidents</div>
+    <span class="stat-circ-badge scb-violet" id="c1badge">—</span>
+  </div>
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c2bar" cx="44" cy="44" r="36" stroke="#10b981" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label"><span id="c2pct">0</span><span style="font-size:.6rem">%</span></div>
+    </div>
+    <div class="stat-circ-name">Taux d'occupation</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c2sub">— / — places</div>
+    <span class="stat-circ-badge scb-green" id="c2badge">—</span>
+  </div>
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c3bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label" style="font-size:.9rem"><span id="c3val">0</span></div>
+    </div>
+    <div class="stat-circ-name">Journal (7 jours)</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c3sub">entrées cette semaine</div>
+    <span class="stat-circ-badge scb-yellow" id="c3badge">—</span>
+  </div>
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c4bar" cx="44" cy="44" r="36" stroke="#ef4444" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label" style="font-size:.9rem"><span id="c4val">0</span></div>
+    </div>
+    <div class="stat-circ-name">Incidents actifs</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c4sub">non traités</div>
+    <span class="stat-circ-badge scb-red" id="c4badge">—</span>
+  </div>
+</div>
+
+<!-- ══════════ DETAIL STATS ══════════ -->
+<div class="stats-detail" id="statsDetail" style="display:none">
+  <div class="sdcard">
+    <div class="sdcard-head">
+      <span class="sdcard-title">📊 Taux de présence</span>
+      <div style="display:flex;align-items:center;gap:.4rem;margin-left:auto">
+        <button class="btn-freq" data-freq="jour" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Jour</button>
+        <button class="btn-freq" data-freq="semaine" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Semaine</button>
+        <button class="btn-freq active" data-freq="mois" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Mois</button>
+        <span style="font-size:.7rem;color:var(--muted);margin-left:.2rem" id="presenceFreqAvg">—</span>
       </div>
     </div>
-
-    <!-- PPE / Avenants -->
-    <div class="sdcard">
-      <div class="sdcard-head"><span class="sdcard-title">📋 PPE / Avenants</span></div>
-      <div class="sdcard-body">
-        <div class="qstat-row"><span class="qstat-label">Actifs</span><span class="qstat-value" id="ppeActif" style="color:var(--green)">—</span></div>
-        <div class="qstat-row"><span class="qstat-label">Brouillons</span><span class="qstat-value" id="ppeBrouillon" style="color:var(--amber)">—</span></div>
-        <div class="qstat-row"><span class="qstat-label">Terminés</span><span class="qstat-value" id="ppeTermine" style="color:var(--muted)">—</span></div>
-        <div class="ppe-bar-wrap" style="margin-top:.75rem">
-          <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.3rem">
-            <span>Actifs</span><span id="ppeActifPct">—%</span>
-          </div>
-          <div class="ppe-bar-track"><div class="ppe-bar-fill" id="ppeActifBar" style="background:var(--green);width:0%"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.3rem;margin-top:.4rem">
-            <span>Brouillons</span><span id="ppeBrouillonPct">—%</span>
-          </div>
-          <div class="ppe-bar-track"><div class="ppe-bar-fill" id="ppeBrouillonBar" style="background:var(--amber);width:0%"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick stats -->
-    <div class="sdcard">
-      <div class="sdcard-head"><span class="sdcard-title">📊 Autres indicateurs</span></div>
-      <div class="sdcard-body">
-        <div class="qstat-row"><span class="qstat-label">Résidents actifs</span><span class="qstat-value" id="qResidents">—</span></div>
-        <div class="qstat-row"><span class="qstat-label">Utilisateurs</span><span class="qstat-value" id="qUsers">—</span></div>
-        <div class="qstat-row"><span class="qstat-label">Véhicules réservés</span><span class="qstat-value" id="qVehi">—</span></div>
-        <div class="qstat-row"><span class="qstat-label">Messages non lus</span><span class="qstat-value" id="qMessages">—</span></div>
-        <div class="qstat-row"><span class="qstat-label">Documents stockés</span><span class="qstat-value" id="qDocs">—</span></div>
+    <div class="sdcard-body"><div class="bar-chart" id="barPresenceMonth"></div></div>
+  </div>
+  <div class="sdcard">
+    <div class="sdcard-head"><span class="sdcard-title">📋 PPE / Avenants</span></div>
+    <div class="sdcard-body">
+      <div class="qstat-row"><span class="qstat-label">Actifs</span><span class="qstat-value" id="ppeActif" style="color:var(--green)">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Brouillons</span><span class="qstat-value" id="ppeBrouillon" style="color:var(--amber)">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Terminés</span><span class="qstat-value" id="ppeTermine" style="color:var(--muted)">—</span></div>
+      <div class="ppe-bar-wrap" style="margin-top:.75rem">
+        <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.3rem"><span>Actifs</span><span id="ppeActifPct">—%</span></div>
+        <div class="ppe-bar-track"><div class="ppe-bar-fill" id="ppeActifBar" style="background:var(--green);width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.3rem;margin-top:.4rem"><span>Brouillons</span><span id="ppeBrouillonPct">—%</span></div>
+        <div class="ppe-bar-track"><div class="ppe-bar-fill" id="ppeBrouillonBar" style="background:var(--amber);width:0%"></div></div>
       </div>
     </div>
   </div>
-
-  <!-- ══════════ CONTENT PANELS ══════════ -->
-  <main class="admin-content">
-
-    <!-- ═══ STATISTIQUES ═══ -->
-    <div id="tab-stats" class="admin-panel active">
-      <!-- Résidents par statut -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
-        <div class="card">
-          <div class="card-header"><span class="card-title">👥 Résidents par statut</span></div>
-          <div class="card-body" style="padding:.75rem 1.25rem">
-            <div id="residentStatutList" style="display:flex;flex-direction:column;gap:.4rem"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">🔑 Connexions récentes</span></div>
-          <div class="card-body" style="padding:0">
-            <div id="recentLoginsList"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Catégories journal + Incidents -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">📂 Catégories journal</span>
-            <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="journalCatTotal"></span>
-          </div>
-          <div class="card-body" style="padding:.9rem 1.25rem">
-            <div id="journalCatBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">⚠️ Types d'incidents</span>
-            <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="incidentTypeTotal"></span>
-          </div>
-          <div class="card-body" style="padding:.9rem 1.25rem">
-            <div id="incidentTypeBars" style="display:flex;flex-direction:column;gap:.55rem"></div>
-          </div>
-        </div>
-      </div>
-
+  <div class="sdcard">
+    <div class="sdcard-head"><span class="sdcard-title">📊 Autres indicateurs</span></div>
+    <div class="sdcard-body">
+      <div class="qstat-row"><span class="qstat-label">Résidents actifs</span><span class="qstat-value" id="qResidents">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Utilisateurs</span><span class="qstat-value" id="qUsers">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Véhicules réservés</span><span class="qstat-value" id="qVehi">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Messages non lus</span><span class="qstat-value" id="qMessages">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Documents stockés</span><span class="qstat-value" id="qDocs">—</span></div>
     </div>
+  </div>
+</div>
 
-    <!-- ═══ ÉTABLISSEMENT ═══ -->
-    <div id="tab-etablissement" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Établissement &amp; personnalisation</div><div class="panel-sub">Informations, identité visuelle et configuration de votre structure</div></div>
+<!-- ══════════ CONTENT PANELS ══════════ -->
+<main class="admin-content">
+
+  <!-- ═══ STATISTIQUES ═══ -->
+  <div id="tab-stats" class="admin-panel active">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+      <div class="card">
+        <div class="card-header"><span class="card-title">👥 Résidents par statut</span></div>
+        <div class="card-body" style="padding:.75rem 1.25rem"><div id="residentStatutList" style="display:flex;flex-direction:column;gap:.4rem"></div></div>
       </div>
-
-      <!-- Ligne 1 : Infos + Aperçu -->
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-body" style="display:grid;grid-template-columns:1fr 280px;gap:2rem;padding:1.5rem">
-          <div style="display:flex;flex-direction:column;gap:1rem">
-            <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Informations générales</div>
-            <div class="form-group"><label>Nom de l'établissement</label><input type="text" id="setEtab" placeholder="Ex : Foyer d'Hébergement Les Trois Rivières"/></div>
-            <div class="form-row">
-              <div class="form-group"><label>Ville</label><input type="text" id="setVille" placeholder="Ville"/></div>
-              <div class="form-group"><label>N° FINESS</label><input type="text" id="setFiness" placeholder="Ex : 750123456"/></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>Téléphone</label><input type="tel" id="setTel" placeholder="01 23 45 67 89"/></div>
-              <div class="form-group"><label>Email</label><input type="email" id="setEmail" placeholder="contact@foyer.fr"/></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>Capacité d'accueil</label><input type="number" id="setCapacite" placeholder="Ex : 100" min="1"/></div>
-              <div class="form-group"><label>Adresse</label><input type="text" id="setAdresse" placeholder="Adresse complète…"/></div>
-            </div>
-          </div>
-          <div style="background:var(--av-l);border-radius:14px;padding:1.25rem;align-self:start;position:sticky;top:1.5rem">
-            <div style="display:flex;align-items:center;gap:.85rem;margin-bottom:1.25rem">
-              <div id="previewLogo" style="width:52px;height:52px;border-radius:12px;background:#fff;color:var(--av);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;box-shadow:0 1px 4px rgba(0,0,0,.08)">FTR</div>
-              <div>
-                <div style="font-weight:800;font-size:.95rem" id="previewNom">—</div>
-                <div style="font-size:.72rem;color:var(--av)" id="previewVille"></div>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.82rem">
-              <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">FINESS</span><span id="previewFiness" style="font-weight:700">—</span></div>
-              <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Téléphone</span><span id="previewTel" style="font-weight:700">—</span></div>
-              <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Email</span><span id="previewEmail" style="font-weight:700">—</span></div>
-              <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Adresse</span><span id="previewAdresse" style="font-weight:700">—</span></div>
-            </div>
-          </div>
-        </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">🔑 Connexions récentes</span></div>
+        <div class="card-body" style="padding:0"><div id="recentLoginsList"></div></div>
       </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📂 Catégories journal</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="journalCatTotal"></span></div>
+        <div class="card-body" style="padding:.9rem 1.25rem"><div id="journalCatBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">⚠️ Types d'incidents</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="incidentTypeTotal"></span></div>
+        <div class="card-body" style="padding:.9rem 1.25rem"><div id="incidentTypeBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
+      </div>
+    </div>
+  </div>
 
-      <!-- Ligne 2 : Couleurs + Logo -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-        <div class="card">
-          <div class="card-header"><span class="card-title">🎨 Couleurs</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-            <div class="form-group"><label>Sidebar</label><div class="color-row"><input type="color" id="bPrimary" value="#1e293b" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/><span style="font-size:.76rem;color:var(--muted)">Barre latérale et titres</span></div></div>
-            <div class="form-group"><label>Accent</label><div class="color-row"><input type="color" id="bAccent" value="#7C6FCD" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/><span style="font-size:.76rem;color:var(--muted)">Boutons et badges</span></div></div>
-            <div style="display:flex;gap:.5rem">
-              <button class="btn btn-violet btn-sm" onclick="saveBranding()">Appliquer</button>
-              <button class="btn btn-ghost btn-sm" onclick="resetBranding()">Défaut</button>
-            </div>
-          </div>
+  <!-- ═══ ÉTABLISSEMENT ═══ -->
+  <div id="tab-etablissement" class="admin-panel" style="display:none">
+    <div class="panel-header">
+      <div><div class="panel-title">Établissement &amp; personnalisation</div><div class="panel-sub">Informations, identité visuelle et configuration de votre structure</div></div>
+    </div>
+    <div class="card" style="margin-bottom:1.25rem">
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 280px;gap:2rem;padding:1.5rem">
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Informations générales</div>
+          <div class="form-group"><label>Nom de l'établissement</label><input type="text" id="setEtab" placeholder="Ex : Foyer d'Hébergement Les Trois Rivières"/></div>
+          <div class="form-row"><div class="form-group"><label>Ville</label><input type="text" id="setVille" placeholder="Ville"/></div><div class="form-group"><label>N° FINESS</label><input type="text" id="setFiness" placeholder="Ex : 750123456"/></div></div>
+          <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="setTel" placeholder="01 23 45 67 89"/></div><div class="form-group"><label>Email</label><input type="email" id="setEmail" placeholder="contact@foyer.fr"/></div></div>
+          <div class="form-row"><div class="form-group"><label>Capacité d'accueil</label><input type="number" id="setCapacite" placeholder="Ex : 100" min="1"/></div><div class="form-group"><label>Adresse</label><input type="text" id="setAdresse" placeholder="Adresse complète…"/></div></div>
         </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">🖼 Logo</span></div>
-          <div class="card-body">
-            <div class="photo-upload-zone" id="logoZone" onclick="document.getElementById('logoInput').click()" style="padding:.85rem">
-              <div id="logoPreview" style="width:52px;height:52px;border-radius:10px;background:var(--g100);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><svg viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="1.5" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-              <div class="photo-upload-info"><strong style="font-size:.8rem">Logo</strong><span style="font-size:.7rem">PNG/JPG/SVG — max 1 Mo</span><button type="button" class="photo-remove" id="logoRemoveBtn" style="display:none" onclick="event.stopPropagation();removeLogo()">✕ Supprimer</button></div>
-            </div>
-            <input type="file" id="logoInput" class="photo-upload-input" accept="image/png,image/jpeg,image/svg+xml"/>
+        <div style="background:var(--av-l);border-radius:14px;padding:1.25rem;align-self:start;position:sticky;top:1.5rem">
+          <div style="display:flex;align-items:center;gap:.85rem;margin-bottom:1.25rem">
+            <div id="previewLogo" style="width:52px;height:52px;border-radius:12px;background:#fff;color:var(--av);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;box-shadow:0 1px 4px rgba(0,0,0,.08)">FTR</div>
+            <div><div style="font-weight:800;font-size:.95rem" id="previewNom">—</div><div style="font-size:.72rem;color:var(--av)" id="previewVille"></div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.82rem">
+            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">FINESS</span><span id="previewFiness" style="font-weight:700">—</span></div>
+            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Téléphone</span><span id="previewTel" style="font-weight:700">—</span></div>
+            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Email</span><span id="previewEmail" style="font-weight:700">—</span></div>
+            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Adresse</span><span id="previewAdresse" style="font-weight:700">—</span></div>
           </div>
         </div>
       </div>
-
-      <!-- Ligne 3 : IA & Enregistrement -->
-      <div class="card" style="margin-top:1.25rem">
-        <div class="card-body" style="display:flex;flex-direction:column;gap:1rem;padding:1.25rem 1.5rem">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:end">
-            <div class="form-group" style="margin:0">
-              <label>Clé API Mistral (IA)</label>
-              <div style="display:flex;gap:.5rem">
-                <input type="password" id="setAiKey" placeholder="Entrez votre clé API Mistral" style="flex:1"/>
-                <button class="btn btn-ghost btn-sm" onclick="const e=document.getElementById('setAiKey');e.type=e.type==='password'?'text':'password'">👁</button>
-              </div>
-              <span style="font-size:.72rem;color:var(--muted)">Optionnelle. Active l'assistant IA. <a href="https://console.mistral.ai" target="_blank" style="color:var(--av)">Obtenir une clé →</a></span>
-            </div>
-            <div style="text-align:right">
-              <button class="btn btn-violet" onclick="saveSettings()">💾 Enregistrer les paramètres</button>
-            </div>
-          </div>
-          <details>
-            <summary style="cursor:pointer;font-weight:600;font-size:.85rem;padding:.2rem 0;color:var(--av)">⚙ Instructions IA personnalisées</summary>
-            <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:1rem">
-              <p style="font-size:.77rem;color:var(--muted)">Personnalisez les instructions système envoyées à l'IA pour chaque module.</p>
-              <div id="aiPromptsContainer"></div>
-            </div>
-          </details>
-        </div>
-      </div>
-      <!-- ─── MULTI-ÉTABLISSEMENTS ─── -->
-      <div class="card" style="margin-top:1.25rem">
-        <div class="card-header">
-          <span class="card-title">🏢 Mes établissements</span>
-          <button class="btn btn-accent btn-sm btn-add-resident" style="margin-left:auto" onclick="document.getElementById('newEtabForm').style.display=document.getElementById('newEtabForm').style.display==='none'?'':'none'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span class="btn-add-label"> Nouvel établissement</span>
-          </button>
-        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+      <div class="card">
+        <div class="card-header"><span class="card-title">🎨 Couleurs</span></div>
         <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-          <!-- Formulaire création -->
-          <div id="newEtabForm" style="display:none;background:var(--g50);border-radius:var(--r-sm);padding:1rem;border:1px solid var(--border)">
-            <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Nouvel établissement</div>
-            <div class="form-row">
-              <div class="form-group"><label>Nom de l'établissement</label><input type="text" id="newEtabNom" placeholder="Ex : Foyer Les Pins" class="form-control"/></div>
-              <div class="form-group"><label>Type d'établissement</label>
-                <select id="newEtabType" class="form-control">
-                  <optgroup label="Hébergement">
-                    <option value="foyer_hebergement">Foyer d'hébergement</option>
-                    <option value="foyer_vie">Foyer de vie</option>
-                    <option value="foyer_jeunes">Foyer de jeunes travailleurs (FJT)</option>
-                    <option value="mecs">MECS — Maison d'enfants à caractère social</option>
-                    <option value="lhss">LHSS — Lits halte soins santé</option>
-                  </optgroup>
-                  <optgroup label="Médico-social enfants">
-                    <option value="ime">IME — Institut médico-éducatif</option>
-                    <option value="itep">ITEP — Institut thérapeutique éducatif</option>
-                    <option value="sessad">SESSAD — Service d'éducation spéciale</option>
-                    <option value="camsp">CAMSP — Centre d'action médico-sociale précoce</option>
-                  </optgroup>
-                  <optgroup label="Médico-social adultes">
-                    <option value="esat">ESAT — Établissement et service d'aide par le travail</option>
-                    <option value="mas">MAS — Maison d'accueil spécialisée</option>
-                    <option value="fam">FAM — Foyer d'accueil médicalisé</option>
-                    <option value="savs">SAVS — Service d'accompagnement à la vie sociale</option>
-                    <option value="samsah">SAMSAH — Service d'accompagnement médico-social</option>
-                    <option value="saj">SAJ — Service d'accueil de jour</option>
-                  </optgroup>
-                  <optgroup label="Protection de l'enfance">
-                    <option value="pead">PEAD — Placement éducatif à domicile</option>
-                    <option value="aemo">AEMO — Action éducative en milieu ouvert</option>
-                    <option value="cea">CEA — Centre éducatif autorisé</option>
-                    <option value="cef">CEF — Centre éducatif fermé</option>
-                  </optgroup>
-                  <optgroup label="Insertion / Social">
-                    <option value="chrs">CHRS — Centre d'hébergement et réinsertion sociale</option>
-                    <option value="cada">CADA — Centre d'accueil de demandeurs d'asile</option>
-                    <option value="siao">SIAO — Service intégré d'accueil et d'orientation</option>
-                    <option value="autre">Autre structure</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="form-group"><label>Couleur</label><input type="color" id="newEtabColor" value="#0f2b4a" style="width:44px;height:38px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/></div>
-            </div>
-            <div style="display:flex;gap:.5rem;margin-top:.5rem">
-              <button class="btn btn-primary btn-sm" onclick="adminCreateEtab()">Créer</button>
-              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('newEtabForm').style.display='none'">Annuler</button>
-            </div>
+          <div class="form-group"><label>Sidebar</label><div class="color-row"><input type="color" id="bPrimary" value="#1e293b" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/><span style="font-size:.76rem;color:var(--muted)">Barre latérale et titres</span></div></div>
+          <div class="form-group"><label>Accent</label><div class="color-row"><input type="color" id="bAccent" value="#7C6FCD" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/><span style="font-size:.76rem;color:var(--muted)">Boutons et badges</span></div></div>
+          <div style="display:flex;gap:.5rem"><button class="btn btn-violet btn-sm" onclick="saveBranding()">Appliquer</button><button class="btn btn-ghost btn-sm" onclick="resetBranding()">Défaut</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">🖼 Logo</span></div>
+        <div class="card-body">
+          <div class="photo-upload-zone" id="logoZone" onclick="document.getElementById('logoInput').click()" style="padding:.85rem">
+            <div id="logoPreview" style="width:52px;height:52px;border-radius:10px;background:var(--g100);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><svg viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="1.5" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+            <div class="photo-upload-info"><strong style="font-size:.8rem">Logo</strong><span style="font-size:.7rem">PNG/JPG/SVG — max 1 Mo</span><button type="button" class="photo-remove" id="logoRemoveBtn" style="display:none" onclick="event.stopPropagation();removeLogo()">✕ Supprimer</button></div>
           </div>
-          <!-- Liste des établissements -->
-          <div id="etabAdminList"></div>
+          <input type="file" id="logoInput" class="photo-upload-input" accept="image/png,image/jpeg,image/svg+xml"/>
         </div>
       </div>
     </div>
-    <!-- ═══ FIN ÉTABLISSEMENT ═══ -->
-
-
-
-    <!-- ═══ FONCTIONS & CATÉGORIES ═══ -->
-    <div id="tab-fonctions" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Catégories &amp; Objectifs</div><div class="panel-sub">Gérez les catégories du journal et les objectifs des résidents</div></div>
-      </div>
-      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-
-        <!-- Catégories du journal -->
-        <div style="display:flex;flex-direction:column;gap:1rem">
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">📂 Catégories du journal</span>
-              <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="resetCatForm();openModal('modalCat')">+ Ajouter</button>
-            </div>
-            <div id="catList" style="min-height:80px"></div>
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-body" style="display:flex;flex-direction:column;gap:1rem;padding:1.25rem 1.5rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:end">
+          <div class="form-group" style="margin:0">
+            <label>Clé API Mistral (IA)</label>
+            <div style="display:flex;gap:.5rem"><input type="password" id="setAiKey" placeholder="Entrez votre clé API Mistral" style="flex:1"/><button class="btn btn-ghost btn-sm" onclick="const e=document.getElementById('setAiKey');e.type=e.type==='password'?'text':'password'">👁</button></div>
+            <span style="font-size:.72rem;color:var(--muted)">Optionnelle. Active l'assistant IA. <a href="https://console.mistral.ai" target="_blank" style="color:var(--av)">Obtenir une clé →</a></span>
           </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">💡 À propos des catégories</span></div>
-            <div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7">
-              <p>Les catégories classifient les entrées du journal de bord. Chaque entrée peut être associée à une catégorie pour faciliter le filtrage et l'analyse des données.</p>
-              <div class="alert alert-info" style="margin-top:.75rem">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Supprimer une catégorie n'affecte pas les entrées existantes.
-              </div>
-            </div>
-          </div>
+          <div style="text-align:right"><button class="btn btn-violet" onclick="saveSettings()">💾 Enregistrer les paramètres</button></div>
         </div>
-
-        <!-- Objectifs personnalisés -->
-        <div style="display:flex;flex-direction:column;gap:1rem">
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">🎯 Objectifs personnalisés</span>
-              <button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr;gap:1rem;padding:1rem">
-              <div id="objList" style="min-height:60px"></div>
-              <div class="card" style="border:none;box-shadow:none;background:var(--g50)">
-                <div class="card-body" style="padding:0;font-size:.82rem;color:var(--muted);line-height:1.7">
-                  <p>Les objectifs sont assignés aux résidents pour structurer leur accompagnement.</p>
-                  <div class="alert alert-info" style="margin-top:.75rem">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    Les objectifs supprimés restent assignés aux résidents existants.
-                  </div>
-                </div>
-              </div>
-            </div>
+        <details><summary style="cursor:pointer;font-weight:600;font-size:.85rem;padding:.2rem 0;color:var(--av)">⚙ Instructions IA personnalisées</summary>
+          <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:1rem">
+            <p style="font-size:.77rem;color:var(--muted)">Personnalisez les instructions système envoyées à l'IA pour chaque module.</p>
+            <div id="aiPromptsContainer"></div>
           </div>
-        </div>
-
-      </div>
-    </div> <!-- /tab-fonctions -->
-
-    <!-- ═══ UTILISATEURS ═══ -->
-    <div id="tab-educateurs" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Comptes utilisateurs</div><div class="panel-sub">Gérez les accès à la plateforme</div></div>
-        <button class="btn btn-violet btn-sm" onclick="resetEducateurForm();openModal('modalEdu')">+ Ajouter</button>
-      </div>
-      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-        <div class="card"><div class="card-body" style="padding:0"><div id="eduList"></div></div></div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Droits d'accès</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:.4rem">
-            <p style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:.4rem">Les utilisateurs accèdent au tableau de bord, résidents (lecture), journal et présences.</p>
-            <div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Tableau de bord</div>
-            <div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Consultation des résidents</div>
-            <div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Journal de bord</div>
-            <div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Présences &amp; Planning</div>
-            <div class="rights-item"><span class="rights-dot" style="background:#dc2626"></span>Ajout / modification résidents</div>
-            <div class="rights-item"><span class="rights-dot" style="background:#dc2626"></span>Administration plateforme</div>
-            <div class="alert alert-info" style="margin-top:.75rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Admin par défaut : <strong>admin</strong> / <strong>admin123</strong></div>
-          </div>
-        </div>
+        </details>
       </div>
     </div>
-
-    <!-- ═══ EMPLOYÉS ═══ -->
-    <div id="tab-employes" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Employés</div><div class="panel-sub">Gestion du personnel de l'établissement</div></div>
-        <button class="btn btn-violet btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button>
-      </div>
-      <div class="card"><div class="card-body" style="padding:1rem"><div id="employesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem"></div></div></div>
-    </div>
-
-    <!-- ═══ PERMISSIONS ═══ -->
-    <div id="tab-permissions" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Associez couleurs et droits à chaque rôle</div></div>
-        <button class="btn btn-violet btn-sm" onclick="resetFonctionForm();openModal('modalFonction')">+ Ajouter</button>
-      </div>
-      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-        <div class="card"><div class="card-body" style="padding:0"><div id="fonctionList"></div></div></div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">💡 À propos des permissions</span></div>
-          <div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7">
-            <p>Chaque fonction peut avoir une couleur distincte dans le journal et des permissions spécifiques sur la plateforme.</p>
-            <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.4rem">
-              <div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur spécialisé</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#14b8a6"></span>Agent hôtelier</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#ec4899"></span>Maître / Maîtresse de maison</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#0ea5e9"></span>Veilleur de nuit</div>
-              <div class="rights-item"><span class="rights-dot" style="background:#78716c"></span>Secrétaire / Assistant</div>
-            </div>
-            <div class="alert alert-info" style="margin-top:1rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> La correspondance se fait par mot-clé dans la fonction de l'utilisateur.</div>
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-header"><span class="card-title">🏢 Mes établissements</span><button class="btn btn-accent btn-sm btn-add-resident" style="margin-left:auto" onclick="document.getElementById('newEtabForm').style.display=document.getElementById('newEtabForm').style.display==='none'?'':'none'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-add-label"> Nouvel établissement</span></button></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
+        <div id="newEtabForm" style="display:none;background:var(--g50);border-radius:var(--r-sm);padding:1rem;border:1px solid var(--border)">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Nouvel établissement</div>
+          <div class="form-row">
+            <div class="form-group"><label>Nom</label><input type="text" id="newEtabNom" placeholder="Ex : Foyer Les Pins" class="form-control"/></div>
+            <div class="form-group"><label>Type</label><select id="newEtabType" class="form-control"><optgroup label="Hébergement"><option value="foyer_hebergement">Foyer d'hébergement</option><option value="foyer_vie">Foyer de vie</option><option value="foyer_jeunes">FJT</option><option value="mecs">MECS</option><option value="lhss">LHSS</option></optgroup><optgroup label="Médico-social enfants"><option value="ime">IME</option><option value="itep">ITEP</option><option value="sessad">SESSAD</option><option value="camsp">CAMSP</option></optgroup><optgroup label="Médico-social adultes"><option value="esat">ESAT</option><option value="mas">MAS</option><option value="fam">FAM</option><option value="savs">SAVS</option><option value="samsah">SAMSAH</option></optgroup></select></div>
+            <div class="form-group"><label>Couleur</label><input type="color" id="newEtabColor" value="#0f2b4a" style="width:44px;height:38px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/></div>
           </div>
+          <div style="display:flex;gap:.5rem;margin-top:.5rem"><button class="btn btn-primary btn-sm" onclick="adminCreateEtab()">Créer</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('newEtabForm').style.display='none'">Annuler</button></div>
         </div>
+        <div id="etabAdminList"></div>
       </div>
     </div>
+  </div>
 
-    <!-- ═══ MON COMPTE ═══ -->
-    <div id="tab-compte" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Mon compte</div><div class="panel-sub">Informations personnelles et identifiants</div></div>
+  <!-- ═══ FONCTIONS & CATÉGORIES ═══ -->
+  <div id="tab-fonctions" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">Catégories &amp; Objectifs</div><div class="panel-sub">Gérez les catégories du journal et les objectifs des résidents</div></div></div>
+    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="card"><div class="card-header"><span class="card-title">📂 Catégories du journal</span><button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="resetCatForm();openModal('modalCat')">+ Ajouter</button></div><div id="catList" style="min-height:80px"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">💡 À propos des catégories</span></div><div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7"><p>Les catégories classifient les entrées du journal de bord.</p><div class="alert alert-info" style="margin-top:.75rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Supprimer une catégorie n'affecte pas les entrées existantes.</div></div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;max-width:860px">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Informations</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-            <div style="display:flex;align-items:center;gap:1rem;padding:.85rem;background:var(--av-l);border-radius:12px">
-              <div class="avatar lg" id="accountAvatar" style="background:var(--av);width:48px;height:48px;font-size:1.1rem">A</div>
-              <div><div style="font-weight:700;font-size:.95rem" id="accountName">Administrateur</div><div style="font-size:.74rem;color:var(--av);font-weight:600" id="accountRole">Admin</div></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label>Prénom</label><input type="text" id="uPrenom" placeholder="Votre prénom"/></div>
-              <div class="form-group"><label>Nom</label><input type="text" id="uNom" placeholder="Votre nom"/></div>
-            </div>
-            <div class="form-group"><label>Rôle / Poste</label><input type="text" id="uRole" placeholder="Ex : Chef de service…"/></div>
-            <button class="btn btn-violet" onclick="saveUser()">Enregistrer</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Identifiants</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-            <div class="form-group"><label>Identifiant de connexion</label><input type="text" id="uUsername" placeholder="Identifiant" autocomplete="off"/></div>
-            <div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="uPassword" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"/></div>
-            <div class="form-group"><label>Confirmer le mot de passe</label><input type="password" id="uPasswordConfirm" placeholder="Confirmer" autocomplete="new-password"/></div>
-            <button class="btn btn-violet" onclick="saveCredentials()">Mettre à jour</button>
-          </div>
-        </div>
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div class="card"><div class="card-header"><span class="card-title">🎯 Objectifs personnalisés</span><button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button></div><div style="display:grid;grid-template-columns:1fr;gap:1rem;padding:1rem"><div id="objList" style="min-height:60px"></div></div></div>
       </div>
     </div>
+  </div>
 
-    <!-- ═══ DONNÉES ═══ -->
-    <div id="tab-donnees" class="admin-panel" style="display:none">
-      <div class="panel-header">
-        <div><div class="panel-title">Données &amp; historique</div><div class="panel-sub">Export, réinitialisation et journal des connexions</div></div>
-      </div>
-      <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Export des données</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-            <p style="font-size:.875rem;color:var(--muted)">Exportez vos données au format JSON pour sauvegarde.</p>
-            <button class="btn btn-outline" onclick="exportData('residents')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exporter les résidents</button>
-            <button class="btn btn-outline" onclick="exportData('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exporter le journal</button>
-            <button class="btn btn-violet" onclick="exportData('all')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Tout exporter</button>
-          </div>
-        </div>
-        <div class="card danger-zone">
-          <div class="card-header"><span class="card-title" style="color:var(--red)">⚠ Zone dangereuse</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-            <p style="font-size:.875rem;color:var(--muted)">Ces actions sont irréversibles. Procédez avec précaution.</p>
-            <button class="btn btn-outline" style="border-color:#fecaca;color:var(--red)" onclick="resetData('journal')">Vider le journal de bord</button>
-            <button class="btn btn-outline" style="border-color:#fecaca;color:var(--red)" onclick="resetData('presences')">Réinitialiser les présences</button>
-            <button class="btn btn-danger" onclick="resetData('all')">Réinitialiser toutes les données</button>
-          </div>
-        </div>
-      </div>
-      <div class="card" style="margin-top:1.5rem">
-        <div class="card-header"><span class="card-title">Historique des connexions</span><button class="btn btn-ghost btn-sm" onclick="renderLoginHistory()" style="margin-left:auto">↻</button></div>
-        <div class="card-body" style="padding:0;overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-            <thead style="background:var(--g50)">
-              <tr>
-                <th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Date</th>
-                <th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Utilisateur</th>
-                <th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Action</th>
-                <th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Rôle</th>
-              </tr>
-            </thead>
-            <tbody id="loginHistoryBody"></tbody>
-          </table>
-        </div>
-      </div>
+  <!-- ═══ UTILISATEURS ═══ -->
+  <div id="tab-educateurs" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">Comptes utilisateurs</div><div class="panel-sub">Gérez les accès à la plateforme</div></div><button class="btn btn-violet btn-sm" onclick="resetEducateurForm();openModal('modalEdu')">+ Ajouter</button></div>
+    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+      <div class="card"><div class="card-body" style="padding:0"><div id="eduList"></div></div></div>
+      <div class="card"><div class="card-header"><span class="card-title">Droits d'accès</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.4rem"><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Tableau de bord</div><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Consultation des résidents</div><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Journal de bord</div><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Présences &amp; Planning</div><div class="rights-item"><span class="rights-dot" style="background:#dc2626"></span>Ajout / modification résidents</div><div class="rights-item"><span class="rights-dot" style="background:#dc2626"></span>Administration plateforme</div><div class="alert alert-info" style="margin-top:.75rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Admin par défaut : <strong>admin</strong> / <strong>admin123</strong></div></div></div>
     </div>
+  </div>
 
-  </main>
-</div><!-- /admin-main -->
-</div><!-- /admin-shell -->
+  <!-- ═══ EMPLOYÉS ═══ -->
+  <div id="tab-employes" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">Employés</div><div class="panel-sub">Gestion du personnel de l'établissement</div></div><button class="btn btn-violet btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button></div>
+    <div class="card"><div class="card-body" style="padding:1rem"><div id="employesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem"></div></div></div>
+  </div>
+
+  <!-- ═══ PERMISSIONS ═══ -->
+  <div id="tab-permissions" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Associez couleurs et droits à chaque rôle</div></div><button class="btn btn-violet btn-sm" onclick="resetFonctionForm();openModal('modalFonction')">+ Ajouter</button></div>
+    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+      <div class="card"><div class="card-body" style="padding:0"><div id="fonctionList"></div></div></div>
+      <div class="card"><div class="card-header"><span class="card-title">💡 À propos des permissions</span></div><div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7"><p>Chaque fonction peut avoir une couleur distincte et des permissions spécifiques.</p><div style="margin-top:1rem;display:flex;flex-direction:column;gap:.4rem"><div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur spécialisé</div><div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div><div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div><div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div><div class="rights-item"><span class="rights-dot" style="background:#14b8a6"></span>Agent hôtelier</div><div class="rights-item"><span class="rights-dot" style="background:#ec4899"></span>Maître / Maîtresse de maison</div><div class="rights-item"><span class="rights-dot" style="background:#0ea5e9"></span>Veilleur de nuit</div><div class="rights-item"><span class="rights-dot" style="background:#78716c"></span>Secrétaire</div></div></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ MON COMPTE ═══ -->
+  <div id="tab-compte" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">Mon compte</div><div class="panel-sub">Informations personnelles et identifiants</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;max-width:860px">
+      <div class="card"><div class="card-header"><span class="card-title">Informations</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
+        <div style="display:flex;align-items:center;gap:1rem;padding:.85rem;background:var(--av-l);border-radius:12px"><div class="avatar lg" id="accountAvatar" style="background:var(--av);width:48px;height:48px;font-size:1.1rem">A</div><div><div style="font-weight:700;font-size:.95rem" id="accountName">Administrateur</div><div style="font-size:.74rem;color:var(--av);font-weight:600" id="accountRole">Admin</div></div></div>
+        <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="uPrenom" placeholder="Votre prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="uNom" placeholder="Votre nom"/></div></div>
+        <div class="form-group"><label>Rôle / Poste</label><input type="text" id="uRole" placeholder="Ex : Chef de service…"/></div>
+        <button class="btn btn-violet" onclick="saveUser()">Enregistrer</button>
+      </div></div>
+      <div class="card"><div class="card-header"><span class="card-title">Identifiants</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
+        <div class="form-group"><label>Identifiant</label><input type="text" id="uUsername" placeholder="Identifiant" autocomplete="off"/></div>
+        <div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="uPassword" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"/></div>
+        <div class="form-group"><label>Confirmer</label><input type="password" id="uPasswordConfirm" placeholder="Confirmer" autocomplete="new-password"/></div>
+        <button class="btn btn-violet" onclick="saveCredentials()">Mettre à jour</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ═══ DONNÉES ═══ -->
+  <div id="tab-donnees" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">Données &amp; historique</div><div class="panel-sub">Export, réinitialisation et journal des connexions</div></div></div>
+    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+      <div class="card"><div class="card-header"><span class="card-title">Export des données</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+        <button class="btn btn-outline" onclick="exportData('residents')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exporter les résidents</button>
+        <button class="btn btn-outline" onclick="exportData('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exporter le journal</button>
+        <button class="btn btn-violet" onclick="exportData('all')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Tout exporter</button>
+      </div></div>
+      <div class="card danger-zone"><div class="card-header"><span class="card-title" style="color:var(--red)">⚠ Zone dangereuse</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+        <button class="btn btn-outline" style="border-color:#fecaca;color:var(--red)" onclick="resetData('journal')">Vider le journal de bord</button>
+        <button class="btn btn-outline" style="border-color:#fecaca;color:var(--red)" onclick="resetData('presences')">Réinitialiser les présences</button>
+        <button class="btn btn-danger" onclick="resetData('all')">Réinitialiser toutes les données</button>
+      </div></div>
+    </div>
+    <div class="card" style="margin-top:1.5rem"><div class="card-header"><span class="card-title">Historique des connexions</span><button class="btn btn-ghost btn-sm" onclick="renderLoginHistory()" style="margin-left:auto">↻</button></div><div class="card-body" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead style="background:var(--g50)"><tr><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Date</th><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Utilisateur</th><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Action</th><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Rôle</th></tr></thead><tbody id="loginHistoryBody"></tbody></table></div></div>
+  </div>
+
+</main>
 
 <!-- ══════════ MODALS ══════════ -->
 <div class="modal-overlay" id="modalFonction">
-  <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="modalFonctionTitle">Nouvelle fonction</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body">
-      <input type="hidden" id="fonctionId"/>
-      <div class="form-group"><label class="required">Nom de la fonction</label><input type="text" id="fonctionName" placeholder="Ex : Éducateur spécialisé, Veilleur de nuit…"/></div>
-      <div class="form-group"><label>Couleur du badge</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="fonctionColor" value="#3b82f6" style="width:48px;border-radius:8px"/><span style="font-size:.8rem;color:var(--muted)">Couleur dans le journal</span></div></div>
-      <div class="form-group"><label>Permissions</label><div id="fonctionPermissions" style="display:flex;flex-direction:column;gap:.5rem"></div></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
-      <button class="btn btn-danger btn-sm" id="btnDeleteFonction" style="margin-right:auto;display:none" onclick="deleteFonction()">Supprimer</button>
-      <button class="btn btn-violet" onclick="saveFonction()">Enregistrer</button>
-    </div>
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalFonctionTitle">Nouvelle fonction</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="fonctionId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="fonctionName" placeholder="Nom de la fonction"/></div><div class="form-group"><label>Couleur</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="fonctionColor" value="#3b82f6" style="width:48px;border-radius:8px"/></div></div><div class="form-group"><label>Permissions</label><div id="fonctionPermissions" style="display:flex;flex-direction:column;gap:.5rem"></div></div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteFonction" style="margin-right:auto;display:none" onclick="deleteFonction()">Supprimer</button><button class="btn btn-violet" onclick="saveFonction()">Enregistrer</button></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modalCat">
-  <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="modalCatTitle">Nouvelle catégorie</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body">
-      <input type="hidden" id="catId"/>
-      <div class="form-group"><label class="required">Nom</label><input type="text" id="catName" placeholder="Nom de la catégorie"/></div>
-      <div class="form-group"><label>Couleur</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="catColor" value="#3b82f6" style="width:48px;border-radius:8px"/><span style="font-size:.8rem;color:var(--muted)">Couleur d'affichage dans le journal</span></div></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
-      <button class="btn btn-danger btn-sm" id="btnDeleteCat" style="margin-right:auto;display:none" onclick="deleteCat()">Supprimer</button>
-      <button class="btn btn-violet" onclick="saveCat()">Enregistrer</button>
-    </div>
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalCatTitle">Nouvelle catégorie</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="catId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="catName" placeholder="Nom de la catégorie"/></div><div class="form-group"><label>Couleur</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="catColor" value="#3b82f6" style="width:48px;border-radius:8px"/></div></div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteCat" style="margin-right:auto;display:none" onclick="deleteCat()">Supprimer</button><button class="btn btn-violet" onclick="saveCat()">Enregistrer</button></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modalObj">
-  <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="modalObjTitle">Nouvel objectif</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body">
-      <input type="hidden" id="objId"/>
-      <div class="form-group"><label class="required">Nom</label><input type="text" id="objName" placeholder="Nom de l'objectif"/></div>
-      <div class="form-group"><label>Description</label><textarea id="objDesc" rows="3" placeholder="Description…"></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
-      <button class="btn btn-danger btn-sm" id="btnDeleteObj" style="margin-right:auto;display:none" onclick="deleteObj()">Supprimer</button>
-      <button class="btn btn-violet" onclick="saveObj()">Enregistrer</button>
-    </div>
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalObjTitle">Nouvel objectif</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="objId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="objName" placeholder="Nom de l'objectif"/></div><div class="form-group"><label>Description</label><textarea id="objDesc" rows="3" placeholder="Description…"></textarea></div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteObj" style="margin-right:auto;display:none" onclick="deleteObj()">Supprimer</button><button class="btn btn-violet" onclick="saveObj()">Enregistrer</button></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modalEmploye">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header"><span class="modal-title" id="modalEmployeTitle">Nouvel employé</span><button class="modal-close" onclick="closeModal('modalEmploye')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="modal" style="max-width:480px"><div class="modal-header"><span class="modal-title" id="modalEmployeTitle">Nouvel employé</span><button class="modal-close" onclick="closeModal('modalEmploye')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
       <input type="hidden" id="empId"/>
-      <div class="form-row">
-        <div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom"/></div>
-        <div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom"/></div>
-      </div>
-      <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option><optgroup label="Équipe éducative &amp; sociale"><option value="Éducateur spécialisé">Éducateur spécialisé</option><option value="Éducateur de jeunes enfants">Éducateur de jeunes enfants</option><option value="Moniteur-éducateur">Moniteur-éducateur</option><option value="Accompagnant éducatif et social">Accompagnant éducatif et social</option><option value="Assistant de service social">Assistant de service social</option><option value="Conseiller en économie sociale">Conseiller en économie sociale</option><option value="Médiateur social">Médiateur social</option><option value="Animateur social">Animateur social</option><option value="Chargé d'insertion">Chargé d'insertion</option><option value="Agent de développement social">Agent de développement social</option></optgroup><optgroup label="Soins &amp; santé"><option value="Psychologue">Psychologue</option><option value="Infirmier">Infirmier</option><option value="Aide-soignant">Aide-soignant</option></optgroup><optgroup label="Direction &amp; coordination"><option value="Directeur d'établissement">Directeur d'établissement</option><option value="Chef de service">Chef de service</option><option value="Coordonnateur de parcours">Coordonnateur de parcours</option><option value="Responsable hébergement">Responsable hébergement</option></optgroup><optgroup label="Hébergement &amp; intendance"><option value="Maître / Maîtresse de maison">Maître / Maîtresse de maison</option><option value="Agent hôtelier">Agent hôtelier</option><option value="Veilleur de nuit">Veilleur de nuit</option><option value="Agent d'entretien">Agent d'entretien</option><option value="Cuisinier / Agent de restauration">Cuisinier / Agent de restauration</option><option value="Technicien de maintenance">Technicien de maintenance</option><option value="Chauffeur / Accompagnateur">Chauffeur / Accompagnateur</option><option value="Agent de sécurité">Agent de sécurité</option></optgroup><optgroup label="Administration"><option value="Secrétaire / Assistant administratif">Secrétaire / Assistant administratif</option><option value="Comptable / Gestionnaire">Comptable / Gestionnaire</option><option value="Agent d'accueil">Agent d'accueil</option></optgroup></select></div>
-      <div class="form-row">
-        <div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div>
-        <div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom"/></div></div>
+      <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option></select></div>
+      <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div><div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div></div>
       <div class="form-group"><label>Date d'embauche</label><input type="date" id="empDate"/></div>
       <div class="form-group"><label>Notes</label><textarea id="empNotes" rows="2" placeholder="Observations…"></textarea></div>
     </div>
@@ -1024,27 +512,16 @@
 </div>
 
 <div class="modal-overlay" id="modalEdu">
-  <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="modalEduTitle">Nouvel utilisateur</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalEduTitle">Nouvel utilisateur</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
       <input type="hidden" id="eduId"/>
-      <div class="form-row">
-        <div class="form-group"><label>Prénom</label><input type="text" id="eduPrenom" placeholder="Prénom"/></div>
-        <div class="form-group"><label>Nom</label><input type="text" id="eduNom" placeholder="Nom"/></div>
-      </div>
+      <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="eduPrenom" placeholder="Prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="eduNom" placeholder="Nom"/></div></div>
       <div class="form-group"><label>Fonction</label><input type="text" id="eduFonction" placeholder="Ex : Éducateur spécialisé…"/></div>
       <div class="form-group"><label class="required">Identifiant</label><input type="text" id="eduUsername" placeholder="Ex : j.dupont" autocomplete="off"/></div>
       <div class="form-group"><label class="required" id="eduPasswordLabel">Mot de passe</label><input type="password" id="eduPassword" placeholder="Mot de passe" autocomplete="new-password"/></div>
-      <div class="form-group" id="etabAssignGroup">
-        <label>Établissement(s) assigné(s)</label>
-        <div id="etabAssignList" style="display:flex;flex-direction:column;gap:.4rem;margin-top:.25rem"></div>
-      </div>
+      <div class="form-group" id="etabAssignGroup"><label>Établissement(s)</label><div id="etabAssignList" style="display:flex;flex-direction:column;gap:.4rem;margin-top:.25rem"></div></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
-      <button class="btn btn-danger btn-sm" id="btnDeleteEdu" style="margin-right:auto;display:none" onclick="deleteEducateur()">Supprimer</button>
-      <button class="btn btn-violet" onclick="saveEducateur()">Enregistrer</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteEdu" style="margin-right:auto;display:none" onclick="deleteEducateur()">Supprimer</button><button class="btn btn-violet" onclick="saveEducateur()">Enregistrer</button></div>
   </div>
 </div>
 
@@ -1061,23 +538,10 @@ const PANEL_NAMES = {
 };
 const ALL_TABS = ['stats','etablissement','fonctions','employes','educateurs','permissions','compte','donnees'];
 
-function toggleSidebar() {
-  const sb = document.querySelector('.admin-sidebar');
-  const ov = document.getElementById('asbOverlay');
-  sb.classList.toggle('open');
-  ov.classList.toggle('open');
-  document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
-}
-function closeSidebar() {
-  document.querySelector('.admin-sidebar').classList.remove('open');
-  document.getElementById('asbOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
+function adminNav(btn) { activateTab(btn.dataset.tab); }
 
-function adminNav(btn) {
-  if(window.innerWidth <= 900) closeSidebar();
-  const name = btn.dataset.tab;
-  document.querySelectorAll('.asb-item').forEach(i => i.classList.toggle('active', i === btn));
+function activateTab(name) {
+  if (!ALL_TABS.includes(name)) name = 'stats';
   ALL_TABS.forEach(n => {
     const el = document.getElementById('tab-' + n);
     if (!el) return;
@@ -1087,14 +551,13 @@ function adminNav(btn) {
   if (name === 'employes') renderEmployes();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
-  // Show/hide stats strip and detail
   const strip = document.getElementById('statsStrip');
   if (strip) strip.style.display = name === 'stats' ? '' : 'none';
   const detail = document.getElementById('statsDetail');
   if (detail) detail.style.display = name === 'stats' ? '' : 'none';
-  // Refresh stats when navigating to the stats tab
   if (name === 'stats') refreshAllStats();
 }
+
 function getEmployes() { return JSON.parse(localStorage.getItem(DB.keys.employes) || '[]'); }
 function saveEmployes(list) { localStorage.setItem(DB.keys.employes, JSON.stringify(list)); }
 function resetEmployeForm() {
@@ -1106,10 +569,7 @@ function resetEmployeForm() {
   document.getElementById('empCreatedAccount').style.display = 'none';
   document.getElementById('empCreatedAccount').textContent = '';
 }
-function genPassword(len=8) {
-  const c = 'abcdefghjkmnpqrstuvwxyz23456789';
-  return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join('');
-}
+function genPassword(len=8) { const c = 'abcdefghjkmnpqrstuvwxyz23456789'; return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join(''); }
 function createUserFromEmploye() {
   const prenom = document.getElementById('empPrenom').value.trim();
   const nom = document.getElementById('empNom').value.trim();
@@ -1138,12 +598,8 @@ function saveEmploye() {
   const notes = document.getElementById('empNotes').value.trim();
   if (!prenom || !nom) { toast('Prénom et nom requis', 'error'); return; }
   let list = getEmployes();
-  if (id) {
-    const idx = list.findIndex(e => e.id === id);
-    if (idx >= 0) list[idx] = { ...list[idx], prenom, nom, poste, telephone, email, dateEmbauche, notes };
-  } else {
-    list.unshift({ id:genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo:'', notes, createdAt:new Date().toISOString() });
-  }
+  if (id) { const idx = list.findIndex(e => e.id === id); if (idx >= 0) list[idx] = { ...list[idx], prenom, nom, poste, telephone, email, dateEmbauche, notes }; }
+  else { list.unshift({ id:genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo:'', notes, createdAt:new Date().toISOString() }); }
   saveEmployes(list);
   closeModal('modalEmploye');
   renderEmployes();
@@ -1179,15 +635,12 @@ function renderEmployes() {
   const el = document.getElementById('employesList');
   if (!el) return;
   const list = getEmployes();
-  if (!list.length) { el.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2rem 0;font-size:.85rem">Aucun employé. Cliquez sur + Ajouter.</div>'; return; }
+  if (!list.length) { el.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2rem 0;font-size:.85rem">Aucun employé.</div>'; return; }
   el.innerHTML = list.map(e => {
     const initiales = ((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'');
     return `<div class="employe-card" onclick="window.location='employe.html?id=${e.id}'" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:var(--r);border:1px solid var(--border);background:#fff;cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)'" onmouseout="this.style.boxShadow='none'">
       <div style="width:42px;height:42px;border-radius:50%;background:var(--av-l);color:var(--av);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0">${escHtml(initiales)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.85rem">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
-        <div style="font-size:.72rem;color:var(--muted)">${escHtml(e.poste||'')}${e.statut==='inactif'?' · <span style="color:var(--red)">Inactif</span>':''}</div>
-      </div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div><div style="font-size:.72rem;color:var(--muted)">${escHtml(e.poste||'')}${e.statut==='inactif'?' · <span style="color:var(--red)">Inactif</span>':''}</div></div>
       <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="padding:4px 8px">✎</button>
     </div>`;
   }).join('');
@@ -1195,13 +648,11 @@ function renderEmployes() {
 
 /* ═══════════ CIRCULAR PROGRESS ═══════════ */
 const CIRC_R = 36;
-const CIRC_C = 2 * Math.PI * CIRC_R; // ~226
-
+const CIRC_C = 2 * Math.PI * CIRC_R;
 function setCirc(barId, pct) {
   const bar = document.getElementById(barId);
   if (!bar) return;
-  const offset = CIRC_C * (1 - Math.min(pct, 100) / 100);
-  bar.style.strokeDashoffset = offset;
+  bar.style.strokeDashoffset = CIRC_C * (1 - Math.min(pct, 100) / 100);
 }
 
 /* ═══════════ STATS ENGINE ═══════════ */
@@ -1221,7 +672,6 @@ function refreshAllStats() {
   const todayP = presences[todayStr] || {};
   const presentCount = Object.values(todayP).filter(v => v === 'present').length;
 
-  // ── Circ 1 : Taux de présence ──
   const totalActifs = actifs.length || 1;
   const presencePct = Math.round((presentCount / totalActifs) * 100);
   document.getElementById('c1pct').textContent = presencePct;
@@ -1232,7 +682,6 @@ function refreshAllStats() {
   else if (presencePct >= 40) { c1b.textContent = 'Normal'; c1b.className = 'stat-circ-badge scb-yellow'; }
   else { c1b.textContent = 'Faible'; c1b.className = 'stat-circ-badge scb-red'; }
 
-  // ── Circ 2 : Taux d'occupation ──
   const capacite = parseInt(settings.capacite) || 100;
   const occupPct = Math.min(Math.round((actifs.length / capacite) * 100), 100);
   document.getElementById('c2pct').textContent = occupPct;
@@ -1243,11 +692,10 @@ function refreshAllStats() {
   else if (occupPct >= 70) { c2b.textContent = 'Élevé'; c2b.className = 'stat-circ-badge scb-yellow'; }
   else { c2b.textContent = 'Disponible'; c2b.className = 'stat-circ-badge scb-green'; }
 
-  // ── Circ 3 : Journal 7 jours ──
   const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const journalWeek = journal.filter(e => e.date && new Date(e.date) >= sevenDaysAgo);
   const journalWeekCount = journalWeek.length;
-  const journalPct = Math.min(journalWeekCount * 5, 100); // 20 entrées = 100%
+  const journalPct = Math.min(journalWeekCount * 5, 100);
   document.getElementById('c3val').textContent = journalWeekCount;
   document.getElementById('c3sub').textContent = `entrées cette semaine`;
   setCirc('c3bar', journalPct);
@@ -1255,7 +703,7 @@ function refreshAllStats() {
   if (journalWeekCount >= 10) { c3b.textContent = 'Actif'; c3b.className = 'stat-circ-badge scb-yellow'; }
   else if (journalWeekCount >= 3) { c3b.textContent = 'Normal'; c3b.className = 'stat-circ-badge scb-violet'; }
   else { c3b.textContent = 'À alimenter'; c3b.className = 'stat-circ-badge scb-red'; }
-  // ── Circ 4 : Incidents actifs ──
+
   const incActifs = incidents.filter(i => i.statut !== 'classe');
   const incCount = incActifs.length;
   const incPct = Math.min(incCount * 10, 100);
@@ -1267,10 +715,7 @@ function refreshAllStats() {
   else if (incCount <= 3) { c4b.textContent = 'À surveiller'; c4b.className = 'stat-circ-badge scb-yellow'; }
   else { c4b.textContent = 'Urgent'; c4b.className = 'stat-circ-badge scb-red'; }
 
-  // ── Bar chart présence ──
   renderPresenceChart(residents, presences);
-
-  // ── PPE stats ──
   const ppeActif = ppe.filter(p => p.statut === 'actif').length;
   const ppeBrouillon = ppe.filter(p => p.statut === 'brouillon').length;
   const ppeTermine = ppe.filter(p => p.statut === 'termine').length;
@@ -1287,7 +732,6 @@ function refreshAllStats() {
     document.getElementById('ppeBrouillonBar').style.width = ppeBrouillonPct + '%';
   }, 100);
 
-  // ── Quick stats ──
   const vehi = planning.filter(e => e.type === 'vehicule' && e.date >= todayStr).length;
   const session = Auth.getSession();
   const uid = String(session?.userId || '');
@@ -1296,31 +740,20 @@ function refreshAllStats() {
   const unread = messages.filter(m => Array.isArray(m.readBy) && myConvIds.includes(m.convId) && !m.readBy.map(String).includes(uid) && String(m.from) !== uid).length;
   let docTotal = 0;
   Object.values(docs).forEach(arr => { if (Array.isArray(arr)) docTotal += arr.length; });
-
   document.getElementById('qResidents').textContent = actifs.length;
   document.getElementById('qUsers').textContent = users.length;
   document.getElementById('qVehi').textContent = vehi > 0 ? `${vehi} à venir` : '—';
   document.getElementById('qMessages').textContent = unread > 0 ? unread : '—';
   document.getElementById('qDocs').textContent = docTotal > 0 ? docTotal : '—';
 
-  // ── Résidents par statut ──
   renderResidentStatuts(residents);
-
-  // ── Connexions récentes ──
   renderRecentLogins();
-
-  // ── Catégories journal ──
   const activeFreq = document.querySelector('.btn-freq.active')?.dataset?.freq || 'semaine';
   renderJournalCatBars(journal, activeFreq);
-
-  // ── Types d'incidents ──
   renderIncidentTypeBars(incidents);
-
-  // ── Demandes d'intervention ──
   renderInterventions();
 }
 
-/* Bar chart: taux de présence (jour / semaine / mois) */
 function renderPresenceChart(residents, presences, freq) {
   const el = document.getElementById('barPresenceMonth');
   if (!el) return;
@@ -1329,102 +762,46 @@ function renderPresenceChart(residents, presences, freq) {
   const actifs = residents.filter(r => r.statut !== 'sorti');
   const totalActifs = actifs.length || 1;
   const todayStr = new Date().toISOString().slice(0, 10);
-  const COLORS = ['#10b981','#34d399'];
-
   let days = [];
-
   if (freq === 'jour') {
     const dayP = presences[todayStr] || {};
     const present = Object.values(dayP).filter(v => v === 'present').length;
     const pct = Math.round((present / totalActifs) * 100);
     const avgEl = document.getElementById('presenceFreqAvg');
     if (avgEl) avgEl.textContent = `${pct}%`;
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;gap:2rem;width:100%;padding:1rem 0">
-        <div style="text-align:center">
-          <div style="font-size:2.2rem;font-weight:800;color:${pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444'}">${pct}%</div>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:2px">${present}/${totalActifs} présents</div>
-        </div>
-        <div style="text-align:left;font-size:.78rem;color:var(--muted)">
-          <div>📅 ${new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' })}</div>
-          <div style="margin-top:4px">${present >= totalActifs * 0.7 ? '✅ Bonne fréquentation' : present >= totalActifs * 0.4 ? '⚠️ Présence modérée' : '🔴 Faible présence'}</div>
-        </div>
-      </div>`;
+    el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:2rem;width:100%;padding:1rem 0"><div style="text-align:center"><div style="font-size:2.2rem;font-weight:800;color:${pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444'}">${pct}%</div><div style="font-size:.72rem;color:var(--muted);margin-top:2px">${present}/${totalActifs} présents</div></div><div style="text-align:left;font-size:.78rem;color:var(--muted)"><div>📅 ${new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' })}</div><div style="margin-top:4px">${present >= totalActifs * 0.7 ? '✅ Bonne fréquentation' : present >= totalActifs * 0.4 ? '⚠️ Présence modérée' : '🔴 Faible présence'}</div></div></div>`;
     return;
   } else if (freq === 'semaine') {
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const str = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 2);
-      const dayP = presences[str] || {};
-      const present = Object.values(dayP).filter(v => v === 'present').length;
-      const pct = Math.round((present / totalActifs) * 100);
-      days.push({ label, pct, present, str });
-    }
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const str = d.toISOString().slice(0,10); const label = d.toLocaleDateString('fr-FR',{weekday:'short'}).slice(0,2); const dayP = presences[str]||{}; const present = Object.values(dayP).filter(v=>v==='present').length; const pct = Math.round((present/totalActifs)*100); days.push({label,pct,present,str}); }
   } else {
-    const monthStr = todayStr.slice(0, 7);
-    const [y, m] = monthStr.split('-').map(Number);
-    const daysInMonth = new Date(y, m, 0).getDate();
-    for (let d = 1; d <= daysInMonth; d++) {
-      const str = `${monthStr}-${String(d).padStart(2, '0')}`;
-      const dayP = presences[str] || {};
-      const present = Object.values(dayP).filter(v => v === 'present').length;
-      const pct = Math.round((present / totalActifs) * 100);
-      days.push({ label: d, pct, present, str });
-    }
+    const monthStr = todayStr.slice(0,7); const [y,m] = monthStr.split('-').map(Number); const daysInMonth = new Date(y,m,0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) { const str = `${monthStr}-${String(d).padStart(2,'0')}`; const dayP = presences[str]||{}; const present = Object.values(dayP).filter(v=>v==='present').length; const pct = Math.round((present/totalActifs)*100); days.push({label:d,pct,present,str}); }
   }
-
-  const avg = days.length > 0 ? Math.round(days.reduce((s, d) => s + d.pct, 0) / days.length) : 0;
+  const avg = days.length > 0 ? Math.round(days.reduce((s,d) => s + d.pct, 0) / days.length) : 0;
   document.getElementById('presenceFreqAvg').textContent = `Ø ${avg}%`;
   el.innerHTML = days.map(d => {
     const isToday = d.str === todayStr;
-    const barH = Math.max(Math.round(Math.min(d.pct, 100) / 100 * 100), d.present > 0 ? 4 : 2);
-    return `<div class="bar-col">
-      <div class="bar-fill" style="height:${barH}px;background:${d.present > 0 ? '#10b981' : 'var(--g200)'};${isToday ? 'outline:2px solid var(--primary);outline-offset:-2px;position:relative;z-index:1' : ''}" data-count="${d.present}/${totalActifs}"></div>
-      <div class="bar-lbl" style="${isToday ? 'color:var(--primary);font-weight:700' : ''}">${d.label}</div>
-    </div>`;
+    const barH = Math.max(Math.round(Math.min(d.pct,100)/100*100), d.present > 0 ? 4 : 2);
+    return `<div class="bar-col"><div class="bar-fill" style="height:${barH}px;background:${d.present > 0 ? '#10b981' : 'var(--g200)'};${isToday ? 'outline:2px solid var(--primary);outline-offset:-2px;position:relative;z-index:1' : ''}" data-count="${d.present}/${totalActifs}"></div><div class="bar-lbl" style="${isToday ? 'color:var(--primary);font-weight:700' : ''}">${d.label}</div></div>`;
   }).join('');
 }
 
-/* Résidents par statut */
 function renderResidentStatuts(residents) {
   const el = document.getElementById('residentStatutList');
   if (!el) return;
-  const statuts = { urgence: { label: 'Urgence', color: '#ef4444', icon: '🚨' }, stage: { label: 'Stage', color: '#f59e0b', icon: '📋' }, temporaire: { label: 'Temporaire', color: '#3b82f6', icon: '⏳' }, permanent: { label: 'Permanent', color: '#10b981', icon: '🏠' }, sorti: { label: 'Sortis', color: '#94a3b8', icon: '📤' } };
+  const statuts = { urgence:{label:'Urgence',color:'#ef4444',icon:'🚨'}, stage:{label:'Stage',color:'#f59e0b',icon:'📋'}, temporaire:{label:'Temporaire',color:'#3b82f6',icon:'⏳'}, permanent:{label:'Permanent',color:'#10b981',icon:'🏠'}, sorti:{label:'Sortis',color:'#94a3b8',icon:'📤'} };
   const counts = {};
   residents.forEach(r => { const s = r.statut || 'present'; counts[s] = (counts[s] || 0) + 1; });
   const total = residents.length || 1;
-  const mois = today().slice(0, 7);
-  const entreesMois = residents.filter(r => r.entree && r.entree.slice(0, 7) === mois).length;
-  el.innerHTML = Object.entries(statuts).map(([key, cfg]) => {
+  const mois = today().slice(0,7);
+  const entreesMois = residents.filter(r => r.entree && r.entree.slice(0,7) === mois).length;
+  el.innerHTML = Object.entries(statuts).map(([key,cfg]) => {
     const count = counts[key] || 0;
-    const pct = Math.round((count / total) * 100);
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0">
-      <span style="font-size:1rem">${cfg.icon}</span>
-      <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;margin-bottom:.25rem">
-          <span style="font-size:.78rem;font-weight:600;color:var(--text)">${cfg.label}</span>
-          <span style="font-size:.78rem;font-weight:700;color:${cfg.color}">${count}</span>
-        </div>
-        <div style="height:6px;border-radius:var(--r-full);background:var(--g100);overflow:hidden">
-          <div style="height:100%;border-radius:var(--r-full);background:${cfg.color};width:${pct}%;transition:width 1s ease"></div>
-        </div>
-      </div>
-      <span style="font-size:.7rem;color:var(--muted);min-width:32px;text-align:right">${pct}%</span>
-    </div>`;
-  }).join('') + `
-    <div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0;border-top:1px solid var(--g200);margin-top:.25rem">
-      <span style="font-size:1rem">📋</span>
-      <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;margin-bottom:.25rem">
-          <span style="font-size:.78rem;font-weight:600;color:var(--text)">Nouvelle admission ce mois</span>
-          <span style="font-size:.78rem;font-weight:700;color:#6366f1">${entreesMois}</span>
-        </div>
-      </div>
-    </div>`;
+    const pct = Math.round((count/total)*100);
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0"><span style="font-size:1rem">${cfg.icon}</span><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:.25rem"><span style="font-size:.78rem;font-weight:600;color:var(--text)">${cfg.label}</span><span style="font-size:.78rem;font-weight:700;color:${cfg.color}">${count}</span></div><div style="height:6px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${cfg.color};width:${pct}%;transition:width 1s ease"></div></div></div><span style="font-size:.7rem;color:var(--muted);min-width:32px;text-align:right">${pct}%</span></div>`;
+  }).join('') + `<div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0;border-top:1px solid var(--g200);margin-top:.25rem"><span style="font-size:1rem">📋</span><div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:.25rem"><span style="font-size:.78rem;font-weight:600;color:var(--text)">Nouvelle admission ce mois</span><span style="font-size:.78rem;font-weight:700;color:#6366f1">${entreesMois}</span></div></div></div>`;
 }
 
-/* Connexions récentes */
 function renderRecentLogins() {
   const el = document.getElementById('recentLoginsList');
   if (!el) return;
@@ -1432,64 +809,35 @@ function renderRecentLogins() {
   if (!log.length) { el.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Aucune connexion enregistrée</div>'; return; }
   el.innerHTML = log.map(e => {
     const d = new Date(e.date);
-    const timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-    const ini = ((e.prenom?.[0] || '') + (e.nom?.[0] || '')).toUpperCase() || e.username?.[0]?.toUpperCase() || '?';
+    const timeStr = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const dateStr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    const ini = ((e.prenom?.[0]||'')+(e.nom?.[0]||'')).toUpperCase() || e.username?.[0]?.toUpperCase() || '?';
     const actionColor = e.action === 'login' ? '#16a34a' : '#64748b';
     const actionLabel = e.action === 'login' ? 'Connexion' : 'Déconnexion';
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 1.25rem;border-bottom:1px solid var(--g100)">
-      <div style="width:30px;height:30px;border-radius:50%;background:var(--av-l);color:var(--av);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0">${escHtml(ini)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:600;color:var(--text)">${escHtml([e.prenom,e.nom].filter(Boolean).join(' ') || e.username)}</div>
-        <div style="font-size:.68rem;color:var(--muted)">${escHtml(e.role || '—')}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:.7rem;font-weight:700;color:${actionColor}">${actionLabel}</div>
-        <div style="font-size:.65rem;color:var(--muted)">${dateStr} ${timeStr}</div>
-      </div>
-    </div>`;
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 1.25rem;border-bottom:1px solid var(--g100)"><div style="width:30px;height:30px;border-radius:50%;background:var(--av-l);color:var(--av);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0">${escHtml(ini)}</div><div style="flex:1;min-width:0"><div style="font-size:.78rem;font-weight:600;color:var(--text)">${escHtml([e.prenom,e.nom].filter(Boolean).join(' ') || e.username)}</div><div style="font-size:.68rem;color:var(--muted)">${escHtml(e.role||'—')}</div></div><div style="text-align:right"><div style="font-size:.7rem;font-weight:700;color:${actionColor}">${actionLabel}</div><div style="font-size:.65rem;color:var(--muted)">${dateStr} ${timeStr}</div></div></div>`;
   }).join('');
 }
 
-/* Catégories journal avec barres */
 function renderJournalCatBars(journal, freq) {
   const el = document.getElementById('journalCatBars');
   const totalEl = document.getElementById('journalCatTotal');
   if (!el) return;
   const cats = DB.get(DB.keys.categories) || [];
   const now = new Date();
-  if (freq === 'jour') {
-    const todayStr = now.toISOString().slice(0, 10);
-    journal = journal.filter(e => e.date && e.date.startsWith(todayStr));
-  } else if (freq === 'semaine') {
-    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-    journal = journal.filter(e => e.date && new Date(e.date) >= weekAgo);
-  } else if (freq === 'mois') {
-    const monthStr = now.toISOString().slice(0, 7);
-    journal = journal.filter(e => e.date && e.date.startsWith(monthStr));
-  }
+  if (freq === 'jour') { journal = journal.filter(e => e.date && e.date.startsWith(now.toISOString().slice(0,10))); }
+  else if (freq === 'semaine') { const wa = new Date(); wa.setDate(wa.getDate()-7); journal = journal.filter(e => e.date && new Date(e.date) >= wa); }
+  else if (freq === 'mois') { journal = journal.filter(e => e.date && e.date.startsWith(now.toISOString().slice(0,7))); }
   const total = journal.length;
-  if (totalEl) totalEl.textContent = `${total} entrée${total > 1 ? 's' : ''} au total`;
-  if (!cats.length || !total) {
-    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucune donnée</div>';
-    return;
-  }
+  if (totalEl) totalEl.textContent = `${total} entrée${total>1?'s':''}`;
+  if (!cats.length || !total) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucune donnée</div>'; return; }
   const counts = {};
-  journal.forEach(e => { const c = String(e.categorie || e.category || e.categoryId || ''); counts[c] = (counts[c] || 0) + 1; });
-  const withCount = cats.map(c => ({ ...c, count: counts[String(c.id)] || 0 })).sort((a, b) => b.count - a.count);
+  journal.forEach(e => { const c = String(e.categorie || e.category || e.categoryId || ''); counts[c] = (counts[c]||0) + 1; });
+  const withCount = cats.map(c => ({...c, count: counts[String(c.id)]||0})).sort((a,b) => b.count - a.count);
   const maxCount = Math.max(...withCount.map(c => c.count), 1);
   el.innerHTML = withCount.map(c => {
-    const pct = Math.round((c.count / total) * 100);
-    const barW = Math.round((c.count / maxCount) * 100);
-    return `<div style="display:flex;align-items:center;gap:.75rem">
-      <span style="width:10px;height:10px;border-radius:3px;background:${c.color};flex-shrink:0"></span>
-      <span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:120px">${escHtml(c.name)}</span>
-      <div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden">
-        <div style="height:100%;border-radius:var(--r-full);background:${c.color};width:${barW}%;transition:width 1s ease"></div>
-      </div>
-      <span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:36px;text-align:right">${c.count}</span>
-      <span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span>
-    </div>`;
+    const pct = Math.round((c.count/total)*100);
+    const barW = Math.round((c.count/maxCount)*100);
+    return `<div style="display:flex;align-items:center;gap:.75rem"><span style="width:10px;height:10px;border-radius:3px;background:${c.color};flex-shrink:0"></span><span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:120px">${escHtml(c.name)}</span><div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${c.color};width:${barW}%;transition:width 1s ease"></div></div><span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:36px;text-align:right">${c.count}</span><span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span></div>`;
   }).join('');
 }
 
@@ -1498,46 +846,22 @@ function renderIncidentTypeBars(incidents) {
   const totalEl = document.getElementById('incidentTypeTotal');
   if (!el) return;
   const total = incidents.length;
-  if (totalEl) totalEl.textContent = `${total} incident${total > 1 ? 's' : ''} au total`;
-  if (!total) {
-    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucun incident</div>';
-    return;
-  }
-  const types = {
-    chute:'Chute', agression:'Agression', fugue:'Fugue',
-    violence:'Violence', medical:'Médical', materiel:'Dégât',
-    accident:'Accident', autre:'Autre'
-  };
-  const colors = {
-    chute:'#f59e0b', agression:'#ef4444', fugue:'#8b5cf6',
-    violence:'#dc2626', medical:'#06b6d4', materiel:'#f97316',
-    accident:'#eab308', autre:'#6b7280'
-  };
-  const icons = {
-    chute:'🦶', agression:'👊', fugue:'🚪',
-    violence:'⚡', medical:'💊', materiel:'🔧',
-    accident:'⚠️', autre:'📋'
-  };
+  if (totalEl) totalEl.textContent = `${total} incident${total>1?'s':''}`;
+  if (!total) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucun incident</div>'; return; }
+  const types = { chute:'Chute', agression:'Agression', fugue:'Fugue', violence:'Violence', medical:'Médical', materiel:'Dégât', accident:'Accident', autre:'Autre' };
+  const colors = { chute:'#f59e0b', agression:'#ef4444', fugue:'#8b5cf6', violence:'#dc2626', medical:'#06b6d4', materiel:'#f97316', accident:'#eab308', autre:'#6b7280' };
+  const icons = { chute:'🦶', agression:'👊', fugue:'🚪', violence:'⚡', medical:'💊', materiel:'🔧', accident:'⚠️', autre:'📋' };
   const counts = {};
-  incidents.forEach(i => { const t = i.type || 'autre'; counts[t] = (counts[t] || 0) + 1; });
-  const entries = Object.entries(types).map(([k,label]) => ({ key:k, label, count:counts[k]||0, color:colors[k], icon:icons[k] })).sort((a,b) => b.count - a.count);
+  incidents.forEach(i => { const t = i.type || 'autre'; counts[t] = (counts[t]||0) + 1; });
+  const entries = Object.entries(types).map(([k,label]) => ({key:k,label,count:counts[k]||0,color:colors[k],icon:icons[k]})).sort((a,b) => b.count - a.count);
   const maxCount = Math.max(...entries.map(e => e.count), 1);
   el.innerHTML = entries.map(e => {
-    const pct = Math.round((e.count / total) * 100);
-    const barW = Math.round((e.count / maxCount) * 100);
-    return `<div style="display:flex;align-items:center;gap:.75rem">
-      <span style="font-size:1rem;width:20px;text-align:center;flex-shrink:0">${e.icon}</span>
-      <span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:100px">${e.label}</span>
-      <div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden">
-        <div style="height:100%;border-radius:var(--r-full);background:${e.color};width:${barW}%;transition:width 1s ease"></div>
-      </div>
-      <span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:36px;text-align:right">${e.count}</span>
-      <span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span>
-    </div>`;
+    const pct = Math.round((e.count/total)*100);
+    const barW = Math.round((e.count/maxCount)*100);
+    return `<div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1rem;width:20px;text-align:center;flex-shrink:0">${e.icon}</span><span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:100px">${e.label}</span><div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${e.color};width:${barW}%;transition:width 1s ease"></div></div><span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:36px;text-align:right">${e.count}</span><span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span></div>`;
   }).join('');
 }
 
-/* Demandes d'intervention */
 function renderInterventions() {
   const total = document.getElementById('intTotal');
   const elO = document.getElementById('intOuvertes');
@@ -1545,28 +869,17 @@ function renderInterventions() {
   if (!elO || !elH) return;
   const list = DB.get(DB.keys.interventions) || [];
   const ouvertes = list.filter(i => i.statut === 'ouverte').reverse();
-  const traitees = list.filter(i => i.statut === 'traitee').reverse().slice(0, 20);
+  const traitees = list.filter(i => i.statut === 'traitee').reverse().slice(0,20);
   if (total) total.textContent = ouvertes.length > 0 ? ouvertes.length + ' en attente' : 'Aucune';
   function itemHTML(i) {
     const date = new Date(i.date);
-    const dateStr = date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
-    const timeStr = date.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const dateStr = date.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr = date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     const couleurs = { basse:'#94a3b8', normale:'#3b82f6', haute:'#f59e0b', critique:'#ef4444' };
     const icones = { basse:'⬇️', normale:'➡️', haute:'⚠️', critique:'🚨' };
     const c = couleurs[i.urgence] || '#94a3b8';
     const ic = icones[i.urgence] || '➡️';
-    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' +
-      '<span style="font-size:.85rem">' + ic + '</span>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' +
-          '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' +
-          '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span>' +
-        '</div>' +
-        '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' +
-        '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div>' +
-      '</div>' +
-      (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(' + i.id + ')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') +
-    '</div>';
+    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' + '<span style="font-size:.85rem">' + ic + '</span>' + '<div style="flex:1;min-width:0">' + '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' + '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' + '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span></div>' + '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' + '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div></div>' + (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(' + i.id + ')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') + '</div>';
   }
   elO.innerHTML = ouvertes.length ? ouvertes.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Tout est traité ✓</div>';
   elH.innerHTML = traitees.length ? traitees.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Aucun historique</div>';
@@ -1591,26 +904,15 @@ function refreshSidebarUser() {
   const b = DB.get(DB.keys.branding) || {};
   const s = DB.get(DB.keys.settings) || {};
   if (s.etablissement) { const e = document.getElementById('asbBrandName'); if (e) e.textContent = s.etablissement; }
-  if (b.logo) { const e = document.getElementById('asbLogo'); if (e) e.innerHTML = `<img src="${b.logo}" alt="Logo"/>`; }
 }
 
-/* ═══════════ INIT ═══════════ */
-// ── GESTION MULTI-ÉTABLISSEMENTS ──
+/* ═══════════ MULTI-ÉTABLISSEMENTS ═══════════ */
 function renderEtabAdminList() {
   const etabs = getEtabs();
   const el = document.getElementById('etabAdminList');
   if (!el) return;
   if (!etabs.length) { el.innerHTML = '<div style="color:var(--muted);font-size:.875rem">Aucun établissement.</div>'; return; }
-  el.innerHTML = etabs.map(e => `
-    <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--white)">
-      <div style="width:36px;height:36px;border-radius:8px;background:${e.color||'#0f2b4a'};flex-shrink:0"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:.875rem">${escHtml(e.nom)}</div>
-        <div style="font-size:.72rem;color:var(--muted)">${etabTypeLabel(e.type)}</div>
-      </div>
-      <span class="badge" style="background:#0891b220;color:#0891b2">${etabTypeLabel(e.type)}</span>
-      ${etabs.length > 1 ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="adminDeleteEtab(${e.id})">✕</button>` : ''}
-    </div>`).join('');
+  el.innerHTML = etabs.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--white)"><div style="width:36px;height:36px;border-radius:8px;background:${e.color||'#0f2b4a'};flex-shrink:0"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.875rem">${escHtml(e.nom)}</div><div style="font-size:.72rem;color:var(--muted)">${etabTypeLabel(e.type)}</div></div><span class="badge" style="background:#0891b220;color:#0891b2">${etabTypeLabel(e.type)}</span>${etabs.length > 1 ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="adminDeleteEtab(${e.id})">✕</button>` : ''}</div>`).join('');
 }
 
 function adminCreateEtab() {
@@ -1619,7 +921,6 @@ function adminCreateEtab() {
   const color = document.getElementById('newEtabColor')?.value || '#0f2b4a';
   if (!nom) { toast('Nom requis', 'error'); return; }
   const etab = createEtab(nom, type, color);
-  // Ajouter les utilisateurs actuels à ce nouvel établissement
   const currentUsers = DB.get(DB.keys.users) || [];
   currentUsers.forEach(u => addUserToAllEtabs(u));
   document.getElementById('newEtabForm').style.display = 'none';
@@ -1627,20 +928,33 @@ function adminCreateEtab() {
   renderEtabAdminList();
   toast('Établissement "' + nom + '" créé ✓', 'success');
 }
+function adminDeleteEtab(id) { confirmDialog('Supprimer cet établissement et toutes ses données ?', () => { deleteEtab(id); renderEtabAdminList(); toast('Établissement supprimé', 'info'); }); }
 
-function adminDeleteEtab(id) {
-  confirmDialog('Supprimer cet établissement et toutes ses données ?', () => {
-    deleteEtab(id);
-    renderEtabAdminList();
-    toast('Établissement supprimé', 'info');
+function activateTab(name) {
+  if (!ALL_TABS.includes(name)) name = 'stats';
+  document.querySelectorAll('.admin-nav-card').forEach(i => i.classList.toggle('active', i.dataset.tab === name));
+  ALL_TABS.forEach(n => {
+    const el = document.getElementById('tab-' + n);
+    if (!el) return;
+    el.style.display = n === name ? '' : 'none';
+    el.classList.toggle('active', n === name);
   });
+  if (name === 'employes') renderEmployes();
+  document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
+  document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
+  const strip = document.getElementById('statsStrip');
+  if (strip) strip.style.display = name === 'stats' ? '' : 'none';
+  const detail = document.getElementById('statsDetail');
+  if (detail) detail.style.display = name === 'stats' ? '' : 'none';
+  if (name === 'stats') refreshAllStats();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const tabParam = params.get('tab') || 'stats';
+  activateTab(tabParam);
   refreshSidebarUser();
   renderEtabAdminList();
-
-  // Afficher l'établissement sélectionné
   const etab = getCurrentEtab();
   if (etab) {
     const nom = document.getElementById('etabBannerNom');
@@ -1649,15 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (type) type.textContent = etabTypeLabel(etab.type);
     const badge = document.getElementById('atbBadge');
     if (badge) badge.textContent = etab.nom;
-    const brandName = document.getElementById('asbBrandName');
-    if (brandName) brandName.textContent = etab.nom;
   }
-  // Show stats strip and detail by default
-  const strip = document.getElementById('statsStrip');
-  if (strip) strip.style.display = '';
-  const detail = document.getElementById('statsDetail');
-  if (detail) detail.style.display = '';
-  // Frequency buttons for presence chart
   document.querySelectorAll('.btn-freq').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-freq').forEach(b => b.classList.remove('active'));
@@ -1670,8 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderJournalCatBars(journal, freq);
     });
   });
-  // Animate circles after 100ms for transition
-  setTimeout(refreshAllStats, 120);
+  if (tabParam === 'stats') setTimeout(refreshAllStats, 120);
 });
 </script>
 </body>

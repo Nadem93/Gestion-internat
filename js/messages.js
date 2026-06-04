@@ -38,8 +38,22 @@ function renderConvs() {
   const allMsgs = getMessages();
   const convs = DB.get('ftr_conversations') || {};
   const q = (document.getElementById('convSearch')?.value || '').trim().toLowerCase();
+  const users = getUsers();
+  const myUserId = String(session.userId);
 
-  const myConvs = Object.values(convs).filter(c => c.userIds.map(String).includes(String(session.userId)));
+  const userConvMap = {};
+  const groupConvs = [];
+
+  Object.values(convs).forEach(c => {
+    const ids = c.userIds.map(String);
+    if (!ids.includes(myUserId)) return;
+    if (ids.length === 2) {
+      const otherId = ids.find(id => id !== myUserId);
+      if (otherId) userConvMap[otherId] = c;
+    } else {
+      groupConvs.push(c);
+    }
+  });
 
   function convToHtml(conv) {
     const msgs = allMsgs.filter(m => m.convId === conv.id).sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -47,7 +61,6 @@ function renderConvs() {
     const unread = msgs.some(m => m.from !== session.userId && !m.readBy?.includes(session.userId));
     const unreadCount = msgs.filter(m => m.from !== session.userId && !m.readBy?.includes(session.userId)).length;
     const otherIds = conv.userIds.filter(id => String(id) !== String(session.userId));
-    const users = getUsers();
 
     let name, avatar, color;
     if (otherIds.length === 0) {
@@ -88,14 +101,47 @@ function renderConvs() {
     </div>`;
   }
 
-  let html = myConvs.map(convToHtml).filter(Boolean).join('');
+  let html = '';
+
+  groupConvs.map(convToHtml).filter(Boolean).forEach(h => html += h);
+
+  users.forEach(u => {
+    const uid = String(u.id);
+    if (uid === myUserId) return;
+    const prenom = u.prenom || '';
+    const nom = u.nom || '';
+    const name = `${prenom} ${nom}`.trim() || u.username;
+    if (q && !name.toLowerCase().includes(q)) return;
+    const initials = (prenom[0]||'') + (nom[0]||'') || '?';
+
+    const conv = userConvMap[uid];
+    if (conv) {
+      html += convToHtml(conv);
+    } else {
+      html += `<div class="chat-conv" onclick="openUserChat('${uid}')">
+        <div class="chat-conv-avatar" style="background:#007aff">${initials}</div>
+        <div class="chat-conv-info">
+          <div class="chat-conv-name">${escHtml(name)}</div>
+          <div class="chat-conv-preview" style="color:var(--muted);font-style:italic">Cliquez pour discuter</div>
+        </div>
+        <div class="chat-conv-right"></div>
+      </div>`;
+    }
+  });
+
   if (!html) {
     html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">
-      <p style="margin:0">${q ? 'Aucune conversation trouvée' : 'Aucune conversation'}</p>
-      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="openCompose()">Nouveau message</button>
+      <p style="margin:0">${q ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur'}</p>
     </div>`;
   }
   document.getElementById('chatConvs').innerHTML = html;
+}
+
+function openUserChat(userId) {
+  const session = Auth.getSession();
+  if (!session) return;
+  const convId = getOrCreateConv([session.userId, userId]);
+  selectConv(convId);
 }
 
 // ── SELECT CONVERSATION ──

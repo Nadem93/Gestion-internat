@@ -3,35 +3,35 @@
 </div>
 <main class="content">
   <div class="grid grid-auto" style="margin-bottom:1.5rem" id="statsGrid">
-    <a href="planning.html" class="stat-card-glass" id="statEventCard" style="cursor:pointer;text-decoration:none" title="Voir le planning">
+    <a href="planning.html" class="stat-card-glass" id="statEventCard" style="cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#ef444425,#fca5a515)" title="Voir le planning">
       <div class="stat-card-top"><span class="stat-label">Événements à venir</span><div class="stat-icon" style="background:rgba(239,68,68,.2);color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
       <div id="statEventList" style="width:100%">
         <div style="font-size:.82rem;font-weight:700;color:rgba(0,0,0,.6);margin:.25rem 0 .1rem">Aucun événement</div>
       </div>
     </a>
-    <div class="stat-card-glass" id="presenceStatCard">
+    <div class="stat-card-glass" id="presenceStatCard" style="background:linear-gradient(135deg,#10b98125,#34d39915)">
       <div class="stat-card-top"><span class="stat-label">Présents aujourd'hui</span><div class="stat-icon green" id="presenceStatIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div>
       <div class="stat-num" id="statPresents">0</div>
       <div class="stat-change" id="presenceStatLabel">Présences enregistrées</div>
       <div id="presenceAlert" style="display:none;margin-top:.4rem;padding:.3rem .6rem;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:var(--r-sm);font-size:.72rem;font-weight:600;text-align:center;cursor:pointer" onclick="window.location='presences.html'">⚠ Présences non saisies — Cliquez pour saisir</div>
     </div>
-    <div class="stat-card-glass">
+    <div class="stat-card-glass" style="background:linear-gradient(135deg,#e85d0425,#fb923c15)">
       <div class="stat-card-top"><span class="stat-label">Entrées journal</span><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div></div>
       <div class="stat-num" id="statJournal">0</div>
       <div class="stat-change">Aujourd'hui</div>
     </div>
-    <a href="incidents.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none" title="Incidents non traités" id="statIncidentCard">
+    <a href="incidents.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#dc262625,#f8717115)" title="Incidents non traités" id="statIncidentCard">
       <div class="stat-card-top"><span class="stat-label">Incidents non traités</span><div class="stat-icon" style="background:rgba(220,38,38,.2);color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
       <div class="stat-num" id="statIncidentInfo">0</div>
       <div class="stat-change" id="statIncidentDetail">Incidents en cours</div>
     </a>
-    <a href="vehicules.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none" title="Réserver un véhicule">
+    <a href="vehicules.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#6366f125,#a5b4fc15)" title="Réserver un véhicule">
       <div class="stat-card-top"><span class="stat-label">Véhicules</span><div class="stat-icon" style="background:rgba(99,102,241,.2);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg></div></div>
       <div id="statVehiculeList" style="width:100%">
         <div style="font-size:.82rem;font-weight:700;color:rgba(0,0,0,.6);margin:.25rem 0 .1rem">Aucune réservation</div>
       </div>
     </a>
-    <a href="residents.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none" title="Anniversaires du mois">
+    <a href="residents.html" class="stat-card-glass" style="cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#ec489925,#f9a8d415)" title="Anniversaires du mois">
       <div class="stat-card-top"><span class="stat-label">Anniversaires du mois</span><div class="stat-icon" style="background:rgba(236,72,153,.2);color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
       <div class="stat-num" style="font-size:.9rem" id="statAnnivInfo">Aucun</div>
       <div class="stat-change" id="statAnnivDetail">Anniversaires ce mois-ci</div>

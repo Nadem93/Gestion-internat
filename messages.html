@@ -7,13 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     .chat-wrap{display:grid;grid-template-columns:300px 1fr;gap:0;height:calc(100vh - 140px);min-height:450px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:#fff}
-    .chat-list{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg)}
+    .chat-list{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg);overflow:hidden;min-height:0}
     .chat-list-header{display:flex;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--border);gap:.5rem;background:#fff}
     .chat-list-header h3{margin:0;font-size:.85rem;font-weight:700;flex:1}
     .chat-list-search{padding:.5rem .75rem;border-bottom:1px solid var(--border)}
     .chat-list-search input{width:100%;padding:.35rem .65rem;border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem;outline:none;box-sizing:border-box}
     .chat-list-search input:focus{border-color:var(--blue)}
-    .chat-convs{flex:1;overflow-y:auto}
+    .chat-convs{flex:1;overflow-y:auto;min-height:0}
     .chat-conv{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)}
     .chat-conv:hover{background:var(--b50)}
     .chat-conv.active{background:#e8f0fe}

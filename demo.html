@@ -189,13 +189,13 @@ function generateDemo() {
   const etabListEl = document.getElementById('etabList');
   etabListEl.style.display = 'grid';
 
-  let totalRes = 0;
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, documents:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
-    const count = generateForCurrentEtab();
-    totalRes += count;
-    log('<span class="ok">✅ ' + count + ' résidents · données complètes</span>');
+    const r = generateForCurrentEtab();
+    Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
+    log('<span class="ok">✅ ' + r.residents + ' résidents · ' + r.journal + ' journaux · ' + r.messages + ' messages · ' + r.contacts + ' contacts</span>');
 
     const dot = etabListEl.querySelector('[data-id="' + etab.id + '"]');
     if (dot) dot.style.background = '#16a34a';
@@ -204,11 +204,38 @@ function generateDemo() {
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
   else sessionStorage.removeItem('ftr_current_etab');
 
+  // Mettre à jour la grille avec les vrais totaux
+  const updateGrid = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
+  updateGrid('#modGrid .mod-item:nth-child(1) .mod-num', totals.residents);
+  updateGrid('#modGrid .mod-item:nth-child(2) .mod-num', totals.journal);
+  updateGrid('#modGrid .mod-item:nth-child(3) .mod-num', totals.planning);
+  updateGrid('#modGrid .mod-item:nth-child(5) .mod-num', '14j');
+  updateGrid('#modGrid .mod-item:nth-child(6) .mod-num', totals.ppe);
+  updateGrid('#modGrid .mod-item:nth-child(7) .mod-num', totals.incidents);
+  updateGrid('#modGrid .mod-item:nth-child(8) .mod-num', totals.interventions);
+  updateGrid('#modGrid .mod-item:nth-child(9) .mod-num', totals.messages);
+  updateGrid('#modGrid .mod-item:nth-child(10) .mod-num', totals.contacts);
+  updateGrid('#modGrid .mod-item:nth-child(11) .mod-num', totals.users);
+  updateGrid('#modGrid .mod-item:nth-child(12) .mod-num', '8');
+
   log('<div class="sep"></div>');
   log('<span style="color:#16a34a;font-weight:700;font-size:1rem">🎉 Données générées pour <strong>' + etabs.length + '</strong> établissement' + (etabs.length > 1 ? 's' : '') + '</span>');
-  log('<span style="display:block;margin-top:.5rem;font-size:.82rem;color:#64748b">Total : ' + totalRes + ' résidents · 80 entrées journal · 70 événements · 16 avenants · 15 incidents · 15 interventions</span>');
+  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:.75rem;font-size:.8rem">' +
+    Object.entries(totals).map(([k,v]) => '<div><span style="color:#64748b">' + k + '</span> <strong>' + v + '</strong></div>').join('') +
+  '</div>');
   log('<a href="index.html" style="display:inline-block;margin-top:.8rem;background:#0f2b4a;color:#fff;padding:.7rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem">→ Aller à la page de connexion</a>');
-  log('<span style="display:block;margin-top:.3rem;font-size:.75rem;color:#94a3b8">Identifiants : admin / admin123</span>');
+  log('<div style="margin-top:.75rem;font-size:.78rem;color:#475569;background:#f0fdf4;border:1px solid #16a34a30;border-radius:8px;padding:.8rem 1rem">');
+  log('<div style="font-weight:700;color:#16a34a;margin-bottom:.4rem">🔑 Comptes de démonstration</div>');
+  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 1rem;font-size:.75rem">');
+  log('<div><strong>Admin</strong> : admin / admin123</div>');
+  log('<div><strong>Éduc.<wbr>spé.</strong> : smartin / educ123</div>');
+  log('<div><strong>Éduc.<wbr>jeunesse</strong> : pdubois / educ123</div>');
+  log('<div><strong>Psychologue</strong> : clegrand / educ123</div>');
+  log('<div><strong>Moniteur</strong> : jfontaine / educ123</div>');
+  log('<div><strong>Infirmier</strong> : dmoreau / educ123</div>');
+  log('<div><strong>Chef service</strong> : npetit / educ123</div>');
+  log('<div><strong>Éduc.<wbr>sportif</strong> : aleroy / educ123</div>');
+  log('</div></div>');
   btn.disabled = false;
   btn.textContent = 'Générer les données pour tous les établissements';
 }
@@ -643,7 +670,25 @@ function generateForCurrentEtab() {
   ].map(c => ({ id:'dc-'+rand(100000,999999).toString(36), updatedAt:new Date(now.getTime()-rand(0,60)*86400000).toISOString(), ...c }));
   DB.set(DB.keys.repertoire, contacts);
 
-  return resList.length;
+  // ── Documents ──
+  const docs = {};
+  for (let i = 0; i < 5; i++) {
+    const res = resList[i * 7];
+    const id = res.id;
+    docs[id] = [
+      { nom:'Compte rendu médical.pdf', type:'medical', date:new Date(now.getTime()-rand(10,365)*86400000).toISOString().slice(0,10), taille:'245 Ko', id:'dd-r'+i+'-1' },
+      { nom:'Contrat de séjour.pdf', type:'administratif', date:new Date(now.getTime()-rand(30,400)*86400000).toISOString().slice(0,10), taille:'180 Ko', id:'dd-r'+i+'-2' },
+      { nom:'Projet personnalisé.pdf', type:'administratif', date:new Date(now.getTime()-rand(5,180)*86400000).toISOString().slice(0,10), taille:'320 Ko', id:'dd-r'+i+'-3' }
+    ];
+  }
+  docs['_resources'] = [
+    { nom:'Règlement intérieur.pdf', type:'resource', date:new Date(now.getTime()-rand(30,200)*86400000).toISOString().slice(0,10), taille:'410 Ko', residentId:'_resources', id:'dd-rsrc-1' },
+    { nom:'Procédure urgences.pdf', type:'resource', date:new Date(now.getTime()-rand(30,200)*86400000).toISOString().slice(0,10), taille:'295 Ko', residentId:'_resources', id:'dd-rsrc-2' },
+    { nom:'Guide des partenaires.pdf', type:'resource', date:new Date(now.getTime()-rand(30,200)*86400000).toISOString().slice(0,10), taille:'520 Ko', residentId:'_resources', id:'dd-rsrc-3' }
+  ];
+  DB.set(DB.keys.documents, docs);
+
+  return { residents: resList.length, journal: journal.length, planning: planning.length, ppe: avenants.length, incidents: incList.length, interventions: intervsList.length, messages: allMsgs.length, contacts: contacts.length, users: users.length, documents: Object.values(docs).flat().length };
 }
 initDefaults();
 populateEtabSelector();

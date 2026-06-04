@@ -168,7 +168,7 @@ function renderObjectifsCheckboxes(selected = []) {
   const el = document.getElementById('objectifsList');
   if (!el) return;
   if (!objs.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:.875rem">Aucun objectif configuré. <a href="admin.html" style="color:var(--blue)">Créer des objectifs</a></p>';
+    el.innerHTML = '<p style="color:var(--muted);font-size:.875rem">Aucun objectif configuré. <a href="admin.html?tab=fonctions" style="color:var(--blue)">Créer des objectifs</a></p>';
     return;
   }
   el.innerHTML = objs.map(o => `
