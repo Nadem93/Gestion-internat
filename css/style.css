@@ -72,7 +72,7 @@ img,video{max-width:100%;height:auto;display:block}
 html{scroll-behavior:smooth}
 body{
   font-family:'Inter',system-ui,sans-serif;
-  background:linear-gradient(135deg,#b8b0d4 0%,#d4cfe8 45%,#f5f0fc 100%);
+  background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);
   background-attachment:fixed;
   color:var(--text);line-height:1.6;min-height:100vh;
   -webkit-font-smoothing:antialiased;
@@ -1067,9 +1067,9 @@ tbody tr:hover .table-actions{opacity:1}
 /* ══════════════════════════════════════════
    ACCUEIL HOME
 ══════════════════════════════════════════ */
-.accueil-home{display:flex;flex-direction:column;min-height:100vh;background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);background-attachment:fixed}
+.accueil-home{display:flex;flex-direction:column;min-height:100vh}
 .accueil-home-main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;padding-top:calc(var(--header-h) + 1.5rem)}
-.accueil-home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:580px;width:100%;perspective:1000px}
+.accueil-home-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.875rem;max-width:620px;width:100%;perspective:1000px}
 .accueil-home-card{
   position:relative;
   display:flex;flex-direction:column;align-items:center;gap:.45rem;
@@ -1096,8 +1096,8 @@ tbody tr:hover .table-actions{opacity:1}
   background:linear-gradient(135deg,rgba(255,255,255,.25) 0%,transparent 50%,rgba(0,0,0,.04) 100%);
   opacity:0;transition:opacity .25s;pointer-events:none;
 }
-.accueil-home-icon{width:48px;height:48px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.accueil-home-icon svg{width:24px;height:24px;color:inherit}
+.accueil-home-icon{width:42px;height:42px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.accueil-home-icon svg{width:20px;height:20px;color:inherit}
 .accueil-home-label{line-height:1.2}
 .notif-badge{
   position:absolute;top:-5px;right:-5px;

@@ -84,7 +84,7 @@ function addUserToAllEtabs(user) {
 }
 
 const ETAB_BG = {
-  foyer_hebergement: ['#b8b0d4','#d4cfe8','#f5f0fc'],  // violet
+  foyer_hebergement: ['#dbeafe','#dbeafe','#eff6ff'],  // bleu
   foyer_vie:         ['#b0b8d4','#cfd4e8','#f0f2fc'],  // bleu lavande
   foyer_jeunes:      ['#d4c8b0','#e8dfc0','#fcf7e8'],  // ocre chaud
   mecs:              ['#b0d4c8','#cfe8df','#f0fcf8'],  // teal
@@ -107,7 +107,7 @@ const ETAB_BG = {
   cada:              ['#d4c4b0','#e8d8c8','#faf0e8'],  // terracotta clair
   siao:              ['#b8d4b0','#d0e8c8','#f0fcec'],  // vert sauge
   autre:             ['#c4c4c4','#d8d8d8','#f0f0f0'],  // gris neutre
-  adultes:           ['#b8b0d4','#d4cfe8','#f5f0fc'],  // violet (legacy)
+  adultes:           ['#dbeafe','#dbeafe','#eff6ff'],  // bleu
   enfants:           ['#b0d4b8','#cfe8d4','#f0fce8'],  // vert (legacy)
 };
 
