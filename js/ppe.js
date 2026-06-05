@@ -169,7 +169,7 @@ function renderSectionCard(p, domaine) {
       <span>${domaine.label}</span>
       <span style="margin-left:auto;font-size:.7rem;color:var(--muted)">${s.objectifs.length} obj.</span>
     </div>
-    <div class="section-body" id="sectionBody_${p.id}_${domaine.id}" style="display:none">
+    <div class="section-body" id="sectionBody_${p.id}_${domaine.id}">
       <div style="display:flex;gap:.5rem;align-items:flex-start">
         <div style="flex:1">
           <label style="font-size:.7rem;color:var(--muted);font-weight:600">Bilan</label>
