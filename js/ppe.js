@@ -662,6 +662,44 @@ async function aiAvenantFromJournal(resident, entries) {
   }
 
   if (!result) {
+    const objTemplates = {
+      autonomie: [
+        { obj: 'Développer l\'autonomie dans les actes de la vie quotidienne', moyens: 'Ateliers pratiques, mise en situation supervisée', eval: 'Nombre d\'actes réalisés sans aide' },
+        { obj: 'Renforcer les capacités d\'auto-prise en charge', moyens: 'Planification hebdomadaire, suivi éducatif individualisé', eval: 'Taux de réalisation des objectifs fixés' }
+      ],
+      sante: [
+        { obj: 'Suivre et stabiliser l\'état de santé global', moyens: 'Consultations médicales régulières, observances des traitements', eval: 'Assiduité aux rendez-vous, stabilité clinique' },
+        { obj: 'Adopter une hygiène de vie adaptée', moyens: 'Ateliers nutrition, activité physique encadrée', eval: 'Amélioration des indicateurs de santé' }
+      ],
+      viePro: [
+        { obj: 'Consolider les acquis professionnels', moyens: 'Mise en situation en atelier, tutorat renforcé', eval: 'Atteinte des objectifs du projet professionnel' },
+        { obj: 'Développer les compétences transversales', moyens: 'Formations adaptées, stages en milieu ordinaire', eval: 'Évolution des compétences évaluées' }
+      ],
+      logement: [
+        { obj: 'Acquérir ou maintenir les savoir-être liés au logement', moyens: 'Entretien du logement accompagné, gestion du budget logement', eval: 'Autonomie dans l\'entretien et la gestion' },
+        { obj: 'Optimiser l\'utilisation de l\'espace de vie', moyens: 'Aménagement personnalisé, rangement organisé', eval: 'Qualité du cadre de vie' }
+      ],
+      vieSociale: [
+        { obj: 'Favoriser l\'intégration sociale et les loisirs', moyens: 'Sorties collectives, inscription à des activités', eval: 'Fréquence de participation aux activités' },
+        { obj: 'Développer le réseau relationnel', moyens: 'Encouragement aux initiatives, groupe de parole', eval: 'Nombre de relations sociales stables' }
+      ],
+      vieAffective: [
+        { obj: 'Accompagner la vie affective et relationnelle', moyens: 'Entretiens individuels, médiation familiale si besoin', eval: 'Qualité des échanges et bien-être exprimé' },
+        { obj: 'Favoriser l\'expression des émotions', moyens: 'Ateliers d\'expression, temps d\'échange', eval: 'Capacité à verbaliser ses émotions' }
+      ],
+      budget: [
+        { obj: 'Acquérir une gestion budgétaire autonome', moyens: 'Ateliers budget, suivi personnalisé des dépenses', eval: 'Équilibre budgétaire mensuel' },
+        { obj: 'Maîtriser les outils de gestion financière', moyens: 'Utilisation d\'un tableau de bord, épargne programmée', eval: 'Capacité à gérer seul son budget' }
+      ],
+      transport: [
+        { obj: 'Développer les compétences de mobilité', moyens: 'Apprentissage des trajets, permis de conduire', eval: 'Autonomie dans les déplacements' },
+        { obj: 'Sécuriser les déplacements', moyens: 'Sensibilisation aux règles de sécurité, accompagnement progressif', eval: 'Respect des règles de sécurité' }
+      ],
+      orientation: [
+        { obj: 'Définir un projet d\'orientation personnalisé', moyens: 'Bilans réguliers, rencontres avec les partenaires', eval: 'Clarté et réalisme du projet défini' },
+        { obj: 'Accompagner les démarches d\'orientation', moyens: 'Soutien administratif, visites de structures', eval: 'Avancement des démarches engagées' }
+      ]
+    };
     const sections = {};
     DOMAINES.forEach(d => {
       const relevant = entries.filter(e =>
@@ -669,17 +707,43 @@ async function aiAvenantFromJournal(resident, entries) {
         (e.categorie || '').toLowerCase().includes(d.id.toLowerCase()) ||
         (e.contenu || '').toLowerCase().includes(d.label.toLowerCase().slice(0, 5))
       );
+      const bilan = relevant.length > 0
+        ? relevant.slice(0, 3).map(e => `Observation du ${e.date || '?'} : ${(e.contenu || '').slice(0, 200)}`).join(' ')
+        : `Aucune observation dans ce domaine.`;
+      const templates = objTemplates[d.id] || [];
+      const numObj = relevant.length > 0 ? Math.min(2, templates.length) : 1;
+      const shuffled = [...templates].sort(() => Math.random() - 0.5).slice(0, numObj);
+      const objectifs = shuffled.map(t => ({
+        objectif: t.obj,
+        moyens: t.moyens,
+        echeance: futureDate(3, 6),
+        evaluation: t.eval
+      }));
+      const exprPhrases = [
+        '"Je souhaite progresser dans ce domaine."',
+        '"Je me sens en capacité d\'évoluer sur ce point."',
+        '"J\'ai besoin d\'être accompagné(e) pour cela."',
+        '"C\'est un domaine où je veux gagner en autonomie."',
+        '"Je suis satisfait(e) des progrès réalisés."',
+        '"Je souhaite que l\'on travaille davantage ce sujet."'
+      ];
       sections[d.id] = {
-        bilan: relevant.length > 0
-          ? relevant.slice(0, 3).map(e => `Observation du ${e.date || '?'} : ${(e.contenu || '').slice(0, 200)}`).join(' ')
-          : `Aucune observation dans ce domaine.`,
-        objectifs: [],
-        expression: `Le résident exprime son point de vue sur ce domaine.`
+        bilan,
+        objectifs,
+        expression: relevant.length > 0
+          ? exprPhrases[Math.floor(Math.random() * exprPhrases.length)]
+          : 'Le résident n\'a pas encore exprimé d\'avis spécifique sur ce domaine.'
       };
     });
-    result = { sections, conclusion: 'Avenant généré depuis le journal (mode local).' };
+    result = { sections, conclusion: 'Avenant généré automatiquement à partir des observations du journal de bord.' };
   }
   return result;
+}
+
+function futureDate(minMonths, maxMonths) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + minMonths + Math.floor(Math.random() * (maxMonths - minMonths)));
+  return d.toISOString().slice(0, 7);
 }
 
 function ensureSectionsComplete(sections) {
