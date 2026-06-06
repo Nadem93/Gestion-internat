@@ -984,6 +984,78 @@ function genererRapportPDF() {
 
   const kpi = (num, lbl) => `<div class="kpi"><div class="kpi-num">${num}</div><div class="kpi-lbl">${lbl}</div></div>`;
 
+  // ── Découpage temporel (semaines si ≤ 45j, sinon mois) ──
+  const _start = new Date(startStr + 'T00:00:00'), _end = new Date(endStr + 'T00:00:00');
+  const _days = Math.round((_end - _start) / 86400000) + 1;
+  const MOIS_ABBR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+  const buckets = [];
+  if (_days <= 45) {
+    let cur = new Date(_start);
+    while (cur <= _end) {
+      const bs = new Date(cur), be = new Date(cur); be.setDate(be.getDate() + 6);
+      buckets.push({ label: bs.getDate() + '/' + (bs.getMonth() + 1), start: bs.toISOString().slice(0, 10), end: be.toISOString().slice(0, 10) });
+      cur.setDate(cur.getDate() + 7);
+    }
+  } else {
+    let cur = new Date(_start.getFullYear(), _start.getMonth(), 1);
+    while (cur <= _end) {
+      const y = cur.getFullYear(), m = cur.getMonth();
+      buckets.push({ label: MOIS_ABBR[m], start: new Date(y, m, 1).toISOString().slice(0, 10), end: new Date(y, m + 1, 0).toISOString().slice(0, 10) });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+  }
+  const _inB = (d, b) => { const s = String(d || '').slice(0, 10); return s >= b.start && s <= b.end; };
+  const jSeries = buckets.map(b => jPeriod.filter(e => _inB(e.date, b)).length);
+  const iSeries = buckets.map(b => iPeriod.filter(i => _inB(i.date, b)).length);
+
+  // ── Graphiques SVG (impriment proprement) ──
+  function svgHBar(obj, color) {
+    const entries = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) return '<p class="empty-line">Aucune donnée sur la période.</p>';
+    const max = Math.max(...entries.map(e => e[1]), 1);
+    const rowH = 26, labelW = 150, barMax = 470, padL = 6, padT = 6, padB = 16;
+    const W = padL + labelW + barMax + 44, H = padT + entries.length * rowH + padB;
+    let grid = '';
+    for (let k = 0; k <= 4; k++) { const x = padL + labelW + barMax * k / 4; grid += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + entries.length * rowH}" stroke="#e8edf2" stroke-width="1"/><text x="${x}" y="${padT + entries.length * rowH + 12}" text-anchor="middle" font-size="7" fill="#94a3b8">${Math.round(max * k / 4)}</text>`; }
+    const bars = entries.map(([label, v], i) => {
+      const y = padT + i * rowH, bw = Math.max(2, Math.round(v / max * barMax));
+      return `<text x="${padL + labelW - 6}" y="${y + rowH / 2 + 3}" text-anchor="end" font-size="9" fill="#334155">${escHtml(String(label)).slice(0, 26)}</text><rect x="${padL + labelW}" y="${y + 4}" width="${bw}" height="${rowH - 10}" rx="3" fill="${color}"/><text x="${padL + labelW + bw + 5}" y="${y + rowH / 2 + 3}" font-size="9" font-weight="700" fill="#0f2b4a">${v}</text>`;
+    }).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${grid}${bars}</svg>`;
+  }
+  function svgColumns(labels, series) {
+    const W = 720, H = 230, padL = 30, padR = 10, padT = 24, padB = 30;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    let max = Math.max(...series.flatMap(s => s.data), 1);
+    const step = Math.max(1, Math.ceil(max / 4)); max = step * 4;
+    const n = labels.length, groupW = plotW / n, barW = Math.max(4, Math.min(16, groupW / (series.length + 1)));
+    let grid = '';
+    for (let k = 0; k <= 4; k++) { const y = padT + plotH - plotH * k / 4; grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e8edf2" stroke-width="1"/><text x="${padL - 4}" y="${y + 3}" text-anchor="end" font-size="7" fill="#94a3b8">${step * k}</text>`; }
+    let bars = '';
+    labels.forEach((lab, i) => {
+      const gx = padL + groupW * i + groupW / 2;
+      series.forEach((s, si) => {
+        const v = s.data[i] || 0, bh = Math.round(v / max * plotH), x = gx - (series.length * barW) / 2 + si * barW;
+        bars += `<rect x="${x}" y="${padT + plotH - bh}" width="${barW - 1.5}" height="${bh}" rx="2" fill="${s.color}"/>`;
+        if (v > 0) bars += `<text x="${(x + (barW - 1.5) / 2).toFixed(1)}" y="${padT + plotH - bh - 2}" text-anchor="middle" font-size="6.5" fill="#475569">${v}</text>`;
+      });
+      bars += `<text x="${gx.toFixed(1)}" y="${H - padB + 12}" text-anchor="middle" font-size="7.5" fill="#475569">${escHtml(lab)}</text>`;
+    });
+    let legend = '';
+    series.forEach((s, si) => { const lx = padL + si * 150; legend += `<rect x="${lx}" y="4" width="10" height="10" rx="2" fill="${s.color}"/><text x="${lx + 14}" y="13" font-size="8" fill="#334155">${escHtml(s.name)}</text>`; });
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px"><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#cbd5e1" stroke-width="1"/>${grid}${bars}${legend}</svg>`;
+  }
+  function svgDonut(segments) {
+    const total = segments.reduce((a, s) => a + s.value, 0);
+    if (!total) return '<p class="empty-line">Aucun incident sur la période.</p>';
+    const cx = 70, cy = 70, r = 50, sw = 22, circ = 2 * Math.PI * r;
+    let off = 0, arcs = '';
+    segments.forEach(s => { if (s.value <= 0) return; const dash = s.value / total * circ; arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${(circ - dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`; off += dash; });
+    const center = `<text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="20" font-weight="800" fill="#0f2b4a">${total}</text><text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="7.5" fill="#94a3b8">incidents</text>`;
+    const legend = segments.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:8.5pt;margin-bottom:4px"><span style="width:11px;height:11px;border-radius:2px;background:${s.color};display:inline-block;flex-shrink:0"></span>${escHtml(s.label)} : <strong>${s.value}</strong> (${Math.round(s.value / total * 100)}%)</div>`).join('');
+    return `<div style="display:flex;align-items:center;gap:.7cm"><svg viewBox="0 0 140 140" width="128" height="128" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
+  }
+
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Rapport d'activité — ${escHtml(label)}</title>
@@ -1011,6 +1083,8 @@ function genererRapportPDF() {
   .grav{flex:1;border-radius:6px;padding:.25cm;text-align:center;color:#fff;font-size:8pt;font-weight:600}
   .empty-line{font-size:8pt;color:#94a3b8;font-style:italic}
   .note{font-size:8pt;color:#475569;margin:.2cm 0}
+  svg{page-break-inside:avoid;max-width:100%}
+  h2{page-break-after:avoid}
   .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:7pt;color:#94a3b8}
   .actions{text-align:center;margin:.4cm 0}
   .actions button{padding:.35rem 1.1rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:9pt;margin:.2rem}
@@ -1039,18 +1113,20 @@ function genererRapportPDF() {
   ${kpi(nbObjAtteints, 'Objectifs atteints')}
 </div>
 
+<h2>Évolution de l'activité</h2>
+<p class="note">Transmissions au journal et incidents déclarés par ${_days <= 45 ? 'semaine' : 'mois'} sur la période.</p>
+${svgColumns(buckets.map(b => b.label), [{ name: 'Transmissions journal', color: '#e85d04', data: jSeries }, { name: 'Incidents', color: '#dc2626', data: iSeries }])}
+
 <h2>Activité du journal de bord</h2>
 <p class="note">${jPeriod.length} entrée${jPeriod.length > 1 ? 's' : ''} sur la période, réparties par catégorie :</p>
-${barTable(jByCat, '#e85d04')}
+${svgHBar(jByCat, '#e85d04')}
 
 <h2>Incidents</h2>
-<div class="grav-row">
-  <div class="grav" style="background:#dc2626">Graves : ${iByGravite.grave}</div>
-  <div class="grav" style="background:#f59e0b">Modérés : ${iByGravite.modere}</div>
-  <div class="grav" style="background:#10b981">Légers : ${iByGravite.leger}</div>
+<p class="note">${iPeriod.length} incident${iPeriod.length > 1 ? 's' : ''} déclaré${iPeriod.length > 1 ? 's' : ''}, dont <strong>${iTraites}</strong> traité${iTraites > 1 ? 's' : ''} (validés ou classés).</p>
+<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
+  <div style="flex:0 0 auto"><div style="font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm">Par gravité</div>${svgDonut([{ label: 'Graves', value: iByGravite.grave, color: '#dc2626' }, { label: 'Modérés', value: iByGravite.modere, color: '#f59e0b' }, { label: 'Légers', value: iByGravite.leger, color: '#10b981' }])}</div>
+  <div style="flex:1;min-width:300px"><div style="font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm">Par type</div>${svgHBar(iByType, '#dc2626')}</div>
 </div>
-<p class="note">${iPeriod.length} incident${iPeriod.length > 1 ? 's' : ''} déclaré${iPeriod.length > 1 ? 's' : ''}, dont <strong>${iTraites}</strong> traité${iTraites > 1 ? 's' : ''} (validés ou classés). Répartition par type :</p>
-${barTable(iByType, '#dc2626')}
 
 <h2>Projets personnalisés (PPE)</h2>
 <p class="note"><strong>${avCrees}</strong> avenant${avCrees > 1 ? 's' : ''} rédigé${avCrees > 1 ? 's' : ''} sur la période · <strong>${avActifs}</strong> avenant${avActifs > 1 ? 's' : ''} actuellement actif${avActifs > 1 ? 's' : ''} dans l'établissement.</p>
