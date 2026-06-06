@@ -5,6 +5,17 @@
   <title>Tableau de bord — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    .mini-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1.25rem}
+    .mini-card{display:block;text-decoration:none;color:inherit;background:#f1f5f9;border:1px solid rgba(15,43,74,.08);border-radius:12px;padding:.55rem .7rem;box-shadow:0 1px 3px rgba(15,43,74,.06);transition:box-shadow .2s,transform .2s;min-width:0}
+    a.mini-card:hover{box-shadow:0 6px 16px rgba(15,43,74,.1);transform:translateY(-2px)}
+    .mini-card .mc-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:flex;align-items:center;gap:.3rem}
+    .mini-card .mc-label svg{width:13px;height:13px;flex-shrink:0}
+    .mini-card .mc-val{font-size:1.25rem;font-weight:800;color:var(--primary);line-height:1.15;margin-top:.1rem}
+    .mini-card .mc-sub{font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+    .mini-card .mc-alert{margin-top:.3rem;padding:.2rem .4rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:6px;font-size:.62rem;font-weight:600;text-align:center}
+    @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -22,6 +33,31 @@
     </header>
 
     <main class="content">
+
+      <!-- MINI CARTES -->
+      <div class="mini-cards" id="miniCards">
+        <a href="planning.html" class="mini-card" id="miniEventCard" title="Voir le planning">
+          <div class="mc-label" style="color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Événements à venir</div>
+          <div class="mc-val" id="miniEventVal">0</div>
+          <div class="mc-sub" id="miniEventSub">Aujourd'hui</div>
+        </a>
+        <div class="mini-card" id="miniPresenceCard">
+          <div class="mc-label" style="color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Présents aujourd'hui</div>
+          <div class="mc-val" id="miniPresentsVal">0</div>
+          <div class="mc-sub" id="miniPresentsSub">Présences enregistrées</div>
+          <div class="mc-alert" id="miniPresenceAlert" style="display:none;cursor:pointer" onclick="window.location='presences.html'">⚠ Présences non saisies</div>
+        </div>
+        <a href="residents.html" class="mini-card" id="miniAnnivCard" title="Anniversaires du mois">
+          <div class="mc-label" style="color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Anniversaires du mois</div>
+          <div class="mc-val" id="miniAnnivVal" style="font-size:1rem">—</div>
+          <div class="mc-sub" id="miniAnnivSub">Ce mois-ci</div>
+        </a>
+        <a href="vehicules.html" class="mini-card" id="miniVehCard" title="Réservations véhicules du jour">
+          <div class="mc-label" style="color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg>Véhicules du jour</div>
+          <div class="mc-val" id="miniVehVal">0</div>
+          <div class="mc-sub" id="miniVehSub">Réservés aujourd'hui</div>
+        </a>
+      </div>
 
       <div class="grid grid-2" style="gap:1.5rem">
 
@@ -361,11 +397,48 @@
 
   function renderDashboard() {
     const s = getStats();
-    // Événements à venir (≤ 2h, hors véhicules)
     const planning = DB.get(DB.keys.planning) || [];
     const now = new Date();
     const todayStr = now.toISOString().slice(0,10);
     const allResidents = (DB.get(DB.keys.residents)||[]).filter(r => r.statut !== 'sorti');
+
+    // ── MINI CARTES ──
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    // Événements à venir (à partir de maintenant, hors véhicules)
+    const upcomingEv = planning.filter(e => e.type !== 'vehicule')
+      .map(e => ({ e, start: new Date(e.date + 'T' + (e.time || '00:00')).getTime() }))
+      .filter(x => x.start >= now.getTime())
+      .sort((a, b) => a.start - b.start);
+    setText('miniEventVal', upcomingEv.length);
+    const nextEv = upcomingEv[0] && upcomingEv[0].e;
+    setText('miniEventSub', nextEv ? (formatDate(nextEv.date) + (nextEv.time ? ' ' + nextEv.time.slice(0,5) : '') + ' · ' + (nextEv.residentName || nextEv.titre || '')) : 'Aucun à venir');
+    // Présents aujourd'hui + alerte saisie
+    setText('miniPresentsVal', s.presentsToday);
+    const todayPres = (DB.get(DB.keys.presences) || {})[todayStr] || {};
+    const markedCount = allResidents.filter(r => todayPres[r.id]).length;
+    const incomplete = allResidents.length > 0 && markedCount < allResidents.length;
+    const pAlert = document.getElementById('miniPresenceAlert');
+    if (pAlert) pAlert.style.display = incomplete ? '' : 'none';
+    setText('miniPresentsSub', incomplete ? (markedCount + '/' + allResidents.length + ' pointés') : 'Présences enregistrées');
+    // Anniversaires du mois
+    const thisMonth = now.getMonth();
+    const annivRes = allResidents.filter(r => r.dob && new Date(r.dob).getMonth() === thisMonth);
+    if (annivRes.length === 1) {
+      const f = annivRes[0];
+      setText('miniAnnivVal', f.prenom || '');
+      setText('miniAnnivSub', new Date(f.dob).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }));
+    } else if (annivRes.length > 1) {
+      setText('miniAnnivVal', annivRes.length);
+      setText('miniAnnivSub', annivRes.map(r => r.prenom).filter(Boolean).join(', '));
+    } else {
+      setText('miniAnnivVal', 'Aucun');
+      setText('miniAnnivSub', 'Ce mois-ci');
+    }
+    // Véhicules réservés dans la journée
+    const vehToday = planning.filter(e => e.type === 'vehicule' && (e.date || '') <= todayStr && (e.dateEnd || e.date || '') >= todayStr)
+      .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    setText('miniVehVal', vehToday.length);
+    setText('miniVehSub', vehToday.length ? [...new Set(vehToday.map(v => v.vehicule).filter(Boolean))].join(', ') : 'Aucun aujourd\'hui');
 
     // Résidents sans avenant actif
     const ppeList = DB.get(DB.keys.ppe) || [];
@@ -549,6 +622,9 @@
       const _sl = document.getElementById('dashSuiviLabel'); if (_sl) _sl.style.display = 'none';
       const _ss = document.getElementById('dashSuiviSection'); if (_ss) _ss.style.display = 'none';
     }
+    hideIf('miniPresenceCard', 'access_presences');
+    hideIf('miniVehCard', 'access_vehicules');
+    hideIf('miniAnnivCard', 'view_residents');
     hideIf('dashCardJournal', 'access_journal');
     hideIf('dashCardAvenants', 'access_ppe');
     hideIf('dashCardSansAvenant', 'access_ppe');
