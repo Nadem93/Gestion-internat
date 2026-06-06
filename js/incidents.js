@@ -74,6 +74,12 @@ function saveIncident() {
   };
 
   const list = getIncidents();
+  // Détection de doublon : même résident, même type, même jour, heures proches, texte similaire
+  const dup = findIncidentDuplicate(incident, list);
+  if (dup) {
+    const i = dup.incident;
+    if (!confirm(`⚠️ Doublon possible avec un incident déjà déclaré :\n\n« ${i.titre} »\n${i.date ? formatDate(i.date) : ''}${i.heure ? ' à ' + i.heure : ''} · déclaré par ${i.declaredBy || '?'}\n\nDéclarer quand même ce nouvel incident ?`)) return;
+  }
   list.unshift(incident);
   saveIncidents(list);
   if (typeof auditLog === 'function') auditLog('incident_create', `${incident.titre} (${GRAVITE_LABELS[incident.gravite]||incident.gravite})`);

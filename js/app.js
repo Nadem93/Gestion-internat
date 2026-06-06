@@ -730,6 +730,56 @@ function escHtml(s) {
   return d.innerHTML;
 }
 
+// ── DÉTECTION DE DOUBLONS (local, par similarité de texte) ──
+function _normTxt(s) {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+// Similarité de Jaccard sur les mots significatifs (0 → 1)
+function textSimilarity(a, b) {
+  const ta = _normTxt(a).split(' ').filter(w => w.length > 2);
+  const tb = _normTxt(b).split(' ').filter(w => w.length > 2);
+  if (!ta.length || !tb.length) return 0;
+  const sa = new Set(ta), sb = new Set(tb);
+  let inter = 0;
+  sa.forEach(w => { if (sb.has(w)) inter++; });
+  return inter / new Set([...sa, ...sb]).size;
+}
+function _hoursBetween(d1, d2) {
+  const t1 = new Date(d1).getTime(), t2 = new Date(d2).getTime();
+  if (isNaN(t1) || isNaN(t2)) return Infinity;
+  return Math.abs(t1 - t2) / 3600000;
+}
+// Cherche un doublon probable d'une transmission journal (même résident, < 3h, texte similaire)
+function findJournalDuplicate(candidate, entries) {
+  let best = null, bestSim = 0;
+  for (const e of (entries || [])) {
+    if (candidate.id && e.id === candidate.id) continue;
+    if (String(e.residentId) !== String(candidate.residentId)) continue;
+    if (_hoursBetween(e.date, candidate.date) > 3) continue;
+    const sim = textSimilarity(e.contenu, candidate.contenu);
+    if (sim >= 0.6 && sim > bestSim) { best = e; bestSim = sim; }
+  }
+  return best ? { entry: best, similarity: bestSim } : null;
+}
+// Cherche un doublon probable d'un incident (même résident, même type, même jour, heures proches, texte similaire)
+function findIncidentDuplicate(candidate, list) {
+  let best = null, bestSim = 0;
+  for (const i of (list || [])) {
+    if (candidate.id && i.id === candidate.id) continue;
+    if (!candidate.residentId || String(i.residentId) !== String(candidate.residentId)) continue;
+    if (i.type !== candidate.type) continue;
+    if (i.date !== candidate.date) continue;
+    if (candidate.heure && i.heure && _hoursBetween(candidate.date + 'T' + candidate.heure, i.date + 'T' + i.heure) > 3) continue;
+    const sim = Math.max(textSimilarity(i.titre, candidate.titre), textSimilarity(i.description, candidate.description));
+    if (sim >= 0.5 && sim > bestSim) { best = i; bestSim = sim; }
+  }
+  return best ? { incident: best, similarity: bestSim } : null;
+}
+
 const STATUT_PPE_LABEL = { brouillon:'Brouillon', actif:'Actif', termine:'Terminé' };
 
 const DEMO_AUTHORS = [

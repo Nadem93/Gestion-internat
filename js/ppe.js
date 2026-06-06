@@ -633,7 +633,7 @@ async function genererAvenantFromJournal(existingId) {
 
 async function aiAvenantFromJournal(resident, entries) {
   const residentInfo = `${resident.prenom || ''} ${resident.nom || ''}`.trim();
-  const journalText = entries.slice(-30).reverse().map(e =>
+  const journalText = entries.slice().reverse().map(e =>
     `[${e.date || '?'} ${e.heure || ''}] (${e.categorie || 'général'}) ${e.contenu || ''}`
   ).join('\n\n');
 

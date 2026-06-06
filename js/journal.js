@@ -196,6 +196,17 @@ function saveInlineEntry() {
   const residents = DB.get(DB.keys.residents) || [];
   const visEl = document.querySelector('input[name="iVisibilite"]:checked');
   const entries = DB.get(DB.keys.journal) || [];
+  // Détection de doublon : même résident, < 3h, contenu très similaire
+  const candDate = document.getElementById('iDate').value || new Date().toISOString();
+  for (const residentId of residentIds) {
+    const dup = findJournalDuplicate({ residentId, contenu, date: candDate }, entries);
+    if (dup) {
+      const e = dup.entry;
+      const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
+      if (!confirm(`⚠️ Doublon possible pour ${e.resident || 'ce résident'} :\n\n« ${extrait} »\n${formatDateTime(e.date)} · ${getJournalAuthor ? getJournalAuthor(e) : (e.author || '')}\n\nEnregistrer quand même cette transmission ?`)) return;
+      break;
+    }
+  }
   for (const residentId of residentIds) {
     const res = residents.find(r => r.id === residentId);
     entries.push({
@@ -454,6 +465,12 @@ function saveEntry() {
     entries = entries.map(e => e.id === id ? { ...e, ...data } : e);
     toast('Entrée mise à jour');
   } else {
+    const dup = findJournalDuplicate({ residentId, contenu, date: data.date }, entries);
+    if (dup) {
+      const e = dup.entry;
+      const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
+      if (!confirm(`⚠️ Doublon possible pour ${e.resident || 'ce résident'} :\n\n« ${extrait} »\n${formatDateTime(e.date)} · ${getJournalAuthor ? getJournalAuthor(e) : (e.author || '')}\n\nEnregistrer quand même cette transmission ?`)) return;
+    }
     data.id = genId();
     data.replies = [];
     data.readBy = [session?.userId];
