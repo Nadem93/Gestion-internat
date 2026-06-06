@@ -923,6 +923,8 @@ function genererRapportPDF() {
   }
   const inRange = d => { if (!d) return false; const s = String(d).slice(0, 10); return s >= startStr && s <= endStr; };
   const fmtD = d => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR');
+  const _start = new Date(startStr + 'T00:00:00'), _end = new Date(endStr + 'T00:00:00');
+  const _days = Math.round((_end - _start) / 86400000) + 1;
 
   const settings = DB.get(DB.keys.settings) || {};
   const session = Auth.getSession();
@@ -1016,8 +1018,6 @@ function genererRapportPDF() {
   const kpi = (num, lbl) => `<div class="kpi"><div class="kpi-num">${num}</div><div class="kpi-lbl">${lbl}</div></div>`;
 
   // ── Découpage temporel (semaines si ≤ 45j, sinon mois) ──
-  const _start = new Date(startStr + 'T00:00:00'), _end = new Date(endStr + 'T00:00:00');
-  const _days = Math.round((_end - _start) / 86400000) + 1;
   const MOIS_ABBR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
   const buckets = [];
   if (_days <= 45) {
