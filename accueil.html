@@ -240,12 +240,15 @@ function saveIncidentAccueil() {
   const residents = DB.get(DB.keys.residents) || [];
   const resident = residents.find(r => r.id === residentId);
   const session = Auth.getSession();
-  const list = JSON.parse(localStorage.getItem('ftr_incidents') || '[]');
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
+  const list = DB.get(DB.keys.incidents) || [];
   list.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
     titre, type, gravite, date, heure,
     residentId: residentId || null,
     residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
+    etabId: etab ? etab.id : null,
+    etabNom: etab ? etab.nom : '',
     lieu, description,
     statut: 'declare',
     declaredBy: session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
@@ -255,7 +258,7 @@ function saveIncidentAccueil() {
     notes: '',
     createdAt: new Date().toISOString()
   });
-  localStorage.setItem('ftr_incidents', JSON.stringify(list));
+  DB.set(DB.keys.incidents, list);
   closeModal('modalIncident');
   document.getElementById('fTitre').value = '';
   document.getElementById('fDescription').value = '';

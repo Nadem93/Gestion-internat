@@ -206,6 +206,7 @@ function generateForCurrentEtab() {
 
   const now = new Date();
   const today = now.toISOString().slice(0,10);
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
   const cfgRes = getCfg('Residents');
   const cfgJournal = getCfg('Journal');
   const cfgPresJours = getCfg('Presences');
@@ -616,6 +617,8 @@ function generateForCurrentEtab() {
       date: d.toISOString().slice(0,10), heure: h + ':' + m,
       residentId: res ? res.id : null,
       residentName: res ? res.prenom + ' ' + res.nom : '',
+      etabId: etab ? etab.id : null,
+      etabNom: etab ? etab.nom : '',
       lieu: tpl.lieu + ' ' + (res ? res.chambre : ''),
       description: desc,
       statut: tpl.statut,
@@ -626,7 +629,7 @@ function generateForCurrentEtab() {
       createdAt: d.toISOString()
     });
   }
-  localStorage.setItem('ftr_incidents', JSON.stringify(incList));
+  DB.set(DB.keys.incidents, incList);
 
   // ── INTERVENTIONS ──
   const intervs = [

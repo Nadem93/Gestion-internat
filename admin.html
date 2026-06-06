@@ -1065,15 +1065,12 @@ ${barTable(iByType, '#dc2626')}
 }
 
 // ── SCAN DES DOUBLONS ──
-const _getIncidentsRaw = () => JSON.parse(localStorage.getItem('ftr_incidents') || '[]');
-const _setIncidentsRaw = (l) => localStorage.setItem('ftr_incidents', JSON.stringify(l));
-
 function scanDuplicates() {
   const el = document.getElementById('dupResults');
   el.innerHTML = '<div style="font-size:.82rem;color:var(--muted)">Analyse en cours…</div>';
   setTimeout(() => {
     const journal = DB.get(DB.keys.journal) || [];
-    const incidents = _getIncidentsRaw();
+    const incidents = DB.get(DB.keys.incidents) || [];
     renderDupResults(findJournalDupPairs(journal), findIncidentDupPairs(incidents));
   }, 30);
 }
@@ -1145,7 +1142,7 @@ function deleteDupItem(kind, id) {
     if (kind === 'journal') {
       DB.set(DB.keys.journal, (DB.get(DB.keys.journal) || []).filter(e => e.id !== id));
     } else {
-      _setIncidentsRaw(_getIncidentsRaw().filter(i => i.id !== id));
+      DB.set(DB.keys.incidents, (DB.get(DB.keys.incidents) || []).filter(i => i.id !== id));
     }
     if (typeof auditLog === 'function') auditLog('delete', `Doublon supprimé (${kind === 'journal' ? 'journal' : 'incident'})`);
     toast('Élément supprimé', 'success');

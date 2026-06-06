@@ -13,8 +13,8 @@ const INCIDENT_ICONS = {
   medical:'💊', materiel:'🔧', accident:'⚠️', autre:'📋'
 };
 
-function getIncidents() { return JSON.parse(localStorage.getItem(INCIDENTS_KEY) || '[]'); }
-function saveIncidents(list) { localStorage.setItem(INCIDENTS_KEY, JSON.stringify(list)); }
+function getIncidents() { return DB.get(DB.keys.incidents) || []; }
+function saveIncidents(list) { DB.set(DB.keys.incidents, list); }
 
 function initIncidents() {
   const session = Auth.requireAuth();
@@ -55,12 +55,15 @@ function saveIncident() {
   const residents = DB.get(DB.keys.residents) || [];
   const resident = residents.find(r => r.id === residentId);
   const session = Auth.getSession();
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
 
   const incident = {
     id: genId(),
     titre, type, gravite, date, heure,
     residentId: residentId || null,
     residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
+    etabId: etab ? etab.id : null,
+    etabNom: etab ? etab.nom : '',
     lieu, description,
     statut: 'declare',
     declaredBy: session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
@@ -152,6 +155,7 @@ function renderIncidents() {
             ${i.residentName ? `<span>👤 ${escHtml(i.residentName)}</span>` : ''}
             ${i.lieu ? `<span>📍 ${escHtml(i.lieu)}</span>` : ''}
             <span>✍️ ${escHtml(i.declaredBy)}</span>
+            ${i.etabNom ? `<span>🏢 ${escHtml(i.etabNom)}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0">
@@ -261,6 +265,7 @@ ${list.map(i => {
           ${i.residentName?`<span>👤 ${escHtml(i.residentName)}</span>`:''}
           ${i.lieu?`<span>📍 ${escHtml(i.lieu)}</span>`:''}
           <span>✍️ ${escHtml(i.declaredBy||'')}</span>
+          ${i.etabNom?`<span>🏢 ${escHtml(i.etabNom)}</span>`:''}
         </div>
         <div class="badges">
           <span class="badge" style="background:${gb};color:${gc}">${GRAVITE_LABELS[i.gravite]||i.gravite}</span>
@@ -309,6 +314,7 @@ function viewIncident(id) {
       <div><strong>Heure</strong><br>${i.heure ? i.heure.slice(0,5) : '—'}</div>
       ${i.residentName ? `<div><strong>Résident</strong><br>${escHtml(i.residentName)}</div>` : ''}
       ${i.lieu ? `<div><strong>Lieu</strong><br>${escHtml(i.lieu)}</div>` : ''}
+      ${i.etabNom ? `<div><strong>Établissement</strong><br>🏢 ${escHtml(i.etabNom)}</div>` : ''}
       <div><strong>Déclaré par</strong><br>${escHtml(i.declaredBy)}</div>
       <div><strong>Déclaré le</strong><br>${i.declaredAt ? formatDateTime(i.declaredAt) : '—'}</div>
     </div>
