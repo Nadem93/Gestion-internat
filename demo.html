@@ -8,21 +8,16 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Inter,sans-serif;background:#f1f5f9;color:#334155;min-height:100vh;padding:2rem;display:flex;flex-direction:column;align-items:center}
-.card{background:#fff;border-radius:12px;padding:2.5rem;max-width:800px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1.5px solid #0f2b4a;margin-bottom:1.5rem}
+.card{background:#fff;border-radius:12px;padding:2.5rem;max-width:920px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1.5px solid #0f2b4a;margin-bottom:1.5rem}
 h1{font-size:1.6rem;font-weight:800;color:#0f2b4a;margin-bottom:.25rem}
 .sub{color:#64748b;font-size:.85rem;margin-bottom:1.5rem}
 .btn{display:inline-flex;align-items:center;gap:.6rem;background:#0f2b4a;color:#fff;border:none;padding:.85rem 2rem;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;width:100%;justify-content:center;transition:background .2s,transform .1s}
 .btn:hover{background:#1a4a7a}
 .btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.status{text-align:left;margin-top:1.5rem;font-size:.82rem;color:#475569;background:#f8fafc;border-radius:8px;padding:1.25rem;max-height:320px;overflow-y:auto;line-height:1.8;border:1px solid #e2e8f0}
+.status{text-align:left;margin-top:1.5rem;font-size:.82rem;color:#475569;background:#f8fafc;border-radius:8px;padding:1.25rem;max-height:360px;overflow-y:auto;line-height:1.8;border:1px solid #e2e8f0}
 .status .ok{color:#16a34a;font-weight:600}
 .status .sep{border-top:1px dashed #e2e8f0;margin:.6rem 0}
-.mod-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:1.25rem 0}
-.mod-item{background:#f8fafc;border-radius:8px;padding:.7rem .5rem;text-align:center;border:1px solid #e2e8f0}
-.mod-icon{font-size:1.2rem;margin-bottom:.2rem}
-.mod-num{font-size:1.1rem;font-weight:800;color:#0f2b4a}
-.mod-label{font-size:.6rem;color:#64748b;text-transform:uppercase;letter-spacing:.03em}
 .sel-label{font-size:.78rem;font-weight:600;color:#64748b;margin-bottom:.5rem;display:block}
 .etab-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem}
 .etab-chip{display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem .4rem .5rem;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;font-size:.78rem;font-weight:500}
@@ -31,39 +26,70 @@ h1{font-size:1.6rem;font-weight:800;color:#0f2b4a;margin-bottom:.25rem}
 .etab-chip input:checked+.etab-dot{box-shadow:0 0 0 2.5px #0f2b4a}
 .etab-chip:has(input:checked){border-color:#0f2b4a;background:#eff6ff}
 .etab-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:box-shadow .1s}
+.footer{font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center}
+.config-sect{margin-bottom:1.25rem}
+.config-sect-title{font-size:.78rem;font-weight:700;color:#0f2b4a;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1.5px solid #e2e8f0}
+.config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:.6rem}
+.config-item{background:#f8fafc;border-radius:8px;padding:.5rem .65rem;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:3px}
+.config-item label{font-size:.65rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.03em}
+.config-item input[type=number]{border:1px solid #cbd5e1;border-radius:5px;padding:.2rem .4rem;font-size:.82rem;font-weight:600;color:#0f2b4a;width:100%;background:#fff;outline:none;font-family:inherit}
+.config-item input[type=number]:focus{border-color:#0f2b4a;box-shadow:0 0 0 2px #0f2b4a20}
+.config-item .hint{font-size:.6rem;color:#94a3b8}
 .etab-grid{display:grid;gap:10px;margin:1rem 0}
 .etab-item{background:#f8fafc;border-radius:8px;padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;border:1px solid #e2e8f0}
 .etab-name{font-weight:600;font-size:.82rem;flex:1;min-width:0}
 .etab-count{font-size:.72rem;color:#64748b}
-.footer{font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center}
 </style>
 </head>
 <body>
 
 <div class="card">
-  <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem">
+  <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem">
     <div style="width:48px;height:48px;background:#0f2b4a;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0">FTR</div>
     <div style="flex:1">
-      <h1>Données de démonstration</h1>
-      <div class="sub">Génération automatique de données réalistes pour tous les établissements</div>
+      <h1>Générateur de données de démonstration</h1>
+      <div class="sub">Configurez les quantités puis générez des données réalistes pour un ou plusieurs établissements</div>
     </div>
   </div>
 
-  <div id="etabList" class="etab-grid" style="display:none"></div>
+  <div class="config-sect">
+    <div class="config-sect-title">Résidents & Suivi</div>
+    <div class="config-grid">
+      <div class="config-item"><label>Résidents</label><input type="number" id="cfgResidents" value="50" min="1" max="500"><span class="hint">Profils individuels</span></div>
+      <div class="config-item"><label>Journal</label><input type="number" id="cfgJournal" value="200" min="0" max="2000"><span class="hint">Entrées de suivi</span></div>
+      <div class="config-item"><label>Jours présence</label><input type="number" id="cfgPresences" value="14" min="1" max="90"><span class="hint">Historique</span></div>
+      <div class="config-item"><label>PPE / Avenants</label><input type="number" id="cfgPpe" value="15" min="0" max="100"><span class="hint">Projets personnalisés</span></div>
+    </div>
+  </div>
 
-  <div class="mod-grid" id="modGrid">
-    <div class="mod-item"><div class="mod-icon">👤</div><div class="mod-num">50</div><div class="mod-label">RÉSIDENTS</div></div>
-    <div class="mod-item"><div class="mod-icon">📖</div><div class="mod-num">200</div><div class="mod-label">JOURNAL</div></div>
-    <div class="mod-item"><div class="mod-icon">📅</div><div class="mod-num">50</div><div class="mod-label">PLANNING</div></div>
-    <div class="mod-item"><div class="mod-icon">🚗</div><div class="mod-num">50</div><div class="mod-label">VÉHICULES</div></div>
-    <div class="mod-item"><div class="mod-icon">✅</div><div class="mod-num">14j</div><div class="mod-label">PRÉSENCES</div></div>
-    <div class="mod-item"><div class="mod-icon">📄</div><div class="mod-num">15</div><div class="mod-label">AVENANTS</div></div>
-    <div class="mod-item"><div class="mod-icon">⚠️</div><div class="mod-num">15</div><div class="mod-label">INCIDENTS</div></div>
-    <div class="mod-item"><div class="mod-icon">🔧</div><div class="mod-num">30</div><div class="mod-label">INTERVENTIONS</div></div>
-    <div class="mod-item"><div class="mod-icon">💬</div><div class="mod-num">20</div><div class="mod-label">MESSAGES</div></div>
-    <div class="mod-item"><div class="mod-icon">📞</div><div class="mod-num">30</div><div class="mod-label">RÉPERTOIRE</div></div>
-    <div class="mod-item"><div class="mod-icon">👥</div><div class="mod-num">50</div><div class="mod-label">EMPLOYÉS</div></div>
-    <div class="mod-item"><div class="mod-icon">📂</div><div class="mod-num">8</div><div class="mod-label">CATÉGORIES</div></div>
+  <div class="config-sect">
+    <div class="config-sect-title">Planning & Logistique</div>
+    <div class="config-grid">
+      <div class="config-item"><label>Événements</label><input type="number" id="cfgPlanning" value="50" min="0" max="500"><span class="hint">RDV / activités / sorties</span></div>
+      <div class="config-item"><label>Véhicules</label><input type="number" id="cfgVehicules" value="4" min="0" max="20"><span class="hint">Parc auto</span></div>
+      <div class="config-item"><label>Réservations</label><input type="number" id="cfgVehRes" value="50" min="0" max="200"><span class="hint">Réservations véhicules</span></div>
+      <div class="config-item"><label>Interventions</label><input type="number" id="cfgInterventions" value="30" min="0" max="200"><span class="hint">Demandes maintenance</span></div>
+    </div>
+  </div>
+
+  <div class="config-sect">
+    <div class="config-sect-title">Incidents & Échanges</div>
+    <div class="config-grid">
+      <div class="config-item"><label>Incidents</label><input type="number" id="cfgIncidents" value="15" min="0" max="100"><span class="hint">Signalements</span></div>
+      <div class="config-item"><label>Messages</label><input type="number" id="cfgMessages" value="20" min="0" max="100"><span class="hint">Conversations</span></div>
+      <div class="config-item"><label>Répertoire</label><input type="number" id="cfgContacts" value="30" min="0" max="100"><span class="hint">Contacts externes</span></div>
+      <div class="config-item"><label>Connexions</label><input type="number" id="cfgLoginHist" value="30" min="0" max="200"><span class="hint">Historique connexions</span></div>
+    </div>
+  </div>
+
+  <div class="config-sect">
+    <div class="config-sect-title">Personnel</div>
+    <div class="config-grid">
+      <div class="config-item"><label>Utilisateurs</label><input type="number" id="cfgUsers" value="28" min="1" max="100"><span class="hint">Comptes (dont admin)</span></div>
+      <div class="config-item"><label>Employés</label><input type="number" id="cfgEmployes" value="50" min="0" max="200"><span class="hint">Fiche personnel</span></div>
+      <div class="config-item"><label>Docs résidents</label><input type="number" id="cfgDocsPerRes" value="3" min="0" max="20"><span class="hint">Par résident</span></div>
+      <div class="config-item"><label>Docs ressources</label><input type="number" id="cfgDocsRsrc" value="3" min="0" max="20"><span class="hint">Documents généraux</span></div>
+    </div>
   </div>
 
   <label class="sel-label">Établissements à générer</label>
@@ -80,11 +106,8 @@ h1{font-size:1.6rem;font-weight:800;color:#0f2b4a;margin-bottom:.25rem}
 
 <script src="js/app.js"></script>
 <script>
-function log(msg) {
-  const s = document.getElementById('status');
-  s.innerHTML += msg + '<br>';
-  s.scrollTop = s.scrollHeight;
-}
+
+function log(msg) { const s = $('status'); s.innerHTML += msg + '<br>'; s.scrollTop = s.scrollHeight; }
 function $(v) { return document.getElementById(v); }
 
 function ageFromDob(dob) {
@@ -96,6 +119,8 @@ function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + m
 function pick(arr) { return arr[rand(0, arr.length - 1)]; }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+function getCfg(k) { return parseInt($('cfg' + k).value) || 0; }
+
 const PRENOMS_M = ['Amine','Thomas','Lucas','Yanis','Hugo','Moussa','Mehdi','Kwame','Ryan','Enzo','Adam','Mathis','Nathan','Sofiane','Lilian','Kylian','Samy','Axel','Noam','Rayane','Eliott','Ibrahim','Ilyes','Wassim','Rayan','Malik','Yacine','Bilal','Nassim','Samir','Kevin','Jordan','Antoine','Alexandre','Romain','Florian','Maxime','Jules','Raphaël','Gabriel','Louis','Arthur','Paul','Nicolas','Clément','Théo','Hugo','Quentin','Bastien','Damien','Rémi'];
 const PRENOMS_F = ['Sofia','Fatima','Clara','Emma','Leila','Sarah','Océane','Inès','Chloé','Nora','Lina','Manon','Zara','Elena','Camille','Selma','Romane','Jade','Assia','Juliette','Louna','Léa','Chloé','Mélissa','Amina','Nour','Sarah','Aïcha','Yasmine','Imane','Sandra','Laura','Marine','Céline','Audrey','Julie','Sophie','Caroline','Valérie','Stéphanie','Justine','Marion','Mathilde','Clémence','Morgane','Émilie','Laurine','Maeva','Elisa','Amélie'];
 const NOMS = ['Benali','Petit','Leroy','Zahra','Moreau','Bernard','Diallo','Garcia','Rousseau','Haddad','Martin','Cohen','Diara','Fabre','Bouaziz','Martinez','Ndiaye','Dubois','Bouchard','Ferrari','Rossi','Traoré','Girard','Da Silva','Fournier','Simon','Mercier','Renard','Fontaine','Lambert','Dupont','Gauthier','Lefevre','Roux','Morel','Garnier','Perrin','Chevallier','Bonnet','Caron','Gauthier','Moulin','Renard','Marchand','Legrand','Rivière','Schneider','Blanc','Weber','Durand'];
@@ -105,7 +130,6 @@ const SITPROS = ['formation','recherche','emploi','inactif','formation','recherc
 const RESSOURCES = ['','rsa','aah','salaire','bourse','rsa','aah','salaire'];
 const ORGANISMES = ['ase','ase','pjj','','ase','pjj','','ase'];
 const REFFERENTS = ['M. Dubois','Mme Martin','M. Dubois','Mme Martin','M. Dubois','Mme Martin'];
-const GENRES = ['M','M','M','M','F','F','F','F'];
 const SITUADMIN = ['francais','francais','francais','francais','demandeur','francais','francais','francais'];
 const ECOLES = ['','Lycée Professionnel Charles de Gaulle','Collège Victor Hugo','École Élémentaire Jules Ferry','Université Paris Cité','GRETA Paris','','CFA Bâtiment Paris','Lycée Hôtelier Guillaume Tirel','Collège Georges Brassens','Lycée Marseille'];
 const CLASSES = ['','1ère Bac Pro MELEC','4ème','CM2','L3 Droit','CAP AEPE','CAP Cuisine','Seconde MELEC','6ème ULIS','SEGPA','CAP Restauration','BTS Commerce International','M1 Psychologie','3ème Prépa Métiers'];
@@ -176,83 +200,37 @@ function updateGenBtn() {
   document.getElementById('genBtn').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M4 12a8 8 0 018-8V0L18 6l-6 6V4a8 8 0 000 16 8 8 0 01-8-8z"/><path d="M12 20l6-6v4a8 8 0 01-8 8z"/></svg> Générer les données' + (n ? ' (' + n + ' établissement' + (n > 1 ? 's' : '') + ')' : '');
 }
 
-function generateDemo() {
-  const btn = $('genBtn');
-  btn.disabled = true;
-  btn.textContent = 'Génération en cours…';
-  $('status').innerHTML = '';
-
-  const originalEtabId = sessionStorage.getItem('ftr_current_etab');
-  const etabs = getSelectedEtabs();
-  if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
-
-  const etabListEl = document.getElementById('etabList');
-  etabListEl.style.display = 'grid';
-
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0 };
-  etabs.forEach((etab, ei) => {
-    sessionStorage.setItem('ftr_current_etab', etab.id);
-    log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
-    const r = generateForCurrentEtab();
-    Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' résidents · ' + r.journal + ' journaux · ' + r.messages + ' messages · ' + r.contacts + ' contacts · ' + r.employes + ' employés</span>');
-
-    const dot = etabListEl.querySelector('[data-id="' + etab.id + '"]');
-    if (dot) dot.style.background = '#16a34a';
-  });
-
-  if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
-  else sessionStorage.removeItem('ftr_current_etab');
-
-  // Mettre à jour la grille avec les vrais totaux
-  const updateGrid = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
-  updateGrid('#modGrid .mod-item:nth-child(1) .mod-num', totals.residents);
-  updateGrid('#modGrid .mod-item:nth-child(2) .mod-num', totals.journal);
-  updateGrid('#modGrid .mod-item:nth-child(3) .mod-num', totals.planning);
-  updateGrid('#modGrid .mod-item:nth-child(5) .mod-num', '14j');
-  updateGrid('#modGrid .mod-item:nth-child(6) .mod-num', totals.ppe);
-  updateGrid('#modGrid .mod-item:nth-child(7) .mod-num', totals.incidents);
-  updateGrid('#modGrid .mod-item:nth-child(8) .mod-num', totals.interventions);
-  updateGrid('#modGrid .mod-item:nth-child(9) .mod-num', totals.messages);
-  updateGrid('#modGrid .mod-item:nth-child(10) .mod-num', totals.contacts);
-  updateGrid('#modGrid .mod-item:nth-child(11) .mod-num', totals.employes);
-  updateGrid('#modGrid .mod-item:nth-child(12) .mod-num', '8');
-
-  log('<div class="sep"></div>');
-  log('<span style="color:#16a34a;font-weight:700;font-size:1rem">🎉 Données générées pour <strong>' + etabs.length + '</strong> établissement' + (etabs.length > 1 ? 's' : '') + '</span>');
-  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:.75rem;font-size:.8rem">' +
-    Object.entries(totals).map(([k,v]) => '<div><span style="color:#64748b">' + k + '</span> <strong>' + v + '</strong></div>').join('') +
-  '</div>');
-  log('<a href="index.html" style="display:inline-block;margin-top:.8rem;background:#0f2b4a;color:#fff;padding:.7rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem">→ Aller à la page de connexion</a>');
-  log('<div style="margin-top:.75rem;font-size:.78rem;color:#475569;background:#f0fdf4;border:1px solid #16a34a30;border-radius:8px;padding:.8rem 1rem">');
-  log('<div style="font-weight:700;color:#16a34a;margin-bottom:.4rem">🔑 Comptes de démonstration</div>');
-  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 1rem;font-size:.75rem">');
-  log('<div><strong>Admin</strong> : admin / admin123</div>');
-  log('<div><strong>Éduc.<wbr>spé.</strong> : smartin / educ123</div>');
-  log('<div><strong>Éduc.<wbr>jeunesse</strong> : pdubois / educ123</div>');
-  log('<div><strong>Psychologue</strong> : clegrand / educ123</div>');
-  log('<div><strong>Moniteur</strong> : jfontaine / educ123</div>');
-  log('<div><strong>Infirmier</strong> : dmoreau / educ123</div>');
-  log('<div><strong>Chef service</strong> : npetit / educ123</div>');
-  log('<div><strong>Éduc.<wbr>sportif</strong> : aleroy / educ123</div>');
-  log('</div></div>');
-  btn.disabled = false;
-  btn.textContent = 'Générer les données pour tous les établissements';
-}
-
+// ── GENERATEUR PRINCIPAL ──
 function generateForCurrentEtab() {
   initDefaults();
 
   const now = new Date();
   const today = now.toISOString().slice(0,10);
+  const cfgRes = getCfg('Residents');
+  const cfgJournal = getCfg('Journal');
+  const cfgPresJours = getCfg('Presences');
+  const cfgPpe = getCfg('Ppe');
+  const cfgPlanning = getCfg('Planning');
+  const cfgVeh = getCfg('Vehicules');
+  const cfgVehRes = getCfg('VehRes');
+  const cfgInterv = getCfg('Interventions');
+  const cfgInc = getCfg('Incidents');
+  const cfgMsg = getCfg('Messages');
+  const cfgContacts = getCfg('Contacts');
+  const cfgLogin = getCfg('LoginHist');
+  const cfgUsers = getCfg('Users');
+  const cfgEmp = getCfg('Employes');
+  const cfgDocsPerRes = getCfg('DocsPerRes');
+  const cfgDocsRsrc = getCfg('DocsRsrc');
 
   const usedNames = new Set();
   const resList = [];
 
-  for (let i = 0; i < 50; i++) {
+  // ── RÉSIDENTS ──
+  for (let i = 0; i < cfgRes; i++) {
     let prenom, nom, key;
     do {
-      prenom = i < 25 ? pick(PRENOMS_M) : pick(PRENOMS_F);
+      prenom = i < Math.ceil(cfgRes/2) ? pick(PRENOMS_M) : pick(PRENOMS_F);
       nom = pick(NOMS);
       key = prenom + '_' + nom;
     } while (usedNames.has(key));
@@ -288,13 +266,13 @@ function generateForCurrentEtab() {
       updatedAt: now.toISOString()
     });
   }
-
   DB.set(DB.keys.residents, []);
   const sortedRes = shuffle([...resList]).map((r, i) => ({ ...r, id: 'demo-' + (i + 1) }));
   resList.length = 0;
   sortedRes.forEach(r => resList.push(r));
   DB.set(DB.keys.residents, resList);
 
+  // ── CATÉGORIES ──
   const cats = [
     { id: 1, name: 'Accompagnement', color: '#3b82f6' },
     { id: 2, name: 'Médical', color: '#ef4444' },
@@ -307,6 +285,7 @@ function generateForCurrentEtab() {
   ];
   DB.set(DB.keys.categories, cats);
 
+  // ── JOURNAL ──
   const journal = [];
   const journalAuthors = [
     { id: 2, name: 'Sophie Martin' }, { id: 3, name: 'Pierre Dubois' },
@@ -369,14 +348,14 @@ function generateForCurrentEtab() {
     'Sortie au parc zoologique. Très intéressé par les animaux.'
   ];
 
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < cfgJournal; i++) {
     const res = resList[i % resList.length];
     const cat = cats[i % cats.length];
     const d = new Date(now.getTime() - rand(0, 365) * 86400000);
     const author = pick(journalAuthors);
     const usedSet = new Set();
     const lignes = [];
-    while (lignes.length < 5) {
+    while (lignes.length < Math.min(5, 2 + rand(0,3))) {
       const t = pick(journalTemplates);
       if (!usedSet.has(t)) { usedSet.add(t); lignes.push(t); }
     }
@@ -403,6 +382,7 @@ function generateForCurrentEtab() {
   }
   DB.set(DB.keys.journal, journal);
 
+  // ── PLANNING (événements) ──
   const planning = [];
   const eventTypes = [
     { title: 'Réunion d équipe', type: 'reunion', color: '#8b5cf6', time: '09:00', dur: '60' },
@@ -427,7 +407,7 @@ function generateForCurrentEtab() {
     { title: 'Sortie parc', type: 'sortie', color: '#0891b2', time: '10:00', dur: '240' }
   ];
 
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < cfgPlanning; i++) {
     const ev = pick(eventTypes);
     const dayOffset = rand(-14, 21);
     const d = new Date(now.getTime() + dayOffset * 86400000);
@@ -445,13 +425,15 @@ function generateForCurrentEtab() {
     });
   }
 
+  // ── VÉHICULES ──
   const vehs = ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'];
-  for (let vi = 0; vi < 50; vi++) {
+  const vehList = cfgVeh <= 4 ? vehs.slice(0, cfgVeh) : vehs.concat(Array.from({length: cfgVeh - 4}, (_, i) => 'Véhicule ' + (i + 5)));
+  for (let vi = 0; vi < cfgVehRes; vi++) {
     const dayOffset = rand(0, 30);
     const d = new Date(now.getTime() + dayOffset * 86400000);
     const ds = d.toISOString().slice(0,10);
     const res = resList[rand(0, resList.length - 1)];
-    const v = pick(vehs);
+    const v = pick(vehList);
     planning.push({
       id: 'dp-v' + (vi + 1),
       titre: 'Véhicule — ' + v,
@@ -467,10 +449,11 @@ function generateForCurrentEtab() {
   }
 
   DB.set(DB.keys.planning, planning);
-  DB.set(DB.keys.vehicules, vehs);
+  DB.set(DB.keys.vehicules, vehList);
 
+  // ── PRÉSENCES ──
   const presences = {};
-  for (let j = -13; j <= 0; j++) {
+  for (let j = -(cfgPresJours - 1); j <= 0; j++) {
     const d = new Date(today + 'T00:00:00');
     d.setDate(d.getDate() + j);
     const ds = d.toISOString().slice(0,10);
@@ -483,133 +466,129 @@ function generateForCurrentEtab() {
   }
   DB.set(DB.keys.presences, presences);
 
+  // ── PPE / AVENANTS ──
   const domaines = ['autonomie','sante','viePro','logement','vieSociale','vieAffective','budget','transport','orientation'];
-  const avenantResidents = [
-    { idx: 0, statut: 'actif', dateRedac: '2026-02-10', dateRev: '2026-08-10', referent: 'M. Dubois', protection: 'Curatelle simple' },
-    { idx: 1, statut: 'actif', dateRedac: '2026-01-15', dateRev: '2026-07-15', referent: 'Mme Martin', protection: '' },
-    { idx: 4, statut: 'actif', dateRedac: '2026-03-01', dateRev: '2026-09-01', referent: 'M. Dubois', protection: 'Tutelle' },
-    { idx: 7, statut: 'brouillon', dateRedac: '2026-05-01', dateRev: '2026-11-01', referent: 'Mme Martin', protection: '' },
-    { idx: 9, statut: 'actif', dateRedac: '2026-04-01', dateRev: '2026-10-01', referent: 'Mme Martin', protection: '' },
-    { idx: 12, statut: 'actif', dateRedac: '2026-02-20', dateRev: '2026-08-20', referent: 'Mme Martin', protection: '' },
-    { idx: 15, statut: 'brouillon', dateRedac: '2026-04-15', dateRev: '2026-10-15', referent: 'Mme Martin', protection: '' },
-    { idx: 25, statut: 'actif', dateRedac: '2026-03-10', dateRev: '2026-09-10', referent: 'Mme Martin', protection: '' },
-    { idx: 33, statut: 'actif', dateRedac: '2026-02-01', dateRev: '2026-08-01', referent: 'Mme Martin', protection: '' },
-    { idx: 30, statut: 'brouillon', dateRedac: '2026-05-10', dateRev: '2026-11-10', referent: 'M. Dubois', protection: '' },
-    { idx: 18, statut: 'actif', dateRedac: '2026-03-20', dateRev: '2026-09-20', referent: 'M. Dubois', protection: '' },
-    { idx: 22, statut: 'actif', dateRedac: '2026-04-05', dateRev: '2026-10-05', referent: 'M. Dubois', protection: '' },
-    { idx: 35, statut: 'brouillon', dateRedac: '2026-05-15', dateRev: '2026-11-15', referent: 'Mme Martin', protection: '' },
-    { idx: 28, statut: 'actif', dateRedac: '2026-01-20', dateRev: '2026-07-20', referent: 'M. Dubois', protection: '' },
-    { idx: 41, statut: 'actif', dateRedac: '2026-02-28', dateRev: '2026-08-28', referent: 'Mme Martin', protection: '' }
-  ];
-
-  const avenants = avenantResidents.map((t, i) => {
-    const res = resList[t.idx];
+  const avenants = [];
+  for (let i = 0; i < cfgPpe; i++) {
+    const idx = i % resList.length;
+    const res = resList[idx];
+    const statut = pick(['actif','actif','actif','brouillon','termine']);
+    const dateRedac = new Date(now.getTime() - rand(30, 180) * 86400000);
+    const dateRev = new Date(dateRedac.getTime() + rand(150, 210) * 86400000);
     const sections = {};
     domaines.forEach(d => {
       sections[d] = {
-        bilan: 'Bilan en cours pour ' + d + '. Évolution à suivre.',
-        objectifs: [{ objectif: 'Objectif principal ' + d, moyens: 'Accompagnement éducatif adapté', echeance: t.dateRev, evaluation: '' }],
+        bilan: 'Bilan pour ' + d + '. Évolution en cours.',
+        objectifs: [{ objectif: 'Objectif ' + d, moyens: 'Accompagnement éducatif adapté', echeance: dateRev.toISOString().slice(0,10), evaluation: '' }],
         expression: res.prenom + ' souhaite progresser dans ce domaine.'
       };
     });
-    return {
+    avenants.push({
       id: 'da-' + (i + 1),
       residentId: res.id,
       residentName: res.prenom + ' ' + res.nom,
-      dateRedaction: t.dateRedac,
-      dateRevision: t.dateRev,
-      referent: t.referent,
-      protection: t.protection,
+      dateRedaction: dateRedac.toISOString().slice(0,10),
+      dateRevision: dateRev.toISOString().slice(0,10),
+      referent: pick(REFFERENTS),
+      protection: Math.random() < .2 ? pick(['Curatelle simple','Tutelle','Sauvegarde']) : '',
       employeur: '', atelier: '', entreeEsat: '',
-      statut: t.statut,
+      statut,
       sections,
       conclusion: 'Projet personnalisé pour ' + res.prenom + '. Accompagnement en cours.',
       signatures: { resident: null, referent: null, direction: null, date: null },
       createdBy: 'Admin',
-      createdAt: new Date(now.getTime() - (avenantResidents.length - i) * 86400000 * 3).toISOString()
-    };
-  });
+      createdAt: new Date(now.getTime() - (cfgPpe - i) * 86400000 * 3).toISOString()
+    });
+  }
   DB.set(DB.keys.ppe, avenants);
 
-  const incidents = [
-    { titre:'Chute dans l escalier', type:'chute', gravite:'moyen', resident:18, lieu:'Escalier principal', desc:'Ryan a glissé dans l escalier en courant. Entorse cheville droite.', statut:'classe', dec:9, decName:'David Moreau' },
-    { titre:'Fugue d Enzo', type:'fugue', gravite:'grave', resident:20, lieu:'Foyer', desc:'Enzo s est enfui par la fenêtre du RDC après le coucher. Retrouvé par la police.', statut:'cours', dec:5, decName:'Julien Fontaine' },
-    { titre:'Violence entre résidents', type:'violence', gravite:'moyen', resident:14, lieu:'Salle commune', desc:'Mehdi a bousculé un autre résident. Médiation effectuée.', statut:'valide', dec:3, decName:'Pierre Dubois' },
-    { titre:'Crise d angoisse', type:'medical', gravite:'moyen', resident:11, lieu:'Chambre 112', desc:'Crise d angoisse nocturne. Éducateur de nuit présent. Pas d hospitalisation.', statut:'cours', dec:11, decName:'Sébastien Girard' },
-    { titre:'Dégât matériel salle de bain', type:'materiel', gravite:'leger', resident:-1, lieu:'Salle de bain garçons', desc:'Robinet arraché du lavabo. Réparation prévue.', statut:'declare', dec:4, decName:'Camille Legrand' },
-    { titre:'Bagarre dans le réfectoire', type:'violence', gravite:'moyen', resident:32, lieu:'Réfectoire', desc:'Kylian s est battu pour une place à table. Intervention éducateur.', statut:'cours', dec:2, decName:'Sophie Martin' },
-    { titre:'Tentative de fugue', type:'fugue', gravite:'grave', resident:28, lieu:'Foyer', desc:'Tentative de quitter le foyer par l arrière. Rattrapé.', statut:'declare', dec:11, decName:'Sébastien Girard' },
-    { titre:'Accident de cuisine', type:'accident', gravite:'leger', resident:22, lieu:'Cuisine', desc:'Coupure au doigt en épluchant des légumes. Pansement.', statut:'classe', dec:3, decName:'Pierre Dubois' },
-    { titre:'Crise de Selma', type:'medical', gravite:'moyen', resident:31, lieu:'Chambre 208', desc:'Crise d angoisse après avoir appris que son bébé était malade.', statut:'valide', dec:4, decName:'Camille Legrand' },
-    { titre:'Incident sortie scolaire', type:'violence', gravite:'leger', resident:26, lieu:'Collège', desc:'Nathan a bousculé un camarade dans la cour. Renseignement.', statut:'declare', dec:5, decName:'Julien Fontaine' },
-    { titre:'Fugue de Kylian', type:'fugue', gravite:'grave', resident:32, lieu:'Foyer', desc:'Kylian est parti sans autorisation après une dispute. Retrouvé au square.', statut:'cours', dec:3, decName:'Pierre Dubois' },
-    { titre:'Malaise de Sarah', type:'medical', gravite:'moyen', resident:11, lieu:'Salle commune', desc:'Malaise vagal. Repos. RDV CMP programmé.', statut:'valide', dec:9, decName:'David Moreau' },
-    { titre:'Conflit chambre 201', type:'violence', gravite:'leger', resident:24, lieu:'Chambre 201', desc:'Dispute entre colocs pour le rangement. Médiation effectuée.', statut:'declare', dec:2, decName:'Sophie Martin' },
-    { titre:'Chute de vélo', type:'accident', gravite:'moyen', resident:22, lieu:'Cour extérieure', desc:'Adam est tombé de vélo. Éraflures. Pansements.', statut:'classe', dec:3, decName:'Pierre Dubois' },
-    { titre:'Insomnie et anxiété', type:'medical', gravite:'leger', resident:27, lieu:'Chambre 204', desc:'Elena n a pas dormi de la nuit. Anxiété sociale. Présence éducateur.', statut:'cours', dec:11, decName:'Sébastien Girard' }
+  // ── INCIDENTS ──
+  const incidentTemplates = [
+    { titre:'Chute dans l escalier', type:'chute', gravite:'moyen', lieu:'Escalier principal', desc:' glissé dans l escalier en courant. Entorse cheville droite.', statut:'classe' },
+    { titre:'Fugue', type:'fugue', gravite:'grave', lieu:'Foyer', desc:' s est enfui par la fenêtre du RDC après le coucher. Retrouvé par la police.', statut:'cours' },
+    { titre:'Violence entre résidents', type:'violence', gravite:'moyen', lieu:'Salle commune', desc:' a bousculé un autre résident. Médiation effectuée.', statut:'valide' },
+    { titre:'Crise d angoisse', type:'medical', gravite:'moyen', lieu:'Chambre', desc:'Crise d angoisse nocturne. Éducateur de nuit présent. Pas d hospitalisation.', statut:'cours' },
+    { titre:'Dégât matériel', type:'materiel', gravite:'leger', lieu:'Salle de bain', desc:'Robinet arraché du lavabo. Réparation prévue.', statut:'declare' },
+    { titre:'Bagarre au réfectoire', type:'violence', gravite:'moyen', lieu:'Réfectoire', desc:' s est battu pour une place à table. Intervention éducateur.', statut:'cours' },
+    { titre:'Tentative de fugue', type:'fugue', gravite:'grave', lieu:'Foyer', desc:'Tentative de quitter le foyer par l arrière. Rattrapé.', statut:'declare' },
+    { titre:'Accident de cuisine', type:'accident', gravite:'leger', lieu:'Cuisine', desc:'Coupure au doigt en épluchant des légumes. Pansement.', statut:'classe' },
+    { titre:'Malaise', type:'medical', gravite:'moyen', lieu:'Salle commune', desc:'Malaise vagal. Repos. RDV CMP programmé.', statut:'valide' },
+    { titre:'Conflit chambre', type:'violence', gravite:'leger', lieu:'Chambre', desc:'Dispute entre colocs pour le rangement. Médiation effectuée.', statut:'declare' },
+    { titre:'Chute de vélo', type:'accident', gravite:'moyen', lieu:'Cour extérieure', desc:' est tombé de vélo. Éraflures. Pansements.', statut:'classe' },
+    { titre:'Insomnie et anxiété', type:'medical', gravite:'leger', lieu:'Chambre', desc:' n a pas dormi de la nuit. Anxiété sociale. Présence éducateur.', statut:'cours' }
   ];
+  const authorNames = ['Sophie Martin','Pierre Dubois','Camille Legrand','Julien Fontaine','Nathalie Petit','Antoine Leroy','David Moreau','Sébastien Girard'];
 
-  const incList = incidents.map((inc, i) => {
+  const incList = [];
+  for (let i = 0; i < cfgInc; i++) {
+    const tpl = pick(incidentTemplates);
     const d = new Date(now.getTime() - rand(1, 45) * 86400000);
     const h = String(rand(6, 23)).padStart(2,'0');
     const m = String(rand(0, 59)).padStart(2,'0');
-    return {
+    const res = resList[rand(0, resList.length - 1)];
+    const author = pick(authorNames);
+    const desc = (res ? res.prenom : 'Un résident') + tpl.desc;
+    incList.push({
       id: 'di-' + (i + 1),
-      titre: inc.titre, type: inc.type, gravite: inc.gravite,
+      titre: tpl.titre, type: tpl.type, gravite: tpl.gravite,
       date: d.toISOString().slice(0,10), heure: h + ':' + m,
-      residentId: inc.resident >= 0 ? resList[inc.resident].id : null,
-      residentName: inc.resident >= 0 ? resList[inc.resident].prenom + ' ' + resList[inc.resident].nom : '',
-      lieu: inc.lieu, description: inc.desc,
-      statut: inc.statut,
-      declaredBy: inc.decName, declaredById: inc.dec,
+      residentId: res ? res.id : null,
+      residentName: res ? res.prenom + ' ' + res.nom : '',
+      lieu: tpl.lieu + ' ' + (res ? res.chambre : ''),
+      description: desc,
+      statut: tpl.statut,
+      declaredBy: author, declaredById: rand(2, 13),
       declaredAt: d.toISOString(),
       validatedBy: null, validatedById: null, validatedAt: null,
       notes: '',
       createdAt: d.toISOString()
-    };
-  });
+    });
+  }
   localStorage.setItem('ftr_incidents', JSON.stringify(incList));
 
+  // ── INTERVENTIONS ──
   const intervs = [
-    { lieu:'Chambre 101 — Lavabo', desc:'Lavabo bouché, se vide très lentement.', urgence:'basse' },
-    { lieu:'Chambre 103 — Radiateur', desc:'Radiateur ne chauffe plus depuis hier.', urgence:'haute' },
-    { lieu:'Chambre 107 — Salle de bain', desc:'Ampoule du plafonnier grillée.', urgence:'basse' },
-    { lieu:'Salle commune — Prises', desc:'Deux prises électriques ne fonctionnent plus.', urgence:'moyenne' },
-    { lieu:'Chambre 204 — Volet', desc:'Volet roulant bloqué à mi-hauteur.', urgence:'moyenne' },
-    { lieu:'Chambre 112 — Évier', desc:'Fuite d eau sous l évier. Flaque au sol.', urgence:'haute' },
-    { lieu:'Couloir 1er — Porte', desc:'Porte coupe-feu ne se ferme plus correctement.', urgence:'haute' },
-    { lieu:'Bureau — Prise', desc:'Prise de l ordinateur du bureau hors service.', urgence:'moyenne' },
-    { lieu:'Chambre 108 — Lumière', desc:'Interrupteur qui claque et étincelle.', urgence:'haute' },
-    { lieu:'Réfectoire — Frigo', desc:'Réfrigérateur ne fait plus de froid.', urgence:'haute' },
-    { lieu:'Cuisine — Mitigeur', desc:'Mitigeur de l évier qui fuit.', urgence:'moyenne' },
-    { lieu:'WC garçons — Chasse', desc:'Chasse d eau ne se vide plus.', urgence:'moyenne' },
+    { lieu:'Lavabo', desc:'Lavabo bouché, se vide très lentement.', urgence:'basse' },
+    { lieu:'Radiateur', desc:'Radiateur ne chauffe plus depuis hier.', urgence:'haute' },
+    { lieu:'Ampoule', desc:'Ampoule du plafonnier grillée.', urgence:'basse' },
+    { lieu:'Prises électriques', desc:'Deux prises électriques ne fonctionnent plus.', urgence:'moyenne' },
+    { lieu:'Volet roulant', desc:'Volet roulant bloqué à mi-hauteur.', urgence:'moyenne' },
+    { lieu:'Fuite d eau', desc:'Fuite d eau sous l évier. Flaque au sol.', urgence:'haute' },
+    { lieu:'Porte coupe-feu', desc:'Porte coupe-feu ne se ferme plus correctement.', urgence:'haute' },
+    { lieu:'Prise ordinateur', desc:'Prise de l ordinateur du bureau hors service.', urgence:'moyenne' },
+    { lieu:'Interrupteur', desc:'Interrupteur qui claque et étincelle.', urgence:'haute' },
+    { lieu:'Réfrigérateur', desc:'Réfrigérateur ne fait plus de froid.', urgence:'haute' },
+    { lieu:'Mitigeur', desc:'Mitigeur de l évier qui fuit.', urgence:'moyenne' },
+    { lieu:'Chasse d eau', desc:'Chasse d eau ne se vide plus.', urgence:'moyenne' },
     { lieu:'Portail électrique', desc:'Portail grince et bloque en milieu de course.', urgence:'basse' },
-    { lieu:'Buanderie — Machine', desc:'Machine à laver bruyante en essorage.', urgence:'moyenne' },
-    { lieu:'Chambre 120 — Prise', desc:'Prise murale près du lit desserrée.', urgence:'basse' },
-    { lieu:'Salle informatique — Écran', desc:'Écran d ordinateur qui reste noir après démarrage.', urgence:'moyenne' },
-    { lieu:'Chambre 105 — Serrure', desc:'Serrure de porte grippée, clé tourne difficilement.', urgence:'basse' },
-    { lieu:'Cuisine — Four', desc:'Four qui ne chauffe plus en position chaleur tournante.', urgence:'haute' },
-    { lieu:'Buanderie — Sèche-linge', desc:'Sèche-linge fait un bruit anormal en rotation.', urgence:'moyenne' },
-    { lieu:'Salle à manger — Table', desc:'Pied de table cassé, instable.', urgence:'basse' },
-    { lieu:'Chambre 109 — Store', desc:'Store enrouleur bloqué, ne remonte plus.', urgence:'basse' },
-    { lieu:'Couloir RDC — Néon', desc:'Néon du couloir qui clignote sans arrêt.', urgence:'moyenne' },
-    { lieu:'Salle pause — Micro-ondes', desc:'Micro-ondes ne chauffe plus les aliments.', urgence:'moyenne' },
-    { lieu:'Chambre 205 — Fenêtre', desc:'Fenêtre qui ferme mal, courant d air.', urgence:'moyenne' },
-    { lieu:'Local poubelles — Porte', desc:'Porte du local poubelles arrachée.', urgence:'basse' },
-    { lieu:'Salle de bain — Miroir', desc:'Miroir mural décollé, risque de chute.', urgence:'haute' },
-    { lieu:'Chaufferie — Voyant', desc:'Voyant d alarme allumé sur la chaudière.', urgence:'haute' },
-    { lieu:'Jardin — Portillon', desc:'Portillon du jardin ne ferme plus correctement.', urgence:'haute' },
-    { lieu:'Salle d activité — Vidéoprojecteur', desc:'Vidéoprojecteur qui affiche une image déformée.', urgence:'moyenne' },
-    { lieu:'Chambre 207 — Prise antenne', desc:'Prise antenne TV arrachée du mur.', urgence:'basse' }
+    { lieu:'Machine à laver', desc:'Machine à laver bruyante en essorage.', urgence:'moyenne' },
+    { lieu:'Prise murale', desc:'Prise murale près du lit desserrée.', urgence:'basse' },
+    { lieu:'Serrure de porte', desc:'Serrure de porte grippée, clé tourne difficilement.', urgence:'basse' },
+    { lieu:'Four', desc:'Four qui ne chauffe plus en position chaleur tournante.', urgence:'haute' },
+    { lieu:'Sèche-linge', desc:'Sèche-linge fait un bruit anormal en rotation.', urgence:'moyenne' },
+    { lieu:'Table', desc:'Pied de table cassé, instable.', urgence:'basse' },
+    { lieu:'Store enrouleur', desc:'Store enrouleur bloqué, ne remonte plus.', urgence:'basse' },
+    { lieu:'Néon', desc:'Néon du couloir qui clignote sans arrêt.', urgence:'moyenne' },
+    { lieu:'Micro-ondes', desc:'Micro-ondes ne chauffe plus les aliments.', urgence:'moyenne' },
+    { lieu:'Fenêtre', desc:'Fenêtre qui ferme mal, courant d air.', urgence:'moyenne' },
+    { lieu:'Miroir mural', desc:'Miroir mural décollé, risque de chute.', urgence:'haute' },
+    { lieu:'Chaudière', desc:'Voyant d alarme allumé sur la chaudière.', urgence:'haute' },
+    { lieu:'Portillon jardin', desc:'Portillon du jardin ne ferme plus correctement.', urgence:'haute' },
+    { lieu:'Vidéoprojecteur', desc:'Vidéoprojecteur qui affiche une image déformée.', urgence:'moyenne' },
+    { lieu:'Prise antenne TV', desc:'Prise antenne TV arrachée du mur.', urgence:'basse' }
   ];
 
-  const intervsList = intervs.map((inc, i) => {
+  const intervsList = [];
+  for (let i = 0; i < cfgInterv; i++) {
+    const inc = intervs[i % intervs.length];
     const d = new Date(now.getTime() - rand(0, 30) * 86400000);
     const statut = Math.random() < .4 ? 'traitee' : 'ouverte';
-    return { id: Date.now() + i, lieu: inc.lieu, desc: inc.desc, urgence: inc.urgence, date: d.toISOString(), statut };
-  });
+    const chambre = 'Chambre ' + (100 + rand(0, 39));
+    intervsList.push({ id: Date.now() + i, lieu: chambre + ' — ' + inc.lieu, desc: inc.desc, urgence: inc.urgence, date: d.toISOString(), statut });
+  }
   DB.set(DB.keys.interventions, intervsList);
 
+  // ── UTILISATEURS ──
   const users = DB.get(DB.keys.users) || [];
   if (users.length <= 1) {
     const profils = [
@@ -622,7 +601,7 @@ function generateForCurrentEtab() {
       { prenom:'Mélanie', nom:'Roux', fonction:'Assistante sociale', username:'mroux' },
       { prenom:'David', nom:'Moreau', fonction:'Infirmier', username:'dmoreau' },
       { prenom:'Élodie', nom:'Fournier', fonction:'Éducatrice jeunes enfants', username:'efournier' },
-      { prenom:'Sébastien', nom:'Girard', fonction:'VEilleur de nuit', username:'sgirard' },
+      { prenom:'Sébastien', nom:'Girard', fonction:'Veilleur de nuit', username:'sgirard' },
       { prenom:'Caroline', nom:'Bonnet', fonction:'Psychomotricienne', username:'cbonnet' },
       { prenom:'Alexandre', nom:'Dupont', fonction:'Médiateur social', username:'adupont' },
       { prenom:'Virginie', nom:'Lambert', fonction:'CESF', username:'vlambert' },
@@ -639,18 +618,20 @@ function generateForCurrentEtab() {
       { prenom:'Hélène',nom:'Garnier', fonction:'Psychologue clinicienne', username:'hgarnier' },
       { prenom:'Thibault',nom:'Renaud', fonction:'Coordonnateur', username:'trenaud' },
       { prenom:'Marianne',nom:'Lacroix', fonction:'Éducatrice jeunesse', username:'mlacroix' },
-      { prenom:'Yannick',nom:'Legros', fonction:'VEilleur de nuit', username:'ylegros' },
+      { prenom:'Yannick',nom:'Legros', fonction:'Veilleur de nuit', username:'ylegros' },
       { prenom:'Sandrine',nom:'Carlier', fonction:'Infirmière', username:'scarlier' }
     ];
-    profils.forEach((p, i) => users.push({
-      id: i + 2, ...p, password: 'educ123', role: 'educ'
-    }));
+    const maxUsers = Math.min(cfgUsers - 1, profils.length);
+    for (let i = 0; i < maxUsers; i++) {
+      const p = profils[i];
+      users.push({ id: i + 2, ...p, password: 'educ123', role: 'educ' });
+    }
     DB.set(DB.keys.users, users);
     users.forEach(u => addUserToAllEtabs(u));
   }
 
-  // ── Employés ──
-  const employes = [
+  // ── EMPLOYÉS ──
+  const employesTpl = [
     { prenom:'Sophie', nom:'Martin', poste:'Éducatrice spécialisée', tel:'06 11 22 33 01', email:'sophie.martin@ftr.fr' },
     { prenom:'Pierre', nom:'Dubois', poste:'Éducateur jeunesse', tel:'06 11 22 33 02', email:'pierre.dubois@ftr.fr' },
     { prenom:'Camille', nom:'Legrand', poste:'Psychologue', tel:'06 11 22 33 03', email:'camille.legrand@ftr.fr' },
@@ -660,7 +641,7 @@ function generateForCurrentEtab() {
     { prenom:'Mélanie', nom:'Roux', poste:'Assistante sociale', tel:'06 11 22 33 07', email:'melanie.roux@ftr.fr' },
     { prenom:'David', nom:'Moreau', poste:'Infirmier', tel:'06 11 22 33 08', email:'david.moreau@ftr.fr' },
     { prenom:'Élodie', nom:'Fournier', poste:'Éducatrice jeunes enfants', tel:'06 11 22 33 09', email:'elodie.fournier@ftr.fr' },
-    { prenom:'Sébastien', nom:'Girard', poste:'VEilleur de nuit', tel:'06 11 22 33 10', email:'sebastien.girard@ftr.fr' },
+    { prenom:'Sébastien', nom:'Girard', poste:'Veilleur de nuit', tel:'06 11 22 33 10', email:'sebastien.girard@ftr.fr' },
     { prenom:'Caroline', nom:'Bonnet', poste:'Psychomotricienne', tel:'06 11 22 33 11', email:'caroline.bonnet@ftr.fr' },
     { prenom:'Alexandre', nom:'Dupont', poste:'Médiateur social', tel:'06 11 22 33 12', email:'alexandre.dupont@ftr.fr' },
     { prenom:'Virginie', nom:'Lambert', poste:'CESF', tel:'06 11 22 33 13', email:'virginie.lambert@ftr.fr' },
@@ -677,7 +658,7 @@ function generateForCurrentEtab() {
     { prenom:'Hélène', nom:'Garnier', poste:'Psychologue clinicienne', tel:'06 11 22 33 24', email:'helene.garnier@ftr.fr' },
     { prenom:'Thibault', nom:'Renaud', poste:'Coordonnateur', tel:'06 11 22 33 25', email:'thibault.renaud@ftr.fr' },
     { prenom:'Marianne', nom:'Lacroix', poste:'Éducatrice jeunesse', tel:'06 11 22 33 26', email:'marianne.lacroix@ftr.fr' },
-    { prenom:'Yannick', nom:'Legros', poste:'VEilleur de nuit', tel:'06 11 22 33 27', email:'yannick.legros@ftr.fr' },
+    { prenom:'Yannick', nom:'Legros', poste:'Veilleur de nuit', tel:'06 11 22 33 27', email:'yannick.legros@ftr.fr' },
     { prenom:'Sandrine', nom:'Carlier', poste:'Infirmière', tel:'06 11 22 33 28', email:'sandrine.carlier@ftr.fr' },
     { prenom:'Michaël', nom:'André', poste:'Éducateur spécialisé', tel:'06 11 22 33 29', email:'michael.andre@ftr.fr' },
     { prenom:'Céline', nom:'Bourgeois', poste:'Psychologue', tel:'06 11 22 33 30', email:'celine.bourgeois@ftr.fr' },
@@ -692,7 +673,7 @@ function generateForCurrentEtab() {
     { prenom:'Nadia', nom:'Gibert', poste:'Psychomotricienne', tel:'06 11 22 33 39', email:'nadia.gibert@ftr.fr' },
     { prenom:'Gilles', nom:'Lemoine', poste:'Agent de maintenance', tel:'06 11 22 33 40', email:'gilles.lemoine@ftr.fr' },
     { prenom:'Aurélie', nom:'Becker', poste:'Éducatrice jeunes enfants', tel:'06 11 22 33 41', email:'aurelie.becker@ftr.fr' },
-    { prenom:'Pascal', nom:'Marchal', poste:'VEilleur de nuit', tel:'06 11 22 33 42', email:'pascal.marchal@ftr.fr' },
+    { prenom:'Pascal', nom:'Marchal', poste:'Veilleur de nuit', tel:'06 11 22 33 42', email:'pascal.marchal@ftr.fr' },
     { prenom:'Martine', nom:'Guérin', poste:'Secrétaire', tel:'06 11 22 33 43', email:'martine.guerin@ftr.fr' },
     { prenom:'Alain', nom:'Boucher', poste:'Médiateur social', tel:'06 11 22 33 44', email:'alain.boucher@ftr.fr' },
     { prenom:'Brigitte', nom:'Colin', poste:'Référente ASE', tel:'06 11 22 33 45', email:'brigitte.colin@ftr.fr' },
@@ -701,7 +682,10 @@ function generateForCurrentEtab() {
     { prenom:'Hervé', nom:'Rolland', poste:'Éducateur sportif', tel:'06 11 22 33 48', email:'herve.rolland@ftr.fr' },
     { prenom:'Danièle', nom:'Leclerc', poste:'Assistante sociale', tel:'06 11 22 33 49', email:'daniele.leclerc@ftr.fr' },
     { prenom:'Patrick', nom:'Mathieu', poste:'Animateur socioculturel', tel:'06 11 22 33 50', email:'patrick.mathieu@ftr.fr' }
-  ].map((e, i) => ({
+  ];
+
+  const empCount = Math.min(cfgEmp, employesTpl.length);
+  const employes = employesTpl.slice(0, empCount).map((e, i) => ({
     id: 'de-' + (i + 1),
     prenom: e.prenom, nom: e.nom, poste: e.poste, telephone: e.tel, email: e.email,
     dateEmbauche: new Date(now.getTime() - rand(60, 1800) * 86400000).toISOString().slice(0,10),
@@ -710,6 +694,7 @@ function generateForCurrentEtab() {
   }));
   DB.set(DB.keys.employes, employes);
 
+  // ── MESSAGES ──
   const conversations = {};
   const allMsgs = [];
   const convDefs = [
@@ -722,19 +707,22 @@ function generateForCurrentEtab() {
     { users: [7,17,19], msgs: ['On organise un tournoi de foot inter-foyers ?','Excellente idée ! Je prépare les jeunes.','Je gère la logistique.','On vise samedi dans 3 semaines.','Sofiane et Amine sont chauds.','On inscrit aussi Kylian ?','Bonne idée, je valide avec son référent.']},
     { users: [1,2], msgs: ['Nouvel arrivant prévu lundi. Chambre 105 à préparer.','OK, je m en occupe. Il faut commander un lit ?','Oui, vérifie le stock. Sinon bon de commande.','Compris. Briefing équipe demain matin ?','À 9h en salle de réunion. Présents : Sophie, Pierre, Julien.','Noté. Je prépare le dossier d accueil.']}
   ];
-  convDefs.forEach((cd, ci) => {
+  const maxConvs = Math.min(cfgMsg, convDefs.length);
+  for (let ci = 0; ci < maxConvs; ci++) {
+    const cd = convDefs[ci];
     const convId = cd.users.sort((a,b)=>a-b).join('_');
-    conversations[convId] = { id: convId, userIds: cd.users, createdAt: new Date(now.getTime() - (convDefs.length - ci) * 86400000*2).toISOString() };
+    conversations[convId] = { id: convId, userIds: cd.users, createdAt: new Date(now.getTime() - (maxConvs - ci) * 86400000 * 2).toISOString() };
     cd.msgs.forEach((body, mi) => {
-      const d = new Date(now.getTime() - ((cd.msgs.length - mi) + (convDefs.length - ci) * 7) * 86400000);
+      const d = new Date(now.getTime() - ((cd.msgs.length - mi) + (maxConvs - ci) * 7) * 86400000);
       d.setHours(rand(8, 18), rand(0, 59), 0, 0);
       allMsgs.push({ id: 'dm-' + (ci + 1) + '-' + (mi + 1), convId, from: cd.users[mi % cd.users.length], body, date: d.toISOString(), readBy: [cd.users[mi % cd.users.length]] });
     });
-  });
+  }
   DB.set(DB.keys.messages, allMsgs);
   localStorage.setItem('ftr_conversations', JSON.stringify(conversations));
 
-  const contacts = [
+  // ── RÉPERTOIRE ──
+  const contactsTpl = [
     { organisme:'CMP Maison Blanche', nom:'Dr Anne Moreau', tel:'01 45 67 89 01', email:'anne.moreau@gh-paris.fr', fonction:'Pédopsychiatre', adresse:'15 Rue de la Santé, 75014 Paris', notes:'Suivi de Lucas et Sarah.' },
     { organisme:'ASE Paris', nom:'Mme Valérie Legrand', tel:'01 23 45 67 10', email:'valerie.legrand@paris.fr', fonction:'Référente ASE', adresse:'12 Rue du Château, 75010 Paris', notes:'' },
     { organisme:'PJJ Paris', nom:'M. Christophe Fontaine', tel:'01 23 45 67 20', email:'christophe.fontaine@justice.fr', fonction:'Éducateur PJJ', adresse:'3 Boulevard du Palais, 75001 Paris', notes:'' },
@@ -742,52 +730,154 @@ function generateForCurrentEtab() {
     { organisme:'CIDFF Paris', nom:'Mme Laure Blanc', tel:'01 45 67 89 34', email:'l.blanc@cidff.fr', fonction:'Psychologue', adresse:'20 Rue de la Roquette, 75011 Paris', notes:'' },
     { organisme:'Hôpital Saint-Antoine', nom:'Dr Paul Lefèvre', tel:'01 49 28 20 00', email:'paul.lefevre@aphp.fr', fonction:'Psychiatre', adresse:'184 Rue du Faubourg Saint-Antoine, 75012 Paris', notes:'' },
     { organisme:'OFII Paris', nom:'M. Amadou Ba', tel:'01 40 77 25 00', email:'amadou.ba@ofii.fr', fonction:'Référent intégration', adresse:'44 Rue Bargue, 75015 Paris', notes:'' },
-    { organisme:'École Élémentaire Jules Ferry', nom:'Mme Christine Petit', tel:'01 43 56 78 90', email:'ce.0751234a@ac-paris.fr', fonction:'Directrice', adresse:'2 Rue Jules Ferry, 75011 Paris', notes:'' },
     { organisme:'Collège Victor Hugo', nom:'M. Laurent Roux', tel:'01 43 56 78 91', email:'ce.0751235b@ac-paris.fr', fonction:'CPE', adresse:'5 Rue Victor Hugo, 75011 Paris', notes:'' },
     { organisme:'ESAT Les Ateliers du Val', nom:'M. Franck Morel', tel:'01 48 90 12 34', email:'f.morel@esat-val.fr', fonction:'Directeur adjoint', adresse:'Route de la Vallée, 94120 Fontenay', notes:'' },
     { organisme:'MDPH Val-de-Marne', nom:'Mme Sophie Leroy', tel:'09 72 12 34 56', email:'sophie.leroy@mdph94.fr', fonction:'Chargée de dossier', adresse:'1 Place de la Préfecture, 94000 Créteil', notes:'' },
     { organisme:'CCAS Paris 10e', nom:'M. David Cohen', tel:'01 45 67 89 50', email:'d.cohen@ccas-paris.fr', fonction:'Travailleur social', adresse:'10 Rue de la Grange aux Belles, 75010 Paris', notes:'' },
     { organisme:'Service Solideo', nom:'Mme Fatou Ba', tel:'06 12 34 56 13', email:'f.ba@solideo.org', fonction:'Travailleuse sociale', adresse:'18 Rue des Martyrs, 75009 Paris', notes:'' },
     { organisme:'Lycée Hôtelier Guillaume Tirel', nom:'M. Jean-Claude Roux', tel:'01 44 14 77 77', email:'jc.roux@ac-paris.fr', fonction:'Chef des travaux', adresse:'18 Rue Guillaume Tirel, 75014 Paris', notes:'' },
-    { organisme:'CMP Enfants-Ados Paris 13e', nom:'Dr Catherine Lefèvre', tel:'01 45 85 45 85', email:'catherine.lefevre@gh-paris.fr', fonction:'Pédopsychiatre', adresse:'43 Rue de la Santé, 75013 Paris', notes:'' },
     { organisme:'GRETA Paris', nom:'Mme Sylvie Mercier', tel:'01 44 62 36 00', email:'s.mercier@greta-paris.fr', fonction:'Coordinatrice', adresse:'164 Rue de Rivoli, 75001 Paris', notes:'' },
     { organisme:'SPIP Paris', nom:'M. Franck Leblanc', tel:'01 45 67 89 60', email:'franck.leblanc@justice.fr', fonction:'Conseiller d insertion', adresse:'12 Rue de la Santé, 75014 Paris', notes:'' },
     { organisme:'PMI Paris 11e', nom:'Mme Claire Fontaine', tel:'01 45 67 89 70', email:'claire.fontaine@paris.fr', fonction:'Puéricultrice', adresse:'8 Rue de la Vacquerie, 75011 Paris', notes:'' },
-    { organisme:'ATELIER CUISINE', nom:'M. Philippe Cheval', tel:'06 11 22 33 99', email:'p.cheval@atelier-cuisine.fr', fonction:'Chef cuisinier formateur', adresse:'15 Rue des Saveurs, 75012 Paris', notes:'' },
-    { organisme:'FOYER JEUNES', nom:'Mme Sylviane Roussel', tel:'01 45 67 89 80', email:'sylviane.roussel@foyerjeunes.org', fonction:'Directrice', adresse:'20 Rue des Lilas, 75020 Paris', notes:'Partenariat ateliers Insertion.' },
+    { organisme:'Foyer Jeunes', nom:'Mme Sylviane Roussel', tel:'01 45 67 89 80', email:'sylviane.roussel@foyerjeunes.org', fonction:'Directrice', adresse:'20 Rue des Lilas, 75020 Paris', notes:'Partenariat ateliers Insertion.' },
     { organisme:'Hopital Cochin', nom:'Dr Martine Vergne', tel:'01 45 67 89 90', email:'martine.vergne@aphp.fr', fonction:'Pédiatre', adresse:'27 Rue du Faubourg Saint-Jacques, 75014 Paris', notes:'' },
-    { organisme:'PROTECTION CIVILE', nom:'M. Emmanuel Dupuis', tel:'06 11 22 34 00', email:'e.dupuis@protection-civile.org', fonction:'Formateur secourisme', adresse:'5 Rue du Secours, 75012 Paris', notes:'' },
-    { organisme:'CLUB SPORTIF', nom:'Mme Karine Bello', tel:'06 11 22 34 01', email:'karine.bello@clubsportif.org', fonction:'Coach sportive', adresse:'Stade Municipal, 75012 Paris', notes:'' },
-    { organisme:'SERVICE INTÉGRATION', nom:'M. Ali Hamdi', tel:'01 45 67 90 01', email:'ali.hamdi@integration.org', fonction:'Référent parcours', adresse:'10 Rue de l Insertion, 75018 Paris', notes:'' },
-    { organisme:'ASSOCIATION ESPOIR', nom:'Mme Nadia Cherfi', tel:'06 11 22 34 02', email:'n.cherfi@espoir-asso.fr', fonction:'Travailleuse sociale', adresse:'7 Rue de l Espoir, 75013 Paris', notes:'' },
-    { organisme:'CAP EMPLOI', nom:'M. Denis Cornet', tel:'01 45 67 90 10', email:'denis.cornet@capemploi.fr', fonction:'Conseiller', adresse:'32 Rue de l Emploi, 75015 Paris', notes:'' },
+    { organisme:'Protection Civile', nom:'M. Emmanuel Dupuis', tel:'06 11 22 34 00', email:'e.dupuis@protection-civile.org', fonction:'Formateur secourisme', adresse:'5 Rue du Secours, 75012 Paris', notes:'' },
+    { organisme:'Club Sportif', nom:'Mme Karine Bello', tel:'06 11 22 34 01', email:'karine.bello@clubsportif.org', fonction:'Coach sportive', adresse:'Stade Municipal, 75012 Paris', notes:'' },
+    { organisme:'Service Intégration', nom:'M. Ali Hamdi', tel:'01 45 67 90 01', email:'ali.hamdi@integration.org', fonction:'Référent parcours', adresse:'10 Rue de l Insertion, 75018 Paris', notes:'' },
+    { organisme:'Association Espoir', nom:'Mme Nadia Cherfi', tel:'06 11 22 34 02', email:'n.cherfi@espoir-asso.fr', fonction:'Travailleuse sociale', adresse:'7 Rue de l Espoir, 75013 Paris', notes:'' },
+    { organisme:'Cap Emploi', nom:'M. Denis Cornet', tel:'01 45 67 90 10', email:'denis.cornet@capemploi.fr', fonction:'Conseiller', adresse:'32 Rue de l Emploi, 75015 Paris', notes:'' },
     { organisme:'CROUS Paris', nom:'Mme Sylvie Albert', tel:'01 40 32 40 00', email:'s.albert@crous-paris.fr', fonction:'Gestionnaire logement', adresse:'15 Rue de Santeuil, 75005 Paris', notes:'' },
-    { organisme:'CENTRE DE LOISIRS', nom:'M. Luc Perret', tel:'06 11 22 34 03', email:'l.perret@centreloisirs.fr', fonction:'Animateur', adresse:'Place des Loisirs, 75011 Paris', notes:'' },
+    { organisme:'Centre de Loisirs', nom:'M. Luc Perret', tel:'06 11 22 34 03', email:'l.perret@centreloisirs.fr', fonction:'Animateur', adresse:'Place des Loisirs, 75011 Paris', notes:'' },
     { organisme:'BAF - Bureau Aide Famille', nom:'Mme Anne-Claire Weiss', tel:'01 45 67 90 20', email:'ac.weiss@baf-paris.fr', fonction:'Assistante familiale', adresse:'5 Rue des Familles, 75010 Paris', notes:'' },
-    { organisme:'SERVICE LOGEMENT', nom:'M. Jean-Baptiste Rey', tel:'01 45 67 90 30', email:'jb.rey@logement-paris.fr', fonction:'Chargé de location', adresse:'22 Rue du Logement, 75019 Paris', notes:'' }
-  ].map(c => ({ id:'dc-'+rand(100000,999999).toString(36), updatedAt:new Date(now.getTime()-rand(0,60)*86400000).toISOString(), ...c }));
+    { organisme:'Service Logement', nom:'M. Jean-Baptiste Rey', tel:'01 45 67 90 30', email:'jb.rey@logement-paris.fr', fonction:'Chargé de location', adresse:'22 Rue du Logement, 75019 Paris', notes:'' },
+    { organisme:'Atelier Cuisine', nom:'M. Philippe Cheval', tel:'06 11 22 33 99', email:'p.cheval@atelier-cuisine.fr', fonction:'Chef cuisinier formateur', adresse:'15 Rue des Saveurs, 75012 Paris', notes:'' },
+    { organisme:'École Élémentaire Jules Ferry', nom:'Mme Christine Petit', tel:'01 43 56 78 90', email:'ce.0751234a@ac-paris.fr', fonction:'Directrice', adresse:'2 Rue Jules Ferry, 75011 Paris', notes:'' }
+  ];
+  const contactCount = Math.min(cfgContacts, contactsTpl.length);
+  const contacts = contactsTpl.slice(0, contactCount).map(c => ({
+    id: 'dc-' + rand(100000, 999999).toString(36),
+    updatedAt: new Date(now.getTime() - rand(0, 60) * 86400000).toISOString(), ...c
+  }));
   DB.set(DB.keys.repertoire, contacts);
 
-  // ── Documents ──
+  // ── DOCUMENTS ──
   const docs = {};
-  for (let i = 0; i < 5; i++) {
-    const res = resList[i * 7];
-    const id = res.id;
-    docs[id] = [
-      { nom:'Compte rendu médical.pdf', type:'medical', date:new Date(now.getTime()-rand(10,365)*86400000).toISOString().slice(0,10), taille:'245 Ko', id:'dd-r'+i+'-1' },
-      { nom:'Contrat de séjour.pdf', type:'administratif', date:new Date(now.getTime()-rand(30,400)*86400000).toISOString().slice(0,10), taille:'180 Ko', id:'dd-r'+i+'-2' },
-      { nom:'Projet personnalisé.pdf', type:'administratif', date:new Date(now.getTime()-rand(5,180)*86400000).toISOString().slice(0,10), taille:'320 Ko', id:'dd-r'+i+'-3' }
-    ];
+  for (let i = 0; i < resList.length && cfgDocsPerRes > 0; i++) {
+    const res = resList[i];
+    const resDocs = [];
+    for (let j = 0; j < cfgDocsPerRes; j++) {
+      resDocs.push({
+        nom: pick(['Compte rendu médical','Contrat de séjour','Projet personnalisé','Bilan social','Certificat médical','Convention de stage','Attestation hébergement','Avenant logement']) + '.pdf',
+        type: pick(['medical','administratif','social','scolarite']),
+        date: new Date(now.getTime() - rand(10, 365) * 86400000).toISOString().slice(0,10),
+        taille: rand(100, 500) + ' Ko',
+        id: 'dd-r' + i + '-' + (j + 1)
+      });
+    }
+    docs[res.id] = resDocs;
   }
-  docs['_resources'] = [
-    { nom:'Règlement intérieur.pdf', type:'resource', date:new Date(now.getTime()-rand(30,200)*86400000).toISOString().slice(0,10), taille:'410 Ko', residentId:'_resources', id:'dd-rsrc-1' },
-    { nom:'Procédure urgences.pdf', type:'resource', date:new Date(now.getTime()-rand(30,200)*86400000).toISOString().slice(0,10), taille:'295 Ko', residentId:'_resources', id:'dd-rsrc-2' },
-    { nom:'Guide des partenaires.pdf', type:'resource', date:new Date(now.getTime()-rand(30,200)*86400000).toISOString().slice(0,10), taille:'520 Ko', residentId:'_resources', id:'dd-rsrc-3' }
-  ];
+  if (cfgDocsRsrc > 0) {
+    docs['_resources'] = [];
+    for (let j = 0; j < cfgDocsRsrc; j++) {
+      docs['_resources'].push({
+        nom: pick(['Règlement intérieur','Procédure urgences','Guide des partenaires','Charte des droits','Plan d évacuation','Livret d accueil','Protocole sanitaire','Règlement de sortie']) + '.pdf',
+        type: 'resource',
+        date: new Date(now.getTime() - rand(30, 200) * 86400000).toISOString().slice(0,10),
+        taille: rand(200, 600) + ' Ko',
+        residentId: '_resources',
+        id: 'dd-rsrc-' + (j + 1)
+      });
+    }
+  }
   DB.set(DB.keys.documents, docs);
 
-  return { residents: resList.length, journal: journal.length, planning: planning.length, ppe: avenants.length, incidents: incList.length, interventions: intervsList.length, messages: allMsgs.length, contacts: contacts.length, users: users.length, employes: employes.length, documents: Object.values(docs).flat().length };
+  // ── HISTORIQUE CONNEXIONS ──
+  const loginHistory = [];
+  const loginUsers = ['admin', 'smartin', 'pdubois', 'clegrand', 'jfontaine'];
+  const actions = ['connexion', 'connexion', 'connexion', 'déconnexion'];
+  for (let i = 0; i < cfgLogin; i++) {
+    const d = new Date(now.getTime() - rand(0, 30) * 86400000);
+    d.setHours(rand(6, 22), rand(0, 59), 0, 0);
+    loginHistory.push({
+      id: genId(),
+      date: d.toISOString(),
+      userId: rand(1, 5),
+      user: pick(loginUsers),
+      action: pick(actions),
+      role: pick(['admin', 'educ', 'educ', 'educ']),
+      details: Math.random() < .2 ? 'Échec de connexion' : ''
+    });
+  }
+  loginHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (loginHistory.length > 200) loginHistory.length = 200;
+  DB.set(DB.keys.loginHistory, loginHistory);
+
+  // ── ONBOARDING ──
+  localStorage.setItem('ftr_onboarded', 'true');
+
+  return {
+    residents: resList.length,
+    journal: journal.length,
+    planning: planning.length,
+    ppe: avenants.length,
+    incidents: incList.length,
+    interventions: intervsList.length,
+    messages: allMsgs.length,
+    contacts: contacts.length,
+    users: users.length,
+    employes: employes.length,
+    documents: Object.values(docs).flat().length,
+    presences: cfgPresJours,
+    loginHistory: loginHistory.length,
+    vehicules: vehList.length
+  };
 }
+
+// ── GENERATE DEMO ──
+function generateDemo() {
+  const btn = $('genBtn');
+  btn.disabled = true;
+  btn.textContent = 'Génération en cours…';
+  $('status').innerHTML = '';
+
+  const originalEtabId = sessionStorage.getItem('ftr_current_etab');
+  const etabs = getSelectedEtabs();
+  if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
+
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0 };
+  etabs.forEach((etab, ei) => {
+    sessionStorage.setItem('ftr_current_etab', etab.id);
+    log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
+    const r = generateForCurrentEtab();
+    Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex</span>');
+  });
+
+  if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
+  else sessionStorage.removeItem('ftr_current_etab');
+
+  log('<div class="sep"></div>');
+  log('<span style="color:#16a34a;font-weight:700;font-size:1rem">🎉 Données générées pour <strong>' + etabs.length + '</strong> établissement' + (etabs.length > 1 ? 's' : '') + '</span>');
+  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:.75rem;font-size:.8rem">' +
+    Object.entries(totals).map(([k,v]) => '<div><span style="color:#64748b">' + k + '</span> <strong>' + v + '</strong></div>').join('') +
+  '</div>');
+  log('<a href="index.html" style="display:inline-block;margin-top:.8rem;background:#0f2b4a;color:#fff;padding:.7rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem">→ Aller à la page de connexion</a>');
+  log('<div style="margin-top:.75rem;font-size:.78rem;color:#475569;background:#f0fdf4;border:1px solid #16a34a30;border-radius:8px;padding:.8rem 1rem">');
+  log('<div style="font-weight:700;color:#16a34a;margin-bottom:.4rem">🔑 Comptes de démonstration</div>');
+  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 1rem;font-size:.75rem">');
+  log('<div><strong>Admin</strong> : admin / admin123</div>');
+  log('<div><strong>Éduc.spé.</strong> : smartin / educ123</div>');
+  log('<div><strong>Éduc.jeunesse</strong> : pdubois / educ123</div>');
+  log('<div><strong>Psychologue</strong> : clegrand / educ123</div>');
+  log('<div><strong>Moniteur</strong> : jfontaine / educ123</div>');
+  log('<div><strong>Infirmier</strong> : dmoreau / educ123</div>');
+  log('<div><strong>Chef service</strong> : npetit / educ123</div>');
+  log('<div><strong>Éduc.sportif</strong> : aleroy / educ123</div>');
+  log('</div></div>');
+  btn.disabled = false;
+  btn.textContent = 'Générer les données';
+}
+
 initDefaults();
 populateEtabSelector();
 </script>
