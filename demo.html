@@ -608,7 +608,7 @@ function generateForCurrentEtab() {
     const statut = Math.random() < .4 ? 'traitee' : 'ouverte';
     return { id: Date.now() + i, lieu: inc.lieu, desc: inc.desc, urgence: inc.urgence, date: d.toISOString(), statut };
   });
-  localStorage.setItem('ftr_interventions', JSON.stringify(intervsList));
+  DB.set(DB.keys.interventions, intervsList);
 
   const users = DB.get(DB.keys.users) || [];
   if (users.length <= 1) {
@@ -708,7 +708,7 @@ function generateForCurrentEtab() {
     statut: Math.random() < .9 ? 'actif' : 'conge',
     photo: '', notes: '', createdAt: now.toISOString()
   }));
-  localStorage.setItem('ftr_employes', JSON.stringify(employes));
+  DB.set(DB.keys.employes, employes);
 
   const conversations = {};
   const allMsgs = [];
