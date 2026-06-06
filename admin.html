@@ -964,7 +964,7 @@ function genererRapportPDF() {
   });
   const tauxPresence = rateDays ? Math.round(rateSum / rateDays) : null;
 
-  // Entrées, sorties, évaluations, objectifs
+  // Entrées, sorties (permissions), évaluations, objectifs
   const entrees = residents.filter(r => inRange(r.entree)).length;
   let nbSorties = 0, nbEvals = 0, nbObjAtteints = 0;
   residents.forEach(r => {
@@ -973,6 +973,37 @@ function genererRapportPDF() {
     const sv = r.objectifsSuivi || {};
     Object.values(sv).forEach(o => { if (o.statut === 'atteint' && inRange(o.dateMaj)) nbObjAtteints++; });
   });
+
+  // ── INDICATEURS RÉGLEMENTAIRES ──
+  // Taux d'occupation : journées réalisées / (capacité × jours avec données)
+  const capacite = parseInt(settings.capacite) || 0;
+  let joursReal = 0, joursData = 0;
+  Object.entries(presences).forEach(([d, day]) => {
+    if (d < startStr || d > endStr) return;
+    joursReal += Object.values(day).filter(s => s === 'present' || s === 'absent').length;
+    joursData++;
+  });
+  const tauxOccup = (capacite && joursData) ? Math.round(joursReal / (capacite * joursData) * 100) : null;
+  // File active & mouvements
+  const enFileActive = residents.filter(r => (r.entree || '0000') <= endStr && (!r.dateSortie || r.dateSortie >= startStr));
+  const fileActive = enFileActive.length;
+  const sortiesCount = residents.filter(r => r.dateSortie && inRange(r.dateSortie)).length;
+  const dureesMois = enFileActive.filter(r => r.entree).map(r => {
+    const fin = (r.dateSortie && r.dateSortie < endStr) ? new Date(r.dateSortie + 'T00:00:00') : _end;
+    return (fin - new Date(r.entree + 'T00:00:00')) / (86400000 * 30.44);
+  }).filter(x => x >= 0);
+  const dureeMoyMois = dureesMois.length ? Math.round(dureesMois.reduce((a, b) => a + b, 0) / dureesMois.length) : null;
+  // Taux de PPE actifs
+  const residWithActivePpe = new Set(ppe.filter(p => p.statut === 'actif').map(p => String(p.residentId)));
+  const tauxPpe = activeRes.length ? Math.round(activeRes.filter(r => residWithActivePpe.has(String(r.id))).length / activeRes.length * 100) : 0;
+  // Profil du public
+  const profilSexe = { Hommes: 0, Femmes: 0, Autre: 0 };
+  activeRes.forEach(r => { profilSexe[r.genre === 'M' ? 'Hommes' : r.genre === 'F' ? 'Femmes' : 'Autre']++; });
+  const ageTranches = { '< 18 ans': 0, '18-25 ans': 0, '26-40 ans': 0, '41-60 ans': 0, '60 ans et +': 0 };
+  activeRes.forEach(r => { if (!r.dob) return; const a = Math.floor((Date.now() - new Date(r.dob)) / 31557600000); if (a < 18) ageTranches['< 18 ans']++; else if (a <= 25) ageTranches['18-25 ans']++; else if (a <= 40) ageTranches['26-40 ans']++; else if (a <= 60) ageTranches['41-60 ans']++; else ageTranches['60 ans et +']++; });
+  const protLabels = { tutelle: 'Tutelle', curatelle: 'Curatelle', sauvegarde: 'Sauvegarde de justice', habilitation: 'Habilitation familiale', masp: 'MASP', accompagnement: 'Accompagnement', aucune: 'Aucune mesure', autre: 'Autre' };
+  const protDist = {};
+  activeRes.forEach(r => { const p = protLabels[r.protection] || r.protection || 'Non renseigné'; protDist[p] = (protDist[p] || 0) + 1; });
 
   // Tables HTML
   const barTable = (obj, color) => {
@@ -1009,8 +1040,9 @@ function genererRapportPDF() {
   const iSeries = buckets.map(b => iPeriod.filter(i => _inB(i.date, b)).length);
 
   // ── Graphiques SVG (impriment proprement) ──
-  function svgHBar(obj, color) {
-    const entries = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  function svgHBar(obj, color, keepOrder) {
+    let entries = Object.entries(obj).filter(([, v]) => v > 0);
+    if (!keepOrder) entries = entries.sort((a, b) => b[1] - a[1]);
     if (!entries.length) return '<p class="empty-line">Aucune donnée sur la période.</p>';
     const max = Math.max(...entries.map(e => e[1]), 1);
     const rowH = 26, labelW = 150, barMax = 470, padL = 6, padT = 6, padB = 16;
@@ -1045,13 +1077,13 @@ function genererRapportPDF() {
     series.forEach((s, si) => { const lx = padL + si * 150; legend += `<rect x="${lx}" y="4" width="10" height="10" rx="2" fill="${s.color}"/><text x="${lx + 14}" y="13" font-size="8" fill="#334155">${escHtml(s.name)}</text>`; });
     return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px"><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#cbd5e1" stroke-width="1"/>${grid}${bars}${legend}</svg>`;
   }
-  function svgDonut(segments) {
+  function svgDonut(segments, centerLabel) {
     const total = segments.reduce((a, s) => a + s.value, 0);
-    if (!total) return '<p class="empty-line">Aucun incident sur la période.</p>';
+    if (!total) return '<p class="empty-line">Aucune donnée sur la période.</p>';
     const cx = 70, cy = 70, r = 50, sw = 22, circ = 2 * Math.PI * r;
     let off = 0, arcs = '';
     segments.forEach(s => { if (s.value <= 0) return; const dash = s.value / total * circ; arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${(circ - dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`; off += dash; });
-    const center = `<text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="20" font-weight="800" fill="#0f2b4a">${total}</text><text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="7.5" fill="#94a3b8">incidents</text>`;
+    const center = `<text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="20" font-weight="800" fill="#0f2b4a">${total}</text><text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="7.5" fill="#94a3b8">${centerLabel || ''}</text>`;
     const legend = segments.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:8.5pt;margin-bottom:4px"><span style="width:11px;height:11px;border-radius:2px;background:${s.color};display:inline-block;flex-shrink:0"></span>${escHtml(s.label)} : <strong>${s.value}</strong> (${Math.round(s.value / total * 100)}%)</div>`).join('');
     return `<div style="display:flex;align-items:center;gap:.7cm"><svg viewBox="0 0 140 140" width="128" height="128" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
   }
@@ -1085,6 +1117,7 @@ function genererRapportPDF() {
   .note{font-size:8pt;color:#475569;margin:.2cm 0}
   svg{page-break-inside:avoid;max-width:100%}
   h2{page-break-after:avoid}
+  .chart-title{font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.12cm}
   .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:7pt;color:#94a3b8}
   .actions{text-align:center;margin:.4cm 0}
   .actions button{padding:.35rem 1.1rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:9pt;margin:.2rem}
@@ -1103,15 +1136,28 @@ function genererRapportPDF() {
 
 <h2>Synthèse</h2>
 <div class="kpi-grid">
-  ${kpi(activeRes.length, 'Résidents actifs')}
-  ${kpi(entrees, 'Entrées (admissions)')}
+  ${kpi(tauxOccup != null ? tauxOccup + '%' : '—', "Taux d'occupation")}
+  ${kpi(fileActive, 'File active')}
+  ${kpi(activeRes.length, 'Résidents présents')}
   ${kpi(tauxPresence != null ? tauxPresence + '%' : '—', 'Taux de présence moyen')}
+  ${kpi(entrees, 'Entrées (admissions)')}
+  ${kpi(sortiesCount, 'Sorties')}
+  ${kpi(dureeMoyMois != null ? dureeMoyMois + ' mois' : '—', 'Durée moy. de séjour')}
+  ${kpi(tauxPpe + '%', 'Résidents avec PPE actif')}
   ${kpi(jPeriod.length, 'Entrées au journal')}
   ${kpi(iPeriod.length, 'Incidents déclarés')}
   ${kpi(avCrees, 'Avenants rédigés')}
-  ${kpi(nbSorties, 'Sorties / permissions')}
   ${kpi(nbObjAtteints, 'Objectifs atteints')}
 </div>
+${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accueil » dans Administration → Établissement pour calculer le taux d\'occupation.</p>'}
+
+<h2>Public accompagné & mouvements</h2>
+<p class="note">File active : <strong>${fileActive}</strong> personne${fileActive > 1 ? 's' : ''} accompagnée${fileActive > 1 ? 's' : ''} sur la période · Entrées : <strong>${entrees}</strong> · Sorties : <strong>${sortiesCount}</strong> · Durée moyenne de séjour : <strong>${dureeMoyMois != null ? dureeMoyMois + ' mois' : '—'}</strong>${capacite ? ` · Capacité autorisée : <strong>${capacite}</strong> places · Taux d'occupation : <strong>${tauxOccup != null ? tauxOccup + '%' : '—'}</strong>` : ''}.</p>
+<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
+  <div style="flex:0 0 auto"><div class="chart-title">Répartition par sexe</div>${svgDonut([{ label: 'Hommes', value: profilSexe.Hommes, color: '#3b82f6' }, { label: 'Femmes', value: profilSexe.Femmes, color: '#ec4899' }, { label: 'Autre', value: profilSexe.Autre, color: '#94a3b8' }], 'résidents')}</div>
+  <div style="flex:1;min-width:300px"><div class="chart-title">Par tranche d'âge</div>${svgHBar(ageTranches, '#0d9488', true)}</div>
+</div>
+<div style="margin-top:.35cm"><div class="chart-title">Mesures de protection juridique</div>${svgHBar(protDist, '#8b5cf6')}</div>
 
 <h2>Évolution de l'activité</h2>
 <p class="note">Transmissions au journal et incidents déclarés par ${_days <= 45 ? 'semaine' : 'mois'} sur la période.</p>
@@ -1124,7 +1170,7 @@ ${svgHBar(jByCat, '#e85d04')}
 <h2>Incidents</h2>
 <p class="note">${iPeriod.length} incident${iPeriod.length > 1 ? 's' : ''} déclaré${iPeriod.length > 1 ? 's' : ''}, dont <strong>${iTraites}</strong> traité${iTraites > 1 ? 's' : ''} (validés ou classés).</p>
 <div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
-  <div style="flex:0 0 auto"><div style="font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm">Par gravité</div>${svgDonut([{ label: 'Graves', value: iByGravite.grave, color: '#dc2626' }, { label: 'Modérés', value: iByGravite.modere, color: '#f59e0b' }, { label: 'Légers', value: iByGravite.leger, color: '#10b981' }])}</div>
+  <div style="flex:0 0 auto"><div class="chart-title">Par gravité</div>${svgDonut([{ label: 'Graves', value: iByGravite.grave, color: '#dc2626' }, { label: 'Modérés', value: iByGravite.modere, color: '#f59e0b' }, { label: 'Légers', value: iByGravite.leger, color: '#10b981' }], 'incidents')}</div>
   <div style="flex:1;min-width:300px"><div style="font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm">Par type</div>${svgHBar(iByType, '#dc2626')}</div>
 </div>
 

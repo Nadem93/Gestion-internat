@@ -1052,9 +1052,12 @@ function renderEditMode(r) {
           ${inputField('eChambre','Chambre / Unité',r.chambre)}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
-          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent']])}
+          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent'],['sorti','Sorti(e)']])}
           ${inputField('eReferent','Référent',r.referent)}
           ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
+        </div>
+        <div class="grid grid-3" style="gap:.75rem">
+          ${inputField('eDateSortie','Date de sortie (si sorti)',r.dateSortie,'date')}
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem">👤 Informations personnelles</div>
@@ -1111,7 +1114,7 @@ function savePageEdit() {
     ...r,
     prenom: g('ePrenom'), nom: g('eNom'), genre: g('eGenre'),
     dob: g('eDob'), entree: g('eEntree'), chambre: g('eChambre'),
-    statut: g('eStatut'), referent: g('eReferent'), color: g('eColor') || '#3b82f6',
+    statut: g('eStatut'), dateSortie: g('eDateSortie'), referent: g('eReferent'), color: g('eColor') || '#3b82f6',
     medecin: g('eMedecin'), medecinTel: g('eMedecinTel'),
     allergies: g('eAllergies'), nss: g('eNss'),
     tuteur: g('eTuteur'), tuteurTel: g('eTuteurTel'), ecole: g('eEcole'),

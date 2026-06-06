@@ -298,6 +298,8 @@ function generateForCurrentEtab() {
 
   resList.forEach((r, ri) => {
     if (['tutelle','curatelle','sauvegarde'].includes(r.protection)) r.protectionNom = pick(PROT_NOMS);
+    // Mouvements : ~8% de sorties sur l'année (pour file active / durée de séjour)
+    if (Math.random() < 0.08) { r.statut = 'sorti'; r.dateSortie = dAgo(rand(5, 150)); }
 
     // Santé
     const traitements = [];
@@ -339,6 +341,10 @@ function generateForCurrentEtab() {
     r.evaluations = evals;
   });
   DB.set(DB.keys.residents, resList);
+
+  // Capacité d'accueil (pour le taux d'occupation du rapport)
+  const _settings = DB.get(DB.keys.settings) || {};
+  DB.set(DB.keys.settings, { ..._settings, capacite: Math.round(cfgRes * 1.1) });
 
   // ── CATÉGORIES ──
   const cats = [
