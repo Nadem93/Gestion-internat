@@ -535,6 +535,15 @@
         <button class="btn btn-danger" onclick="resetData('all')">Réinitialiser toutes les données</button>
       </div></div>
     </div>
+    <div class="card" style="margin-top:1.5rem" id="dupCard">
+      <div class="card-header">
+        <span class="card-title">🔍 Doublons potentiels</span>
+        <button class="btn btn-outline btn-sm" onclick="scanDuplicates()" style="margin-left:auto">Analyser</button>
+      </div>
+      <div class="card-body" id="dupResults">
+        <div style="font-size:.82rem;color:var(--muted)">Recherche les transmissions et incidents en double (même résident, horaire proche, texte similaire). Cliquez sur « Analyser ».</div>
+      </div>
+    </div>
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header">
         <span class="card-title">📋 Journal d'audit</span>
@@ -1053,6 +1062,95 @@ ${barTable(iByType, '#dc2626')}
 </body></html>`);
   w.document.close();
   if (typeof auditLog === 'function') auditLog('export', `Rapport d'activité — ${label}`);
+}
+
+// ── SCAN DES DOUBLONS ──
+const _getIncidentsRaw = () => JSON.parse(localStorage.getItem('ftr_incidents') || '[]');
+const _setIncidentsRaw = (l) => localStorage.setItem('ftr_incidents', JSON.stringify(l));
+
+function scanDuplicates() {
+  const el = document.getElementById('dupResults');
+  el.innerHTML = '<div style="font-size:.82rem;color:var(--muted)">Analyse en cours…</div>';
+  setTimeout(() => {
+    const journal = DB.get(DB.keys.journal) || [];
+    const incidents = _getIncidentsRaw();
+    renderDupResults(findJournalDupPairs(journal), findIncidentDupPairs(incidents));
+  }, 30);
+}
+
+function findJournalDupPairs(entries) {
+  const byRes = {};
+  entries.forEach(e => { const k = String(e.residentId); (byRes[k] = byRes[k] || []).push(e); });
+  const pairs = [];
+  Object.values(byRes).forEach(group => {
+    for (let i = 0; i < group.length; i++) for (let j = i + 1; j < group.length; j++) {
+      if (_hoursBetween(group[i].date, group[j].date) > 3) continue;
+      const sim = textSimilarity(group[i].contenu, group[j].contenu);
+      if (sim >= 0.6) pairs.push({ a: group[i], b: group[j], sim });
+    }
+  });
+  return pairs.sort((x, y) => y.sim - x.sim);
+}
+
+function findIncidentDupPairs(list) {
+  const pairs = [];
+  for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+    const a = list[i], b = list[j];
+    if (!a.residentId || String(a.residentId) !== String(b.residentId)) continue;
+    if (a.type !== b.type || a.date !== b.date) continue;
+    if (a.heure && b.heure && _hoursBetween(a.date + 'T' + a.heure, b.date + 'T' + b.heure) > 3) continue;
+    const sim = Math.max(textSimilarity(a.titre, b.titre), textSimilarity(a.description, b.description));
+    if (sim >= 0.5) pairs.push({ a, b, sim });
+  }
+  return pairs.sort((x, y) => y.sim - x.sim);
+}
+
+function _dupItemHtml(kind, item) {
+  if (kind === 'journal') {
+    const c = item.contenu || '';
+    return `<div style="flex:1;min-width:220px;padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)">
+      <div style="font-size:.71rem;color:var(--muted)">${escHtml(item.resident || '?')} · ${formatDateTime(item.date)} · ${escHtml(item.author || '')}</div>
+      <div style="font-size:.8rem;margin-top:3px">${escHtml(c.slice(0, 170))}${c.length > 170 ? '…' : ''}</div>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-top:.35rem;font-size:.7rem;padding:2px 8px" onclick="deleteDupItem('journal','${item.id}')">✕ Supprimer celle-ci</button>
+    </div>`;
+  }
+  const d = item.description || '';
+  return `<div style="flex:1;min-width:220px;padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)">
+    <div style="font-size:.71rem;color:var(--muted)">${escHtml(item.residentName || '?')} · ${item.date ? formatDate(item.date) : ''}${item.heure ? ' ' + item.heure : ''} · ${escHtml(item.declaredBy || '')}</div>
+    <div style="font-size:.81rem;font-weight:600;margin-top:3px">${escHtml(item.titre || '')}</div>
+    <div style="font-size:.76rem;color:var(--g700)">${escHtml(d.slice(0, 150))}${d.length > 150 ? '…' : ''}</div>
+    <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-top:.35rem;font-size:.7rem;padding:2px 8px" onclick="deleteDupItem('incident','${item.id}')">✕ Supprimer celui-ci</button>
+  </div>`;
+}
+
+function _dupPairHtml(kind, p) {
+  return `<div style="border:1px solid var(--border);border-radius:var(--r);padding:.6rem;margin-bottom:.6rem">
+    <div style="font-size:.7rem;color:var(--accent);font-weight:700;margin-bottom:.4rem">Similarité ${Math.round(p.sim * 100)}%</div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:stretch">${_dupItemHtml(kind, p.a)}${_dupItemHtml(kind, p.b)}</div>
+  </div>`;
+}
+
+function renderDupResults(jPairs, iPairs) {
+  const el = document.getElementById('dupResults');
+  const total = jPairs.length + iPairs.length;
+  if (!total) { el.innerHTML = '<div style="font-size:.85rem;color:#16a34a;font-weight:600">✓ Aucun doublon potentiel détecté.</div>'; return; }
+  el.innerHTML = `
+    <div style="font-size:.85rem;font-weight:600;margin-bottom:.75rem">${total} doublon${total > 1 ? 's' : ''} potentiel${total > 1 ? 's' : ''} détecté${total > 1 ? 's' : ''} — vérifiez avant de supprimer.</div>
+    ${jPairs.length ? `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:.5rem 0 .4rem">📓 Journal de bord (${jPairs.length})</div>${jPairs.map(p => _dupPairHtml('journal', p)).join('')}` : ''}
+    ${iPairs.length ? `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:.75rem 0 .4rem">⚠️ Incidents (${iPairs.length})</div>${iPairs.map(p => _dupPairHtml('incident', p)).join('')}` : ''}`;
+}
+
+function deleteDupItem(kind, id) {
+  confirmDialog('Supprimer définitivement cet élément ?', () => {
+    if (kind === 'journal') {
+      DB.set(DB.keys.journal, (DB.get(DB.keys.journal) || []).filter(e => e.id !== id));
+    } else {
+      _setIncidentsRaw(_getIncidentsRaw().filter(i => i.id !== id));
+    }
+    if (typeof auditLog === 'function') auditLog('delete', `Doublon supprimé (${kind === 'journal' ? 'journal' : 'incident'})`);
+    toast('Élément supprimé', 'success');
+    scanDuplicates();
+  });
 }
 
 function renderPpeBars() {
