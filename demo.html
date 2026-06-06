@@ -851,11 +851,16 @@ function generateForCurrentEtab() {
     const res = resList[i];
     const resDocs = [];
     for (let j = 0; j < cfgDocsPerRes; j++) {
+      const dueSoon = Math.random() < .25;
       resDocs.push({
-        nom: pick(['Compte rendu médical','Contrat de séjour','Projet personnalisé','Bilan social','Certificat médical','Convention de stage','Attestation hébergement','Avenant logement']) + '.pdf',
-        type: pick(['medical','administratif','social','scolarite']),
-        date: new Date(now.getTime() - rand(10, 365) * 86400000).toISOString().slice(0,10),
-        taille: rand(100, 500) + ' Ko',
+        name: pick(['Compte rendu médical','Contrat de séjour','Projet personnalisé','Bilan social','Certificat médical','Convention de stage','Attestation hébergement','Avenant logement']),
+        category: pick(['medical','administratif','scolaire','judiciaire','contrat','autre']),
+        docDate: new Date(now.getTime() - rand(10, 365) * 86400000).toISOString().slice(0,10),
+        dueDate: dueSoon ? new Date(now.getTime() + rand(-30, 120) * 86400000).toISOString().slice(0,10) : '',
+        mimeType: 'application/pdf',
+        size: rand(100, 500) * 1024,
+        fileName: 'document.pdf',
+        date: new Date().toISOString(),
         id: 'dd-r' + i + '-' + (j + 1)
       });
     }
@@ -865,10 +870,13 @@ function generateForCurrentEtab() {
     docs['_resources'] = [];
     for (let j = 0; j < cfgDocsRsrc; j++) {
       docs['_resources'].push({
-        nom: pick(['Règlement intérieur','Procédure urgences','Guide des partenaires','Charte des droits','Plan d évacuation','Livret d accueil','Protocole sanitaire','Règlement de sortie']) + '.pdf',
-        type: 'resource',
-        date: new Date(now.getTime() - rand(30, 200) * 86400000).toISOString().slice(0,10),
-        taille: rand(200, 600) + ' Ko',
+        name: pick(['Règlement intérieur','Procédure urgences','Guide des partenaires','Charte des droits','Plan d évacuation','Livret d accueil','Protocole sanitaire','Règlement de sortie']),
+        category: 'administratif',
+        docDate: new Date(now.getTime() - rand(30, 200) * 86400000).toISOString().slice(0,10),
+        mimeType: 'application/pdf',
+        size: rand(200, 600) * 1024,
+        fileName: 'document.pdf',
+        date: new Date().toISOString(),
         residentId: '_resources',
         id: 'dd-rsrc-' + (j + 1)
       });

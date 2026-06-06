@@ -14,7 +14,7 @@ function fmtSize(b) {
 }
 
 function getAllDocuments() {
-  const all = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  const all = (DB.get(DB.keys.documents) || {});
   const residents = DB.get(DB.keys.residents) || [];
   const list = [];
   for (const [resId, docs] of Object.entries(all)) {
@@ -161,7 +161,7 @@ function toggleDocType(type) {
 }
 
 function editDocModal(docId, resId) {
-  const allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  const allDocs = (DB.get(DB.keys.documents) || {});
   const doc = (allDocs[resId]||[]).find(d => d.id === docId);
   if (!doc) return;
   toggleDocType(doc.type === 'resource' ? 'resource' : 'resident');
@@ -201,7 +201,7 @@ async function saveDocument() {
   if (!residentId) { toast('Veuillez sélectionner un résident', 'error'); return; }
   if (!name && !window._pendingDocFile) { toast('Veuillez entrer un nom ou sélectionner un fichier', 'error'); return; }
 
-  let allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  let allDocs = (DB.get(DB.keys.documents) || {});
   if (!allDocs[residentId]) allDocs[residentId] = [];
 
   if (id) {
@@ -233,7 +233,7 @@ async function saveDocument() {
     window._pendingDocFile = null;
   }
 
-  localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(allDocs));
+  DB.set(DB.keys.documents, allDocs);
   toast(id ? 'Document modifié' : 'Document ajouté', 'success');
   closeModal('docModal');
   renderDocuments();
@@ -258,12 +258,12 @@ function cancelDocFile() {
 
 function deleteDocument(docId, resId) {
   if (!confirm('Supprimer ce document ?')) return;
-  let allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  let allDocs = (DB.get(DB.keys.documents) || {});
   const key = resId || '_resources';
   if (!allDocs[key]) return;
   allDocs[key] = allDocs[key].filter(d => d.id !== docId);
   if (!allDocs[key].length) delete allDocs[key];
-  localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(allDocs));
+  DB.set(DB.keys.documents, allDocs);
   toast('Document supprimé', 'success');
   renderDocuments();
 }

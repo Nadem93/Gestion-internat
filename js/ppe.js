@@ -11,8 +11,8 @@ const DOMAINES = [
   { id:'orientation', label:'Orientation', icon:'🧭' }
 ];
 
-function getPpe() { return JSON.parse(localStorage.getItem(PPE_KEY) || '[]'); }
-function savePpe(list) { localStorage.setItem(PPE_KEY, JSON.stringify(list)); }
+function getPpe() { return DB.get(DB.keys.ppe) || []; }
+function savePpe(list) { DB.set(DB.keys.ppe, list); }
 
 function emptySection() {
   return { bilan:'', objectifs:[{ objectif:'', moyens:'', echeance:'', evaluation:'' }], expression:'' };
