@@ -58,7 +58,11 @@ function renderDocuments() {
   if (filterRes) filtered = filtered.filter(d => d.residentId === filterRes);
   if (filterType) filtered = filtered.filter(d => (d.type || 'resident') === filterType);
   if (filterCat) filtered = filtered.filter(d => d.category === filterCat);
-  if (search) filtered = filtered.filter(d => (d.residentName||'').toLowerCase().includes(search));
+  if (search) filtered = filtered.filter(d =>
+    (d.residentName||'').toLowerCase().includes(search) ||
+    (d.name||'').toLowerCase().includes(search) ||
+    (d.category||'').toLowerCase().includes(search)
+  );
 
   if (!filtered.length) {
     container.innerHTML = '<div class="empty" style="padding:3rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><p>Aucun document trouvé</p><button class="btn btn-outline btn-sm" onclick="openDocModal()">Ajouter un document</button></div>';

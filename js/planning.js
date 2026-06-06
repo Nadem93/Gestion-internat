@@ -214,19 +214,85 @@ function saveEvent() {
   }
   let events = DB.get(DB.keys.planning) || [];
   const id = document.getElementById('eventId').value;
-  if (id) { events = events.map(e => e.id === id ? {...e,...data} : e); toast('Événement mis à jour'); }
-  else { data.id = genId(); events.push(data); toast('Événement ajouté'); }
+  let finalEvent;
+  if (id) { events = events.map(e => { if (e.id === id) { finalEvent = {...e,...data}; return finalEvent; } return e; }); toast('Événement mis à jour'); }
+  else { data.id = genId(); finalEvent = data; events.push(data); toast('Événement ajouté'); }
   DB.set(DB.keys.planning, events);
+  syncEventToResidentRdv(finalEvent);
   closeAllModals();
   render();
+}
+
+// Synchronise un événement planning de type "rdv" vers la fiche du résident (sante.rdv)
+function syncEventToResidentRdv(event) {
+  if (!event) return;
+  const residents = DB.get(DB.keys.residents) || [];
+  const setEventLink = (santeRdvId) => {
+    const evs = (DB.get(DB.keys.planning) || []).map(e => {
+      if (e.id !== event.id) return e;
+      const c = { ...e };
+      if (santeRdvId) c.santeRdvId = santeRdvId; else delete c.santeRdvId;
+      return c;
+    });
+    DB.set(DB.keys.planning, evs);
+  };
+
+  // Pas (ou plus) un RDV → retirer le lien éventuel
+  if (event.type !== 'rdv' || !event.residentId) {
+    if (event.santeRdvId && event.residentId) {
+      const r = residents.find(x => String(x.id) === String(event.residentId));
+      if (r && r.sante && Array.isArray(r.sante.rdv)) {
+        r.sante.rdv = r.sante.rdv.filter(x => x.id !== event.santeRdvId);
+        DB.set(DB.keys.residents, residents);
+      }
+    }
+    if (event.santeRdvId) setEventLink(null);
+    return;
+  }
+
+  const r = residents.find(x => String(x.id) === String(event.residentId));
+  if (!r) return;
+  if (!r.sante) r.sante = {};
+  if (!Array.isArray(r.sante.rdv)) r.sante.rdv = [];
+
+  const rdvData = {
+    date: event.date,
+    heure: event.time || event.heure || '',
+    type: event.titre || 'Rendez-vous',
+    lieu: event.destination || '',
+    notes: event.desc || '',
+    planningId: event.id
+  };
+
+  let santeRdvId = event.santeRdvId;
+  let idx = santeRdvId ? r.sante.rdv.findIndex(x => x.id === santeRdvId) : -1;
+  if (idx < 0) { idx = r.sante.rdv.findIndex(x => x.planningId === event.id); if (idx >= 0) santeRdvId = r.sante.rdv[idx].id; }
+  if (idx >= 0) {
+    r.sante.rdv[idx] = { ...r.sante.rdv[idx], ...rdvData };
+  } else {
+    santeRdvId = genId();
+    r.sante.rdv.push({ id: santeRdvId, fait: false, ...rdvData });
+  }
+  DB.set(DB.keys.residents, residents);
+  if (event.santeRdvId !== santeRdvId) setEventLink(santeRdvId);
 }
 
 function deleteEvent() {
   const id = document.getElementById('eventId').value;
   confirmDialog('Supprimer cet événement ?', () => {
     let events = DB.get(DB.keys.planning) || [];
+    const ev = events.find(e => e.id === id);
     events = events.filter(e => e.id !== id);
     DB.set(DB.keys.planning, events);
+    // Retirer le RDV lié dans la fiche résident
+    if (ev && ev.santeRdvId && ev.residentId) {
+      const residents = DB.get(DB.keys.residents) || [];
+      const r = residents.find(x => String(x.id) === String(ev.residentId));
+      if (r && r.sante && Array.isArray(r.sante.rdv)) {
+        r.sante.rdv = r.sante.rdv.filter(x => x.id !== ev.santeRdvId);
+        DB.set(DB.keys.residents, residents);
+      }
+    }
     closeAllModals();
     render();
     toast('Événement supprimé', 'info');

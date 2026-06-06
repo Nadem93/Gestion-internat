@@ -178,7 +178,7 @@ function renderSectionCard(p, domaine) {
             <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','correction')" title="Corriger le texte">✓ Corriger</button>
             <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','reformulation')" title="Reformulation institutionnelle">🏛 Reformuler</button>
           </div>
-          <textarea class="input" style="min-height:60px;width:100%" onchange="updateSectionField('${p.id}','${domaine.id}','bilan',this.value)" placeholder="Bilan du domaine…">${escHtml(s.bilan||'')}</textarea>
+          <textarea class="input" style="min-height:160px;width:100%;resize:vertical" onchange="updateSectionField('${p.id}','${domaine.id}','bilan',this.value)" placeholder="Bilan du domaine…">${escHtml(s.bilan||'')}</textarea>
         </div>
         <button class="btn btn-ghost btn-sm" style="margin-top:1.2rem" onclick="addSectionObj('${p.id}','${domaine.id}')">+ Objectif</button>
       </div>
@@ -508,7 +508,7 @@ function renderAvenant() {
     const r = residents.find(x => x.id === p.residentId);
     const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
     return `<tr style="cursor:pointer;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.04);background:${i%2===0?'#fff':'#f8fafc'};transition:background .15s,box-shadow .15s" onmouseenter="this.style.background='#eef2ff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseleave="this.style.background='${i%2===0?'#fff':'#f8fafc'}';this.style.boxShadow='0 2px 6px rgba(0,0,0,.04)'" onclick="openAvenant('${p.id}')">
-      <td style="padding:.7rem .75rem;border-radius:12px 0 0 12px"><div style="display:flex;align-items:center;gap:.6rem">${r?.photo?`<img src="${sanitizeUrl(r.photo)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div style="width:28px;height:28px;border-radius:50%;background:${r?.color||'var(--primary)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.6rem;color:#fff;flex-shrink:0">${initials(r?.prenom, r?.nom)}</div>`}<span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
+      <td style="padding:.7rem .75rem;border-radius:12px 0 0 12px"><div style="display:flex;align-items:center;gap:.6rem"><span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
       <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${formatDate(p.dateRedaction)}</td>
       <td style="padding:.7rem .75rem"><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></td>
       <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${p.referent ? escHtml(p.referent) : '—'}</td>
@@ -579,12 +579,12 @@ async function genererAvenantFromJournal(existingId) {
     if (!p) { toast('Avenant introuvable', 'error'); return; }
     residentId = p.residentId;
     const residents = DB.get(DB.keys.residents) || [];
-    resident = residents.find(r => r.id === residentId);
+    resident = residents.find(r => String(r.id) === String(residentId));
   } else {
     residentId = document.getElementById('fAvResident').value;
     if (!residentId) { toast('Veuillez d\'abord choisir un résident', 'error'); return; }
     const residents = DB.get(DB.keys.residents) || [];
-    resident = residents.find(r => r.id === residentId);
+    resident = residents.find(r => String(r.id) === String(residentId));
   }
   if (!resident) { toast('Résident introuvable', 'error'); return; }
 

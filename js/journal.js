@@ -214,6 +214,7 @@ function saveInlineEntry() {
     });
   }
   DB.set(DB.keys.journal, entries);
+  if (typeof auditLog === 'function') auditLog('journal_create', `${residentIds.length} entrée(s) pour ${entries.slice(-residentIds.length).map(e=>e.resident).join(', ')}`);
   toast(residentIds.length + ' entrée' + (residentIds.length>1?'s':'') + ' ajoutée' + (residentIds.length>1?'s':'') + ' ✓');
   showJournalList();
   renderEntries();
@@ -275,7 +276,11 @@ function getEntries() {
     if (e.visibilite !== 'confidentiel') return true;
     return isAdmin || String(e.authorId) === String(session?.userId);
   });
-  if (q) list = list.filter(e => (e.contenu || '').toLowerCase().includes(q) || (e.resident || '').toLowerCase().includes(q));
+  if (q) list = list.filter(e =>
+    (e.contenu  || '').toLowerCase().includes(q) ||
+    (e.resident || '').toLowerCase().includes(q) ||
+    (e.author   || '').toLowerCase().includes(q)
+  );
   if (res) list = list.filter(e => e.residentId === res);
   if (cat) list = list.filter(e => String(e.categorie) === String(cat));
   if (date) list = list.filter(e => e.date && e.date.startsWith(date));
@@ -312,7 +317,7 @@ function renderEntries() {
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntryById('${e.id}')">Supprimer</button>
         </div>
       </div>` : '';
-    return `<div class="entry-card ${isSelected ? 'selected' : ''}" style="${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;' : ''}" onclick="selectEntry('${e.id}')">
+    return `<div class="entry-card ${isSelected ? 'selected' : ''}" style="${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
       <div class="entry-header">
         ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
         <div style="flex:1;min-width:0">
@@ -325,8 +330,9 @@ function renderEntries() {
           <div class="entry-meta">${formatDateTime(e.date)} · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span></div>
         </div>
       </div>
-      ${!isSelected ? `<div class="entry-preview">${escHtml(e.contenu)||''}</div>` : ''}
-      ${!isSelected && (e.replies||[]).length ? `<div style="font-size:.7rem;color:var(--blue);margin-top:.4rem;font-weight:600">💬 ${e.replies.length} réponse${e.replies.length>1?'s':''}</div>` : ''}
+      ${!isSelected && !isUnread ? `<div class="entry-preview">${escHtml(e.contenu)||''}</div>` : ''}
+      ${!isSelected && isUnread ? `<div style="font-size:.78rem;color:var(--muted);margin-top:.5rem;font-style:italic">Cliquez pour lire</div>` : ''}
+      ${!isSelected && !isUnread && (e.replies||[]).length ? `<div style="font-size:.7rem;color:var(--blue);margin-top:.4rem;font-weight:600">💬 ${e.replies.length} réponse${e.replies.length>1?'s':''}</div>` : ''}
       ${expandedSection}
     </div>`;
   }).join('');
@@ -573,4 +579,104 @@ async function aiAssistJournal(action) {
     ta.dispatchEvent(new Event('input'));
     toast('✓ ' + labels[action] + ' (mode local)', 'success');
   }
+}
+
+// ── EXPORT PDF ──
+function exportJournalPDF() {
+  const list = getEntries();
+  if (!list.length) { toast('Aucune entrée à exporter', 'error'); return; }
+
+  const settings = DB.get(DB.keys.settings) || {};
+  const cats = DB.get(DB.keys.categories) || [];
+  const session = Auth.getSession();
+
+  const dateFilter = document.getElementById('jFilterDate')?.value || '';
+  const resFilter  = document.getElementById('jFilterResident')?.value || '';
+  const catFilter  = document.getElementById('jFilterCat')?.value || '';
+
+  let periodLabel = dateFilter
+    ? `du ${new Date(dateFilter).toLocaleDateString('fr-FR')}`
+    : `au ${new Date().toLocaleDateString('fr-FR')}`;
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Journal de bord — ${escHtml(settings.etablissement||'FTR')}</title>
+<style>
+  @page{margin:1.8cm 1.5cm}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:9.5pt;line-height:1.6;color:#334155;max-width:800px;margin:0 auto}
+  .top-stripe{height:6px;background:#0f2b4a;border-radius:0 0 4px 4px;margin-bottom:.5cm}
+  .doc-header{margin-bottom:.7cm}
+  .doc-header .etab{font-size:11pt;font-weight:300;color:#0f2b4a}
+  .doc-header .etab strong{font-weight:700}
+  .doc-header .doc-title{font-size:15pt;font-weight:800;color:#0f2b4a;margin-top:.05cm}
+  .doc-header .doc-meta{font-size:7.5pt;color:#64748b;margin-top:.1cm}
+  .day-group{margin-bottom:.5cm}
+  .day-label{font-size:8pt;font-weight:700;color:#0f2b4a;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #0f2b4a;padding-bottom:2px;margin-bottom:.25cm}
+  .entry{border:1px solid #e2e8f0;border-radius:7px;padding:.4cm .5cm;margin-bottom:.25cm;page-break-inside:avoid}
+  .entry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.3cm;margin-bottom:.2cm}
+  .entry-resident{font-weight:700;font-size:9.5pt;color:#0f2b4a}
+  .entry-meta{font-size:7pt;color:#64748b;margin-top:1px}
+  .entry-cat{display:inline-block;padding:1px 7px;border-radius:100px;font-size:7pt;font-weight:600}
+  .entry-body{font-size:8.5pt;color:#334155;line-height:1.6;white-space:pre-wrap}
+  .entry-replies{margin-top:.2cm;padding-top:.2cm;border-top:1px solid #f1f5f9}
+  .reply{font-size:7.5pt;color:#64748b;padding:.15cm .3cm;background:#f8fafc;border-radius:5px;margin-bottom:.1cm}
+  .reply strong{color:#475569}
+  .badge-conf{display:inline-block;padding:1px 7px;border-radius:100px;font-size:7pt;font-weight:600;background:#fef2f2;color:#dc2626}
+  .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:7pt;color:#94a3b8}
+  .actions{text-align:center;margin:.4cm 0}
+  .actions button{padding:.35rem 1.1rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:9pt;margin:.2rem}
+  @media print{.actions{display:none}}
+</style></head><body>
+<div class="top-stripe"></div>
+<div class="doc-header">
+  <div class="etab"><strong>${escHtml(settings.etablissement||'Foyer d\'Hébergement')}</strong></div>
+  <div class="doc-title">Journal de bord</div>
+  <div class="doc-meta">
+    Export ${periodLabel} · ${list.length} entrée${list.length>1?'s':''} · Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+    ${session ? ` · par ${escHtml([session.prenom,session.nom].filter(Boolean).join(' ')||session.username)}` : ''}
+  </div>
+</div>
+<div class="actions">
+  <button onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
+  <button onclick="window.close()">Fermer</button>
+</div>
+${(() => {
+  // Grouper par date
+  const groups = {};
+  list.forEach(e => {
+    const d = e.date ? e.date.slice(0,10) : 'Sans date';
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(e);
+  });
+  return Object.entries(groups).map(([date, entries]) => {
+    const label = date === 'Sans date' ? 'Sans date' :
+      new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    return `<div class="day-group">
+      <div class="day-label">${escHtml(label)}</div>
+      ${entries.map(e => {
+        const cat = cats.find(c => String(c.id) === String(e.categorie));
+        const timeStr = e.date && e.date.length > 10 ? new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+        return `<div class="entry">
+          <div class="entry-top">
+            <div>
+              <div class="entry-resident">${escHtml(e.resident||'—')}</div>
+              <div class="entry-meta">${timeStr ? timeStr+' · ' : ''}${escHtml(e.author||'')}${cat?'':''}</div>
+            </div>
+            <div style="display:flex;gap:.2cm;flex-shrink:0;align-items:center">
+              ${cat ? `<span class="entry-cat" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
+              ${e.visibilite==='confidentiel' ? '<span class="badge-conf">Confidentiel</span>' : ''}
+            </div>
+          </div>
+          <div class="entry-body">${escHtml(e.contenu||'')}</div>
+          ${(e.replies||[]).length ? `<div class="entry-replies">${e.replies.map(r=>`<div class="reply"><strong>${escHtml(r.author)}</strong> · ${new Date(r.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} — ${escHtml(r.content)}</div>`).join('')}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+})()}
+<div class="footer">${escHtml(settings.etablissement||'Foyer d\'Hébergement')} — Journal de bord — ${new Date().toLocaleDateString('fr-FR')}</div>
+</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 500);
 }

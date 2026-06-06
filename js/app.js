@@ -14,7 +14,7 @@ const DB = {
     users:'ftr_users', session:'ftr_session', vehicules:'ftr_vehicules',
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
-    loginHistory:'ftr_login_history', fonctionColors:'ftr_fonction_colors',
+    loginHistory:'ftr_login_history', auditLog:'ftr_audit_log', fonctionColors:'ftr_fonction_colors',
     aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
     etablissements:'ftr_etablissements'
@@ -149,12 +149,16 @@ const API_URL = 'http://localhost:3001';
 // ── DEFAULT DATA ──
 const DEFAULTS = {
   categories: [
-    { id:1, name:'Accompagnement', color:'#3b82f6' },
-    { id:2, name:'Médical', color:'#ef4444' },
-    { id:3, name:'Éducatif', color:'#10b981' },
-    { id:4, name:'Administratif', color:'#f59e0b' },
-    { id:5, name:'Familial', color:'#8b5cf6' },
-    { id:6, name:'Loisirs', color:'#06b6d4' }
+    { id:1,  name:'Autonomie',                   color:'#3b82f6' },
+    { id:2,  name:'Santé et bien-être',           color:'#ef4444' },
+    { id:3,  name:'Logement',                     color:'#10b981' },
+    { id:4,  name:'Vie sociale et loisirs',       color:'#f59e0b' },
+    { id:5,  name:'Vie affective et familiale',   color:'#8b5cf6' },
+    { id:6,  name:'Gestion du budget',            color:'#06b6d4' },
+    { id:7,  name:'Transport et déplacement',     color:'#f97316' },
+    { id:8,  name:'Orientation',                  color:'#84cc16' },
+    { id:9,  name:'Accompagnement',               color:'#0ea5e9' },
+    { id:10, name:'Administratif',                color:'#a855f7' }
   ],
   objectives: [
     { id:1, name:'Autonomie', description:"Développement de l'autonomie au quotidien" },
@@ -205,7 +209,13 @@ const DEFAULTS = {
 
 function initDefaults() {
   initEtabs();
-  if (!DB.get(DB.keys.categories)) DB.set(DB.keys.categories, DEFAULTS.categories);
+  const _catVersion = 'v3';
+  if (localStorage.getItem('ftr_cat_version') !== _catVersion) {
+    DB.set(DB.keys.categories, DEFAULTS.categories);
+    localStorage.setItem('ftr_cat_version', _catVersion);
+  } else if (!DB.get(DB.keys.categories)) {
+    DB.set(DB.keys.categories, DEFAULTS.categories);
+  }
   if (!DB.get(DB.keys.objectives)) DB.set(DB.keys.objectives, DEFAULTS.objectives);
   if (!DB.get(DB.keys.residents)) DB.set(DB.keys.residents, []);
   if (!DB.get(DB.keys.journal)) DB.set(DB.keys.journal, []);
@@ -235,6 +245,26 @@ function migrateFonctionColors() {
     }
   });
   if (changed) DB.set(DB.keys.fonctionColors, existing);
+}
+
+// ── AUDIT LOG ──
+function auditLog(action, details) {
+  try {
+    const session = Auth?.getSession?.();
+    if (!session) return;
+    const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+    log.unshift({
+      id: genId(),
+      date: new Date().toISOString(),
+      userId: session.userId,
+      user: [session.prenom, session.nom].filter(Boolean).join(' ') || session.username,
+      role: session.role,
+      action,
+      details: details || ''
+    });
+    if (log.length > 1000) log.length = 1000;
+    localStorage.setItem('ftr_audit_log', JSON.stringify(log));
+  } catch {}
 }
 
 // ── LOGIN HISTORY ──
@@ -561,6 +591,44 @@ function initMenuPopup() {
     hr.appendChild(userBox);
   }
 
+  // ── Badge messages non lus dans le header ──
+  if (!isAccueil && !document.getElementById('headerMsgBadge')) {
+    const session = Auth.getSession();
+    const hr2 = isAdmin ? header.querySelector('.atb-right') : header.querySelector('.header-right');
+    if (hr2 && session) {
+      const msgBtn = document.createElement('a');
+      msgBtn.id = 'headerMsgBadge';
+      msgBtn.href = 'messages.html';
+      msgBtn.title = 'Messages';
+      msgBtn.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--g100);color:var(--g600);margin-left:.5rem;flex-shrink:0;text-decoration:none;transition:background .15s';
+      msgBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+      msgBtn.onmouseover = () => msgBtn.style.background = 'var(--g200)';
+      msgBtn.onmouseout  = () => msgBtn.style.background = 'var(--g100)';
+
+      const dot = document.createElement('span');
+      dot.id = 'headerMsgDot';
+      dot.style.cssText = 'display:none;position:absolute;top:2px;right:2px;min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:8px;font-size:.55rem;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid #fff;box-sizing:border-box';
+      msgBtn.appendChild(dot);
+      hr2.insertBefore(msgBtn, hr2.firstChild);
+
+      function refreshMsgBadge() {
+        const msgs = JSON.parse(localStorage.getItem('ftr_messages') || '[]');
+        const uid = String(session.userId);
+        const count = msgs.filter(m => String(m.from) !== uid && !(m.readBy||[]).map(String).includes(uid)).length;
+        if (count > 0) {
+          dot.textContent = count > 99 ? '99+' : count;
+          dot.style.display = 'flex';
+          msgBtn.style.color = '#ef4444';
+        } else {
+          dot.style.display = 'none';
+          msgBtn.style.color = 'var(--g600)';
+        }
+      }
+      refreshMsgBadge();
+      setInterval(refreshMsgBadge, 15000);
+    }
+  }
+
   // Create popup if not exists (skip on accueil page)
   if (!isAccueil && !document.getElementById('menuPopup')) {
     const popup = document.createElement('div');
@@ -825,14 +893,6 @@ async function callMistral(prompt, system) {
 }
 
 // ── INIT ──
-// ── SERVICE WORKER CLEANUP ──
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   initDefaults();
   applyBranding();
@@ -842,6 +902,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderUserInfo();
   if (!Auth.isAdmin()) {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 });
 

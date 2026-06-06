@@ -590,22 +590,82 @@ function saveCredentials() {
 // ── DONNÉES ──
 function exportData(type) {
   let data = {};
-  if (type === 'residents' || type === 'all') data.residents = DB.get(DB.keys.residents) || [];
-  if (type === 'journal' || type === 'all') data.journal = DB.get(DB.keys.journal) || [];
+  const k = DB.keys;
+  if (type === 'residents' || type === 'all') data.residents = DB.get(k.residents) || [];
+  if (type === 'journal'   || type === 'all') data.journal   = DB.get(k.journal)   || [];
   if (type === 'all') {
-    data.categories = DB.get(DB.keys.categories) || [];
-    data.objectives = DB.get(DB.keys.objectives) || [];
-    data.presences = DB.get(DB.keys.presences) || {};
-    data.settings = DB.get(DB.keys.settings) || {};
+    data.categories    = DB.get(k.categories)    || [];
+    data.objectives    = DB.get(k.objectives)    || [];
+    data.presences     = DB.get(k.presences)     || {};
+    data.planning      = DB.get(k.planning)      || [];
+    data.incidents     = DB.get(k.incidents)     || [];
+    data.ppe           = DB.get(k.ppe)           || [];
+    data.repertoire    = DB.get(k.repertoire)    || [];
+    data.vehicules     = DB.get(k.vehicules)     || [];
+    data.documents     = JSON.parse(localStorage.getItem(k.documents) || '{}');
+    data.messages      = DB.get(k.messages)      || [];
+    data.conversations = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
+    data.interventions = DB.get(k.interventions) || [];
+    data.settings      = DB.get(k.settings)      || {};
+    data.branding      = DB.get(k.branding)      || {};
+    data.users         = DB.get(k.users)         || [];
+    data.fonctionColors= DB.get(k.fonctionColors)|| [];
+    data._exportedAt   = new Date().toISOString();
+    data._version      = '1.0';
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `ftr-export-${type}-${today()}.json`;
+  a.download = `ftr-backup-${type}-${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('Export téléchargé');
+  toast('Export téléchargé ✓');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        confirmDialog(
+          `Restaurer la sauvegarde du ${data._exportedAt ? new Date(data._exportedAt).toLocaleString('fr-FR') : 'fichier sélectionné'} ?\n\nLes données actuelles seront écrasées.`,
+          () => {
+            const k = DB.keys;
+            if (data.residents)     DB.set(k.residents,     data.residents);
+            if (data.journal)       DB.set(k.journal,       data.journal);
+            if (data.categories)    DB.set(k.categories,    data.categories);
+            if (data.objectives)    DB.set(k.objectives,    data.objectives);
+            if (data.presences)     DB.set(k.presences,     data.presences);
+            if (data.planning)      DB.set(k.planning,      data.planning);
+            if (data.incidents)     DB.set(k.incidents,     data.incidents);
+            if (data.ppe)           DB.set(k.ppe,           data.ppe);
+            if (data.repertoire)    DB.set(k.repertoire,    data.repertoire);
+            if (data.vehicules)     DB.set(k.vehicules,     data.vehicules);
+            if (data.documents)     localStorage.setItem(k.documents, JSON.stringify(data.documents));
+            if (data.messages)      DB.set(k.messages,      data.messages);
+            if (data.conversations) localStorage.setItem('ftr_conversations', JSON.stringify(data.conversations));
+            if (data.interventions) DB.set(k.interventions, data.interventions);
+            if (data.settings)      DB.set(k.settings,      data.settings);
+            if (data.branding)      DB.set(k.branding,      data.branding);
+            if (data.fonctionColors)DB.set(k.fonctionColors,data.fonctionColors);
+            toast('Données restaurées avec succès — rechargement…', 'success');
+            setTimeout(() => location.reload(), 1500);
+          }
+        );
+      } catch {
+        toast('Fichier invalide ou corrompu', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function resetData(type) {
@@ -648,6 +708,69 @@ function renderLoginHistory() {
   }).join('');
 }
 
+// ── AUDIT LOG ──
+const ACTION_LABELS = {
+  resident_create: 'Résident ajouté',   resident_update: 'Résident modifié',  resident_delete: 'Résident supprimé',
+  incident_create: 'Incident déclaré',  incident_update: 'Incident traité',
+  journal_create:  'Entrée journal',
+  ppe_create:      'Avenant créé',      ppe_update:      'Avenant modifié',
+  user_create:     'Utilisateur créé',  user_update:     'Utilisateur modifié',
+};
+const ACTION_COLORS = {
+  resident_create:'#10b981', resident_update:'#3b82f6', resident_delete:'#ef4444',
+  incident_create:'#f59e0b', incident_update:'#10b981',
+  journal_create: '#8b5cf6',
+  ppe_create:     '#06b6d4', ppe_update:     '#3b82f6',
+  user_create:    '#6366f1', user_update:    '#6366f1',
+};
+
+function renderAuditLog() {
+  const tbody = document.getElementById('auditLogBody');
+  if (!tbody) return;
+  const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+  if (!log.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Aucune action enregistrée</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.slice(0, 200).map(e => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    const timeStr = d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    const label = ACTION_LABELS[e.action] || e.action;
+    const color = ACTION_COLORS[e.action] || '#64748b';
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:.55rem 1rem;white-space:nowrap;font-size:.78rem">${dateStr} <span style="color:var(--muted)">${timeStr}</span></td>
+      <td style="padding:.55rem 1rem;font-size:.78rem;font-weight:500">${escHtml(e.user||'—')} <span style="font-size:.68rem;color:var(--muted)">(${escHtml(e.role||'')})</span></td>
+      <td style="padding:.55rem 1rem"><span style="display:inline-block;padding:1px 8px;border-radius:100px;font-size:.68rem;font-weight:700;background:${color}18;color:${color}">${label}</span></td>
+      <td style="padding:.55rem 1rem;font-size:.75rem;color:var(--g600);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.details||'')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportAuditLog() {
+  const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+  if (!log.length) { toast('Aucune action à exporter', 'info'); return; }
+  const header = 'Date,Heure,Utilisateur,Rôle,Action,Détails\n';
+  const rows = log.map(e => {
+    const d = new Date(e.date);
+    return [
+      d.toLocaleDateString('fr-FR'),
+      d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
+      e.user || '',
+      e.role || '',
+      ACTION_LABELS[e.action] || e.action,
+      (e.details || '').replace(/,/g, ';')
+    ].map(v => `"${v}"`).join(',');
+  }).join('\n');
+  const blob = new Blob(['﻿' + header + rows], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `audit-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Audit exporté ✓');
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
@@ -660,6 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEducateurs();
   initLogoUpload();
   renderLoginHistory();
+  renderAuditLog();
 
   ['setEtab','setVille','setFiness','setTel','setEmail'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', updatePreview);

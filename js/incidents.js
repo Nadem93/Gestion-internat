@@ -76,6 +76,7 @@ function saveIncident() {
   const list = getIncidents();
   list.unshift(incident);
   saveIncidents(list);
+  if (typeof auditLog === 'function') auditLog('incident_create', `${incident.titre} (${GRAVITE_LABELS[incident.gravite]||incident.gravite})`);
   closeModal('modalIncident');
   toast('Incident déclaré');
   renderIncidents();
@@ -166,7 +167,118 @@ function graviteColor(g) {
   return { leger:'#16a34a', moyen:'#ca8a04', grave:'#ea580c', critique:'#dc2626' }[g] || '#6b7280';
 }
 
+let _currentIncidentId = null;
+
+function printSingleIncident() {
+  if (!_currentIncidentId) return;
+  const list = getIncidents();
+  const i = list.find(x => x.id === _currentIncidentId);
+  if (!i) return;
+  _printIncidentWindow([i], `Incident — ${i.titre}`);
+}
+
+function exportIncidentsPDF() {
+  let list = getIncidents();
+  const search = (document.getElementById('searchIncident')?.value || '').toLowerCase();
+  const filterType = document.getElementById('filterType')?.value || '';
+  const filterGravite = document.getElementById('filterGravite')?.value || '';
+  const filterStatut = document.getElementById('filterStatut')?.value || '';
+  const session = Auth.getSession();
+  const isAdmin = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
+  list = list.filter(i => {
+    if (filterType && i.type !== filterType) return false;
+    if (filterGravite && i.gravite !== filterGravite) return false;
+    if (filterStatut && i.statut !== filterStatut) return false;
+    if (!isAdmin && i.declaredById !== session?.userId) return false;
+    if (search) {
+      const txt = `${i.titre} ${i.residentName||''} ${i.description||''} ${i.lieu||''} ${i.declaredBy||''}`.toLowerCase();
+      if (!txt.includes(search)) return false;
+    }
+    return true;
+  });
+  list.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  if (!list.length) { toast('Aucun incident à exporter', 'error'); return; }
+  _printIncidentWindow(list, `Rapport d'incidents — ${new Date().toLocaleDateString('fr-FR')}`);
+}
+
+function _printIncidentWindow(list, title) {
+  const settings = DB.get(DB.keys.settings) || {};
+  const gravColors = { leger:'#16a34a', moyen:'#ca8a04', grave:'#ea580c', critique:'#dc2626' };
+  const gravBg    = { leger:'#f0fdf4', moyen:'#fefce8', grave:'#ffedd5', critique:'#fef2f2' };
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escHtml(title)}</title>
+<style>
+  @page{margin:1.8cm 1.5cm}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:9.5pt;line-height:1.6;color:#334155;max-width:800px;margin:0 auto}
+  .top-stripe{height:6px;background:#0f2b4a;border-radius:0 0 4px 4px;margin-bottom:.5cm}
+  .doc-header{margin-bottom:.6cm}
+  .doc-header .etab{font-size:11pt;font-weight:300;color:#0f2b4a}
+  .doc-header .etab strong{font-weight:700}
+  .doc-header .doc-title{font-size:15pt;font-weight:800;color:#0f2b4a;margin-top:.05cm}
+  .doc-header .doc-meta{font-size:7.5pt;color:#64748b;margin-top:.15cm}
+  .incident{border:1px solid #e2e8f0;border-radius:8px;padding:.5cm .6cm;margin-bottom:.4cm;page-break-inside:avoid}
+  .inc-top{display:flex;align-items:flex-start;gap:.4cm;margin-bottom:.2cm}
+  .inc-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+  .inc-title{font-size:10.5pt;font-weight:700;color:#0f2b4a;margin:0 0 2px}
+  .inc-meta{font-size:7.5pt;color:#64748b;display:flex;flex-wrap:wrap;gap:.1cm .35cm}
+  .badge{display:inline-block;padding:1px 7px;border-radius:100px;font-size:7pt;font-weight:600}
+  .badges{display:flex;gap:.2cm;margin-top:.15cm}
+  .inc-desc{font-size:8.5pt;color:#475569;margin-top:.2cm;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:.2cm}
+  .inc-notes{font-size:8pt;color:#64748b;font-style:italic;margin-top:.15cm}
+  .inc-validation{font-size:7.5pt;color:#16a34a;margin-top:.15cm}
+  .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:7pt;color:#94a3b8}
+  .actions{text-align:center;margin:.4cm 0}
+  .actions button{padding:.35rem 1.1rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:9pt;margin:.2rem}
+  @media print{.actions{display:none}}
+</style></head><body>
+<div class="top-stripe"></div>
+<div class="doc-header">
+  <div class="etab"><strong>${escHtml(settings.etablissement||'Foyer d\'Hébergement')}</strong></div>
+  <div class="doc-title">${escHtml(title)}</div>
+  <div class="doc-meta">Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} · ${list.length} incident${list.length>1?'s':''}</div>
+</div>
+<div class="actions">
+  <button onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
+  <button onclick="window.close()">Fermer</button>
+</div>
+${list.map(i => {
+  const gc = gravColors[i.gravite]||'#6b7280';
+  const gb = gravBg[i.gravite]||'#f3f4f6';
+  const icon = INCIDENT_ICONS[i.type]||'📋';
+  return `<div class="incident">
+    <div class="inc-top">
+      <div class="inc-icon" style="background:${gb};color:${gc}">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="inc-title">${escHtml(i.titre)}</div>
+        <div class="inc-meta">
+          <span>📅 ${escHtml(i.date||'—')}${i.heure?' · '+i.heure.slice(0,5):''}</span>
+          ${i.residentName?`<span>👤 ${escHtml(i.residentName)}</span>`:''}
+          ${i.lieu?`<span>📍 ${escHtml(i.lieu)}</span>`:''}
+          <span>✍️ ${escHtml(i.declaredBy||'')}</span>
+        </div>
+        <div class="badges">
+          <span class="badge" style="background:${gb};color:${gc}">${GRAVITE_LABELS[i.gravite]||i.gravite}</span>
+          <span class="badge" style="background:#f1f5f9;color:#475569">${INCIDENT_TYPES[i.type]||i.type}</span>
+          <span class="badge" style="background:#f1f5f9;color:#475569">${STATUT_LABELS[i.statut]||i.statut}</span>
+        </div>
+      </div>
+    </div>
+    ${i.description?`<div class="inc-desc">${escHtml(i.description)}</div>`:''}
+    ${i.notes?`<div class="inc-notes">📎 Notes : ${escHtml(i.notes)}</div>`:''}
+    ${i.validatedBy?`<div class="inc-validation">✔ Traité par ${escHtml(i.validatedBy)}${i.validatedAt?' le '+new Date(i.validatedAt).toLocaleDateString('fr-FR'):''}</div>`:''}
+  </div>`;
+}).join('')}
+<div class="footer">${escHtml(settings.etablissement||'Foyer d\'Hébergement')} — Document généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 500);
+}
+
 function viewIncident(id) {
+  _currentIncidentId = id;
+  const btnPrint = document.getElementById('btnPrintIncident');
+  if (btnPrint) btnPrint.style.display = '';
   const list = getIncidents();
   const i = list.find(x => x.id === id);
   if (!i) return;
@@ -213,6 +325,8 @@ function viewIncident(id) {
 }
 
 function openValidation(id) {
+  const btnPrint = document.getElementById('btnPrintIncident');
+  if (btnPrint) btnPrint.style.display = 'none';
   closeModal('modalDetail');
   const list = getIncidents();
   const i = list.find(x => x.id === id);
@@ -261,6 +375,7 @@ function validateIncident(id) {
   i.validatedAt = new Date().toISOString();
 
   saveIncidents(list);
+  if (typeof auditLog === 'function') auditLog('incident_update', `${i.titre} → ${STATUT_LABELS[statut]||statut}`);
   closeModal('modalDetail');
   toast(`Incident ${STATUT_LABELS[statut]?.toLowerCase() || statut}`);
   renderIncidents();

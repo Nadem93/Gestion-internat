@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Avenants — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
+/* Champs plats (sans effet de profondeur) sur la page de rédaction de l'avenant */
+input, select, textarea {
+  background: #fff;
+  box-shadow: none;
+  border: 1px solid rgba(15,43,74,.15);
+}
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(15,43,74,.12);
+  border-color: var(--primary);
+}
 .section-card {
   border:1px solid var(--border);
   border-radius:var(--r);

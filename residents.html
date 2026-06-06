@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Résidents — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -32,6 +32,13 @@
         </div>
         <select id="filterObjectif" style="width:auto">
           <option value="">Tous les objectifs</option>
+        </select>
+        <select id="sortResidents" style="width:auto">
+          <option value="nom">Trier : Nom A→Z</option>
+          <option value="prenom">Trier : Prénom A→Z</option>
+          <option value="chambre">Trier : Chambre</option>
+          <option value="entree">Trier : Date d'entrée</option>
+          <option value="age">Trier : Âge</option>
         </select>
         <div style="margin-left:auto;display:flex;gap:.5rem">
           <button class="btn btn-ghost btn-icon" id="viewGrid" title="Grille"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>

@@ -252,22 +252,22 @@ function startComposeConv() {
   document.getElementById('chatInput').focus();
 }
 
-function addUsersToConv(convId, newUserIds) {
+function addUsersToConv(targetConvId, newUserIds) {
   const convs = DB.get('ftr_conversations') || {};
-  const conv = convs[convId];
+  const conv = convs[targetConvId];
   if (!conv) return;
   const oldUserIds = conv.userIds.map(String);
   const allIds = [...new Set([...oldUserIds, ...newUserIds.map(String)])];
   const newConvId = convId(allIds);
-  if (newConvId === convId) return; // no change
+  if (newConvId === targetConvId) return; // no change
   // Create new conversation entry
   convs[newConvId] = { id: newConvId, userIds: allIds, createdAt: conv.createdAt };
   // Update all messages to new convId
   const msgs = DB.get(DB.keys.messages) || [];
-  msgs.forEach(m => { if (m.convId === convId) m.convId = newConvId; });
+  msgs.forEach(m => { if (m.convId === targetConvId) m.convId = newConvId; });
   DB.set(DB.keys.messages, msgs);
   // Remove old conversation
-  delete convs[convId];
+  delete convs[targetConvId];
   DB.set('ftr_conversations', convs);
   currentConvId = newConvId;
   toast('Participant ajouté');

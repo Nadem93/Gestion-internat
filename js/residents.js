@@ -188,12 +188,26 @@ function populateFilterObjectifs() {
 
 // ── FILTRES ──
 function getResidents() {
-  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const q       = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const objectif = document.getElementById('filterObjectif')?.value || '';
+  const sortBy  = document.getElementById('sortResidents')?.value || 'nom';
   let list = DB.get(DB.keys.residents) || [];
-  if (q) list = list.filter(r => `${r.prenom} ${r.nom}`.toLowerCase().includes(q));
+  if (q) list = list.filter(r => `${r.prenom} ${r.nom}`.toLowerCase().includes(q) || (r.chambre||'').toLowerCase().includes(q));
   if (objectif) list = list.filter(r => (r.objectifs || []).includes(String(objectif)));
-  list.sort((a, b) => (a.statut === 'sorti' ? 1 : 0) - (b.statut === 'sorti' ? 1 : 0));
+
+  list.sort((a, b) => {
+    // Sortis toujours en dernier
+    const sortedA = a.statut === 'sorti' ? 1 : 0;
+    const sortedB = b.statut === 'sorti' ? 1 : 0;
+    if (sortedA !== sortedB) return sortedA - sortedB;
+    switch (sortBy) {
+      case 'prenom':  return (a.prenom||'').localeCompare(b.prenom||'');
+      case 'chambre': return (a.chambre||'').localeCompare(b.chambre||'', undefined, {numeric:true});
+      case 'entree':  return (a.entree||'').localeCompare(b.entree||'');
+      case 'age':     return (b.dob||'').localeCompare(a.dob||''); // plus âgé en premier
+      default:        return (a.nom||'').localeCompare(b.nom||'');
+    }
+  });
   return list;
 }
 
@@ -407,10 +421,12 @@ function saveResident() {
   if (id) {
     residents = residents.map(r => r.id === id ? { ...r, ...data } : r);
     toast('Résident mis à jour');
+    if (typeof auditLog === 'function') auditLog('resident_update', `${data.prenom} ${data.nom}`);
   } else {
     data.id = genId(); data.createdAt = new Date().toISOString();
     residents.push(data);
     toast('Résident ajouté');
+    if (typeof auditLog === 'function') auditLog('resident_create', `${data.prenom} ${data.nom}`);
   }
   DB.set(DB.keys.residents, residents);
   closeAllModals(); resetForm(); renderResidents();
@@ -421,7 +437,9 @@ function deleteResident() {
   const id = document.getElementById('residentId').value;
   if (!id) return;
   confirmDialog('Supprimer ce résident définitivement ?', () => {
+    const r = (DB.get(DB.keys.residents)||[]).find(x => x.id === id);
     DB.set(DB.keys.residents, (DB.get(DB.keys.residents)||[]).filter(r => r.id !== id));
+    if (typeof auditLog === 'function') auditLog('resident_delete', r ? `${r.prenom} ${r.nom}` : id);
     closeAllModals(); resetForm(); renderResidents();
     toast('Résident supprimé', 'info');
   });
@@ -478,6 +496,8 @@ function initResidents() {
   if (searchInput) searchInput.addEventListener('input', renderResidents);
   const filterObj = document.getElementById('filterObjectif');
   if (filterObj) filterObj.addEventListener('change', renderResidents);
+  const sortSel = document.getElementById('sortResidents');
+  if (sortSel) sortSel.addEventListener('change', renderResidents);
   const viewGrid = document.getElementById('viewGrid');
   if (viewGrid) viewGrid.addEventListener('click', () => { currentView='grid'; renderResidents(); });
   const viewList = document.getElementById('viewList');

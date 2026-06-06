@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Tableau de bord — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* Stat cards compactes sur le tableau de bord (écran uniquement) */
+    @media screen {
+      #statsGrid .stat-card { padding: .85rem .95rem; gap: .35rem; border-radius: 14px; }
+      #statsGrid .stat-card .stat-icon { width: 32px; height: 32px; }
+      #statsGrid .stat-card .stat-icon svg { width: 15px; height: 15px; }
+      #statsGrid .stat-card .stat-label { font-size: .66rem; letter-spacing: .04em; }
+      #statsGrid .stat-card .stat-num,
+      #statsGrid .stat-card .stat-value { font-size: 1.15rem; }
+      #statsGrid .stat-card .stat-change,
+      #statsGrid .stat-card .stat-detail { font-size: .68rem; }
+    }
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -129,6 +142,89 @@
           </div>
           <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto" id="dashboardRepertoire">
             <div class="empty" style="padding:1.5rem"><p>Aucun contact</p></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUIVI RÉSIDENTS (données des fiches) -->
+      <div class="section-label" style="margin:1.75rem 0 .25rem;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)" id="dashSuiviLabel">Suivi des résidents</div>
+      <div class="grid grid-2" style="gap:1.5rem;margin-top:.75rem" id="dashSuiviSection">
+
+        <!-- RDV MÉDICAUX À VENIR -->
+        <div class="card" id="dashCardRdv">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+            <span class="card-title">RDV médicaux à venir</span>
+            <span class="badge badge-gray" id="dashRdvCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashRdvMedicaux">
+            <div class="empty" style="padding:1.5rem"><p>Aucun RDV à venir</p></div>
+          </div>
+        </div>
+
+        <!-- RÉSIDENTS ACTUELLEMENT SORTIS -->
+        <div class="card" id="dashCardSorties">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0d9488"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            <span class="card-title">Résidents actuellement sortis</span>
+            <span class="badge badge-gray" id="dashSortiesCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSorties">
+            <div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>
+          </div>
+        </div>
+
+        <!-- SOLDES BUDGET NÉGATIFS -->
+        <div class="card" id="dashCardSoldes">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#dc2626"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span class="card-title">Soldes budget négatifs</span>
+            <span class="badge badge-gray" id="dashSoldesCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSoldes">
+            <div class="empty" style="padding:1.5rem"><p>Aucun solde négatif</p></div>
+          </div>
+        </div>
+
+        <!-- RAPPELS VACCINS -->
+        <div class="card" id="dashCardVaccins">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#9333ea"><path d="M18 2l4 4M17 7l-9 9-4 1 1-4 9-9zM13.5 6.5l4 4"/></svg>
+            <span class="card-title">Rappels de vaccins à faire</span>
+            <span class="badge badge-gray" id="dashVaccinsCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashVaccins">
+            <div class="empty" style="padding:1.5rem"><p>Aucun rappel en retard</p></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STATISTIQUES VISUELLES -->
+      <div class="grid grid-2" style="gap:1.5rem;margin-top:1.5rem" id="dashStatsSection">
+
+        <!-- Présences 7 jours -->
+        <div class="card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--green)"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span class="card-title">Présences — 7 derniers jours</span>
+          </div>
+          <div class="card-body">
+            <div id="chartPresences" style="display:flex;align-items:flex-end;gap:.4rem;height:80px;margin-bottom:.5rem"></div>
+            <div id="chartPresencesLegend" style="font-size:.7rem;color:var(--muted);text-align:center"></div>
+          </div>
+        </div>
+
+        <!-- Incidents par statut -->
+        <div class="card">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#dc2626"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="card-title">Incidents — répartition</span>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.6rem">
+            <div id="chartIncidents"></div>
+            <div id="chartIncidentsCats" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem"></div>
           </div>
         </div>
 
@@ -555,11 +651,83 @@
         </div>`;
       }).join('');
     }
+    // ── Graphique présences 7 jours ──
+    const presencesData = DB.get(DB.keys.presences) || {};
+    const allRes = (DB.get(DB.keys.residents)||[]).filter(r => r.statut !== 'sorti');
+    const total = allRes.length || 1;
+    const days7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0,10);
+      const presDay = presencesData[key] || {};
+      const count = allRes.filter(r => presDay[r.id] === 'present').length;
+      days7.push({ key, label: d.toLocaleDateString('fr-FR',{weekday:'short'}), count, pct: Math.round(count/total*100) });
+    }
+    const maxPct = Math.max(...days7.map(d => d.pct), 1);
+    const chartEl = document.getElementById('chartPresences');
+    if (chartEl) {
+      chartEl.innerHTML = days7.map(d => {
+        const h = Math.max(4, Math.round(d.pct / maxPct * 72));
+        const isToday = d.key === now.toISOString().slice(0,10);
+        const color = d.pct >= 80 ? '#10b981' : d.pct >= 50 ? '#f59e0b' : '#ef4444';
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="font-size:.6rem;color:var(--muted);font-weight:600">${d.pct}%</div>
+          <div style="width:100%;height:${h}px;background:${color};border-radius:3px 3px 0 0;opacity:${isToday?1:.75};transition:height .3s" title="${d.label} : ${d.count}/${total}"></div>
+          <div style="font-size:.62rem;color:${isToday?'var(--accent)':'var(--muted)'};font-weight:${isToday?700:400}">${d.label}</div>
+        </div>`;
+      }).join('');
+      const avgPct = Math.round(days7.reduce((s,d)=>s+d.pct,0)/7);
+      const legEl = document.getElementById('chartPresencesLegend');
+      if (legEl) legEl.textContent = `Moyenne sur 7 jours : ${avgPct}% · ${total} résidents actifs`;
+    }
+
+    // ── Graphique incidents par statut ──
+    const incAll = DB.get(DB.keys.incidents) || [];
+    const incStats = {
+      declare: { label:'Déclaré', color:'#3b82f6', count: incAll.filter(i=>i.statut==='declare').length },
+      cours:   { label:'En cours', color:'#f59e0b', count: incAll.filter(i=>i.statut==='cours').length },
+      valide:  { label:'Validé',   color:'#10b981', count: incAll.filter(i=>i.statut==='valide').length },
+      classe:  { label:'Classé',   color:'#94a3b8', count: incAll.filter(i=>i.statut==='classe').length },
+    };
+    const incTotal = incAll.length || 1;
+    const incChartEl = document.getElementById('chartIncidents');
+    if (incChartEl) {
+      incChartEl.innerHTML = Object.values(incStats).map(s => {
+        const pct = Math.round(s.count / incTotal * 100);
+        return `<div style="margin-bottom:.4rem">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px">
+            <span style="color:var(--g700);font-weight:500">${s.label}</span>
+            <span style="color:var(--muted)">${s.count} (${pct}%)</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;transition:width .4s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    const incCatEl = document.getElementById('chartIncidentsCats');
+    if (incCatEl) {
+      const byType = {};
+      incAll.forEach(i => { byType[i.type] = (byType[i.type]||0)+1; });
+      const typeColors = { chute:'#f59e0b', agression:'#ef4444', fugue:'#8b5cf6', violence:'#dc2626', medical:'#06b6d4', materiel:'#6366f1', accident:'#f97316', autre:'#94a3b8' };
+      const typeLabels = { chute:'Chute', agression:'Agression', fugue:'Fugue', violence:'Violence', medical:'Médical', materiel:'Matériel', accident:'Accident', autre:'Autre' };
+      incCatEl.innerHTML = Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type, count]) =>
+        `<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;border-radius:100px;font-size:.7rem;font-weight:600;background:${typeColors[type]||'#94a3b8'}18;color:${typeColors[type]||'#94a3b8'}">${typeLabels[type]||type} <strong>${count}</strong></span>`
+      ).join('');
+    }
+
+    renderResidentTracking();
+
     // ── Filtrer les cartes selon les permissions ──
     const _session = Auth.getSession();
     const _userId = _session?.userId;
     const canSee = (perm) => _session?.role === 'admin' || hasPermission(_userId, perm);
     const hideIf = (id, perm) => { const el = document.getElementById(id); if (el && !canSee(perm)) el.style.display = 'none'; };
+    // Section suivi résidents
+    if (!canSee('view_residents')) {
+      const _sl = document.getElementById('dashSuiviLabel'); if (_sl) _sl.style.display = 'none';
+      const _ss = document.getElementById('dashSuiviSection'); if (_ss) _ss.style.display = 'none';
+    }
     hideIf('presenceStatCard', 'access_presences');
     hideIf('statJournalCard', 'access_journal');
     hideIf('statIncidentCard', 'view_incidents');
@@ -571,7 +739,102 @@
     const _alCard = document.getElementById('dashCardAlertes');
     if (_alCard && !canSee('access_ppe') && !canSee('view_incidents')) _alCard.style.display = 'none';
     hideIf('dashCardRepertoire', 'access_repertoire');
+    const _statsEl = document.getElementById('dashStatsSection');
+    if (_statsEl && !canSee('access_presences') && !canSee('view_incidents')) _statsEl.style.display = 'none';
   }
+
+  // ── SUIVI DES RÉSIDENTS (agrège les données des fiches) ──
+  function renderResidentTracking() {
+    const residents = (DB.get(DB.keys.residents) || []);
+    const todayStr = new Date().toISOString().slice(0,10);
+    const nowMs = Date.now();
+    const resName = r => `${r.prenom||''} ${r.nom||''}`.trim() || '—';
+    const avatar = r => r.photo
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
+      : `<div class="avatar sm" style="background:${r.color||'var(--blue)'};flex-shrink:0;width:26px;height:26px;font-size:.6rem">${(r.prenom||'?')[0].toUpperCase()}</div>`;
+    const rowOpen = r => `<a href="resident.html?id=${r.id}" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;text-decoration:none;color:inherit">`;
+
+    // 1) RDV médicaux à venir (14 jours)
+    const rdvs = [];
+    residents.forEach(r => (r.sante?.rdv || []).forEach(v => {
+      if (!v.fait && v.date >= todayStr) rdvs.push({ r, v });
+    }));
+    rdvs.sort((a,b) => (a.v.date+'T'+(a.v.heure||'')).localeCompare(b.v.date+'T'+(b.v.heure||'')));
+    const rdvEl = document.getElementById('dashRdvMedicaux');
+    setCount('dashRdvCount', rdvs.length);
+    if (rdvs.length) {
+      rdvEl.innerHTML = rdvs.slice(0,10).map(({r,v}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(v.type||'Rendez-vous')}${v.lieu?' · '+escHtml(v.lieu):''}</div></div>
+        <span style="font-size:.72rem;color:var(--muted);white-space:nowrap;text-align:right">${formatDate(v.date)}${v.heure?'<br>'+v.heure:''}</span>
+      </a>`).join('');
+    } else { rdvEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun RDV à venir</p></div>'; }
+
+    // 2) Résidents actuellement sortis (non rentrés)
+    const sorties = [];
+    residents.forEach(r => (r.sorties || []).forEach(s => {
+      if (!s.retourEffectif) {
+        const prevu = s.retourPrevuDate ? new Date(s.retourPrevuDate+'T'+(s.retourPrevuHeure||'23:59')).getTime() : null;
+        const dep = s.date ? new Date(s.date+'T'+(s.heure||'00:00')).getTime() : 0;
+        const enCours = dep <= nowMs;
+        const retard = prevu && prevu < nowMs;
+        sorties.push({ r, s, enCours, retard, sortKey: prevu || dep });
+      }
+    }));
+    sorties.sort((a,b) => a.sortKey - b.sortKey);
+    const soEl = document.getElementById('dashSorties');
+    setCount('dashSortiesCount', sorties.length);
+    if (sorties.length) {
+      soEl.innerHTML = sorties.slice(0,10).map(({r,s,retard}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(s.destination||'Sortie')}${s.retourPrevuDate?' · retour '+formatDate(s.retourPrevuDate)+(s.retourPrevuHeure?' '+s.retourPrevuHeure:''):''}</div></div>
+        <span class="badge ${retard?'badge-red':'badge-amber'}" style="white-space:nowrap">${retard?'En retard':'Sorti(e)'}</span>
+      </a>`).join('');
+    } else { soEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>'; }
+
+    // 3) Soldes budget négatifs
+    const soldes = [];
+    residents.forEach(r => {
+      const ops = (r.budget && r.budget.operations) || [];
+      if (!ops.length) return;
+      const solde = ops.reduce((a,o) => a + (o.type==='recette' ? Number(o.montant||0) : -Number(o.montant||0)), 0);
+      if (solde < 0) soldes.push({ r, solde });
+    });
+    soldes.sort((a,b) => a.solde - b.solde);
+    const sdEl = document.getElementById('dashSoldes');
+    setCount('dashSoldesCount', soldes.length);
+    if (soldes.length) {
+      sdEl.innerHTML = soldes.slice(0,10).map(({r,solde}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div></div>
+        <span style="font-weight:700;color:#dc2626;white-space:nowrap">${solde.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
+      </a>`).join('');
+    } else { sdEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun solde négatif</p></div>'; }
+
+    // 4) Rappels de vaccins en retard
+    const vaccins = [];
+    residents.forEach(r => (r.sante?.vaccins || []).forEach(vc => {
+      if (vc.rappel && vc.rappel < todayStr) vaccins.push({ r, vc });
+    }));
+    vaccins.sort((a,b) => (a.vc.rappel||'').localeCompare(b.vc.rappel||''));
+    const vcEl = document.getElementById('dashVaccins');
+    setCount('dashVaccinsCount', vaccins.length);
+    if (vaccins.length) {
+      vcEl.innerHTML = vaccins.slice(0,10).map(({r,vc}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(vc.nom||'Vaccin')}</div></div>
+        <span style="font-size:.72rem;color:#dc2626;font-weight:600;white-space:nowrap">${formatDate(vc.rappel)}</span>
+      </a>`).join('');
+    } else { vcEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun rappel en retard</p></div>'; }
+  }
+
+  function setCount(id, n) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (n > 0) { el.style.display = ''; el.textContent = n; el.className = 'badge ' + (n > 0 ? 'badge-amber' : 'badge-gray'); }
+    else el.style.display = 'none';
+  }
+
   renderDashboard();
 </script>
 </body>
