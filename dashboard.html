@@ -525,7 +525,7 @@
     }
 
     const nc = document.getElementById('navResCount');
-    if (s.totalResidents > 0) { nc.style.display=''; nc.textContent = s.totalResidents; }
+    if (nc && s.totalResidents > 0) { nc.style.display=''; nc.textContent = s.totalResidents; }
 
     const journal = (DB.get(DB.keys.journal)||[]).slice(-5).reverse();
     const jEl = document.getElementById('recentJournal');
