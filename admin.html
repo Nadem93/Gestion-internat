@@ -905,6 +905,56 @@ function toggleRapportPeriode() {
   document.getElementById('rapportAnneeWrap').style.display = t === 'annee' ? '' : 'none';
 }
 
+// ── GRAPHIQUES SVG (partagés : rapport PDF + page Statistiques) ──
+function svgHBar(obj, color, keepOrder, colorMap) {
+  let entries = Object.entries(obj).filter(([, v]) => v > 0);
+  if (!keepOrder) entries = entries.sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return '<p class="empty-line" style="font-size:.82rem;color:#94a3b8;font-style:italic">Aucune donnée.</p>';
+  const max = Math.max(...entries.map(e => e[1]), 1);
+  const rowH = 26, labelW = 150, barMax = 470, padL = 6, padT = 6, padB = 16;
+  const W = padL + labelW + barMax + 44, H = padT + entries.length * rowH + padB;
+  let grid = '';
+  for (let k = 0; k <= 4; k++) { const x = padL + labelW + barMax * k / 4; grid += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + entries.length * rowH}" stroke="#e8edf2" stroke-width="1"/><text x="${x}" y="${padT + entries.length * rowH + 12}" text-anchor="middle" font-size="7" fill="#94a3b8">${Math.round(max * k / 4)}</text>`; }
+  const bars = entries.map(([label, v], i) => {
+    const y = padT + i * rowH, bw = Math.max(2, Math.round(v / max * barMax));
+    const col = (colorMap && colorMap[label]) || color;
+    return `<text x="${padL + labelW - 6}" y="${y + rowH / 2 + 3}" text-anchor="end" font-size="9" fill="#334155">${escHtml(String(label)).slice(0, 26)}</text><rect x="${padL + labelW}" y="${y + 4}" width="${bw}" height="${rowH - 10}" rx="3" fill="${col}"/><text x="${padL + labelW + bw + 5}" y="${y + rowH / 2 + 3}" font-size="9" font-weight="700" fill="#0f2b4a">${v}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${grid}${bars}</svg>`;
+}
+function svgColumns(labels, series) {
+  const W = 720, H = 230, padL = 30, padR = 10, padT = 24, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  let max = Math.max(...series.flatMap(s => s.data), 1);
+  const step = Math.max(1, Math.ceil(max / 4)); max = step * 4;
+  const n = labels.length, groupW = plotW / n, barW = Math.max(4, Math.min(16, groupW / (series.length + 1)));
+  let grid = '';
+  for (let k = 0; k <= 4; k++) { const y = padT + plotH - plotH * k / 4; grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e8edf2" stroke-width="1"/><text x="${padL - 4}" y="${y + 3}" text-anchor="end" font-size="7" fill="#94a3b8">${step * k}</text>`; }
+  let bars = '';
+  labels.forEach((lab, i) => {
+    const gx = padL + groupW * i + groupW / 2;
+    series.forEach((s, si) => {
+      const v = s.data[i] || 0, bh = Math.round(v / max * plotH), x = gx - (series.length * barW) / 2 + si * barW;
+      bars += `<rect x="${x}" y="${padT + plotH - bh}" width="${barW - 1.5}" height="${bh}" rx="2" fill="${s.color}"/>`;
+      if (v > 0) bars += `<text x="${(x + (barW - 1.5) / 2).toFixed(1)}" y="${padT + plotH - bh - 2}" text-anchor="middle" font-size="6.5" fill="#475569">${v}</text>`;
+    });
+    bars += `<text x="${gx.toFixed(1)}" y="${H - padB + 12}" text-anchor="middle" font-size="7.5" fill="#475569">${escHtml(lab)}</text>`;
+  });
+  let legend = '';
+  series.forEach((s, si) => { const lx = padL + si * 150; legend += `<rect x="${lx}" y="4" width="10" height="10" rx="2" fill="${s.color}"/><text x="${lx + 14}" y="13" font-size="8" fill="#334155">${escHtml(s.name)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px"><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#cbd5e1" stroke-width="1"/>${grid}${bars}${legend}</svg>`;
+}
+function svgDonut(segments, centerLabel) {
+  const total = segments.reduce((a, s) => a + s.value, 0);
+  if (!total) return '<p class="empty-line" style="font-size:.82rem;color:#94a3b8;font-style:italic">Aucune donnée.</p>';
+  const cx = 70, cy = 70, r = 50, sw = 22, circ = 2 * Math.PI * r;
+  let off = 0, arcs = '';
+  segments.forEach(s => { if (s.value <= 0) return; const dash = s.value / total * circ; arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${(circ - dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`; off += dash; });
+  const center = `<text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="20" font-weight="800" fill="#0f2b4a">${total}</text><text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="7.5" fill="#94a3b8">${centerLabel || ''}</text>`;
+  const legend = segments.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:.78rem;margin-bottom:4px"><span style="width:11px;height:11px;border-radius:2px;background:${s.color};display:inline-block;flex-shrink:0"></span>${escHtml(s.label)} : <strong>${s.value}</strong> (${Math.round(s.value / total * 100)}%)</div>`).join('');
+  return `<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="120" height="120" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
+}
+
 function genererRapportPDF() {
   const type = document.getElementById('rapportType').value;
   let startStr, endStr, label;
@@ -1038,55 +1088,6 @@ function genererRapportPDF() {
   const _inB = (d, b) => { const s = String(d || '').slice(0, 10); return s >= b.start && s <= b.end; };
   const jSeries = buckets.map(b => jPeriod.filter(e => _inB(e.date, b)).length);
   const iSeries = buckets.map(b => iPeriod.filter(i => _inB(i.date, b)).length);
-
-  // ── Graphiques SVG (impriment proprement) ──
-  function svgHBar(obj, color, keepOrder) {
-    let entries = Object.entries(obj).filter(([, v]) => v > 0);
-    if (!keepOrder) entries = entries.sort((a, b) => b[1] - a[1]);
-    if (!entries.length) return '<p class="empty-line">Aucune donnée sur la période.</p>';
-    const max = Math.max(...entries.map(e => e[1]), 1);
-    const rowH = 26, labelW = 150, barMax = 470, padL = 6, padT = 6, padB = 16;
-    const W = padL + labelW + barMax + 44, H = padT + entries.length * rowH + padB;
-    let grid = '';
-    for (let k = 0; k <= 4; k++) { const x = padL + labelW + barMax * k / 4; grid += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + entries.length * rowH}" stroke="#e8edf2" stroke-width="1"/><text x="${x}" y="${padT + entries.length * rowH + 12}" text-anchor="middle" font-size="7" fill="#94a3b8">${Math.round(max * k / 4)}</text>`; }
-    const bars = entries.map(([label, v], i) => {
-      const y = padT + i * rowH, bw = Math.max(2, Math.round(v / max * barMax));
-      return `<text x="${padL + labelW - 6}" y="${y + rowH / 2 + 3}" text-anchor="end" font-size="9" fill="#334155">${escHtml(String(label)).slice(0, 26)}</text><rect x="${padL + labelW}" y="${y + 4}" width="${bw}" height="${rowH - 10}" rx="3" fill="${color}"/><text x="${padL + labelW + bw + 5}" y="${y + rowH / 2 + 3}" font-size="9" font-weight="700" fill="#0f2b4a">${v}</text>`;
-    }).join('');
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${grid}${bars}</svg>`;
-  }
-  function svgColumns(labels, series) {
-    const W = 720, H = 230, padL = 30, padR = 10, padT = 24, padB = 30;
-    const plotW = W - padL - padR, plotH = H - padT - padB;
-    let max = Math.max(...series.flatMap(s => s.data), 1);
-    const step = Math.max(1, Math.ceil(max / 4)); max = step * 4;
-    const n = labels.length, groupW = plotW / n, barW = Math.max(4, Math.min(16, groupW / (series.length + 1)));
-    let grid = '';
-    for (let k = 0; k <= 4; k++) { const y = padT + plotH - plotH * k / 4; grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e8edf2" stroke-width="1"/><text x="${padL - 4}" y="${y + 3}" text-anchor="end" font-size="7" fill="#94a3b8">${step * k}</text>`; }
-    let bars = '';
-    labels.forEach((lab, i) => {
-      const gx = padL + groupW * i + groupW / 2;
-      series.forEach((s, si) => {
-        const v = s.data[i] || 0, bh = Math.round(v / max * plotH), x = gx - (series.length * barW) / 2 + si * barW;
-        bars += `<rect x="${x}" y="${padT + plotH - bh}" width="${barW - 1.5}" height="${bh}" rx="2" fill="${s.color}"/>`;
-        if (v > 0) bars += `<text x="${(x + (barW - 1.5) / 2).toFixed(1)}" y="${padT + plotH - bh - 2}" text-anchor="middle" font-size="6.5" fill="#475569">${v}</text>`;
-      });
-      bars += `<text x="${gx.toFixed(1)}" y="${H - padB + 12}" text-anchor="middle" font-size="7.5" fill="#475569">${escHtml(lab)}</text>`;
-    });
-    let legend = '';
-    series.forEach((s, si) => { const lx = padL + si * 150; legend += `<rect x="${lx}" y="4" width="10" height="10" rx="2" fill="${s.color}"/><text x="${lx + 14}" y="13" font-size="8" fill="#334155">${escHtml(s.name)}</text>`; });
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px"><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#cbd5e1" stroke-width="1"/>${grid}${bars}${legend}</svg>`;
-  }
-  function svgDonut(segments, centerLabel) {
-    const total = segments.reduce((a, s) => a + s.value, 0);
-    if (!total) return '<p class="empty-line">Aucune donnée sur la période.</p>';
-    const cx = 70, cy = 70, r = 50, sw = 22, circ = 2 * Math.PI * r;
-    let off = 0, arcs = '';
-    segments.forEach(s => { if (s.value <= 0) return; const dash = s.value / total * circ; arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${(circ - dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`; off += dash; });
-    const center = `<text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="20" font-weight="800" fill="#0f2b4a">${total}</text><text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="7.5" fill="#94a3b8">${centerLabel || ''}</text>`;
-    const legend = segments.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:8.5pt;margin-bottom:4px"><span style="width:11px;height:11px;border-radius:2px;background:${s.color};display:inline-block;flex-shrink:0"></span>${escHtml(s.label)} : <strong>${s.value}</strong> (${Math.round(s.value / total * 100)}%)</div>`).join('');
-    return `<div style="display:flex;align-items:center;gap:.7cm"><svg viewBox="0 0 140 140" width="128" height="128" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
-  }
 
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -1279,34 +1280,20 @@ function renderPpeBars() {
   const ppe = DB.get(DB.keys.ppe) || [];
   const total = ppe.length;
   if (totalEl) totalEl.textContent = total + ' avenant' + (total > 1 ? 's' : '');
-  if (!total) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucun avenant</div>'; return; }
-  const statuts = [
-    { key:'actif',     label:'Actif',       color:'#10b981' },
-    { key:'brouillon', label:'Brouillon',   color:'#f59e0b' },
-    { key:'termine',   label:'Terminé',     color:'#94a3b8' },
-  ];
   const counts = {};
-  ppe.forEach(p => { counts[p.statut] = (counts[p.statut]||0) + 1; });
-  const maxC = Math.max(...statuts.map(s => counts[s.key]||0), 1);
-  el.innerHTML = statuts.map(s => {
-    const c = counts[s.key] || 0;
-    const pct = Math.round(c/total*100);
-    const barW = Math.round(c/maxC*100);
-    return `<div style="display:flex;align-items:center;gap:.75rem">
-      <span style="width:10px;height:10px;border-radius:3px;background:${s.color};flex-shrink:0"></span>
-      <span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:90px">${s.label}</span>
-      <div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${s.color};width:${barW}%;transition:width 1s ease"></div></div>
-      <span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:28px;text-align:right">${c}</span>
-      <span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span>
-    </div>`;
-  }).join('');
+  ppe.forEach(p => { counts[p.statut] = (counts[p.statut] || 0) + 1; });
+  el.innerHTML = svgDonut([
+    { label: 'Actif', value: counts.actif || 0, color: '#10b981' },
+    { label: 'Brouillon', value: counts.brouillon || 0, color: '#f59e0b' },
+    { label: 'Terminé', value: counts.termine || 0, color: '#94a3b8' }
+  ], 'avenants');
 }
 
 function renderDocBars() {
   const el = document.getElementById('docBars');
   const totalEl = document.getElementById('docTotal');
   if (!el) return;
-  const docs = JSON.parse(localStorage.getItem('ftr_documents') || '{}');
+  const docs = DB.get(DB.keys.documents) || {};
   const catLabels = { administratif:'Administratif', medical:'Médical', scolaire:'Scolaire', judiciaire:'Judiciaire', contrat:'Contrat', ressource:'Ressource', autre:'Autre' };
   const catColors = { administratif:'#3b82f6', medical:'#ef4444', scolaire:'#10b981', judiciaire:'#8b5cf6', contrat:'#f59e0b', ressource:'#06b6d4', autre:'#94a3b8' };
   const counts = {};
@@ -1316,20 +1303,9 @@ function renderDocBars() {
     arr.forEach(d => { const c = d.category || 'autre'; counts[c] = (counts[c]||0)+1; total++; });
   });
   if (totalEl) totalEl.textContent = total + ' document' + (total>1?'s':'');
-  if (!total) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucun document</div>'; return; }
-  const maxC = Math.max(...Object.values(counts), 1);
-  el.innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([cat, c]) => {
-    const pct = Math.round(c/total*100);
-    const barW = Math.round(c/maxC*100);
-    const color = catColors[cat] || '#94a3b8';
-    return `<div style="display:flex;align-items:center;gap:.75rem">
-      <span style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0"></span>
-      <span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:100px">${catLabels[cat]||cat}</span>
-      <div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${color};width:${barW}%;transition:width 1s ease"></div></div>
-      <span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:28px;text-align:right">${c}</span>
-      <span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span>
-    </div>`;
-  }).join('');
+  const data = {}, colorMap = {};
+  Object.entries(counts).forEach(([cat, c]) => { const lbl = catLabels[cat] || cat; data[lbl] = c; colorMap[lbl] = catColors[cat] || '#94a3b8'; });
+  el.innerHTML = svgHBar(data, '#3b82f6', false, colorMap);
 }
 
 function renderPresenceChart(residents, presences, freq) {
@@ -1410,13 +1386,9 @@ function renderJournalCatBars(journal, freq) {
   if (!cats.length || !total) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucune donnée</div>'; return; }
   const counts = {};
   journal.forEach(e => { const c = String(e.categorie || e.category || e.categoryId || ''); counts[c] = (counts[c]||0) + 1; });
-  const withCount = cats.map(c => ({...c, count: counts[String(c.id)]||0})).sort((a,b) => b.count - a.count);
-  const maxCount = Math.max(...withCount.map(c => c.count), 1);
-  el.innerHTML = withCount.map(c => {
-    const pct = Math.round((c.count/total)*100);
-    const barW = Math.round((c.count/maxCount)*100);
-    return `<div style="display:flex;align-items:center;gap:.75rem"><span style="width:10px;height:10px;border-radius:3px;background:${c.color};flex-shrink:0"></span><span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:120px">${escHtml(c.name)}</span><div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${c.color};width:${barW}%;transition:width 1s ease"></div></div><span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:36px;text-align:right">${c.count}</span><span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span></div>`;
-  }).join('');
+  const data = {}, colorMap = {};
+  cats.forEach(c => { const n = counts[String(c.id)] || 0; if (n > 0) { data[c.name] = n; colorMap[c.name] = c.color; } });
+  el.innerHTML = svgHBar(data, '#e85d04', false, colorMap);
 }
 
 function renderIncidentTypeBars(incidents) {
@@ -1428,16 +1400,11 @@ function renderIncidentTypeBars(incidents) {
   if (!total) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:.5rem 0">Aucun incident</div>'; return; }
   const types = { chute:'Chute', agression:'Agression', fugue:'Fugue', violence:'Violence', medical:'Médical', materiel:'Dégât', accident:'Accident', autre:'Autre' };
   const colors = { chute:'#f59e0b', agression:'#ef4444', fugue:'#8b5cf6', violence:'#dc2626', medical:'#06b6d4', materiel:'#f97316', accident:'#eab308', autre:'#6b7280' };
-  const icons = { chute:'🦶', agression:'👊', fugue:'🚪', violence:'⚡', medical:'💊', materiel:'🔧', accident:'⚠️', autre:'📋' };
   const counts = {};
   incidents.forEach(i => { const t = i.type || 'autre'; counts[t] = (counts[t]||0) + 1; });
-  const entries = Object.entries(types).map(([k,label]) => ({key:k,label,count:counts[k]||0,color:colors[k],icon:icons[k]})).sort((a,b) => b.count - a.count);
-  const maxCount = Math.max(...entries.map(e => e.count), 1);
-  el.innerHTML = entries.map(e => {
-    const pct = Math.round((e.count/total)*100);
-    const barW = Math.round((e.count/maxCount)*100);
-    return `<div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1rem;width:20px;text-align:center;flex-shrink:0">${e.icon}</span><span style="font-size:.78rem;font-weight:500;color:var(--text);min-width:100px">${e.label}</span><div style="flex:1;height:8px;border-radius:var(--r-full);background:var(--g100);overflow:hidden"><div style="height:100%;border-radius:var(--r-full);background:${e.color};width:${barW}%;transition:width 1s ease"></div></div><span style="font-size:.75rem;font-weight:700;color:var(--g600);min-width:36px;text-align:right">${e.count}</span><span style="font-size:.68rem;color:var(--muted);min-width:32px">${pct}%</span></div>`;
-  }).join('');
+  const data = {}, colorMap = {};
+  Object.entries(counts).forEach(([t, c]) => { const lbl = types[t] || t; data[lbl] = c; colorMap[lbl] = colors[t] || '#6b7280'; });
+  el.innerHTML = svgHBar(data, '#dc2626', false, colorMap);
 }
 
 function renderInterventions() {
