@@ -135,6 +135,22 @@
     .perm-btn{display:inline-flex;align-items:center;justify-content:center;padding:.35rem .7rem;border-radius:var(--r);border:1.5px solid rgba(15,43,74,.14);background:rgba(255,255,255,.8);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;gap:.3rem}
     .perm-btn:hover{border-color:var(--av);color:var(--av);background:#fff}
     .perm-btn.active{background:var(--av-l);border-color:var(--av);color:var(--av);box-shadow:0 0 0 2px var(--av-l)}
+    /* Permissions : cartes de rôles */
+    .role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem}
+    .role-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,43,74,.06);display:flex;flex-direction:column;transition:box-shadow .2s,transform .2s}
+    .role-card:hover{box-shadow:0 8px 22px rgba(15,43,74,.1);transform:translateY(-2px)}
+    .role-card-top{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;color:#fff}
+    .role-card-top .role-name{font-weight:700;font-size:.9rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .role-card-top .role-edit{background:rgba(255,255,255,.25);border:none;color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:.8rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .role-card-top .role-edit:hover{background:rgba(255,255,255,.45)}
+    .role-card-body{padding:.75rem .9rem;display:flex;flex-direction:column;gap:.55rem;flex:1}
+    .role-count{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .role-perms{display:flex;flex-wrap:wrap;gap:.3rem}
+    .role-perm{font-size:.66rem;font-weight:600;padding:.18rem .55rem;border-radius:100px;background:var(--g100);color:var(--g600)}
+    .role-noperm{font-size:.76rem;color:var(--g400);font-style:italic}
+    .perm-group{margin-bottom:.7rem}
+    .perm-group:last-child{margin-bottom:0}
+    .perm-group-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.4rem}
 
     /* ── RESPONSIVE ── */
     @media(max-width:900px){
@@ -477,11 +493,8 @@
 
   <!-- ═══ PERMISSIONS ═══ -->
   <div id="tab-permissions" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Associez couleurs et droits à chaque rôle</div></div><button class="btn btn-violet btn-sm" onclick="resetFonctionForm();openModal('modalFonction')">+ Ajouter</button></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div class="card"><div class="card-body" style="padding:0"><div id="fonctionList"></div></div></div>
-      <div class="card"><div class="card-header"><span class="card-title">💡 À propos des permissions</span></div><div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7"><p>Chaque fonction peut avoir une couleur distincte et des permissions spécifiques.</p><div style="margin-top:1rem;display:flex;flex-direction:column;gap:.4rem"><div class="rights-item"><span class="rights-dot" style="background:#3b82f6"></span>Éducateur spécialisé</div><div class="rights-item"><span class="rights-dot" style="background:#8b5cf6"></span>Psychologue</div><div class="rights-item"><span class="rights-dot" style="background:#ef4444"></span>Infirmier</div><div class="rights-item"><span class="rights-dot" style="background:#f59e0b"></span>Chef de service</div><div class="rights-item"><span class="rights-dot" style="background:#14b8a6"></span>Agent hôtelier</div><div class="rights-item"><span class="rights-dot" style="background:#ec4899"></span>Maître / Maîtresse de maison</div><div class="rights-item"><span class="rights-dot" style="background:#0ea5e9"></span>Veilleur de nuit</div><div class="rights-item"><span class="rights-dot" style="background:#78716c"></span>Secrétaire</div></div></div></div>
-    </div>
+    <div class="panel-header"><div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Une carte par rôle — cliquez sur ✎ pour ajuster les droits d'accès</div></div><button class="btn btn-violet btn-sm" onclick="resetFonctionForm();openModal('modalFonction')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouvelle fonction</button></div>
+    <div class="role-grid" id="fonctionList"></div>
   </div>
 
   <!-- ═══ MON COMPTE ═══ -->

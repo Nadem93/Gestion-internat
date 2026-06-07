@@ -316,26 +316,48 @@ function renderFonctions() {
   const el = document.getElementById('fonctionList');
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2rem"><p>Aucune fonction définie</p></div>`;
+    el.innerHTML = `<div class="empty" style="padding:2rem;grid-column:1/-1"><p>Aucune fonction définie</p></div>`;
     return;
   }
   el.innerHTML = list.map(f => {
-    const perms = (f.permissions || []).map(p => `<span class="badge" style="background:var(--green)12;color:var(--green);font-size:.65rem">${escHtml(PERMISSION_LABELS[p]||p)}</span>`).join('');
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
-      <span style="width:14px;height:14px;border-radius:4px;background:${f.color};flex-shrink:0"></span>
-      <span style="flex:1;font-weight:600;font-size:.875rem">${escHtml(f.fonction)}</span>
-      <div style="display:flex;gap:.3rem;flex-wrap:wrap">${perms}</div>
-      <button class="btn btn-ghost btn-sm" onclick="editFonction(${f.id})">Modifier</button>
+    const perms = f.permissions || [];
+    const chips = perms.length
+      ? perms.map(p => `<span class="role-perm">${escHtml(PERMISSION_LABELS[p] || p)}</span>`).join('')
+      : '<span class="role-noperm">Aucun droit accordé</span>';
+    return `<div class="role-card">
+      <div class="role-card-top" style="background:${f.color}">
+        <span class="role-name">${escHtml(f.fonction)}</span>
+        <button class="role-edit" title="Modifier" onclick="editFonction(${f.id})">✎</button>
+      </div>
+      <div class="role-card-body">
+        <div class="role-count">${perms.length} droit${perms.length > 1 ? 's' : ''} d'accès</div>
+        <div class="role-perms">${chips}</div>
+      </div>
     </div>`;
   }).join('');
 }
+
+const PERM_GROUPS = [
+  { label: 'Général', keys: ['view_dashboard'] },
+  { label: 'Résidents & projet', keys: ['view_residents', 'edit_residents', 'access_ppe', 'access_sante'] },
+  { label: 'Suivi quotidien', keys: ['access_journal', 'access_presences', 'access_repertoire', 'access_documents', 'access_vehicules'] },
+  { label: 'Incidents', keys: ['view_incidents', 'validate_incidents'] },
+  { label: 'Administration', keys: ['access_interventions', 'access_employes', 'access_admin', 'manage_users'] }
+];
 
 function renderFonctionPermissions(selected) {
   const el = document.getElementById('fonctionPermissions');
   if (!el) return;
   selected = selected || [];
-  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:.4rem">` + Object.entries(PERMISSION_LABELS).map(([key, label]) => `
-    <button type="button" class="perm-btn ${selected.includes(key)?'active':''}" data-key="${key}" onclick="this.classList.toggle('active')">${escHtml(label)}</button>`).join('') + `</div>`;
+  const used = new Set();
+  const btn = k => `<button type="button" class="perm-btn ${selected.includes(k) ? 'active' : ''}" data-key="${k}" onclick="this.classList.toggle('active')">${escHtml(PERMISSION_LABELS[k] || k)}</button>`;
+  let html = PERM_GROUPS.map(g => {
+    const btns = g.keys.filter(k => PERMISSION_LABELS[k]).map(k => { used.add(k); return btn(k); }).join('');
+    return btns ? `<div class="perm-group"><div class="perm-group-label">${g.label}</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${btns}</div></div>` : '';
+  }).join('');
+  const others = Object.keys(PERMISSION_LABELS).filter(k => !used.has(k));
+  if (others.length) html += `<div class="perm-group"><div class="perm-group-label">Autres</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${others.map(btn).join('')}</div></div>`;
+  el.innerHTML = html;
 }
 
 function editFonction(id) {
