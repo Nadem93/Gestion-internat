@@ -173,19 +173,19 @@ const DEFAULTS = {
   users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin' }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
-    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: [] },
-    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: [] },
-    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: [] },
-    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: [] },
-    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: [] },
-    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: [] },
-    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: [] },
-    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: [] },
-    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: [] },
-    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['edit_residents', 'view_incidents', 'validate_incidents'] },
-    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: [] },
-    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: [] },
-    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['edit_residents', 'view_incidents', 'validate_incidents', 'access_admin', 'manage_users'] }
+    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
+    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
+    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_sante','view_incidents'] },
+    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents'] },
+    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_sante'] },
+    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_vehicules'] },
+    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents'] },
+    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules'] },
+    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules'] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions'] },
+    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents'] },
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_admin','access_employes','manage_users'] }
   ],
   aiPrompts: {
     ppe: {
@@ -231,6 +231,8 @@ function initDefaults() {
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
   else migrateFonctionColors();
+  // Migration unique : applique les permissions par défaut aux rôles standard
+  if (localStorage.getItem(DB._k('ftr_perm_v')) !== '1') { applyDefaultFonctionPerms(); localStorage.setItem(DB._k('ftr_perm_v'), '1'); }
   if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
   setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
 }
@@ -245,6 +247,29 @@ function migrateFonctionColors() {
     }
   });
   if (changed) DB.set(DB.keys.fonctionColors, existing);
+}
+
+// Applique (une fois) les permissions par défaut aux fonctions standard existantes
+function applyDefaultFonctionPerms() {
+  const list = DB.get(DB.keys.fonctionColors) || [];
+  let changed = false;
+  list.forEach(f => {
+    const def = DEFAULTS.fonctionColors.find(d => d.fonction === f.fonction);
+    if (def) { f.permissions = [...def.permissions]; changed = true; }
+  });
+  if (changed) DB.set(DB.keys.fonctionColors, list);
+}
+
+// Garde d'accès à un module : true si admin ou permission accordée, sinon affiche un refus
+function requireModule(perm) {
+  const s = Auth.getSession();
+  if (s && (s.role === 'admin' || hasPermission(s.userId, perm))) return true;
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;font-family:Inter,system-ui,sans-serif;color:#64748b;padding:2rem">'
+    + '<div><div style="font-size:2.2rem;margin-bottom:.5rem">⛔</div>'
+    + '<div style="font-size:1.15rem;font-weight:700;color:#0f2b4a">Accès refusé</div>'
+    + '<div style="font-size:.9rem;margin-top:.4rem">Vous n\'avez pas la permission d\'accéder à ce module.</div>'
+    + '<a href="accueil.html" style="display:inline-block;margin-top:1.2rem;background:#0f2b4a;color:#fff;padding:.6rem 1.5rem;border-radius:8px;text-decoration:none;font-size:.85rem;font-weight:600">← Retour à l\'accueil</a></div></div>';
+  return false;
 }
 
 // ── AUDIT LOG ──

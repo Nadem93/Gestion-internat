@@ -247,6 +247,7 @@ function exportPresencesPDF() {
 }
 
 function initPresences() {
+  if (!requireModule('access_presences')) return;
   document.getElementById('presenceDate').value = today();
   updateDateLabel();
   renderStats();

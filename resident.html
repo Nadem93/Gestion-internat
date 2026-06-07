@@ -1282,6 +1282,7 @@ function deleteDocFromPage(docId, resId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!requireModule('view_residents')) return;
   loadResident();
 });
 

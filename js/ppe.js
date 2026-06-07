@@ -21,6 +21,7 @@ function emptySection() {
 function initPpe() {
   const session = Auth.requireAuth();
   if (!session) return;
+  if (!requireModule('access_ppe')) return;
   populateAvenantSelects();
   renderAvenant();
   const params = new URLSearchParams(window.location.search);

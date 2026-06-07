@@ -483,6 +483,7 @@ function activateTab(name) {
 
 // ── INIT ──
 function initResidents() {
+  if (!requireModule('view_residents')) return;
   const entree = document.getElementById('rEntree');
   if (entree) entree.value = today();
   updateAdaptiveSections();

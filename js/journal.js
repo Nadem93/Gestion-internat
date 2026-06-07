@@ -514,6 +514,7 @@ function resetEntryForm() {
 }
 
 function initJournal() {
+  if (!requireModule('access_journal')) return;
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   populateSelects();
   renderEntries();

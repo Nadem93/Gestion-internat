@@ -31,7 +31,7 @@ function getAllDocuments() {
 function initDocuments() {
   const session = Auth.requireAuth();
   if (!session) return;
-  if (!canAccessModule('documents')) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1.1rem;color:var(--muted)">⛔ Accès refusé. Vous n\'avez pas les droits pour accéder à cette page.</div>'; return; }
+  if (!requireModule('access_documents')) return;
   populateDocResidentSelect();
   renderDocuments();
 }

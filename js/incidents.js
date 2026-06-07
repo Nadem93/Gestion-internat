@@ -19,7 +19,7 @@ function saveIncidents(list) { DB.set(DB.keys.incidents, list); }
 function initIncidents() {
   const session = Auth.requireAuth();
   if (!session) return;
-  if (!canAccessModule('incidents')) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1.1rem;color:var(--muted)">⛔ Accès refusé. Vous n\'avez pas les droits pour accéder à cette page.</div>'; return; }
+  if (!requireModule('view_incidents')) return;
   populateResidentSelect();
   setDefaults();
   renderIncidents();

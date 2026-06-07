@@ -1,7 +1,7 @@
 function initVehicules() {
   const _session = Auth.requireAuth();
   if (!_session) return;
-  if (!canAccessModule('vehicules')) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1.1rem;color:var(--muted)">⛔ Accès refusé. Vous n\'avez pas les droits pour accéder à cette page.</div>'; return; }
+  if (!requireModule('access_vehicules')) return;
   const now = new Date();
   const fmt = d => d.toISOString().slice(0,16);
   document.getElementById('vDateAller').value = fmt(now);

@@ -315,6 +315,7 @@ function populateVehiculeList() {
 }
 
 function initPlanning() {
+  if (!requireModule('access_presences')) return;
   document.getElementById('evDate').value = today();
   populateResidentSelect();
   populateVehiculeList();
