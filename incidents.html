@@ -15,9 +15,10 @@
   display:flex;
   flex-direction:column;
   gap:.35rem;
-  transition:box-shadow .15s;
+  box-shadow:0 4px 14px rgba(15,43,74,.08), 0 1px 3px rgba(15,43,74,.05);
+  transition:box-shadow .2s, transform .2s;
 }
-.incident-card:hover { box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.incident-card:hover { box-shadow:0 10px 28px rgba(15,43,74,.13), 0 3px 8px rgba(15,43,74,.07); transform:translateY(-2px); }
 .incident-card .top {
   display:flex;
   align-items:flex-start;
