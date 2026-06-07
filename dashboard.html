@@ -188,7 +188,7 @@
       <div class="grid grid-2" style="gap:1.5rem;margin-top:1.5rem" id="dashStatsSection">
 
         <!-- Présences 7 jours -->
-        <div class="card">
+        <div class="card" id="dashCardPresenceChart">
           <div class="card-header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--green)"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             <span class="card-title">Présences — 7 derniers jours</span>
@@ -200,7 +200,7 @@
         </div>
 
         <!-- Incidents par statut -->
-        <div class="card">
+        <div class="card" id="dashCardIncidentChart">
           <div class="card-header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#dc2626"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <span class="card-title">Incidents — répartition</span>
@@ -633,6 +633,8 @@
     const _alCard = document.getElementById('dashCardAlertes');
     if (_alCard && !canSee('access_ppe') && !canSee('view_incidents')) _alCard.style.display = 'none';
     hideIf('dashCardRepertoire', 'access_repertoire');
+    hideIf('dashCardPresenceChart', 'access_presences');
+    hideIf('dashCardIncidentChart', 'view_incidents');
     const _statsEl = document.getElementById('dashStatsSection');
     if (_statsEl && !canSee('access_presences') && !canSee('view_incidents')) _statsEl.style.display = 'none';
   }
