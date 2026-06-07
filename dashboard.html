@@ -460,14 +460,17 @@
     // Alertes échéances
     const nowDate2 = new Date();
     const alertes = [];
-    // Avenants avec révision dans < 30j
-    ppeList.filter(p => p.statut === 'actif' && p.dateRevision).forEach(p => {
+    const _aSess = Auth.getSession();
+    const _aCanPpe = _aSess?.role === 'admin' || hasPermission(_aSess?.userId, 'access_ppe');
+    const _aCanInc = _aSess?.role === 'admin' || canViewAllIncidents(_aSess?.userId);
+    // Avenants avec révision dans < 30j (réservé aux droits PPE)
+    if (_aCanPpe) ppeList.filter(p => p.statut === 'actif' && p.dateRevision).forEach(p => {
       const d = new Date(p.dateRevision + 'T00:00:00');
       const diff = Math.round((d - nowDate2) / 86400000);
       if (diff >= 0 && diff <= 30) alertes.push({ type: 'avenant', label: `Révision avenant : ${p.residentName||'?'}`, date: p.dateRevision, jours: diff });
     });
-    // Incidents non validés depuis > 7j
-    (DB.get(DB.keys.incidents)||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
+    // Incidents non validés depuis > 7j (réservé aux droits incidents)
+    if (_aCanInc) (DB.get(DB.keys.incidents)||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
       if (i.date) {
         const d = new Date(i.date + (i.heure ? 'T'+i.heure : 'T00:00:00'));
         const diff = Math.round((nowDate2 - d) / 86400000);
@@ -635,6 +638,8 @@
     hideIf('dashCardRepertoire', 'access_repertoire');
     hideIf('dashCardPresenceChart', 'access_presences');
     hideIf('dashCardIncidentChart', 'view_incidents');
+    hideIf('dashCardRdv', 'access_sante');
+    hideIf('dashCardVaccins', 'access_sante');
     const _statsEl = document.getElementById('dashStatsSection');
     if (_statsEl && !canSee('access_presences') && !canSee('view_incidents')) _statsEl.style.display = 'none';
   }

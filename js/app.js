@@ -822,6 +822,7 @@ const PERMISSION_LABELS = {
   access_presences: 'Présences & planning',
   view_incidents: 'Voir les incidents',
   validate_incidents: 'Valider les incidents',
+  access_sante: 'Santé / Médical (RDV, vaccins)',
   access_documents: 'Documents',
   access_vehicules: 'Véhicules',
   access_interventions: 'Interventions',
