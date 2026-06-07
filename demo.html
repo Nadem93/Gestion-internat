@@ -321,12 +321,15 @@ function generateForCurrentEtab() {
     r.sorties = sorties;
 
     // Budget personnel (recette mensuelle + dépenses, sur 12 mois)
-    const ops = []; const rec = pick(BUD_REC);
+    const ops = [];
+    const enDifficulte = Math.random() < 0.18; // ~18% en difficulté budgétaire → solde négatif
+    const rec = enDifficulte ? pick([['Argent de poche',[20,50]],['Pension',[120,200]]]) : pick(BUD_REC);
     for (let mo = 11; mo >= 0; mo--) {
       const dmo = new Date(now.getFullYear(), now.getMonth()-mo, rand(1,5)).toISOString().slice(0,10);
       if (dmo > today) continue;
       ops.push({ id:'bu-'+ri+'-r'+mo, type:'recette', montant: rand(rec[1][0], rec[1][1]), date: dmo, categorie: rec[0], libelle: rec[0]+' du mois', notes:'' });
-      for (let dd = 0; dd < rand(2,4); dd++) { const dday = new Date(now.getFullYear(), now.getMonth()-mo, rand(6,27)).toISOString().slice(0,10); if (dday > today) continue; ops.push({ id:'bu-'+ri+'-d'+mo+'-'+dd, type:'depense', montant: rand(10,180), date: dday, categorie: pick(BUD_DEP_CAT), libelle:'', notes:'' }); }
+      const nbDep = enDifficulte ? rand(3,6) : rand(2,4);
+      for (let dd = 0; dd < nbDep; dd++) { const dday = new Date(now.getFullYear(), now.getMonth()-mo, rand(6,27)).toISOString().slice(0,10); if (dday > today) continue; ops.push({ id:'bu-'+ri+'-d'+mo+'-'+dd, type:'depense', montant: enDifficulte ? rand(50,260) : rand(10,180), date: dday, categorie: pick(BUD_DEP_CAT), libelle:'', notes:'' }); }
     }
     r.budget = { operations: ops };
 
