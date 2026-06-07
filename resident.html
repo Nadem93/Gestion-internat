@@ -1154,10 +1154,11 @@ function renderDataCards(r) {
   const now = new Date();
   const rEvents = planning.filter(e => String(e.residentId) === String(currentResidentId) || e.residentName === `${r.prenom||''} ${r.nom||''}`);
   const upcomingEvents = rEvents.filter(e => { const start = new Date(e.date + 'T' + (e.time||'09:00')); return start.getTime() > now.getTime() - 3600000; }).sort((a,b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'')).slice(0,5);
-  const rJournal = journal.filter(e => String(e.residentId) === String(currentResidentId) || e.resident === `${r.prenom||''} ${r.nom||''}`).slice(-5).reverse();
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const rJournal = journal.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === `${r.prenom||''} ${r.nom||''}`) && _canConf(e)).slice(-5).reverse();
   const rIncidents = incidents.filter(e => String(e.residentId) === String(currentResidentId)).slice(-5).reverse();
   const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
-  const _sess = Auth.getSession();
   const canSeeIncidents = _sess && typeof canViewAllIncidents === 'function' && canViewAllIncidents(_sess.userId);
   const incidentsCardHtml = !canSeeIncidents ? '' : `<div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="card-title">Incidents récents</span><a href="incidents.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rIncidents.length ? rIncidents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.type||'Incident')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${escHtml(e.description||'').slice(0,80)}</div></div><span class="badge ${e.gravite === 'grave' ? 'badge-red' : e.gravite === 'modere' ? 'badge-amber' : 'badge-green'}">${e.gravite||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun incident</p></div>'}</div></div>`;
   return `<div class="grid grid-2" style="gap:1.5rem;margin-bottom:1rem">

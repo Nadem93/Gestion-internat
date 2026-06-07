@@ -527,7 +527,8 @@
     const nc = document.getElementById('navResCount');
     if (nc && s.totalResidents > 0) { nc.style.display=''; nc.textContent = s.totalResidents; }
 
-    const journal = (DB.get(DB.keys.journal)||[]).slice(-5).reverse();
+    const _js = Auth.getSession();
+    const journal = (DB.get(DB.keys.journal)||[]).filter(e => e.visibilite !== 'confidentiel' || _js?.role === 'admin' || String(e.authorId) === String(_js?.userId)).slice(-5).reverse();
     const jEl = document.getElementById('recentJournal');
     const cats = DB.get(DB.keys.categories)||[];
     if (journal.length) {
