@@ -686,7 +686,8 @@ function budgetCard(r) {
           <div style="font-size:1.05rem;font-weight:800;color:#dc2626;line-height:1.4">– ${fmtMoney(moisDepenses)}</div>
         </div>
       </div>
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">${rows}</div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 5 ? 'max-height:255px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+      ${sorted.length > 5 ? `<div class="no-print" style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:-.35rem">↕ ${sorted.length} opérations — faites défiler pour tout voir</div>` : ''}
     </div></div>`;
 }
 
