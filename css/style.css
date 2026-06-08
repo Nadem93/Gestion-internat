@@ -150,13 +150,13 @@ body{
    CARDS — Glassmorphism
 ══════════════════════════════════════════ */
 .card{
-  background:#f1f5f9;
+  background:#ffffff;
   border-radius:var(--r-lg);
   border:none;
-  box-shadow:inset 6px 6px 14px #c8cdd6,inset -6px -6px 14px #ffffff;
+  box-shadow:inset 6px 6px 14px #e6e9f0,inset -6px -6px 14px #ffffff;
   transition:box-shadow var(--t),transform var(--t);
 }
-.card:hover{box-shadow:inset 4px 4px 10px #c8cdd6,inset -4px -4px 10px #ffffff;transform:translateY(-2px)}
+.card:hover{box-shadow:inset 4px 4px 10px #e6e9f0,inset -4px -4px 10px #ffffff;transform:translateY(-2px)}
 .card-header{
   padding:1.1rem 1.5rem;
   border-bottom:1px solid rgba(15,43,74,.07);
