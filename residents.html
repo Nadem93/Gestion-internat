@@ -21,36 +21,6 @@
     /* Retire le contour neon coloré au survol, on garde juste l'ombre douce */
     .res-card:hover{box-shadow:0 6px 18px rgba(15,43,74,.1)}
     .res-card-body{position:relative;z-index:1}
-
-    /* ── Aperçu agrandi au survol ── */
-    #resPreviewOverlay{
-      position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;
-      background:rgba(15,43,74,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
-      opacity:0;pointer-events:none;transition:opacity .22s ease;
-    }
-    #resPreviewOverlay.show{opacity:1;pointer-events:auto}
-    #resPreviewCard{
-      width:min(440px,92vw);max-height:88vh;overflow-y:auto;
-      background:#ffffff;border-radius:var(--r-lg);padding:0;
-      box-shadow:inset 6px 6px 14px #e6e9f0,inset -6px -6px 14px #ffffff,0 24px 60px rgba(15,43,74,.28);
-      transform:translateY(12px) scale(.97);transition:transform .25s cubic-bezier(.34,1.56,.64,1);
-      border-top:4px solid var(--rp-color,#0891b2);
-    }
-    #resPreviewOverlay.show #resPreviewCard{transform:translateY(0) scale(1)}
-    .rp-head{display:flex;gap:1rem;align-items:center;padding:1.4rem 1.4rem 1rem}
-    .rp-photo{width:74px;height:74px;border-radius:16px;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;color:#fff}
-    .rp-name{font-size:1.2rem;font-weight:800;line-height:1.15}
-    .rp-meta{font-size:.8rem;color:var(--muted);margin-top:.15rem}
-    .rp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:0 1.4rem 1rem}
-    .rp-stat{background:var(--g50);border-radius:var(--r-sm);padding:.55rem .4rem;text-align:center}
-    .rp-stat-val{font-size:1.05rem;font-weight:800;line-height:1.1}
-    .rp-stat-key{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
-    .rp-section-title{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 1.4rem;margin-bottom:.4rem}
-    .rp-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;padding:0 1.4rem 1.4rem}
-    .rp-act{display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem .5rem;border-radius:var(--r-sm);border:1px solid var(--border);background:#fff;font-size:.82rem;font-weight:600;color:var(--g700);cursor:pointer;transition:all .15s;text-decoration:none}
-    .rp-act:hover{border-color:var(--rp-color,#0891b2);color:var(--rp-color,#0891b2);transform:translateY(-1px)}
-    .rp-act.primary{grid-column:1/-1;background:var(--rp-color,#0891b2);color:#fff;border-color:transparent}
-    .rp-act.primary:hover{filter:brightness(1.06);color:#fff}
   </style>
 </head>
 <body>
@@ -316,11 +286,6 @@
   </div>
 </div>
 
-<!-- Aperçu agrandi au survol d'une carte résident -->
-<div id="resPreviewOverlay">
-  <div id="resPreviewCard"></div>
-</div>
-
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
@@ -334,91 +299,6 @@ document.addEventListener('mousemove', e => {
   card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
   card.style.setProperty('--my', (e.clientY - r.top) + 'px');
 });
-
-// ─────────────────────────────────────────────
-//  APERÇU AGRANDI + ACTIONS RAPIDES AU SURVOL
-// ─────────────────────────────────────────────
-(function () {
-  const overlay = document.getElementById('resPreviewOverlay');
-  const cardEl = document.getElementById('resPreviewCard');
-  let hideTimer = null, currentId = null;
-
-  const money = n => (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-
-  function getRes(id) { return (DB.get(DB.keys.residents) || []).find(r => String(r.id) === String(id)); }
-
-  function buildPreview(r) {
-    const color = r.color || '#0891b2';
-    const name = `${r.prenom||''} ${r.nom||''}`.trim();
-    const photo = r.photo
-      ? `<img src="${sanitizeUrl(r.photo)}" class="rp-photo" alt=""/>`
-      : `<div class="rp-photo" style="background:${color}">${initials(r.prenom, r.nom)}</div>`;
-    const todayPresences = (DB.get(DB.keys.presences) || {})[today()] || {};
-    const presence = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-
-    // Indicateurs
-    const ops = (r.budget && r.budget.operations) || [];
-    const solde = ops.reduce((a, o) => a + (o.type === 'recette' ? (+o.montant || 0) : -(+o.montant || 0)), 0);
-    const rdv = (r.sante && r.sante.rdv) || [];
-    const nextRdv = rdv.filter(v => !v.fait && v.date && v.date >= today()).sort((a, b) => (a.date||'').localeCompare(b.date||''))[0];
-    const sortiesEnCours = ((r.sorties) || []).filter(s => !s.retourEffectif).length;
-
-    const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : true;
-    const act = (doParam, icon, label, cls) => `<a class="rp-act ${cls||''}" href="resident.html?id=${r.id}${doParam?('&do='+doParam):''}"><span>${icon}</span> ${label}</a>`;
-
-    cardEl.style.setProperty('--rp-color', color);
-    cardEl.innerHTML = `
-      <div class="rp-head">
-        ${photo}
-        <div style="min-width:0">
-          <div class="rp-name">${escHtml(name)}</div>
-          <div class="rp-meta">${r.dob ? age(r.dob)+' ans' : ''}${r.chambre ? ' · Chambre '+escHtml(r.chambre) : ''}</div>
-          <div style="margin-top:.35rem">${statusBadge(presence)}</div>
-          ${r.referent ? `<div class="rp-meta" style="margin-top:.25rem">Référent : <strong>${escHtml(r.referent)}</strong></div>` : ''}
-        </div>
-      </div>
-      <div class="rp-stats">
-        <div class="rp-stat"><div class="rp-stat-val" style="color:${solde<0?'#dc2626':'#16a34a'}">${money(solde)}</div><div class="rp-stat-key">Solde</div></div>
-        <div class="rp-stat"><div class="rp-stat-val">${nextRdv ? formatDate(nextRdv.date) : '—'}</div><div class="rp-stat-key">Prochain RDV</div></div>
-        <div class="rp-stat"><div class="rp-stat-val">${sortiesEnCours}</div><div class="rp-stat-key">Sortie(s)</div></div>
-      </div>
-      ${canEdit ? `<div class="rp-section-title">Actions rapides</div>
-      <div class="rp-actions">
-        ${act('budget', '💰', 'Ajouter au budget')}
-        ${act('sortie', '🚪', 'Nouvelle sortie')}
-        ${act('rdv', '🏥', 'Ajouter un RDV')}
-        ${act('objectif', '🎯', 'Suivi objectif')}
-        ${act('', '📂', 'Ouvrir la fiche', 'primary')}
-      </div>` : `<div class="rp-actions">${act('', '📂', 'Ouvrir la fiche', 'primary')}</div>`}
-    `;
-  }
-
-  function show(id) {
-    const r = getRes(id);
-    if (!r) return;
-    currentId = id;
-    buildPreview(r);
-    overlay.classList.add('show');
-  }
-  function scheduleHide() { clearTimeout(hideTimer); hideTimer = setTimeout(() => { overlay.classList.remove('show'); currentId = null; }, 180); }
-  function cancelHide() { clearTimeout(hideTimer); }
-
-  // Survol des cartes (délégation)
-  document.addEventListener('mouseover', e => {
-    const card = e.target.closest && e.target.closest('.res-card');
-    if (card && card.dataset.id) { cancelHide(); if (card.dataset.id !== currentId) show(card.dataset.id); }
-  });
-  document.addEventListener('mouseout', e => {
-    const card = e.target.closest && e.target.closest('.res-card');
-    if (card && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#resPreviewCard'))) scheduleHide();
-  });
-  // Garder ouvert quand la souris est sur l'aperçu
-  cardEl.addEventListener('mouseenter', cancelHide);
-  cardEl.addEventListener('mouseleave', scheduleHide);
-  // Clic en dehors de la carte ferme l'aperçu
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('show'); });
-})();
 </script>
 </body>
 </html>

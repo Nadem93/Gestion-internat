@@ -1628,24 +1628,6 @@ function deleteDocFromPage(docId, resId) {
 document.addEventListener('DOMContentLoaded', () => {
   if (!requireModule('view_residents')) return;
   loadResident();
-  // Action rapide demandée depuis la carte de la liste (?do=budget…)
-  const params = new URLSearchParams(window.location.search);
-  const action = params.get('do');
-  if (action) {
-    setTimeout(() => {
-      try {
-        if (action === 'budget') openBudgetModal();
-        else if (action === 'sortie') openSortieModal();
-        else if (action === 'rdv') openSanteModal('rdv');
-        else if (action === 'traitement') openSanteModal('traitement');
-        else if (action === 'vaccin') openSanteModal('vaccin');
-        else if (action === 'objectif') openObjectifModal();
-        else if (action === 'eval') openEvalModal();
-        else if (action === 'bilan') genererBilanIA();
-      } catch (e) {}
-      history.replaceState({}, '', 'resident.html?id=' + encodeURIComponent(currentResidentId));
-    }, 250);
-  }
 });
 
 function printResident() {
