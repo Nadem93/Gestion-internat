@@ -1001,7 +1001,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
+  initAutoLock();
 });
+
+// ── VERROUILLAGE AUTOMATIQUE PAR INACTIVITÉ ──
+let _idleTimer = null;
+const IDLE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
+function initAutoLock() {
+  if (!Auth.getSession()) return;
+  const lock = () => {
+    try { logConnexion('logout', Auth.getSession()); } catch {}
+    DB.remove(DB.keys.session);
+    try { sessionStorage.setItem('ftr_lock_reason', 'idle'); } catch {}
+    window.location.href = 'index.html';
+  };
+  const reset = () => { clearTimeout(_idleTimer); _idleTimer = setTimeout(lock, IDLE_LIMIT_MS); };
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
+    document.addEventListener(ev, reset, { passive: true }));
+  reset();
+}
 
 function getPosteOptions() {
   const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
