@@ -337,7 +337,7 @@
 
   function wizardBack() { if (wizardStep > 0) wizardGoTo(wizardStep - 1); }
 
-  function wizardNext() {
+  async function wizardNext() {
     if (wizardStep === 0) {
       const etab = document.getElementById('wEtab').value.trim();
       if (!etab) { toast('Le nom de l\'établissement est requis', 'error'); return; }
@@ -371,7 +371,8 @@
       const nom    = document.getElementById('wNom').value.trim();
       const session = Auth.getSession();
       let users = DB.get(DB.keys.users) || [];
-      users = users.map(u => u.id === session.userId ? { ...u, prenom, nom, username, password } : u);
+      const _pwdHash = await hashPassword(password);
+      users = users.map(u => u.id === session.userId ? { ...u, prenom, nom, username, password: _pwdHash } : u);
       DB.set(DB.keys.users, users);
       DB.set(DB.keys.session, { ...session, prenom, nom, username });
       DB.set(DB.keys.user, { prenom, nom, role: 'Administrateur' });

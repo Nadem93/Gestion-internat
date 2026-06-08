@@ -483,7 +483,7 @@ function editEducateur(id) {
   openModal('modalEdu');
 }
 
-function saveEducateur() {
+async function saveEducateur() {
   const username = document.getElementById('eduUsername').value.trim();
   const password = document.getElementById('eduPassword').value;
   const prenom = document.getElementById('eduPrenom').value.trim();
@@ -491,21 +491,23 @@ function saveEducateur() {
   const fonction = document.getElementById('eduFonction').value.trim();
   const id = document.getElementById('eduId').value;
   if (!username) { toast("L'identifiant est requis", 'error'); return; }
+  if (password && password.length < 6) { toast('Mot de passe : 6 caractères minimum', 'error'); return; }
   let users = DB.get(DB.keys.users) || [];
   if (users.find(u => u.username === username && String(u.id) !== String(id))) {
     toast('Cet identifiant est déjà utilisé', 'error'); return;
   }
+  const pwdHash = password ? await hashPassword(password) : null;
   if (id) {
     if (!password && !users.find(u => String(u.id) === String(id))?.password) {
       toast('Le mot de passe est requis', 'error'); return;
     }
     users = users.map(u => String(u.id) === String(id)
-      ? { ...u, prenom, nom, fonction, username, ...(password ? { password } : {}) } : u);
+      ? { ...u, prenom, nom, fonction, username, ...(pwdHash ? { password: pwdHash } : {}) } : u);
     toast('Utilisateur mis à jour');
   } else {
     if (!password) { toast('Le mot de passe est requis', 'error'); return; }
     const newId = Math.max(0, ...users.map(u => u.id)) + 1;
-    users.push({ id: newId, prenom, nom, fonction, username, password, role: 'educateur' });
+    users.push({ id: newId, prenom, nom, fonction, username, password: pwdHash, role: 'educateur' });
     toast('Utilisateur ajouté');
   }
   DB.set(DB.keys.users, users);
@@ -590,18 +592,20 @@ function saveUser() {
   toast('Compte mis à jour');
 }
 
-function saveCredentials() {
+async function saveCredentials() {
   const username = document.getElementById('uUsername').value.trim();
   const password = document.getElementById('uPassword').value;
   const confirm = document.getElementById('uPasswordConfirm').value;
   if (!username) { toast("L'identifiant est requis", 'error'); return; }
+  if (password && password.length < 6) { toast('Mot de passe : 6 caractères minimum', 'error'); return; }
   if (password && password !== confirm) { toast('Les mots de passe ne correspondent pas', 'error'); return; }
   const session = Auth.getSession();
   let users = DB.get(DB.keys.users) || [];
   if (users.find(u => u.username === username && u.id !== session.userId)) {
     toast('Cet identifiant est déjà utilisé', 'error'); return;
   }
-  users = users.map(u => u.id === session.userId ? { ...u, username, ...(password ? { password } : {}) } : u);
+  const pwdHash = password ? await hashPassword(password) : null;
+  users = users.map(u => u.id === session.userId ? { ...u, username, ...(pwdHash ? { password: pwdHash } : {}) } : u);
   DB.set(DB.keys.users, users);
   DB.set(DB.keys.session, { ...session, username });
   document.getElementById('uPassword').value = '';

@@ -309,12 +309,31 @@ function logConnexion(action, user) {
 }
 
 // ── AUTH ──
+// ── HACHAGE DES MOTS DE PASSE (SHA-256 + sel) ──
+const _PWD_SALT = 'ftr.internalis.pwd.v1';
+async function hashPassword(pwd) {
+  const data = new TextEncoder().encode(_PWD_SALT + ':' + (pwd || ''));
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return 'h$' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function isHashedPwd(s) { return typeof s === 'string' && s.startsWith('h$'); }
+
 const Auth = {
   getSession() { return DB.get(DB.keys.session); },
-  login(username, password) {
+  async login(username, password) {
     const users = DB.get(DB.keys.users) || DEFAULTS.users;
-    const user = users.find(u => u.username === username.trim() && u.password === password);
+    const user = users.find(u => u.username === username.trim());
     if (!user) return false;
+    let ok = false;
+    if (isHashedPwd(user.password)) {
+      ok = user.password === await hashPassword(password);
+    } else if (user.password === password) {
+      // Ancien mot de passe en clair → on le convertit en haché
+      ok = true;
+      user.password = await hashPassword(password);
+      DB.set(DB.keys.users, users);
+    }
+    if (!ok) return false;
     DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, prenom: user.prenom || '', nom: user.nom || '', fonction: user.fonction || '', mustChangePassword: user.mustChangePassword || false });
     logConnexion('login', user);
     return true;

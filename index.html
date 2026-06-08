@@ -83,11 +83,11 @@
   initDefaults();
   if (Auth.getSession()) window.location.href = 'app.html';
 
-  document.getElementById('loginForm').addEventListener('submit', e => {
+  document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const username = document.getElementById('login').value;
     const password = document.getElementById('pw').value;
-    if (Auth.login(username, password)) {
+    if (await Auth.login(username, password)) {
       window.location.href = 'app.html';
     } else {
       document.getElementById('loginError').style.display = 'block';
