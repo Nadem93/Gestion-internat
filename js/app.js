@@ -134,13 +134,26 @@ function _softBgStops(hex) {
   return [`hsl(${hue},${sl}%,91%)`, `hsl(${hue},${sl}%,95%)`, `hsl(${hue},${sl}%,98%)`];
 }
 
+// Renvoie true si la couleur hex est perçue comme foncée
+function _isDarkColor(hex) {
+  let h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (h.length !== 6) return false;
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  // Luminance perçue (0..255)
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
+}
+
 function applyEtabBackground() {
   const etab = getCurrentEtab();
   if (!etab) return;
   if (etab.bgColor) {
     // Couleur de fond personnalisée → appliquée telle quelle
     document.body.style.setProperty('background', etab.bgColor, 'important');
+    // Bascule auto du texte en clair si le fond est foncé
+    document.body.classList.toggle('etab-dark-bg', _isDarkColor(etab.bgColor));
   } else {
+    document.body.classList.remove('etab-dark-bg');
     const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
     document.body.style.setProperty('background',
       `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`,
