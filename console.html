@@ -74,11 +74,44 @@
         </div>
       </div>
 
-      <div class="csl-panel" id="panel-users"><div class="soon">Gestion centralisée des utilisateurs — à venir (#3)</div></div>
+      <!-- #3 UTILISATEURS -->
+      <div class="csl-panel" id="panel-users">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+          <button class="btn btn-primary btn-sm" onclick="cslOpenUserModal()">+ Nouvel utilisateur</button>
+        </div>
+        <div class="card"><div class="card-body" style="padding:0;overflow-x:auto">
+          <table class="csl" id="usersTable"></table>
+        </div></div>
+      </div>
       <div class="csl-panel" id="panel-roles"><div class="soon">Rôles & permissions globaux — à venir (#4)</div></div>
       <div class="csl-panel" id="panel-audit"><div class="soon">Audit transversal — à venir (#5)</div></div>
       <div class="csl-panel" id="panel-params"><div class="soon">Paramétrage global — à venir (#6)</div></div>
     </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="userModalTitle">Nouvel utilisateur</span><button class="modal-close" onclick="closeModal('userModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="uId"/>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="form-group"><label>Prénom</label><input type="text" id="uPrenom"/></div>
+        <div class="form-group"><label>Nom</label><input type="text" id="uNom"/></div>
+      </div>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="form-group"><label>Identifiant *</label><input type="text" id="uUsername" autocomplete="off"/></div>
+        <div class="form-group"><label>Rôle</label><select id="uRole"><option value="educ">Éducateur / Personnel</option><option value="admin">Administrateur (établissement)</option><option value="superadmin">Super admin (groupe)</option></select></div>
+      </div>
+      <div class="form-group"><label>Fonction</label><select id="uFonction"></select></div>
+      <div class="form-group"><label id="uPwdLabel">Mot de passe *</label><input type="password" id="uPassword" autocomplete="new-password" placeholder="Min. 6 caractères"/></div>
+      <div class="form-group"><label>Établissements affectés</label><div id="uEtabs" style="display:flex;flex-wrap:wrap;gap:.5rem"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="uDeleteBtn" style="margin-right:auto;display:none" onclick="cslDeleteUser()">Supprimer</button>
+      <button class="btn btn-ghost" onclick="closeModal('userModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="cslSaveUser()">💾 Enregistrer</button>
+    </div>
   </div>
 </div>
 
@@ -91,6 +124,7 @@
     document.querySelectorAll('.csl-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
     document.querySelectorAll('.csl-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
     if (name === 'consolide') renderConsolide();
+    if (name === 'users') renderUsers();
   }
 
   const ETAB_TYPE_LABEL = { adultes: 'Adultes', enfants: 'Enfants', mixte: 'Mixte' };
@@ -181,6 +215,116 @@
       <div class="kpi"><div class="kpi-num">${tJournal}</div><div class="kpi-lbl">Entrées journal (jour)</div></div>`;
     document.getElementById('consolideTable').innerHTML =
       `<thead><tr><th>Établissement</th><th>Actifs</th><th>Capacité</th><th>Occup.</th><th>Incidents</th><th>Avenants</th><th>Journal (j)</th></tr></thead><tbody>${rows || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">Aucun établissement</td></tr>'}</tbody>`;
+  }
+
+  // ── #3 UTILISATEURS ──
+  const ROLE_LABEL = { educ: 'Personnel', educateur: 'Personnel', admin: 'Admin', moderator: 'Modérateur', superadmin: 'Super admin' };
+  const ROLE_COLOR = { educ: '#64748b', educateur: '#64748b', admin: '#0891b2', moderator: '#8b5cf6', superadmin: '#a16207' };
+
+  function cslAllUsers() {
+    const map = {};
+    getEtabs().forEach(e => {
+      (getEtabData(e.id, DB.keys.users) || []).forEach(u => {
+        if (!map[u.id]) map[u.id] = { user: u, etabIds: new Set() };
+        map[u.id].etabIds.add(String(e.id));
+      });
+    });
+    return Object.values(map);
+  }
+
+  function renderUsers() {
+    const etabs = getEtabs();
+    const all = cslAllUsers().sort((a, b) => (a.user.username || '').localeCompare(b.user.username || ''));
+    const rows = all.map(({ user, etabIds }) => {
+      const chips = etabs.filter(e => etabIds.has(String(e.id))).map(e => `<span style="font-size:.66rem;font-weight:600;padding:.1rem .45rem;border-radius:100px;background:${e.color||'#0f2b4a'}1a;color:${e.color||'#0f2b4a'}">${escHtml(e.nom||'?')}</span>`).join(' ') || '<span style="color:var(--g400)">—</span>';
+      const rc = ROLE_COLOR[user.role] || '#64748b';
+      return `<tr>
+        <td><strong>${escHtml((user.prenom || '') + ' ' + (user.nom || ''))}</strong><div style="font-size:.72rem;color:var(--muted)">@${escHtml(user.username || '')}</div></td>
+        <td><span style="font-size:.68rem;font-weight:700;padding:.12rem .5rem;border-radius:100px;background:${rc}1a;color:${rc}">${ROLE_LABEL[user.role] || user.role || '—'}</span></td>
+        <td style="font-size:.78rem">${escHtml(user.fonction || '—')}</td>
+        <td style="display:flex;flex-wrap:wrap;gap:.25rem">${chips}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="cslOpenUserModal('${user.id}')">✎</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('usersTable').innerHTML =
+      `<thead><tr><th>Utilisateur</th><th>Rôle</th><th>Fonction</th><th>Établissements</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem">Aucun utilisateur</td></tr>'}</tbody>`;
+  }
+
+  function cslOpenUserModal(id) {
+    const etabs = getEtabs();
+    let user = null, etabIds = new Set();
+    if (id) { const found = cslAllUsers().find(x => String(x.user.id) === String(id)); if (found) { user = found.user; etabIds = found.etabIds; } }
+    document.getElementById('userModalTitle').textContent = id ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur';
+    document.getElementById('uId').value = id || '';
+    document.getElementById('uPrenom').value = user?.prenom || '';
+    document.getElementById('uNom').value = user?.nom || '';
+    document.getElementById('uUsername').value = user?.username || '';
+    document.getElementById('uRole').value = user?.role || 'educ';
+    document.getElementById('uPassword').value = '';
+    document.getElementById('uPwdLabel').textContent = id ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe *';
+    document.getElementById('uDeleteBtn').style.display = id ? '' : 'none';
+    // fonctions
+    const fonctions = (DB.get(DB.keys.fonctionColors) || []);
+    document.getElementById('uFonction').innerHTML = '<option value="">—</option>' + fonctions.map(f => `<option value="${escHtml(f.fonction)}"${user?.fonction === f.fonction ? ' selected' : ''}>${escHtml(f.fonction)}</option>`).join('');
+    // établissements
+    document.getElementById('uEtabs').innerHTML = etabs.map(e => `<label class="checkbox-wrap" style="font-size:.8rem"><input type="checkbox" value="${e.id}"${etabIds.has(String(e.id)) ? ' checked' : ''}/> ${escHtml(e.nom || '?')}</label>`).join('') || '<span style="color:var(--g400);font-size:.8rem">Aucun établissement</span>';
+    openModal('userModal');
+  }
+
+  async function cslSaveUser() {
+    const id = document.getElementById('uId').value;
+    const username = document.getElementById('uUsername').value.trim();
+    const prenom = document.getElementById('uPrenom').value.trim();
+    const nom = document.getElementById('uNom').value.trim();
+    const role = document.getElementById('uRole').value;
+    const fonction = document.getElementById('uFonction').value;
+    const password = document.getElementById('uPassword').value;
+    if (!username) { toast('Identifiant requis', 'error'); return; }
+    if (!id && (!password || password.length < 6)) { toast('Mot de passe (6 caractères min) requis', 'error'); return; }
+    if (password && password.length < 6) { toast('Mot de passe : 6 caractères minimum', 'error'); return; }
+    const selected = [...document.querySelectorAll('#uEtabs input:checked')].map(c => c.value);
+    if (!selected.length) { toast('Sélectionnez au moins un établissement', 'error'); return; }
+    const all = cslAllUsers();
+    if (all.some(x => x.user.username === username && String(x.user.id) !== String(id))) { toast('Identifiant déjà utilisé', 'error'); return; }
+    const uid = id || String(Math.max(0, ...all.map(x => Number(x.user.id) || 0)) + 1);
+    const existing = all.find(x => String(x.user.id) === String(uid))?.user;
+    const pwdHash = password ? await hashPassword(password) : (existing?.password || '');
+    const base = { id: isNaN(Number(uid)) ? uid : Number(uid), prenom, nom, username, fonction, role, password: pwdHash };
+    getEtabs().forEach(e => {
+      const key = `${DB.keys.users}__${e.id}`;
+      let list = (getEtabData(e.id, DB.keys.users) || []).filter(u => String(u.id) !== String(uid));
+      if (selected.includes(String(e.id))) list.push({ ...base });
+      localStorage.setItem(key, JSON.stringify(list));
+    });
+    cslRebuildGlobalUsers();
+    if (typeof auditLog === 'function') auditLog(id ? 'user_update' : 'user_create', 'Utilisateur ' + username);
+    closeModal('userModal');
+    toast('Utilisateur enregistré', 'success');
+    renderUsers();
+  }
+
+  function cslDeleteUser() {
+    const id = document.getElementById('uId').value;
+    if (!id) return;
+    confirmDialog('Supprimer définitivement cet utilisateur ?', () => {
+      getEtabs().forEach(e => {
+        const key = `${DB.keys.users}__${e.id}`;
+        const list = (getEtabData(e.id, DB.keys.users) || []).filter(u => String(u.id) !== String(id));
+        localStorage.setItem(key, JSON.stringify(list));
+      });
+      cslRebuildGlobalUsers();
+      if (typeof auditLog === 'function') auditLog('user_delete', 'Utilisateur supprimé #' + id);
+      closeModal('userModal');
+      toast('Utilisateur supprimé', 'info');
+      renderUsers();
+    });
+  }
+
+  // Reconstruit la liste globale 'ftr_users' (clé brute) = union de tous les établissements (pour la connexion)
+  function cslRebuildGlobalUsers() {
+    const map = {};
+    getEtabs().forEach(e => (getEtabData(e.id, DB.keys.users) || []).forEach(u => { map[u.id] = u; }));
+    localStorage.setItem('ftr_users', JSON.stringify(Object.values(map)));
   }
 
   document.addEventListener('DOMContentLoaded', renderEtabs);
