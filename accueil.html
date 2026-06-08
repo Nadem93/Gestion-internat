@@ -20,6 +20,10 @@
     .accueil-home-card:hover::before{opacity:1}
     .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
     .notif-badge{z-index:10}
+    /* Recherche globale */
+    .srch-grp{margin-bottom:.75rem}
+    .srch-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.2rem .2rem .35rem}
+    #searchGlobalResults a:hover{background:var(--g50)}
   </style>
 </head>
 <body>
@@ -61,6 +65,9 @@ if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(
       <a href="presences.html" class="accueil-home-card" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="accueil-home-label">Présences</span></a>
       <a href="messages.html" class="accueil-home-card" data-module="messages" style="--c:#0284c7;background:linear-gradient(135deg,#0284c718,#38bdf812),#fff"><span class="accueil-home-icon" style="background:#0284c720;color:#0284c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span><span class="accueil-home-label">Messages</span><span class="notif-badge hidden">0</span></a>
       <a href="repertoire.html" class="accueil-home-card" style="--c:#7c3aed;background:linear-gradient(135deg,#7c3aed18,#a78bfa12),#fff"><span class="accueil-home-icon" style="background:#7c3aed20;color:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="accueil-home-label">Répertoire</span></a>
+      <a href="#" onclick="openSearch();return false" class="accueil-home-card" style="--c:#0ea5e9;background:linear-gradient(135deg,#0ea5e918,#7dd3fc12),#fff"><span class="accueil-home-icon" style="background:#0ea5e920;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="accueil-home-label">Recherche</span></a>
+      <a href="#" onclick="openMemo();return false" class="accueil-home-card" style="--c:#f59e0b;background:linear-gradient(135deg,#f59e0b18,#fcd34d12),#fff"><span class="accueil-home-icon" style="background:#f59e0b20;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span><span class="accueil-home-label">Notes rapides</span></a>
+      <a href="#" onclick="openModal('modalAide');return false" class="accueil-home-card" style="--c:#14b8a6;background:linear-gradient(135deg,#14b8a618,#5eead412),#fff"><span class="accueil-home-icon" style="background:#14b8a620;color:#14b8a6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="accueil-home-label">Aide</span></a>
       <a href="interventions.html" class="accueil-home-card admin-only" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
       <a href="admin-modules.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
       <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
@@ -209,7 +216,118 @@ if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(
   </div>
 </div>
 
+<!-- ── RECHERCHE GLOBALE ── -->
+<div class="modal-overlay" id="modalSearch" onclick="closeModal('modalSearch')">
+  <div class="modal" style="max-width:640px;align-self:flex-start;margin-top:8vh" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">🔍 Recherche globale</span>
+      <button class="modal-close" onclick="closeModal('modalSearch')">&times;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <input type="text" id="searchGlobalInput" class="form-control" placeholder="Rechercher un résident, une note, un document…" oninput="runGlobalSearch()" autocomplete="off"/>
+      <div id="searchGlobalResults" style="max-height:55vh;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── NOTES RAPIDES ── -->
+<div class="modal-overlay" id="modalMemo" onclick="closeModal('modalMemo')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">🗒️ Notes rapides</span>
+      <button class="modal-close" onclick="closeModal('modalMemo')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Bloc-notes personnel — enregistré automatiquement, visible uniquement par vous.</p>
+      <textarea id="memoText" class="form-control" rows="12" style="resize:vertical;font-size:.9rem;line-height:1.6" placeholder="Vos notes, pense-bêtes, rappels…" oninput="saveMemo()"></textarea>
+      <div id="memoSaved" style="font-size:.72rem;color:#16a34a;margin-top:.4rem;height:1rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AIDE / GUIDE ── -->
+<div class="modal-overlay" id="modalAide" onclick="closeModal('modalAide')">
+  <div class="modal lg" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">❓ Aide & guide d'utilisation</span>
+      <button class="modal-close" onclick="closeModal('modalAide')">&times;</button>
+    </div>
+    <div class="modal-body" style="font-size:.86rem;line-height:1.65">
+      <p style="color:var(--muted);margin-bottom:1rem">Voici les principaux modules de l'application et leur usage.</p>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div><strong>📊 Tableau de bord</strong> — vue d'ensemble : présents, événements, anniversaires, indicateurs.</div>
+        <div><strong>👥 Résidents</strong> — fiches complètes : santé, sorties, budget, objectifs, évaluations, fil de vie et bilan IA.</div>
+        <div><strong>📔 Journal de bord</strong> — observations quotidiennes, avec niveau de confidentialité.</div>
+        <div><strong>📄 Avenants (PPE)</strong> — projets personnalisés, génération assistée depuis le journal.</div>
+        <div><strong>📎 Documents</strong> — pièces administratives classées par résident.</div>
+        <div><strong>📅 Planning</strong> — rendez-vous, activités, réservations de véhicules (synchronisés avec les fiches).</div>
+        <div><strong>✅ Présences</strong> — pointage quotidien des résidents.</div>
+        <div><strong>💬 Messages</strong> — communication interne entre membres de l'équipe.</div>
+        <div><strong>📇 Répertoire</strong> — contacts utiles (partenaires, familles, intervenants).</div>
+        <div><strong>🔍 Recherche</strong> — accès rapide à tout (raccourci <kbd style="background:var(--g100);border-radius:4px;padding:1px 6px;font-size:.78rem">Ctrl/⌘ + K</kbd>).</div>
+        <div><strong>🗒️ Notes rapides</strong> — bloc-notes personnel.</div>
+      </div>
+      <p style="color:var(--muted);margin-top:1rem;font-size:.8rem">Les boutons flottants en bas à droite permettent de déclarer une intervention, signaler un incident ou réserver un véhicule.</p>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── RECHERCHE GLOBALE ──
+function openSearch() {
+  openModal('modalSearch');
+  setTimeout(() => { const i = document.getElementById('searchGlobalInput'); if (i) { i.value = ''; i.focus(); } runGlobalSearch(); }, 60);
+}
+function runGlobalSearch() {
+  const q = (document.getElementById('searchGlobalInput').value || '').trim().toLowerCase();
+  const box = document.getElementById('searchGlobalResults');
+  if (q.length < 2) { box.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Tapez au moins 2 caractères…</div>'; return; }
+  const _sess = Auth.getSession();
+  const groups = [];
+  const item = (icon, title, sub, href) => `<a href="${href}" style="display:flex;gap:.7rem;align-items:center;padding:.55rem .7rem;border-radius:var(--r-sm);text-decoration:none;color:inherit;border-bottom:1px solid var(--border)"><span style="font-size:1.05rem">${icon}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${title}</div><div style="font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div></div></a>`;
+
+  // Résidents
+  const residents = DB.get(DB.keys.residents) || [];
+  const rMatch = residents.filter(r => `${r.prenom||''} ${r.nom||''} ${r.chambre||''}`.toLowerCase().includes(q)).slice(0, 8);
+  if (rMatch.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Résidents (${rMatch.length})</div>${rMatch.map(r => item('👤', escHtml(`${r.prenom||''} ${r.nom||''}`.trim()), (r.chambre?'Chambre '+escHtml(r.chambre):'')+(r.referent?' · '+escHtml(r.referent):''), 'resident.html?id='+r.id)).join('')}</div>`);
+
+  // Journal (confidentialité respectée)
+  const journal = (DB.get(DB.keys.journal) || []).filter(e => (e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId)) && (e.contenu||'').toLowerCase().includes(q)).slice(-8).reverse();
+  if (journal.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Journal (${journal.length})</div>${journal.map(e => item('📔', escHtml((e.resident||'Note')), escHtml((e.contenu||'').slice(0,80)), 'journal.html')).join('')}</div>`);
+
+  // Documents
+  const docsMap = DB.get(DB.keys.documents) || {};
+  const docHits = [];
+  Object.entries(docsMap).forEach(([rid, docs]) => (docs||[]).forEach(d => { if ((d.name||'').toLowerCase().includes(q)) { const r = residents.find(x => String(x.id)===String(rid)); docHits.push(item('📎', escHtml(d.name), r?`${r.prenom||''} ${r.nom||''}`.trim():'Document', 'documents.html?residentId='+rid)); } }));
+  if (docHits.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Documents (${docHits.length})</div>${docHits.slice(0,8).join('')}</div>`);
+
+  // Planning
+  const plan = (DB.get(DB.keys.planning) || []).filter(e => `${e.titre||''} ${e.desc||''} ${e.destination||''}`.toLowerCase().includes(q)).slice(0, 6);
+  if (plan.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Planning (${plan.length})</div>${plan.map(e => item('📅', escHtml(e.titre||'Événement'), escHtml(e.date||''), 'planning.html')).join('')}</div>`);
+
+  // Répertoire
+  const rep = (DB.get(DB.keys.repertoire) || []).filter(c => `${c.nom||''} ${c.organisme||''} ${c.fonction||''}`.toLowerCase().includes(q)).slice(0, 6);
+  if (rep.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Répertoire (${rep.length})</div>${rep.map(c => item('📇', escHtml(c.nom||c.organisme||'Contact'), escHtml([c.fonction,c.organisme].filter(Boolean).join(' · ')), 'repertoire.html')).join('')}</div>`);
+
+  box.innerHTML = groups.length ? groups.join('') : '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Aucun résultat pour « ' + escHtml(q) + ' »</div>';
+}
+// Raccourci clavier Ctrl/⌘ + K
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
+});
+
+// ── NOTES RAPIDES (mémo perso) ──
+function memoKey() { const s = Auth.getSession(); return 'ftr_memo_' + (s ? s.userId : 'anon'); }
+function openMemo() { document.getElementById('memoText').value = localStorage.getItem(memoKey()) || ''; document.getElementById('memoSaved').textContent = ''; openModal('modalMemo'); }
+let _memoTimer = null;
+function saveMemo() {
+  clearTimeout(_memoTimer);
+  _memoTimer = setTimeout(() => {
+    localStorage.setItem(memoKey(), document.getElementById('memoText').value);
+    const el = document.getElementById('memoSaved'); el.textContent = '✓ Enregistré'; setTimeout(() => { el.textContent = ''; }, 1500);
+  }, 400);
+}
+
 function loadChambres() {
   const r = DB.get(DB.keys.residents) || [];
   const chambres = [...new Set(r.map(x => x.chambre).filter(Boolean))].sort();
