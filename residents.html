@@ -18,6 +18,8 @@
       opacity:0;transition:opacity .35s ease;pointer-events:none;filter:blur(8px);
     }
     .res-card:hover::before{opacity:1}
+    /* Retire le contour neon coloré au survol, on garde juste l'ombre douce */
+    .res-card:hover{box-shadow:0 6px 18px rgba(15,43,74,.1)}
     .res-card-body{position:relative;z-index:1}
   </style>
 </head>
