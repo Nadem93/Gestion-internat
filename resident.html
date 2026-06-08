@@ -158,6 +158,21 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="bilanModal">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title" id="bilanModalTitle">🤖 Bilan de synthèse</span>
+      <button class="modal-close" onclick="closeModal('bilanModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="bilanModalBody"></div>
+    <div class="modal-footer" id="bilanModalFooter" style="display:none">
+      <button class="btn btn-ghost" onclick="copierBilan()">📋 Copier</button>
+      <button class="btn btn-ghost" onclick="imprimerBilan()">🖨 Imprimer</button>
+      <button class="btn btn-primary" onclick="closeModal('bilanModal')">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
@@ -1201,7 +1216,7 @@ function fvFilter(type, btn) {
 
 function filDeVieCard(r) {
   const ev = buildFilDeVie(r);
-  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span></div>`;
+  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>🤖</span> Générer le bilan</button></div>`;
   if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
   const types = [...new Set(ev.map(e => e.type))];
   const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
@@ -1283,6 +1298,195 @@ function radarSignauxCard(r) {
       </div>
       <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
     </div></div>`;
+}
+
+// ═══════════════════════════════════════════
+//  AUTO-RÉDACTION DU BILAN / PROJET PAR IA
+// ═══════════════════════════════════════════
+let _lastBilanText = '';
+
+// Construit un résumé structuré du quotidien à envoyer à l'IA
+function buildBilanContext(r) {
+  const name = `${r.prenom||''} ${r.nom||''}`.trim();
+  const L = [];
+  L.push(`Résident : ${name}`);
+  if (r.dob) L.push(`Âge : ${age(r.dob)} ans`);
+  if (r.genre) L.push(`Genre : ${r.genre==='M'?'masculin':r.genre==='F'?'féminin':'autre'}`);
+  if (r.entree) L.push(`Entré le : ${formatDate(r.entree)}`);
+  L.push(`Statut : ${r.statut||'—'}`);
+  if (r.referent) L.push(`Référent : ${r.referent}`);
+  if (r.protection) L.push(`Mesure de protection : ${(typeof PROTECTION_LABELS!=='undefined'?(PROTECTION_LABELS[r.protection]||r.protection):r.protection)}${r.protectionNom?(' ('+r.protectionNom+')'):''}`);
+
+  // Objectifs assignés
+  const objs = DB.get(DB.keys.objectives) || [];
+  const resObjs = (r.objectifs||[]).map(id => objs.find(o => String(o.id)===String(id))?.name).filter(Boolean);
+  if (resObjs.length) L.push(`\nObjectifs du projet personnalisé : ${resObjs.join(', ')}`);
+
+  // Évaluations (évolution autonomie)
+  const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if (evals.length) {
+    const first = evals[0], last = evals[evals.length-1];
+    L.push(`\nÉvaluations d'autonomie : ${evals.length} grille(s).`);
+    L.push(`Score global : ${evalScorePct(first.scores)}% (${formatDate(first.date)}) → ${evalScorePct(last.scores)}% (${formatDate(last.date)}).`);
+    if (typeof GRILLE_EVAL !== 'undefined') {
+      GRILLE_EVAL.forEach(d => {
+        const a = evalDomaineScore(first.scores, d), b = evalDomaineScore(last.scores, d);
+        L.push(`  - ${d.domaine} : ${a}% → ${b}%`);
+      });
+    }
+  }
+
+  // Statistiques du quotidien
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const jrn = (DB.get(DB.keys.journal)||[]).filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e));
+  const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
+  const sorties = getSorties(r);
+  const ops = getBudgetOps(r);
+  const solde = ops.reduce((a,o)=>a+(o.type==='recette'?(+o.montant||0):-(+o.montant||0)),0);
+  const s = getSante(r);
+  const rdvFaits = s.rdv.filter(v=>v.fait).length, rdvManq = s.rdv.filter(v=>!v.fait && v.date && v.date<today()).length;
+  L.push(`\nActivité enregistrée : ${jrn.length} observations au journal, ${inc.length} incident(s), ${sorties.length} sortie(s)/permission(s), ${ops.length} opération(s) budgétaires (solde ${fmtMoney(solde)}).`);
+  L.push(`Suivi médical : ${rdvFaits} RDV honorés, ${rdvManq} non honorés, ${s.traitements.length} traitement(s), ${s.vaccins.length} vaccination(s).`);
+  if (inc.length) {
+    const types = {}; inc.forEach(e => { types[e.type||'autre'] = (types[e.type||'autre']||0)+1; });
+    L.push(`Types d'incidents : ${Object.entries(types).map(([k,v])=>k+' ('+v+')').join(', ')}.`);
+  }
+
+  // Signaux de vigilance
+  const sig = computeSignals(r);
+  if (sig.length) L.push(`\nSignaux de vigilance détectés : ${sig.map(x=>x.label+' — '+x.detail).join(' ; ')}.`);
+
+  // Observations clés (journal, max 30, anti-débordement)
+  const recent = jrn.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,30);
+  const cats = DB.get(DB.keys.categories)||[];
+  if (recent.length) {
+    L.push(`\nObservations du journal (de la plus récente à la plus ancienne) :`);
+    recent.forEach(e => {
+      const cat = cats.find(c=>String(c.id)===String(e.categorie));
+      L.push(`[${(e.date||'').slice(0,10)}] (${cat?cat.name:'général'}) ${(e.contenu||'').slice(0,300)}`);
+    });
+  }
+  return L.join('\n');
+}
+
+async function genererBilanIA() {
+  const r = getResident();
+  if (!r) return;
+  const name = `${r.prenom||''} ${r.nom||''}`.trim();
+  document.getElementById('bilanModalTitle').textContent = `🤖 Bilan de synthèse — ${name}`;
+  document.getElementById('bilanModalFooter').style.display = 'none';
+  document.getElementById('bilanModalBody').innerHTML = `<div style="padding:2.5rem 1rem;text-align:center;color:var(--muted)"><div style="font-size:1.8rem;margin-bottom:.6rem">🤖</div><div style="font-weight:600">Analyse du quotidien en cours…</div><div style="font-size:.8rem;margin-top:.35rem">Lecture du journal, des évaluations et des indicateurs.</div></div>`;
+  openModal('bilanModal');
+
+  const context = buildBilanContext(r);
+  let text = null;
+  const key = getAiKey();
+  if (key) {
+    const system = "Tu es un éducateur spécialisé en établissement médico-social (ESMS). À partir des données du quotidien d'un résident, rédige un BILAN DE SYNTHÈSE professionnel et institutionnel, en français, prêt à être présenté en réunion de projet personnalisé. "
+      + "Structure ta réponse en markdown avec EXACTEMENT ces sections (titres en '## ') : "
+      + "## 1. Contexte et parcours, ## 2. Évolution par domaine, ## 3. Santé et bien-être, ## 4. Vie sociale, autonomie et quotidien, ## 5. Points de vigilance, ## 6. Préconisations et objectifs à venir. "
+      + "Appuie-toi UNIQUEMENT sur les données fournies, reste factuel, bienveillant et nuancé. N'invente aucun fait.";
+    try {
+      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({
+          model: 'mistral-small-latest',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: `Rédige le bilan de synthèse à partir de ces données :\n\n${context}` }
+          ],
+          temperature: 0.6,
+          max_tokens: 3500
+        })
+      });
+      if (res.ok) { const data = await res.json(); text = data.choices?.[0]?.message?.content?.trim() || null; }
+    } catch (_) {}
+  }
+
+  let viaIA = !!text;
+  if (!text) text = bilanOfflineTemplate(r);
+
+  _lastBilanText = text;
+  const banner = viaIA
+    ? `<div style="font-size:.74rem;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">✓ Généré par IA à partir du quotidien. <strong>À relire et valider</strong> avant toute utilisation officielle.</div>`
+    : `<div style="font-size:.74rem;color:#a16207;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">ℹ Bilan généré localement (aucune clé IA configurée). Pour une rédaction enrichie, ajoutez une clé Mistral dans Administration → Établissement.</div>`;
+  document.getElementById('bilanModalBody').innerHTML = banner + `<div id="bilanContent" style="font-size:.86rem;line-height:1.65">${mdToHtml(text)}</div>`;
+  document.getElementById('bilanModalFooter').style.display = '';
+}
+
+// Bilan généré localement (sans IA) à partir des données réelles
+function bilanOfflineTemplate(r) {
+  const name = `${r.prenom||''} ${r.nom||''}`.trim();
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const jrn = (DB.get(DB.keys.journal)||[]).filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e)).sort((a,b)=> new Date(b.date)-new Date(a.date));
+  const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
+  const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const sig = computeSignals(r);
+  const cats = DB.get(DB.keys.categories)||[];
+  let out = '';
+  out += `## 1. Contexte et parcours\n`;
+  out += `${name}${r.dob?`, ${age(r.dob)} ans`:''}, accueilli(e) ${r.entree?`depuis le ${formatDate(r.entree)}`:'dans l\'établissement'}${r.referent?`, suivi(e) par ${r.referent}`:''}. Statut : ${r.statut||'—'}.\n\n`;
+  out += `## 2. Évolution par domaine\n`;
+  if (evals.length >= 1) {
+    const first = evals[0], last = evals[evals.length-1];
+    out += `Score d'autonomie global : ${evalScorePct(first.scores)}% (${formatDate(first.date)})${evals.length>1?` → ${evalScorePct(last.scores)}% (${formatDate(last.date)})`:''}.\n`;
+    if (typeof GRILLE_EVAL !== 'undefined') GRILLE_EVAL.forEach(d => { out += `- ${d.domaine} : ${evalDomaineScore(first.scores,d)}%${evals.length>1?` → ${evalDomaineScore(last.scores,d)}%`:''}\n`; });
+  } else out += `Aucune grille d'évaluation enregistrée à ce jour.\n`;
+  out += `\n## 3. Santé et bien-être\n`;
+  const s = getSante(r);
+  out += `Suivi médical : ${s.rdv.filter(v=>v.fait).length} rendez-vous honorés, ${s.traitements.length} traitement(s) en cours, ${s.vaccins.length} vaccination(s) enregistrée(s).${r.allergies?` Allergies / CI : ${r.allergies}.`:''}\n\n`;
+  out += `## 4. Vie sociale, autonomie et quotidien\n`;
+  out += `${jrn.length} observation(s) au journal, ${getSorties(r).length} sortie(s)/permission(s). `;
+  const ops = getBudgetOps(r); const solde = ops.reduce((a,o)=>a+(o.type==='recette'?(+o.montant||0):-(+o.montant||0)),0);
+  out += `Gestion du budget personnel : solde actuel de ${fmtMoney(solde)}.\n`;
+  if (jrn.length) { out += `\nObservations récentes :\n`; jrn.slice(0,5).forEach(e => { const cat = cats.find(c=>String(c.id)===String(e.categorie)); out += `- [${(e.date||'').slice(0,10)}] (${cat?cat.name:'général'}) ${(e.contenu||'').slice(0,200)}\n`; }); }
+  out += `\n## 5. Points de vigilance\n`;
+  out += sig.length ? sig.map(x=>`- ${x.label} : ${x.detail}`).join('\n')+'\n' : `Aucun signal faible détecté ; la situation paraît stable.\n`;
+  if (inc.length) out += `- ${inc.length} incident(s) enregistré(s) sur l'ensemble de l'accompagnement.\n`;
+  out += `\n## 6. Préconisations et objectifs à venir\n`;
+  out += `Poursuivre l'accompagnement éducatif en s'appuyant sur les axes du projet personnalisé. `;
+  out += sig.some(x=>x.level==='alert') ? `Une attention particulière est requise sur les points de vigilance signalés ci-dessus.\n` : `Maintenir la dynamique engagée et réévaluer les objectifs lors de la prochaine réunion de projet.\n`;
+  return out;
+}
+
+// Mini-rendu markdown → HTML (titres ##, listes -, gras **)
+function mdToHtml(md) {
+  const esc = t => escHtml(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const lines = String(md).replace(/```/g,'').split('\n');
+  let html = '', inList = false;
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  lines.forEach(raw => {
+    const line = raw.trimEnd();
+    if (/^#{1,3}\s+/.test(line)) { closeList(); const t = line.replace(/^#{1,3}\s+/, ''); html += `<h4 style="margin:1rem 0 .4rem;color:var(--primary);font-size:.95rem">${esc(t)}</h4>`; }
+    else if (/^[-*]\s+/.test(line)) { if (!inList) { html += '<ul style="margin:.2rem 0 .6rem 1.1rem;display:flex;flex-direction:column;gap:.2rem">'; inList = true; } html += `<li>${esc(line.replace(/^[-*]\s+/, ''))}</li>`; }
+    else if (line === '') { closeList(); }
+    else { closeList(); html += `<p style="margin:.3rem 0">${esc(line)}</p>`; }
+  });
+  closeList();
+  return html;
+}
+
+function copierBilan() {
+  if (!_lastBilanText) return;
+  navigator.clipboard?.writeText(_lastBilanText).then(
+    () => toast('Bilan copié dans le presse-papier', 'success'),
+    () => toast('Impossible de copier', 'error')
+  );
+}
+
+function imprimerBilan() {
+  const r = getResident();
+  const name = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Résident';
+  const w = window.open('', '_blank');
+  if (!w) { toast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Bilan de synthèse — ${escHtml(name)}</title>
+    <style>body{font-family:Georgia,serif;max-width:760px;margin:2rem auto;padding:0 1.5rem;line-height:1.6;color:#1e293b}h1{font-size:1.4rem;border-bottom:2px solid #0f2b4a;padding-bottom:.4rem}h4{color:#0f2b4a;margin:1.1rem 0 .3rem}ul{margin:.3rem 0 .6rem 1.2rem}.meta{color:#64748b;font-size:.85rem;margin-bottom:1.5rem}</style>
+    </head><body><h1>Bilan de synthèse</h1><div class="meta">${escHtml(name)} · Édité le ${formatDate(today())}</div>${mdToHtml(_lastBilanText)}
+    <script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
 }
 
 function renderDataCards(r) {
