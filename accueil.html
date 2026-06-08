@@ -8,7 +8,7 @@
   <style>
     /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
     .accueil-home-grid{grid-auto-rows:1fr}
-    .accueil-home-card{position:relative;overflow:hidden;isolation:isolate}
+    .accueil-home-card{position:relative;isolation:isolate}
     /* Halo radial qui suit la souris */
     .accueil-home-card::before{
       content:'';position:absolute;inset:0;border-radius:inherit;z-index:0;
@@ -27,7 +27,7 @@
     }
     .accueil-home-card:hover::after{opacity:1}
     .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
-    .notif-badge{z-index:2}
+    .notif-badge{z-index:10}
   </style>
 </head>
 <body>
