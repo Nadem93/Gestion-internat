@@ -103,7 +103,17 @@
         <div style="font-size:.82rem;color:var(--muted);background:var(--g50);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:1rem">Les modifications de droits sont appliquées à <strong>tous les établissements</strong> du groupe.</div>
         <div class="role-grid-csl" id="rolesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem"></div>
       </div>
-      <div class="csl-panel" id="panel-audit"><div class="soon">Audit transversal — à venir (#5)</div></div>
+      <!-- #5 AUDIT GLOBAL -->
+      <div class="csl-panel" id="panel-audit">
+        <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+          <input type="text" id="auditSearch" placeholder="Rechercher (utilisateur, action, détail)…" oninput="renderAuditGlobal()" style="flex:1;min-width:200px"/>
+          <select id="auditEtab" onchange="renderAuditGlobal()" style="width:auto"></select>
+          <button class="btn btn-outline btn-sm" onclick="cslExportAudit()">Exporter CSV</button>
+        </div>
+        <div class="card"><div class="card-body" style="padding:0;max-height:520px;overflow:auto">
+          <table class="csl" id="auditTable"></table>
+        </div></div>
+      </div>
       <div class="csl-panel" id="panel-params"><div class="soon">Paramétrage global — à venir (#6)</div></div>
     </main>
   </div>
@@ -156,6 +166,7 @@
     if (name === 'consolide') renderConsolide();
     if (name === 'users') renderUsers();
     if (name === 'roles') renderRoles();
+    if (name === 'audit') { cslLoadAudit(); renderAuditGlobal(); }
   }
 
   const ETAB_TYPE_LABEL = { adultes: 'Adultes', enfants: 'Enfants', mixte: 'Mixte' };
@@ -421,6 +432,53 @@
     closeModal('roleModal');
     toast('Droits appliqués à ' + count + ' établissement' + (count > 1 ? 's' : ''), 'success');
     renderRoles();
+  }
+
+  // ── #5 AUDIT GLOBAL ──
+  const AUDIT_ACTION_LABEL = {
+    journal_create: 'Création journal', incident_create: 'Déclaration incident', incident_update: 'MAJ incident',
+    resident_create: 'Création résident', resident_update: 'MAJ résident', resident_delete: 'Suppression résident',
+    user_create: 'Création utilisateur', user_update: 'MAJ utilisateur', user_delete: 'Suppression utilisateur',
+    etab_create: 'Création établissement', etab_delete: 'Suppression établissement',
+    roles_update: 'MAJ rôles', export: 'Export', delete: 'Suppression', params_update: 'MAJ paramètres'
+  };
+  let _auditCache = null;
+  function cslLoadAudit() {
+    const rows = [];
+    getEtabs().forEach(e => {
+      const log = JSON.parse(localStorage.getItem(`${DB.keys.auditLog}__${e.id}`) || '[]');
+      log.forEach(l => rows.push({ ...l, etabId: String(e.id), etabNom: e.nom || '?' }));
+    });
+    rows.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    _auditCache = rows;
+    // remplir le filtre établissement
+    const sel = document.getElementById('auditEtab');
+    if (sel && !sel.dataset.filled) { sel.innerHTML = '<option value="">Tous les établissements</option>' + getEtabs().map(e => `<option value="${e.id}">${escHtml(e.nom || '?')}</option>`).join(''); sel.dataset.filled = '1'; }
+  }
+  function renderAuditGlobal() {
+    if (!_auditCache) cslLoadAudit();
+    const q = (document.getElementById('auditSearch').value || '').toLowerCase();
+    const etabF = document.getElementById('auditEtab').value;
+    let rows = _auditCache;
+    if (etabF) rows = rows.filter(r => r.etabId === etabF);
+    if (q) rows = rows.filter(r => ((r.user || '') + ' ' + (AUDIT_ACTION_LABEL[r.action] || r.action || '') + ' ' + (r.details || '')).toLowerCase().includes(q));
+    const body = rows.slice(0, 300).map(r => `<tr>
+      <td style="white-space:nowrap;font-size:.74rem;color:var(--muted)">${r.date ? formatDateTime(r.date) : '—'}</td>
+      <td style="font-size:.76rem">${escHtml(r.etabNom)}</td>
+      <td style="font-size:.78rem"><strong>${escHtml(r.user || '—')}</strong>${r.role ? ` <span style="font-size:.66rem;color:var(--muted)">(${escHtml(r.role)})</span>` : ''}</td>
+      <td style="font-size:.76rem">${escHtml(AUDIT_ACTION_LABEL[r.action] || r.action || '—')}</td>
+      <td style="font-size:.76rem;color:var(--g700)">${escHtml(r.details || '')}</td>
+    </tr>`).join('');
+    document.getElementById('auditTable').innerHTML =
+      `<thead><tr><th>Date</th><th>Établissement</th><th>Utilisateur</th><th>Action</th><th>Détail</th></tr></thead><tbody>${body || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem">Aucune entrée</td></tr>'}</tbody>`;
+  }
+  function cslExportAudit() {
+    if (!_auditCache) cslLoadAudit();
+    const lines = [['Date', 'Établissement', 'Utilisateur', 'Rôle', 'Action', 'Détail']];
+    _auditCache.forEach(r => lines.push([r.date || '', r.etabNom || '', r.user || '', r.role || '', AUDIT_ACTION_LABEL[r.action] || r.action || '', (r.details || '').replace(/"/g, '""')]));
+    const csv = '﻿' + lines.map(l => l.map(c => `"${c}"`).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'audit_groupe.csv'; a.click();
   }
 
   document.addEventListener('DOMContentLoaded', renderEtabs);
