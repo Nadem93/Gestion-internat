@@ -114,9 +114,29 @@ const ETAB_BG = {
 function applyEtabBackground() {
   const etab = getCurrentEtab();
   if (!etab) return;
-  const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
-  document.body.style.background = `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`;
+  if (etab.bgColor) {
+    // Couleur de fond personnalisée → dégradé doux teinté vers le blanc
+    const c = etab.bgColor;
+    document.body.style.background = `linear-gradient(135deg,`
+      + `color-mix(in srgb, ${c} 30%, #fff) 0%,`
+      + `color-mix(in srgb, ${c} 18%, #fff) 45%,`
+      + `color-mix(in srgb, ${c} 8%, #fff) 100%)`;
+  } else {
+    const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
+    document.body.style.background = `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`;
+  }
   document.body.style.backgroundAttachment = 'fixed';
+}
+
+// Définit (ou réinitialise) la couleur de fond de l'établissement courant
+function setEtabBgColor(color) {
+  const id = DB._id();
+  const etabs = getEtabs();
+  const etab = etabs.find(e => String(e.id) === String(id));
+  if (!etab) return;
+  if (color) etab.bgColor = color; else delete etab.bgColor;
+  saveEtabs(etabs);
+  applyEtabBackground();
 }
 
 function etabTypeLabel(type) {

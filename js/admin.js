@@ -13,6 +13,21 @@ function loadBranding() {
   document.getElementById('bPrimary').value = b.primaryColor || '#0f2b4a';
   document.getElementById('bAccent').value = b.accentColor || '#e85d04';
   if (b.logo) updateLogoPreview(b.logo);
+  loadBgColorInput();
+}
+
+// Renseigne le sélecteur de couleur de fond depuis l'établissement courant
+function loadBgColorInput() {
+  const input = document.getElementById('bBackground');
+  if (!input) return;
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
+  let val = etab && etab.bgColor;
+  if (!val) {
+    // Aperçu : couleur de base du type d'établissement (1re teinte du dégradé)
+    const c = (typeof ETAB_BG !== 'undefined' && etab) ? (ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement']) : null;
+    val = c ? c[0] : '#dbeafe';
+  }
+  input.value = val;
 }
 
 function saveBranding() {
@@ -810,6 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initLogoUpload();
   renderLoginHistory();
   renderAuditLog();
+  if (typeof applyEtabBackground === 'function') applyEtabBackground();
 
   ['setEtab','setVille','setFiness','setTel','setEmail'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', updatePreview);
