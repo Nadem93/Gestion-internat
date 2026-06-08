@@ -114,7 +114,36 @@
           <table class="csl" id="auditTable"></table>
         </div></div>
       </div>
-      <div class="csl-panel" id="panel-params"><div class="soon">Paramétrage global — à venir (#6)</div></div>
+      <!-- #6 PARAMÉTRAGE GLOBAL -->
+      <div class="csl-panel" id="panel-params">
+        <div class="card" style="margin-bottom:1.25rem">
+          <div class="card-header"><span class="card-title">🤖 Clé API IA partagée (Mistral)</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+            <div style="font-size:.8rem;color:var(--muted)">Appliquée à <strong>tous les établissements</strong> du groupe.</div>
+            <div style="display:flex;gap:.5rem"><input type="password" id="globalAiKey" placeholder="Clé API Mistral" style="flex:1"/><button class="btn btn-ghost btn-sm" onclick="const e=document.getElementById('globalAiKey');e.type=e.type==='password'?'text':'password'">👁</button></div>
+            <div style="text-align:right"><button class="btn btn-primary" onclick="cslSaveAiKey()">Appliquer à tous</button></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:1.25rem">
+          <div class="card-header"><span class="card-title">🎨 Charte graphique du groupe</span></div>
+          <div class="card-body" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="margin:0"><label>Couleur principale</label><input type="color" id="globalPrimary" value="#0f2b4a" style="width:52px;height:38px;padding:.2rem"/></div>
+            <div class="form-group" style="margin:0"><label>Couleur d'accent</label><input type="color" id="globalAccent" value="#e85d04" style="width:52px;height:38px;padding:.2rem"/></div>
+            <button class="btn btn-primary" onclick="cslSaveBranding()">Appliquer à tous</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">💾 Sauvegarde du groupe</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+            <div style="font-size:.8rem;color:var(--muted)">Exporte/restaure <strong>toutes les données de la plateforme</strong> (tous établissements).</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-violet" onclick="cslBackupAll()">⬇ Sauvegarder tout</button>
+              <button class="btn btn-outline" onclick="document.getElementById('restoreFile').click()" style="border-color:#a78bfa;color:#7c3aed">⬆ Restaurer…</button>
+              <input type="file" id="restoreFile" accept="application/json" style="display:none" onchange="cslRestoreAll(event)"/>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </div>
@@ -167,6 +196,7 @@
     if (name === 'users') renderUsers();
     if (name === 'roles') renderRoles();
     if (name === 'audit') { cslLoadAudit(); renderAuditGlobal(); }
+    if (name === 'params') cslLoadParams();
   }
 
   const ETAB_TYPE_LABEL = { adultes: 'Adultes', enfants: 'Enfants', mixte: 'Mixte' };
@@ -479,6 +509,62 @@
     const csv = '﻿' + lines.map(l => l.map(c => `"${c}"`).join(';')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'audit_groupe.csv'; a.click();
+  }
+
+  // ── #6 PARAMÉTRAGE GLOBAL ──
+  function cslLoadParams() {
+    const etabs = getEtabs();
+    const first = etabs[0];
+    if (first) {
+      const key = getEtabData(first.id, DB.keys.aiKey);
+      if (key) document.getElementById('globalAiKey').value = key;
+      const b = getEtabData(first.id, DB.keys.branding) || {};
+      if (b.primaryColor) document.getElementById('globalPrimary').value = b.primaryColor;
+      if (b.accentColor) document.getElementById('globalAccent').value = b.accentColor;
+    }
+  }
+  function cslSaveAiKey() {
+    const key = document.getElementById('globalAiKey').value.trim();
+    getEtabs().forEach(e => localStorage.setItem(`${DB.keys.aiKey}__${e.id}`, JSON.stringify(key)));
+    if (typeof auditLog === 'function') auditLog('params_update', 'Clé API IA partagée (tous établissements)');
+    toast('Clé API appliquée à tous les établissements', 'success');
+  }
+  function cslSaveBranding() {
+    const primaryColor = document.getElementById('globalPrimary').value;
+    const accentColor = document.getElementById('globalAccent').value;
+    getEtabs().forEach(e => {
+      const b = getEtabData(e.id, DB.keys.branding) || {};
+      localStorage.setItem(`${DB.keys.branding}__${e.id}`, JSON.stringify({ ...b, primaryColor, accentColor }));
+    });
+    if (typeof applyBranding === 'function') applyBranding();
+    if (typeof auditLog === 'function') auditLog('params_update', 'Charte graphique du groupe');
+    toast('Charte appliquée à tous les établissements', 'success');
+  }
+  function cslBackupAll() {
+    const dump = { _type: 'internalis_group_backup', _date: new Date().toISOString(), data: {} };
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('ftr_')) dump.data[k] = localStorage.getItem(k); }
+    const blob = new Blob([JSON.stringify(dump)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'sauvegarde_groupe_' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+    if (typeof auditLog === 'function') auditLog('export', 'Sauvegarde complète du groupe');
+    toast('Sauvegarde générée', 'success');
+  }
+  function cslRestoreAll(ev) {
+    const file = ev.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const dump = JSON.parse(reader.result);
+        if (!dump || dump._type !== 'internalis_group_backup' || !dump.data) { toast('Fichier de sauvegarde invalide', 'error'); return; }
+        confirmDialog('Restaurer cette sauvegarde ? Toutes les données actuelles seront remplacées.', () => {
+          Object.keys(localStorage).filter(k => k.startsWith('ftr_')).forEach(k => localStorage.removeItem(k));
+          Object.entries(dump.data).forEach(([k, v]) => localStorage.setItem(k, v));
+          toast('Sauvegarde restaurée — rechargement…', 'success');
+          setTimeout(() => window.location.reload(), 1200);
+        });
+      } catch { toast('Lecture du fichier impossible', 'error'); }
+    };
+    reader.readAsText(file);
+    ev.target.value = '';
   }
 
   document.addEventListener('DOMContentLoaded', renderEtabs);
