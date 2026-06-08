@@ -309,10 +309,11 @@
     const all = cslAllUsers().sort((a, b) => (a.user.username || '').localeCompare(b.user.username || ''));
     const rows = all.map(({ user, etabIds }) => {
       const chips = etabs.filter(e => etabIds.has(String(e.id))).map(e => `<span style="font-size:.66rem;font-weight:600;padding:.1rem .45rem;border-radius:100px;background:${e.color||'#0f2b4a'}1a;color:${e.color||'#0f2b4a'}">${escHtml(e.nom||'?')}</span>`).join(' ') || '<span style="color:var(--g400)">—</span>';
-      const rc = ROLE_COLOR[user.role] || '#64748b';
+      const roleKey = user.super ? 'superadmin' : user.role;
+      const rc = ROLE_COLOR[roleKey] || '#64748b';
       return `<tr>
         <td><strong>${escHtml((user.prenom || '') + ' ' + (user.nom || ''))}</strong><div style="font-size:.72rem;color:var(--muted)">@${escHtml(user.username || '')}</div></td>
-        <td><span style="font-size:.68rem;font-weight:700;padding:.12rem .5rem;border-radius:100px;background:${rc}1a;color:${rc}">${ROLE_LABEL[user.role] || user.role || '—'}</span></td>
+        <td><span style="font-size:.68rem;font-weight:700;padding:.12rem .5rem;border-radius:100px;background:${rc}1a;color:${rc}">${ROLE_LABEL[roleKey] || roleKey || '—'}</span></td>
         <td style="font-size:.78rem">${escHtml(user.fonction || '—')}</td>
         <td style="display:flex;flex-wrap:wrap;gap:.25rem">${chips}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="cslOpenUserModal('${user.id}')">✎</button></td>
@@ -331,7 +332,7 @@
     document.getElementById('uPrenom').value = user?.prenom || '';
     document.getElementById('uNom').value = user?.nom || '';
     document.getElementById('uUsername').value = user?.username || '';
-    document.getElementById('uRole').value = user?.role || 'educ';
+    document.getElementById('uRole').value = user?.super ? 'superadmin' : (user?.role || 'educ');
     document.getElementById('uPassword').value = '';
     document.getElementById('uPwdLabel').textContent = id ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe *';
     document.getElementById('uDeleteBtn').style.display = id ? '' : 'none';
@@ -348,7 +349,9 @@
     const username = document.getElementById('uUsername').value.trim();
     const prenom = document.getElementById('uPrenom').value.trim();
     const nom = document.getElementById('uNom').value.trim();
-    const role = document.getElementById('uRole').value;
+    const roleSel = document.getElementById('uRole').value;
+    const role = roleSel === 'superadmin' ? 'admin' : roleSel;
+    const isSuper = roleSel === 'superadmin';
     const fonction = document.getElementById('uFonction').value;
     const password = document.getElementById('uPassword').value;
     if (!username) { toast('Identifiant requis', 'error'); return; }
@@ -361,7 +364,7 @@
     const uid = id || String(Math.max(0, ...all.map(x => Number(x.user.id) || 0)) + 1);
     const existing = all.find(x => String(x.user.id) === String(uid))?.user;
     const pwdHash = password ? await hashPassword(password) : (existing?.password || '');
-    const base = { id: isNaN(Number(uid)) ? uid : Number(uid), prenom, nom, username, fonction, role, password: pwdHash };
+    const base = { id: isNaN(Number(uid)) ? uid : Number(uid), prenom, nom, username, fonction, role, super: isSuper, password: pwdHash };
     getEtabs().forEach(e => {
       const key = `${DB.keys.users}__${e.id}`;
       let list = (getEtabData(e.id, DB.keys.users) || []).filter(u => String(u.id) !== String(uid));

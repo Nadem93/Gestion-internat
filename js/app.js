@@ -170,7 +170,7 @@ const DEFAULTS = {
   ],
   settings: { etablissement:'Foyer d\'Hébergement Les Trois Rivières', ville:'', tel:'', email:'', capacite:'' },
   branding: { primaryColor:'#0f2b4a', accentColor:'#e85d04', logo:'' },
-  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'superadmin' }],
+  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
     { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
@@ -335,7 +335,7 @@ const Auth = {
       DB.set(DB.keys.users, users);
     }
     if (!ok) return false;
-    DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, prenom: user.prenom || '', nom: user.nom || '', fonction: user.fonction || '', mustChangePassword: user.mustChangePassword || false });
+    DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, super: !!user.super, prenom: user.prenom || '', nom: user.nom || '', fonction: user.fonction || '', mustChangePassword: user.mustChangePassword || false });
     logConnexion('login', user);
     return true;
   },
@@ -371,7 +371,7 @@ const Auth = {
   requireAdmin() {
     const s = this.requireAuth();
     if (!s) return null;
-    if (s.role !== 'admin' && !canAccessAdmin(s.userId) && !canAccessModule('admin')) { window.location.href = 'dashboard.html'; return null; }
+    if (s.role !== 'admin' && s.role !== 'superadmin' && !canAccessAdmin(s.userId) && !canAccessModule('admin')) { window.location.href = 'dashboard.html'; return null; }
     return s;
   },
   isAdmin() {
@@ -382,9 +382,9 @@ const Auth = {
   isSuperAdmin() {
     const s = this.getSession();
     if (!s) return false;
-    if (s.role === 'superadmin') return true;
+    if (s.super || s.role === 'superadmin') return true;
     const u = (DB.get(DB.keys.users) || []).find(x => String(x.id) === String(s.userId));
-    return !!(u && u.role === 'superadmin');
+    return !!(u && (u.super || u.role === 'superadmin'));
   },
   requireSuperAdmin() {
     const s = this.requireAuth();
@@ -399,12 +399,22 @@ function getEtabData(etabId, key) {
   return JSON.parse(localStorage.getItem(`${key}__${etabId}`) || 'null');
 }
 
-// S'assure qu'au moins un super administrateur existe (élève l'admin par défaut)
+// S'assure qu'au moins un super administrateur existe (drapeau super:true sur l'admin par défaut)
 function migrateSuperAdmin() {
   const users = DB.get(DB.keys.users) || [];
-  if (!users.length || users.some(u => u.role === 'superadmin')) return;
-  const target = users.find(u => u.username === 'admin') || users.find(u => u.role === 'admin') || users.find(u => String(u.id) === '1');
-  if (target) { target.role = 'superadmin'; DB.set(DB.keys.users, users); }
+  if (!users.length) return;
+  let changed = false;
+  // Normalise un éventuel role 'superadmin' (ancienne approche) → role 'admin' + super:true
+  users.forEach(u => { if (u.role === 'superadmin') { u.role = 'admin'; u.super = true; changed = true; } });
+  // Garantit au moins un super admin
+  if (!users.some(u => u.super)) {
+    const t = users.find(u => u.username === 'admin') || users.find(u => u.role === 'admin') || users[0];
+    if (t) { t.super = true; if (!t.role) t.role = 'admin'; changed = true; }
+  }
+  if (changed) DB.set(DB.keys.users, users);
+  // Normalise une session ouverte avec l'ancien role 'superadmin'
+  const sess = DB.get(DB.keys.session);
+  if (sess && sess.role === 'superadmin') { sess.role = 'admin'; sess.super = true; DB.set(DB.keys.session, sess); }
 }
 
 // ── STRUCTURE TYPE (toujours adulte) ──
