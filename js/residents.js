@@ -245,7 +245,7 @@ function residentCard(r) {
 
   const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
   const presenceStatus = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-  return `<div class="res-card" style="--card-color:${coverColor}" onclick="window.location.href='resident.html?id=${r.id}'">
+  return `<div class="res-card" data-id="${r.id}" style="--card-color:${coverColor}" onclick="window.location.href='resident.html?id=${r.id}'">
     <div class="res-card-body">
       ${photoEl}
       <div class="res-card-info">
