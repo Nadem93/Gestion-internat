@@ -137,12 +137,9 @@ function _softBgStops(hex) {
 function applyEtabBackground() {
   const etab = getCurrentEtab();
   if (!etab) return;
-  const stops = etab.bgColor ? _softBgStops(etab.bgColor) : null;
-  if (stops) {
-    // Couleur de fond personnalisée → dégradé pastel clair conservant la teinte
-    document.body.style.setProperty('background',
-      `linear-gradient(135deg,${stops[0]} 0%,${stops[1]} 45%,${stops[2]} 100%)`,
-      'important');
+  if (etab.bgColor) {
+    // Couleur de fond personnalisée → appliquée telle quelle
+    document.body.style.setProperty('background', etab.bgColor, 'important');
   } else {
     const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
     document.body.style.setProperty('background',
