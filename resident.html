@@ -242,8 +242,7 @@ function renderViewMode(r) {
         infoRow('Référent principal', r.referent)
       ])}
       ${santeCard(r)}
-      ${sortiesCard(r)}
-      ${budgetCard(r)}
+      <div class="grid grid-2" style="gap:1rem;align-items:start">${sortiesCard(r)}${budgetCard(r)}</div>
       ${isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
         infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
         infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
