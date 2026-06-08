@@ -632,14 +632,91 @@ async function genererAvenantFromJournal(existingId) {
   }
 }
 
+function _ppeMoney(n) { return (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
+
+// Agrège TOUT le fil de vie du résident (au-delà du journal) pour enrichir l'avenant.
+// Les incidents sont évoqués SANS détailler leur nature (uniquement leur existence).
+function buildFilDeVieContext(resident) {
+  const rid = resident.id;
+  const td = today();
+  const L = [];
+
+  // Profil
+  L.push(`— PROFIL —`);
+  if (resident.dob) L.push(`Âge : ${age(resident.dob)} ans`);
+  if (resident.entree) L.push(`Entré le : ${formatDate(resident.entree)}`);
+  L.push(`Statut : ${resident.statut || '—'}`);
+  if (resident.referent) L.push(`Référent : ${resident.referent}`);
+  if (resident.protection) L.push(`Mesure de protection : ${resident.protection}${resident.protectionNom ? ' (' + resident.protectionNom + ')' : ''}`);
+
+  // Objectifs assignés
+  const objs = DB.get(DB.keys.objectives) || [];
+  const resObjs = (resident.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))?.name).filter(Boolean);
+  if (resObjs.length) L.push(`Objectifs du projet : ${resObjs.join(', ')}`);
+
+  // Santé
+  const s = resident.sante || {};
+  const traitements = s.traitements || [], rdv = s.rdv || [], vaccins = s.vaccins || [];
+  const rdvFaits = rdv.filter(v => v.fait).length, rdvManq = rdv.filter(v => !v.fait && v.date && v.date < td).length;
+  if (traitements.length || rdv.length || vaccins.length || resident.allergies) {
+    L.push(`\n— SANTÉ —`);
+    if (resident.allergies) L.push(`Allergies / contre-indications : ${resident.allergies}`);
+    if (traitements.length) L.push(`Traitements en cours : ${traitements.map(t => t.nom + (t.posologie ? ' (' + t.posologie + ')' : '')).filter(Boolean).join(', ')}`);
+    if (rdv.length) L.push(`Rendez-vous médicaux : ${rdvFaits} honorés, ${rdvManq} non honorés.`);
+    if (vaccins.length) { const retard = vaccins.filter(v => v.rappel && v.rappel < td).length; L.push(`Vaccinations : ${vaccins.length} enregistrée(s)${retard ? `, ${retard} rappel(s) en retard` : ''}.`); }
+  }
+
+  // Sorties / permissions
+  const sorties = resident.sorties || [];
+  if (sorties.length) {
+    const retard = sorties.filter(so => so.retourPrevuDate && !so.retourEffectif && new Date(so.retourPrevuDate + 'T' + (so.retourPrevuHeure || '23:59')) < new Date()).length;
+    L.push(`\n— SORTIES & PERMISSIONS —`);
+    L.push(`${sorties.length} sortie(s)/permission(s)${retard ? `, dont ${retard} retour(s) en retard` : ''}.`);
+    sorties.slice(-5).reverse().forEach(so => L.push(`- ${formatDate(so.date)} : ${so.destination || 'sortie'}${so.motif ? ' (' + so.motif + ')' : ''}`));
+  }
+
+  // Budget
+  const ops = (resident.budget && resident.budget.operations) || [];
+  if (ops.length) {
+    const solde = ops.reduce((a, o) => a + (o.type === 'recette' ? (+o.montant || 0) : -(+o.montant || 0)), 0);
+    L.push(`\n— BUDGET PERSONNEL —`);
+    L.push(`${ops.length} opération(s), solde actuel : ${_ppeMoney(solde)}${solde < 0 ? ' (NÉGATIF)' : ''}.`);
+  }
+
+  // Évaluations (moyenne générique des scores 0-4)
+  const evals = [...(resident.evaluations || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const evalPct = ev => { const v = Object.values(ev.scores || {}).map(Number).filter(x => !isNaN(x)); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / (v.length * 4) * 100) : null; };
+  if (evals.length) {
+    L.push(`\n— ÉVALUATIONS D'AUTONOMIE —`);
+    const first = evalPct(evals[0]), last = evalPct(evals[evals.length - 1]);
+    L.push(`${evals.length} grille(s). Score global : ${first != null ? first + '%' : '—'} (${formatDate(evals[0].date)})${evals.length > 1 ? ` → ${last != null ? last + '%' : '—'} (${formatDate(evals[evals.length - 1].date)})` : ''}.`);
+    evals.filter(e => e.note).slice(-3).forEach(e => L.push(`- Note du ${formatDate(e.date)} : ${(e.note || '').slice(0, 200)}`));
+  }
+
+  // Incidents — UNIQUEMENT leur existence, SANS détailler la nature
+  const incidents = (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(rid));
+  if (incidents.length) {
+    L.push(`\n— INCIDENTS —`);
+    L.push(`${incidents.length} incident(s) ont été enregistré(s) durant l'accompagnement. NE PAS détailler leur nature dans l'avenant : se contenter de mentionner qu'il y a eu des incidents et le suivi/accompagnement mis en place.`);
+  }
+
+  return L.join('\n');
+}
+
 async function aiAvenantFromJournal(resident, entries) {
   const residentInfo = `${resident.prenom || ''} ${resident.nom || ''}`.trim();
   const journalText = entries.slice().reverse().map(e =>
     `[${e.date || '?'} ${e.heure || ''}] (${e.categorie || 'général'}) ${e.contenu || ''}`
   ).join('\n\n');
+  const filDeVie = buildFilDeVieContext(resident);
 
   const key = getAiKey();
-  const systemPrompt = getAiPrompt('ppe', 'avenant') || 'Tu es un rédacteur de PPE. Retourne UNIQUEMENT un objet JSON valide.';
+  const baseSystem = getAiPrompt('ppe', 'avenant') || 'Tu es un rédacteur de PPE. Retourne UNIQUEMENT un objet JSON valide.';
+  const systemPrompt = baseSystem + `\n\nEXIGENCES DE QUALITÉ :
+- Exploite l'INTÉGRALITÉ des données fournies (synthèse du dossier + journal) pour produire un avenant RICHE, DÉTAILLÉ et PERSONNALISÉ.
+- Pour CHAQUE domaine, rédige un bilan circonstancié (plusieurs phrases) appuyé sur des éléments concrets et l'évolution observée, puis propose des objectifs précis, mesurables, avec des moyens et des modalités d'évaluation adaptés.
+- Adopte un style professionnel, institutionnel, bienveillant et nuancé ; reste factuel et n'invente aucun fait.
+- CONFIDENTIALITÉ : si des incidents sont signalés, tu peux indiquer qu'il y a eu des incidents et décrire l'accompagnement mis en place, mais NE DÉTAILLE JAMAIS leur nature, leur type ni les circonstances.`;
 
   let result = null;
   if (key) {
@@ -651,7 +728,7 @@ async function aiAvenantFromJournal(resident, entries) {
           model: 'mistral-small-latest',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Rédige un avenant de PPE pour ${residentInfo} (${entries.length} entrées journal) :\n\n${journalText}` }
+            { role: 'user', content: `Rédige l'avenant de PPE le plus complet et détaillé possible pour ${residentInfo}, en t'appuyant sur l'ensemble des données ci-dessous (synthèse du dossier + observations du journal). Couvre chaque domaine pertinent avec un bilan développé et des objectifs concrets.\n\n===== SYNTHÈSE DU DOSSIER (fil de vie) =====\n${filDeVie}\n\n===== JOURNAL DE BORD (${entries.length} entrées) =====\n${journalText}` }
           ],
           temperature: 0.7,
           max_tokens: 4000
