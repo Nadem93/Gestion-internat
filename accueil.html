@@ -5,6 +5,18 @@
   <title>Accueil — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
+    .accueil-home-card{position:relative;overflow:hidden;isolation:isolate}
+    .accueil-home-card::before{
+      content:'';position:absolute;inset:0;border-radius:inherit;z-index:0;
+      background:radial-gradient(circle 130px at var(--mx,50%) var(--my,50%),
+        color-mix(in srgb, var(--c,#4f46e5) 40%, transparent) 0%, transparent 65%);
+      opacity:0;transition:opacity .35s ease;pointer-events:none;
+    }
+    .accueil-home-card:hover::before{opacity:1}
+    .accueil-home-icon,.accueil-home-label,.notif-badge{position:relative;z-index:1}
+  </style>
 </head>
 <body>
 <script src="js/app.js"></script>
@@ -420,6 +432,20 @@ function showMainAccueil() {
   applyTerminology();
   applyEtabBackground();
 }
+
+// ── Suivi du curseur pour la lueur des cartes ──
+function bindGlowCards() {
+  document.querySelectorAll('.accueil-home-card').forEach(card => {
+    if (card._glowBound) return;
+    card._glowBound = true;
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+}
+document.addEventListener('DOMContentLoaded', bindGlowCards);
 
 // Init : si un seul étab ou déjà sélectionné → direct
 (function() {
