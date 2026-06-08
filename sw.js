@@ -1,8 +1,9 @@
-const CACHE = 'internalis-v4';
+const CACHE = 'internalis-v5';
 const ASSETS = [
   './',
   './accueil.html',
   './dashboard.html',
+  './aide.html',
   './index.html',
   './css/style.css',
   './js/app.js',
