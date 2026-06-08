@@ -20,7 +20,8 @@
     .help-sec .lead{color:var(--muted);font-size:.9rem;margin:0 0 1rem;line-height:1.6}
     .admin-tag{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:#fee2e2;color:#dc2626;padding:.15rem .5rem;border-radius:999px}
     /* Maquette d'écran */
-    .screen{position:relative;border-radius:14px;border:1px solid var(--border);background:#fff;box-shadow:0 10px 30px rgba(15,43,74,.1);overflow:hidden;margin-bottom:.85rem}
+    .screen{position:relative;border-radius:14px;border:1px solid var(--border);background:#fff;box-shadow:0 10px 30px rgba(15,43,74,.1);overflow:visible;margin-bottom:1rem}
+    .screen-bar{border-radius:14px 14px 0 0}
     .screen-bar{height:30px;background:#0f2b4a;display:flex;align-items:center;gap:6px;padding:0 12px}
     .screen-bar i{width:10px;height:10px;border-radius:50%;display:inline-block}
     .screen-bar .r{background:#ff5f57}.screen-bar .y{background:#febc2e}.screen-bar .g{background:#28c840}
@@ -37,15 +38,14 @@
     .mk-line{height:8px;border-radius:4px;background:#e2e8f0;margin:6px 0}
     .mk-line.s{width:60%}.mk-line.m{width:80%}
     /* Pins / bulles */
-    .pin{position:absolute;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:5;cursor:default;border:2px solid #fff}
-    .pin .bub{position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:#0f2b4a;color:#fff;font-size:.72rem;font-weight:500;line-height:1.4;padding:.45rem .65rem;border-radius:8px;width:max-content;max-width:210px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-    .pin .bub::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#0f2b4a}
-    .pin:hover .bub{opacity:1}
-    .pin:hover{transform:scale(1.15)}
-    /* Légende */
-    .legend{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.45rem}
-    .legend li{display:flex;gap:.6rem;align-items:flex-start;font-size:.84rem;color:var(--g700);line-height:1.5}
-    .legend .num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:.74rem;display:flex;align-items:center;justify-content:center}
+    .pin{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff,0 3px 10px rgba(0,0,0,.35);z-index:30;cursor:default}
+    .pin .bub{display:none}
+    /* Légende détaillée sous chaque écran */
+    .legend{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.55rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm);padding:.85rem 1rem}
+    .legend li{display:flex;gap:.7rem;align-items:flex-start}
+    .legend .num{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:.76rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+    .legend .lg-title{font-weight:700;font-size:.85rem;color:var(--primary)}
+    .legend .lg-desc{font-size:.8rem;color:var(--g700);line-height:1.5;margin-top:1px}
     .tip{background:#ecfeff;border:1px solid #a5f3fc;border-radius:var(--r-sm);padding:.6rem .85rem;font-size:.82rem;color:#0e7490;margin-top:.75rem}
     .hidden{display:none!important}
   </style>
@@ -101,8 +101,8 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Champs identifiant / mot de passe — verrouillage auto après inactivité.</li>
-            <li><span class="num">2</span> Connexion — l'interface s'adapte ensuite à vos droits.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Identifiants</div><div class="lg-desc">Saisissez votre identifiant et votre mot de passe (chiffré). Après 15 minutes d'inactivité, la session se verrouille automatiquement pour protéger les données.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Bouton de connexion</div><div class="lg-desc">Valide l'accès. L'interface et les menus affichés s'adaptent ensuite à votre fonction (éducateur, chef de service, administrateur…).</div></div></li>
           </ul>
           <div class="tip">💡 Si plusieurs établissements existent, un écran de sélection s'affiche juste après la connexion.</div>
         </section>
@@ -132,9 +132,9 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Cartes modules — accès à toutes les fonctionnalités selon vos droits.</li>
-            <li><span class="num">2</span> Recherche globale & notes rapides (cartes « Pratique »).</li>
-            <li><span class="num">3</span> Boutons flottants d'action rapide (intervention, incident, véhicule).</li>
+            <li><span class="num">1</span><div><div class="lg-title">Cartes des modules</div><div class="lg-desc">Chaque carte mène à une section (résidents, journal, planning…). Seules les cartes correspondant à vos droits sont affichées ; les pastilles rouges signalent des nouveautés non lues.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Recherche & notes</div><div class="lg-desc">La recherche globale retrouve instantanément un résident, une note ou un document. Le bloc-notes garde vos pense-bêtes personnels.</div></div></li>
+            <li><span class="num">3</span><div><div class="lg-title">Boutons flottants</div><div class="lg-desc">En bas à droite : demander une intervention technique, signaler un incident, ou réserver un véhicule — sans changer de page.</div></div></li>
           </ul>
         </section>
 
@@ -157,8 +157,8 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Cartes d'indicateurs — chiffres du jour.</li>
-            <li><span class="num">2</span> Graphiques & suivi transversal des résidents.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Indicateurs du jour</div><div class="lg-desc">Nombre de résidents présents, événements à venir, anniversaires du jour et véhicules réservés. Mise à jour automatique.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Graphiques & suivi</div><div class="lg-desc">Courbe de présence et suivi transversal de tous les résidents : prochains RDV, soldes budgétaires, rappels de vaccins…</div></div></li>
           </ul>
         </section>
 
@@ -181,9 +181,9 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Recherche, filtres et tri.</li>
-            <li><span class="num">2</span> Cartes résidents — clic = ouverture de la fiche.</li>
-            <li><span class="num">3</span> Vue grille/liste &amp; ajout d'un résident (administrateur).</li>
+            <li><span class="num">1</span><div><div class="lg-title">Recherche, filtres & tri</div><div class="lg-desc">Tapez un nom pour filtrer la liste, filtrez par objectif, ou triez par nom, prénom, chambre, date d'entrée ou âge.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Cartes résidents</div><div class="lg-desc">Une carte par résident avec photo, âge, chambre et statut de présence. Un clic ouvre la fiche complète.</div></div></li>
+            <li><span class="num">3</span><div><div class="lg-title">Affichage & ajout</div><div class="lg-desc">Basculez entre la vue grille et la vue liste. Le bouton « + Ajouter un résident » (réservé aux administrateurs) crée un nouveau dossier.</div></div></li>
           </ul>
         </section>
 
@@ -208,10 +208,10 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Radar de vigilance — alertes automatiques.</li>
-            <li><span class="num">2</span> Cartes santé, sorties, budget, objectifs, évaluations (modifiables selon droits).</li>
-            <li><span class="num">3</span> Fil de vie unifié — historique complet filtrable.</li>
-            <li><span class="num">4</span> Génération du bilan de synthèse par IA.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Radar de vigilance</div><div class="lg-desc">Détecte automatiquement les signaux faibles : absences répétées, incidents fréquents, budget négatif, RDV non honorés, journal silencieux… avec un niveau de vigilance global.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Cartes thématiques</div><div class="lg-desc">Santé (traitements, RDV, vaccins), sorties & permissions, budget personnel, objectifs et grilles d'évaluation. Chaque carte est modifiable selon vos droits.</div></div></li>
+            <li><span class="num">3</span><div><div class="lg-title">Fil de vie</div><div class="lg-desc">Tout l'historique du résident réuni sur une frise unique (journal, incidents, RDV, sorties, budget, avenants…), filtrable par type d'événement.</div></div></li>
+            <li><span class="num">4</span><div><div class="lg-title">Bilan IA</div><div class="lg-desc">Génère un bilan de synthèse à partir du quotidien du résident, prêt pour la réunion de projet. À relire et valider avant tout usage officiel.</div></div></li>
           </ul>
           <div class="tip">💡 Le bouton « ✎ Modifier » (en haut de la fiche) n'apparaît qu'aux personnes autorisées à éditer.</div>
         </section>
@@ -235,8 +235,8 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Liste des observations (catégorie, date, auteur).</li>
-            <li><span class="num">2</span> Nouvelle note + niveau de confidentialité.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Liste des observations</div><div class="lg-desc">Chaque entrée affiche sa catégorie, sa date, son auteur et son contenu. Les collègues peuvent réagir / accuser réception.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Nouvelle observation</div><div class="lg-desc">Rédigez une note, rattachez-la à un résident, choisissez une catégorie et un niveau de visibilité (normale ou confidentielle).</div></div></li>
           </ul>
           <div class="tip">🔒 Une note « confidentielle » n'est visible que par son auteur et les administrateurs.</div>
         </section>
@@ -255,8 +255,8 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Génération assistée par IA depuis le journal.</li>
-            <li><span class="num">2</span> Bilan et objectifs par domaine — éditables, puis export PDF.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Génération par IA</div><div class="lg-desc">Pré-rédige l'avenant à partir de l'ensemble des observations du journal du résident. Gagnez du temps, puis ajustez le texte.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Bilan & objectifs par domaine</div><div class="lg-desc">Pour chaque domaine (autonomie, santé, vie sociale…) : un bilan et des objectifs avec moyens et évaluation. Tout est éditable, puis exportable en PDF.</div></div></li>
           </ul>
         </section>
 
@@ -276,7 +276,7 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Ajout d'événements ; synchronisation RDV ↔ fiche résident.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Ajout & synchronisation</div><div class="lg-desc">Cliquez un jour pour ajouter un RDV, une activité ou une réservation de véhicule. Un RDV médical saisi ici apparaît automatiquement dans la fiche du résident concerné (et inversement).</div></div></li>
           </ul>
           <div class="tip">✅ Le module Présences permet de pointer chaque résident (présent / absent / sorti) jour par jour.</div>
         </section>
@@ -294,7 +294,7 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Recherche dans résidents, journal, documents, planning, répertoire.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Recherche transversale</div><div class="lg-desc">Cherche en même temps dans les résidents, le journal, les documents, le planning et le répertoire. Chaque résultat est cliquable. Raccourci : Ctrl/⌘ + K depuis l'accueil.</div></div></li>
           </ul>
           <div class="tip">🗒️ La carte « Notes rapides » ouvre un bloc-notes personnel, enregistré automatiquement.</div>
         </section>
@@ -319,10 +319,10 @@
             </div>
           </div>
           <ul class="legend">
-            <li><span class="num">1</span> Statistiques & rapport d'activité.</li>
-            <li><span class="num">2</span> Paramètres de l'établissement (identité, couleurs, fond, logo, IA).</li>
-            <li><span class="num">3</span> Gestion des utilisateurs et des fonctions.</li>
-            <li><span class="num">4</span> Permissions par fonction.</li>
+            <li><span class="num">1</span><div><div class="lg-title">Statistiques & rapport</div><div class="lg-desc">Tableaux et graphiques d'activité : taux d'occupation, file active, mouvements, profil du public, taux de PPE — exportables pour le rapport d'activité.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Établissement</div><div class="lg-desc">Identité (nom, FINESS, coordonnées), couleurs, couleur de fond, logo, capacité d'accueil et clé API de l'assistant IA.</div></div></li>
+            <li><span class="num">3</span><div><div class="lg-title">Utilisateurs & fonctions</div><div class="lg-desc">Créez et gérez les comptes des membres de l'équipe, leurs fonctions (éducateur, AMP, chef de service…) et leurs accès.</div></div></li>
+            <li><span class="num">4</span><div><div class="lg-title">Permissions</div><div class="lg-desc">Définissez finement, par fonction, qui peut voir et modifier quoi (résidents, incidents, santé, documents…).</div></div></li>
           </ul>
           <div class="tip superadmin-only">👑 La <strong>Console groupe</strong> (super administrateur) permet de gérer plusieurs établissements, une vue consolidée, les rôles globaux et l'audit.</div>
         </section>
