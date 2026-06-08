@@ -256,8 +256,7 @@ function renderViewMode(r) {
         infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
         infoRow('Tuteur / Curateur', r.protectionNom)
       ]) : ''}
-      ${objectifsCard(r)}
-      ${evaluationsCard(r)}
+      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${objectifsCard(r)}${evaluationsCard(r)}</div>
       ${r.notes ? infoCard('6366f1', '📝 Notes', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.notes)}</p></div>`]) : ''}
       ${r.contacts ? infoCard('6366f1', '📞 Contacts d\'urgence', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.contacts)}</p></div>`]) : ''}
     </div>
