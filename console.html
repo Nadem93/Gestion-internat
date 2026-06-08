@@ -22,6 +22,21 @@
     table.csl th{text-align:left;padding:.5rem .7rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--border)}
     table.csl td{padding:.55rem .7rem;border-bottom:1px solid var(--border)}
     .soon{padding:2.5rem;text-align:center;color:var(--muted);font-size:.9rem;border:1px dashed var(--border);border-radius:12px}
+    .role-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,43,74,.06);display:flex;flex-direction:column}
+    .role-card-top{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;color:#fff}
+    .role-card-top .role-name{font-weight:700;font-size:.9rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .role-card-top .role-edit{background:rgba(255,255,255,.25);border:none;color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;flex-shrink:0}
+    .role-card-top .role-edit:hover{background:rgba(255,255,255,.45)}
+    .role-card-body{padding:.75rem .9rem;display:flex;flex-direction:column;gap:.55rem;flex:1}
+    .role-count{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+    .role-perms{display:flex;flex-wrap:wrap;gap:.3rem}
+    .role-perm{font-size:.66rem;font-weight:600;padding:.18rem .55rem;border-radius:100px;background:var(--g100);color:var(--g600)}
+    .role-noperm{font-size:.76rem;color:var(--g400);font-style:italic}
+    .perm-group{margin-bottom:.7rem}.perm-group:last-child{margin-bottom:0}
+    .perm-group-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.4rem}
+    .perm-btn{display:inline-flex;align-items:center;padding:.35rem .7rem;border-radius:8px;border:1.5px solid rgba(15,43,74,.14);background:#fff;color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s}
+    .perm-btn:hover{border-color:var(--primary);color:var(--primary)}
+    .perm-btn.active{background:var(--primary)15;border-color:var(--primary);color:var(--primary)}
   </style>
 </head>
 <body>
@@ -83,10 +98,25 @@
           <table class="csl" id="usersTable"></table>
         </div></div>
       </div>
-      <div class="csl-panel" id="panel-roles"><div class="soon">Rôles & permissions globaux — à venir (#4)</div></div>
+      <!-- #4 RÔLES GLOBAUX -->
+      <div class="csl-panel" id="panel-roles">
+        <div style="font-size:.82rem;color:var(--muted);background:var(--g50);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:1rem">Les modifications de droits sont appliquées à <strong>tous les établissements</strong> du groupe.</div>
+        <div class="role-grid-csl" id="rolesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem"></div>
+      </div>
       <div class="csl-panel" id="panel-audit"><div class="soon">Audit transversal — à venir (#5)</div></div>
       <div class="csl-panel" id="panel-params"><div class="soon">Paramétrage global — à venir (#6)</div></div>
     </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="roleModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="roleModalTitle">Permissions du rôle</span><button class="modal-close" onclick="closeModal('roleModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body"><input type="hidden" id="roleName"/><div id="rolePerms"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('roleModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="cslSaveRole()">💾 Appliquer à tous</button>
+    </div>
   </div>
 </div>
 
@@ -125,6 +155,7 @@
     document.querySelectorAll('.csl-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
     if (name === 'consolide') renderConsolide();
     if (name === 'users') renderUsers();
+    if (name === 'roles') renderRoles();
   }
 
   const ETAB_TYPE_LABEL = { adultes: 'Adultes', enfants: 'Enfants', mixte: 'Mixte' };
@@ -325,6 +356,71 @@
     const map = {};
     getEtabs().forEach(e => (getEtabData(e.id, DB.keys.users) || []).forEach(u => { map[u.id] = u; }));
     localStorage.setItem('ftr_users', JSON.stringify(Object.values(map)));
+  }
+
+  // ── #4 RÔLES GLOBAUX ──
+  const PERM_GROUPS = [
+    { label: 'Général', keys: ['view_dashboard'] },
+    { label: 'Résidents & projet', keys: ['view_residents', 'edit_residents', 'access_ppe', 'access_sante'] },
+    { label: 'Suivi quotidien', keys: ['access_journal', 'access_presences', 'access_repertoire', 'access_documents', 'access_vehicules'] },
+    { label: 'Incidents', keys: ['view_incidents', 'validate_incidents'] },
+    { label: 'Administration', keys: ['access_interventions', 'access_employes', 'access_admin', 'manage_users'] }
+  ];
+
+  // Référence : union des rôles de tous les établissements (permissions de la 1re occurrence)
+  function cslAllRoles() {
+    const map = {};
+    getEtabs().forEach(e => (getEtabData(e.id, DB.keys.fonctionColors) || []).forEach(f => {
+      if (!map[f.fonction]) map[f.fonction] = { fonction: f.fonction, color: f.color, permissions: f.permissions || [] };
+    }));
+    return Object.values(map).sort((a, b) => a.fonction.localeCompare(b.fonction));
+  }
+
+  function renderRoles() {
+    const roles = cslAllRoles();
+    document.getElementById('rolesGrid').innerHTML = roles.map(f => {
+      const chips = (f.permissions || []).length
+        ? f.permissions.map(p => `<span class="role-perm">${escHtml((typeof PERMISSION_LABELS !== 'undefined' && PERMISSION_LABELS[p]) || p)}</span>`).join('')
+        : '<span class="role-noperm">Aucun droit</span>';
+      return `<div class="role-card">
+        <div class="role-card-top" style="background:${f.color || '#0f2b4a'}"><span class="role-name">${escHtml(f.fonction)}</span><button class="role-edit" onclick="cslOpenRole('${escHtml(f.fonction).replace(/'/g, '')}')">✎</button></div>
+        <div class="role-card-body"><div class="role-count">${(f.permissions || []).length} droit${(f.permissions || []).length > 1 ? 's' : ''}</div><div class="role-perms">${chips}</div></div>
+      </div>`;
+    }).join('') || '<div class="soon" style="grid-column:1/-1">Aucun rôle</div>';
+  }
+
+  function cslOpenRole(fonction) {
+    const role = cslAllRoles().find(r => r.fonction === fonction);
+    if (!role) return;
+    document.getElementById('roleModalTitle').textContent = 'Droits — ' + fonction;
+    document.getElementById('roleName').value = fonction;
+    const sel = role.permissions || [];
+    const used = new Set();
+    const btn = k => `<button type="button" class="perm-btn ${sel.includes(k) ? 'active' : ''}" data-key="${k}" onclick="this.classList.toggle('active')">${escHtml(PERMISSION_LABELS[k] || k)}</button>`;
+    let html = PERM_GROUPS.map(g => {
+      const btns = g.keys.filter(k => PERMISSION_LABELS[k]).map(k => { used.add(k); return btn(k); }).join('');
+      return btns ? `<div class="perm-group"><div class="perm-group-label">${g.label}</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${btns}</div></div>` : '';
+    }).join('');
+    const others = Object.keys(PERMISSION_LABELS).filter(k => !used.has(k));
+    if (others.length) html += `<div class="perm-group"><div class="perm-group-label">Autres</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${others.map(btn).join('')}</div></div>`;
+    document.getElementById('rolePerms').innerHTML = html;
+    openModal('roleModal');
+  }
+
+  function cslSaveRole() {
+    const fonction = document.getElementById('roleName').value;
+    const perms = [...document.querySelectorAll('#rolePerms .perm-btn.active')].map(b => b.dataset.key);
+    let count = 0;
+    getEtabs().forEach(e => {
+      const list = getEtabData(e.id, DB.keys.fonctionColors) || [];
+      let found = false;
+      list.forEach(f => { if (f.fonction === fonction) { f.permissions = [...perms]; found = true; } });
+      if (found) { localStorage.setItem(`${DB.keys.fonctionColors}__${e.id}`, JSON.stringify(list)); count++; }
+    });
+    if (typeof auditLog === 'function') auditLog('roles_update', 'Droits du rôle « ' + fonction + ' » (tous établissements)');
+    closeModal('roleModal');
+    toast('Droits appliqués à ' + count + ' établissement' + (count > 1 ? 's' : ''), 'success');
+    renderRoles();
   }
 
   document.addEventListener('DOMContentLoaded', renderEtabs);
