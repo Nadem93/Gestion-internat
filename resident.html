@@ -350,11 +350,15 @@ function santeCard(r) {
         ${medRow('Allergies / CI', r.allergies)}
       </div>
       ${s.notesMedicales ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">Notes médicales</div><p style="white-space:pre-wrap;line-height:1.6;font-size:.83rem;margin:0">${escHtml(s.notesMedicales)}</p></div>` : ''}
+      ${SANTE_SEP}
       <div>${subHeader('💊', 'Traitements en cours', 'traitement')}${wrap(traitList)}</div>
+      ${SANTE_SEP}
       <div>${subHeader('📅', 'Rendez-vous médicaux', 'rdv')}${wrap(rdvList)}</div>
+      ${SANTE_SEP}
       <div>${subHeader('💉', 'Vaccinations', 'vaccin')}${wrap(vaccList)}</div>
     </div></div>`;
 }
+const SANTE_SEP = '<div style="height:2px;border-radius:2px;background:#e2e8f0;box-shadow:inset 0 1px 2px rgba(15,43,74,.18),0 1px 0 rgba(255,255,255,.8);margin:.15rem 0"></div>';
 
 function santeField(id, label, value, type) {
   return `<div class="form-group"><label>${label}</label><input type="${type||'text'}" id="${id}" value="${escHtml(value||'')}" class="form-input"/></div>`;
