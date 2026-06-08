@@ -18,14 +18,6 @@
       filter:blur(8px);
     }
     .accueil-home-card:hover::before{opacity:1}
-    /* Fine ligne lumineuse sur le bord supérieur */
-    .accueil-home-card::after{
-      content:'';position:absolute;top:0;left:15%;right:15%;height:1.5px;z-index:1;
-      background:linear-gradient(90deg,transparent,
-        color-mix(in srgb, var(--c,#4f46e5) 70%, transparent),transparent);
-      opacity:0;transition:opacity .3s ease;pointer-events:none;
-    }
-    .accueil-home-card:hover::after{opacity:1}
     .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
     .notif-badge{z-index:10}
   </style>

@@ -18,14 +18,6 @@
       opacity:0;transition:opacity .35s ease;pointer-events:none;filter:blur(8px);
     }
     .res-card:hover::before{opacity:1}
-    /* Fine ligne lumineuse sur le bord supérieur */
-    .res-card::after{
-      content:'';position:absolute;top:0;left:12%;right:12%;height:1.5px;z-index:1;
-      background:linear-gradient(90deg,transparent,
-        color-mix(in srgb, var(--card-color,#0891b2) 75%, transparent),transparent);
-      opacity:0;transition:opacity .3s ease;pointer-events:none;
-    }
-    .res-card:hover::after{opacity:1}
     .res-card-body{position:relative;z-index:1}
   </style>
 </head>
