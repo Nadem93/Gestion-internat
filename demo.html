@@ -250,7 +250,7 @@ function generateForCurrentEtab() {
     resList.push({
       id: 'demo-' + (i + 1),
       prenom, nom, dob, genre,
-      entree: new Date(now.getTime() - rand(60, 720) * 86400000).toISOString().slice(0,10),
+      entree: new Date(now.getTime() - rand(20, 360) * 86400000).toISOString().slice(0,10),
       statut, chambre, color,
       referent: pick(REFFERENTS),
       photo: 'https://i.pravatar.cc/150?u=demo-' + (i + 1) + '&img=' + ((i % 70) + 1),
@@ -274,10 +274,17 @@ function generateForCurrentEtab() {
   DB.set(DB.keys.residents, resList);
 
   // ── MODULES FICHE RÉSIDENT (Santé, Sorties, Budget, Objectifs, Évaluations) — étalés sur 1 an ──
+  const _MS = 86400000;
   const dAgo = n => new Date(now.getTime() - rand(0, n) * 86400000).toISOString().slice(0,10);
   const dtAgo = n => new Date(now.getTime() - rand(0, n) * 86400000).toISOString();
   const dAhead = n => new Date(now.getTime() + rand(1, n) * 86400000).toISOString().slice(0,10);
   const hh = (a,b) => String(rand(a,b)).padStart(2,'0') + ':' + pick(['00','15','30','45']);
+  // Fenêtre de présence d'un résident (entrée → sortie ou aujourd'hui)
+  const winStart = r => new Date((r.entree || today) + 'T00:00:00').getTime();
+  const winEnd = r => Math.min(now.getTime(), r.dateSortie ? new Date(r.dateSortie + 'T00:00:00').getTime() : now.getTime());
+  const dWin = r => { const s = winStart(r), e = Math.max(winEnd(r), s + _MS); return new Date(s + Math.random() * (e - s)); };
+  const dWinStr = r => dWin(r).toISOString().slice(0,10);
+  const isActive = r => r.statut !== 'sorti';
   const MEDS = [
     { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur' }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir' },
     { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun' }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne' },
@@ -298,49 +305,52 @@ function generateForCurrentEtab() {
 
   resList.forEach((r, ri) => {
     if (['tutelle','curatelle','sauvegarde'].includes(r.protection)) r.protectionNom = pick(PROT_NOMS);
-    // Mouvements : ~8% de sorties sur l'année (pour file active / durée de séjour)
-    if (Math.random() < 0.08) { r.statut = 'sorti'; r.dateSortie = dAgo(rand(5, 150)); }
+    // Mouvements : ~8% de sorties — date cohérente (après l'entrée, avant aujourd'hui)
+    { const s = winStart(r) + 30 * _MS, e = now.getTime() - 7 * _MS;
+      if (Math.random() < 0.08 && e > s) { r.statut = 'sorti'; r.dateSortie = new Date(s + Math.random() * (e - s)).toISOString().slice(0,10); } }
+    const active = isActive(r);
 
-    // Santé
+    // Santé (dans la fenêtre de présence ; RDV/rappels à venir uniquement si présent)
     const traitements = [];
-    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); const fini = Math.random() < .3; traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dAgo(330), fin: fini ? dAgo(60) : '' }); }
+    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '' }); }
     const rdv = [];
-    for (let k = 0; k < rand(1,4); k++) rdv.push({ id:'dr-'+ri+'-'+k, date: dAgo(360), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: true });
-    if (Math.random() < .7) rdv.push({ id:'dr-'+ri+'-f', date: dAhead(40), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: false });
+    for (let k = 0; k < rand(1,4); k++) rdv.push({ id:'dr-'+ri+'-'+k, date: dWinStr(r), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: true });
+    if (active && Math.random() < .7) rdv.push({ id:'dr-'+ri+'-f', date: dAhead(40), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: false });
     const vaccins = [];
-    for (let k = 0; k < rand(1,2); k++) { const overdue = Math.random() < .3; vaccins.push({ id:'dv-'+ri+'-'+k, nom: pick(VACCINS), date: dAgo(700), rappel: overdue ? dAgo(40) : dAhead(300) }); }
+    for (let k = 0; k < rand(1,2); k++) { const overdue = Math.random() < .3; vaccins.push({ id:'dv-'+ri+'-'+k, nom: pick(VACCINS), date: dWinStr(r), rappel: overdue ? dAgo(40) : (active ? dAhead(300) : '') }); }
     r.sante = { groupeSanguin: pick(['A+','A-','B+','B-','O+','O-','AB+','AB-','']), notesMedicales: Math.random()<.3 ? 'Suivi médical régulier. Pas de contre-indication particulière.' : '', traitements, rdv, vaccins };
 
-    // Sorties & permissions (sur 1 an)
+    // Sorties & permissions (dans la fenêtre ; sortie en cours uniquement si présent)
     const sorties = [];
     for (let k = 0; k < rand(0,8); k++) {
-      const dep = dAgo(360);
-      const enCours = k === 0 && Math.random() < .25;
+      const dep = (active && k === 0 && Math.random() < .25) ? dAgo(2) : dWinStr(r);
+      const enCours = active && k === 0 && Math.random() < .25;
       sorties.push({ id:'so-'+ri+'-'+k, date: dep, heure: String(rand(8,18)).padStart(2,'0')+':00', destination: pick(SORTIE_DEST), motif: pick(SORTIE_MOTIF), accompagnement: pick(SORTIE_ACC), retourPrevuDate: dep, retourPrevuHeure: String(rand(18,21)).padStart(2,'0')+':00', autorisePar: pick(REFFERENTS), notes:'', retourEffectif: enCours ? null : new Date(new Date(dep+'T18:00').getTime()+rand(1,5)*3600000).toISOString() });
     }
     r.sorties = sorties;
 
-    // Budget personnel (recette mensuelle + dépenses, sur 12 mois)
+    // Budget personnel (mensuel, uniquement pendant la présence)
     const ops = [];
-    const enDifficulte = Math.random() < 0.18; // ~18% en difficulté budgétaire → solde négatif
+    const enDifficulte = Math.random() < 0.18;
     const rec = enDifficulte ? pick([['Argent de poche',[20,50]],['Pension',[120,200]]]) : pick(BUD_REC);
+    const ws = winStart(r), we = winEnd(r);
     for (let mo = 11; mo >= 0; mo--) {
-      const dmo = new Date(now.getFullYear(), now.getMonth()-mo, rand(1,5)).toISOString().slice(0,10);
-      if (dmo > today) continue;
-      ops.push({ id:'bu-'+ri+'-r'+mo, type:'recette', montant: rand(rec[1][0], rec[1][1]), date: dmo, categorie: rec[0], libelle: rec[0]+' du mois', notes:'' });
+      const dmoD = new Date(now.getFullYear(), now.getMonth() - mo, rand(1,5));
+      if (dmoD.getTime() < ws || dmoD.getTime() > we) continue;
+      ops.push({ id:'bu-'+ri+'-r'+mo, type:'recette', montant: rand(rec[1][0], rec[1][1]), date: dmoD.toISOString().slice(0,10), categorie: rec[0], libelle: rec[0]+' du mois', notes:'' });
       const nbDep = enDifficulte ? rand(3,6) : rand(2,4);
-      for (let dd = 0; dd < nbDep; dd++) { const dday = new Date(now.getFullYear(), now.getMonth()-mo, rand(6,27)).toISOString().slice(0,10); if (dday > today) continue; ops.push({ id:'bu-'+ri+'-d'+mo+'-'+dd, type:'depense', montant: enDifficulte ? rand(50,260) : rand(10,180), date: dday, categorie: pick(BUD_DEP_CAT), libelle:'', notes:'' }); }
+      for (let dd = 0; dd < nbDep; dd++) { const ddD = new Date(now.getFullYear(), now.getMonth() - mo, rand(6,27)); if (ddD.getTime() < ws || ddD.getTime() > we) continue; ops.push({ id:'bu-'+ri+'-d'+mo+'-'+dd, type:'depense', montant: enDifficulte ? rand(50,260) : rand(10,180), date: ddD.toISOString().slice(0,10), categorie: pick(BUD_DEP_CAT), libelle:'', notes:'' }); }
     }
     r.budget = { operations: ops };
 
     // Suivi des objectifs
     const suivi = {};
-    (r.objectifs || []).forEach(oid => { const st = pick(['non_commence','en_cours','en_cours','atteint','atteint','abandonne']); suivi[oid] = { statut: st, note: st==='atteint' ? 'Objectif atteint, à consolider.' : st==='en_cours' ? 'Progression régulière constatée.' : '', dateMaj: dtAgo(300) }; });
+    (r.objectifs || []).forEach(oid => { const st = pick(['non_commence','en_cours','en_cours','atteint','atteint','abandonne']); suivi[oid] = { statut: st, note: st==='atteint' ? 'Objectif atteint, à consolider.' : st==='en_cours' ? 'Progression régulière constatée.' : '', dateMaj: dWin(r).toISOString() }; });
     r.objectifsSuivi = suivi;
 
-    // Grilles d'évaluation (1-3 sur l'année)
+    // Grilles d'évaluation (dans la fenêtre)
     const evals = [];
-    for (let k = 0; k < rand(1,3); k++) { const scores = {}; EVAL_KEYS.forEach(key => { if (Math.random() < .9) scores[key] = rand(1,4); }); evals.push({ id:'ev-'+ri+'-'+k, date: dAgo(340), evaluateur: pick(REFFERENTS), note:"Bilan d'autonomie périodique.", scores }); }
+    for (let k = 0; k < rand(1,3); k++) { const scores = {}; EVAL_KEYS.forEach(key => { if (Math.random() < .9) scores[key] = rand(1,4); }); evals.push({ id:'ev-'+ri+'-'+k, date: dWinStr(r), evaluateur: pick(REFFERENTS), note:"Bilan d'autonomie périodique.", scores }); }
     r.evaluations = evals;
   });
   DB.set(DB.keys.residents, resList);
@@ -441,7 +451,7 @@ function generateForCurrentEtab() {
   for (let i = 0; i < cfgJournal; i++) {
     const res = resList[i % resList.length];
     const cat = cats[i % cats.length];
-    const d = new Date(now.getTime() - rand(0, 365) * 86400000);
+    const d = dWin(res);
     const author = pick(journalAuthors);
     const catTemplates = journalParCategorie[cat.id];
     const usedSet = new Set();
@@ -499,12 +509,14 @@ function generateForCurrentEtab() {
     { title: 'Sortie parc', type: 'sortie', color: '#0891b2', time: '10:00', dur: '240' }
   ];
 
+  const planningRes = resList.filter(r => r.statut !== 'sorti');
+  const _planRes = planningRes.length ? planningRes : resList;
   for (let i = 0; i < cfgPlanning; i++) {
     const ev = pick(eventTypes);
     const dayOffset = rand(-14, 21);
     const d = new Date(now.getTime() + dayOffset * 86400000);
     const dateStr = d.toISOString().slice(0,10);
-    const res = resList[i % resList.length];
+    const res = _planRes[i % _planRes.length];
     planning.push({
       id: 'dp-' + (i + 1),
       titre: res ? ev.title + ' — ' + res.prenom + ' ' + res.nom : ev.title,
@@ -549,8 +561,11 @@ function generateForCurrentEtab() {
     const d = new Date(today + 'T00:00:00');
     d.setDate(d.getDate() + j);
     const ds = d.toISOString().slice(0,10);
+    const dayMs = d.getTime();
     const dayPresences = {};
     resList.forEach(r => {
+      // Ne pointer que pendant la présence effective (après l'entrée, avant la sortie)
+      if (dayMs < winStart(r) || dayMs > winEnd(r)) return;
       const rnd = Math.random();
       dayPresences[r.id] = rnd < .7 ? 'present' : rnd < .85 ? 'absent' : 'sortie';
     });
@@ -564,8 +579,8 @@ function generateForCurrentEtab() {
   for (let i = 0; i < cfgPpe; i++) {
     const idx = i % resList.length;
     const res = resList[idx];
-    const statut = pick(['actif','actif','actif','brouillon','termine']);
-    const dateRedac = new Date(now.getTime() - rand(10, 350) * 86400000);
+    const statut = res.statut === 'sorti' ? 'termine' : pick(['actif','actif','actif','brouillon','termine']);
+    const dateRedac = dWin(res);
     const dateRev = new Date(dateRedac.getTime() + rand(150, 210) * 86400000);
     const sections = {};
     domaines.forEach(d => {
@@ -614,10 +629,10 @@ function generateForCurrentEtab() {
   const incList = [];
   for (let i = 0; i < cfgInc; i++) {
     const tpl = pick(incidentTemplates);
-    const d = new Date(now.getTime() - rand(1, 365) * 86400000);
+    const res = resList[rand(0, resList.length - 1)];
+    const d = dWin(res);
     const h = String(rand(6, 23)).padStart(2,'0');
     const m = String(rand(0, 59)).padStart(2,'0');
-    const res = resList[rand(0, resList.length - 1)];
     const author = pick(authorNames);
     const desc = (res ? res.prenom : 'Un résident') + tpl.desc;
     incList.push({
