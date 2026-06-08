@@ -119,6 +119,7 @@ function renderAvenantFull(p) {
       <button class="btn btn-outline btn-sm" onclick="backToList()">← Retour à la liste</button>
       <button class="btn btn-accent btn-sm" onclick="regenerateAvenantFromJournal('${p.id}')" style="gap:.35rem"><span>🤖</span> Générer depuis le journal</button>
       <div style="display:flex;gap:.5rem">
+        <button class="btn btn-outline btn-sm" onclick="openCompareAvenant('${p.id}')">⇄ Comparer</button>
         <button class="btn btn-outline btn-sm" onclick="editAvenant('${p.id}')">Modifier infos</button>
         <button class="btn btn-outline btn-sm" onclick="changeAvenantStatut('${p.id}')">${p.statut==='brouillon'?'Activer':p.statut==='actif'?'Terminer':'—'}</button>
         <button class="btn btn-accent btn-sm" onclick="printAvenant('${p.id}')">Télécharger PDF</button>
@@ -630,6 +631,56 @@ async function genererAvenantFromJournal(existingId) {
     renderAvenant();
     setTimeout(() => openAvenant(avenant.id), 400);
   }
+}
+
+// ═══════════════════════════════════════════
+//  COMPARAISON D'AVENANTS
+// ═══════════════════════════════════════════
+function openCompareAvenant(id) {
+  const list = getPpe();
+  const cur = list.find(p => p.id === id);
+  if (!cur) return;
+  const others = list.filter(p => String(p.residentId) === String(cur.residentId) && p.id !== id)
+    .sort((a, b) => (b.dateRedaction || '').localeCompare(a.dateRedaction || ''));
+  if (!others.length) { toast('Aucun autre avenant pour ce résident à comparer', 'info'); return; }
+  const opts = others.map(o => `<option value="${o.id}">${o.dateRedaction || '?'} — ${STATUT_PPE_LABEL[o.statut] || o.statut}</option>`).join('');
+  document.getElementById('compareBody').innerHTML = `
+    <div style="margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.88rem">
+      <strong>${escHtml(cur.residentName)}</strong>
+      <span>— comparer l'avenant du <strong>${cur.dateRedaction || '?'}</strong> avec :</span>
+      <select id="compareSel" class="form-control" style="width:auto" onchange="renderCompare('${id}', this.value)">${opts}</select>
+    </div>
+    <div id="compareTable"></div>`;
+  openModal('modalCompare');
+  renderCompare(id, others[0].id);
+}
+
+function renderCompare(idA, idB) {
+  const list = getPpe();
+  const A = list.find(p => p.id === idA), B = list.find(p => p.id === idB);
+  if (!A || !B) return;
+  const td = 'padding:.55rem;border-bottom:1px solid var(--border);vertical-align:top';
+  const objCount = s => (s.objectifs || []).filter(o => o.objectif && o.objectif.trim()).length;
+  const rows = DOMAINES.map(d => {
+    const sa = (A.sections && A.sections[d.id]) || {}, sb = (B.sections && B.sections[d.id]) || {};
+    const oa = objCount(sa), ob = objCount(sb);
+    const diff = oa - ob;
+    const trend = diff > 0 ? `<span style="color:#16a34a;font-weight:700"> (+${diff})</span>` : diff < 0 ? `<span style="color:#dc2626;font-weight:700"> (${diff})</span>` : '';
+    return `<tr>
+      <td style="${td};font-weight:700;color:var(--primary);white-space:nowrap">${d.icon} ${d.label}</td>
+      <td style="${td}">${escHtml(sb.bilan || '—')}<div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">${ob} objectif(s)</div></td>
+      <td style="${td}">${escHtml(sa.bilan || '—')}<div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">${oa} objectif(s)${trend}</div></td>
+    </tr>`;
+  }).join('');
+  const thStyle = 'text-align:left;padding:.55rem;border-bottom:2px solid var(--primary);font-size:.78rem;color:var(--primary)';
+  document.getElementById('compareTable').innerHTML = `
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem">
+      <thead><tr>
+        <th style="${thStyle}">Domaine</th>
+        <th style="${thStyle}">Avenant du ${B.dateRedaction || '?'} <span style="font-weight:400;color:var(--muted)">(plus ancien)</span></th>
+        <th style="${thStyle}">Avenant du ${A.dateRedaction || '?'} <span style="font-weight:400;color:var(--muted)">(en cours)</span></th>
+      </tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="font-size:.74rem;color:var(--muted);margin-top:.75rem">Les variations entre parenthèses indiquent l'évolution du nombre d'objectifs par domaine.</div>`;
 }
 
 async function aiAvenantFromJournal(resident, entries) {
