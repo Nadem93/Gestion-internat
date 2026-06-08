@@ -6,6 +6,10 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
+    /* Chips de filtre du Fil de vie */
+    .fv-chip{font:inherit;font-size:.74rem;font-weight:600;padding:.28rem .7rem;border-radius:999px;border:1px solid var(--border);background:var(--white,#fff);color:var(--muted);cursor:pointer;transition:all .15s}
+    .fv-chip:hover{border-color:var(--accent);color:var(--accent)}
+    .fv-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
       @page { margin: 1.5cm 1.2cm; size: A4; }
@@ -235,6 +239,7 @@ function renderViewMode(r) {
       <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)"><div class="stat-card-top"><span class="stat-label">Genre</span><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div></div><div class="stat-num">${genderLabel}</div><div class="stat-change">${r.dob ? 'Né(e) le '+formatDate(r.dob) : ''}</div></div>
     </div>
     ${renderStatCards(r)}
+    ${radarSignauxCard(r)}
     <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
       ${infoCard('d97706', '🏠 Séjour', [
         infoRow('Date d\'entrée', r.entree ? formatDate(r.entree) : ''),
@@ -265,6 +270,7 @@ function renderViewMode(r) {
       <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap">TABLEAU DE BORD DU RÉSIDENT</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
+    <div class="no-print">${filDeVieCard(r)}</div>
     <div class="no-print">${renderDataCards(r)}</div>
     <div class="no-print tabs" style="margin-bottom:1rem">
       <button class="tab active" data-tab="documents">📎 Documents ${docs.length ? `<span class="badge badge-gray" style="margin-left:.3rem">${docs.length}</span>` : ''}</button>
@@ -1145,6 +1151,138 @@ function togglePageEdit() {
   const dl = document.getElementById('btnDownload');
   if (dl) dl.style.display = pageEditMode ? 'none' : '';
   loadResident();
+}
+
+// ═══════════════════════════════════════════
+//  FIL DE VIE UNIFIÉ
+// ═══════════════════════════════════════════
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie' };
+
+function fvDate(ts) {
+  const p = n => String(n).padStart(2, '0');
+  const d = `${ts.getFullYear()}-${p(ts.getMonth()+1)}-${p(ts.getDate())}`;
+  const hm = `${p(ts.getHours())}:${p(ts.getMinutes())}`;
+  return formatDate(d) + (hm !== '00:00' ? ' · ' + hm : '');
+}
+
+function buildFilDeVie(r) {
+  const ev = [];
+  const push = (ts, type, icon, color, title, detail) => { if (!ts || isNaN(ts.getTime())) return; ev.push({ ts, type, icon, color, title, detail: detail || '' }); };
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const name = `${r.prenom||''} ${r.nom||''}`;
+  if (r.entree) push(new Date(r.entree + 'T00:00'), 'admission', '🏠', '#0891b2', 'Admission', "Entrée dans l'établissement");
+  if (r.dateSortie) push(new Date(r.dateSortie + 'T00:00'), 'sortie-def', '🚸', '#64748b', "Sortie de l'établissement", '');
+  const cats = DB.get(DB.keys.categories) || [];
+  (DB.get(DB.keys.journal) || []).filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e)).forEach(e => {
+    const cat = cats.find(c => String(c.id) === String(e.categorie));
+    push(new Date(e.date), 'journal', '📔', cat ? cat.color : '#059669', cat ? cat.name : 'Journal', e.contenu);
+  });
+  (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
+    push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `Incident — ${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
+  });
+  const s = getSante(r);
+  s.rdv.forEach(v => push(new Date((v.date||'') + 'T' + (v.heure || '00:00')), 'rdv', '🏥', '#16a34a', `RDV — ${v.type||'médical'}`, [v.praticien, v.lieu, v.fait ? 'effectué' : (v.date && v.date < today() ? 'non honoré' : 'à venir')].filter(Boolean).join(' · ')));
+  s.vaccins.forEach(vc => { if (vc.date) push(new Date(vc.date + 'T00:00'), 'vaccin', '💉', '#0891b2', `Vaccin — ${vc.nom||''}`, vc.rappel ? 'Rappel : ' + formatDate(vc.rappel) : ''); });
+  s.traitements.forEach(t => { if (t.debut) push(new Date(t.debut + 'T00:00'), 'traitement', '💊', '#ef4444', `Traitement — ${t.nom||''}`, [t.posologie, t.frequence].filter(Boolean).join(' · ')); });
+  getSorties(r).forEach(so => push(new Date((so.date||'') + 'T' + (so.heure || '00:00')), 'sortie', '🚪', '#0d9488', `Sortie — ${so.destination||''}`, [so.motif, so.accompagnement].filter(Boolean).join(' · ')));
+  getBudgetOps(r).forEach(o => push(new Date((o.date||'') + 'T00:00'), 'budget', '💰', '#d97706', `${o.type==='recette'?'Recette':'Dépense'} — ${o.libelle||o.categorie||''}`, `${o.type==='recette'?'+':'–'} ${fmtMoney(o.montant)}`));
+  (DB.get(DB.keys.ppe) || []).filter(p => String(p.residentId) === String(currentResidentId)).forEach(p => push(new Date((p.dateRedaction||'') + 'T00:00'), 'avenant', '📄', '#8b5cf6', 'Avenant PPE', (typeof STATUT_PPE_LABEL !== 'undefined' ? (STATUT_PPE_LABEL[p.statut]||p.statut) : p.statut) || ''));
+  getEvaluations(r).forEach(e => { if (e.date) push(new Date(e.date + 'T00:00'), 'evaluation', '📊', '#6366f1', "Grille d'évaluation", e.grille || e.nom || e.titre || ''); });
+  ev.sort((a, b) => b.ts - a.ts);
+  return ev;
+}
+
+function fvFilter(type, btn) {
+  document.querySelectorAll('.fv-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('#fvList .fv-item').forEach(it => { it.style.display = (type === 'all' || it.dataset.fvType === type) ? '' : 'none'; });
+}
+
+function filDeVieCard(r) {
+  const ev = buildFilDeVie(r);
+  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span></div>`;
+  if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
+  const types = [...new Set(ev.map(e => e.type))];
+  const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
+    types.map(t => `<button class="fv-chip" onclick="fvFilter('${t}',this)">${FV_TYPE_LABELS[t]||t}</button>`).join('');
+  const rows = ev.map(e => `<div class="fv-item" data-fv-type="${e.type}" style="display:flex;gap:.75rem;padding:.6rem .25rem;border-bottom:1px solid var(--border)">
+      <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${e.color}1a;font-size:1rem">${e.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><span style="font-weight:650;font-size:.83rem;color:${e.color}">${escHtml(e.title)}</span><span style="font-size:.7rem;color:var(--muted)">${fvDate(e.ts)}</span></div>
+        ${e.detail ? `<div style="font-size:.78rem;color:var(--g700);margin-top:1px;white-space:pre-wrap">${escHtml(String(e.detail).slice(0,240))}</div>` : ''}
+      </div></div>`).join('');
+  return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body" style="padding:1rem 1.25rem">
+      <div class="fv-chips no-print" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">${chips}</div>
+      <div id="fvList" style="max-height:520px;overflow-y:auto">${rows}</div>
+    </div></div>`;
+}
+
+// ═══════════════════════════════════════════
+//  RADAR DE SIGNAUX FAIBLES
+// ═══════════════════════════════════════════
+function computeSignals(r) {
+  const out = [];
+  const td = today(), now = Date.now();
+  const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+  // Absences récentes (14 j)
+  const presences = DB.get(DB.keys.presences) || {};
+  let abs = 0; const since14 = daysAgo(14);
+  for (const [d, day] of Object.entries(presences)) { if (d < since14) continue; if (day[currentResidentId] === 'absent') abs++; }
+  if (abs >= 5) out.push({ level:'alert', icon:'📉', label:'Absences fréquentes', detail:`${abs} absences sur les 14 derniers jours` });
+  else if (abs >= 3) out.push({ level:'warn', icon:'📉', label:'Absences en hausse', detail:`${abs} absences sur 14 jours` });
+  // Incidents (30 j)
+  const since30 = daysAgo(30);
+  const inc = (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId) && (e.date||'') >= since30);
+  if (inc.some(e => ['grave','critique'].includes(e.gravite))) out.push({ level:'alert', icon:'⚠️', label:'Incident grave récent', detail:`${inc.length} incident(s) sur 30 jours, dont au moins un grave` });
+  else if (inc.length >= 2) out.push({ level:'warn', icon:'⚠️', label:'Incidents répétés', detail:`${inc.length} incidents sur 30 jours` });
+  // Budget négatif
+  const ops = getBudgetOps(r);
+  const solde = ops.reduce((a, o) => a + (o.type === 'recette' ? (+o.montant||0) : -(+o.montant||0)), 0);
+  if (ops.length && solde < 0) out.push({ level:'alert', icon:'💰', label:'Budget négatif', detail:`Solde actuel : ${fmtMoney(solde)}` });
+  // RDV médicaux non honorés
+  const s = getSante(r);
+  const rdvManq = s.rdv.filter(v => !v.fait && v.date && v.date < td);
+  if (rdvManq.length) out.push({ level:'warn', icon:'🏥', label:'RDV médical non honoré', detail:`${rdvManq.length} rendez-vous passé(s) non marqué(s) « effectué »` });
+  // Rappel vaccinal dépassé
+  const vacc = s.vaccins.filter(vc => vc.rappel && vc.rappel < td);
+  if (vacc.length) out.push({ level:'warn', icon:'💉', label:'Rappel vaccinal dû', detail:`${vacc.length} rappel(s) dépassé(s)` });
+  // Retour de sortie en retard
+  if (getSorties(r).some(so => sortieStatut(so).key === 'retard')) out.push({ level:'alert', icon:'🚪', label:'Retour de sortie en retard', detail:"Le résident n'est pas rentré à l'heure prévue" });
+  // Silence au journal (résident présent)
+  if (r.statut !== 'sorti') {
+    const _sess = Auth.getSession();
+    const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+    const name = `${r.prenom||''} ${r.nom||''}`;
+    const jrn = (DB.get(DB.keys.journal) || []).filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e));
+    const last = jrn.reduce((m, e) => { const t = new Date(e.date).getTime(); return t > m ? t : m; }, 0);
+    if (last === 0) out.push({ level:'info', icon:'🕐', label:'Aucune observation', detail:'Aucune entrée au journal pour ce résident' });
+    else { const days = Math.floor((now - last) / 86400000); if (days >= 21) out.push({ level:'warn', icon:'🕐', label:'Journal silencieux', detail:`Dernière observation il y a ${days} jours` }); }
+  }
+  return out;
+}
+
+function radarSignauxCard(r) {
+  const sig = computeSignals(r);
+  const order = { alert:0, warn:1, info:2 };
+  sig.sort((a, b) => order[a.level] - order[b.level]);
+  const nAlert = sig.filter(x => x.level === 'alert').length, nWarn = sig.filter(x => x.level === 'warn').length;
+  const lv = nAlert ? { c:'#dc2626', bg:'#fef2f2', bd:'#fecaca', txt:`Vigilance élevée — ${nAlert} alerte${nAlert>1?'s':''}` }
+    : nWarn ? { c:'#d97706', bg:'#fffbeb', bd:'#fde68a', txt:`Points de vigilance — ${nWarn} signal${nWarn>1?'aux':''}` }
+    : sig.length ? { c:'#0891b2', bg:'#ecfeff', bd:'#a5f3fc', txt:'À surveiller' }
+    : { c:'#16a34a', bg:'#f0fdf4', bd:'#bbf7d0', txt:'Situation stable' };
+  const cm = { alert:{c:'#dc2626',bg:'#fef2f2',bd:'#fecaca'}, warn:{c:'#d97706',bg:'#fffbeb',bd:'#fde68a'}, info:{c:'#0891b2',bg:'#ecfeff',bd:'#a5f3fc'} };
+  const rows = sig.length ? sig.map(x => `<div style="display:flex;gap:.7rem;align-items:flex-start;padding:.6rem .85rem;border-radius:var(--r-sm);background:${cm[x.level].bg};border:1px solid ${cm[x.level].bd}">
+      <span style="font-size:1.05rem;flex-shrink:0;line-height:1.3">${x.icon}</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.82rem;color:${cm[x.level].c}">${escHtml(x.label)}</div><div style="font-size:.76rem;color:var(--g700)">${escHtml(x.detail)}</div></div>
+    </div>`).join('') : `<div style="padding:.85rem;font-size:.82rem;color:#16a34a">✓ Aucun signal faible détecté. La situation paraît stable.</div>`;
+  return `<div class="card" style="margin-bottom:1.5rem;border-left:3px solid ${lv.c}"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${lv.c}">📡 Radar de vigilance</span>
+        <span class="badge" style="margin-left:auto;background:${lv.bg};color:${lv.c};border:1px solid ${lv.bd}">${lv.txt}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
+    </div></div>`;
 }
 
 function renderDataCards(r) {
