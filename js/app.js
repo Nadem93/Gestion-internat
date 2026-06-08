@@ -170,7 +170,7 @@ const DEFAULTS = {
   ],
   settings: { etablissement:'Foyer d\'Hébergement Les Trois Rivières', ville:'', tel:'', email:'', capacite:'' },
   branding: { primaryColor:'#0f2b4a', accentColor:'#e85d04', logo:'' },
-  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin' }],
+  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'superadmin' }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
     { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
@@ -225,6 +225,7 @@ function initDefaults() {
   if (!DB.get(DB.keys.user)) DB.set(DB.keys.user, { nom:'Administrateur', prenom:'', role:'Administrateur' });
   if (!DB.get(DB.keys.branding)) DB.set(DB.keys.branding, DEFAULTS.branding);
   if (!DB.get(DB.keys.users)) DB.set(DB.keys.users, DEFAULTS.users);
+  migrateSuperAdmin();
   if (!DB.get(DB.keys.vehicules)) DB.set(DB.keys.vehicules, DEFAULTS.vehicules);
   if (!DB.get(DB.keys.documents)) DB.set(DB.keys.documents, {});
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
@@ -263,7 +264,7 @@ function applyDefaultFonctionPerms() {
 // Garde d'accès à un module : true si admin ou permission accordée, sinon affiche un refus
 function requireModule(perm) {
   const s = Auth.getSession();
-  if (s && (s.role === 'admin' || hasPermission(s.userId, perm))) return true;
+  if (s && (s.role === 'admin' || s.role === 'superadmin' || hasPermission(s.userId, perm))) return true;
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;font-family:Inter,system-ui,sans-serif;color:#64748b;padding:2rem">'
     + '<div><div style="font-size:2.2rem;margin-bottom:.5rem">⛔</div>'
     + '<div style="font-size:1.15rem;font-weight:700;color:#0f2b4a">Accès refusé</div>'
@@ -376,9 +377,35 @@ const Auth = {
   isAdmin() {
     const s = this.getSession();
     if (!s) return false;
-    return s.role === 'admin' || canAccessAdmin(s.userId);
+    return s.role === 'admin' || s.role === 'superadmin' || canAccessAdmin(s.userId);
+  },
+  isSuperAdmin() {
+    const s = this.getSession();
+    if (!s) return false;
+    if (s.role === 'superadmin') return true;
+    const u = (DB.get(DB.keys.users) || []).find(x => String(x.id) === String(s.userId));
+    return !!(u && u.role === 'superadmin');
+  },
+  requireSuperAdmin() {
+    const s = this.requireAuth();
+    if (!s) return null;
+    if (!this.isSuperAdmin()) { window.location.href = 'accueil.html'; return null; }
+    return s;
   }
 };
+
+// Lit les données d'un établissement précis (clé suffixée), pour la console groupe
+function getEtabData(etabId, key) {
+  return JSON.parse(localStorage.getItem(`${key}__${etabId}`) || 'null');
+}
+
+// S'assure qu'au moins un super administrateur existe (élève l'admin par défaut)
+function migrateSuperAdmin() {
+  const users = DB.get(DB.keys.users) || [];
+  if (!users.length || users.some(u => u.role === 'superadmin')) return;
+  const target = users.find(u => u.username === 'admin') || users.find(u => u.role === 'admin') || users.find(u => String(u.id) === '1');
+  if (target) { target.role = 'superadmin'; DB.set(DB.keys.users, users); }
+}
 
 // ── STRUCTURE TYPE (toujours adulte) ──
 function getStructureType() { return 'adultes'; }
@@ -997,6 +1024,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderUserInfo();
   if (!Auth.isAdmin()) {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  }
+  if (!Auth.isSuperAdmin()) {
+    document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
   }
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});

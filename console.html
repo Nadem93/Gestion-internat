@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Console groupe — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    .csl-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.5rem;border-bottom:1px solid var(--border)}
+    .csl-tab{padding:.6rem 1rem;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+    .csl-tab:hover{color:var(--text)}
+    .csl-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+    .csl-panel{display:none}
+    .csl-panel.active{display:block}
+    .etab-row{display:flex;align-items:center;gap:.85rem;padding:.85rem 1rem;border:1px solid var(--border);border-radius:12px;margin-bottom:.6rem;background:#fff}
+    .etab-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem}
+    .kpi-num{font-size:1.7rem;font-weight:800;color:var(--primary);line-height:1.1}
+    .kpi-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:.2rem}
+    table.csl{width:100%;border-collapse:collapse;font-size:.82rem}
+    table.csl th{text-align:left;padding:.5rem .7rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--border)}
+    table.csl td{padding:.55rem .7rem;border-bottom:1px solid var(--border)}
+    .soon{padding:2.5rem;text-align:center;color:var(--muted);font-size:.9rem;border:1px dashed var(--border);border-radius:12px}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="main">
+    <header class="header">
+      <div class="header-info">
+        <div class="header-title">👑 Console groupe</div>
+        <div class="header-date">Supervision multi-établissements</div>
+      </div>
+      <div class="header-right">
+        <a href="accueil.html" class="btn btn-outline btn-sm">← Accueil</a>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="csl-tabs">
+        <button class="csl-tab active" data-tab="etabs" onclick="cslTab('etabs')">🏢 Établissements</button>
+        <button class="csl-tab" data-tab="consolide" onclick="cslTab('consolide')">📊 Vue consolidée</button>
+        <button class="csl-tab" data-tab="users" onclick="cslTab('users')">👥 Utilisateurs</button>
+        <button class="csl-tab" data-tab="roles" onclick="cslTab('roles')">🔑 Rôles globaux</button>
+        <button class="csl-tab" data-tab="audit" onclick="cslTab('audit')">📋 Audit global</button>
+        <button class="csl-tab" data-tab="params" onclick="cslTab('params')">⚙️ Paramétrage global</button>
+      </div>
+
+      <!-- #1 ÉTABLISSEMENTS -->
+      <div class="csl-panel active" id="panel-etabs">
+        <div class="card" style="margin-bottom:1.25rem">
+          <div class="card-header"><span class="card-title">➕ Nouvel établissement</span></div>
+          <div class="card-body" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="margin:0;flex:1;min-width:180px"><label>Nom</label><input type="text" id="newEtabNom" placeholder="Ex : Foyer Les Tilleuls"/></div>
+            <div class="form-group" style="margin:0;min-width:150px"><label>Type</label><select id="newEtabType">
+              <option value="adultes">Adultes</option><option value="enfants">Enfants</option><option value="mixte">Mixte</option>
+            </select></div>
+            <div class="form-group" style="margin:0"><label>Couleur</label><input type="color" id="newEtabColor" value="#0f2b4a" style="width:52px;height:38px;padding:.2rem"/></div>
+            <button class="btn btn-primary" onclick="cslCreateEtab()">Créer</button>
+          </div>
+        </div>
+        <div id="etabsList"></div>
+      </div>
+
+      <!-- #2 VUE CONSOLIDÉE -->
+      <div class="csl-panel" id="panel-consolide">
+        <div class="kpi-grid" id="consolideKpis"></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Détail par établissement</span></div>
+          <div class="card-body" style="padding:0;overflow-x:auto">
+            <table class="csl" id="consolideTable"></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="csl-panel" id="panel-users"><div class="soon">Gestion centralisée des utilisateurs — à venir (#3)</div></div>
+      <div class="csl-panel" id="panel-roles"><div class="soon">Rôles & permissions globaux — à venir (#4)</div></div>
+      <div class="csl-panel" id="panel-audit"><div class="soon">Audit transversal — à venir (#5)</div></div>
+      <div class="csl-panel" id="panel-params"><div class="soon">Paramétrage global — à venir (#6)</div></div>
+    </main>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script>
+  Auth.requireSuperAdmin();
+
+  function cslTab(name) {
+    document.querySelectorAll('.csl-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.csl-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+    if (name === 'consolide') renderConsolide();
+  }
+
+  const ETAB_TYPE_LABEL = { adultes: 'Adultes', enfants: 'Enfants', mixte: 'Mixte' };
+
+  // ── #1 ÉTABLISSEMENTS ──
+  function renderEtabs() {
+    const etabs = getEtabs();
+    const el = document.getElementById('etabsList');
+    if (!etabs.length) { el.innerHTML = '<div class="empty" style="padding:2rem"><p>Aucun établissement</p></div>'; return; }
+    el.innerHTML = etabs.map(e => {
+      const res = getEtabData(e.id, DB.keys.residents) || [];
+      const actifs = res.filter(r => r.statut !== 'sorti').length;
+      return `<div class="etab-row">
+        <span class="etab-dot" style="background:${e.color || '#0f2b4a'}"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.9rem">${escHtml(e.nom || 'Sans nom')}</div>
+          <div style="font-size:.74rem;color:var(--muted)">${ETAB_TYPE_LABEL[e.type] || e.type || '—'}${e.ville ? ' · ' + escHtml(e.ville) : ''} · ${actifs} résident${actifs > 1 ? 's' : ''}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="cslOpenEtab('${e.id}')">Ouvrir</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="cslDeleteEtab('${e.id}','${escHtml((e.nom||'').replace(/'/g,''))}')">Supprimer</button>
+      </div>`;
+    }).join('');
+  }
+
+  function cslCreateEtab() {
+    const nom = document.getElementById('newEtabNom').value.trim();
+    if (!nom) { toast('Le nom est requis', 'error'); return; }
+    const type = document.getElementById('newEtabType').value;
+    const color = document.getElementById('newEtabColor').value;
+    createEtab(nom, type, color);
+    if (typeof auditLog === 'function') auditLog('etab_create', 'Établissement créé : ' + nom);
+    document.getElementById('newEtabNom').value = '';
+    toast('Établissement créé', 'success');
+    renderEtabs();
+  }
+
+  function cslOpenEtab(id) {
+    sessionStorage.setItem('ftr_current_etab', String(id));
+    window.location.href = 'accueil.html';
+  }
+
+  function cslDeleteEtab(id, nom) {
+    confirmDialog('Supprimer « ' + nom +' » et TOUTES ses données ? Cette action est irréversible.', () => {
+      deleteEtab(id);
+      // Purge des données de l'établissement
+      Object.values(DB.keys).forEach(k => { try { localStorage.removeItem(`${k}__${id}`); } catch {} });
+      if (typeof auditLog === 'function') auditLog('etab_delete', 'Établissement supprimé : ' + nom);
+      toast('Établissement supprimé', 'info');
+      renderEtabs();
+    });
+  }
+
+  // ── #2 VUE CONSOLIDÉE ──
+  function renderConsolide() {
+    const etabs = getEtabs();
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let tRes = 0, tActifs = 0, tInc = 0, tJournal = 0, tAvenants = 0, tCapacite = 0;
+    const rows = etabs.map(e => {
+      const res = getEtabData(e.id, DB.keys.residents) || [];
+      const actifs = res.filter(r => r.statut !== 'sorti').length;
+      const inc = getEtabData(e.id, DB.keys.incidents) || [];
+      const openInc = inc.filter(i => i.statut === 'declare' || i.statut === 'cours').length;
+      const journal = getEtabData(e.id, DB.keys.journal) || [];
+      const jToday = journal.filter(j => (j.date || '').slice(0, 10) === todayStr).length;
+      const ppe = getEtabData(e.id, DB.keys.ppe) || [];
+      const avActifs = ppe.filter(p => p.statut === 'actif').length;
+      const settings = getEtabData(e.id, DB.keys.settings) || {};
+      const cap = parseInt(settings.capacite) || 0;
+      const occ = cap ? Math.round(actifs / cap * 100) : null;
+      tRes += res.length; tActifs += actifs; tInc += openInc; tJournal += jToday; tAvenants += avActifs; tCapacite += cap;
+      return `<tr>
+        <td><span class="etab-dot" style="display:inline-block;background:${e.color || '#0f2b4a'};margin-right:.4rem"></span>${escHtml(e.nom || '—')}</td>
+        <td>${actifs}</td>
+        <td>${cap || '—'}</td>
+        <td style="color:${occ != null && occ > 95 ? '#dc2626' : 'inherit'}">${occ != null ? occ + '%' : '—'}</td>
+        <td style="color:${openInc ? '#dc2626' : 'inherit'};font-weight:${openInc ? 700 : 400}">${openInc}</td>
+        <td>${avActifs}</td>
+        <td>${jToday}</td>
+      </tr>`;
+    }).join('');
+    const globalOcc = tCapacite ? Math.round(tActifs / tCapacite * 100) : null;
+    document.getElementById('consolideKpis').innerHTML = `
+      <div class="kpi"><div class="kpi-num">${etabs.length}</div><div class="kpi-lbl">Établissements</div></div>
+      <div class="kpi"><div class="kpi-num">${tActifs}</div><div class="kpi-lbl">Résidents actifs</div></div>
+      <div class="kpi"><div class="kpi-num">${globalOcc != null ? globalOcc + '%' : '—'}</div><div class="kpi-lbl">Taux d'occupation</div></div>
+      <div class="kpi"><div class="kpi-num" style="color:${tInc ? '#dc2626' : 'var(--primary)'}">${tInc}</div><div class="kpi-lbl">Incidents ouverts</div></div>
+      <div class="kpi"><div class="kpi-num">${tAvenants}</div><div class="kpi-lbl">Avenants actifs</div></div>
+      <div class="kpi"><div class="kpi-num">${tJournal}</div><div class="kpi-lbl">Entrées journal (jour)</div></div>`;
+    document.getElementById('consolideTable').innerHTML =
+      `<thead><tr><th>Établissement</th><th>Actifs</th><th>Capacité</th><th>Occup.</th><th>Incidents</th><th>Avenants</th><th>Journal (j)</th></tr></thead><tbody>${rows || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">Aucun établissement</td></tr>'}</tbody>`;
+  }
+
+  document.addEventListener('DOMContentLoaded', renderEtabs);
+</script>
+</body>
+</html>
