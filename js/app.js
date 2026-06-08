@@ -111,19 +111,30 @@ const ETAB_BG = {
   enfants:           ['#b0d4b8','#cfe8d4','#f0fce8'],  // vert (legacy)
 };
 
+// Mélange une couleur hex vers le blanc. amt = part de couleur conservée (0..1)
+function _tintWhite(hex, amt) {
+  let h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (h.length !== 6) return hex;
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  const mix = v => Math.round(v * amt + 255 * (1 - amt));
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+}
+
 function applyEtabBackground() {
   const etab = getCurrentEtab();
   if (!etab) return;
   if (etab.bgColor) {
     // Couleur de fond personnalisée → dégradé doux teinté vers le blanc
     const c = etab.bgColor;
-    document.body.style.background = `linear-gradient(135deg,`
-      + `color-mix(in srgb, ${c} 30%, #fff) 0%,`
-      + `color-mix(in srgb, ${c} 18%, #fff) 45%,`
-      + `color-mix(in srgb, ${c} 8%, #fff) 100%)`;
+    document.body.style.setProperty('background',
+      `linear-gradient(135deg,${_tintWhite(c,0.42)} 0%,${_tintWhite(c,0.26)} 45%,${_tintWhite(c,0.12)} 100%)`,
+      'important');
   } else {
     const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
-    document.body.style.background = `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`;
+    document.body.style.setProperty('background',
+      `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`,
+      'important');
   }
   document.body.style.backgroundAttachment = 'fixed';
 }
