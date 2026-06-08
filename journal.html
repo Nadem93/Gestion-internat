@@ -49,7 +49,8 @@
           </div>
           <select id="jFilterResident" style="width:auto"><option value="">Tous les résidents</option></select>
           <select id="jFilterCat" style="width:auto"><option value="">Toutes les catégories</option></select>
-          <input type="date" id="jFilterDate" style="width:auto"/>
+          <input type="date" id="jFilterDate" style="width:auto" title="Date de début"/>
+          <input type="date" id="jFilterDateEnd" style="width:auto" title="Date de fin"/>
           <button class="btn btn-ghost btn-sm" id="btnUnreadFilter" onclick="toggleUnreadFilter()" style="white-space:nowrap">
             <span id="unreadDot" style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block;flex-shrink:0"></span>
             Non lus <span id="unreadCount" style="background:var(--blue);color:#fff;border-radius:var(--r-full);padding:1px 6px;font-size:.7rem;margin-left:2px">0</span>

@@ -26,6 +26,7 @@ function showJournalList() {
 
 function showNewEntryForm() {
   selectedEntryId = null;
+  inlineAttachments = [];
   renderEntryForm();
   document.getElementById('journalListView').style.display = 'none';
   document.getElementById('journalFormView').style.display = '';
@@ -128,9 +129,19 @@ function renderEntryForm() {
           </div>
         </div>
       </div>
+      <div class="form-step">
+        <div class="step-h"><span class="step-n">5</span><span class="step-t">Pièces jointes <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
+        <div class="step-b">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">📎 Ajouter un fichier
+            <input type="file" accept="image/*,application/pdf" style="display:none" onchange="addInlineAttachment(this)"/>
+          </label>
+          <div id="inlineAttachList" style="display:flex;flex-direction:column;gap:.35rem;margin-top:.5rem"></div>
+        </div>
+      </div>
       <button class="btn btn-primary" onclick="saveInlineEntry()" style="margin-top:1rem">Enregistrer l'entrée</button>
     </div>`;
   document.getElementById('entryFormContainer').innerHTML = html;
+  renderInlineAttachList();
 }
 
 function selectCatPill(id) {
@@ -219,12 +230,14 @@ function saveInlineEntry() {
       date: document.getElementById('iDate').value || new Date().toISOString(),
       objectif: document.getElementById('iObjectif').value,
       contenu, visibilite: visEl?.value || 'equipe',
+      attachments: inlineAttachments.slice(),
       author: userName, authorId: session?.userId,
       replies: [], readBy: [session?.userId],
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     });
   }
   DB.set(DB.keys.journal, entries);
+  inlineAttachments = [];
   if (typeof auditLog === 'function') auditLog('journal_create', `${residentIds.length} entrée(s) pour ${entries.slice(-residentIds.length).map(e=>e.resident).join(', ')}`);
   toast(residentIds.length + ' entrée' + (residentIds.length>1?'s':'') + ' ajoutée' + (residentIds.length>1?'s':'') + ' ✓');
   showJournalList();
@@ -279,7 +292,8 @@ function getEntries() {
   const q = (document.getElementById('jSearch')?.value || '').toLowerCase();
   const res = document.getElementById('jFilterResident')?.value || '';
   const cat = document.getElementById('jFilterCat')?.value || '';
-  const date = document.getElementById('jFilterDate')?.value || '';
+  const dateFrom = document.getElementById('jFilterDate')?.value || '';
+  const dateTo = document.getElementById('jFilterDateEnd')?.value || '';
   let list = (DB.get(DB.keys.journal) || []).slice().reverse();
   // Filtrer selon la visibilité : confidentiel → uniquement admin ou auteur
   const isAdmin = session?.role === 'admin';
@@ -294,7 +308,8 @@ function getEntries() {
   );
   if (res) list = list.filter(e => e.residentId === res);
   if (cat) list = list.filter(e => String(e.categorie) === String(cat));
-  if (date) list = list.filter(e => e.date && e.date.startsWith(date));
+  if (dateFrom) list = list.filter(e => e.date && e.date.slice(0,10) >= dateFrom);
+  if (dateTo) list = list.filter(e => e.date && e.date.slice(0,10) <= dateTo);
   if (filterUnread && session) list = list.filter(e => !e.readBy || !e.readBy.includes(session.userId));
   return list;
 }
@@ -317,7 +332,9 @@ function renderEntries() {
     const isUnread = session && (!e.readBy || !e.readBy.includes(session.userId));
     const expandedSection = isSelected ? `
       <div onclick="event.stopPropagation()" style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
-        <p style="font-size:.88rem;line-height:1.8;white-space:pre-wrap;color:var(--text);margin-bottom:.75rem">${escHtml(e.contenu)||''}</p>
+        <p style="font-size:.88rem;line-height:1.8;white-space:pre-wrap;color:var(--text);margin-bottom:.5rem">${escHtml(e.contenu)||''}</p>
+        ${e.editedAt ? `<div style="font-size:.7rem;color:var(--muted);margin-bottom:.6rem;font-style:italic">✎ Modifié par ${escHtml(e.editedBy||'?')} le ${formatDateTime(e.editedAt)}${(e.editHistory&&e.editHistory.length)?` · <a href="#" onclick="event.preventDefault();event.stopPropagation();showEditHistory('${e.id}')" style="color:var(--accent)">historique (${e.editHistory.length})</a>`:''}</div>` : ''}
+        ${renderEntryAttachments(e)}
         ${renderReplies(e)}
         <div style="display:flex;gap:.5rem;align-items:flex-end;margin-top:.75rem">
           <textarea id="replyContent_${e.id}" rows="2" class="form-control" style="flex:1;font-size:.82rem;resize:vertical" placeholder="Écrire une réponse…"></textarea>
@@ -365,6 +382,61 @@ function renderReplies(e) {
           <p style="font-size:.82rem;line-height:1.6;margin-top:3px;white-space:pre-wrap">${escHtml(r.content)}</p>
         </div>
       </div>`).join('')}
+  </div>`;
+}
+
+// ── Historique des modifications ──
+function showEditHistory(id) {
+  const e = (DB.get(DB.keys.journal) || []).find(x => x.id === id);
+  if (!e || !e.editHistory) return;
+  const lines = e.editHistory.slice().reverse().map(h =>
+    `• ${formatDateTime(h.at)} — ${h.by || '?'}\n   Ancien contenu : « ${(h.contenu || '').slice(0, 200)}${(h.contenu || '').length > 200 ? '…' : ''} »`
+  ).join('\n\n');
+  alert(`Historique des modifications\n\n${lines}`);
+}
+
+// ── Pièces jointes ──
+let inlineAttachments = [];
+
+function renderInlineAttachList() {
+  const box = document.getElementById('inlineAttachList');
+  if (!box) return;
+  box.innerHTML = inlineAttachments.length ? inlineAttachments.map(a => `
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.35rem .5rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem">
+      <span>${a.type && a.type.includes('image') ? '🖼️' : '📎'}</span>
+      <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.name)}</span>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:0 .4rem" onclick="removeInlineAttachment('${a.id}')">✕</button>
+    </div>`).join('') : '';
+}
+
+async function addInlineAttachment(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); input.value = ''; return; }
+  try {
+    const data = await fileToBase64(file);
+    inlineAttachments.push({ id: genId(), name: file.name, type: file.type, size: file.size, data });
+    renderInlineAttachList();
+  } catch (e) { toast('Erreur de chargement', 'error'); }
+  input.value = '';
+}
+
+function removeInlineAttachment(id) {
+  inlineAttachments = inlineAttachments.filter(a => a.id !== id);
+  renderInlineAttachList();
+}
+
+function renderEntryAttachments(e) {
+  const atts = e.attachments || [];
+  if (!atts.length) return '';
+  return `<div style="margin-bottom:.75rem">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.4rem">📎 Pièces jointes (${atts.length})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+      ${atts.map(a => a.type && a.type.includes('image')
+        ? `<a href="${a.data}" download="${escHtml(a.name)}" title="${escHtml(a.name)}"><img src="${a.data}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--border)"/></a>`
+        : `<a href="${a.data}" download="${escHtml(a.name)}" style="display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem;text-decoration:none;color:var(--g700)">📎 ${escHtml(a.name)}</a>`
+      ).join('')}
+    </div>
   </div>`;
 }
 
@@ -462,7 +534,14 @@ function saveEntry() {
   let entries = DB.get(DB.keys.journal) || [];
   const id = document.getElementById('entryId').value;
   if (id) {
-    entries = entries.map(e => e.id === id ? { ...e, ...data } : e);
+    entries = entries.map(e => {
+      if (e.id !== id) return e;
+      // Conserver l'auteur d'origine ; tracer la modification + historiser le contenu
+      const { author, authorId, ...editData } = data;
+      const history = (e.editHistory || []).concat([{ at: new Date().toISOString(), by: userName, byId: session?.userId, contenu: e.contenu }]);
+      return { ...e, ...editData, editHistory: history, editedBy: userName, editedById: session?.userId, editedAt: new Date().toISOString() };
+    });
+    if (typeof auditLog === 'function') auditLog('journal_edit', `Entrée modifiée — ${data.resident}`);
     toast('Entrée mise à jour');
   } else {
     const dup = findJournalDuplicate({ residentId, contenu, date: data.date }, entries);
@@ -491,8 +570,10 @@ function deleteEntry() { deleteEntryById(document.getElementById('entryId').valu
 function deleteEntryById(id) {
   confirmDialog('Supprimer cette entrée ?', () => {
     let entries = DB.get(DB.keys.journal) || [];
+    const removed = entries.find(e => e.id === id);
     entries = entries.filter(e => e.id !== id);
     DB.set(DB.keys.journal, entries);
+    if (typeof auditLog === 'function') auditLog('journal_delete', `Entrée supprimée — ${removed?.resident || ''} (${formatDateTime(removed?.date)})`);
     closeAllModals();
     selectedEntryId = null;
     showJournalList();
@@ -518,7 +599,7 @@ function initJournal() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   populateSelects();
   renderEntries();
-  ['jSearch','jFilterResident','jFilterCat','jFilterDate'].forEach(id => {
+  ['jSearch','jFilterResident','jFilterCat','jFilterDate','jFilterDateEnd'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', renderEntries);
     document.getElementById(id)?.addEventListener('change', renderEntries);
   });
@@ -609,12 +690,15 @@ function exportJournalPDF() {
   const session = Auth.getSession();
 
   const dateFilter = document.getElementById('jFilterDate')?.value || '';
+  const dateFilterEnd = document.getElementById('jFilterDateEnd')?.value || '';
   const resFilter  = document.getElementById('jFilterResident')?.value || '';
   const catFilter  = document.getElementById('jFilterCat')?.value || '';
 
-  let periodLabel = dateFilter
-    ? `du ${new Date(dateFilter).toLocaleDateString('fr-FR')}`
-    : `au ${new Date().toLocaleDateString('fr-FR')}`;
+  let periodLabel;
+  if (dateFilter && dateFilterEnd) periodLabel = `du ${new Date(dateFilter).toLocaleDateString('fr-FR')} au ${new Date(dateFilterEnd).toLocaleDateString('fr-FR')}`;
+  else if (dateFilter) periodLabel = `depuis le ${new Date(dateFilter).toLocaleDateString('fr-FR')}`;
+  else if (dateFilterEnd) periodLabel = `jusqu'au ${new Date(dateFilterEnd).toLocaleDateString('fr-FR')}`;
+  else periodLabel = `au ${new Date().toLocaleDateString('fr-FR')}`;
 
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
