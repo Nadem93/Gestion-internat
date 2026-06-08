@@ -111,24 +111,37 @@ const ETAB_BG = {
   enfants:           ['#b0d4b8','#cfe8d4','#f0fce8'],  // vert (legacy)
 };
 
-// Mélange une couleur hex vers le blanc. amt = part de couleur conservée (0..1)
-function _tintWhite(hex, amt) {
+// Construit un dégradé pastel clair à partir de la TEINTE d'une couleur hex.
+// On conserve le hue (et un peu de saturation) mais on force une luminosité claire,
+// pour qu'une couleur même foncée donne un fond doux et lisible (jamais gris/sombre).
+function _softBgStops(hex) {
   let h = String(hex || '').replace('#', '');
   if (h.length === 3) h = h.split('').map(c => c + c).join('');
-  if (h.length !== 6) return hex;
-  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
-  const mix = v => Math.round(v * amt + 255 * (1 - amt));
-  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+  if (h.length !== 6) return null;
+  const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let hue = 0, s = 0, l = (max + min) / 2;
+  if (d !== 0) {
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) hue = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) hue = (b - r) / d + 2;
+    else hue = (r - g) / d + 4;
+    hue *= 60;
+  }
+  // Saturation bornée : assez pour voir la teinte, pas trop pour rester doux
+  let sl = Math.round(Math.min(Math.max(s, 0.35), 0.80) * 100);
+  hue = Math.round(hue);
+  return [`hsl(${hue},${sl}%,91%)`, `hsl(${hue},${sl}%,95%)`, `hsl(${hue},${sl}%,98%)`];
 }
 
 function applyEtabBackground() {
   const etab = getCurrentEtab();
   if (!etab) return;
-  if (etab.bgColor) {
-    // Couleur de fond personnalisée → dégradé doux teinté vers le blanc
-    const c = etab.bgColor;
+  const stops = etab.bgColor ? _softBgStops(etab.bgColor) : null;
+  if (stops) {
+    // Couleur de fond personnalisée → dégradé pastel clair conservant la teinte
     document.body.style.setProperty('background',
-      `linear-gradient(135deg,${_tintWhite(c,0.42)} 0%,${_tintWhite(c,0.26)} 45%,${_tintWhite(c,0.12)} 100%)`,
+      `linear-gradient(135deg,${stops[0]} 0%,${stops[1]} 45%,${stops[2]} 100%)`,
       'important');
   } else {
     const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
