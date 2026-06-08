@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
+    .accueil-home-grid{grid-auto-rows:1fr}
     .accueil-home-card{position:relative;overflow:hidden;isolation:isolate}
     /* Halo radial qui suit la souris */
     .accueil-home-card::before{
@@ -25,7 +26,8 @@
       opacity:0;transition:opacity .3s ease;pointer-events:none;
     }
     .accueil-home-card:hover::after{opacity:1}
-    .accueil-home-icon,.accueil-home-label,.notif-badge{position:relative;z-index:1}
+    .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
+    .notif-badge{z-index:2}
   </style>
 </head>
 <body>
