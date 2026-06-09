@@ -1,35 +1,67 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Fiche résident — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
+    /* Chips de filtre du Fil de vie */
+    .fv-chip{font:inherit;font-size:.74rem;font-weight:600;padding:.28rem .7rem;border-radius:999px;border:1px solid var(--border);background:var(--white,#fff);color:var(--muted);cursor:pointer;transition:all .15s}
+    .fv-chip:hover{border-color:var(--accent);color:var(--accent)}
+    .fv-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
-      @page { margin: 0.5cm; size: A4; }
+      @page { margin: 1.5cm 1.2cm; size: A4; }
 
       /* Masquer l'interface */
-      .header, #toast-container { display: none !important; }
-      .btn, .tab { display: none !important; }
+      .header, #toast-container, .no-print, .btn, .tab, .tabs { display: none !important; }
 
-      /* Libérer toutes les contraintes de hauteur */
-      html, body { height: auto !important; overflow: visible !important; background: #f1f5f9 !important; margin: 0 !important; }
-      .app-layout { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
-      .main { display: block !important; height: auto !important; overflow: visible !important; }
-      .content { display: block !important; height: auto !important; overflow: visible !important; padding: .75rem !important; max-width: 100% !important; width: 100% !important; margin: 0 !important; flex: none !important; }
+      /* Libérer toutes les contraintes */
+      html, body { height: auto !important; overflow: visible !important; background: #fff !important; margin: 0 !important; font-size: 10pt !important; }
+      .app-layout, .main { display: block !important; height: auto !important; overflow: visible !important; }
+      .content { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; margin: 0 !important; flex: none !important; }
 
       /* Forcer les grilles */
-      .grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
-      .grid-2 { grid-template-columns: repeat(2, 1fr) !important; }
-      .grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
+      .grid-4 { grid-template-columns: repeat(4, 1fr) !important; gap: .5rem !important; }
+      .grid-2 { grid-template-columns: repeat(2, 1fr) !important; gap: .5rem !important; }
+      .grid-3 { grid-template-columns: repeat(3, 1fr) !important; gap: .5rem !important; }
 
-      /* Cartes */
-      .card, .stat-card { box-shadow: 0 1px 4px rgba(0,0,0,.1) !important; background: rgba(255,255,255,.9) !important; break-inside: avoid; }
+      /* Cartes compactes */
+      .card { box-shadow: none !important; background: #fff !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: .5rem !important; }
+      .card-body { padding: .6rem .85rem !important; }
+      .card-header { padding: .5rem .85rem !important; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
+      .card-title { font-size: .75rem !important; }
+      .stat-card { box-shadow: none !important; break-inside: avoid; }
 
-      /* Sections exclues du téléchargement */
-      .no-print { display: none !important; }
+      /* En-tête de fiche imprimée */
+      #printHeader { display: block !important; }
+
+      /* Tailles de texte */
+      h1, h2, h3 { font-size: 11pt !important; }
+      p, div, span, td, th { font-size: 9pt !important; line-height: 1.4 !important; }
+    }
+
+    /* En-tête visible uniquement à l'impression */
+    #printHeader {
+      display: none;
+      border-bottom: 3px solid #0f2b4a;
+      padding-bottom: .5cm;
+      margin-bottom: .5cm;
+    }
+    #printHeader .ph-etab { font-size: 9pt; color: #64748b; }
+    #printHeader .ph-title { font-size: 16pt; font-weight: 800; color: #0f2b4a; margin: 2px 0; }
+    #printHeader .ph-meta { font-size: 8pt; color: #94a3b8; }
+
+    /* Stat cards compactes sur la fiche résident (écran uniquement) */
+    @media screen {
+      #residentContent .stat-card { padding: .85rem .95rem; gap: .35rem; border-radius: 14px; }
+      #residentContent .stat-card .stat-icon { width: 32px; height: 32px; }
+      #residentContent .stat-card .stat-icon svg { width: 15px; height: 15px; }
+      #residentContent .stat-card .stat-label { font-size: .66rem; letter-spacing: .04em; }
+      #residentContent .stat-card .stat-num { font-size: 1.15rem; }
+      #residentContent .stat-card .stat-change { font-size: .68rem; }
+      #residentContent .grid-4 { gap: .75rem; margin-bottom: 1rem !important; }
     }
   </style>
 </head>
@@ -47,7 +79,97 @@
         <button class="btn btn-accent btn-sm btn-add-resident" id="btnEdit" onclick="togglePageEdit()">✎<span class="btn-add-label"> Modifier</span></button>
       </div>
     </header>
+    <div id="printHeader">
+      <div class="ph-etab" id="phEtab"></div>
+      <div class="ph-title" id="phTitle">Fiche résident</div>
+      <div class="ph-meta" id="phMeta"></div>
+    </div>
     <main class="content" id="residentContent"></main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="santeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="santeModalTitle">Santé</span>
+      <button class="modal-close" onclick="closeModal('santeModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="santeModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('santeModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSanteItem()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sortieModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="sortieModalTitle">Sortie</span>
+      <button class="modal-close" onclick="closeModal('sortieModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="sortieModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('sortieModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSortie()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="budgetModalTitle">Opération</span>
+      <button class="modal-close" onclick="closeModal('budgetModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="budgetModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('budgetModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveBudgetOp()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="objectifModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="objectifModalTitle">Suivi de l'objectif</span>
+      <button class="modal-close" onclick="closeModal('objectifModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="objectifModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('objectifModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveObjectifSuivi()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="evalModal">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title" id="evalModalTitle">Grille d'évaluation</span>
+      <button class="modal-close" onclick="closeModal('evalModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="evalModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('evalModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEvaluation()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bilanModal">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title" id="bilanModalTitle">🤖 Bilan de synthèse</span>
+      <button class="modal-close" onclick="closeModal('bilanModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="bilanModalBody"></div>
+    <div class="modal-footer" id="bilanModalFooter" style="display:none">
+      <button class="btn btn-ghost" onclick="copierBilan()">📋 Copier</button>
+      <button class="btn btn-ghost" onclick="imprimerBilan()">🖨 Imprimer</button>
+      <button class="btn btn-primary" onclick="closeModal('bilanModal')">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -91,8 +213,6 @@ function loadResident() {
 }
 
 function renderViewMode(r) {
-  const objs = DB.get(DB.keys.objectives) || [];
-  const resObjs = (r.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))).filter(Boolean);
   const type = getStructureType();
   const docs = (DB.get(DB.keys.documents)||{})[currentResidentId]||[];
   const genderLabel = r.genre==='M'?'Masculin':r.genre==='F'?'Féminin':'Autre';
@@ -134,34 +254,29 @@ function renderViewMode(r) {
       <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)"><div class="stat-card-top"><span class="stat-label">Genre</span><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div></div><div class="stat-num">${genderLabel}</div><div class="stat-change">${r.dob ? 'Né(e) le '+formatDate(r.dob) : ''}</div></div>
     </div>
     ${renderStatCards(r)}
+    ${radarSignauxCard(r)}
     <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
-      ${infoCard('0f2b4a', '👤 Identité', [
-        infoRow('Nom', r.nom), infoRow('Prénom', r.prenom),
-        infoRow('Genre', genderLabel), infoRow('Date de naissance', r.dob ? formatDate(r.dob)+' ('+age(r.dob)+' ans)' : ''),
-        infoRow('N° Sécurité sociale', r.nss)
-      ])}
       ${infoCard('d97706', '🏠 Séjour', [
         infoRow('Date d\'entrée', r.entree ? formatDate(r.entree) : ''),
         infoRow('Statut', r.statut), infoRow('Chambre / Unité', r.chambre),
         infoRow('Référent principal', r.referent)
       ])}
-      ${infoCard('16a34a', '🏥 Médical', [
-        infoRow('Médecin traitant', r.medecin), infoRow('Tél. médecin', r.medecinTel),
-        infoRow('Allergies / Contre-indications', r.allergies)
-      ])}
+      ${santeCard(r)}
+      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
       ${isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
         infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
         infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
         infoRow('Organisme', r.organisme), infoRow('N° dossier', r.dossier)
       ]) : ''}
-      ${isAdulte ? infoCard('3b82f6', '👤 Adulte', [
+      ${isAdulte ? infoCard('3b82f6', '💼 Situation administrative & professionnelle', [
         infoRow('Situation professionnelle', r.situationPro),
         infoRow('Ressources', r.ressources),
         infoRow('Organisme prescripteur', r.organismeA),
         infoRow('Situation administrative', r.situationAdmin),
-        infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection)
+        infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
+        infoRow('Tuteur / Curateur', r.protectionNom)
       ]) : ''}
-      ${resObjs.length ? infoCard('f59e0b', '🎯 Objectifs assignés ('+resObjs.length+')', resObjs.map(o => `<div style="grid-column:1/-1"><div style="padding:.6rem .85rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><div style="font-weight:600;font-size:.85rem">${escHtml(o.name)}</div>${o.description ? `<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}</div></div>`)) : ''}
+      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${objectifsCard(r)}${evaluationsCard(r)}</div>
       ${r.notes ? infoCard('6366f1', '📝 Notes', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.notes)}</p></div>`]) : ''}
       ${r.contacts ? infoCard('6366f1', '📞 Contacts d\'urgence', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.contacts)}</p></div>`]) : ''}
     </div>
@@ -170,11 +285,745 @@ function renderViewMode(r) {
       <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap">TABLEAU DE BORD DU RÉSIDENT</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
+    <div class="no-print">${filDeVieCard(r)}</div>
     <div class="no-print">${renderDataCards(r)}</div>
     <div class="no-print tabs" style="margin-bottom:1rem">
       <button class="tab active" data-tab="documents">📎 Documents ${docs.length ? `<span class="badge badge-gray" style="margin-left:.3rem">${docs.length}</span>` : ''}</button>
     </div>
     <div class="no-print" id="tab-documents">${docsHtml(docs)}</div>`;
+  initPageTabs();
+}
+
+// ── SANTÉ (intégré à la carte Médical) ──
+let santeEdit = { type: null, id: null };
+const BLOOD_GROUPS = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+function getSante(r) {
+  const s = r.sante || {};
+  return { groupeSanguin: s.groupeSanguin || '', notesMedicales: s.notesMedicales || '', traitements: s.traitements || [], rdv: s.rdv || [], vaccins: s.vaccins || [] };
+}
+
+function persistResident(data) {
+  const residents = DB.get(DB.keys.residents) || [];
+  DB.set(DB.keys.residents, residents.map(x => x.id === currentResidentId ? data : x));
+  if (typeof auditLog === 'function') auditLog('resident_update', `Santé — ${data.prenom||''} ${data.nom||''}`);
+}
+
+function santeCard(r) {
+  const s = getSante(r);
+  const canEdit = canEditResident();
+
+  const subHeader = (icon, title, addType) => `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
+      <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">${icon} ${title}</span>
+      ${canEdit && addType ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent);padding:.15rem .5rem;font-size:.72rem" onclick="openSanteModal('${addType}')">+ Ajouter</button>` : ''}
+    </div>`;
+  const wrap = inner => `<div style="border:1px solid var(--border);border-radius:var(--r-sm);max-height:160px;overflow-y:auto">${inner}</div>`;
+
+  const medRow = (label, value) => `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${value ? escHtml(value) : '<span style="color:var(--g400)">—</span>'}</div></div>`;
+
+  // Traitements
+  const traitList = s.traitements.length ? s.traitements.map((t, i) => {
+    const actif = !t.fin || t.fin >= today();
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem">${escHtml(t.nom)} ${actif ? '<span class="badge badge-green">Actif</span>' : '<span class="badge badge-gray">Terminé</span>'}</div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${[t.posologie, t.frequence].filter(Boolean).map(escHtml).join(' · ')}${t.debut ? ' · depuis '+formatDate(t.debut) : ''}${t.fin ? ' → '+formatDate(t.fin) : ''}</div>
+      </div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openSanteModal('traitement','${t.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSanteItem('traitements','${t.id}')">✕</button></div>` : ''}
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun traitement enregistré</div>';
+
+  // RDV
+  const rdvSorted = [...s.rdv].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const rdvList = rdvSorted.length ? rdvSorted.map((v, i) => {
+    const avenir = v.date >= today() && !v.fait;
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem">${escHtml(v.type||'Rendez-vous')} ${v.fait ? '<span class="badge badge-gray">Effectué</span>' : avenir ? '<span class="badge badge-amber">À venir</span>' : '<span class="badge badge-red">Passé</span>'}</div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${formatDate(v.date)}${v.heure ? ' à '+v.heure : ''}${v.praticien ? ' · '+escHtml(v.praticien) : ''}${v.lieu ? ' · '+escHtml(v.lieu) : ''}</div>
+        ${v.notes ? `<div style="font-size:.73rem;color:var(--g700);margin-top:2px">${escHtml(v.notes)}</div>` : ''}
+      </div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">${!v.fait && v.date <= today() ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme effectué" onclick="toggleRdvFait('${v.id}')">✓</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="openSanteModal('rdv','${v.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSanteItem('rdv','${v.id}')">✕</button></div>` : ''}
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun rendez-vous médical</div>';
+
+  // Vaccins
+  const vaccList = s.vaccins.length ? s.vaccins.map((vc, i) => {
+    const rappelDu = vc.rappel && vc.rappel < today();
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem">${escHtml(vc.nom)}</div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${vc.date ? formatDate(vc.date) : 'Date inconnue'}${vc.rappel ? ` · Rappel : <span style="color:${rappelDu ? '#ef4444' : 'inherit'};font-weight:${rappelDu ? '700' : '400'}">${formatDate(vc.rappel)}${rappelDu ? ' (à faire)' : ''}</span>` : ''}</div>
+      </div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openSanteModal('vaccin','${vc.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSanteItem('vaccins','${vc.id}')">✕</button></div>` : ''}
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune vaccination enregistrée</div>';
+
+  return `<div class="card" style="border-left:3px solid #16a34a"><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#16a34a">🏥 Médical</span>
+        ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSanteModal('medical')">✎ Modifier</button>` : ''}
+      </div>
+      <div class="grid grid-4" style="gap:.75rem">
+        ${medRow('Groupe sanguin', s.groupeSanguin)}
+        ${medRow('Médecin traitant', r.medecin)}
+        ${medRow('Tél. médecin', r.medecinTel)}
+        ${medRow('Allergies / CI', r.allergies)}
+      </div>
+      ${s.notesMedicales ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">Notes médicales</div><p style="white-space:pre-wrap;line-height:1.6;font-size:.83rem;margin:0">${escHtml(s.notesMedicales)}</p></div>` : ''}
+      ${SANTE_SEP}
+      <div>${subHeader('💊', 'Traitements en cours', 'traitement')}${wrap(traitList)}</div>
+      ${SANTE_SEP}
+      <div>${subHeader('📅', 'Rendez-vous médicaux', 'rdv')}${wrap(rdvList)}</div>
+      ${SANTE_SEP}
+      <div>${subHeader('💉', 'Vaccinations', 'vaccin')}${wrap(vaccList)}</div>
+    </div></div>`;
+}
+const SANTE_SEP = '<div style="height:2px;border-radius:2px;background:#e2e8f0;box-shadow:inset 0 1px 2px rgba(15,43,74,.18),0 1px 0 rgba(255,255,255,.8);margin:.15rem 0"></div>';
+
+function santeField(id, label, value, type) {
+  return `<div class="form-group"><label>${label}</label><input type="${type||'text'}" id="${id}" value="${escHtml(value||'')}" class="form-input"/></div>`;
+}
+function santeTextarea(id, label, value) {
+  return `<div class="form-group"><label>${label}</label><textarea id="${id}" class="form-input" rows="3" style="resize:vertical">${escHtml(value||'')}</textarea></div>`;
+}
+function santeSelectGroupe(val) {
+  return `<div class="form-group"><label>Groupe sanguin</label><select id="sGroupe" class="form-input">${BLOOD_GROUPS.map(g => `<option value="${g}"${val===g?' selected':''}>${g||'—'}</option>`).join('')}</select></div>`;
+}
+
+function santeFormHtml(type, item) {
+  if (type === 'medical') return `
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeSelectGroupe(item.groupeSanguin)}
+      ${santeField('sMedecin','Médecin traitant',item.medecin)}
+      ${santeField('sMedecinTel','Tél. médecin',item.medecinTel)}
+      ${santeField('sAllergies','Allergies / Contre-indications',item.allergies)}
+    </div>
+    ${santeTextarea('sNotesMed','Notes médicales',item.notesMedicales)}`;
+  if (type === 'traitement') return `
+    ${santeField('sNom','Médicament *',item.nom)}
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('sPosologie','Posologie (ex: 1 cp 500mg)',item.posologie)}
+      ${santeField('sFrequence','Fréquence (ex: matin et soir)',item.frequence)}
+    </div>
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('sDebut','Début',item.debut,'date')}
+      ${santeField('sFin','Fin (laisser vide si en cours)',item.fin,'date')}
+    </div>`;
+  if (type === 'rdv') return `
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('sDate','Date *',item.date,'date')}
+      ${santeField('sHeure','Heure',item.heure,'time')}
+    </div>
+    ${santeField('sType','Type (médecin, dentiste, kiné...)',item.type)}
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('sPraticien','Praticien',item.praticien)}
+      ${santeField('sLieu','Lieu',item.lieu)}
+    </div>
+    ${santeTextarea('sNotes','Notes',item.notes)}`;
+  if (type === 'vaccin') return `
+    ${santeField('sNom','Vaccin *',item.nom)}
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('sDate','Date du vaccin',item.date,'date')}
+      ${santeField('sRappel','Prochain rappel',item.rappel,'date')}
+    </div>`;
+  return '';
+}
+
+function openSanteModal(type, id) {
+  if (!canEditResident()) return;
+  santeEdit = { type, id: id || null };
+  const r = getResident();
+  const s = getSante(r);
+  let item = {};
+  if (type === 'medical') {
+    item = { groupeSanguin: s.groupeSanguin, medecin: r.medecin, medecinTel: r.medecinTel, allergies: r.allergies, notesMedicales: s.notesMedicales };
+  } else if (id) {
+    const map = { traitement: 'traitements', rdv: 'rdv', vaccin: 'vaccins' };
+    item = (s[map[type]] || []).find(x => x.id === id) || {};
+  }
+  const titles = { traitement: id ? 'Modifier le traitement' : 'Nouveau traitement', rdv: id ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous', vaccin: id ? 'Modifier la vaccination' : 'Nouvelle vaccination', medical: 'Données médicales' };
+  document.getElementById('santeModalTitle').textContent = titles[type] || 'Santé';
+  document.getElementById('santeModalBody').innerHTML = santeFormHtml(type, item);
+  openModal('santeModal');
+}
+
+function saveSanteItem() {
+  const r = getResident();
+  if (!r) return;
+  const s = getSante(r);
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const { type, id } = santeEdit;
+  let data;
+  if (type === 'medical') {
+    data = { ...r, medecin: g('sMedecin'), medecinTel: g('sMedecinTel'), allergies: g('sAllergies'),
+      sante: { ...s, groupeSanguin: g('sGroupe'), notesMedicales: g('sNotesMed') }, updatedAt: new Date().toISOString() };
+  } else {
+    let listKey, item;
+    if (type === 'traitement') {
+      if (!g('sNom')) { toast('Le nom du médicament est requis', 'error'); return; }
+      listKey = 'traitements'; item = { nom: g('sNom'), posologie: g('sPosologie'), frequence: g('sFrequence'), debut: g('sDebut'), fin: g('sFin') };
+    } else if (type === 'rdv') {
+      if (!g('sDate')) { toast('La date est requise', 'error'); return; }
+      listKey = 'rdv'; item = { date: g('sDate'), heure: g('sHeure'), type: g('sType'), praticien: g('sPraticien'), lieu: g('sLieu'), notes: g('sNotes') };
+    } else if (type === 'vaccin') {
+      if (!g('sNom')) { toast('Le nom du vaccin est requis', 'error'); return; }
+      listKey = 'vaccins'; item = { nom: g('sNom'), date: g('sDate'), rappel: g('sRappel') };
+    } else return;
+    const list = [...(s[listKey] || [])];
+    let finalItem;
+    if (id) { const i = list.findIndex(x => x.id === id); if (i >= 0) { finalItem = { ...list[i], ...item }; list[i] = finalItem; } }
+    else { item.id = genId(); if (type === 'rdv') item.fait = false; finalItem = item; list.push(item); }
+    // Synchronisation du RDV médical vers le planning
+    if (type === 'rdv' && finalItem) {
+      finalItem.planningId = syncRdvToPlanning(r, finalItem);
+    }
+    data = { ...r, sante: { ...s, [listKey]: list }, updatedAt: new Date().toISOString() };
+  }
+  persistResident(data);
+  closeModal('santeModal');
+  toast('Enregistré', 'success');
+  loadResident();
+}
+
+function syncRdvToPlanning(r, rdv) {
+  const events = DB.get(DB.keys.planning) || [];
+  const evt = {
+    titre: rdv.type ? rdv.type : 'Rendez-vous médical',
+    residentId: currentResidentId,
+    residentName: `${r.prenom||''} ${r.nom||''}`.trim(),
+    type: 'rdv',
+    date: rdv.date,
+    time: rdv.heure || '',
+    heure: rdv.heure || '',
+    color: '#ef4444',
+    desc: [rdv.praticien ? 'Praticien : ' + rdv.praticien : '', rdv.lieu ? 'Lieu : ' + rdv.lieu : '', rdv.notes].filter(Boolean).join(' · '),
+    source: 'sante',
+    santeRdvId: rdv.id
+  };
+  if (rdv.planningId && events.some(e => e.id === rdv.planningId)) {
+    DB.set(DB.keys.planning, events.map(e => e.id === rdv.planningId ? { ...e, ...evt } : e));
+    return rdv.planningId;
+  }
+  evt.id = genId();
+  events.push(evt);
+  DB.set(DB.keys.planning, events);
+  return evt.id;
+}
+
+function deleteSanteItem(listKey, id) {
+  confirmDialog('Supprimer cet élément ?', () => {
+    const r = getResident();
+    const s = getSante(r);
+    // Retirer l'événement lié du planning si c'est un RDV
+    if (listKey === 'rdv') {
+      const rdv = (s.rdv || []).find(x => x.id === id);
+      if (rdv && rdv.planningId) {
+        const events = (DB.get(DB.keys.planning) || []).filter(e => e.id !== rdv.planningId);
+        DB.set(DB.keys.planning, events);
+      }
+    }
+    const data = { ...r, sante: { ...s, [listKey]: (s[listKey] || []).filter(x => x.id !== id) }, updatedAt: new Date().toISOString() };
+    persistResident(data);
+    toast('Supprimé', 'success');
+    loadResident();
+  });
+}
+
+function toggleRdvFait(id) {
+  const r = getResident();
+  const s = getSante(r);
+  const rdv = (s.rdv || []).map(v => v.id === id ? { ...v, fait: !v.fait } : v);
+  const data = { ...r, sante: { ...s, rdv }, updatedAt: new Date().toISOString() };
+  persistResident(data);
+  loadResident();
+}
+
+// ── SORTIES & PERMISSIONS ──
+let sortieEditId = null;
+const SORTIE_MOTIFS = ['Famille', 'Médical', 'Loisir', 'Travail / Stage', 'Démarches', 'Week-end', 'Autre'];
+const SORTIE_ACCOMP = ['Seul(e)', 'Accompagné(e) par un éducateur', 'Famille / Proche', 'Transport adapté', 'Autre'];
+
+function getSorties(r) { return r.sorties || []; }
+
+function sortieStatut(s) {
+  if (s.retourEffectif) return { key: 'rentre', label: 'Rentré(e)', cls: 'badge-green' };
+  const prevu = s.retourPrevuDate ? new Date(s.retourPrevuDate + 'T' + (s.retourPrevuHeure || '23:59')) : null;
+  if (prevu && prevu.getTime() < Date.now()) return { key: 'retard', label: 'En retard', cls: 'badge-red' };
+  const dep = s.date ? new Date(s.date + 'T' + (s.heure || '00:00')) : null;
+  if (dep && dep.getTime() > Date.now()) return { key: 'prevue', label: 'Sortie prévue', cls: 'badge-amber' };
+  return { key: 'encours', label: 'En cours', cls: 'badge-amber' };
+}
+
+function sortiesCard(r) {
+  const list = getSorties(r);
+  const canEdit = canEditResident();
+  const sorted = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.heure || '').localeCompare(a.heure || ''));
+  const enCours = list.filter(s => !s.retourEffectif).length;
+
+  const rows = sorted.length ? sorted.map((s, i) => {
+    const st = sortieStatut(s);
+    const retourTxt = s.retourEffectif
+      ? 'Rentré(e) le ' + formatDateTime(s.retourEffectif)
+      : (s.retourPrevuDate ? 'Retour prévu : ' + formatDate(s.retourPrevuDate) + (s.retourPrevuHeure ? ' à ' + s.retourPrevuHeure : '') : '');
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(s.destination || 'Sortie')} <span class="badge ${st.cls}">${st.label}</span>${s.motif ? `<span class="badge badge-gray">${escHtml(s.motif)}</span>` : ''}</div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">Départ ${formatDate(s.date)}${s.heure ? ' à ' + s.heure : ''}${s.accompagnement ? ' · ' + escHtml(s.accompagnement) : ''}</div>
+        ${retourTxt ? `<div style="font-size:.73rem;color:${st.key === 'retard' ? '#ef4444' : 'var(--muted)'};margin-top:1px">${retourTxt}</div>` : ''}
+        ${s.autorisePar ? `<div style="font-size:.72rem;color:var(--g400);margin-top:1px">Autorisé par ${escHtml(s.autorisePar)}</div>` : ''}
+        ${s.notes ? `<div style="font-size:.73rem;color:var(--g700);margin-top:2px">${escHtml(s.notes)}</div>` : ''}
+      </div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">${!s.retourEffectif ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer le retour" onclick="marquerRetour('${s.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="openSortieModal('${s.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSortie('${s.id}')">✕</button></div>` : ''}
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune sortie enregistrée</div>';
+
+  return `<div class="card" style="border-left:3px solid #0d9488"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0d9488">🚪 Sorties & permissions${enCours ? ` <span class="badge badge-amber" style="margin-left:.3rem">${enCours} en cours</span>` : ''}</span>
+        ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSortieModal()">+ Nouvelle sortie</button>` : ''}
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">${rows}</div>
+    </div></div>`;
+}
+
+function sortieFormHtml(item) {
+  const motifOpts = ['<option value="">—</option>'].concat(SORTIE_MOTIFS.map(m => `<option value="${m}"${item.motif === m ? ' selected' : ''}>${m}</option>`)).join('');
+  const accOpts = ['<option value="">—</option>'].concat(SORTIE_ACCOMP.map(m => `<option value="${m}"${item.accompagnement === m ? ' selected' : ''}>${m}</option>`)).join('');
+  return `
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('soDate', 'Date de départ *', item.date, 'date')}
+      ${santeField('soHeure', 'Heure de départ', item.heure, 'time')}
+    </div>
+    ${santeField('soDestination', 'Destination *', item.destination)}
+    <div class="grid grid-2" style="gap:.75rem">
+      <div class="form-group"><label>Motif</label><select id="soMotif" class="form-input">${motifOpts}</select></div>
+      <div class="form-group"><label>Accompagnement</label><select id="soAccomp" class="form-input">${accOpts}</select></div>
+    </div>
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('soRetourDate', 'Retour prévu (date)', item.retourPrevuDate, 'date')}
+      ${santeField('soRetourHeure', 'Retour prévu (heure)', item.retourPrevuHeure, 'time')}
+    </div>
+    ${santeField('soAutorise', 'Autorisé par', item.autorisePar)}
+    ${santeTextarea('soNotes', 'Notes', item.notes)}`;
+}
+
+function openSortieModal(id) {
+  if (!canEditResident()) return;
+  sortieEditId = id || null;
+  const r = getResident();
+  const item = id ? (getSorties(r).find(x => x.id === id) || {}) : { date: today() };
+  document.getElementById('sortieModalTitle').textContent = id ? 'Modifier la sortie' : 'Nouvelle sortie';
+  document.getElementById('sortieModalBody').innerHTML = sortieFormHtml(item);
+  openModal('sortieModal');
+}
+
+function saveSortie() {
+  const r = getResident();
+  if (!r) return;
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  if (!g('soDate')) { toast('La date de départ est requise', 'error'); return; }
+  if (!g('soDestination')) { toast('La destination est requise', 'error'); return; }
+  const item = {
+    date: g('soDate'), heure: g('soHeure'), destination: g('soDestination'),
+    motif: g('soMotif'), accompagnement: g('soAccomp'),
+    retourPrevuDate: g('soRetourDate'), retourPrevuHeure: g('soRetourHeure'),
+    autorisePar: g('soAutorise'), notes: g('soNotes')
+  };
+  const list = [...getSorties(r)];
+  if (sortieEditId) { const idx = list.findIndex(x => x.id === sortieEditId); if (idx >= 0) list[idx] = { ...list[idx], ...item }; }
+  else { item.id = genId(); item.retourEffectif = null; list.push(item); }
+  persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
+  closeModal('sortieModal');
+  toast('Enregistré', 'success');
+  loadResident();
+}
+
+function marquerRetour(id) {
+  const r = getResident();
+  const list = getSorties(r).map(s => s.id === id ? { ...s, retourEffectif: new Date().toISOString() } : s);
+  persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
+  toast('Retour enregistré', 'success');
+  loadResident();
+}
+
+function deleteSortie(id) {
+  confirmDialog('Supprimer cette sortie ?', () => {
+    const r = getResident();
+    const list = getSorties(r).filter(s => s.id !== id);
+    persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
+    toast('Supprimé', 'success');
+    loadResident();
+  });
+}
+
+// ── BUDGET PERSONNEL ──
+let budgetEditId = null;
+const BUDGET_CAT_RECETTE = ['AAH', 'RSA', 'Salaire', 'Argent de poche', 'Pension', 'Famille', 'Autre'];
+const BUDGET_CAT_DEPENSE = ['Alimentation', 'Hygiène', 'Vêtements', 'Loisirs', 'Transport', 'Téléphone', 'Tabac', 'Santé', 'Démarches', 'Autre'];
+
+function getBudgetOps(r) { return (r.budget && r.budget.operations) || []; }
+function fmtMoney(n) { return (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
+
+function budgetCard(r) {
+  const ops = getBudgetOps(r);
+  const canEdit = canEditResident();
+  const sorted = [...ops].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.id || '').localeCompare(a.id || ''));
+  const solde = ops.reduce((acc, o) => acc + (o.type === 'recette' ? Number(o.montant || 0) : -Number(o.montant || 0)), 0);
+  const monthPrefix = today().slice(0, 7);
+  let moisRecettes = 0, moisDepenses = 0;
+  ops.forEach(o => {
+    if ((o.date || '').slice(0, 7) !== monthPrefix) return;
+    if (o.type === 'recette') moisRecettes += Number(o.montant || 0); else moisDepenses += Number(o.montant || 0);
+  });
+
+  const rows = sorted.length ? sorted.map((o, i) => {
+    const isRec = o.type === 'recette';
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isRec ? '#dcfce7' : '#fee2e2'};color:${isRec ? '#16a34a' : '#dc2626'};font-weight:800">${isRec ? '+' : '–'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.libelle || (isRec ? 'Recette' : 'Dépense'))}${o.categorie ? ` <span class="badge badge-gray">${escHtml(o.categorie)}</span>` : ''}</div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${formatDate(o.date)}${o.notes ? ' · ' + escHtml(o.notes) : ''}</div>
+      </div>
+      <div style="font-weight:700;font-size:.85rem;color:${isRec ? '#16a34a' : '#dc2626'};white-space:nowrap">${isRec ? '+' : '–'} ${fmtMoney(o.montant)}</div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${o.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteBudgetOp('${o.id}')">✕</button></div>` : ''}
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune opération enregistrée</div>';
+
+  return `<div class="card" style="border-left:3px solid #d97706"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d97706">💰 Budget personnel</span>
+        ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openBudgetModal()">+ Opération</button>` : ''}
+      </div>
+      <div class="grid grid-3" style="gap:.75rem">
+        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:${solde < 0 ? '#fef2f2' : '#f0fdf4'};border:1px solid ${solde < 0 ? '#fecaca' : '#bbf7d0'}">
+          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Solde actuel</div>
+          <div style="font-size:1.25rem;font-weight:800;color:${solde < 0 ? '#dc2626' : '#16a34a'};line-height:1.2">${fmtMoney(solde)}</div>
+        </div>
+        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--border)">
+          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Recettes (mois)</div>
+          <div style="font-size:1.05rem;font-weight:800;color:#16a34a;line-height:1.4">+ ${fmtMoney(moisRecettes)}</div>
+        </div>
+        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--border)">
+          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Dépenses (mois)</div>
+          <div style="font-size:1.05rem;font-weight:800;color:#dc2626;line-height:1.4">– ${fmtMoney(moisDepenses)}</div>
+        </div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 5 ? 'max-height:255px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+      ${sorted.length > 5 ? `<div class="no-print" style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:-.35rem">↕ ${sorted.length} opérations — faites défiler pour tout voir</div>` : ''}
+    </div></div>`;
+}
+
+function budgetFormHtml(item) {
+  const type = item.type || 'depense';
+  const cats = type === 'recette' ? BUDGET_CAT_RECETTE : BUDGET_CAT_DEPENSE;
+  const catOpts = ['<option value="">—</option>'].concat(cats.map(c => `<option value="${c}"${item.categorie === c ? ' selected' : ''}>${c}</option>`)).join('');
+  return `
+    <div class="grid grid-2" style="gap:.75rem">
+      <div class="form-group"><label>Type *</label><select id="buType" class="form-input" onchange="refreshBudgetCats()">
+        <option value="depense"${type === 'depense' ? ' selected' : ''}>Dépense</option>
+        <option value="recette"${type === 'recette' ? ' selected' : ''}>Recette</option>
+      </select></div>
+      <div class="form-group"><label>Montant (€) *</label><input type="number" step="0.01" min="0" id="buMontant" value="${item.montant != null ? item.montant : ''}" class="form-input"/></div>
+    </div>
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('buDate', 'Date *', item.date || today(), 'date')}
+      <div class="form-group"><label>Catégorie</label><select id="buCategorie" class="form-input">${catOpts}</select></div>
+    </div>
+    ${santeField('buLibelle', 'Libellé', item.libelle)}
+    ${santeTextarea('buNotes', 'Notes', item.notes)}`;
+}
+
+function refreshBudgetCats() {
+  const type = document.getElementById('buType').value;
+  const cats = type === 'recette' ? BUDGET_CAT_RECETTE : BUDGET_CAT_DEPENSE;
+  const sel = document.getElementById('buCategorie');
+  const cur = sel.value;
+  sel.innerHTML = ['<option value="">—</option>'].concat(cats.map(c => `<option value="${c}"${cur === c ? ' selected' : ''}>${c}</option>`)).join('');
+}
+
+function openBudgetModal(id) {
+  if (!canEditResident()) return;
+  budgetEditId = id || null;
+  const r = getResident();
+  const item = id ? (getBudgetOps(r).find(x => x.id === id) || {}) : { type: 'depense', date: today() };
+  document.getElementById('budgetModalTitle').textContent = id ? 'Modifier l\'opération' : 'Nouvelle opération';
+  document.getElementById('budgetModalBody').innerHTML = budgetFormHtml(item);
+  openModal('budgetModal');
+}
+
+function saveBudgetOp() {
+  const r = getResident();
+  if (!r) return;
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const montant = parseFloat(g('buMontant'));
+  if (!(montant > 0)) { toast('Le montant doit être supérieur à 0', 'error'); return; }
+  if (!g('buDate')) { toast('La date est requise', 'error'); return; }
+  const item = {
+    type: g('buType') === 'recette' ? 'recette' : 'depense',
+    montant: Math.round(montant * 100) / 100,
+    date: g('buDate'), categorie: g('buCategorie'), libelle: g('buLibelle'), notes: g('buNotes')
+  };
+  const ops = [...getBudgetOps(r)];
+  if (budgetEditId) { const idx = ops.findIndex(x => x.id === budgetEditId); if (idx >= 0) ops[idx] = { ...ops[idx], ...item }; }
+  else { item.id = genId(); ops.push(item); }
+  persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
+  closeModal('budgetModal');
+  toast('Enregistré', 'success');
+  loadResident();
+}
+
+function deleteBudgetOp(id) {
+  confirmDialog('Supprimer cette opération ?', () => {
+    const r = getResident();
+    const ops = getBudgetOps(r).filter(o => o.id !== id);
+    persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
+    toast('Supprimé', 'success');
+    loadResident();
+  });
+}
+
+// ── SUIVI DES OBJECTIFS ──
+let objectifEditId = null;
+const OBJ_STATUTS = {
+  non_commence: { label: 'Non commencé', cls: 'badge-gray', color: '#64748b' },
+  en_cours: { label: 'En cours', cls: 'badge-amber', color: '#d97706' },
+  atteint: { label: 'Atteint', cls: 'badge-green', color: '#16a34a' },
+  abandonne: { label: 'Abandonné', cls: 'badge-red', color: '#dc2626' }
+};
+
+function getObjSuivi(r) { return r.objectifsSuivi || {}; }
+
+function objectifsCard(r) {
+  const objs = DB.get(DB.keys.objectives) || [];
+  const resObjs = (r.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))).filter(Boolean);
+  if (!resObjs.length) return '';
+  const canEdit = canEditResident();
+  const suivi = getObjSuivi(r);
+  const nbAtteint = resObjs.filter(o => (suivi[o.id] && suivi[o.id].statut) === 'atteint').length;
+  const pct = resObjs.length ? Math.round(nbAtteint / resObjs.length * 100) : 0;
+
+  const rows = resObjs.map(o => {
+    const sv = suivi[o.id] || {};
+    const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
+    return `<div style="padding:.7rem .85rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border);border-left:3px solid ${st.color}">
+      <div style="display:flex;align-items:flex-start;gap:.5rem">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.85rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.name)} <span class="badge ${st.cls}">${st.label}</span></div>
+          ${o.description ? `<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}
+          ${sv.note ? `<div style="font-size:.76rem;color:var(--g700);margin-top:.35rem">📌 ${escHtml(sv.note)}</div>` : ''}
+          ${sv.dateMaj ? `<div style="font-size:.7rem;color:var(--g400);margin-top:2px">Mis à jour le ${formatDate(sv.dateMaj)}</div>` : ''}
+        </div>
+        ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="color:var(--accent);flex-shrink:0" onclick="openObjectifModal('${o.id}')">✎ Suivi</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="card" style="border-left:3px solid #f59e0b"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b">🎯 Objectifs personnalisés (${resObjs.length})</span>
+        <span class="badge badge-green" style="margin-left:auto">${nbAtteint}/${resObjs.length} atteint${nbAtteint > 1 ? 's' : ''}</span>
+      </div>
+      <div style="height:7px;border-radius:4px;background:var(--g100);overflow:hidden"><div style="height:100%;width:${pct}%;background:#16a34a;transition:width .3s"></div></div>
+      ${rows}
+    </div></div>`;
+}
+
+function openObjectifModal(objId) {
+  if (!canEditResident()) return;
+  objectifEditId = objId;
+  const r = getResident();
+  const objs = DB.get(DB.keys.objectives) || [];
+  const o = objs.find(x => String(x.id) === String(objId));
+  const sv = getObjSuivi(r)[objId] || {};
+  const statut = sv.statut || 'non_commence';
+  const statutOpts = Object.entries(OBJ_STATUTS).map(([k, v]) => `<option value="${k}"${statut === k ? ' selected' : ''}>${v.label}</option>`).join('');
+  document.getElementById('objectifModalTitle').textContent = o ? o.name : 'Suivi de l\'objectif';
+  document.getElementById('objectifModalBody').innerHTML = `
+    ${o && o.description ? `<div style="font-size:.8rem;color:var(--muted);padding:.6rem .85rem;background:var(--g50);border-radius:var(--r-sm)">${escHtml(o.description)}</div>` : ''}
+    <div class="form-group"><label>Statut</label><select id="objStatut" class="form-input">${statutOpts}</select></div>
+    ${santeTextarea('objNote', 'Note de suivi', sv.note)}`;
+  openModal('objectifModal');
+}
+
+function saveObjectifSuivi() {
+  const r = getResident();
+  if (!r || !objectifEditId) return;
+  const statut = document.getElementById('objStatut').value;
+  const note = document.getElementById('objNote').value.trim();
+  const suivi = { ...getObjSuivi(r) };
+  suivi[objectifEditId] = { statut, note, dateMaj: new Date().toISOString() };
+  persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
+  closeModal('objectifModal');
+  toast('Suivi mis à jour', 'success');
+  loadResident();
+}
+
+// ── GRILLES D'ÉVALUATION (autonomie) ──
+let evalEditId = null;
+const EVAL_NIVEAUX = [
+  { v: 0, label: 'Non acquis / Dépendant' },
+  { v: 1, label: 'Aide importante' },
+  { v: 2, label: 'Aide partielle' },
+  { v: 3, label: 'Avec supervision' },
+  { v: 4, label: 'Autonome' }
+];
+const GRILLE_EVAL = [
+  { domaine: 'Hygiène & soins', criteres: [
+    { key: 'toilette', label: 'Toilette / hygiène corporelle' },
+    { key: 'habillage', label: 'Habillage' },
+    { key: 'sante', label: 'Gestion de sa santé / traitements' }
+  ] },
+  { domaine: 'Repas & alimentation', criteres: [
+    { key: 'preparation', label: 'Préparation des repas' },
+    { key: 'repas', label: 'Prise des repas / équilibre' }
+  ] },
+  { domaine: 'Logement & cadre de vie', criteres: [
+    { key: 'chambre', label: 'Entretien de sa chambre' },
+    { key: 'linge', label: 'Entretien du linge' }
+  ] },
+  { domaine: 'Administratif & budget', criteres: [
+    { key: 'courrier', label: 'Courrier / démarches' },
+    { key: 'budget', label: 'Gestion du budget' }
+  ] },
+  { domaine: 'Vie sociale & déplacements', criteres: [
+    { key: 'relations', label: 'Relations sociales' },
+    { key: 'activites', label: 'Participation aux activités' },
+    { key: 'deplacements', label: 'Déplacements / transports' }
+  ] },
+  { domaine: 'Communication', criteres: [
+    { key: 'expression', label: 'Expression / compréhension' }
+  ] }
+];
+const EVAL_ALL_CRITERES = GRILLE_EVAL.flatMap(d => d.criteres.map(c => c.key));
+
+function getEvaluations(r) { return r.evaluations || []; }
+function evalScorePct(scores) {
+  scores = scores || {};
+  let sum = 0, n = 0;
+  EVAL_ALL_CRITERES.forEach(k => { if (scores[k] != null) { sum += Number(scores[k]); n++; } });
+  return n ? Math.round(sum / (n * 4) * 100) : 0;
+}
+function evalScoreColor(pct) { return pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626'; }
+function evalDomaineScore(scores, domaine) {
+  let sum = 0, n = 0;
+  domaine.criteres.forEach(c => { if (scores && scores[c.key] != null) { sum += Number(scores[c.key]); n++; } });
+  return n ? Math.round(sum / (n * 4) * 100) : 0;
+}
+
+function evaluationsCard(r) {
+  const evals = getEvaluations(r);
+  const canEdit = canEditResident();
+  const sorted = [...evals].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const last = sorted[0];
+  const prev = sorted[1];
+  let trend = '';
+  if (last && prev) {
+    const d = evalScorePct(last.scores) - evalScorePct(prev.scores);
+    if (d > 0) trend = `<span style="color:#16a34a;font-size:.72rem;font-weight:700">▲ +${d}%</span>`;
+    else if (d < 0) trend = `<span style="color:#dc2626;font-size:.72rem;font-weight:700">▼ ${d}%</span>`;
+    else trend = `<span style="color:var(--muted);font-size:.72rem;font-weight:700">= stable</span>`;
+  }
+
+  const rows = sorted.length ? sorted.map(ev => {
+    const pct = evalScorePct(ev.scores);
+    const col = evalScoreColor(pct);
+    const domBreak = GRILLE_EVAL.map(d => {
+      const dp = evalDomaineScore(ev.scores, d);
+      return `<div style="display:flex;align-items:center;gap:.5rem;margin:.15rem 0">
+        <span style="font-size:.72rem;color:var(--muted);width:170px;flex-shrink:0">${d.domaine}</span>
+        <div style="flex:1;height:6px;border-radius:3px;background:var(--g100);overflow:hidden"><div style="height:100%;width:${dp}%;background:${evalScoreColor(dp)}"></div></div>
+        <span style="font-size:.72rem;font-weight:700;color:${evalScoreColor(dp)};width:34px;text-align:right">${dp}%</span>
+      </div>`;
+    }).join('');
+    const critDetail = GRILLE_EVAL.map(d => `<div style="margin-top:.4rem"><div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">${d.domaine}</div>${d.criteres.map(c => { const v = ev.scores ? ev.scores[c.key] : null; const niv = EVAL_NIVEAUX.find(x => x.v === Number(v)); return `<div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.74rem;padding:1px 0"><span>${c.label}</span><span style="color:${v != null ? evalScoreColor(Number(v) / 4 * 100) : 'var(--g400)'};font-weight:600">${niv ? niv.label : '—'}</span></div>`; }).join('')}</div>`).join('');
+    return `<details style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">
+      <summary style="display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;cursor:pointer;list-style:none">
+        <span style="font-weight:700;font-size:.85rem;color:${col}">${pct}%</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.82rem">Évaluation du ${formatDate(ev.date)}</div>
+          ${ev.evaluateur ? `<div style="font-size:.72rem;color:var(--muted)">Par ${escHtml(ev.evaluateur)}</div>` : ''}
+        </div>
+        ${canEdit ? `<span class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="event.preventDefault();event.stopPropagation();openEvalModal('${ev.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.preventDefault();event.stopPropagation();deleteEvaluation('${ev.id}')">✕</button></span>` : ''}
+      </summary>
+      <div style="padding:.6rem .85rem;border-top:1px solid var(--border);background:var(--g50)">
+        ${domBreak}
+        ${ev.note ? `<div style="font-size:.76rem;color:var(--g700);margin-top:.5rem">📌 ${escHtml(ev.note)}</div>` : ''}
+        <details style="margin-top:.5rem"><summary style="font-size:.72rem;color:var(--accent);cursor:pointer">Voir le détail par critère</summary><div style="margin-top:.3rem">${critDetail}</div></details>
+      </div>
+    </details>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune évaluation enregistrée</div>';
+
+  return `<div class="card" style="border-left:3px solid #9333ea"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9333ea">📋 Grilles d'évaluation${last ? ` <span class="badge" style="background:${evalScoreColor(evalScorePct(last.scores))}22;color:${evalScoreColor(evalScorePct(last.scores))};margin-left:.3rem">${evalScorePct(last.scores)}% d'autonomie</span>` : ''}</span>
+        ${trend}
+        ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openEvalModal()">+ Nouvelle évaluation</button>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
+    </div></div>`;
+}
+
+function evalFormHtml(item) {
+  const scores = item.scores || {};
+  const niveauxLegende = EVAL_NIVEAUX.map(n => `${n.v} = ${n.label}`).join(' · ');
+  const domaines = GRILLE_EVAL.map(d => `
+    <div style="margin-top:.5rem">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9333ea;margin-bottom:.3rem">${d.domaine}</div>
+      ${d.criteres.map(c => {
+        const cur = scores[c.key];
+        const opts = EVAL_NIVEAUX.map(n => `<option value="${n.v}"${Number(cur) === n.v ? ' selected' : ''}>${n.v} — ${n.label}</option>`).join('');
+        return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
+          <label style="flex:1;font-size:.8rem;margin:0">${c.label}</label>
+          <select id="ev_${c.key}" class="form-input" style="width:230px;flex-shrink:0"><option value="">— Non évalué —</option>${opts}</select>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+  return `
+    <div class="grid grid-2" style="gap:.75rem">
+      ${santeField('evDate', 'Date de l\'évaluation *', item.date || today(), 'date')}
+      ${santeField('evEvaluateur', 'Évaluateur', item.evaluateur)}
+    </div>
+    <div style="font-size:.7rem;color:var(--muted);padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm)">Échelle : ${niveauxLegende}</div>
+    ${domaines}
+    ${santeTextarea('evNote', 'Synthèse / commentaire', item.note)}`;
+}
+
+function openEvalModal(id) {
+  if (!canEditResident()) return;
+  evalEditId = id || null;
+  const r = getResident();
+  const item = id ? (getEvaluations(r).find(x => x.id === id) || {}) : { date: today() };
+  document.getElementById('evalModalTitle').textContent = id ? 'Modifier l\'évaluation' : 'Nouvelle évaluation';
+  document.getElementById('evalModalBody').innerHTML = evalFormHtml(item);
+  openModal('evalModal');
+}
+
+function saveEvaluation() {
+  const r = getResident();
+  if (!r) return;
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  if (!g('evDate')) { toast('La date est requise', 'error'); return; }
+  const scores = {};
+  EVAL_ALL_CRITERES.forEach(k => { const el = document.getElementById('ev_' + k); if (el && el.value !== '') scores[k] = Number(el.value); });
+  const item = { date: g('evDate'), evaluateur: g('evEvaluateur'), note: g('evNote'), scores };
+  const list = [...getEvaluations(r)];
+  if (evalEditId) { const idx = list.findIndex(x => x.id === evalEditId); if (idx >= 0) list[idx] = { ...list[idx], ...item }; }
+  else { item.id = genId(); list.push(item); }
+  persistResident({ ...r, evaluations: list, updatedAt: new Date().toISOString() });
+  closeModal('evalModal');
+  toast('Évaluation enregistrée', 'success');
+  loadResident();
+}
+
+function deleteEvaluation(id) {
+  confirmDialog('Supprimer cette évaluation ?', () => {
+    const r = getResident();
+    const list = getEvaluations(r).filter(e => e.id !== id);
+    persistResident({ ...r, evaluations: list, updatedAt: new Date().toISOString() });
+    toast('Supprimé', 'success');
+    loadResident();
+  });
 }
 
 function docsHtml(docs) {
@@ -227,9 +1076,12 @@ function renderEditMode(r) {
           ${inputField('eChambre','Chambre / Unité',r.chambre)}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
-          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent']])}
+          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent'],['sorti','Sorti(e)']])}
           ${inputField('eReferent','Référent',r.referent)}
           ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
+        </div>
+        <div class="grid grid-3" style="gap:.75rem">
+          ${inputField('eDateSortie','Date de sortie (si sorti)',r.dateSortie,'date')}
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem">👤 Informations personnelles</div>
@@ -259,6 +1111,7 @@ function renderEditMode(r) {
           ${inputField('eOrganismeA','Organisme',r.organismeA)}
           ${inputField('eSituationAdmin','Situation admin.',r.situationAdmin)}
           ${selectField('eProtection','Mesure de protection',r.protection, [['','—'],['tutelle','Tutelle'],['curatelle','Curatelle'],['sauvegarde','Sauvegarde de justice'],['habilitation','Habilitation familiale'],['masp','MASP'],['autre','Autre']])}
+          ${inputField('eProtectionNom','Tuteur / Curateur',r.protectionNom)}
         </div>`:''}
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:.25rem">🎯 Objectifs</div>
@@ -285,13 +1138,13 @@ function savePageEdit() {
     ...r,
     prenom: g('ePrenom'), nom: g('eNom'), genre: g('eGenre'),
     dob: g('eDob'), entree: g('eEntree'), chambre: g('eChambre'),
-    statut: g('eStatut'), referent: g('eReferent'), color: g('eColor') || '#3b82f6',
+    statut: g('eStatut'), dateSortie: g('eDateSortie'), referent: g('eReferent'), color: g('eColor') || '#3b82f6',
     medecin: g('eMedecin'), medecinTel: g('eMedecinTel'),
     allergies: g('eAllergies'), nss: g('eNss'),
     tuteur: g('eTuteur'), tuteurTel: g('eTuteurTel'), ecole: g('eEcole'),
     classe: g('eClasse'), organisme: g('eOrganisme'), dossier: g('eDossier'),
     situationPro: g('eSituationPro'), ressources: g('eRessources'),
-    organismeA: g('eOrganismeA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'),
+    organismeA: g('eOrganismeA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'),
     objectifs: checked,
     notes: g('eNotes'), contacts: g('eContacts'),
     updatedAt: new Date().toISOString()
@@ -315,6 +1168,327 @@ function togglePageEdit() {
   loadResident();
 }
 
+// ═══════════════════════════════════════════
+//  FIL DE VIE UNIFIÉ
+// ═══════════════════════════════════════════
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie' };
+
+function fvDate(ts) {
+  const p = n => String(n).padStart(2, '0');
+  const d = `${ts.getFullYear()}-${p(ts.getMonth()+1)}-${p(ts.getDate())}`;
+  const hm = `${p(ts.getHours())}:${p(ts.getMinutes())}`;
+  return formatDate(d) + (hm !== '00:00' ? ' · ' + hm : '');
+}
+
+function buildFilDeVie(r) {
+  const ev = [];
+  const push = (ts, type, icon, color, title, detail) => { if (!ts || isNaN(ts.getTime())) return; ev.push({ ts, type, icon, color, title, detail: detail || '' }); };
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const name = `${r.prenom||''} ${r.nom||''}`;
+  if (r.entree) push(new Date(r.entree + 'T00:00'), 'admission', '🏠', '#0891b2', 'Admission', "Entrée dans l'établissement");
+  if (r.dateSortie) push(new Date(r.dateSortie + 'T00:00'), 'sortie-def', '🚸', '#64748b', "Sortie de l'établissement", '');
+  const cats = DB.get(DB.keys.categories) || [];
+  (DB.get(DB.keys.journal) || []).filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e)).forEach(e => {
+    const cat = cats.find(c => String(c.id) === String(e.categorie));
+    push(new Date(e.date), 'journal', '📔', cat ? cat.color : '#059669', cat ? cat.name : 'Journal', e.contenu);
+  });
+  (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
+    push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `Incident — ${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
+  });
+  const s = getSante(r);
+  s.rdv.forEach(v => push(new Date((v.date||'') + 'T' + (v.heure || '00:00')), 'rdv', '🏥', '#16a34a', `RDV — ${v.type||'médical'}`, [v.praticien, v.lieu, v.fait ? 'effectué' : (v.date && v.date < today() ? 'non honoré' : 'à venir')].filter(Boolean).join(' · ')));
+  s.vaccins.forEach(vc => { if (vc.date) push(new Date(vc.date + 'T00:00'), 'vaccin', '💉', '#0891b2', `Vaccin — ${vc.nom||''}`, vc.rappel ? 'Rappel : ' + formatDate(vc.rappel) : ''); });
+  s.traitements.forEach(t => { if (t.debut) push(new Date(t.debut + 'T00:00'), 'traitement', '💊', '#ef4444', `Traitement — ${t.nom||''}`, [t.posologie, t.frequence].filter(Boolean).join(' · ')); });
+  getSorties(r).forEach(so => push(new Date((so.date||'') + 'T' + (so.heure || '00:00')), 'sortie', '🚪', '#0d9488', `Sortie — ${so.destination||''}`, [so.motif, so.accompagnement].filter(Boolean).join(' · ')));
+  getBudgetOps(r).forEach(o => push(new Date((o.date||'') + 'T00:00'), 'budget', '💰', '#d97706', `${o.type==='recette'?'Recette':'Dépense'} — ${o.libelle||o.categorie||''}`, `${o.type==='recette'?'+':'–'} ${fmtMoney(o.montant)}`));
+  (DB.get(DB.keys.ppe) || []).filter(p => String(p.residentId) === String(currentResidentId)).forEach(p => push(new Date((p.dateRedaction||'') + 'T00:00'), 'avenant', '📄', '#8b5cf6', 'Avenant PPE', (typeof STATUT_PPE_LABEL !== 'undefined' ? (STATUT_PPE_LABEL[p.statut]||p.statut) : p.statut) || ''));
+  getEvaluations(r).forEach(e => { if (e.date) push(new Date(e.date + 'T00:00'), 'evaluation', '📊', '#6366f1', "Grille d'évaluation", e.grille || e.nom || e.titre || ''); });
+  ev.sort((a, b) => b.ts - a.ts);
+  return ev;
+}
+
+function fvFilter(type, btn) {
+  document.querySelectorAll('.fv-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('#fvList .fv-item').forEach(it => { it.style.display = (type === 'all' || it.dataset.fvType === type) ? '' : 'none'; });
+}
+
+function filDeVieCard(r) {
+  const ev = buildFilDeVie(r);
+  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>🤖</span> Générer le bilan</button></div>`;
+  if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
+  const types = [...new Set(ev.map(e => e.type))];
+  const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
+    types.map(t => `<button class="fv-chip" onclick="fvFilter('${t}',this)">${FV_TYPE_LABELS[t]||t}</button>`).join('');
+  const rows = ev.map(e => `<div class="fv-item" data-fv-type="${e.type}" style="display:flex;gap:.75rem;padding:.6rem .25rem;border-bottom:1px solid var(--border)">
+      <div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${e.color}1a;font-size:1rem">${e.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><span style="font-weight:650;font-size:.83rem;color:${e.color}">${escHtml(e.title)}</span><span style="font-size:.7rem;color:var(--muted)">${fvDate(e.ts)}</span></div>
+        ${e.detail ? `<div style="font-size:.78rem;color:var(--g700);margin-top:1px;white-space:pre-wrap">${escHtml(String(e.detail).slice(0,240))}</div>` : ''}
+      </div></div>`).join('');
+  return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body" style="padding:1rem 1.25rem">
+      <div class="fv-chips no-print" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">${chips}</div>
+      <div id="fvList" style="max-height:520px;overflow-y:auto">${rows}</div>
+    </div></div>`;
+}
+
+// ═══════════════════════════════════════════
+//  RADAR DE SIGNAUX FAIBLES
+// ═══════════════════════════════════════════
+function computeSignals(r) {
+  const out = [];
+  const td = today(), now = Date.now();
+  const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+  // Absences récentes (14 j)
+  const presences = DB.get(DB.keys.presences) || {};
+  let abs = 0; const since14 = daysAgo(14);
+  for (const [d, day] of Object.entries(presences)) { if (d < since14) continue; if (day[currentResidentId] === 'absent') abs++; }
+  if (abs >= 5) out.push({ level:'alert', icon:'📉', label:'Absences fréquentes', detail:`${abs} absences sur les 14 derniers jours` });
+  else if (abs >= 3) out.push({ level:'warn', icon:'📉', label:'Absences en hausse', detail:`${abs} absences sur 14 jours` });
+  // Incidents (30 j)
+  const since30 = daysAgo(30);
+  const inc = (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId) && (e.date||'') >= since30);
+  if (inc.some(e => ['grave','critique'].includes(e.gravite))) out.push({ level:'alert', icon:'⚠️', label:'Incident grave récent', detail:`${inc.length} incident(s) sur 30 jours, dont au moins un grave` });
+  else if (inc.length >= 2) out.push({ level:'warn', icon:'⚠️', label:'Incidents répétés', detail:`${inc.length} incidents sur 30 jours` });
+  // Budget négatif
+  const ops = getBudgetOps(r);
+  const solde = ops.reduce((a, o) => a + (o.type === 'recette' ? (+o.montant||0) : -(+o.montant||0)), 0);
+  if (ops.length && solde < 0) out.push({ level:'alert', icon:'💰', label:'Budget négatif', detail:`Solde actuel : ${fmtMoney(solde)}` });
+  // RDV médicaux non honorés
+  const s = getSante(r);
+  const rdvManq = s.rdv.filter(v => !v.fait && v.date && v.date < td);
+  if (rdvManq.length) out.push({ level:'warn', icon:'🏥', label:'RDV médical non honoré', detail:`${rdvManq.length} rendez-vous passé(s) non marqué(s) « effectué »` });
+  // Rappel vaccinal dépassé
+  const vacc = s.vaccins.filter(vc => vc.rappel && vc.rappel < td);
+  if (vacc.length) out.push({ level:'warn', icon:'💉', label:'Rappel vaccinal dû', detail:`${vacc.length} rappel(s) dépassé(s)` });
+  // Retour de sortie en retard
+  if (getSorties(r).some(so => sortieStatut(so).key === 'retard')) out.push({ level:'alert', icon:'🚪', label:'Retour de sortie en retard', detail:"Le résident n'est pas rentré à l'heure prévue" });
+  // Silence au journal (résident présent)
+  if (r.statut !== 'sorti') {
+    const _sess = Auth.getSession();
+    const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+    const name = `${r.prenom||''} ${r.nom||''}`;
+    const jrn = (DB.get(DB.keys.journal) || []).filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e));
+    const last = jrn.reduce((m, e) => { const t = new Date(e.date).getTime(); return t > m ? t : m; }, 0);
+    if (last === 0) out.push({ level:'info', icon:'🕐', label:'Aucune observation', detail:'Aucune entrée au journal pour ce résident' });
+    else { const days = Math.floor((now - last) / 86400000); if (days >= 21) out.push({ level:'warn', icon:'🕐', label:'Journal silencieux', detail:`Dernière observation il y a ${days} jours` }); }
+  }
+  return out;
+}
+
+function radarSignauxCard(r) {
+  const sig = computeSignals(r);
+  const order = { alert:0, warn:1, info:2 };
+  sig.sort((a, b) => order[a.level] - order[b.level]);
+  const nAlert = sig.filter(x => x.level === 'alert').length, nWarn = sig.filter(x => x.level === 'warn').length;
+  const lv = nAlert ? { c:'#dc2626', bg:'#fef2f2', bd:'#fecaca', txt:`Vigilance élevée — ${nAlert} alerte${nAlert>1?'s':''}` }
+    : nWarn ? { c:'#d97706', bg:'#fffbeb', bd:'#fde68a', txt:`Points de vigilance — ${nWarn} signal${nWarn>1?'aux':''}` }
+    : sig.length ? { c:'#0891b2', bg:'#ecfeff', bd:'#a5f3fc', txt:'À surveiller' }
+    : { c:'#16a34a', bg:'#f0fdf4', bd:'#bbf7d0', txt:'Situation stable' };
+  const cm = { alert:{c:'#dc2626',bg:'#fef2f2',bd:'#fecaca'}, warn:{c:'#d97706',bg:'#fffbeb',bd:'#fde68a'}, info:{c:'#0891b2',bg:'#ecfeff',bd:'#a5f3fc'} };
+  const rows = sig.length ? sig.map(x => `<div style="display:flex;gap:.7rem;align-items:flex-start;padding:.6rem .85rem;border-radius:var(--r-sm);background:${cm[x.level].bg};border:1px solid ${cm[x.level].bd}">
+      <span style="font-size:1.05rem;flex-shrink:0;line-height:1.3">${x.icon}</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.82rem;color:${cm[x.level].c}">${escHtml(x.label)}</div><div style="font-size:.76rem;color:var(--g700)">${escHtml(x.detail)}</div></div>
+    </div>`).join('') : `<div style="padding:.85rem;font-size:.82rem;color:#16a34a">✓ Aucun signal faible détecté. La situation paraît stable.</div>`;
+  return `<div class="card" style="margin-bottom:1.5rem;border-left:3px solid ${lv.c}"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${lv.c}">📡 Radar de vigilance</span>
+        <span class="badge" style="margin-left:auto;background:${lv.bg};color:${lv.c};border:1px solid ${lv.bd}">${lv.txt}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
+    </div></div>`;
+}
+
+// ═══════════════════════════════════════════
+//  AUTO-RÉDACTION DU BILAN / PROJET PAR IA
+// ═══════════════════════════════════════════
+let _lastBilanText = '';
+
+// Construit un résumé structuré du quotidien à envoyer à l'IA
+function buildBilanContext(r) {
+  const name = `${r.prenom||''} ${r.nom||''}`.trim();
+  const L = [];
+  L.push(`Résident : ${name}`);
+  if (r.dob) L.push(`Âge : ${age(r.dob)} ans`);
+  if (r.genre) L.push(`Genre : ${r.genre==='M'?'masculin':r.genre==='F'?'féminin':'autre'}`);
+  if (r.entree) L.push(`Entré le : ${formatDate(r.entree)}`);
+  L.push(`Statut : ${r.statut||'—'}`);
+  if (r.referent) L.push(`Référent : ${r.referent}`);
+  if (r.protection) L.push(`Mesure de protection : ${(typeof PROTECTION_LABELS!=='undefined'?(PROTECTION_LABELS[r.protection]||r.protection):r.protection)}${r.protectionNom?(' ('+r.protectionNom+')'):''}`);
+
+  // Objectifs assignés
+  const objs = DB.get(DB.keys.objectives) || [];
+  const resObjs = (r.objectifs||[]).map(id => objs.find(o => String(o.id)===String(id))?.name).filter(Boolean);
+  if (resObjs.length) L.push(`\nObjectifs du projet personnalisé : ${resObjs.join(', ')}`);
+
+  // Évaluations (évolution autonomie)
+  const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if (evals.length) {
+    const first = evals[0], last = evals[evals.length-1];
+    L.push(`\nÉvaluations d'autonomie : ${evals.length} grille(s).`);
+    L.push(`Score global : ${evalScorePct(first.scores)}% (${formatDate(first.date)}) → ${evalScorePct(last.scores)}% (${formatDate(last.date)}).`);
+    if (typeof GRILLE_EVAL !== 'undefined') {
+      GRILLE_EVAL.forEach(d => {
+        const a = evalDomaineScore(first.scores, d), b = evalDomaineScore(last.scores, d);
+        L.push(`  - ${d.domaine} : ${a}% → ${b}%`);
+      });
+    }
+  }
+
+  // Statistiques du quotidien
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const jrn = (DB.get(DB.keys.journal)||[]).filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e));
+  const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
+  const sorties = getSorties(r);
+  const ops = getBudgetOps(r);
+  const solde = ops.reduce((a,o)=>a+(o.type==='recette'?(+o.montant||0):-(+o.montant||0)),0);
+  const s = getSante(r);
+  const rdvFaits = s.rdv.filter(v=>v.fait).length, rdvManq = s.rdv.filter(v=>!v.fait && v.date && v.date<today()).length;
+  L.push(`\nActivité enregistrée : ${jrn.length} observations au journal, ${inc.length} incident(s), ${sorties.length} sortie(s)/permission(s), ${ops.length} opération(s) budgétaires (solde ${fmtMoney(solde)}).`);
+  L.push(`Suivi médical : ${rdvFaits} RDV honorés, ${rdvManq} non honorés, ${s.traitements.length} traitement(s), ${s.vaccins.length} vaccination(s).`);
+  if (inc.length) {
+    const types = {}; inc.forEach(e => { types[e.type||'autre'] = (types[e.type||'autre']||0)+1; });
+    L.push(`Types d'incidents : ${Object.entries(types).map(([k,v])=>k+' ('+v+')').join(', ')}.`);
+  }
+
+  // Signaux de vigilance
+  const sig = computeSignals(r);
+  if (sig.length) L.push(`\nSignaux de vigilance détectés : ${sig.map(x=>x.label+' — '+x.detail).join(' ; ')}.`);
+
+  // Observations clés (journal, max 30, anti-débordement)
+  const recent = jrn.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,30);
+  const cats = DB.get(DB.keys.categories)||[];
+  if (recent.length) {
+    L.push(`\nObservations du journal (de la plus récente à la plus ancienne) :`);
+    recent.forEach(e => {
+      const cat = cats.find(c=>String(c.id)===String(e.categorie));
+      L.push(`[${(e.date||'').slice(0,10)}] (${cat?cat.name:'général'}) ${(e.contenu||'').slice(0,300)}`);
+    });
+  }
+  return L.join('\n');
+}
+
+async function genererBilanIA() {
+  const r = getResident();
+  if (!r) return;
+  const name = `${r.prenom||''} ${r.nom||''}`.trim();
+  document.getElementById('bilanModalTitle').textContent = `🤖 Bilan de synthèse — ${name}`;
+  document.getElementById('bilanModalFooter').style.display = 'none';
+  document.getElementById('bilanModalBody').innerHTML = `<div style="padding:2.5rem 1rem;text-align:center;color:var(--muted)"><div style="font-size:1.8rem;margin-bottom:.6rem">🤖</div><div style="font-weight:600">Analyse du quotidien en cours…</div><div style="font-size:.8rem;margin-top:.35rem">Lecture du journal, des évaluations et des indicateurs.</div></div>`;
+  openModal('bilanModal');
+
+  const context = buildBilanContext(r);
+  let text = null;
+  const key = getAiKey();
+  if (key) {
+    const system = "Tu es un éducateur spécialisé en établissement médico-social (ESMS). À partir des données du quotidien d'un résident, rédige un BILAN DE SYNTHÈSE professionnel et institutionnel, en français, prêt à être présenté en réunion de projet personnalisé. "
+      + "Structure ta réponse en markdown avec EXACTEMENT ces sections (titres en '## ') : "
+      + "## 1. Contexte et parcours, ## 2. Évolution par domaine, ## 3. Santé et bien-être, ## 4. Vie sociale, autonomie et quotidien, ## 5. Points de vigilance, ## 6. Préconisations et objectifs à venir. "
+      + "Appuie-toi UNIQUEMENT sur les données fournies, reste factuel, bienveillant et nuancé. N'invente aucun fait.";
+    try {
+      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({
+          model: 'mistral-small-latest',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: `Rédige le bilan de synthèse à partir de ces données :\n\n${context}` }
+          ],
+          temperature: 0.6,
+          max_tokens: 3500
+        })
+      });
+      if (res.ok) { const data = await res.json(); text = data.choices?.[0]?.message?.content?.trim() || null; }
+    } catch (_) {}
+  }
+
+  let viaIA = !!text;
+  if (!text) text = bilanOfflineTemplate(r);
+
+  _lastBilanText = text;
+  const banner = viaIA
+    ? `<div style="font-size:.74rem;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">✓ Généré par IA à partir du quotidien. <strong>À relire et valider</strong> avant toute utilisation officielle.</div>`
+    : `<div style="font-size:.74rem;color:#a16207;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">ℹ Bilan généré localement (aucune clé IA configurée). Pour une rédaction enrichie, ajoutez une clé Mistral dans Administration → Établissement.</div>`;
+  document.getElementById('bilanModalBody').innerHTML = banner + `<div id="bilanContent" style="font-size:.86rem;line-height:1.65">${mdToHtml(text)}</div>`;
+  document.getElementById('bilanModalFooter').style.display = '';
+}
+
+// Bilan généré localement (sans IA) à partir des données réelles
+function bilanOfflineTemplate(r) {
+  const name = `${r.prenom||''} ${r.nom||''}`.trim();
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const jrn = (DB.get(DB.keys.journal)||[]).filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e)).sort((a,b)=> new Date(b.date)-new Date(a.date));
+  const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
+  const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const sig = computeSignals(r);
+  const cats = DB.get(DB.keys.categories)||[];
+  let out = '';
+  out += `## 1. Contexte et parcours\n`;
+  out += `${name}${r.dob?`, ${age(r.dob)} ans`:''}, accueilli(e) ${r.entree?`depuis le ${formatDate(r.entree)}`:'dans l\'établissement'}${r.referent?`, suivi(e) par ${r.referent}`:''}. Statut : ${r.statut||'—'}.\n\n`;
+  out += `## 2. Évolution par domaine\n`;
+  if (evals.length >= 1) {
+    const first = evals[0], last = evals[evals.length-1];
+    out += `Score d'autonomie global : ${evalScorePct(first.scores)}% (${formatDate(first.date)})${evals.length>1?` → ${evalScorePct(last.scores)}% (${formatDate(last.date)})`:''}.\n`;
+    if (typeof GRILLE_EVAL !== 'undefined') GRILLE_EVAL.forEach(d => { out += `- ${d.domaine} : ${evalDomaineScore(first.scores,d)}%${evals.length>1?` → ${evalDomaineScore(last.scores,d)}%`:''}\n`; });
+  } else out += `Aucune grille d'évaluation enregistrée à ce jour.\n`;
+  out += `\n## 3. Santé et bien-être\n`;
+  const s = getSante(r);
+  out += `Suivi médical : ${s.rdv.filter(v=>v.fait).length} rendez-vous honorés, ${s.traitements.length} traitement(s) en cours, ${s.vaccins.length} vaccination(s) enregistrée(s).${r.allergies?` Allergies / CI : ${r.allergies}.`:''}\n\n`;
+  out += `## 4. Vie sociale, autonomie et quotidien\n`;
+  out += `${jrn.length} observation(s) au journal, ${getSorties(r).length} sortie(s)/permission(s). `;
+  const ops = getBudgetOps(r); const solde = ops.reduce((a,o)=>a+(o.type==='recette'?(+o.montant||0):-(+o.montant||0)),0);
+  out += `Gestion du budget personnel : solde actuel de ${fmtMoney(solde)}.\n`;
+  if (jrn.length) { out += `\nObservations récentes :\n`; jrn.slice(0,5).forEach(e => { const cat = cats.find(c=>String(c.id)===String(e.categorie)); out += `- [${(e.date||'').slice(0,10)}] (${cat?cat.name:'général'}) ${(e.contenu||'').slice(0,200)}\n`; }); }
+  out += `\n## 5. Points de vigilance\n`;
+  out += sig.length ? sig.map(x=>`- ${x.label} : ${x.detail}`).join('\n')+'\n' : `Aucun signal faible détecté ; la situation paraît stable.\n`;
+  if (inc.length) out += `- ${inc.length} incident(s) enregistré(s) sur l'ensemble de l'accompagnement.\n`;
+  out += `\n## 6. Préconisations et objectifs à venir\n`;
+  out += `Poursuivre l'accompagnement éducatif en s'appuyant sur les axes du projet personnalisé. `;
+  out += sig.some(x=>x.level==='alert') ? `Une attention particulière est requise sur les points de vigilance signalés ci-dessus.\n` : `Maintenir la dynamique engagée et réévaluer les objectifs lors de la prochaine réunion de projet.\n`;
+  return out;
+}
+
+// Mini-rendu markdown → HTML (titres ##, listes -, gras **)
+function mdToHtml(md) {
+  const esc = t => escHtml(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const lines = String(md).replace(/```/g,'').split('\n');
+  let html = '', inList = false;
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  lines.forEach(raw => {
+    const line = raw.trimEnd();
+    if (/^#{1,3}\s+/.test(line)) { closeList(); const t = line.replace(/^#{1,3}\s+/, ''); html += `<h4 style="margin:1rem 0 .4rem;color:var(--primary);font-size:.95rem">${esc(t)}</h4>`; }
+    else if (/^[-*]\s+/.test(line)) { if (!inList) { html += '<ul style="margin:.2rem 0 .6rem 1.1rem;display:flex;flex-direction:column;gap:.2rem">'; inList = true; } html += `<li>${esc(line.replace(/^[-*]\s+/, ''))}</li>`; }
+    else if (line === '') { closeList(); }
+    else { closeList(); html += `<p style="margin:.3rem 0">${esc(line)}</p>`; }
+  });
+  closeList();
+  return html;
+}
+
+function copierBilan() {
+  if (!_lastBilanText) return;
+  navigator.clipboard?.writeText(_lastBilanText).then(
+    () => toast('Bilan copié dans le presse-papier', 'success'),
+    () => toast('Impossible de copier', 'error')
+  );
+}
+
+function imprimerBilan() {
+  const r = getResident();
+  const name = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Résident';
+  const w = window.open('', '_blank');
+  if (!w) { toast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Bilan de synthèse — ${escHtml(name)}</title>
+    <style>body{font-family:Georgia,serif;max-width:760px;margin:2rem auto;padding:0 1.5rem;line-height:1.6;color:#1e293b}h1{font-size:1.4rem;border-bottom:2px solid #0f2b4a;padding-bottom:.4rem}h4{color:#0f2b4a;margin:1.1rem 0 .3rem}ul{margin:.3rem 0 .6rem 1.2rem}.meta{color:#64748b;font-size:.85rem;margin-bottom:1.5rem}</style>
+    </head><body><h1>Bilan de synthèse</h1><div class="meta">${escHtml(name)} · Édité le ${formatDate(today())}</div>${mdToHtml(_lastBilanText)}
+    <script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
 function renderDataCards(r) {
   const journal = DB.get(DB.keys.journal) || [];
   const planning = DB.get(DB.keys.planning) || [];
@@ -324,14 +1498,18 @@ function renderDataCards(r) {
   const now = new Date();
   const rEvents = planning.filter(e => String(e.residentId) === String(currentResidentId) || e.residentName === `${r.prenom||''} ${r.nom||''}`);
   const upcomingEvents = rEvents.filter(e => { const start = new Date(e.date + 'T' + (e.time||'09:00')); return start.getTime() > now.getTime() - 3600000; }).sort((a,b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'')).slice(0,5);
-  const rJournal = journal.filter(e => String(e.residentId) === String(currentResidentId) || e.resident === `${r.prenom||''} ${r.nom||''}`).slice(-5).reverse();
+  const _sess = Auth.getSession();
+  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
+  const rJournal = journal.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === `${r.prenom||''} ${r.nom||''}`) && _canConf(e)).slice(-5).reverse();
   const rIncidents = incidents.filter(e => String(e.residentId) === String(currentResidentId)).slice(-5).reverse();
   const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
+  const canSeeIncidents = _sess && typeof canViewAllIncidents === 'function' && canViewAllIncidents(_sess.userId);
+  const incidentsCardHtml = !canSeeIncidents ? '' : `<div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="card-title">Incidents récents</span><a href="incidents.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rIncidents.length ? rIncidents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.type||'Incident')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${escHtml(e.description||'').slice(0,80)}</div></div><span class="badge ${e.gravite === 'grave' ? 'badge-red' : e.gravite === 'modere' ? 'badge-amber' : 'badge-green'}">${e.gravite||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun incident</p></div>'}</div></div>`;
   return `<div class="grid grid-2" style="gap:1.5rem;margin-bottom:1rem">
     <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="card-title">Événements à venir</span><a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${upcomingEvents.length ? upcomingEvents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.titre||'Événement')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${e.time ? e.time.slice(0,5) : '—'}${e.timeEnd ? ' → '+e.timeEnd.slice(0,5) : ''}</div></div><span class="badge">${e.type||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun événement planifié</p></div>'}</div></div>
     <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="card-title">Journal de bord</span><a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rJournal.length ? rJournal.map(e => { const cat = categories.find(c=>String(c.id)===String(e.categorie)); return `<div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}<span style="font-size:.72rem;color:var(--muted)">${formatDateTime(e.date)}</span></div><div style="font-size:.8rem;color:var(--g700)">${escHtml(e.contenu||'')}</div></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucune entrée journal</p></div>'}</div></div>
     <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="card-title">Avenants (PPE)</span><a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rPpe.length ? rPpe.map(p => { const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0); return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html?id=${p.id}'"><div style="font-weight:600;font-size:.875rem">${escHtml(p.dateRedaction||'?')}</div><div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs</div></div><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucun avenant actif</p></div>'}</div></div>
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="card-title">Incidents récents</span><a href="incidents.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rIncidents.length ? rIncidents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.type||'Incident')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${escHtml(e.description||'').slice(0,80)}</div></div><span class="badge ${e.gravite === 'grave' ? 'badge-red' : e.gravite === 'modere' ? 'badge-amber' : 'badge-green'}">${e.gravite||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun incident</p></div>'}</div></div>
+    ${incidentsCardHtml}
   </div>`;
 }
 
@@ -448,12 +1626,30 @@ function deleteDocFromPage(docId, resId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!requireModule('view_residents')) return;
   loadResident();
 });
 
 function printResident() {
   const r = getResident();
   const name = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Résident';
+  const settings = DB.get(DB.keys.settings) || {};
+
+  // Peupler l'en-tête d'impression
+  const phEtab = document.getElementById('phEtab');
+  const phTitle = document.getElementById('phTitle');
+  const phMeta  = document.getElementById('phMeta');
+  if (phEtab) phEtab.textContent = settings.etablissement || 'Foyer d\'Hébergement';
+  if (phTitle) phTitle.textContent = `Fiche résident — ${name}`;
+  if (phMeta) {
+    const parts = [];
+    if (r?.dob) parts.push(`Né(e) le ${new Date(r.dob).toLocaleDateString('fr-FR')}`);
+    if (r?.chambre) parts.push(`Chambre ${r.chambre}`);
+    if (r?.entree) parts.push(`Entrée le ${new Date(r.entree).toLocaleDateString('fr-FR')}`);
+    parts.push(`Imprimé le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
+    phMeta.textContent = parts.join(' · ');
+  }
+
   document.title = `Fiche — ${name}`;
   window.print();
   document.title = 'Fiche résident — FTR';

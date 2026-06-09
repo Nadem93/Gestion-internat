@@ -126,5 +126,5 @@ function deleteContact() {
 
 
 
-document.addEventListener('DOMContentLoaded', renderContacts);
+document.addEventListener('DOMContentLoaded', () => { if (requireModule('access_repertoire')) renderContacts(); });
 if (typeof registerPageInit === 'function') registerPageInit('repertoire', renderContacts);

@@ -72,6 +72,7 @@
       </div>
       <button type="submit" class="lc-btn">Se connecter</button>
       <div id="loginError" class="lc-error">Identifiant ou mot de passe incorrect.</div>
+      <div id="lockInfo" style="display:none;margin-top:.6rem;font-size:.8rem;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:.5rem .7rem;text-align:center">🔒 Session fermée après 15 min d'inactivité. Reconnectez-vous.</div>
     </form>
   </div>
 
@@ -82,12 +83,16 @@
 <script>
   initDefaults();
   if (Auth.getSession()) window.location.href = 'app.html';
+  if (sessionStorage.getItem('ftr_lock_reason') === 'idle') {
+    const li = document.getElementById('lockInfo'); if (li) li.style.display = 'block';
+    sessionStorage.removeItem('ftr_lock_reason');
+  }
 
-  document.getElementById('loginForm').addEventListener('submit', e => {
+  document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const username = document.getElementById('login').value;
     const password = document.getElementById('pw').value;
-    if (Auth.login(username, password)) {
+    if (await Auth.login(username, password)) {
       window.location.href = 'app.html';
     } else {
       document.getElementById('loginError').style.display = 'block';

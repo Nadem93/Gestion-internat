@@ -1,17 +1,38 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Accueil — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
+    .accueil-home-grid{grid-auto-rows:1fr}
+    .accueil-home-card{position:relative;isolation:isolate}
+    /* Halo radial qui suit la souris */
+    .accueil-home-card::before{
+      content:'';position:absolute;inset:0;border-radius:inherit;z-index:0;
+      background:radial-gradient(circle 150px at var(--mx,50%) var(--my,50%),
+        color-mix(in srgb, var(--c,#4f46e5) 38%, transparent) 0%, transparent 68%);
+      opacity:0;transition:opacity .35s ease;pointer-events:none;
+      filter:blur(8px);
+    }
+    .accueil-home-card:hover::before{opacity:1}
+    .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
+    .notif-badge{z-index:10}
+    /* Recherche globale */
+    .srch-grp{margin-bottom:.75rem}
+    .srch-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.2rem .2rem .35rem}
+    #searchGlobalResults a:hover{background:var(--g50)}
+  </style>
 </head>
 <body>
 <script src="js/app.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
-if (Auth.getSession()?.role !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
 </script>
 
 <!-- ── SÉLECTION ÉTABLISSEMENT ── -->
@@ -35,27 +56,35 @@ if (Auth.getSession()?.role !== 'admin') document.querySelectorAll('.admin-only'
   </header>
   <main class="accueil-home-main">
     <div class="accueil-home-grid">
-      <a href="dashboard.html" class="accueil-home-card" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e510,#818cf808)"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="accueil-home-label">Tableau de bord</span></a>
-      <a href="residents.html" class="accueil-home-card" style="--c:#0891b2;background:linear-gradient(135deg,#0891b210,#22d3ee08)"><span class="accueil-home-icon" style="background:#0891b220;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Résidents</span></a>
-      <a href="journal.html" class="accueil-home-card" data-module="journal" style="--c:#059669;background:linear-gradient(135deg,#05966910,#34d39908)"><span class="accueil-home-icon" style="background:#05966920;color:#059669"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="accueil-home-label">Journal de bord</span><span class="notif-badge hidden">0</span></a>
-      <a href="ppe.html" class="accueil-home-card" data-module="ppe" style="--c:#dc2626;background:linear-gradient(135deg,#dc262610,#f8717108)"><span class="accueil-home-icon" style="background:#dc262620;color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="accueil-home-label">Avenants</span><span class="notif-badge hidden">0</span></a>
-      <a href="documents.html" class="accueil-home-card" style="--c:#8b5cf6;background:linear-gradient(135deg,#8b5cf610,#a78bfa08)"><span class="accueil-home-icon" style="background:#8b5cf620;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span><span class="accueil-home-label">Documents</span></a>
-      <a href="planning.html" class="accueil-home-card" style="--c:#d97706;background:linear-gradient(135deg,#d9770610,#fbbf2408)"><span class="accueil-home-icon" style="background:#d9770620;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="accueil-home-label">Planning</span></a>
-      <a href="presences.html" class="accueil-home-card" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a10,#4ade8008)"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="accueil-home-label">Présences</span></a>
-      <a href="messages.html" class="accueil-home-card" data-module="messages" style="--c:#0284c7;background:linear-gradient(135deg,#0284c710,#38bdf808)"><span class="accueil-home-icon" style="background:#0284c720;color:#0284c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span><span class="accueil-home-label">Messages</span><span class="notif-badge hidden">0</span></a>
-      <a href="repertoire.html" class="accueil-home-card" style="--c:#7c3aed;background:linear-gradient(135deg,#7c3aed10,#a78bfa08)"><span class="accueil-home-icon" style="background:#7c3aed20;color:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="accueil-home-label">Répertoire</span></a>
-      <a href="interventions.html" class="accueil-home-card admin-only" style="--c:#0d9488;background:linear-gradient(135deg,#0d948810,#2dd4bf08)"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
-      <a href="admin-modules.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c10,#a8a29e08)"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
-      <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a10,#1e3a5f08)"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
+      <a href="dashboard.html" class="accueil-home-card" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="accueil-home-label">Tableau de bord</span></a>
+      <a href="residents.html" class="accueil-home-card" style="--c:#0891b2;background:linear-gradient(135deg,#0891b218,#22d3ee12),#fff"><span class="accueil-home-icon" style="background:#0891b220;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Résidents</span></a>
+      <a href="journal.html" class="accueil-home-card" data-module="journal" style="--c:#059669;background:linear-gradient(135deg,#05966918,#34d39912),#fff"><span class="accueil-home-icon" style="background:#05966920;color:#059669"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="accueil-home-label">Journal de bord</span><span class="notif-badge hidden">0</span></a>
+      <a href="ppe.html" class="accueil-home-card" data-module="ppe" style="--c:#dc2626;background:linear-gradient(135deg,#dc262618,#f8717112),#fff"><span class="accueil-home-icon" style="background:#dc262620;color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="accueil-home-label">Avenants</span><span class="notif-badge hidden">0</span></a>
+      <a href="documents.html" class="accueil-home-card" style="--c:#8b5cf6;background:linear-gradient(135deg,#8b5cf618,#a78bfa12),#fff"><span class="accueil-home-icon" style="background:#8b5cf620;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span><span class="accueil-home-label">Documents</span></a>
+      <a href="planning.html" class="accueil-home-card" style="--c:#d97706;background:linear-gradient(135deg,#d9770618,#fbbf2412),#fff"><span class="accueil-home-icon" style="background:#d9770620;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="accueil-home-label">Planning</span></a>
+      <a href="presences.html" class="accueil-home-card" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="accueil-home-label">Présences</span></a>
+      <a href="messages.html" class="accueil-home-card" data-module="messages" style="--c:#0284c7;background:linear-gradient(135deg,#0284c718,#38bdf812),#fff"><span class="accueil-home-icon" style="background:#0284c720;color:#0284c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span><span class="accueil-home-label">Messages</span><span class="notif-badge hidden">0</span></a>
+      <a href="repertoire.html" class="accueil-home-card" style="--c:#7c3aed;background:linear-gradient(135deg,#7c3aed18,#a78bfa12),#fff"><span class="accueil-home-icon" style="background:#7c3aed20;color:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="accueil-home-label">Répertoire</span></a>
+      <a href="#" onclick="openSearch();return false" class="accueil-home-card" style="--c:#0ea5e9;background:linear-gradient(135deg,#0ea5e918,#7dd3fc12),#fff"><span class="accueil-home-icon" style="background:#0ea5e920;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="accueil-home-label">Recherche</span></a>
+      <a href="notes.html" class="accueil-home-card" style="--c:#f59e0b;background:linear-gradient(135deg,#f59e0b18,#fcd34d12),#fff"><span class="accueil-home-icon" style="background:#f59e0b20;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span><span class="accueil-home-label">Notes rapides</span></a>
+      <a href="aide.html" class="accueil-home-card" style="--c:#14b8a6;background:linear-gradient(135deg,#14b8a618,#5eead412),#fff"><span class="accueil-home-icon" style="background:#14b8a620;color:#14b8a6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="accueil-home-label">Aide</span></a>
+      <a href="interventions.html" class="accueil-home-card admin-only" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
+      <a href="admin-modules.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
+      <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
+      <a href="console.html" class="accueil-home-card superadmin-only" style="--c:#a16207;background:linear-gradient(135deg,#a1620718,#eab30812),#fff"><span class="accueil-home-icon" style="background:#a1620720;color:#a16207"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg></span><span class="accueil-home-label">Console groupe</span></a>
     </div>
   </main>
 </div><!-- /mainAccueilView -->
 
 <div class="accueil-fab-stack">
+  <div class="accueil-fab" onclick="openModal('modalIntervention')" title="Demander une intervention" style="background:#0d9488">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+  </div>
+
   <div class="accueil-fab" data-module="incidents" onclick="var _s=Auth.getSession();localStorage.setItem('ftr_last_visit_incidents_'+_s.userId,Date.now());if(_s?.role==='admin'){location.href='incidents.html'}else{openModal('modalIncident')}" title="Signaler un incident" style="background:#e11d48">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></svg>
   </div>
-  
+
   <a href="vehicules.html" class="accueil-fab" title="Gérer les véhicules" style="background:#6366f1;text-decoration:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg>
   </a>
@@ -187,7 +216,64 @@ if (Auth.getSession()?.role !== 'admin') document.querySelectorAll('.admin-only'
   </div>
 </div>
 
+<!-- ── RECHERCHE GLOBALE ── -->
+<div class="modal-overlay" id="modalSearch" onclick="closeModal('modalSearch')">
+  <div class="modal" style="max-width:640px;align-self:flex-start;margin-top:8vh" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">🔍 Recherche globale</span>
+      <button class="modal-close" onclick="closeModal('modalSearch')">&times;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <input type="text" id="searchGlobalInput" class="form-control" placeholder="Rechercher un résident, une note, un document…" oninput="runGlobalSearch()" autocomplete="off"/>
+      <div id="searchGlobalResults" style="max-height:55vh;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── RECHERCHE GLOBALE ──
+function openSearch() {
+  openModal('modalSearch');
+  setTimeout(() => { const i = document.getElementById('searchGlobalInput'); if (i) { i.value = ''; i.focus(); } runGlobalSearch(); }, 60);
+}
+function runGlobalSearch() {
+  const q = (document.getElementById('searchGlobalInput').value || '').trim().toLowerCase();
+  const box = document.getElementById('searchGlobalResults');
+  if (q.length < 2) { box.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Tapez au moins 2 caractères…</div>'; return; }
+  const _sess = Auth.getSession();
+  const groups = [];
+  const item = (icon, title, sub, href) => `<a href="${href}" style="display:flex;gap:.7rem;align-items:center;padding:.55rem .7rem;border-radius:var(--r-sm);text-decoration:none;color:inherit;border-bottom:1px solid var(--border)"><span style="font-size:1.05rem">${icon}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${title}</div><div style="font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div></div></a>`;
+
+  // Résidents
+  const residents = DB.get(DB.keys.residents) || [];
+  const rMatch = residents.filter(r => `${r.prenom||''} ${r.nom||''} ${r.chambre||''}`.toLowerCase().includes(q)).slice(0, 8);
+  if (rMatch.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Résidents (${rMatch.length})</div>${rMatch.map(r => item('👤', escHtml(`${r.prenom||''} ${r.nom||''}`.trim()), (r.chambre?'Chambre '+escHtml(r.chambre):'')+(r.referent?' · '+escHtml(r.referent):''), 'resident.html?id='+r.id)).join('')}</div>`);
+
+  // Journal (confidentialité respectée)
+  const journal = (DB.get(DB.keys.journal) || []).filter(e => (e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId)) && (e.contenu||'').toLowerCase().includes(q)).slice(-8).reverse();
+  if (journal.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Journal (${journal.length})</div>${journal.map(e => item('📔', escHtml((e.resident||'Note')), escHtml((e.contenu||'').slice(0,80)), 'journal.html')).join('')}</div>`);
+
+  // Documents
+  const docsMap = DB.get(DB.keys.documents) || {};
+  const docHits = [];
+  Object.entries(docsMap).forEach(([rid, docs]) => (docs||[]).forEach(d => { if ((d.name||'').toLowerCase().includes(q)) { const r = residents.find(x => String(x.id)===String(rid)); docHits.push(item('📎', escHtml(d.name), r?`${r.prenom||''} ${r.nom||''}`.trim():'Document', 'documents.html?residentId='+rid)); } }));
+  if (docHits.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Documents (${docHits.length})</div>${docHits.slice(0,8).join('')}</div>`);
+
+  // Planning
+  const plan = (DB.get(DB.keys.planning) || []).filter(e => `${e.titre||''} ${e.desc||''} ${e.destination||''}`.toLowerCase().includes(q)).slice(0, 6);
+  if (plan.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Planning (${plan.length})</div>${plan.map(e => item('📅', escHtml(e.titre||'Événement'), escHtml(e.date||''), 'planning.html')).join('')}</div>`);
+
+  // Répertoire
+  const rep = (DB.get(DB.keys.repertoire) || []).filter(c => `${c.nom||''} ${c.organisme||''} ${c.fonction||''}`.toLowerCase().includes(q)).slice(0, 6);
+  if (rep.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Répertoire (${rep.length})</div>${rep.map(c => item('📇', escHtml(c.nom||c.organisme||'Contact'), escHtml([c.fonction,c.organisme].filter(Boolean).join(' · ')), 'repertoire.html')).join('')}</div>`);
+
+  box.innerHTML = groups.length ? groups.join('') : '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Aucun résultat pour « ' + escHtml(q) + ' »</div>';
+}
+// Raccourci clavier Ctrl/⌘ + K
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
+});
+
 function loadChambres() {
   const r = DB.get(DB.keys.residents) || [];
   const chambres = [...new Set(r.map(x => x.chambre).filter(Boolean))].sort();
@@ -236,12 +322,15 @@ function saveIncidentAccueil() {
   const residents = DB.get(DB.keys.residents) || [];
   const resident = residents.find(r => r.id === residentId);
   const session = Auth.getSession();
-  const list = JSON.parse(localStorage.getItem('ftr_incidents') || '[]');
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
+  const list = DB.get(DB.keys.incidents) || [];
   list.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
     titre, type, gravite, date, heure,
     residentId: residentId || null,
     residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
+    etabId: etab ? etab.id : null,
+    etabNom: etab ? etab.nom : '',
     lieu, description,
     statut: 'declare',
     declaredBy: session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
@@ -251,7 +340,7 @@ function saveIncidentAccueil() {
     notes: '',
     createdAt: new Date().toISOString()
   });
-  localStorage.setItem('ftr_incidents', JSON.stringify(list));
+  DB.set(DB.keys.incidents, list);
   closeModal('modalIncident');
   document.getElementById('fTitre').value = '';
   document.getElementById('fDescription').value = '';
@@ -411,6 +500,20 @@ function showMainAccueil() {
   applyTerminology();
   applyEtabBackground();
 }
+
+// ── Suivi du curseur pour la lueur des cartes ──
+function bindGlowCards() {
+  document.querySelectorAll('.accueil-home-card').forEach(card => {
+    if (card._glowBound) return;
+    card._glowBound = true;
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+}
+document.addEventListener('DOMContentLoaded', bindGlowCards);
 
 // Init : si un seul étab ou déjà sélectionné → direct
 (function() {

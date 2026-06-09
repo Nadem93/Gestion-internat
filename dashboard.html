@@ -1,10 +1,21 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Tableau de bord — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    .mini-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.5rem}
+    .mini-card{display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:inherit;background:#f1f5f9;border:1px solid rgba(15,43,74,.08);border-radius:14px;padding:1rem 1.15rem;box-shadow:0 1px 3px rgba(15,43,74,.06);transition:box-shadow .2s,transform .2s;min-width:0;min-height:96px}
+    a.mini-card:hover{box-shadow:0 6px 16px rgba(15,43,74,.1);transform:translateY(-2px)}
+    .mini-card .mc-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:flex;align-items:center;gap:.4rem}
+    .mini-card .mc-label svg{width:16px;height:16px;flex-shrink:0}
+    .mini-card .mc-val{font-size:1.7rem;font-weight:800;color:var(--primary);line-height:1.1;margin-top:.35rem}
+    .mini-card .mc-sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
+    .mini-card .mc-alert{margin-top:.45rem;padding:.25rem .5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:7px;font-size:.7rem;font-weight:600;text-align:center}
+    @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -23,79 +34,33 @@
 
     <main class="content">
 
-      <!-- STATS -->
-      <div class="grid grid-auto" style="margin-bottom:1.5rem" id="statsGrid">
-        <a href="planning.html" class="stat-card" id="statEventCard" style="cursor:pointer;text-decoration:none;color:inherit;background:linear-gradient(135deg,#ef444425,#fca5a515)" title="Voir le planning">
-          <div class="stat-card-top"><span class="stat-label">Événements à venir</span><div class="stat-icon" style="background:#fef3f2;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
-          <div id="statEventList" style="width:100%">
-            <div style="font-size:.82rem;font-weight:700;color:var(--g800);margin:.25rem 0 .1rem">Aucun événement</div>
-          </div>
+      <!-- MINI CARTES -->
+      <div class="mini-cards" id="miniCards">
+        <a href="planning.html" class="mini-card" id="miniEventCard" title="Voir le planning">
+          <div class="mc-label" style="color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Événements à venir</div>
+          <div class="mc-val" id="miniEventVal">0</div>
+          <div class="mc-sub" id="miniEventSub">Aujourd'hui</div>
         </a>
-        <div class="stat-card" id="presenceStatCard" style="background:linear-gradient(135deg,#10b98125,#34d39915)">
-          <div class="stat-card-top"><span class="stat-label">Présents aujourd'hui</span><div class="stat-icon green" id="presenceStatIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div>
-          <div class="stat-num" id="statPresents">0</div>
-          <div class="stat-change" id="presenceStatLabel">Présences enregistrées</div>
-          <div id="presenceAlert" style="display:none;margin-top:.4rem;padding:.3rem .6rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:var(--r-sm);font-size:.72rem;font-weight:600;text-align:center;cursor:pointer" onclick="window.location='presences.html'">⚠ Présences non saisies — Cliquez pour saisir</div>
+        <div class="mini-card" id="miniPresenceCard">
+          <div class="mc-label" style="color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Présents aujourd'hui</div>
+          <div class="mc-val" id="miniPresentsVal">0</div>
+          <div class="mc-sub" id="miniPresentsSub">Présences enregistrées</div>
+          <div class="mc-alert" id="miniPresenceAlert" style="display:none;cursor:pointer" onclick="window.location='presences.html'">⚠ Présences non saisies</div>
         </div>
-        <div class="stat-card" id="statJournalCard" style="background:linear-gradient(135deg,#e85d0425,#fb923c15)">
-          <div class="stat-card-top"><span class="stat-label">Entrées journal</span><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div></div>
-          <div class="stat-num" id="statJournal">0</div>
-          <div class="stat-change">Aujourd'hui</div>
-        </div>
-
-        <a href="incidents.html" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit;background:linear-gradient(135deg,#dc262625,#f8717115)" title="Incidents non traités" id="statIncidentCard">
-          <div class="stat-card-top"><span class="stat-label">Incidents non traités</span><div class="stat-icon" style="background:#fef2f2;color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
-          <div class="stat-value" id="statIncidentInfo">0</div>
-          <div class="stat-detail" id="statIncidentDetail">Incidents en cours</div>
+        <a href="residents.html" class="mini-card" id="miniAnnivCard" title="Anniversaires du mois">
+          <div class="mc-label" style="color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Anniversaires du mois</div>
+          <div class="mc-val" id="miniAnnivVal" style="font-size:1.25rem">—</div>
+          <div class="mc-sub" id="miniAnnivSub">Ce mois-ci</div>
         </a>
-
-
-        <a href="vehicules.html" class="stat-card" id="statVehiculeCard" style="cursor:pointer;text-decoration:none;color:inherit;background:linear-gradient(135deg,#6366f125,#a5b4fc15)" title="Réserver un véhicule">
-          <div class="stat-card-top"><span class="stat-label">Véhicules</span><div class="stat-icon" style="background:#eef2ff;color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg></div></div>
-          <div id="statVehiculeList" style="width:100%">
-            <div style="font-size:.82rem;font-weight:700;color:var(--g800);margin:.25rem 0 .1rem">Aucune réservation</div>
-          </div>
+        <a href="vehicules.html" class="mini-card" id="miniVehCard" title="Réservations véhicules du jour">
+          <div class="mc-label" style="color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg>Véhicules du jour</div>
+          <div class="mc-val" id="miniVehVal">0</div>
+          <div class="mc-sub" id="miniVehSub">Réservés aujourd'hui</div>
         </a>
-
-        <a href="residents.html" class="stat-card" id="statAnnivCard" style="cursor:pointer;text-decoration:none;color:inherit;background:linear-gradient(135deg,#ec489925,#f9a8d415)" title="Anniversaires du mois">
-          <div class="stat-card-top"><span class="stat-label">Anniversaires du mois</span><div class="stat-icon" style="background:#fdf2f8;color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
-          <div style="font-size:.9rem;font-weight:700;color:var(--g800);margin:.25rem 0 .1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="statAnnivInfo">Aucun</div>
-          <div style="font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="statAnnivDetail">Anniversaires ce mois-ci</div>
-        </a>
-      </div>
-
-      <div class="grid grid-2" style="gap:1.5rem">
-
-        <!-- DERNIÈRES ENTRÉES JOURNAL -->
-        <div class="card" id="dashCardJournal">
-          <div class="card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span class="card-title">Journal de bord</span>
-            <a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a>
-          </div>
-          <div class="card-body" style="padding:0">
-            <div id="recentJournal">
-              <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>Aucune entrée aujourd'hui</p><a href="journal.html" class="btn btn-outline btn-sm">Ajouter une entrée</a></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- AVENANTS RÉCENTS -->
-        <div class="card" id="dashCardAvenants">
-          <div class="card-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <span class="card-title">Avenants récents</span>
-            <a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a>
-          </div>
-          <div class="card-body" style="padding:0" id="dashboardAvenants">
-            <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div><p>Aucun avenant</p><a href="ppe.html" class="btn btn-outline btn-sm">Créer un avenant</a></div>
-          </div>
-        </div>
-
       </div>
 
       <!-- CARTES SUPPLÉMENTAIRES -->
-      <div class="grid grid-3" style="gap:1.5rem;margin-top:1.5rem">
+      <div class="grid grid-3" style="gap:1.5rem">
 
         <!-- RÉSIDENTS SANS AVENANT -->
         <div class="card" id="dashCardSansAvenant">
@@ -129,6 +94,120 @@
           </div>
           <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto" id="dashboardRepertoire">
             <div class="empty" style="padding:1.5rem"><p>Aucun contact</p></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- JOURNAL + AVENANTS -->
+      <div class="grid grid-2" style="gap:1.5rem;margin-top:1.5rem">
+
+        <!-- DERNIÈRES ENTRÉES JOURNAL -->
+        <div class="card" id="dashCardJournal">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span class="card-title">Journal de bord</span>
+            <a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div id="recentJournal">
+              <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>Aucune entrée aujourd'hui</p><a href="journal.html" class="btn btn-outline btn-sm">Ajouter une entrée</a></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AVENANTS RÉCENTS -->
+        <div class="card" id="dashCardAvenants">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span class="card-title">Avenants récents</span>
+            <a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a>
+          </div>
+          <div class="card-body" style="padding:0" id="dashboardAvenants">
+            <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div><p>Aucun avenant</p><a href="ppe.html" class="btn btn-outline btn-sm">Créer un avenant</a></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUIVI RÉSIDENTS (données des fiches) -->
+      <div class="section-label" style="margin:1.75rem 0 .25rem;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)" id="dashSuiviLabel">Suivi des résidents</div>
+      <div class="grid grid-2" style="gap:1.5rem;margin-top:.75rem" id="dashSuiviSection">
+
+        <!-- RDV MÉDICAUX À VENIR -->
+        <div class="card" id="dashCardRdv">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+            <span class="card-title">RDV médicaux à venir</span>
+            <span class="badge badge-gray" id="dashRdvCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashRdvMedicaux">
+            <div class="empty" style="padding:1.5rem"><p>Aucun RDV à venir</p></div>
+          </div>
+        </div>
+
+        <!-- RÉSIDENTS ACTUELLEMENT SORTIS -->
+        <div class="card" id="dashCardSorties">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0d9488"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            <span class="card-title">Résidents actuellement sortis</span>
+            <span class="badge badge-gray" id="dashSortiesCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSorties">
+            <div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>
+          </div>
+        </div>
+
+        <!-- SOLDES BUDGET NÉGATIFS -->
+        <div class="card" id="dashCardSoldes">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#dc2626"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span class="card-title">Soldes budget négatifs</span>
+            <span class="badge badge-gray" id="dashSoldesCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSoldes">
+            <div class="empty" style="padding:1.5rem"><p>Aucun solde négatif</p></div>
+          </div>
+        </div>
+
+        <!-- RAPPELS VACCINS -->
+        <div class="card" id="dashCardVaccins">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#9333ea"><path d="M18 2l4 4M17 7l-9 9-4 1 1-4 9-9zM13.5 6.5l4 4"/></svg>
+            <span class="card-title">Rappels de vaccins à faire</span>
+            <span class="badge badge-gray" id="dashVaccinsCount" style="margin-left:auto;display:none">0</span>
+          </div>
+          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashVaccins">
+            <div class="empty" style="padding:1.5rem"><p>Aucun rappel en retard</p></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STATISTIQUES VISUELLES -->
+      <div class="grid grid-2" style="gap:1.5rem;margin-top:1.5rem" id="dashStatsSection">
+
+        <!-- Présences 7 jours -->
+        <div class="card" id="dashCardPresenceChart">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--green)"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span class="card-title">Présences — 7 derniers jours</span>
+          </div>
+          <div class="card-body">
+            <div id="chartPresences" style="display:flex;align-items:flex-end;gap:.5rem;height:150px;margin-bottom:.6rem"></div>
+            <div id="chartPresencesLegend" style="font-size:.7rem;color:var(--muted);text-align:center"></div>
+          </div>
+        </div>
+
+        <!-- Incidents par statut -->
+        <div class="card" id="dashCardIncidentChart">
+          <div class="card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#dc2626"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="card-title">Incidents — répartition</span>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.6rem">
+            <div id="chartIncidents"></div>
+            <div id="chartIncidentsCats" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem"></div>
           </div>
         </div>
 
@@ -258,7 +337,7 @@
 
   function wizardBack() { if (wizardStep > 0) wizardGoTo(wizardStep - 1); }
 
-  function wizardNext() {
+  async function wizardNext() {
     if (wizardStep === 0) {
       const etab = document.getElementById('wEtab').value.trim();
       if (!etab) { toast('Le nom de l\'établissement est requis', 'error'); return; }
@@ -292,7 +371,8 @@
       const nom    = document.getElementById('wNom').value.trim();
       const session = Auth.getSession();
       let users = DB.get(DB.keys.users) || [];
-      users = users.map(u => u.id === session.userId ? { ...u, prenom, nom, username, password } : u);
+      const _pwdHash = await hashPassword(password);
+      users = users.map(u => u.id === session.userId ? { ...u, prenom, nom, username, password: _pwdHash } : u);
       DB.set(DB.keys.users, users);
       DB.set(DB.keys.session, { ...session, prenom, nom, username });
       DB.set(DB.keys.user, { prenom, nom, role: 'Administrateur' });
@@ -319,136 +399,48 @@
 
   function renderDashboard() {
     const s = getStats();
-    // Événements à venir (≤ 2h, hors véhicules)
     const planning = DB.get(DB.keys.planning) || [];
     const now = new Date();
     const todayStr = now.toISOString().slice(0,10);
-    const eventList = document.getElementById('statEventList');
-    const upcomingEvents = planning
-      .filter(e => e.type !== 'vehicule')
-      .filter(e => {
-        const start = new Date(e.date + 'T' + (e.time || '00:00'));
-        const end = e.timeEnd ? new Date(e.date + 'T' + e.timeEnd) : new Date(start.getTime() + 3600000);
-        const diffStart = start.getTime() - now.getTime();
-        const diffEnd = end.getTime() - now.getTime();
-        return (diffStart > 0 && diffStart <= 7200000) || (diffStart <= 0 && diffEnd > 0);
-      })
-      .sort((a,b) => (a.date + 'T' + (a.time||'00:00')).localeCompare(b.date + 'T' + (b.time||'00:00')));
-    if (upcomingEvents.length) {
-      eventList.innerHTML = upcomingEvents.slice(0, 5).map(e => {
-        const creneau = e.time ? (e.timeEnd ? `${e.time.slice(0,5)}→${e.timeEnd.slice(0,5)}` : e.time.slice(0,5)) : '';
-        const nom = e.residentName || e.titre || '?';
-        return `<div style="display:flex;align-items:center;gap:.5rem;padding:3px 0;font-size:.78rem;border-bottom:1px solid var(--border)">
-          <span style="font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(nom)}</span>
-          <span style="color:var(--muted);font-size:.7rem">${creneau}</span>
-        </div>`;
-      }).join('');
-    } else {
-      eventList.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Aucun événement dans les 2h</div>';
-    }
-    document.getElementById('statPresents').textContent = s.presentsToday;
-    // Alert if presences not fully completed for today
     const allResidents = (DB.get(DB.keys.residents)||[]).filter(r => r.statut !== 'sorti');
-    const todayPresences = (DB.get(DB.keys.presences)||{})[todayStr] || {};
-    const markedCount = allResidents.filter(r => todayPresences[r.id]).length;
-    const alertEl = document.getElementById('presenceAlert');
-    const labelEl = document.getElementById('presenceStatLabel');
-    const iconEl = document.getElementById('presenceStatIcon');
-    const cardEl = document.getElementById('presenceStatCard');
+
+    // ── MINI CARTES ──
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    // Événements à venir (à partir de maintenant, hors véhicules)
+    const upcomingEv = planning.filter(e => e.type !== 'vehicule')
+      .map(e => ({ e, start: new Date(e.date + 'T' + (e.time || '00:00')).getTime() }))
+      .filter(x => x.start >= now.getTime())
+      .sort((a, b) => a.start - b.start);
+    setText('miniEventVal', upcomingEv.length);
+    const nextEv = upcomingEv[0] && upcomingEv[0].e;
+    setText('miniEventSub', nextEv ? (formatDate(nextEv.date) + (nextEv.time ? ' ' + nextEv.time.slice(0,5) : '') + ' · ' + (nextEv.residentName || nextEv.titre || '')) : 'Aucun à venir');
+    // Présents aujourd'hui + alerte saisie
+    setText('miniPresentsVal', s.presentsToday);
+    const todayPres = (DB.get(DB.keys.presences) || {})[todayStr] || {};
+    const markedCount = allResidents.filter(r => todayPres[r.id]).length;
     const incomplete = allResidents.length > 0 && markedCount < allResidents.length;
-    if (incomplete) {
-      alertEl.style.display = '';
-      labelEl.textContent = markedCount + '/' + allResidents.length + ' résidents pointés';
-      cardEl.style.border = '1.5px solid #fecaca';
-      iconEl.style.background = '#fef2f2';
-      iconEl.style.color = '#b91c1c';
-    } else {
-      alertEl.style.display = 'none';
-      labelEl.textContent = 'Présences enregistrées';
-      cardEl.style.border = '';
-      iconEl.style.background = '';
-      iconEl.style.color = '';
-    }
-    document.getElementById('statJournal').textContent = s.todayEntries;
-
-    // Incidents non traités
-    const allIncidents = DB.get(DB.keys.incidents) || [];
-    const curSession = Auth.getSession();
-    const canViewAll = curSession && (curSession.role === 'admin' || curSession.role === 'moderator' || canViewAllIncidents(curSession.userId));
-    const visibleIncidents = canViewAll ? allIncidents : allIncidents.filter(i => i.declaredById === curSession?.userId);
-    const openIncidents = visibleIncidents.filter(i => i.statut === 'declare' || i.statut === 'cours');
-    const incCard = document.getElementById('statIncidentCard');
-    const incInfo = document.getElementById('statIncidentInfo');
-    const incDetail = document.getElementById('statIncidentDetail');
-    if (!canViewAll) {
-      incCard.style.display = 'none';
-    } else {
-      incCard.style.display = '';
-      incInfo.textContent = openIncidents.length;
-      if (openIncidents.length) {
-        incDetail.textContent = `${openIncidents.length} incident${openIncidents.length>1?'s':''} non traités`;
-        incCard.style.borderLeft = '3px solid #dc2626';
-      } else {
-        incDetail.textContent = 'Aucun incident en cours';
-        incCard.style.borderLeft = '';
-      }
-    }
-
+    const pAlert = document.getElementById('miniPresenceAlert');
+    if (pAlert) pAlert.style.display = incomplete ? '' : 'none';
+    setText('miniPresentsSub', incomplete ? (markedCount + '/' + allResidents.length + ' pointés') : 'Présences enregistrées');
     // Anniversaires du mois
-    const nowDate = new Date();
-    const thisMonth = nowDate.getMonth();
-    const annivResidents = allResidents.filter(r => {
-      if (!r.dob) return false;
-      const d = new Date(r.dob);
-      return d.getMonth() === thisMonth;
-    });
-    const annivInfo = document.getElementById('statAnnivInfo');
-    const annivDetail = document.getElementById('statAnnivDetail');
-    if (annivResidents.length) {
-      if (annivResidents.length === 1) {
-        const first = annivResidents[0];
-        const dob = new Date(first.dob);
-        const dayStr = dob.toLocaleDateString('fr-FR', { day:'numeric', month:'long' });
-        annivInfo.textContent = first.prenom || '';
-        annivInfo.style.fontSize = '1.15rem';
-        annivDetail.textContent = dayStr;
-      } else {
-        const names = annivResidents.map(r => r.prenom).filter(Boolean).join(', ');
-        annivInfo.textContent = annivResidents.length + ' anniversaires';
-        annivInfo.style.fontSize = '';
-        annivDetail.textContent = names;
-      }
+    const thisMonth = now.getMonth();
+    const annivRes = allResidents.filter(r => r.dob && new Date(r.dob).getMonth() === thisMonth);
+    if (annivRes.length === 1) {
+      const f = annivRes[0];
+      setText('miniAnnivVal', f.prenom || '');
+      setText('miniAnnivSub', new Date(f.dob).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }));
+    } else if (annivRes.length > 1) {
+      setText('miniAnnivVal', annivRes.length);
+      setText('miniAnnivSub', annivRes.map(r => r.prenom).filter(Boolean).join(', '));
     } else {
-      annivInfo.textContent = 'Aucun';
-      annivInfo.style.fontSize = '';
-      annivDetail.textContent = 'Ce mois-ci';
+      setText('miniAnnivVal', 'Aucun');
+      setText('miniAnnivSub', 'Ce mois-ci');
     }
-
-    // Réservations véhicules (imminentes ou en cours)
-    const vehList = document.getElementById('statVehiculeList');
-    const vehiculeResas = planning
-      .filter(e => e.type === 'vehicule')
-      .filter(e => {
-        const start = new Date(e.date + 'T' + (e.time || '00:00'));
-        const end = e.timeEnd ? new Date(e.date + 'T' + e.timeEnd) : new Date(start.getTime() + 3600000);
-        const diffStart = start.getTime() - now.getTime();
-        const diffEnd = end.getTime() - now.getTime();
-        // Imminent (≤ 2h) ou en cours
-        return (diffStart > 0 && diffStart <= 7200000) || (diffStart <= 0 && diffEnd > 0);
-      })
-      .sort((a,b) => (a.date + 'T' + (a.time||'00:00')).localeCompare(b.date + 'T' + (b.time||'00:00')));
-    if (vehiculeResas.length) {
-      vehList.innerHTML = vehiculeResas.slice(0, 5).map(r => {
-        const dureeLabel = r.time && r.timeEnd ? `${r.time.slice(0,5)}→${r.timeEnd.slice(0,5)}` : (r.time||'');
-        return `<div style="display:flex;align-items:center;gap:.5rem;padding:2px 0;font-size:.75rem;border-bottom:1px solid var(--border)">
-          <span style="font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.vehicule||'?'}</span>
-          <span style="color:var(--muted)">${shortName(r.reservedBy)}</span>
-          <span style="color:var(--muted);white-space:nowrap;font-size:.7rem">${dureeLabel}</span>
-        </div>`;
-      }).join('');
-    } else {
-      vehList.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Aucune réservation imminente</div>';
-    }
+    // Véhicules réservés dans la journée
+    const vehToday = planning.filter(e => e.type === 'vehicule' && (e.date || '') <= todayStr && (e.dateEnd || e.date || '') >= todayStr)
+      .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    setText('miniVehVal', vehToday.length);
+    setText('miniVehSub', vehToday.length ? [...new Set(vehToday.map(v => v.vehicule).filter(Boolean))].join(', ') : 'Aucun aujourd\'hui');
 
     // Résidents sans avenant actif
     const ppeList = DB.get(DB.keys.ppe) || [];
@@ -469,14 +461,17 @@
     // Alertes échéances
     const nowDate2 = new Date();
     const alertes = [];
-    // Avenants avec révision dans < 30j
-    ppeList.filter(p => p.statut === 'actif' && p.dateRevision).forEach(p => {
+    const _aSess = Auth.getSession();
+    const _aCanPpe = _aSess?.role === 'admin' || hasPermission(_aSess?.userId, 'access_ppe');
+    const _aCanInc = _aSess?.role === 'admin' || canViewAllIncidents(_aSess?.userId);
+    // Avenants avec révision dans < 30j (réservé aux droits PPE)
+    if (_aCanPpe) ppeList.filter(p => p.statut === 'actif' && p.dateRevision).forEach(p => {
       const d = new Date(p.dateRevision + 'T00:00:00');
       const diff = Math.round((d - nowDate2) / 86400000);
       if (diff >= 0 && diff <= 30) alertes.push({ type: 'avenant', label: `Révision avenant : ${p.residentName||'?'}`, date: p.dateRevision, jours: diff });
     });
-    // Incidents non validés depuis > 7j
-    (DB.get(DB.keys.incidents)||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
+    // Incidents non validés depuis > 7j (réservé aux droits incidents)
+    if (_aCanInc) (DB.get(DB.keys.incidents)||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
       if (i.date) {
         const d = new Date(i.date + (i.heure ? 'T'+i.heure : 'T00:00:00'));
         const diff = Math.round((nowDate2 - d) / 86400000);
@@ -534,9 +529,10 @@
     }
 
     const nc = document.getElementById('navResCount');
-    if (s.totalResidents > 0) { nc.style.display=''; nc.textContent = s.totalResidents; }
+    if (nc && s.totalResidents > 0) { nc.style.display=''; nc.textContent = s.totalResidents; }
 
-    const journal = (DB.get(DB.keys.journal)||[]).slice(-5).reverse();
+    const _js = Auth.getSession();
+    const journal = (DB.get(DB.keys.journal)||[]).filter(e => e.visibilite !== 'confidentiel' || _js?.role === 'admin' || String(e.authorId) === String(_js?.userId)).slice(-5).reverse();
     const jEl = document.getElementById('recentJournal');
     const cats = DB.get(DB.keys.categories)||[];
     if (journal.length) {
@@ -555,23 +551,192 @@
         </div>`;
       }).join('');
     }
+    // ── Graphique présences 7 jours ──
+    const presencesData = DB.get(DB.keys.presences) || {};
+    const allRes = (DB.get(DB.keys.residents)||[]).filter(r => r.statut !== 'sorti');
+    const total = allRes.length || 1;
+    const days7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0,10);
+      const presDay = presencesData[key] || {};
+      const count = allRes.filter(r => presDay[r.id] === 'present').length;
+      days7.push({ key, label: d.toLocaleDateString('fr-FR',{weekday:'short'}), count, pct: Math.round(count/total*100) });
+    }
+    const maxPct = Math.max(...days7.map(d => d.pct), 1);
+    const chartEl = document.getElementById('chartPresences');
+    if (chartEl) {
+      chartEl.innerHTML = days7.map(d => {
+        const h = Math.max(4, Math.round(d.pct / maxPct * 130));
+        const isToday = d.key === now.toISOString().slice(0,10);
+        const color = d.pct >= 80 ? '#10b981' : d.pct >= 50 ? '#f59e0b' : '#ef4444';
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="font-size:.6rem;color:var(--muted);font-weight:600">${d.pct}%</div>
+          <div style="width:100%;height:${h}px;background:${color};border-radius:3px 3px 0 0;opacity:${isToday?1:.75};transition:height .3s" title="${d.label} : ${d.count}/${total}"></div>
+          <div style="font-size:.62rem;color:${isToday?'var(--accent)':'var(--muted)'};font-weight:${isToday?700:400}">${d.label}</div>
+        </div>`;
+      }).join('');
+      const avgPct = Math.round(days7.reduce((s,d)=>s+d.pct,0)/7);
+      const legEl = document.getElementById('chartPresencesLegend');
+      if (legEl) legEl.textContent = `Moyenne sur 7 jours : ${avgPct}% · ${total} résidents actifs`;
+    }
+
+    // ── Graphique incidents par statut ──
+    const incAll = DB.get(DB.keys.incidents) || [];
+    const incStats = {
+      declare: { label:'Déclaré', color:'#3b82f6', count: incAll.filter(i=>i.statut==='declare').length },
+      cours:   { label:'En cours', color:'#f59e0b', count: incAll.filter(i=>i.statut==='cours').length },
+      valide:  { label:'Validé',   color:'#10b981', count: incAll.filter(i=>i.statut==='valide').length },
+      classe:  { label:'Classé',   color:'#94a3b8', count: incAll.filter(i=>i.statut==='classe').length },
+    };
+    const incTotal = incAll.length || 1;
+    const incChartEl = document.getElementById('chartIncidents');
+    if (incChartEl) {
+      incChartEl.innerHTML = Object.values(incStats).map(s => {
+        const pct = Math.round(s.count / incTotal * 100);
+        return `<div style="margin-bottom:.4rem">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px">
+            <span style="color:var(--g700);font-weight:500">${s.label}</span>
+            <span style="color:var(--muted)">${s.count} (${pct}%)</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${s.color};border-radius:4px;transition:width .4s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    const incCatEl = document.getElementById('chartIncidentsCats');
+    if (incCatEl) {
+      const byType = {};
+      incAll.forEach(i => { byType[i.type] = (byType[i.type]||0)+1; });
+      const typeColors = { chute:'#f59e0b', agression:'#ef4444', fugue:'#8b5cf6', violence:'#dc2626', medical:'#06b6d4', materiel:'#6366f1', accident:'#f97316', autre:'#94a3b8' };
+      const typeLabels = { chute:'Chute', agression:'Agression', fugue:'Fugue', violence:'Violence', medical:'Médical', materiel:'Matériel', accident:'Accident', autre:'Autre' };
+      incCatEl.innerHTML = Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type, count]) =>
+        `<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;border-radius:100px;font-size:.7rem;font-weight:600;background:${typeColors[type]||'#94a3b8'}18;color:${typeColors[type]||'#94a3b8'}">${typeLabels[type]||type} <strong>${count}</strong></span>`
+      ).join('');
+    }
+
+    renderResidentTracking();
+
     // ── Filtrer les cartes selon les permissions ──
     const _session = Auth.getSession();
     const _userId = _session?.userId;
     const canSee = (perm) => _session?.role === 'admin' || hasPermission(_userId, perm);
     const hideIf = (id, perm) => { const el = document.getElementById(id); if (el && !canSee(perm)) el.style.display = 'none'; };
-    hideIf('presenceStatCard', 'access_presences');
-    hideIf('statJournalCard', 'access_journal');
-    hideIf('statIncidentCard', 'view_incidents');
-    hideIf('statVehiculeCard', 'access_vehicules');
-    hideIf('statAnnivCard', 'view_residents');
+    // Section suivi résidents
+    if (!canSee('view_residents')) {
+      const _sl = document.getElementById('dashSuiviLabel'); if (_sl) _sl.style.display = 'none';
+      const _ss = document.getElementById('dashSuiviSection'); if (_ss) _ss.style.display = 'none';
+    }
+    hideIf('miniPresenceCard', 'access_presences');
+    hideIf('miniVehCard', 'access_vehicules');
+    hideIf('miniAnnivCard', 'view_residents');
     hideIf('dashCardJournal', 'access_journal');
     hideIf('dashCardAvenants', 'access_ppe');
     hideIf('dashCardSansAvenant', 'access_ppe');
     const _alCard = document.getElementById('dashCardAlertes');
     if (_alCard && !canSee('access_ppe') && !canSee('view_incidents')) _alCard.style.display = 'none';
     hideIf('dashCardRepertoire', 'access_repertoire');
+    hideIf('dashCardPresenceChart', 'access_presences');
+    hideIf('dashCardIncidentChart', 'view_incidents');
+    hideIf('dashCardRdv', 'access_sante');
+    hideIf('dashCardVaccins', 'access_sante');
+    const _statsEl = document.getElementById('dashStatsSection');
+    if (_statsEl && !canSee('access_presences') && !canSee('view_incidents')) _statsEl.style.display = 'none';
   }
+
+  // ── SUIVI DES RÉSIDENTS (agrège les données des fiches) ──
+  function renderResidentTracking() {
+    const residents = (DB.get(DB.keys.residents) || []);
+    const todayStr = new Date().toISOString().slice(0,10);
+    const nowMs = Date.now();
+    const resName = r => `${r.prenom||''} ${r.nom||''}`.trim() || '—';
+    const avatar = r => r.photo
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
+      : `<div class="avatar sm" style="background:${r.color||'var(--blue)'};flex-shrink:0;width:26px;height:26px;font-size:.6rem">${(r.prenom||'?')[0].toUpperCase()}</div>`;
+    const rowOpen = r => `<a href="resident.html?id=${r.id}" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;text-decoration:none;color:inherit">`;
+
+    // 1) RDV médicaux à venir (14 jours)
+    const rdvs = [];
+    residents.forEach(r => (r.sante?.rdv || []).forEach(v => {
+      if (!v.fait && v.date >= todayStr) rdvs.push({ r, v });
+    }));
+    rdvs.sort((a,b) => (a.v.date+'T'+(a.v.heure||'')).localeCompare(b.v.date+'T'+(b.v.heure||'')));
+    const rdvEl = document.getElementById('dashRdvMedicaux');
+    setCount('dashRdvCount', rdvs.length);
+    if (rdvs.length) {
+      rdvEl.innerHTML = rdvs.slice(0,10).map(({r,v}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(v.type||'Rendez-vous')}${v.lieu?' · '+escHtml(v.lieu):''}</div></div>
+        <span style="font-size:.72rem;color:var(--muted);white-space:nowrap;text-align:right">${formatDate(v.date)}${v.heure?'<br>'+v.heure:''}</span>
+      </a>`).join('');
+    } else { rdvEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun RDV à venir</p></div>'; }
+
+    // 2) Résidents actuellement sortis (non rentrés)
+    const sorties = [];
+    residents.forEach(r => (r.sorties || []).forEach(s => {
+      if (!s.retourEffectif) {
+        const prevu = s.retourPrevuDate ? new Date(s.retourPrevuDate+'T'+(s.retourPrevuHeure||'23:59')).getTime() : null;
+        const dep = s.date ? new Date(s.date+'T'+(s.heure||'00:00')).getTime() : 0;
+        const enCours = dep <= nowMs;
+        const retard = prevu && prevu < nowMs;
+        sorties.push({ r, s, enCours, retard, sortKey: prevu || dep });
+      }
+    }));
+    sorties.sort((a,b) => a.sortKey - b.sortKey);
+    const soEl = document.getElementById('dashSorties');
+    setCount('dashSortiesCount', sorties.length);
+    if (sorties.length) {
+      soEl.innerHTML = sorties.slice(0,10).map(({r,s,retard}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(s.destination||'Sortie')}${s.retourPrevuDate?' · retour '+formatDate(s.retourPrevuDate)+(s.retourPrevuHeure?' '+s.retourPrevuHeure:''):''}</div></div>
+        <span class="badge ${retard?'badge-red':'badge-amber'}" style="white-space:nowrap">${retard?'En retard':'Sorti(e)'}</span>
+      </a>`).join('');
+    } else { soEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>'; }
+
+    // 3) Soldes budget négatifs
+    const soldes = [];
+    residents.forEach(r => {
+      const ops = (r.budget && r.budget.operations) || [];
+      if (!ops.length) return;
+      const solde = ops.reduce((a,o) => a + (o.type==='recette' ? Number(o.montant||0) : -Number(o.montant||0)), 0);
+      if (solde < 0) soldes.push({ r, solde });
+    });
+    soldes.sort((a,b) => a.solde - b.solde);
+    const sdEl = document.getElementById('dashSoldes');
+    setCount('dashSoldesCount', soldes.length);
+    if (soldes.length) {
+      sdEl.innerHTML = soldes.slice(0,10).map(({r,solde}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div></div>
+        <span style="font-weight:700;color:#dc2626;white-space:nowrap">${solde.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
+      </a>`).join('');
+    } else { sdEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun solde négatif</p></div>'; }
+
+    // 4) Rappels de vaccins en retard
+    const vaccins = [];
+    residents.forEach(r => (r.sante?.vaccins || []).forEach(vc => {
+      if (vc.rappel && vc.rappel < todayStr) vaccins.push({ r, vc });
+    }));
+    vaccins.sort((a,b) => (a.vc.rappel||'').localeCompare(b.vc.rappel||''));
+    const vcEl = document.getElementById('dashVaccins');
+    setCount('dashVaccinsCount', vaccins.length);
+    if (vaccins.length) {
+      vcEl.innerHTML = vaccins.slice(0,10).map(({r,vc}) => `${rowOpen(r)}
+        ${avatar(r)}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(vc.nom||'Vaccin')}</div></div>
+        <span style="font-size:.72rem;color:#dc2626;font-weight:600;white-space:nowrap">${formatDate(vc.rappel)}</span>
+      </a>`).join('');
+    } else { vcEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun rappel en retard</p></div>'; }
+  }
+
+  function setCount(id, n) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (n > 0) { el.style.display = ''; el.textContent = n; el.className = 'badge ' + (n > 0 ? 'badge-amber' : 'badge-gray'); }
+    else el.style.display = 'none';
+  }
+
   renderDashboard();
 </script>
 </body>

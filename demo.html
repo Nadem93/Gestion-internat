@@ -57,7 +57,7 @@ h1{font-size:1.6rem;font-weight:800;color:#0f2b4a;margin-bottom:.25rem}
     <div class="config-grid">
       <div class="config-item"><label>Résidents</label><input type="number" id="cfgResidents" value="50" min="1" max="500"><span class="hint">Profils individuels</span></div>
       <div class="config-item"><label>Journal</label><input type="number" id="cfgJournal" value="200" min="0" max="2000"><span class="hint">Entrées de suivi</span></div>
-      <div class="config-item"><label>Jours présence</label><input type="number" id="cfgPresences" value="14" min="1" max="90"><span class="hint">Historique</span></div>
+      <div class="config-item"><label>Jours présence</label><input type="number" id="cfgPresences" value="365" min="1" max="400"><span class="hint">Historique (1 an pour le rapport)</span></div>
       <div class="config-item"><label>PPE / Avenants</label><input type="number" id="cfgPpe" value="15" min="0" max="100"><span class="hint">Projets personnalisés</span></div>
     </div>
   </div>
@@ -206,6 +206,7 @@ function generateForCurrentEtab() {
 
   const now = new Date();
   const today = now.toISOString().slice(0,10);
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
   const cfgRes = getCfg('Residents');
   const cfgJournal = getCfg('Journal');
   const cfgPresJours = getCfg('Presences');
@@ -249,7 +250,7 @@ function generateForCurrentEtab() {
     resList.push({
       id: 'demo-' + (i + 1),
       prenom, nom, dob, genre,
-      entree: new Date(now.getTime() - rand(60, 720) * 86400000).toISOString().slice(0,10),
+      entree: new Date(now.getTime() - rand(20, 360) * 86400000).toISOString().slice(0,10),
       statut, chambre, color,
       referent: pick(REFFERENTS),
       photo: 'https://i.pravatar.cc/150?u=demo-' + (i + 1) + '&img=' + ((i % 70) + 1),
@@ -271,6 +272,92 @@ function generateForCurrentEtab() {
   resList.length = 0;
   sortedRes.forEach(r => resList.push(r));
   DB.set(DB.keys.residents, resList);
+
+  // ── MODULES FICHE RÉSIDENT (Santé, Sorties, Budget, Objectifs, Évaluations) — étalés sur 1 an ──
+  const _MS = 86400000;
+  const dAgo = n => new Date(now.getTime() - rand(0, n) * 86400000).toISOString().slice(0,10);
+  const dtAgo = n => new Date(now.getTime() - rand(0, n) * 86400000).toISOString();
+  const dAhead = n => new Date(now.getTime() + rand(1, n) * 86400000).toISOString().slice(0,10);
+  const hh = (a,b) => String(rand(a,b)).padStart(2,'0') + ':' + pick(['00','15','30','45']);
+  // Fenêtre de présence d'un résident (entrée → sortie ou aujourd'hui)
+  const winStart = r => new Date((r.entree || today) + 'T00:00:00').getTime();
+  const winEnd = r => Math.min(now.getTime(), r.dateSortie ? new Date(r.dateSortie + 'T00:00:00').getTime() : now.getTime());
+  const dWin = r => { const s = winStart(r), e = Math.max(winEnd(r), s + _MS); return new Date(s + Math.random() * (e - s)); };
+  const dWinStr = r => dWin(r).toISOString().slice(0,10);
+  const isActive = r => r.statut !== 'sorti';
+  const MEDS = [
+    { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur' }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir' },
+    { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun' }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne' },
+    { nom:'Méthylphénidate 18mg', pos:'1 cp', freq:'le matin' }, { nom:'Escitalopram 10mg', pos:'1 cp', freq:'le soir' },
+    { nom:'Hydroxyzine 25mg', pos:'1 cp', freq:'au coucher' }, { nom:'Mélatonine 2mg', pos:'1 cp', freq:'au coucher' }
+  ];
+  const VACCINS = ['DTP (rappel)','Hépatite B','ROR','Méningocoque C','COVID-19','Grippe saisonnière','Papillomavirus'];
+  const RDV_TYPES = ['Médecin traitant','Dentiste','Ophtalmologue','CMP','Dermatologue','Kinésithérapeute','Psychiatre'];
+  const PRATICIENS = ['Dr Moreau','Dr Laurent','Dr Petit','Dr Rousseau','Dr Blanc','Dr Lefèvre','Centre de santé'];
+  const LIEUX_MED = ['Cabinet médical','CMP Maison Blanche','Hôpital Saint-Antoine','Centre de santé','Maison médicale'];
+  const SORTIE_DEST = ['Domicile familial','RDV médical CMP','Sortie sportive','Stage professionnel','Démarches préfecture','Week-end en famille','Cinéma','Visite de logement','Entretien employeur','Bibliothèque'];
+  const SORTIE_MOTIF = ['Famille','Médical','Loisir','Travail / Stage','Démarches','Week-end'];
+  const SORTIE_ACC = ['Seul(e)','Accompagné(e) par un éducateur','Famille / Proche','Transport adapté'];
+  const BUD_REC = [['AAH',[900,1016]],['RSA',[580,610]],['Salaire',[400,950]],['Argent de poche',[30,60]],['Pension',[150,300]]];
+  const BUD_DEP_CAT = ['Alimentation','Hygiène','Vêtements','Loisirs','Transport','Téléphone','Tabac','Santé','Démarches'];
+  const EVAL_KEYS = ['toilette','habillage','sante','preparation','repas','chambre','linge','courrier','budget','relations','activites','deplacements','expression'];
+  const PROT_NOMS = ['UDAF 75','Me Lefranc (mandataire judiciaire)','ATP 94','Mme Garnier (tutrice familiale)','M. Bernard (curateur)','UDAF 93','Me Rolland (mandataire)'];
+
+  resList.forEach((r, ri) => {
+    if (['tutelle','curatelle','sauvegarde'].includes(r.protection)) r.protectionNom = pick(PROT_NOMS);
+    // Mouvements : ~8% de sorties — date cohérente (après l'entrée, avant aujourd'hui)
+    { const s = winStart(r) + 30 * _MS, e = now.getTime() - 7 * _MS;
+      if (Math.random() < 0.08 && e > s) { r.statut = 'sorti'; r.dateSortie = new Date(s + Math.random() * (e - s)).toISOString().slice(0,10); } }
+    const active = isActive(r);
+
+    // Santé (dans la fenêtre de présence ; RDV/rappels à venir uniquement si présent)
+    const traitements = [];
+    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '' }); }
+    const rdv = [];
+    for (let k = 0; k < rand(1,4); k++) rdv.push({ id:'dr-'+ri+'-'+k, date: dWinStr(r), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: true });
+    if (active && Math.random() < .7) rdv.push({ id:'dr-'+ri+'-f', date: dAhead(40), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: false });
+    const vaccins = [];
+    for (let k = 0; k < rand(1,2); k++) { const overdue = Math.random() < .3; vaccins.push({ id:'dv-'+ri+'-'+k, nom: pick(VACCINS), date: dWinStr(r), rappel: overdue ? dAgo(40) : (active ? dAhead(300) : '') }); }
+    r.sante = { groupeSanguin: pick(['A+','A-','B+','B-','O+','O-','AB+','AB-','']), notesMedicales: Math.random()<.3 ? 'Suivi médical régulier. Pas de contre-indication particulière.' : '', traitements, rdv, vaccins };
+
+    // Sorties & permissions (dans la fenêtre ; sortie en cours uniquement si présent)
+    const sorties = [];
+    for (let k = 0; k < rand(0,8); k++) {
+      const dep = (active && k === 0 && Math.random() < .25) ? dAgo(2) : dWinStr(r);
+      const enCours = active && k === 0 && Math.random() < .25;
+      sorties.push({ id:'so-'+ri+'-'+k, date: dep, heure: String(rand(8,18)).padStart(2,'0')+':00', destination: pick(SORTIE_DEST), motif: pick(SORTIE_MOTIF), accompagnement: pick(SORTIE_ACC), retourPrevuDate: dep, retourPrevuHeure: String(rand(18,21)).padStart(2,'0')+':00', autorisePar: pick(REFFERENTS), notes:'', retourEffectif: enCours ? null : new Date(new Date(dep+'T18:00').getTime()+rand(1,5)*3600000).toISOString() });
+    }
+    r.sorties = sorties;
+
+    // Budget personnel (mensuel, uniquement pendant la présence)
+    const ops = [];
+    const enDifficulte = Math.random() < 0.18;
+    const rec = enDifficulte ? pick([['Argent de poche',[20,50]],['Pension',[120,200]]]) : pick(BUD_REC);
+    const ws = winStart(r), we = winEnd(r);
+    for (let mo = 11; mo >= 0; mo--) {
+      const dmoD = new Date(now.getFullYear(), now.getMonth() - mo, rand(1,5));
+      if (dmoD.getTime() < ws || dmoD.getTime() > we) continue;
+      ops.push({ id:'bu-'+ri+'-r'+mo, type:'recette', montant: rand(rec[1][0], rec[1][1]), date: dmoD.toISOString().slice(0,10), categorie: rec[0], libelle: rec[0]+' du mois', notes:'' });
+      const nbDep = enDifficulte ? rand(3,6) : rand(2,4);
+      for (let dd = 0; dd < nbDep; dd++) { const ddD = new Date(now.getFullYear(), now.getMonth() - mo, rand(6,27)); if (ddD.getTime() < ws || ddD.getTime() > we) continue; ops.push({ id:'bu-'+ri+'-d'+mo+'-'+dd, type:'depense', montant: enDifficulte ? rand(50,260) : rand(10,180), date: ddD.toISOString().slice(0,10), categorie: pick(BUD_DEP_CAT), libelle:'', notes:'' }); }
+    }
+    r.budget = { operations: ops };
+
+    // Suivi des objectifs
+    const suivi = {};
+    (r.objectifs || []).forEach(oid => { const st = pick(['non_commence','en_cours','en_cours','atteint','atteint','abandonne']); suivi[oid] = { statut: st, note: st==='atteint' ? 'Objectif atteint, à consolider.' : st==='en_cours' ? 'Progression régulière constatée.' : '', dateMaj: dWin(r).toISOString() }; });
+    r.objectifsSuivi = suivi;
+
+    // Grilles d'évaluation (dans la fenêtre)
+    const evals = [];
+    for (let k = 0; k < rand(1,3); k++) { const scores = {}; EVAL_KEYS.forEach(key => { if (Math.random() < .9) scores[key] = rand(1,4); }); evals.push({ id:'ev-'+ri+'-'+k, date: dWinStr(r), evaluateur: pick(REFFERENTS), note:"Bilan d'autonomie périodique.", scores }); }
+    r.evaluations = evals;
+  });
+  DB.set(DB.keys.residents, resList);
+
+  // Capacité d'accueil (pour le taux d'occupation du rapport)
+  const _settings = DB.get(DB.keys.settings) || {};
+  DB.set(DB.keys.settings, { ..._settings, capacite: Math.round(cfgRes * 1.1) });
 
   // ── CATÉGORIES ──
   const cats = [
@@ -364,7 +451,7 @@ function generateForCurrentEtab() {
   for (let i = 0; i < cfgJournal; i++) {
     const res = resList[i % resList.length];
     const cat = cats[i % cats.length];
-    const d = new Date(now.getTime() - rand(0, 365) * 86400000);
+    const d = dWin(res);
     const author = pick(journalAuthors);
     const catTemplates = journalParCategorie[cat.id];
     const usedSet = new Set();
@@ -422,12 +509,14 @@ function generateForCurrentEtab() {
     { title: 'Sortie parc', type: 'sortie', color: '#0891b2', time: '10:00', dur: '240' }
   ];
 
+  const planningRes = resList.filter(r => r.statut !== 'sorti');
+  const _planRes = planningRes.length ? planningRes : resList;
   for (let i = 0; i < cfgPlanning; i++) {
     const ev = pick(eventTypes);
     const dayOffset = rand(-14, 21);
     const d = new Date(now.getTime() + dayOffset * 86400000);
     const dateStr = d.toISOString().slice(0,10);
-    const res = resList[i % resList.length];
+    const res = _planRes[i % _planRes.length];
     planning.push({
       id: 'dp-' + (i + 1),
       titre: res ? ev.title + ' — ' + res.prenom + ' ' + res.nom : ev.title,
@@ -472,8 +561,11 @@ function generateForCurrentEtab() {
     const d = new Date(today + 'T00:00:00');
     d.setDate(d.getDate() + j);
     const ds = d.toISOString().slice(0,10);
+    const dayMs = d.getTime();
     const dayPresences = {};
     resList.forEach(r => {
+      // Ne pointer que pendant la présence effective (après l'entrée, avant la sortie)
+      if (dayMs < winStart(r) || dayMs > winEnd(r)) return;
       const rnd = Math.random();
       dayPresences[r.id] = rnd < .7 ? 'present' : rnd < .85 ? 'absent' : 'sortie';
     });
@@ -487,8 +579,8 @@ function generateForCurrentEtab() {
   for (let i = 0; i < cfgPpe; i++) {
     const idx = i % resList.length;
     const res = resList[idx];
-    const statut = pick(['actif','actif','actif','brouillon','termine']);
-    const dateRedac = new Date(now.getTime() - rand(30, 180) * 86400000);
+    const statut = res.statut === 'sorti' ? 'termine' : pick(['actif','actif','actif','brouillon','termine']);
+    const dateRedac = dWin(res);
     const dateRev = new Date(dateRedac.getTime() + rand(150, 210) * 86400000);
     const sections = {};
     domaines.forEach(d => {
@@ -537,10 +629,10 @@ function generateForCurrentEtab() {
   const incList = [];
   for (let i = 0; i < cfgInc; i++) {
     const tpl = pick(incidentTemplates);
-    const d = new Date(now.getTime() - rand(1, 45) * 86400000);
+    const res = resList[rand(0, resList.length - 1)];
+    const d = dWin(res);
     const h = String(rand(6, 23)).padStart(2,'0');
     const m = String(rand(0, 59)).padStart(2,'0');
-    const res = resList[rand(0, resList.length - 1)];
     const author = pick(authorNames);
     const desc = (res ? res.prenom : 'Un résident') + tpl.desc;
     incList.push({
@@ -549,6 +641,8 @@ function generateForCurrentEtab() {
       date: d.toISOString().slice(0,10), heure: h + ':' + m,
       residentId: res ? res.id : null,
       residentName: res ? res.prenom + ' ' + res.nom : '',
+      etabId: etab ? etab.id : null,
+      etabNom: etab ? etab.nom : '',
       lieu: tpl.lieu + ' ' + (res ? res.chambre : ''),
       description: desc,
       statut: tpl.statut,
@@ -559,7 +653,7 @@ function generateForCurrentEtab() {
       createdAt: d.toISOString()
     });
   }
-  localStorage.setItem('ftr_incidents', JSON.stringify(incList));
+  DB.set(DB.keys.incidents, incList);
 
   // ── INTERVENTIONS ──
   const intervs = [
@@ -781,11 +875,16 @@ function generateForCurrentEtab() {
     const res = resList[i];
     const resDocs = [];
     for (let j = 0; j < cfgDocsPerRes; j++) {
+      const dueSoon = Math.random() < .25;
       resDocs.push({
-        nom: pick(['Compte rendu médical','Contrat de séjour','Projet personnalisé','Bilan social','Certificat médical','Convention de stage','Attestation hébergement','Avenant logement']) + '.pdf',
-        type: pick(['medical','administratif','social','scolarite']),
-        date: new Date(now.getTime() - rand(10, 365) * 86400000).toISOString().slice(0,10),
-        taille: rand(100, 500) + ' Ko',
+        name: pick(['Compte rendu médical','Contrat de séjour','Projet personnalisé','Bilan social','Certificat médical','Convention de stage','Attestation hébergement','Avenant logement']),
+        category: pick(['medical','administratif','scolaire','judiciaire','contrat','autre']),
+        docDate: new Date(now.getTime() - rand(10, 365) * 86400000).toISOString().slice(0,10),
+        dueDate: dueSoon ? new Date(now.getTime() + rand(-30, 120) * 86400000).toISOString().slice(0,10) : '',
+        mimeType: 'application/pdf',
+        size: rand(100, 500) * 1024,
+        fileName: 'document.pdf',
+        date: new Date().toISOString(),
         id: 'dd-r' + i + '-' + (j + 1)
       });
     }
@@ -795,10 +894,13 @@ function generateForCurrentEtab() {
     docs['_resources'] = [];
     for (let j = 0; j < cfgDocsRsrc; j++) {
       docs['_resources'].push({
-        nom: pick(['Règlement intérieur','Procédure urgences','Guide des partenaires','Charte des droits','Plan d évacuation','Livret d accueil','Protocole sanitaire','Règlement de sortie']) + '.pdf',
-        type: 'resource',
-        date: new Date(now.getTime() - rand(30, 200) * 86400000).toISOString().slice(0,10),
-        taille: rand(200, 600) + ' Ko',
+        name: pick(['Règlement intérieur','Procédure urgences','Guide des partenaires','Charte des droits','Plan d évacuation','Livret d accueil','Protocole sanitaire','Règlement de sortie']),
+        category: 'administratif',
+        docDate: new Date(now.getTime() - rand(30, 200) * 86400000).toISOString().slice(0,10),
+        mimeType: 'application/pdf',
+        size: rand(200, 600) * 1024,
+        fileName: 'document.pdf',
+        date: new Date().toISOString(),
         residentId: '_resources',
         id: 'dd-rsrc-' + (j + 1)
       });
@@ -844,7 +946,11 @@ function generateForCurrentEtab() {
     documents: Object.values(docs).flat().length,
     presences: cfgPresJours,
     loginHistory: loginHistory.length,
-    vehicules: vehList.length
+    vehicules: vehList.length,
+    rdvMedicaux: resList.reduce((a,r) => a + ((r.sante&&r.sante.rdv)||[]).length, 0),
+    sorties: resList.reduce((a,r) => a + ((r.sorties)||[]).length, 0),
+    operationsBudget: resList.reduce((a,r) => a + ((r.budget&&r.budget.operations)||[]).length, 0),
+    evaluations: resList.reduce((a,r) => a + ((r.evaluations)||[]).length, 0)
   };
 }
 
@@ -859,7 +965,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');

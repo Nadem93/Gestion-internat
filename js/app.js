@@ -14,7 +14,7 @@ const DB = {
     users:'ftr_users', session:'ftr_session', vehicules:'ftr_vehicules',
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
-    loginHistory:'ftr_login_history', fonctionColors:'ftr_fonction_colors',
+    loginHistory:'ftr_login_history', auditLog:'ftr_audit_log', fonctionColors:'ftr_fonction_colors',
     aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
     etablissements:'ftr_etablissements'
@@ -111,12 +111,67 @@ const ETAB_BG = {
   enfants:           ['#b0d4b8','#cfe8d4','#f0fce8'],  // vert (legacy)
 };
 
+// Construit un dégradé pastel clair à partir de la TEINTE d'une couleur hex.
+// On conserve le hue (et un peu de saturation) mais on force une luminosité claire,
+// pour qu'une couleur même foncée donne un fond doux et lisible (jamais gris/sombre).
+function _softBgStops(hex) {
+  let h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (h.length !== 6) return null;
+  const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let hue = 0, s = 0, l = (max + min) / 2;
+  if (d !== 0) {
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) hue = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) hue = (b - r) / d + 2;
+    else hue = (r - g) / d + 4;
+    hue *= 60;
+  }
+  // Saturation bornée : assez pour voir la teinte, pas trop pour rester doux
+  let sl = Math.round(Math.min(Math.max(s, 0.35), 0.80) * 100);
+  hue = Math.round(hue);
+  return [`hsl(${hue},${sl}%,91%)`, `hsl(${hue},${sl}%,95%)`, `hsl(${hue},${sl}%,98%)`];
+}
+
+// Renvoie true si la couleur hex est perçue comme foncée
+function _isDarkColor(hex) {
+  let h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (h.length !== 6) return false;
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  // Luminance perçue (0..255)
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
+}
+
 function applyEtabBackground() {
   const etab = getCurrentEtab();
   if (!etab) return;
-  const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
-  document.body.style.background = `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`;
+  document.body.classList.remove('etab-dark-bg');
+  const stops = etab.bgColor ? _softBgStops(etab.bgColor) : null;
+  if (stops) {
+    // Couleur de fond personnalisée → dégradé pastel clair conservant la teinte
+    document.body.style.setProperty('background',
+      `linear-gradient(135deg,${stops[0]} 0%,${stops[1]} 45%,${stops[2]} 100%)`,
+      'important');
+  } else {
+    const colors = ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement'];
+    document.body.style.setProperty('background',
+      `linear-gradient(135deg,${colors[0]} 0%,${colors[1]} 45%,${colors[2]} 100%)`,
+      'important');
+  }
   document.body.style.backgroundAttachment = 'fixed';
+}
+
+// Définit (ou réinitialise) la couleur de fond de l'établissement courant
+function setEtabBgColor(color) {
+  const id = DB._id();
+  const etabs = getEtabs();
+  const etab = etabs.find(e => String(e.id) === String(id));
+  if (!etab) return;
+  if (color) etab.bgColor = color; else delete etab.bgColor;
+  saveEtabs(etabs);
+  applyEtabBackground();
 }
 
 function etabTypeLabel(type) {
@@ -149,12 +204,16 @@ const API_URL = 'http://localhost:3001';
 // ── DEFAULT DATA ──
 const DEFAULTS = {
   categories: [
-    { id:1, name:'Accompagnement', color:'#3b82f6' },
-    { id:2, name:'Médical', color:'#ef4444' },
-    { id:3, name:'Éducatif', color:'#10b981' },
-    { id:4, name:'Administratif', color:'#f59e0b' },
-    { id:5, name:'Familial', color:'#8b5cf6' },
-    { id:6, name:'Loisirs', color:'#06b6d4' }
+    { id:1,  name:'Autonomie',                   color:'#3b82f6' },
+    { id:2,  name:'Santé et bien-être',           color:'#ef4444' },
+    { id:3,  name:'Logement',                     color:'#10b981' },
+    { id:4,  name:'Vie sociale et loisirs',       color:'#f59e0b' },
+    { id:5,  name:'Vie affective et familiale',   color:'#8b5cf6' },
+    { id:6,  name:'Gestion du budget',            color:'#06b6d4' },
+    { id:7,  name:'Transport et déplacement',     color:'#f97316' },
+    { id:8,  name:'Orientation',                  color:'#84cc16' },
+    { id:9,  name:'Accompagnement',               color:'#0ea5e9' },
+    { id:10, name:'Administratif',                color:'#a855f7' }
   ],
   objectives: [
     { id:1, name:'Autonomie', description:"Développement de l'autonomie au quotidien" },
@@ -166,22 +225,22 @@ const DEFAULTS = {
   ],
   settings: { etablissement:'Foyer d\'Hébergement Les Trois Rivières', ville:'', tel:'', email:'', capacite:'' },
   branding: { primaryColor:'#0f2b4a', accentColor:'#e85d04', logo:'' },
-  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin' }],
+  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
-    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: [] },
-    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: [] },
-    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: [] },
-    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: [] },
-    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: [] },
-    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: [] },
-    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: [] },
-    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: [] },
-    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: [] },
-    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['edit_residents', 'view_incidents', 'validate_incidents'] },
-    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: [] },
-    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: [] },
-    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['edit_residents', 'view_incidents', 'validate_incidents', 'access_admin', 'manage_users'] }
+    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
+    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
+    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_sante','view_incidents'] },
+    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents'] },
+    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_sante'] },
+    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_vehicules'] },
+    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents'] },
+    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules'] },
+    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules'] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions'] },
+    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents'] },
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_admin','access_employes','manage_users'] }
   ],
   aiPrompts: {
     ppe: {
@@ -205,7 +264,13 @@ const DEFAULTS = {
 
 function initDefaults() {
   initEtabs();
-  if (!DB.get(DB.keys.categories)) DB.set(DB.keys.categories, DEFAULTS.categories);
+  const _catVersion = 'v3';
+  if (localStorage.getItem('ftr_cat_version') !== _catVersion) {
+    DB.set(DB.keys.categories, DEFAULTS.categories);
+    localStorage.setItem('ftr_cat_version', _catVersion);
+  } else if (!DB.get(DB.keys.categories)) {
+    DB.set(DB.keys.categories, DEFAULTS.categories);
+  }
   if (!DB.get(DB.keys.objectives)) DB.set(DB.keys.objectives, DEFAULTS.objectives);
   if (!DB.get(DB.keys.residents)) DB.set(DB.keys.residents, []);
   if (!DB.get(DB.keys.journal)) DB.set(DB.keys.journal, []);
@@ -215,12 +280,15 @@ function initDefaults() {
   if (!DB.get(DB.keys.user)) DB.set(DB.keys.user, { nom:'Administrateur', prenom:'', role:'Administrateur' });
   if (!DB.get(DB.keys.branding)) DB.set(DB.keys.branding, DEFAULTS.branding);
   if (!DB.get(DB.keys.users)) DB.set(DB.keys.users, DEFAULTS.users);
+  migrateSuperAdmin();
   if (!DB.get(DB.keys.vehicules)) DB.set(DB.keys.vehicules, DEFAULTS.vehicules);
   if (!DB.get(DB.keys.documents)) DB.set(DB.keys.documents, {});
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
   else migrateFonctionColors();
+  // Migration unique : applique les permissions par défaut aux rôles standard
+  if (localStorage.getItem(DB._k('ftr_perm_v')) !== '1') { applyDefaultFonctionPerms(); localStorage.setItem(DB._k('ftr_perm_v'), '1'); }
   if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
   setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
 }
@@ -235,6 +303,49 @@ function migrateFonctionColors() {
     }
   });
   if (changed) DB.set(DB.keys.fonctionColors, existing);
+}
+
+// Applique (une fois) les permissions par défaut aux fonctions standard existantes
+function applyDefaultFonctionPerms() {
+  const list = DB.get(DB.keys.fonctionColors) || [];
+  let changed = false;
+  list.forEach(f => {
+    const def = DEFAULTS.fonctionColors.find(d => d.fonction === f.fonction);
+    if (def) { f.permissions = [...def.permissions]; changed = true; }
+  });
+  if (changed) DB.set(DB.keys.fonctionColors, list);
+}
+
+// Garde d'accès à un module : true si admin ou permission accordée, sinon affiche un refus
+function requireModule(perm) {
+  const s = Auth.getSession();
+  if (s && (s.role === 'admin' || s.role === 'superadmin' || hasPermission(s.userId, perm))) return true;
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;font-family:Inter,system-ui,sans-serif;color:#64748b;padding:2rem">'
+    + '<div><div style="font-size:2.2rem;margin-bottom:.5rem">⛔</div>'
+    + '<div style="font-size:1.15rem;font-weight:700;color:#0f2b4a">Accès refusé</div>'
+    + '<div style="font-size:.9rem;margin-top:.4rem">Vous n\'avez pas la permission d\'accéder à ce module.</div>'
+    + '<a href="accueil.html" style="display:inline-block;margin-top:1.2rem;background:#0f2b4a;color:#fff;padding:.6rem 1.5rem;border-radius:8px;text-decoration:none;font-size:.85rem;font-weight:600">← Retour à l\'accueil</a></div></div>';
+  return false;
+}
+
+// ── AUDIT LOG ──
+function auditLog(action, details) {
+  try {
+    const session = Auth?.getSession?.();
+    if (!session) return;
+    const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+    log.unshift({
+      id: genId(),
+      date: new Date().toISOString(),
+      userId: session.userId,
+      user: [session.prenom, session.nom].filter(Boolean).join(' ') || session.username,
+      role: session.role,
+      action,
+      details: details || ''
+    });
+    if (log.length > 1000) log.length = 1000;
+    localStorage.setItem('ftr_audit_log', JSON.stringify(log));
+  } catch {}
 }
 
 // ── LOGIN HISTORY ──
@@ -254,13 +365,32 @@ function logConnexion(action, user) {
 }
 
 // ── AUTH ──
+// ── HACHAGE DES MOTS DE PASSE (SHA-256 + sel) ──
+const _PWD_SALT = 'ftr.internalis.pwd.v1';
+async function hashPassword(pwd) {
+  const data = new TextEncoder().encode(_PWD_SALT + ':' + (pwd || ''));
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return 'h$' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function isHashedPwd(s) { return typeof s === 'string' && s.startsWith('h$'); }
+
 const Auth = {
   getSession() { return DB.get(DB.keys.session); },
-  login(username, password) {
+  async login(username, password) {
     const users = DB.get(DB.keys.users) || DEFAULTS.users;
-    const user = users.find(u => u.username === username.trim() && u.password === password);
+    const user = users.find(u => u.username === username.trim());
     if (!user) return false;
-    DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, prenom: user.prenom || '', nom: user.nom || '', fonction: user.fonction || '', mustChangePassword: user.mustChangePassword || false });
+    let ok = false;
+    if (isHashedPwd(user.password)) {
+      ok = user.password === await hashPassword(password);
+    } else if (user.password === password) {
+      // Ancien mot de passe en clair → on le convertit en haché
+      ok = true;
+      user.password = await hashPassword(password);
+      DB.set(DB.keys.users, users);
+    }
+    if (!ok) return false;
+    DB.set(DB.keys.session, { userId: user.id, username: user.username, role: user.role, super: !!user.super, prenom: user.prenom || '', nom: user.nom || '', fonction: user.fonction || '', mustChangePassword: user.mustChangePassword || false });
     logConnexion('login', user);
     return true;
   },
@@ -296,15 +426,51 @@ const Auth = {
   requireAdmin() {
     const s = this.requireAuth();
     if (!s) return null;
-    if (s.role !== 'admin' && !canAccessAdmin(s.userId) && !canAccessModule('admin')) { window.location.href = 'dashboard.html'; return null; }
+    if (s.role !== 'admin' && s.role !== 'superadmin' && !canAccessAdmin(s.userId) && !canAccessModule('admin')) { window.location.href = 'dashboard.html'; return null; }
     return s;
   },
   isAdmin() {
     const s = this.getSession();
     if (!s) return false;
-    return s.role === 'admin' || canAccessAdmin(s.userId);
+    return s.role === 'admin' || s.role === 'superadmin' || canAccessAdmin(s.userId);
+  },
+  isSuperAdmin() {
+    const s = this.getSession();
+    if (!s) return false;
+    if (s.super || s.role === 'superadmin') return true;
+    const u = (DB.get(DB.keys.users) || []).find(x => String(x.id) === String(s.userId));
+    return !!(u && (u.super || u.role === 'superadmin'));
+  },
+  requireSuperAdmin() {
+    const s = this.requireAuth();
+    if (!s) return null;
+    if (!this.isSuperAdmin()) { window.location.href = 'accueil.html'; return null; }
+    return s;
   }
 };
+
+// Lit les données d'un établissement précis (clé suffixée), pour la console groupe
+function getEtabData(etabId, key) {
+  return JSON.parse(localStorage.getItem(`${key}__${etabId}`) || 'null');
+}
+
+// S'assure qu'au moins un super administrateur existe (drapeau super:true sur l'admin par défaut)
+function migrateSuperAdmin() {
+  const users = DB.get(DB.keys.users) || [];
+  if (!users.length) return;
+  let changed = false;
+  // Normalise un éventuel role 'superadmin' (ancienne approche) → role 'admin' + super:true
+  users.forEach(u => { if (u.role === 'superadmin') { u.role = 'admin'; u.super = true; changed = true; } });
+  // Garantit au moins un super admin
+  if (!users.some(u => u.super)) {
+    const t = users.find(u => u.username === 'admin') || users.find(u => u.role === 'admin') || users[0];
+    if (t) { t.super = true; if (!t.role) t.role = 'admin'; changed = true; }
+  }
+  if (changed) DB.set(DB.keys.users, users);
+  // Normalise une session ouverte avec l'ancien role 'superadmin'
+  const sess = DB.get(DB.keys.session);
+  if (sess && sess.role === 'superadmin') { sess.role = 'admin'; sess.super = true; DB.set(DB.keys.session, sess); }
+}
 
 // ── STRUCTURE TYPE (toujours adulte) ──
 function getStructureType() { return 'adultes'; }
@@ -561,6 +727,44 @@ function initMenuPopup() {
     hr.appendChild(userBox);
   }
 
+  // ── Badge messages non lus dans le header ──
+  if (!isAccueil && !document.getElementById('headerMsgBadge')) {
+    const session = Auth.getSession();
+    const hr2 = isAdmin ? header.querySelector('.atb-right') : header.querySelector('.header-right');
+    if (hr2 && session) {
+      const msgBtn = document.createElement('a');
+      msgBtn.id = 'headerMsgBadge';
+      msgBtn.href = 'messages.html';
+      msgBtn.title = 'Messages';
+      msgBtn.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--g100);color:var(--g600);margin-left:.5rem;flex-shrink:0;text-decoration:none;transition:background .15s';
+      msgBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+      msgBtn.onmouseover = () => msgBtn.style.background = 'var(--g200)';
+      msgBtn.onmouseout  = () => msgBtn.style.background = 'var(--g100)';
+
+      const dot = document.createElement('span');
+      dot.id = 'headerMsgDot';
+      dot.style.cssText = 'display:none;position:absolute;top:2px;right:2px;min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:8px;font-size:.55rem;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid #fff;box-sizing:border-box';
+      msgBtn.appendChild(dot);
+      hr2.insertBefore(msgBtn, hr2.firstChild);
+
+      function refreshMsgBadge() {
+        const msgs = JSON.parse(localStorage.getItem('ftr_messages') || '[]');
+        const uid = String(session.userId);
+        const count = msgs.filter(m => String(m.from) !== uid && !(m.readBy||[]).map(String).includes(uid)).length;
+        if (count > 0) {
+          dot.textContent = count > 99 ? '99+' : count;
+          dot.style.display = 'flex';
+          msgBtn.style.color = '#ef4444';
+        } else {
+          dot.style.display = 'none';
+          msgBtn.style.color = 'var(--g600)';
+        }
+      }
+      refreshMsgBadge();
+      setInterval(refreshMsgBadge, 15000);
+    }
+  }
+
   // Create popup if not exists (skip on accueil page)
   if (!isAccueil && !document.getElementById('menuPopup')) {
     const popup = document.createElement('div');
@@ -662,6 +866,56 @@ function escHtml(s) {
   return d.innerHTML;
 }
 
+// ── DÉTECTION DE DOUBLONS (local, par similarité de texte) ──
+function _normTxt(s) {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+// Similarité de Jaccard sur les mots significatifs (0 → 1)
+function textSimilarity(a, b) {
+  const ta = _normTxt(a).split(' ').filter(w => w.length > 2);
+  const tb = _normTxt(b).split(' ').filter(w => w.length > 2);
+  if (!ta.length || !tb.length) return 0;
+  const sa = new Set(ta), sb = new Set(tb);
+  let inter = 0;
+  sa.forEach(w => { if (sb.has(w)) inter++; });
+  return inter / new Set([...sa, ...sb]).size;
+}
+function _hoursBetween(d1, d2) {
+  const t1 = new Date(d1).getTime(), t2 = new Date(d2).getTime();
+  if (isNaN(t1) || isNaN(t2)) return Infinity;
+  return Math.abs(t1 - t2) / 3600000;
+}
+// Cherche un doublon probable d'une transmission journal (même résident, < 3h, texte similaire)
+function findJournalDuplicate(candidate, entries) {
+  let best = null, bestSim = 0;
+  for (const e of (entries || [])) {
+    if (candidate.id && e.id === candidate.id) continue;
+    if (String(e.residentId) !== String(candidate.residentId)) continue;
+    if (_hoursBetween(e.date, candidate.date) > 3) continue;
+    const sim = textSimilarity(e.contenu, candidate.contenu);
+    if (sim >= 0.6 && sim > bestSim) { best = e; bestSim = sim; }
+  }
+  return best ? { entry: best, similarity: bestSim } : null;
+}
+// Cherche un doublon probable d'un incident (même résident, même type, même jour, heures proches, texte similaire)
+function findIncidentDuplicate(candidate, list) {
+  let best = null, bestSim = 0;
+  for (const i of (list || [])) {
+    if (candidate.id && i.id === candidate.id) continue;
+    if (!candidate.residentId || String(i.residentId) !== String(candidate.residentId)) continue;
+    if (i.type !== candidate.type) continue;
+    if (i.date !== candidate.date) continue;
+    if (candidate.heure && i.heure && _hoursBetween(candidate.date + 'T' + candidate.heure, i.date + 'T' + i.heure) > 3) continue;
+    const sim = Math.max(textSimilarity(i.titre, candidate.titre), textSimilarity(i.description, candidate.description));
+    if (sim >= 0.5 && sim > bestSim) { best = i; bestSim = sim; }
+  }
+  return best ? { incident: best, similarity: bestSim } : null;
+}
+
 const STATUT_PPE_LABEL = { brouillon:'Brouillon', actif:'Actif', termine:'Terminé' };
 
 const DEMO_AUTHORS = [
@@ -704,6 +958,7 @@ const PERMISSION_LABELS = {
   access_presences: 'Présences & planning',
   view_incidents: 'Voir les incidents',
   validate_incidents: 'Valider les incidents',
+  access_sante: 'Santé / Médical (RDV, vaccins)',
   access_documents: 'Documents',
   access_vehicules: 'Véhicules',
   access_interventions: 'Interventions',
@@ -825,14 +1080,6 @@ async function callMistral(prompt, system) {
 }
 
 // ── INIT ──
-// ── SERVICE WORKER CLEANUP ──
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   initDefaults();
   applyBranding();
@@ -843,7 +1090,31 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!Auth.isAdmin()) {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
+  if (!Auth.isSuperAdmin()) {
+    document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+  initAutoLock();
 });
+
+// ── VERROUILLAGE AUTOMATIQUE PAR INACTIVITÉ ──
+let _idleTimer = null;
+const IDLE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
+function initAutoLock() {
+  if (!Auth.getSession()) return;
+  const lock = () => {
+    try { logConnexion('logout', Auth.getSession()); } catch {}
+    DB.remove(DB.keys.session);
+    try { sessionStorage.setItem('ftr_lock_reason', 'idle'); } catch {}
+    window.location.href = 'index.html';
+  };
+  const reset = () => { clearTimeout(_idleTimer); _idleTimer = setTimeout(lock, IDLE_LIMIT_MS); };
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
+    document.addEventListener(ev, reset, { passive: true }));
+  reset();
+}
 
 function getPosteOptions() {
   const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;

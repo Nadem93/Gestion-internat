@@ -13,6 +13,21 @@ function loadBranding() {
   document.getElementById('bPrimary').value = b.primaryColor || '#0f2b4a';
   document.getElementById('bAccent').value = b.accentColor || '#e85d04';
   if (b.logo) updateLogoPreview(b.logo);
+  loadBgColorInput();
+}
+
+// Renseigne le sélecteur de couleur de fond depuis l'établissement courant
+function loadBgColorInput() {
+  const input = document.getElementById('bBackground');
+  if (!input) return;
+  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
+  let val = etab && etab.bgColor;
+  if (!val) {
+    // Aperçu : couleur de base du type d'établissement (1re teinte du dégradé)
+    const c = (typeof ETAB_BG !== 'undefined' && etab) ? (ETAB_BG[etab.type] || ETAB_BG['foyer_hebergement']) : null;
+    val = c ? c[0] : '#dbeafe';
+  }
+  input.value = val;
 }
 
 function saveBranding() {
@@ -316,26 +331,48 @@ function renderFonctions() {
   const el = document.getElementById('fonctionList');
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2rem"><p>Aucune fonction définie</p></div>`;
+    el.innerHTML = `<div class="empty" style="padding:2rem;grid-column:1/-1"><p>Aucune fonction définie</p></div>`;
     return;
   }
   el.innerHTML = list.map(f => {
-    const perms = (f.permissions || []).map(p => `<span class="badge" style="background:var(--green)12;color:var(--green);font-size:.65rem">${escHtml(PERMISSION_LABELS[p]||p)}</span>`).join('');
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
-      <span style="width:14px;height:14px;border-radius:4px;background:${f.color};flex-shrink:0"></span>
-      <span style="flex:1;font-weight:600;font-size:.875rem">${escHtml(f.fonction)}</span>
-      <div style="display:flex;gap:.3rem;flex-wrap:wrap">${perms}</div>
-      <button class="btn btn-ghost btn-sm" onclick="editFonction(${f.id})">Modifier</button>
+    const perms = f.permissions || [];
+    const chips = perms.length
+      ? perms.map(p => `<span class="role-perm">${escHtml(PERMISSION_LABELS[p] || p)}</span>`).join('')
+      : '<span class="role-noperm">Aucun droit accordé</span>';
+    return `<div class="role-card">
+      <div class="role-card-top" style="background:${f.color}">
+        <span class="role-name">${escHtml(f.fonction)}</span>
+        <button class="role-edit" title="Modifier" onclick="editFonction(${f.id})">✎</button>
+      </div>
+      <div class="role-card-body">
+        <div class="role-count">${perms.length} droit${perms.length > 1 ? 's' : ''} d'accès</div>
+        <div class="role-perms">${chips}</div>
+      </div>
     </div>`;
   }).join('');
 }
+
+const PERM_GROUPS = [
+  { label: 'Général', keys: ['view_dashboard'] },
+  { label: 'Résidents & projet', keys: ['view_residents', 'edit_residents', 'access_ppe', 'access_sante'] },
+  { label: 'Suivi quotidien', keys: ['access_journal', 'access_presences', 'access_repertoire', 'access_documents', 'access_vehicules'] },
+  { label: 'Incidents', keys: ['view_incidents', 'validate_incidents'] },
+  { label: 'Administration', keys: ['access_interventions', 'access_employes', 'access_admin', 'manage_users'] }
+];
 
 function renderFonctionPermissions(selected) {
   const el = document.getElementById('fonctionPermissions');
   if (!el) return;
   selected = selected || [];
-  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:.4rem">` + Object.entries(PERMISSION_LABELS).map(([key, label]) => `
-    <button type="button" class="perm-btn ${selected.includes(key)?'active':''}" data-key="${key}" onclick="this.classList.toggle('active')">${escHtml(label)}</button>`).join('') + `</div>`;
+  const used = new Set();
+  const btn = k => `<button type="button" class="perm-btn ${selected.includes(k) ? 'active' : ''}" data-key="${k}" onclick="this.classList.toggle('active')">${escHtml(PERMISSION_LABELS[k] || k)}</button>`;
+  let html = PERM_GROUPS.map(g => {
+    const btns = g.keys.filter(k => PERMISSION_LABELS[k]).map(k => { used.add(k); return btn(k); }).join('');
+    return btns ? `<div class="perm-group"><div class="perm-group-label">${g.label}</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${btns}</div></div>` : '';
+  }).join('');
+  const others = Object.keys(PERMISSION_LABELS).filter(k => !used.has(k));
+  if (others.length) html += `<div class="perm-group"><div class="perm-group-label">Autres</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${others.map(btn).join('')}</div></div>`;
+  el.innerHTML = html;
 }
 
 function editFonction(id) {
@@ -461,7 +498,7 @@ function editEducateur(id) {
   openModal('modalEdu');
 }
 
-function saveEducateur() {
+async function saveEducateur() {
   const username = document.getElementById('eduUsername').value.trim();
   const password = document.getElementById('eduPassword').value;
   const prenom = document.getElementById('eduPrenom').value.trim();
@@ -469,21 +506,23 @@ function saveEducateur() {
   const fonction = document.getElementById('eduFonction').value.trim();
   const id = document.getElementById('eduId').value;
   if (!username) { toast("L'identifiant est requis", 'error'); return; }
+  if (password && password.length < 6) { toast('Mot de passe : 6 caractères minimum', 'error'); return; }
   let users = DB.get(DB.keys.users) || [];
   if (users.find(u => u.username === username && String(u.id) !== String(id))) {
     toast('Cet identifiant est déjà utilisé', 'error'); return;
   }
+  const pwdHash = password ? await hashPassword(password) : null;
   if (id) {
     if (!password && !users.find(u => String(u.id) === String(id))?.password) {
       toast('Le mot de passe est requis', 'error'); return;
     }
     users = users.map(u => String(u.id) === String(id)
-      ? { ...u, prenom, nom, fonction, username, ...(password ? { password } : {}) } : u);
+      ? { ...u, prenom, nom, fonction, username, ...(pwdHash ? { password: pwdHash } : {}) } : u);
     toast('Utilisateur mis à jour');
   } else {
     if (!password) { toast('Le mot de passe est requis', 'error'); return; }
     const newId = Math.max(0, ...users.map(u => u.id)) + 1;
-    users.push({ id: newId, prenom, nom, fonction, username, password, role: 'educateur' });
+    users.push({ id: newId, prenom, nom, fonction, username, password: pwdHash, role: 'educateur' });
     toast('Utilisateur ajouté');
   }
   DB.set(DB.keys.users, users);
@@ -568,18 +607,20 @@ function saveUser() {
   toast('Compte mis à jour');
 }
 
-function saveCredentials() {
+async function saveCredentials() {
   const username = document.getElementById('uUsername').value.trim();
   const password = document.getElementById('uPassword').value;
   const confirm = document.getElementById('uPasswordConfirm').value;
   if (!username) { toast("L'identifiant est requis", 'error'); return; }
+  if (password && password.length < 6) { toast('Mot de passe : 6 caractères minimum', 'error'); return; }
   if (password && password !== confirm) { toast('Les mots de passe ne correspondent pas', 'error'); return; }
   const session = Auth.getSession();
   let users = DB.get(DB.keys.users) || [];
   if (users.find(u => u.username === username && u.id !== session.userId)) {
     toast('Cet identifiant est déjà utilisé', 'error'); return;
   }
-  users = users.map(u => u.id === session.userId ? { ...u, username, ...(password ? { password } : {}) } : u);
+  const pwdHash = password ? await hashPassword(password) : null;
+  users = users.map(u => u.id === session.userId ? { ...u, username, ...(pwdHash ? { password: pwdHash } : {}) } : u);
   DB.set(DB.keys.users, users);
   DB.set(DB.keys.session, { ...session, username });
   document.getElementById('uPassword').value = '';
@@ -590,22 +631,82 @@ function saveCredentials() {
 // ── DONNÉES ──
 function exportData(type) {
   let data = {};
-  if (type === 'residents' || type === 'all') data.residents = DB.get(DB.keys.residents) || [];
-  if (type === 'journal' || type === 'all') data.journal = DB.get(DB.keys.journal) || [];
+  const k = DB.keys;
+  if (type === 'residents' || type === 'all') data.residents = DB.get(k.residents) || [];
+  if (type === 'journal'   || type === 'all') data.journal   = DB.get(k.journal)   || [];
   if (type === 'all') {
-    data.categories = DB.get(DB.keys.categories) || [];
-    data.objectives = DB.get(DB.keys.objectives) || [];
-    data.presences = DB.get(DB.keys.presences) || {};
-    data.settings = DB.get(DB.keys.settings) || {};
+    data.categories    = DB.get(k.categories)    || [];
+    data.objectives    = DB.get(k.objectives)    || [];
+    data.presences     = DB.get(k.presences)     || {};
+    data.planning      = DB.get(k.planning)      || [];
+    data.incidents     = DB.get(k.incidents)     || [];
+    data.ppe           = DB.get(k.ppe)           || [];
+    data.repertoire    = DB.get(k.repertoire)    || [];
+    data.vehicules     = DB.get(k.vehicules)     || [];
+    data.documents     = JSON.parse(localStorage.getItem(k.documents) || '{}');
+    data.messages      = DB.get(k.messages)      || [];
+    data.conversations = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
+    data.interventions = DB.get(k.interventions) || [];
+    data.settings      = DB.get(k.settings)      || {};
+    data.branding      = DB.get(k.branding)      || {};
+    data.users         = DB.get(k.users)         || [];
+    data.fonctionColors= DB.get(k.fonctionColors)|| [];
+    data._exportedAt   = new Date().toISOString();
+    data._version      = '1.0';
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `ftr-export-${type}-${today()}.json`;
+  a.download = `ftr-backup-${type}-${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('Export téléchargé');
+  toast('Export téléchargé ✓');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        confirmDialog(
+          `Restaurer la sauvegarde du ${data._exportedAt ? new Date(data._exportedAt).toLocaleString('fr-FR') : 'fichier sélectionné'} ?\n\nLes données actuelles seront écrasées.`,
+          () => {
+            const k = DB.keys;
+            if (data.residents)     DB.set(k.residents,     data.residents);
+            if (data.journal)       DB.set(k.journal,       data.journal);
+            if (data.categories)    DB.set(k.categories,    data.categories);
+            if (data.objectives)    DB.set(k.objectives,    data.objectives);
+            if (data.presences)     DB.set(k.presences,     data.presences);
+            if (data.planning)      DB.set(k.planning,      data.planning);
+            if (data.incidents)     DB.set(k.incidents,     data.incidents);
+            if (data.ppe)           DB.set(k.ppe,           data.ppe);
+            if (data.repertoire)    DB.set(k.repertoire,    data.repertoire);
+            if (data.vehicules)     DB.set(k.vehicules,     data.vehicules);
+            if (data.documents)     localStorage.setItem(k.documents, JSON.stringify(data.documents));
+            if (data.messages)      DB.set(k.messages,      data.messages);
+            if (data.conversations) localStorage.setItem('ftr_conversations', JSON.stringify(data.conversations));
+            if (data.interventions) DB.set(k.interventions, data.interventions);
+            if (data.settings)      DB.set(k.settings,      data.settings);
+            if (data.branding)      DB.set(k.branding,      data.branding);
+            if (data.fonctionColors)DB.set(k.fonctionColors,data.fonctionColors);
+            toast('Données restaurées avec succès — rechargement…', 'success');
+            setTimeout(() => location.reload(), 1500);
+          }
+        );
+      } catch {
+        toast('Fichier invalide ou corrompu', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function resetData(type) {
@@ -648,6 +749,69 @@ function renderLoginHistory() {
   }).join('');
 }
 
+// ── AUDIT LOG ──
+const ACTION_LABELS = {
+  resident_create: 'Résident ajouté',   resident_update: 'Résident modifié',  resident_delete: 'Résident supprimé',
+  incident_create: 'Incident déclaré',  incident_update: 'Incident traité',
+  journal_create:  'Entrée journal',
+  ppe_create:      'Avenant créé',      ppe_update:      'Avenant modifié',
+  user_create:     'Utilisateur créé',  user_update:     'Utilisateur modifié',
+};
+const ACTION_COLORS = {
+  resident_create:'#10b981', resident_update:'#3b82f6', resident_delete:'#ef4444',
+  incident_create:'#f59e0b', incident_update:'#10b981',
+  journal_create: '#8b5cf6',
+  ppe_create:     '#06b6d4', ppe_update:     '#3b82f6',
+  user_create:    '#6366f1', user_update:    '#6366f1',
+};
+
+function renderAuditLog() {
+  const tbody = document.getElementById('auditLogBody');
+  if (!tbody) return;
+  const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+  if (!log.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Aucune action enregistrée</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.slice(0, 200).map(e => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    const timeStr = d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    const label = ACTION_LABELS[e.action] || e.action;
+    const color = ACTION_COLORS[e.action] || '#64748b';
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:.55rem 1rem;white-space:nowrap;font-size:.78rem">${dateStr} <span style="color:var(--muted)">${timeStr}</span></td>
+      <td style="padding:.55rem 1rem;font-size:.78rem;font-weight:500">${escHtml(e.user||'—')} <span style="font-size:.68rem;color:var(--muted)">(${escHtml(e.role||'')})</span></td>
+      <td style="padding:.55rem 1rem"><span style="display:inline-block;padding:1px 8px;border-radius:100px;font-size:.68rem;font-weight:700;background:${color}18;color:${color}">${label}</span></td>
+      <td style="padding:.55rem 1rem;font-size:.75rem;color:var(--g600);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.details||'')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportAuditLog() {
+  const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+  if (!log.length) { toast('Aucune action à exporter', 'info'); return; }
+  const header = 'Date,Heure,Utilisateur,Rôle,Action,Détails\n';
+  const rows = log.map(e => {
+    const d = new Date(e.date);
+    return [
+      d.toLocaleDateString('fr-FR'),
+      d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
+      e.user || '',
+      e.role || '',
+      ACTION_LABELS[e.action] || e.action,
+      (e.details || '').replace(/,/g, ';')
+    ].map(v => `"${v}"`).join(',');
+  }).join('\n');
+  const blob = new Blob(['﻿' + header + rows], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `audit-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Audit exporté ✓');
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
@@ -660,6 +824,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEducateurs();
   initLogoUpload();
   renderLoginHistory();
+  renderAuditLog();
+  if (typeof applyEtabBackground === 'function') applyEtabBackground();
 
   ['setEtab','setVille','setFiness','setTel','setEmail'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', updatePreview);

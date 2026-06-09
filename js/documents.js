@@ -14,7 +14,7 @@ function fmtSize(b) {
 }
 
 function getAllDocuments() {
-  const all = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  const all = (DB.get(DB.keys.documents) || {});
   const residents = DB.get(DB.keys.residents) || [];
   const list = [];
   for (const [resId, docs] of Object.entries(all)) {
@@ -31,7 +31,7 @@ function getAllDocuments() {
 function initDocuments() {
   const session = Auth.requireAuth();
   if (!session) return;
-  if (!canAccessModule('documents')) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1.1rem;color:var(--muted)">⛔ Accès refusé. Vous n\'avez pas les droits pour accéder à cette page.</div>'; return; }
+  if (!requireModule('access_documents')) return;
   populateDocResidentSelect();
   renderDocuments();
 }
@@ -58,7 +58,11 @@ function renderDocuments() {
   if (filterRes) filtered = filtered.filter(d => d.residentId === filterRes);
   if (filterType) filtered = filtered.filter(d => (d.type || 'resident') === filterType);
   if (filterCat) filtered = filtered.filter(d => d.category === filterCat);
-  if (search) filtered = filtered.filter(d => (d.residentName||'').toLowerCase().includes(search));
+  if (search) filtered = filtered.filter(d =>
+    (d.residentName||'').toLowerCase().includes(search) ||
+    (d.name||'').toLowerCase().includes(search) ||
+    (d.category||'').toLowerCase().includes(search)
+  );
 
   if (!filtered.length) {
     container.innerHTML = '<div class="empty" style="padding:3rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><p>Aucun document trouvé</p><button class="btn btn-outline btn-sm" onclick="openDocModal()">Ajouter un document</button></div>';
@@ -157,7 +161,7 @@ function toggleDocType(type) {
 }
 
 function editDocModal(docId, resId) {
-  const allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  const allDocs = (DB.get(DB.keys.documents) || {});
   const doc = (allDocs[resId]||[]).find(d => d.id === docId);
   if (!doc) return;
   toggleDocType(doc.type === 'resource' ? 'resource' : 'resident');
@@ -197,7 +201,7 @@ async function saveDocument() {
   if (!residentId) { toast('Veuillez sélectionner un résident', 'error'); return; }
   if (!name && !window._pendingDocFile) { toast('Veuillez entrer un nom ou sélectionner un fichier', 'error'); return; }
 
-  let allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  let allDocs = (DB.get(DB.keys.documents) || {});
   if (!allDocs[residentId]) allDocs[residentId] = [];
 
   if (id) {
@@ -229,7 +233,7 @@ async function saveDocument() {
     window._pendingDocFile = null;
   }
 
-  localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(allDocs));
+  DB.set(DB.keys.documents, allDocs);
   toast(id ? 'Document modifié' : 'Document ajouté', 'success');
   closeModal('docModal');
   renderDocuments();
@@ -254,12 +258,12 @@ function cancelDocFile() {
 
 function deleteDocument(docId, resId) {
   if (!confirm('Supprimer ce document ?')) return;
-  let allDocs = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) || '{}');
+  let allDocs = (DB.get(DB.keys.documents) || {});
   const key = resId || '_resources';
   if (!allDocs[key]) return;
   allDocs[key] = allDocs[key].filter(d => d.id !== docId);
   if (!allDocs[key].length) delete allDocs[key];
-  localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(allDocs));
+  DB.set(DB.keys.documents, allDocs);
   toast('Document supprimé', 'success');
   renderDocuments();
 }
