@@ -300,10 +300,10 @@ function generateForCurrentEtab() {
   const dWinStr = r => dWin(r).toISOString().slice(0,10);
   const isActive = r => r.statut !== 'sorti';
   const MEDS = [
-    { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur' }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir' },
-    { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun' }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne' },
-    { nom:'Méthylphénidate 18mg', pos:'1 cp', freq:'le matin' }, { nom:'Escitalopram 10mg', pos:'1 cp', freq:'le soir' },
-    { nom:'Hydroxyzine 25mg', pos:'1 cp', freq:'au coucher' }, { nom:'Mélatonine 2mg', pos:'1 cp', freq:'au coucher' }
+    { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur', moments:[] }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir', moments:['matin','soir'] },
+    { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun', moments:['matin'] }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne', moments:[] },
+    { nom:'Méthylphénidate 18mg', pos:'1 cp', freq:'le matin', moments:['matin'] }, { nom:'Escitalopram 10mg', pos:'1 cp', freq:'le soir', moments:['soir'] },
+    { nom:'Hydroxyzine 25mg', pos:'1 cp', freq:'au coucher', moments:['coucher'] }, { nom:'Mélatonine 2mg', pos:'1 cp', freq:'au coucher', moments:['coucher'] }
   ];
   const VACCINS = ['DTP (rappel)','Hépatite B','ROR','Méningocoque C','COVID-19','Grippe saisonnière','Papillomavirus'];
   const RDV_TYPES = ['Médecin traitant','Dentiste','Ophtalmologue','CMP','Dermatologue','Kinésithérapeute','Psychiatre'];
@@ -326,7 +326,7 @@ function generateForCurrentEtab() {
 
     // Santé (dans la fenêtre de présence ; RDV/rappels à venir uniquement si présent)
     const traitements = [];
-    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '' }); }
+    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '', moments: med.moments.slice() }); }
     const rdv = [];
     for (let k = 0; k < rand(1,4); k++) rdv.push({ id:'dr-'+ri+'-'+k, date: dWinStr(r), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: true });
     if (active && Math.random() < .7) rdv.push({ id:'dr-'+ri+'-f', date: dAhead(40), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: false });
@@ -1362,6 +1362,40 @@ function generateForCurrentEtab() {
   ];
   DB.set(DB.keys.cvs, { membres: cvsMembresDemo, seances: cvsSeancesDemo });
 
+  // ── DISTRIBUTION DES MÉDICAMENTS ──
+  const MED_HEURES = { matin: '08:00', midi: '12:00', soir: '18:00', coucher: '21:00' };
+  const MED_OBS = {
+    refuse: ['Refus du résident, médicament non administré.', "Refus malgré la proposition à plusieurs reprises."],
+    absent: ['Résident absent au moment de la distribution.', 'Résident en sortie, prise non effectuée.'],
+    report: ['Prise reportée au moment suivant.', 'Reporté à la demande du résident, repas en cours.']
+  };
+  const medicamentsDemo = [];
+  resList.filter(r => isActive(r)).forEach(r => {
+    const traitsAvecMoments = (r.sante.traitements || []).filter(t => (t.moments || []).length);
+    if (!traitsAvecMoments.length) return;
+    for (let d = 6; d >= 0; d--) {
+      const date = new Date(now.getTime() - d * 86400000).toISOString().slice(0,10);
+      traitsAvecMoments.forEach(t => {
+        t.moments.forEach(moment => {
+          const roll = Math.random();
+          let statut = 'donne';
+          if (roll < 0.04) statut = 'refuse';
+          else if (roll < 0.07) statut = 'absent';
+          else if (roll < 0.10) statut = 'report';
+          medicamentsDemo.push({
+            id: 'demo-med-' + r.id + '-' + t.id + '-' + date + '-' + moment,
+            date, residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+            traitementId: t.id, medicament: t.nom, posologie: t.posologie, moment, statut,
+            heure: new Date(date + 'T' + MED_HEURES[moment] + ':00').toISOString(),
+            auteur: pick(REFFERENTS),
+            observation: statut !== 'donne' ? pick(MED_OBS[statut]) : ''
+          });
+        });
+      });
+    }
+  });
+  DB.set(DB.keys.medicaments, medicamentsDemo);
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
@@ -1372,6 +1406,7 @@ function generateForCurrentEtab() {
     nuits: nuits.length,
     activites: activites.length,
     cvs: cvsSeancesDemo.length,
+    medicaments: medicamentsDemo.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -1408,7 +1443,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');

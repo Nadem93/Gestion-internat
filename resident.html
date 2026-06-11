@@ -377,6 +377,7 @@ function renderViewMode(r) {
 // ── SANTÉ (intégré à la carte Médical) ──
 let santeEdit = { type: null, id: null };
 const BLOOD_GROUPS = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const MED_MOMENTS = { matin: 'Matin', midi: 'Midi', soir: 'Soir', coucher: 'Coucher' };
 
 function getSante(r) {
   const s = r.sante || {};
@@ -505,7 +506,7 @@ function santeCard(r) {
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem">${escHtml(t.nom)} ${actif ? '<span class="badge badge-green">Actif</span>' : '<span class="badge badge-gray">Terminé</span>'}</div>
-        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${[t.posologie, t.frequence].filter(Boolean).map(escHtml).join(' · ')}${t.debut ? ' · depuis '+formatDate(t.debut) : ''}${t.fin ? ' → '+formatDate(t.fin) : ''}</div>
+        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${[t.posologie, t.frequence].filter(Boolean).map(escHtml).join(' · ')}${t.debut ? ' · depuis '+formatDate(t.debut) : ''}${t.fin ? ' → '+formatDate(t.fin) : ''}${(t.moments||[]).length ? ' · ' + t.moments.map(m => MED_MOMENTS[m]).join(', ') : ''}</div>
       </div>
       ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openSanteModal('traitement','${t.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSanteItem('traitements','${t.id}')">✕</button></div>` : ''}
     </div>`;
@@ -591,6 +592,11 @@ function santeFormHtml(type, item) {
     <div class="grid grid-2" style="gap:.75rem">
       ${santeField('sDebut','Début',item.debut,'date')}
       ${santeField('sFin','Fin (laisser vide si en cours)',item.fin,'date')}
+    </div>
+    <div class="form-group"><label>Moments de prise (pour la feuille de distribution)</label>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;padding:.5rem .1rem">
+        ${Object.entries(MED_MOMENTS).map(([k, l]) => `<label style="display:flex;align-items:center;gap:.35rem;font-size:.82rem;font-weight:400"><input type="checkbox" id="sMoment_${k}" value="${k}" ${(item.moments||[]).includes(k) ? 'checked' : ''}/> ${l}</label>`).join('')}
+      </div>
     </div>`;
   if (type === 'rdv') return `
     <div class="grid grid-2" style="gap:.75rem">
@@ -708,7 +714,8 @@ function saveSanteItem() {
     let listKey, item;
     if (type === 'traitement') {
       if (!g('sNom')) { toast('Le nom du médicament est requis', 'error'); return; }
-      listKey = 'traitements'; item = { nom: g('sNom'), posologie: g('sPosologie'), frequence: g('sFrequence'), debut: g('sDebut'), fin: g('sFin') };
+      const moments = Object.keys(MED_MOMENTS).filter(k => document.getElementById('sMoment_' + k)?.checked);
+      listKey = 'traitements'; item = { nom: g('sNom'), posologie: g('sPosologie'), frequence: g('sFrequence'), debut: g('sDebut'), fin: g('sFin'), moments };
     } else if (type === 'rdv') {
       if (!g('sDate')) { toast('La date est requise', 'error'); return; }
       listKey = 'rdv'; item = { date: g('sDate'), heure: g('sHeure'), type: g('sType'), praticien: g('sPraticien'), lieu: g('sLieu'), notes: g('sNotes') };
@@ -1703,7 +1710,7 @@ function togglePageEdit() {
 // ═══════════════════════════════════════════
 //  FIL DE VIE UNIFIÉ
 // ═══════════════════════════════════════════
-const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites', nuit:'Nuits', activite:'Activités' };
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites', nuit:'Nuits', activite:'Activités', medicament:'Médicaments' };
 
 function fvDate(ts) {
   const p = n => String(n).padStart(2, '0');
@@ -1727,6 +1734,11 @@ function buildFilDeVie(r) {
   });
   (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
     push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `${e.eig?.declarable ? '🚨 EIG — ' : 'Incident — '}${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
+  });
+  const MED_MOMENT_LABELS = { matin:'Matin', midi:'Midi', soir:'Soir', coucher:'Coucher' };
+  const MED_STATUT_LABELS = { refuse:'🚫 Refus', absent:'➖ Absence', report:'⏭️ Report' };
+  (DB.get(DB.keys.medicaments) || []).filter(e => String(e.residentId) === String(currentResidentId) && ['refuse','absent','report'].includes(e.statut)).forEach(e => {
+    push(new Date((e.heure || e.date + 'T00:00')), 'medicament', '💊', '#d97706', `${MED_STATUT_LABELS[e.statut]} médicament — ${e.medicament||''}`.trim(), `${MED_MOMENT_LABELS[e.moment]||''}${e.observation ? ' · ' + e.observation : ''}`);
   });
   const s = getSante(r);
   s.rdv.forEach(v => push(new Date((v.date||'') + 'T' + (v.heure || '00:00')), 'rdv', '🏥', '#16a34a', `RDV — ${v.type||'médical'}`, [v.praticien, v.lieu, v.fait ? 'effectué' : (v.date && v.date < today() ? 'non honoré' : 'à venir')].filter(Boolean).join(' · ')));
