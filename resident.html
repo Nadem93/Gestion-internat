@@ -1532,7 +1532,7 @@ function togglePageEdit() {
 // ═══════════════════════════════════════════
 //  FIL DE VIE UNIFIÉ
 // ═══════════════════════════════════════════
-const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau' };
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites' };
 
 function fvDate(ts) {
   const p = n => String(n).padStart(2, '0');
@@ -1566,6 +1566,15 @@ function buildFilDeVie(r) {
     if (it.dateAjout) push(new Date(it.dateAjout + 'T00:00'), 'trousseau', '🧳', '#7c3aed', `Dépôt — ${it.designation||'article'}`, [it.categorie, it.etat].filter(Boolean).join(' · '));
     if (it.restitue && it.dateRestitution) push(new Date(it.dateRestitution + 'T00:00'), 'trousseau', '🧳', '#7c3aed', `Restitution — ${it.designation||'article'}`, '');
   });
+  if (DB.keys.visites) {
+    const _visLabels = { libre:'Visite libre', mediatisee:'Visite médiatisée', hebergement:'Hébergement famille', telephone:'Appel téléphonique' };
+    const _visStatuts = { prevue:'prévue', realisee:'réalisée', annulee:'annulée', absent:'non présenté' };
+    (DB.get(DB.keys.visites) || []).filter(v => String(v.residentId) === String(currentResidentId)).forEach(v => {
+      push(new Date((v.date||'') + 'T' + (v.heure || '00:00')), 'visite', '👪', '#65a30d',
+        `${_visLabels[v.type]||'Visite'} — ${v.personne||''}`,
+        [v.lien, _visStatuts[v.statut]||v.statut, v.type==='hebergement'&&v.dateRetour ? 'retour ' + formatDate(v.dateRetour) : ''].filter(Boolean).join(' · '));
+    });
+  }
   getBudgetOps(r).forEach(o => push(new Date((o.date||'') + 'T00:00'), 'budget', '💰', '#d97706', `${o.type==='recette'?'Recette':'Dépense'} — ${o.libelle||o.categorie||''}`, `${o.type==='recette'?'+':'–'} ${fmtMoney(o.montant)}`));
   (DB.get(DB.keys.ppe) || []).filter(p => String(p.residentId) === String(currentResidentId)).forEach(p => push(new Date((p.dateRedaction||'') + 'T00:00'), 'avenant', '📄', '#8b5cf6', 'Avenant PPE', (typeof STATUT_PPE_LABEL !== 'undefined' ? (STATUT_PPE_LABEL[p.statut]||p.statut) : p.statut) || ''));
   getEvaluations(r).forEach(e => { if (e.date) push(new Date(e.date + 'T00:00'), 'evaluation', '📊', '#6366f1', "Grille d'évaluation", e.grille || e.nom || e.titre || ''); });

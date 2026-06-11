@@ -1124,6 +1124,55 @@ function generateForCurrentEtab() {
   shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.soir[r.id] = 0; });
   DB.set(DB.keys.repas, { [today]: repasDay });
 
+  // ── DROITS DE VISITE & VISITES FAMILLE ──
+  const VIS_PERSONNES = [
+    ['Mme {N}','Mère'],['M. {N}','Père'],['M. et Mme {N}','Parents'],['Mme {N}','Grand-mère'],
+    ['M. {N}','Grand-père'],['Mme {N}','Tante'],['M. {N}','Oncle'],['Mme {N}','Sœur'],['M. {N}','Frère']
+  ];
+  const visites = [];
+  resList.forEach(r => {
+    if (Math.random() < .6) {
+      // Cadre : 1-2 personnes autorisées
+      const nb = Math.random() < .35 ? 2 : 1;
+      const picked = shuffle([...VIS_PERSONNES]).slice(0, nb);
+      r.droitsVisite = picked.map(([tpl, lien], k) => {
+        const type = pick(['libre','libre','libre','mediatisee','hebergement','telephone']);
+        return {
+          id: 'demo-dv-' + r.id + '-' + k,
+          personne: tpl.replace('{N}', r.nom),
+          lien, type,
+          modalites: type === 'hebergement' ? pick(['1 week-end sur 2','Vacances scolaires','1 week-end par mois']) : type === 'mediatisee' ? pick(['1 h en présence d\'un éducateur','2 h au point rencontre']) : pick(['Libre en journée','Mercredis et week-ends','']),
+          decision: Math.random() < .5 ? pick(['Ordonnance JE du ' + new Date(now.getTime() - rand(60, 400) * 86400000).toLocaleDateString('fr-FR'),'Accord ASE','Décision MDPH','Accord famille/établissement']) : ''
+        };
+      });
+      // Visites sur l'année : passées + à venir
+      const nbVis = rand(2, 8);
+      for (let k = 0; k < nbVis; k++) {
+        const d = r.droitsVisite[rand(0, r.droitsVisite.length - 1)];
+        const offset = rand(-300, 21);
+        const dateV = new Date(now.getTime() + offset * 86400000);
+        const past = offset < 0;
+        const type = d.type;
+        const dateStr = dateV.toISOString().slice(0,10);
+        visites.push({
+          id: 'demo-vis-' + r.id + '-' + k,
+          residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+          type, personne: d.personne, lien: d.lien,
+          date: dateStr,
+          heure: pick(['10:00','14:00','14:30','15:00','16:00']),
+          dateRetour: type === 'hebergement' ? new Date(dateV.getTime() + rand(1, 2) * 86400000).toISOString().slice(0,10) : '',
+          heureRetour: type === 'hebergement' ? pick(['17:00','18:00','19:00']) : '',
+          lieu: type === 'mediatisee' ? 'Point rencontre' : type === 'hebergement' ? 'Domicile familial' : 'Établissement',
+          notes: past && Math.random() < .3 ? pick(['Visite qui s\'est bien déroulée','Moment chaleureux, le résident était ravi','Échanges tendus en début de visite puis apaisés','Le résident a présenté ses progrès']) : '',
+          statut: past ? pick(['realisee','realisee','realisee','realisee','annulee','absent']) : 'prevue',
+          createdBy: pick(REFFERENTS), createdAt: now.toISOString()
+        });
+      }
+    }
+  });
+  DB.set(DB.keys.visites, visites);
+  DB.set(DB.keys.residents, resList); // persiste les droitsVisite ajoutés ci-dessus
+
   // ── ÉCHÉANCIER ADMINISTRATIF ──
   const echTypes = ['mdph','jugement','identite','css','contrat','ppe','medical'];
   const echLibelles = {
@@ -1157,6 +1206,7 @@ function generateForCurrentEtab() {
   return {
     chambres: rooms.length,
     echeances: echeances.length,
+    visites: visites.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -1193,7 +1243,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
