@@ -130,7 +130,7 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
 ══════════════════════════════════════════ */
 .header{
   height:var(--header-h);
-  background:rgba(255,255,255,.72);
+  background:rgba(255,255,255,.4);
   backdrop-filter:var(--blur) saturate(160%);-webkit-backdrop-filter:var(--blur) saturate(160%);
   border-bottom:none;
   display:flex;align-items:center;gap:.75rem;
