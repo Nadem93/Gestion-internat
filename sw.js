@@ -1,10 +1,12 @@
-const CACHE = 'internalis-v6';
+const CACHE = 'internalis-v7';
 const ASSETS = [
   './',
   './accueil.html',
   './dashboard.html',
   './aide.html',
   './notes.html',
+  './chambres.html',
+  './echeances.html',
   './index.html',
   './css/style.css',
   './js/app.js',
