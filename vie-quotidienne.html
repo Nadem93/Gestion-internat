@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Vie quotidienne — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout"><div class="main">
+  <header class="header">
+    <div class="header-info"><div class="header-title">🏠 Vie quotidienne</div></div>
+    <div class="header-right"><a href="accueil.html" class="btn btn-outline btn-sm">← Accueil</a></div>
+  </header>
+  <main class="content">
+    <div style="max-width:620px;margin:0 auto;padding:2rem 0">
+      <div class="am-grid">
+        <a href="presences.html" class="am-card" data-perm="access_presences" style="background:linear-gradient(135deg,#16a34a25,#4ade8015)">
+          <span class="am-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span> Présences
+        </a>
+        <a href="chambres.html" class="am-card" data-perm="view_residents" style="background:linear-gradient(135deg,#be185d25,#f472b615)">
+          <span class="am-icon" style="background:#be185d20;color:#be185d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></span> Chambres
+        </a>
+        <a href="repas.html" class="am-card" data-perm="view_residents" style="background:linear-gradient(135deg,#ea580c25,#fdba7415)">
+          <span class="am-icon" style="background:#ea580c20;color:#ea580c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></span> Repas & régimes
+        </a>
+        <a href="visites.html" class="am-card" data-perm="view_residents" style="background:linear-gradient(135deg,#65a30d25,#bef26415)">
+          <span class="am-icon" style="background:#65a30d20;color:#65a30d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span> Visites & famille
+        </a>
+        <a href="nuit.html" class="am-card" data-perm="access_journal" style="background:linear-gradient(135deg,#312e8125,#818cf815)">
+          <span class="am-icon" style="background:#312e8120;color:#312e81"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span> Cahier de nuit
+        </a>
+      </div>
+    </div>
+  </main>
+</div></div>
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script>
+  Auth.requireAuth();
+  document.querySelectorAll('[data-perm]').forEach(el => {
+    const _s = Auth.getSession();
+    const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || hasPermission(_s.userId, el.dataset.perm));
+    if (!ok) el.style.display = 'none';
+  });
+</script>
+</body></html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dossiers & suivi — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout"><div class="main">
+  <header class="header">
+    <div class="header-info"><div class="header-title">📂 Dossiers & suivi</div></div>
+    <div class="header-right"><a href="accueil.html" class="btn btn-outline btn-sm">← Accueil</a></div>
+  </header>
+  <main class="content">
+    <div style="max-width:620px;margin:0 auto;padding:2rem 0">
+      <div class="am-grid">
+        <a href="ppe.html" class="am-card" data-perm="access_ppe" data-module="ppe" style="background:linear-gradient(135deg,#dc262625,#f8717115);position:relative">
+          <span class="am-icon" style="background:#dc262620;color:#dc2626"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span> Avenants
+        </a>
+        <a href="documents.html" class="am-card" data-perm="access_documents" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)">
+          <span class="am-icon" style="background:#8b5cf620;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span> Documents
+        </a>
+        <a href="echeances.html" class="am-card" data-perm="view_residents" style="background:linear-gradient(135deg,#0369a125,#7dd3fc15)">
+          <span class="am-icon" style="background:#0369a120;color:#0369a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg></span> Échéancier
+        </a>
+        <a href="viatrajectoire.html" class="am-card" data-perm="access_viatrajectoire" style="background:linear-gradient(135deg,#0d948825,#2dd4bf15)">
+          <span class="am-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span> ViaTrajectoire
+        </a>
+        <a href="repertoire.html" class="am-card" data-perm="access_repertoire" style="background:linear-gradient(135deg,#7c3aed25,#a78bfa15)">
+          <span class="am-icon" style="background:#7c3aed20;color:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Répertoire
+        </a>
+      </div>
+    </div>
+  </main>
+</div></div>
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script>
+  Auth.requireAuth();
+  document.querySelectorAll('[data-perm]').forEach(el => {
+    const _s = Auth.getSession();
+    const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || hasPermission(_s.userId, el.dataset.perm));
+    if (!ok) el.style.display = 'none';
+  });
+</script>
+</body></html>

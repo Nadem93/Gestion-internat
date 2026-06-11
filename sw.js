@@ -1,4 +1,4 @@
-const CACHE = 'internalis-v10';
+const CACHE = 'internalis-v11';
 const ASSETS = [
   './',
   './accueil.html',
@@ -10,6 +10,8 @@ const ASSETS = [
   './repas.html',
   './visites.html',
   './nuit.html',
+  './vie-quotidienne.html',
+  './dossiers.html',
   './index.html',
   './css/style.css',
   './js/app.js',
