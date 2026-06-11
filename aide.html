@@ -75,6 +75,8 @@
           <a href="#s-accueil">Accueil</a>
           <a href="#s-dashboard">Tableau de bord</a>
           <a href="#s-residents">Résidents</a>
+          <a href="#s-chambres">Chambres & repas</a>
+          <a href="#s-echeances">Échéancier</a>
           <a href="#s-fiche">Fiche résident</a>
           <a href="#s-journal">Journal</a>
           <a href="#s-avenant">Avenants (PPE)</a>
@@ -184,6 +186,53 @@
             <li><span class="num">1</span><div><div class="lg-title">Recherche, filtres & tri</div><div class="lg-desc">Tapez un nom pour filtrer la liste, filtrez par objectif, ou triez par nom, prénom, chambre, date d'entrée ou âge.</div></div></li>
             <li><span class="num">2</span><div><div class="lg-title">Cartes résidents</div><div class="lg-desc">Une carte par résident avec photo, âge, chambre et statut de présence. Un clic ouvre la fiche complète.</div></div></li>
             <li><span class="num">3</span><div><div class="lg-title">Affichage & ajout</div><div class="lg-desc">Basculez entre la vue grille et la vue liste. Le bouton « + Ajouter un résident » (réservé aux administrateurs) crée un nouveau dossier.</div></div></li>
+          </ul>
+        </section>
+
+        <!-- CHAMBRES & REPAS -->
+        <section class="help-sec" id="s-chambres">
+          <h2>🛏️ Chambres & repas</h2>
+          <p class="lead">Le quotidien de l'internat : plan d'occupation des chambres, attribution des lits, états des lieux, et gestion des repas avec régimes alimentaires.</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>chambres</span></div>
+            <div class="screen-body">
+              <div class="mk-head">🏢 Unité A <span class="mk-badge" style="margin-left:auto">12 chambres</span></div>
+              <div class="mk-row">
+                <div class="mk-card" style="flex:1;border-left:3px solid #16a34a">Ch. 101<div class="mk-badge" style="margin-top:4px;background:#dcfce7;color:#16a34a">Libre</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #d97706">Ch. 102<div class="mk-badge" style="margin-top:4px;background:#fef3c7;color:#d97706">1/1</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #d97706">Ch. 103<div class="mk-badge" style="margin-top:4px">📋 EDL</div></div>
+              </div>
+              <div class="pin" style="top:80px;left:30px">1<span class="bub">Une carte par chambre : état coloré (libre, complète, sur-occupée), occupants cliquables.</span></div>
+              <div class="pin" style="top:80px;right:60px">2<span class="bub">États des lieux d'entrée et de sortie avec historique par chambre.</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Plan d'occupation</div><div class="lg-desc">Vue par unité/étage. Attribuer un lit met à jour automatiquement la fiche du résident ; les chambres existantes sont importées automatiquement à la première ouverture.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">États des lieux</div><div class="lg-desc">Grille murs / sol / mobilier / literie / sanitaires (Bon, Moyen, Dégradé) avec observations, à l'entrée comme à la sortie. Tout l'historique reste consultable.</div></div></li>
+          </ul>
+          <div class="tip">🍽️ Le module <strong>Repas</strong> fonctionne par jour : tous les résidents actifs sont inscrits midi et soir par défaut, on décoche les absents. La synthèse « Effectifs cuisine par régime » et la feuille imprimable donnent à la cuisine exactement ce dont elle a besoin. Les allergies remontent de la fiche santé.</div>
+        </section>
+
+        <!-- ÉCHÉANCIER -->
+        <section class="help-sec" id="s-echeances">
+          <h2>⏰ Échéancier administratif</h2>
+          <p class="lead">Les renouvellements à ne jamais manquer : MDPH, jugements, pièces d'identité, CSS, contrats de séjour…</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>échéancier</span></div>
+            <div class="screen-body">
+              <div class="mk-row">
+                <div class="mk-card" style="flex:1;border-left:3px solid #dc2626;text-align:center">En retard<div style="font-weight:800;color:#dc2626">2</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #d97706;text-align:center">Sous 30 j<div style="font-weight:800;color:#d97706">5</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #0891b2;text-align:center">Sous 90 j<div style="font-weight:800;color:#0891b2">8</div></div>
+              </div>
+              <div class="mk-card" style="border-left:3px solid #dc2626">🧾 Renouvellement MDPH — <span style="color:#dc2626;font-weight:700">12 j de retard</span></div>
+              <div class="pin" style="top:30px;left:30px">1<span class="bub">Tri automatique par urgence : retard (rouge), sous 30 jours (orange), sous 90 jours (cyan).</span></div>
+              <div class="pin" style="bottom:30px;left:30px">2<span class="bub">Chaque échéance est liée au résident, avec compte des jours restants et bouton « traité ✓ ».</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Alertes par urgence</div><div class="lg-desc">Le tableau de bord affiche aussi une carte « Échéances urgentes » dès qu'une échéance approche ou est dépassée — impossible de manquer un renouvellement.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Suivi par résident</div><div class="lg-desc">Types métier : notification MDPH, jugement/mesure, pièce d'identité, CSS/mutuelle, contrat de séjour, révision PPE, visite médicale. Filtrable par résident et par type.</div></div></li>
           </ul>
         </section>
 
