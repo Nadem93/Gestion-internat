@@ -1275,10 +1275,10 @@ body.etab-dark-bg .res-card,
 body.etab-dark-bg .resident-card,
 body.etab-dark-bg .modal,
 .am-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.875rem;perspective:1000px}
+.am-grid{grid-auto-rows:1fr}
 .am-card{
   position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;
-  min-height:122px;
   padding:1.1rem .5rem;border-radius:var(--r-lg);
   background:#fff;
   border:1.5px solid rgba(148,163,184,.3);
@@ -1304,7 +1304,7 @@ body.etab-dark-bg .modal,
 
 @media (max-width:600px){
   .am-grid{grid-template-columns:repeat(3,1fr);gap:.625rem}
-  .am-card{padding:.75rem .2rem;font-size:.65rem;min-height:104px}
+  .am-card{padding:.75rem .2rem;font-size:.65rem}
   .am-icon{width:36px;height:36px}
   .am-icon svg{width:18px;height:18px}
 }
