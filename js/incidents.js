@@ -161,6 +161,7 @@ function renderIncidents() {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0">
           <span class="badge-incident ${GRAVITE_CLASSES[i.gravite]||''}">${gravLabel}</span>
           <span class="badge-status ${STATUT_CLASSES[i.statut]||''}">${statLabel}</span>
+          ${i.eig?.declarable ? `<span class="badge-incident dangere" title="Événement indésirable grave">🚨 EIG${i.eig.cloture ? ' · clôturé' : i.eig.declareARS ? ' · déclaré' : ' · à déclarer'}</span>` : ''}
         </div>
       </div>
       ${i.description ? `<div class="desc">${escHtml(i.description)}</div>` : ''}
@@ -321,6 +322,14 @@ function viewIncident(id) {
     <div><strong>Description</strong><br>${escHtml(i.description) || '—'}</div>
     ${i.validatedBy ? `<div><strong>Validé par</strong><br>${escHtml(i.validatedBy)}${i.validatedAt ? ' le '+formatDateTime(i.validatedAt) : ''}</div>` : ''}
     ${i.notes ? `<div><strong>Notes de validation</strong><br>${escHtml(i.notes)}</div>` : ''}
+    <div style="border-top:1px solid var(--border);padding-top:.6rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+      <strong>🚨 Événement indésirable grave (ARS)</strong>
+      ${i.eig?.declarable ? `<span class="badge-incident dangere">${i.eig.cloture ? 'Clôturé' : i.eig.declareARS ? 'Déclaré' : 'À déclarer'}</span>` : '<span class="badge badge-gray">Non déclarable</span>'}
+      ${(typeof canValidateIncidents === 'function' && canValidateIncidents(session?.userId)) || isAdmin ? `
+        <button class="btn btn-ghost btn-sm" onclick="toggleEigDeclarable('${i.id}')">${i.eig?.declarable ? 'Retirer du registre EIG' : 'Marquer comme EIG'}</button>
+        ${i.eig?.declarable ? `<a class="btn btn-ghost btn-sm" href="eig.html">Gérer la déclaration →</a>` : ''}
+      ` : ''}
+    </div>
   `;
 
   const footer = document.getElementById('detailFooter');
@@ -390,6 +399,19 @@ function validateIncident(id) {
   if (typeof auditLog === 'function') auditLog('incident_update', `${i.titre} → ${STATUT_LABELS[statut]||statut}`);
   closeModal('modalDetail');
   toast(`Incident ${STATUT_LABELS[statut]?.toLowerCase() || statut}`);
+  renderIncidents();
+}
+
+function toggleEigDeclarable(id) {
+  const list = getIncidents();
+  const i = list.find(x => x.id === id);
+  if (!i) return;
+  const next = !(i.eig && i.eig.declarable);
+  i.eig = next ? { declarable: true, declareARS: false, dateDeclarationARS: '', numeroSignalement: '', destinataires: ['ars'], mesuresImmediates: '', mesuresCorrectives: '', cloture: false, dateCloture: '', suites: '' } : { ...(i.eig || {}), declarable: false };
+  saveIncidents(list);
+  if (typeof auditLog === 'function') auditLog('eig_toggle', `${i.titre} → ${next ? 'ajouté au registre EIG' : 'retiré du registre EIG'}`);
+  toast(next ? 'Ajouté au registre des EIG' : 'Retiré du registre des EIG');
+  viewIncident(id);
   renderIncidents();
 }
 

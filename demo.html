@@ -674,6 +674,38 @@ function generateForCurrentEtab() {
       createdAt: d.toISOString()
     });
   }
+  // Marquage EIG (Événements Indésirables Graves) sur les incidents graves
+  const eigGraves = incList.filter(i => ['grave','critique'].includes(i.gravite));
+  eigGraves.forEach((i, idx) => {
+    const declareDate = new Date(new Date(i.date).getTime() + 24 * 3600 * 1000).toISOString().slice(0,10);
+    if (idx === 0) {
+      i.eig = {
+        declarable: true, declareARS: true, dateDeclarationARS: declareDate,
+        numeroSignalement: 'ARS-' + new Date(i.date).getFullYear() + '-' + String(rand(1000,9999)),
+        destinataires: ['ars', 'cd'],
+        mesuresImmediates: 'Mise en sécurité du résident, contact famille et forces de l ordre, renforcement de la surveillance de nuit.',
+        mesuresCorrectives: 'Révision du protocole de surveillance nocturne et installation d une alarme sur les issues du RDC.',
+        cloture: true, dateCloture: new Date(new Date(i.date).getTime() + 20 * 86400000).toISOString().slice(0,10),
+        suites: 'Retour ARS sans suite particulière. Mesures correctives mises en œuvre et suivies en réunion d équipe.'
+      };
+    } else if (idx === 1) {
+      i.eig = {
+        declarable: true, declareARS: true, dateDeclarationARS: declareDate,
+        numeroSignalement: 'ARS-' + new Date(i.date).getFullYear() + '-' + String(rand(1000,9999)),
+        destinataires: ['ars', 'famille'],
+        mesuresImmediates: 'Entretien individuel avec le résident, information de la famille et du référent ASE.',
+        mesuresCorrectives: '',
+        cloture: false, dateCloture: '', suites: ''
+      };
+    } else {
+      i.eig = {
+        declarable: true, declareARS: false, dateDeclarationARS: '', numeroSignalement: '',
+        destinataires: ['ars'],
+        mesuresImmediates: 'Mise en sécurité et information de la direction.',
+        mesuresCorrectives: '', cloture: false, dateCloture: '', suites: ''
+      };
+    }
+  });
   DB.set(DB.keys.incidents, incList);
 
   // ── INTERVENTIONS ──

@@ -1726,7 +1726,7 @@ function buildFilDeVie(r) {
     push(new Date(e.date), 'journal', '📔', cat ? cat.color : '#059669', cat ? cat.name : 'Journal', e.contenu);
   });
   (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
-    push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `Incident — ${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
+    push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `${e.eig?.declarable ? '🚨 EIG — ' : 'Incident — '}${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
   });
   const s = getSante(r);
   s.rdv.forEach(v => push(new Date((v.date||'') + 'T' + (v.heure || '00:00')), 'rdv', '🏥', '#16a34a', `RDV — ${v.type||'médical'}`, [v.praticien, v.lieu, v.fait ? 'effectué' : (v.date && v.date < today() ? 'non honoré' : 'à venir')].filter(Boolean).join(' · ')));
