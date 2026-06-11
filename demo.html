@@ -1051,10 +1051,83 @@ function generateForCurrentEtab() {
   }
   localStorage.setItem('ftr_conges', JSON.stringify(conges));
 
+  // ── CHAMBRES & ÉTATS DES LIEUX ──
+  const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
+  const rooms = roomNames.map(nom => ({
+    id: 'demo-ch-' + nom,
+    nom,
+    unite: 'Unité ' + ['A','B','C','D'][Math.floor((parseInt(nom) - 100) / 10) % 4],
+    capacite: Math.random() < .2 ? 2 : 1,
+    notes: Math.random() < .12 ? pick(['Accès PMR','Proche sanitaires','Lit médicalisé','Vue jardin']) : ''
+  }));
+  DB.set(DB.keys.chambres, rooms);
+  const edls = [];
+  shuffle([...resList]).slice(0, Math.min(12, resList.length)).forEach(r => {
+    const room = rooms.find(c => c.nom === r.chambre);
+    if (!room) return;
+    edls.push({
+      id: 'demo-edl-' + r.id, chambreId: room.id, chambreNom: room.nom,
+      residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+      type: 'entree', date: r.entree,
+      etat: { murs: pick(['Bon','Bon','Moyen']), sol: pick(['Bon','Bon','Moyen']), mobilier: pick(['Bon','Moyen']), literie: 'Bon', sanitaires: pick(['Bon','Bon','Moyen','Dégradé']) },
+      observations: Math.random() < .3 ? pick(['RAS','Trace d\'usure sur le bureau','Rideau à remplacer','Peinture défraîchie côté fenêtre']) : '',
+      author: pick(REFFERENTS), createdAt: new Date(r.entree + 'T10:00').toISOString()
+    });
+  });
+  DB.set(DB.keys.edl, edls);
+
+  // ── RÉGIMES & REPAS DU JOUR ──
+  const regimePool = ['sansporc','sansporc','vegetarien','diabetique','hyposode','halal','hypocalorique'];
+  resList.forEach(r => {
+    if (Math.random() < .3) {
+      r.regime = {
+        type: pick(regimePool),
+        autreLabel: '',
+        texture: Math.random() < .12 ? pick(['hachee','mixee']) : 'normale',
+        allergiesAlim: r.allergies || '',
+        notes: Math.random() < .15 ? pick(['Petites portions','Aide à la découpe','Double ration de légumes','Mange lentement — prévoir du temps']) : ''
+      };
+    }
+  });
+  DB.set(DB.keys.residents, resList);
+  const repasDay = { midi: {}, soir: {} };
+  shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.midi[r.id] = 0; });
+  shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.soir[r.id] = 0; });
+  DB.set(DB.keys.repas, { [today]: repasDay });
+
+  // ── ÉCHÉANCIER ADMINISTRATIF ──
+  const echTypes = ['mdph','jugement','identite','css','contrat','ppe','medical'];
+  const echLibelles = {
+    mdph: 'Renouvellement notification MDPH', jugement: 'Renouvellement mesure de protection',
+    identite: 'Renouvellement carte d\'identité', css: 'Renouvellement CSS',
+    contrat: 'Révision du contrat de séjour', ppe: 'Révision du projet personnalisé', medical: 'Visite médicale annuelle'
+  };
+  const echeances = [];
+  resList.filter(r => r.statut !== 'sorti').forEach(r => {
+    if (Math.random() < .55) {
+      const n = Math.random() < .25 ? 2 : 1;
+      for (let k = 0; k < n; k++) {
+        const type = pick(echTypes);
+        const offset = rand(-25, 320); // quelques retards, beaucoup à venir
+        echeances.push({
+          id: 'demo-ec-' + r.id + '-' + k, type,
+          libelle: echLibelles[type], date: new Date(now.getTime() + offset * 86400000).toISOString().slice(0,10),
+          residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+          notes: '', done: offset < -10 && Math.random() < .5,
+          author: pick(REFFERENTS), createdAt: now.toISOString()
+        });
+      }
+    }
+  });
+  echeances.push({ id: 'demo-ec-etab-1', type: 'autre', libelle: 'Commission de sécurité incendie', date: new Date(now.getTime() + rand(40, 120) * 86400000).toISOString().slice(0,10), residentId: null, residentName: '', notes: 'Préparer les registres', done: false, author: 'Direction', createdAt: now.toISOString() });
+  DB.set(DB.keys.echeances, echeances);
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
   return {
+    chambres: rooms.length,
+    echeances: echeances.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -1091,7 +1164,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
