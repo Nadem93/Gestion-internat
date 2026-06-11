@@ -355,7 +355,7 @@ function renderFonctions() {
 const PERM_GROUPS = [
   { label: 'Général', keys: ['view_dashboard'] },
   { label: 'Résidents & projet', keys: ['view_residents', 'edit_residents', 'access_ppe', 'access_sante'] },
-  { label: 'Suivi quotidien', keys: ['access_journal', 'access_presences', 'access_repertoire', 'access_documents', 'access_vehicules'] },
+  { label: 'Suivi quotidien', keys: ['access_journal', 'access_presences', 'access_repertoire', 'access_documents', 'access_vehicules', 'access_activites'] },
   { label: 'Incidents', keys: ['view_incidents', 'validate_incidents'] },
   { label: 'Administration', keys: ['access_interventions', 'access_employes', 'access_admin', 'manage_users'] }
 ];

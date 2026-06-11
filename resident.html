@@ -144,6 +144,42 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="activiteInscrModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Inscrire à une activité</span>
+      <button class="modal-close" onclick="closeModal('activiteInscrModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="required">Activité</label><select id="aiActivite"></select></div>
+      <div class="form-group"><label>Date d'inscription</label><input type="date" id="aiDate"/></div>
+      <div id="aiEmptyMsg" style="display:none;font-size:.78rem;color:#d97706;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:.5rem .7rem">Aucune activité disponible. Créez d'abord une activité dans le module <a href="activites.html">Activités éducatives</a>.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('activiteInscrModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveActiviteInscr()">💾 Inscrire</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="activiteBilanModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="abmTitle">Bilan d'activité</span>
+      <button class="modal-close" onclick="closeModal('activiteBilanModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div id="abmHistory" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="abmDate"/></div>
+      <div class="form-group"><label>Bilan / observation</label><textarea id="abmTexte" rows="3" placeholder="Participation, comportement, progrès observés…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('activiteBilanModal')">Fermer</button>
+      <button class="btn btn-primary" onclick="saveActiviteBilan()">💾 Ajouter le bilan</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="objectifModal">
   <div class="modal">
     <div class="modal-header">
@@ -305,6 +341,7 @@ function renderViewMode(r) {
       ${serafinphCard(r)}
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
       ${trousseauCard(r)}
+      ${activitesCard(r)}
       ${isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
         infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
         infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
@@ -1019,6 +1056,140 @@ function printTrousseau() {
   w.document.close();
 }
 
+// ── ACTIVITÉS ÉDUCATIVES (sur la fiche résident) ──
+const _actCategories = {
+  sportive: { label: 'Sportive', icon: '⚽', color: '#16a34a' },
+  creative: { label: 'Créative / Artistique', icon: '🎨', color: '#db2777' },
+  culturelle: { label: 'Culturelle', icon: '🎭', color: '#8b5cf6' },
+  scolaire: { label: 'Scolaire / Soutien', icon: '📚', color: '#0369a1' },
+  autonomie: { label: 'Autonomie / Vie quotidienne', icon: '🧺', color: '#d97706' },
+  sortie: { label: 'Sortie / Extérieur', icon: '🚌', color: '#0d9488' },
+  citoyennete: { label: 'Citoyenneté / Expression', icon: '🗳️', color: '#6366f1' },
+  autre: { label: 'Autre', icon: '✨', color: '#64748b' }
+};
+let activiteBilanInscrId = null;
+
+function getResidentActivites(r) { return r.activites || []; }
+
+function activitesCard(r) {
+  const inscriptions = getResidentActivites(r);
+  const canEdit = canEditResident();
+  const catalogue = DB.get(DB.keys.activites) || [];
+  const actives = inscriptions.filter(i => i.statut === 'active');
+  const sorted = [...inscriptions].sort((a, b) => (a.statut === 'active' ? 0 : 1) - (b.statut === 'active' ? 0 : 1) || (b.dateInscription || '').localeCompare(a.dateInscription || ''));
+
+  const rows = sorted.length ? sorted.map((i, idx) => {
+    const act = catalogue.find(a => a.id === i.activiteId);
+    const c = _actCategories[act?.categorie] || _actCategories.autre;
+    const lastBilan = (i.bilans || []).slice().sort((x, y) => (y.date || '').localeCompare(x.date || ''))[0];
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.55rem .85rem;${idx ? 'border-top:1px solid var(--border)' : ''};${i.statut !== 'active' ? 'opacity:.55' : ''}">
+      <span style="font-size:1.1rem">${c.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+          ${escHtml(act ? act.nom : 'Activité supprimée')}
+          ${act?.jour ? `<span class="badge badge-gray">${escHtml(act.jour)}${act.heureDebut ? ' · ' + act.heureDebut : ''}</span>` : ''}
+          ${i.statut !== 'active' ? '<span class="badge badge-gray">Terminée</span>' : ''}
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:1px">Inscrit le ${formatDate(i.dateInscription)}${i.dateFin ? ' · terminée le ' + formatDate(i.dateFin) : ''}</div>
+        ${lastBilan ? `<div style="font-size:.72rem;color:var(--muted);margin-top:2px">📝 ${formatDate(lastBilan.date)} — ${escHtml((lastBilan.texte || '').slice(0, 140))}</div>` : ''}
+      </div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="openActiviteBilanModal('${i.id}')">📝 Bilan</button>
+        ${i.statut === 'active' ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" title="Mettre fin à l'inscription" onclick="terminerActiviteInscr('${i.id}')">↩</button>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune activité éducative</div>';
+
+  return `<div class="card" style="border-left:3px solid #6366f1"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6366f1">🎨 Activités éducatives${actives.length ? ` <span class="badge" style="background:#6366f11a;color:#6366f1;margin-left:.3rem">${actives.length} en cours</span>` : ''}</span>
+        <span class="no-print" style="margin-left:auto;display:flex;gap:.3rem">
+          <a href="activites.html" class="btn btn-ghost btn-sm">📋 Catalogue</a>
+          ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openActiviteInscrModal()">+ Inscrire</button>` : ''}
+        </span>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+    </div></div>`;
+}
+
+function openActiviteInscrModal() {
+  if (!canEditResident()) return;
+  const r = getResident();
+  if (!r) return;
+  const catalogue = (DB.get(DB.keys.activites) || []).filter(a => a.actif !== false);
+  const inscritIds = new Set(getResidentActivites(r).filter(i => i.statut === 'active').map(i => i.activiteId));
+  const opts = catalogue.filter(a => !inscritIds.has(a.id));
+  document.getElementById('aiDate').value = today();
+  const sel = document.getElementById('aiActivite');
+  if (!opts.length) {
+    sel.innerHTML = '';
+    sel.style.display = 'none';
+    document.getElementById('aiEmptyMsg').style.display = '';
+  } else {
+    sel.style.display = '';
+    document.getElementById('aiEmptyMsg').style.display = 'none';
+    sel.innerHTML = opts.map(a => {
+      const c = _actCategories[a.categorie] || _actCategories.autre;
+      return `<option value="${a.id}">${c.icon} ${escHtml(a.nom)}${a.jour ? ' — ' + escHtml(a.jour) : ''}</option>`;
+    }).join('');
+  }
+  openModal('activiteInscrModal');
+}
+
+function saveActiviteInscr() {
+  const r = getResident();
+  if (!r) return;
+  const activiteId = document.getElementById('aiActivite').value;
+  if (!activiteId) { toast('Choisissez une activité', 'error'); return; }
+  const inscription = { id: genId(), activiteId, dateInscription: document.getElementById('aiDate').value || today(), statut: 'active', bilans: [] };
+  persistResident({ ...r, activites: [...getResidentActivites(r), inscription] });
+  if (typeof auditLog === 'function') auditLog('activite_inscription', `Inscription — ${(r.prenom || '') + ' ' + (r.nom || '')}`);
+  toast('Inscription enregistrée ✓');
+  closeModal('activiteInscrModal');
+  loadResident();
+}
+
+function terminerActiviteInscr(inscriptionId) {
+  const r = getResident();
+  if (!r) return;
+  confirmDialog("Mettre fin à cette inscription ?", () => {
+    persistResident({ ...r, activites: getResidentActivites(r).map(i => i.id === inscriptionId ? { ...i, statut: 'terminee', dateFin: today() } : i) });
+    toast('Inscription terminée', 'info');
+    loadResident();
+  });
+}
+
+function openActiviteBilanModal(inscriptionId) {
+  activiteBilanInscrId = inscriptionId;
+  const r = getResident();
+  const i = getResidentActivites(r).find(x => x.id === inscriptionId);
+  const catalogue = DB.get(DB.keys.activites) || [];
+  const act = catalogue.find(a => a.id === i?.activiteId);
+  document.getElementById('abmTitle').textContent = `Bilan — ${act ? act.nom : 'Activité'}`;
+  document.getElementById('abmDate').value = today();
+  document.getElementById('abmTexte').value = '';
+  const bilans = [...(i?.bilans || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  document.getElementById('abmHistory').innerHTML = bilans.length ? bilans.map(b => `<div style="padding:.5rem .65rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm)">
+    <div style="font-size:.7rem;color:var(--muted);font-weight:600">${formatDate(b.date)}${b.auteur ? ' · ' + escHtml(b.auteur) : ''}</div>
+    <div style="font-size:.8rem;margin-top:2px">${escHtml(b.texte)}</div>
+  </div>`).join('') : '<div style="font-size:.78rem;color:var(--g400)">Aucun bilan enregistré.</div>';
+  openModal('activiteBilanModal');
+}
+
+function saveActiviteBilan() {
+  const texte = document.getElementById('abmTexte').value.trim();
+  if (!texte) { toast('Le bilan est vide', 'error'); return; }
+  const r = getResident();
+  if (!r) return;
+  const s = Auth.getSession();
+  const auteur = s ? (`${s.prenom || ''} ${s.nom || ''}`.trim() || s.username) : '';
+  const bilan = { id: genId(), date: document.getElementById('abmDate').value || today(), texte, auteur };
+  persistResident({ ...r, activites: getResidentActivites(r).map(i => i.id === activiteBilanInscrId ? { ...i, bilans: [...(i.bilans || []), bilan] } : i) });
+  toast('Bilan ajouté ✓');
+  loadResident();
+  openActiviteBilanModal(activiteBilanInscrId);
+}
+
 function getBudgetOps(r) { return (r.budget && r.budget.operations) || []; }
 function fmtMoney(n) { return (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
 
@@ -1532,7 +1703,7 @@ function togglePageEdit() {
 // ═══════════════════════════════════════════
 //  FIL DE VIE UNIFIÉ
 // ═══════════════════════════════════════════
-const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites', nuit:'Nuits' };
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites', nuit:'Nuits', activite:'Activités' };
 
 function fvDate(ts) {
   const p = n => String(n).padStart(2, '0');
@@ -1574,6 +1745,15 @@ function buildFilDeVie(r) {
       });
     });
   }
+  getResidentActivites(r).forEach(i => {
+    const catalogue = DB.get(DB.keys.activites) || [];
+    const act = catalogue.find(a => a.id === i.activiteId);
+    const c = _actCategories[act?.categorie] || _actCategories.autre;
+    const nom = act ? act.nom : 'Activité';
+    if (i.dateInscription) push(new Date(i.dateInscription + 'T00:00'), 'activite', c.icon, c.color, `Inscription — ${nom}`, act?.jour ? `${act.jour}${act.heureDebut ? ' · ' + act.heureDebut : ''}${act.lieu ? ' · ' + act.lieu : ''}` : '');
+    if (i.dateFin) push(new Date(i.dateFin + 'T00:00'), 'activite', c.icon, c.color, `Fin d'activité — ${nom}`, '');
+    (i.bilans || []).forEach(b => { if (b.date) push(new Date(b.date + 'T00:00'), 'activite', c.icon, c.color, `Bilan activité — ${nom}`, b.texte || ''); });
+  });
   if (DB.keys.visites) {
     const _visLabels = { libre:'Visite libre', mediatisee:'Visite médiatisée', hebergement:'Hébergement famille', telephone:'Appel téléphonique' };
     const _visStatuts = { prevue:'prévue', realisee:'réalisée', annulee:'annulée', absent:'non présenté' };

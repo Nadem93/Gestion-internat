@@ -1237,6 +1237,52 @@ function generateForCurrentEtab() {
   echeances.push({ id: 'demo-ec-etab-1', type: 'autre', libelle: 'Commission de sécurité incendie', date: new Date(now.getTime() + rand(40, 120) * 86400000).toISOString().slice(0,10), residentId: null, residentName: '', notes: 'Préparer les registres', done: false, author: 'Direction', createdAt: now.toISOString() });
   DB.set(DB.keys.echeances, echeances);
 
+  // ── ACTIVITÉS ÉDUCATIVES ──
+  const ACT_CATALOGUE_DEMO = [
+    { nom: 'Atelier cuisine', categorie: 'autonomie', jour: 'Mercredi', heureDebut: '14:00', heureFin: '16:00', lieu: 'Cuisine pédagogique', animateur: 'Maîtresse de maison', placesMax: 6, description: "Préparation d'un repas en autonomie : courses, équilibre alimentaire, hygiène." },
+    { nom: 'Football / sport collectif', categorie: 'sportive', jour: 'Mardi', heureDebut: '17:00', heureFin: '18:30', lieu: 'Gymnase municipal', animateur: 'Éducateur sportif', placesMax: 10, description: 'Travail du collectif, respect des règles, dépense physique.' },
+    { nom: 'Atelier arts plastiques', categorie: 'creative', jour: 'Lundi', heureDebut: '16:30', heureFin: '18:00', lieu: "Salle d'activités", animateur: 'Éducatrice référente', placesMax: 8, description: 'Expression par le dessin, la peinture et le collage.' },
+    { nom: 'Soutien scolaire', categorie: 'scolaire', jour: 'Jeudi', heureDebut: '17:00', heureFin: '18:00', lieu: "Salle d'étude", animateur: 'Bénévole AFEV', placesMax: 4, description: 'Aide aux devoirs et révisions.' },
+    { nom: 'Sortie médiathèque', categorie: 'sortie', jour: 'Samedi', heureDebut: '10:00', heureFin: '12:00', lieu: 'Médiathèque municipale', animateur: 'Éducateur référent', placesMax: 5, description: 'Découverte de la lecture, emprunt de livres.' },
+    { nom: 'Conseil des jeunes', categorie: 'citoyennete', jour: 'Vendredi', heureDebut: '18:00', heureFin: '19:00', lieu: 'Salle commune', animateur: 'Chef de service', placesMax: 0, description: 'Expression collective, propositions sur la vie quotidienne.' },
+    { nom: 'Atelier musique', categorie: 'culturelle', jour: 'Mercredi', heureDebut: '16:00', heureFin: '17:00', lieu: 'Salle polyvalente', animateur: 'Intervenant musique', placesMax: 6, description: 'Initiation aux instruments et au chant.' },
+    { nom: 'Piscine', categorie: 'sportive', jour: 'Samedi', heureDebut: '14:00', heureFin: '16:00', lieu: 'Piscine municipale', animateur: 'Maître-nageur + éducateur', placesMax: 8, description: 'Activité aquatique, apprentissage de la natation.', actif: false }
+  ];
+  const activites = ACT_CATALOGUE_DEMO.map((a, k) => ({ id: 'demo-act-' + k, actif: true, ...a, createdAt: now.toISOString() }));
+  const ACT_BILAN_POOL = [
+    'Bonne participation, motivation en hausse.',
+    "S'est montré(e) en retrait au début puis intégré(e) au groupe.",
+    'Progrès notables dans la relation aux autres.',
+    'A pris des responsabilités dans le déroulement de la séance.',
+    'Quelques difficultés de concentration mais investissement réel.',
+    'Très bon comportement, à poursuivre sur cette dynamique.',
+    'Absent(e) sans justification, à recontacter.',
+    'A exprimé du plaisir à participer, demande à continuer.'
+  ];
+  const activitesActives = activites.filter(a => a.actif);
+  resList.filter(r => r.statut !== 'sorti').forEach(r => {
+    const chosen = shuffle([...activitesActives]).slice(0, rand(0, 3));
+    r.activites = chosen.map((a, k) => {
+      const terminee = Math.random() < .15;
+      const bilans = [];
+      const nbBilans = rand(0, 2);
+      for (let b = 0; b < nbBilans; b++) {
+        bilans.push({ id: 'demo-actb-' + r.id + '-' + k + '-' + b, date: new Date(now.getTime() - rand(1, 60) * 86400000).toISOString().slice(0,10), texte: pick(ACT_BILAN_POOL), auteur: pick(REFFERENTS) });
+      }
+      const inscr = {
+        id: 'demo-acti-' + r.id + '-' + k,
+        activiteId: a.id,
+        dateInscription: new Date(now.getTime() - rand(10, 200) * 86400000).toISOString().slice(0,10),
+        statut: terminee ? 'terminee' : 'active',
+        bilans
+      };
+      if (terminee) inscr.dateFin = new Date(now.getTime() - rand(1, 30) * 86400000).toISOString().slice(0,10);
+      return inscr;
+    });
+  });
+  DB.set(DB.keys.activites, activites);
+  DB.set(DB.keys.residents, resList);
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
@@ -1245,6 +1291,7 @@ function generateForCurrentEtab() {
     echeances: echeances.length,
     visites: visites.length,
     nuits: nuits.length,
+    activites: activites.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -1281,7 +1328,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
