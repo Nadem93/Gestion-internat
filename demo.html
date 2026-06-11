@@ -1076,6 +1076,35 @@ function generateForCurrentEtab() {
   });
   DB.set(DB.keys.edl, edls);
 
+  // ── TROUSSEAU & EFFETS PERSONNELS ──
+  const TR_POOL = [
+    ['Vêtements','Jean'],['Vêtements','T-shirts'],['Vêtements','Pull'],['Vêtements','Blouson'],['Vêtements','Paire de baskets'],
+    ['Linge de maison','Parure de lit'],['Linge de maison','Serviettes de toilette'],
+    ['Hygiène','Trousse de toilette'],['Multimédia','Téléphone portable'],['Multimédia','Casque audio'],['Multimédia','Console de jeux'],
+    ['Papiers','Carte d\'identité'],['Papiers','Carte vitale'],['Objets de valeur','Montre'],['Objets de valeur','Bijou de famille'],
+    ['Mobilier personnel','Lampe de chevet'],['Autre','Vélo'],['Autre','Instrument de musique']
+  ];
+  resList.forEach(r => {
+    if (Math.random() < .7) {
+      const n = rand(3, 8);
+      const pool = shuffle([...TR_POOL]).slice(0, n);
+      r.trousseau = pool.map(([categorie, designation], k) => {
+        const restitue = r.statut === 'sorti' && Math.random() < .8;
+        const dAjout = Math.random() < .8 ? r.entree : new Date(new Date(r.entree).getTime() + rand(5, 120) * 86400000).toISOString().slice(0,10);
+        return {
+          id: 'demo-tr-' + r.id + '-' + k,
+          designation, categorie,
+          quantite: designation.endsWith('s') ? rand(2, 6) : 1,
+          etat: pick(['Neuf','Bon','Bon','Bon','Usé','Abîmé']),
+          dateAjout: dAjout,
+          notes: Math.random() < .2 ? pick(['Marque Nike','Couleur bleue','Étiquetée au nom du résident','Avec chargeur','N° série relevé']) : '',
+          restitue,
+          dateRestitution: restitue ? (r.dateSortie || today) : undefined
+        };
+      });
+    }
+  });
+
   // ── RÉGIMES & REPAS DU JOUR ──
   const regimePool = ['sansporc','sansporc','vegetarien','diabetique','hyposode','halal','hypocalorique'];
   resList.forEach(r => {

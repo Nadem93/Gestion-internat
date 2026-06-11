@@ -130,6 +130,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="trousseauModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="trousseauModalTitle">Article du trousseau</span>
+      <button class="modal-close" onclick="closeModal('trousseauModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="trousseauModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('trousseauModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveTrousseauItem()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="objectifModal">
   <div class="modal">
     <div class="modal-header">
@@ -290,6 +304,7 @@ function renderViewMode(r) {
       ${santeCard(r)}
       ${serafinphCard(r)}
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
+      ${trousseauCard(r)}
       ${isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
         infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
         infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
@@ -856,6 +871,154 @@ let budgetEditId = null;
 const BUDGET_CAT_RECETTE = ['AAH', 'RSA', 'Salaire', 'Argent de poche', 'Pension', 'Famille', 'Autre'];
 const BUDGET_CAT_DEPENSE = ['Alimentation', 'Hygiène', 'Vêtements', 'Loisirs', 'Transport', 'Téléphone', 'Tabac', 'Santé', 'Démarches', 'Autre'];
 
+// ── TROUSSEAU & EFFETS PERSONNELS ──
+let trousseauEditId = null;
+const TROUSSEAU_CATS = ['Vêtements', 'Linge de maison', 'Hygiène', 'Multimédia', 'Papiers', 'Objets de valeur', 'Mobilier personnel', 'Autre'];
+const TROUSSEAU_ETATS = ['Neuf', 'Bon', 'Usé', 'Abîmé'];
+
+function getTrousseau(r) { return r.trousseau || []; }
+
+function trousseauCard(r) {
+  const items = getTrousseau(r);
+  const canEdit = canEditResident();
+  const enDepot = items.filter(i => !i.restitue);
+  const restitues = items.filter(i => i.restitue);
+  const sorted = [...items].sort((a, b) => (a.restitue ? 1 : 0) - (b.restitue ? 1 : 0) || (b.dateAjout || '').localeCompare(a.dateAjout || ''));
+
+  const rows = sorted.length ? sorted.map((it, i) => `
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''};${it.restitue ? 'opacity:.55' : ''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+          ${escHtml(it.designation || 'Article')}${(it.quantite || 1) > 1 ? ` <span class="badge badge-gray">× ${it.quantite}</span>` : ''}
+          ${it.categorie ? `<span class="badge badge-gray">${escHtml(it.categorie)}</span>` : ''}
+          ${it.etat ? `<span class="badge" style="background:${it.etat === 'Abîmé' ? '#fee2e2' : it.etat === 'Usé' ? '#fef9c3' : '#dcfce7'};color:${it.etat === 'Abîmé' ? '#dc2626' : it.etat === 'Usé' ? '#a16207' : '#16a34a'}">${it.etat}</span>` : ''}
+          ${it.restitue ? '<span class="badge badge-gray">↩ Restitué</span>' : ''}
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:1px">Déposé le ${formatDate(it.dateAjout)}${it.restitue && it.dateRestitution ? ' · restitué le ' + formatDate(it.dateRestitution) : ''}${it.notes ? ' · ' + escHtml(it.notes) : ''}</div>
+      </div>
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">
+        ${!it.restitue ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme restitué" onclick="restituerTrousseauItem('${it.id}')">↩</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="openTrousseauModal('${it.id}')">✎</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTrousseauItem('${it.id}')">✕</button>
+      </div>` : ''}
+    </div>`).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun article inventorié</div>';
+
+  return `<div class="card" style="border-left:3px solid #7c3aed"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7c3aed">🧳 Trousseau & effets personnels${enDepot.length ? ` <span class="badge" style="background:#7c3aed1a;color:#7c3aed;margin-left:.3rem">${enDepot.length} en dépôt</span>` : ''}${restitues.length ? ` <span class="badge badge-gray">${restitues.length} restitué(s)</span>` : ''}</span>
+        <span class="no-print" style="margin-left:auto;display:flex;gap:.3rem">
+          ${items.length ? `<button class="btn btn-ghost btn-sm" onclick="printTrousseau()">🖨 Inventaire</button>` : ''}
+          ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openTrousseauModal()">+ Article</button>` : ''}
+        </span>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+    </div></div>`;
+}
+
+function trousseauFormHtml(item) {
+  const catOpts = TROUSSEAU_CATS.map(c => `<option value="${c}"${item.categorie === c ? ' selected' : ''}>${c}</option>`).join('');
+  const etatOpts = TROUSSEAU_ETATS.map(e => `<option value="${e}"${(item.etat || 'Bon') === e ? ' selected' : ''}>${e}</option>`).join('');
+  return `
+    ${santeField('trDesignation', 'Désignation *', item.designation)}
+    <div class="grid grid-2" style="gap:.75rem">
+      <div class="form-group"><label>Catégorie</label><select id="trCategorie" class="form-input">${catOpts}</select></div>
+      <div class="form-group"><label>Quantité</label><input type="number" id="trQuantite" class="form-input" min="1" value="${item.quantite || 1}"/></div>
+    </div>
+    <div class="grid grid-2" style="gap:.75rem">
+      <div class="form-group"><label>État</label><select id="trEtat" class="form-input">${etatOpts}</select></div>
+      ${santeField('trDateAjout', 'Date de dépôt', item.dateAjout || today(), 'date')}
+    </div>
+    ${santeTextarea('trNotes', 'Notes (marque, couleur, n° de série…)', item.notes)}`;
+}
+
+function openTrousseauModal(id) {
+  if (!canEditResident()) return;
+  trousseauEditId = id || null;
+  const r = getResident();
+  const item = id ? (getTrousseau(r).find(x => x.id === id) || {}) : {};
+  document.getElementById('trousseauModalTitle').textContent = id ? "Modifier l'article" : 'Nouvel article';
+  document.getElementById('trousseauModalBody').innerHTML = trousseauFormHtml(item);
+  openModal('trousseauModal');
+}
+
+function saveTrousseauItem() {
+  const r = getResident();
+  if (!r) return;
+  const designation = document.getElementById('trDesignation').value.trim();
+  if (!designation) { toast('La désignation est requise', 'error'); return; }
+  const data = {
+    designation,
+    categorie: document.getElementById('trCategorie').value,
+    quantite: Math.max(parseInt(document.getElementById('trQuantite').value) || 1, 1),
+    etat: document.getElementById('trEtat').value,
+    dateAjout: document.getElementById('trDateAjout').value || today(),
+    notes: document.getElementById('trNotes').value.trim()
+  };
+  let items = getTrousseau(r);
+  if (trousseauEditId) {
+    items = items.map(x => x.id === trousseauEditId ? { ...x, ...data } : x);
+    toast('Article mis à jour');
+  } else {
+    items = [...items, { id: genId(), ...data, restitue: false }];
+    toast('Article ajouté au trousseau');
+  }
+  persistResident({ ...r, trousseau: items });
+  closeModal('trousseauModal');
+  loadResident();
+}
+
+function restituerTrousseauItem(id) {
+  const r = getResident();
+  if (!r) return;
+  confirmDialog('Marquer cet article comme restitué au résident ?', () => {
+    persistResident({ ...r, trousseau: getTrousseau(r).map(x => x.id === id ? { ...x, restitue: true, dateRestitution: today() } : x) });
+    toast('Article restitué ✓');
+    loadResident();
+  });
+}
+
+function deleteTrousseauItem(id) {
+  const r = getResident();
+  if (!r) return;
+  confirmDialog('Supprimer cet article de l\'inventaire ?', () => {
+    persistResident({ ...r, trousseau: getTrousseau(r).filter(x => x.id !== id) });
+    toast('Article supprimé', 'info');
+    loadResident();
+  });
+}
+
+// Fiche d'inventaire imprimable avec signatures
+function printTrousseau() {
+  const r = getResident();
+  if (!r) return;
+  const name = `${r.prenom || ''} ${r.nom || ''}`.trim();
+  const settings = DB.get(DB.keys.settings) || {};
+  const items = [...getTrousseau(r)].sort((a, b) => (a.categorie || '').localeCompare(b.categorie || '') || (a.designation || '').localeCompare(b.designation || ''));
+  const w = window.open('', '_blank');
+  if (!w) { toast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Inventaire du trousseau — ${escHtml(name)}</title>
+    <style>
+      body{font-family:'Inter','Segoe UI',sans-serif;max-width:780px;margin:1.5rem auto;padding:0 1.5rem;color:#1e293b;font-size:10pt;line-height:1.5}
+      h1{font-size:15pt;color:#0f2b4a;border-bottom:2px solid #0f2b4a;padding-bottom:.3rem}
+      .meta{color:#64748b;font-size:9pt;margin-bottom:1.2rem}
+      table{width:100%;border-collapse:collapse;margin-bottom:2rem}
+      th{text-align:left;font-size:8pt;text-transform:uppercase;letter-spacing:.04em;color:#0f2b4a;border-bottom:2px solid #0f2b4a;padding:.3rem .45rem}
+      td{padding:.35rem .45rem;border-bottom:1px solid #e2e8f0;font-size:9.5pt}
+      .sig{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2.5rem}
+      .sig div{border-top:1px solid #94a3b8;padding-top:.4rem;font-size:9pt;color:#475569}
+      .note{font-size:8pt;color:#94a3b8;margin-top:2rem}
+      @page{margin:1.5cm}
+    </style></head><body>
+    <h1>Inventaire du trousseau</h1>
+    <div class="meta">${escHtml(settings.etablissement || 'Établissement')} · ${escHtml(name)}${r.chambre ? ' · Chambre ' + escHtml(r.chambre) : ''} · Édité le ${formatDate(today())}</div>
+    <table><thead><tr><th>Désignation</th><th>Catégorie</th><th>Qté</th><th>État</th><th>Déposé le</th><th>Restitué</th></tr></thead>
+    <tbody>${items.map(it => `<tr><td>${escHtml(it.designation || '')}${it.notes ? `<br><span style="font-size:8pt;color:#64748b">${escHtml(it.notes)}</span>` : ''}</td><td>${escHtml(it.categorie || '—')}</td><td>${it.quantite || 1}</td><td>${escHtml(it.etat || '—')}</td><td>${formatDate(it.dateAjout)}</td><td>${it.restitue ? '✓ ' + formatDate(it.dateRestitution) : ''}</td></tr>`).join('')}</tbody></table>
+    <div class="sig"><div>Signature du résident<br><br><br></div><div>Signature de l'éducateur<br><br><br></div></div>
+    <p class="note">Document contradictoire établi en deux exemplaires — un remis au résident, un conservé au dossier.</p>
+    <script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
 function getBudgetOps(r) { return (r.budget && r.budget.operations) || []; }
 function fmtMoney(n) { return (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
 
@@ -1369,7 +1532,7 @@ function togglePageEdit() {
 // ═══════════════════════════════════════════
 //  FIL DE VIE UNIFIÉ
 // ═══════════════════════════════════════════
-const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie' };
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau' };
 
 function fvDate(ts) {
   const p = n => String(n).padStart(2, '0');
@@ -1399,6 +1562,10 @@ function buildFilDeVie(r) {
   s.vaccins.forEach(vc => { if (vc.date) push(new Date(vc.date + 'T00:00'), 'vaccin', '💉', '#0891b2', `Vaccin — ${vc.nom||''}`, vc.rappel ? 'Rappel : ' + formatDate(vc.rappel) : ''); });
   s.traitements.forEach(t => { if (t.debut) push(new Date(t.debut + 'T00:00'), 'traitement', '💊', '#ef4444', `Traitement — ${t.nom||''}`, [t.posologie, t.frequence].filter(Boolean).join(' · ')); });
   getSorties(r).forEach(so => push(new Date((so.date||'') + 'T' + (so.heure || '00:00')), 'sortie', '🚪', '#0d9488', `Sortie — ${so.destination||''}`, [so.motif, so.accompagnement].filter(Boolean).join(' · ')));
+  getTrousseau(r).forEach(it => {
+    if (it.dateAjout) push(new Date(it.dateAjout + 'T00:00'), 'trousseau', '🧳', '#7c3aed', `Dépôt — ${it.designation||'article'}`, [it.categorie, it.etat].filter(Boolean).join(' · '));
+    if (it.restitue && it.dateRestitution) push(new Date(it.dateRestitution + 'T00:00'), 'trousseau', '🧳', '#7c3aed', `Restitution — ${it.designation||'article'}`, '');
+  });
   getBudgetOps(r).forEach(o => push(new Date((o.date||'') + 'T00:00'), 'budget', '💰', '#d97706', `${o.type==='recette'?'Recette':'Dépense'} — ${o.libelle||o.categorie||''}`, `${o.type==='recette'?'+':'–'} ${fmtMoney(o.montant)}`));
   (DB.get(DB.keys.ppe) || []).filter(p => String(p.residentId) === String(currentResidentId)).forEach(p => push(new Date((p.dateRedaction||'') + 'T00:00'), 'avenant', '📄', '#8b5cf6', 'Avenant PPE', (typeof STATUT_PPE_LABEL !== 'undefined' ? (STATUT_PPE_LABEL[p.statut]||p.statut) : p.statut) || ''));
   getEvaluations(r).forEach(e => { if (e.date) push(new Date(e.date + 'T00:00'), 'evaluation', '📊', '#6366f1', "Grille d'évaluation", e.grille || e.nom || e.titre || ''); });
