@@ -10,20 +10,20 @@
 body{font-family:Inter,sans-serif;background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);background-attachment:fixed;color:#334155;min-height:100vh;padding:2rem;display:flex;flex-direction:column;align-items:center}
 /* Champ d'aurores v4 */
 body::before,body::after{content:'';position:fixed;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(70px)}
-body::before{width:55vw;height:55vw;top:-18vw;right:-12vw;background:radial-gradient(circle at 35% 35%,rgba(6,182,212,.22),rgba(99,102,241,.13) 55%,transparent 75%);animation:aur-a 46s ease-in-out infinite alternate}
-body::after{width:48vw;height:48vw;bottom:-20vw;left:-10vw;background:radial-gradient(circle at 60% 60%,rgba(168,85,247,.16),rgba(6,182,212,.1) 55%,transparent 75%);animation:aur-b 58s ease-in-out infinite alternate}
+body::before{width:55vw;height:55vw;top:-18vw;right:-12vw;background:radial-gradient(circle at 35% 35%,rgba(6,182,212,.11),rgba(99,102,241,.07) 55%,transparent 75%);animation:aur-a 46s ease-in-out infinite alternate}
+body::after{width:48vw;height:48vw;bottom:-20vw;left:-10vw;background:radial-gradient(circle at 60% 60%,rgba(168,85,247,.08),rgba(6,182,212,.05) 55%,transparent 75%);animation:aur-b 58s ease-in-out infinite alternate}
 @keyframes aur-a{from{transform:translate(0,0)}to{transform:translate(-8vw,6vh) scale(1.12)}}
 @keyframes aur-b{from{transform:translate(0,0)}to{transform:translate(7vw,-5vh) scale(1.1)}}
 .card{background:rgba(255,255,255,.78);backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%);border-radius:20px;padding:2.5rem;max-width:920px;width:100%;box-shadow:0 8px 32px rgba(15,43,74,.1);border:1px solid rgba(255,255,255,.85);margin-bottom:1.5rem;position:relative;overflow:hidden;animation:rise .5s cubic-bezier(.22,1,.36,1) backwards}
 /* Scan-line signature en haut de la carte */
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#06b6d4 20%,#6366f1 50%,#a855f7 80%,transparent);background-size:220% 100%;animation:scan 8s linear infinite}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#06b6d4 20%,#6366f1 50%,#a855f7 80%,transparent);background-size:220% 100%;animation:scan 16s linear infinite}
 @keyframes scan{from{background-position:0% 0}to{background-position:220% 0}}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color:#0f2b4a;margin-bottom:.25rem}
 .sub{color:#64748b;font-size:.85rem;margin-bottom:1.5rem}
 .btn{display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:none;padding:.85rem 2rem;border-radius:12px;font-size:.9rem;font-weight:600;cursor:pointer;width:100%;justify-content:center;transition:box-shadow .2s,transform .1s;box-shadow:0 4px 16px rgba(124,58,237,.3);position:relative;overflow:hidden}
 .btn::after{content:'';position:absolute;top:0;bottom:0;left:-80%;width:50%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-18deg);transition:left .45s ease}
-.btn:hover{box-shadow:0 6px 24px rgba(124,58,237,.45),0 0 18px rgba(168,85,247,.3)}
+.btn:hover{box-shadow:0 5px 18px rgba(124,58,237,.3)}
 .btn:hover::after{left:130%}
 .btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
