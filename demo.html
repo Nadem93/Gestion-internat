@@ -1173,6 +1173,43 @@ function generateForCurrentEtab() {
   DB.set(DB.keys.visites, visites);
   DB.set(DB.keys.residents, resList); // persiste les droitsVisite ajoutés ci-dessus
 
+  // ── CAHIER DE NUIT ──
+  const VEILLEURS = ['Karim Benyahia', 'Sylvie Rocher', 'Marc Antoine'];
+  const NUIT_EVT_POOL = [
+    ['reveil', 'Réveillé vers {h}, a demandé un verre d\'eau puis s\'est rendormi.'],
+    ['reveil', 'Insomnie, a regardé la télé au salon une heure avant de remonter.'],
+    ['angoisse', 'Crise d\'angoisse, temps d\'écoute et de réassurance d\'une vingtaine de minutes.'],
+    ['soin', 'Maux de tête, paracétamol donné selon protocole, à surveiller.'],
+    ['conflit', 'Tension verbale entre deux résidents dans le couloir, retour au calme rapide.'],
+    ['retour', 'Retour tardif de soirée, dans le cadre de son autorisation.'],
+    ['fugue', 'Absence constatée à la ronde, retour de lui-même 40 min plus tard. Cadre informé.']
+  ];
+  const nuits = [];
+  for (let k = 1; k <= 45; k++) {
+    const dN = new Date(now.getTime() - k * 86400000).toISOString().slice(0,10);
+    const nbEvt = Math.random() < .5 ? 0 : rand(1, 3);
+    const evts = [];
+    for (let e = 0; e < nbEvt; e++) {
+      const [type, tpl] = pick(NUIT_EVT_POOL);
+      const heure = `${String(rand(0, 5)).padStart(2,'0')}:${pick(['00','15','30','45'])}`;
+      const rr = pick(resList.filter(x => x.statut !== 'sorti'));
+      evts.push({ id: 'demo-ne-' + k + '-' + e, type, heure, residentId: rr ? rr.id : null, residentName: rr ? `${rr.prenom} ${rr.nom}` : '', description: tpl.replace('{h}', heure) });
+    }
+    const hasFugue = evts.some(e => e.type === 'fugue');
+    nuits.push({
+      id: 'demo-nuit-' + k, date: dN,
+      veilleur: pick(VEILLEURS), veilleurId: null,
+      ambiance: hasFugue ? 'tres_agitee' : nbEvt >= 2 ? 'agitee' : 'calme',
+      effectif: resList.filter(x => x.statut !== 'sorti').length - rand(0, 4),
+      rondes: ['22:30','00:30','02:30','04:30','06:00'].map((h, ri) => ({ id: 'demo-rd-' + k + '-' + ri, heure: h, ras: Math.random() < .85, note: Math.random() < .15 ? pick(['Lumière restée allumée ch. 112','Porte du local mal fermée','Bruit côté cuisine, RAS après vérification']) : '' })),
+      evenements: evts,
+      astreintes: hasFugue ? [{ id: 'demo-as-' + k, heure: pick(['01:10','02:40','03:20']), cadre: 'N. Petit (chef de service)', motif: 'Absence d\'un résident constatée à la ronde', decision: 'Surveillance renforcée, rappel à 30 min, signalement si non-retour à 1 h' }] : [],
+      transmission: nbEvt ? 'Nuit ' + (hasFugue ? 'marquée par une absence temporaire — voir événements.' : 'avec quelques réveils, voir le détail des événements.') : 'Nuit calme, rien à signaler.',
+      createdAt: new Date(dN + 'T22:00').toISOString()
+    });
+  }
+  DB.set(DB.keys.nuits, nuits);
+
   // ── ÉCHÉANCIER ADMINISTRATIF ──
   const echTypes = ['mdph','jugement','identite','css','contrat','ppe','medical'];
   const echLibelles = {
@@ -1207,6 +1244,7 @@ function generateForCurrentEtab() {
     chambres: rooms.length,
     echeances: echeances.length,
     visites: visites.length,
+    nuits: nuits.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -1243,7 +1281,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');

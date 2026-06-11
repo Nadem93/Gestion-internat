@@ -1532,7 +1532,7 @@ function togglePageEdit() {
 // ═══════════════════════════════════════════
 //  FIL DE VIE UNIFIÉ
 // ═══════════════════════════════════════════
-const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites' };
+const FV_TYPE_LABELS = { journal:'Journal', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations', admission:'Admission', 'sortie-def':'Sortie', trousseau:'Trousseau', visite:'Visites', nuit:'Nuits' };
 
 function fvDate(ts) {
   const p = n => String(n).padStart(2, '0');
@@ -1566,6 +1566,14 @@ function buildFilDeVie(r) {
     if (it.dateAjout) push(new Date(it.dateAjout + 'T00:00'), 'trousseau', '🧳', '#7c3aed', `Dépôt — ${it.designation||'article'}`, [it.categorie, it.etat].filter(Boolean).join(' · '));
     if (it.restitue && it.dateRestitution) push(new Date(it.dateRestitution + 'T00:00'), 'trousseau', '🧳', '#7c3aed', `Restitution — ${it.designation||'article'}`, '');
   });
+  if (DB.keys.nuits) {
+    const _nuitTypes = { reveil:'Réveil / insomnie', angoisse:'Angoisse / crise', soin:'Soin / santé', conflit:'Conflit / agitation', fugue:'Absence / fugue', retour:'Retour tardif', autre:'Événement' };
+    (DB.get(DB.keys.nuits) || []).forEach(n => {
+      (n.evenements || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
+        push(new Date(n.date + 'T' + (e.heure || '23:00')), 'nuit', '🌙', '#312e81', `Nuit — ${_nuitTypes[e.type]||'Événement'}`, e.description || '');
+      });
+    });
+  }
   if (DB.keys.visites) {
     const _visLabels = { libre:'Visite libre', mediatisee:'Visite médiatisée', hebergement:'Hébergement famille', telephone:'Appel téléphonique' };
     const _visStatuts = { prevue:'prévue', realisee:'réalisée', annulee:'annulée', absent:'non présenté' };
