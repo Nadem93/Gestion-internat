@@ -18,7 +18,7 @@ const DB = {
     aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
     chambres:'ftr_chambres', edl:'ftr_edl', echeances:'ftr_echeances', releves:'ftr_releves',
-    repas:'ftr_repas', visites:'ftr_visites', nuits:'ftr_nuits', activites:'ftr_activites',
+    repas:'ftr_repas', visites:'ftr_visites', nuits:'ftr_nuits', activites:'ftr_activites', cvs:'ftr_cvs',
     etablissements:'ftr_etablissements', viatrajectoire:'ftr_viatrajectoire'
   }
 };
@@ -240,10 +240,10 @@ const DEFAULTS = {
     { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents','access_planning_equipe','access_conges'] },
     { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules','access_planning_equipe','access_conges'] },
     { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules','access_planning_equipe','access_conges'] },
-    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions','access_viatrajectoire','access_serafinph','access_planning_equipe','access_conges','access_activites'] },
-    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions','access_activites'] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions','access_viatrajectoire','access_serafinph','access_planning_equipe','access_conges','access_activites','access_cvs'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions','access_activites','access_cvs'] },
     { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents'] },
-    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','access_conges','access_activites','access_admin','access_employes','manage_users'] }
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','access_conges','access_activites','access_cvs','access_admin','access_employes','manage_users'] }
   ],
   aiPrompts: {
     ppe: {
@@ -988,6 +988,7 @@ const PERMISSION_LABELS = {
   access_planning_equipe: 'Planning équipe',
   access_conges: 'Congés',
   access_activites: 'Activités éducatives',
+  access_cvs: 'Conseil de la Vie Sociale (CVS)',
   manage_users: 'Gérer les utilisateurs'
 };
 

@@ -1315,6 +1315,53 @@ function generateForCurrentEtab() {
   DB.set(DB.keys.activites, activites);
   DB.set(DB.keys.residents, resList);
 
+  // ── CONSEIL DE LA VIE SOCIALE (CVS) ──
+  const cvsResidentsMembres = shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, 2);
+  const cvsMembresDemo = [
+    ...cvsResidentsMembres.map((r, k) => ({ id: 'demo-cvsm-res-' + k, nom: `${r.prenom} ${r.nom}`, college: 'residents', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() })),
+    { id: 'demo-cvsm-fam-1', nom: 'Mme Diallo (représentante des familles)', college: 'familles', role: 'titulaire', contact: 'famille.diallo@email.fr', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-fam-2', nom: 'M. Lefebvre (représentant des familles, suppléant)', college: 'familles', role: 'suppleant', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-pers-1', nom: pick(REFFERENTS) + ' (éducateur référent)', college: 'personnel', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-dir-1', nom: 'Directeur d\'établissement', college: 'direction', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: '', statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-anc-1', nom: 'Ancien représentant des résidents', college: 'residents', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 560 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() - 210 * 86400000).toISOString().slice(0,10), statut: 'ancien', createdAt: now.toISOString() }
+  ];
+  const cvsSeancesDemo = [
+    {
+      id: 'demo-cvss-1',
+      date: new Date(now.getTime() - 95 * 86400000).toISOString().slice(0,10), heure: '17:00', lieu: 'Salle commune',
+      presents: cvsMembresDemo.filter(m => m.statut === 'actif').map(m => m.nom).join(', '),
+      excuses: 'M. Lefebvre (représentant des familles, suppléant)',
+      ordreDuJour: 'Bilan des activités du trimestre, projet de menus, organisation des sorties d\'été, point sur les travaux de la salle de bain commune.',
+      compteRendu: "Les résidents expriment leur satisfaction concernant les nouvelles activités proposées (atelier cuisine, sortie médiathèque). Une demande est faite pour diversifier les menus du week-end. La direction informe de l'avancement des travaux de rénovation de la salle de bain commune, prévus avant la fin de l'année. Discussion sur l'organisation d'une sortie collective pour l'été.",
+      resolutions: [
+        { id: 'demo-cvsr-1', texte: 'Proposer un menu végétarien une fois par semaine et recueillir les avis des résidents', responsable: 'Maîtresse de maison', echeance: new Date(now.getTime() - 30 * 86400000).toISOString().slice(0,10), statut: 'fait' },
+        { id: 'demo-cvsr-2', texte: "Planifier une sortie collective d'été et présenter 3 propositions de destination au prochain CVS", responsable: 'Chef de service', echeance: new Date(now.getTime() + 25 * 86400000).toISOString().slice(0,10), statut: 'en_cours' },
+        { id: 'demo-cvsr-3', texte: 'Communiquer le calendrier des travaux de la salle de bain commune aux résidents', responsable: 'Direction', echeance: new Date(now.getTime() - 10 * 86400000).toISOString().slice(0,10), statut: 'fait' }
+      ],
+      createdAt: now.toISOString()
+    },
+    {
+      id: 'demo-cvss-2',
+      date: new Date(now.getTime() - 5 * 86400000).toISOString().slice(0,10), heure: '17:30', lieu: 'Salle commune',
+      presents: cvsMembresDemo.filter(m => m.statut === 'actif').map(m => m.nom).join(', '),
+      excuses: '',
+      ordreDuJour: 'Retour sur la sortie d\'été, règlement de fonctionnement, point sur le registre des EIG, questions diverses des résidents.',
+      compteRendu: "Retour très positif sur la sortie organisée cet été. Les résidents souhaitent que ce type de sortie soit reconduit chaque trimestre. Présentation du registre des EIG et rappel du circuit de signalement. Plusieurs résidents demandent un accès plus large au wifi dans les chambres en soirée.",
+      resolutions: [
+        { id: 'demo-cvsr-4', texte: 'Étudier la possibilité d\'élargir les horaires d\'accès au wifi en soirée', responsable: 'Direction', echeance: new Date(now.getTime() + 40 * 86400000).toISOString().slice(0,10), statut: 'a_faire' },
+        { id: 'demo-cvsr-5', texte: 'Inscrire une sortie collective trimestrielle au planning d\'activités', responsable: 'Chef de service', echeance: new Date(now.getTime() + 20 * 86400000).toISOString().slice(0,10), statut: 'a_faire' }
+      ],
+      createdAt: now.toISOString()
+    },
+    {
+      id: 'demo-cvss-3',
+      date: new Date(now.getTime() + 55 * 86400000).toISOString().slice(0,10), heure: '17:00', lieu: 'Salle commune',
+      presents: '', excuses: '', ordreDuJour: 'Préparation du renouvellement du règlement de fonctionnement, bilan annuel.',
+      compteRendu: '', resolutions: [], createdAt: now.toISOString()
+    }
+  ];
+  DB.set(DB.keys.cvs, { membres: cvsMembresDemo, seances: cvsSeancesDemo });
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
@@ -1324,6 +1371,7 @@ function generateForCurrentEtab() {
     visites: visites.length,
     nuits: nuits.length,
     activites: activites.length,
+    cvs: cvsSeancesDemo.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -1360,7 +1408,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');

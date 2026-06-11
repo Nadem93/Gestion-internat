@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Conseil de la Vie Sociale — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout">
+  <div class="main">
+    <header class="header">
+      <div class="header-info"><div class="header-title">Conseil de la Vie Sociale</div></div>
+      <div class="header-right">
+        <button class="btn btn-accent btn-sm btn-add-resident no-cvs-edit" onclick="openSeanceModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="btn-add-label">Nouvelle séance</span>
+        </button>
+        <a href="accueil.html" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Accueil
+        </a>
+      </div>
+    </header>
+
+    <main class="content" style="max-width:1100px">
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Le Conseil de la Vie Sociale associe résidents, familles, personnel et direction à la vie de l'établissement, conformément au cadre réglementaire des ESSMS.</div>
+      <div id="cvsStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
+
+      <div class="tabs" id="cvsTabs">
+        <button class="tab active" data-tab="membres">Composition</button>
+        <button class="tab" data-tab="seances">Séances & comptes-rendus</button>
+        <button class="tab" data-tab="resolutions">Suivi des résolutions</button>
+      </div>
+
+      <div id="tab-cvs-membres">
+        <div class="toolbar no-cvs-edit" style="margin-bottom:1rem;justify-content:flex-end">
+          <button class="btn btn-outline btn-sm" onclick="openMembreModal()">+ Ajouter un membre</button>
+        </div>
+        <div id="cvsMembresList"></div>
+      </div>
+
+      <div id="tab-cvs-seances" style="display:none">
+        <div id="cvsSeancesList"></div>
+      </div>
+
+      <div id="tab-cvs-resolutions" style="display:none">
+        <div id="cvsResolutionsList"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL MEMBRE -->
+<div class="modal-overlay" id="modalCvsMembre">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="cmTitle">Nouveau membre</span>
+      <button class="modal-close" onclick="closeModal('modalCvsMembre')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="required">Nom</label><input type="text" id="cmNom" placeholder="Nom du membre ou de l'organisme"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Collège</label><select id="cmCollege"></select></div>
+        <div class="form-group"><label>Qualité</label><select id="cmRole"></select></div>
+      </div>
+      <div class="form-group"><label>Contact</label><input type="text" id="cmContact" placeholder="Email ou téléphone (optionnel)"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Début de mandat</label><input type="date" id="cmMandatDebut"/></div>
+        <div class="form-group"><label>Fin de mandat</label><input type="date" id="cmMandatFin"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalCvsMembre')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveMembre()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SÉANCE -->
+<div class="modal-overlay" id="modalCvsSeance">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title" id="csTitle">Nouvelle séance</span>
+      <button class="modal-close" onclick="closeModal('modalCvsSeance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="required">Date</label><input type="date" id="csDate"/></div>
+        <div class="form-group"><label>Heure</label><input type="time" id="csHeure"/></div>
+        <div class="form-group"><label>Lieu</label><input type="text" id="csLieu" placeholder="Salle commune…"/></div>
+      </div>
+      <div class="form-group"><label>Présents</label><textarea id="csPresents" rows="2" placeholder="Liste des présents…"></textarea></div>
+      <div class="form-group"><label>Excusés</label><textarea id="csExcuses" rows="2" placeholder="Liste des excusés…"></textarea></div>
+      <div class="form-group"><label>Ordre du jour</label><textarea id="csOrdreDuJour" rows="2" placeholder="Points à aborder…"></textarea></div>
+      <div class="form-group"><label>Compte-rendu des échanges</label><textarea id="csCompteRendu" rows="5" placeholder="Synthèse des discussions, décisions, remarques des résidents et familles…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalCvsSeance')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSeance()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RÉSOLUTIONS -->
+<div class="modal-overlay" id="modalCvsResolutions">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title" id="rmTitle">Résolutions</span>
+      <button class="modal-close" onclick="closeModal('modalCvsResolutions')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="section-label">Résolutions adoptées</div>
+      <div id="rmList" style="display:flex;flex-direction:column;gap:.45rem;margin-bottom:1rem"></div>
+      <div class="divider"></div>
+      <div id="rmAddBox">
+        <div class="section-label">Ajouter une résolution</div>
+        <div class="form-group"><label>Texte de la résolution</label><textarea id="rmTexte" rows="2" placeholder="Décision ou action décidée en séance…"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Responsable</label><input type="text" id="rmResponsable" placeholder="Personne ou service en charge"/></div>
+          <div class="form-group"><label>Échéance</label><input type="date" id="rmEcheance"/></div>
+          <div class="form-group" style="flex:0;align-self:flex-end"><button class="btn btn-accent btn-sm" onclick="addResolution(cvsResolutionsSeanceId)">+ Ajouter</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script src="js/cvs.js"></script>
+</body>
+</html>
