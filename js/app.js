@@ -18,6 +18,7 @@ const DB = {
     aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
     chambres:'ftr_chambres', edl:'ftr_edl', echeances:'ftr_echeances', releves:'ftr_releves',
+    repas:'ftr_repas',
     etablissements:'ftr_etablissements', viatrajectoire:'ftr_viatrajectoire'
   }
 };
