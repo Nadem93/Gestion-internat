@@ -13,6 +13,11 @@ const ROUTES = {
   'repertoire':  { view:'repertoire',  title:'Répertoire',       sub:'', js:'js/repertoire.js' },
   'vehicules':   { view:'vehicules',   title:'Véhicules',        sub:'', js:'js/vehicules.js' },
   'employe':     { view:'employe',     title:'Fiche employé',    sub:'', js:'' },
+  'pilotage':    { view:'pilotage',    title:'Portail',        sub:'', js:'' },
+  'viatrajectoire': { view:'viatrajectoire', title:'ViaTrajectoire', sub:'', js:'js/viatrajectoire.js' },
+  'serafinph':   { view:'serafinph',   title:'SERAFIN-PH',      sub:'', js:'js/serafinph.js' },
+  'planning-equipe': { view:'planning-equipe', title:'Planning équipe', sub:'', js:'js/planning-equipe.js' },
+  'conges':      { view:'conges',      title:'Congés',          sub:'', js:'js/conges.js' },
   'admin':       { view:'admin',       title:'Administration',   sub:'', js:'js/admin.js' }
 };
 

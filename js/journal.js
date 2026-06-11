@@ -130,7 +130,18 @@ function renderEntryForm() {
         </div>
       </div>
       <div class="form-step">
-        <div class="step-h"><span class="step-n">5</span><span class="step-t">Pièces jointes <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
+        <div class="step-h"><span class="step-n">5</span><span class="step-t">SERAFIN-PH <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
+        <div class="step-b">
+          <div class="pill-group">
+            <div class="pill sp-pill" data-sp="" onclick="selectSpPill('')" style="--pill-bg:#e2e8f022;--pill-color:#64748b;--pill-border:#cbd5e1">Aucun</div>
+            <div class="pill sp-pill" data-sp="direct" onclick="selectSpPill('direct')" style="--pill-bg:#8b5cf622;--pill-color:#8b5cf6;--pill-border:#8b5cf6">Prestation directe</div>
+            <div class="pill sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" style="--pill-bg:#f9731622;--pill-color:#f97316;--pill-border:#f97316">Prestation indirecte</div>
+          </div>
+          <input type="hidden" id="iSerafinph" value=""/>
+        </div>
+      </div>
+      <div class="form-step">
+        <div class="step-h"><span class="step-n">6</span><span class="step-t">Pièces jointes <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
         <div class="step-b">
           <label class="btn btn-ghost btn-sm" style="cursor:pointer">📎 Ajouter un fichier
             <input type="file" accept="image/*,application/pdf" style="display:none" onchange="addInlineAttachment(this)"/>
@@ -142,6 +153,13 @@ function renderEntryForm() {
     </div>`;
   document.getElementById('entryFormContainer').innerHTML = html;
   renderInlineAttachList();
+}
+
+function selectSpPill(val) {
+  document.getElementById('iSerafinph').value = val;
+  document.querySelectorAll('.sp-pill').forEach(el => {
+    el.classList.toggle('active', el.dataset.sp === val);
+  });
 }
 
 function selectCatPill(id) {
@@ -230,6 +248,7 @@ function saveInlineEntry() {
       date: document.getElementById('iDate').value || new Date().toISOString(),
       objectif: document.getElementById('iObjectif').value,
       contenu, visibilite: visEl?.value || 'equipe',
+      serafinphType: document.getElementById('iSerafinph')?.value || '',
       attachments: inlineAttachments.slice(),
       author: userName, authorId: session?.userId,
       replies: [], readBy: [session?.userId],
@@ -354,6 +373,8 @@ function renderEntries() {
             <span style="font-weight:${isUnread ? '800' : '700'};font-size:.875rem">${escHtml(e.resident)||'—'}</span>
             ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
             ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
+            ${e.serafinphType === 'direct' ? '<span class="badge" style="background:#8b5cf622;color:#8b5cf6">📊 Direct</span>' : ''}
+            ${e.serafinphType === 'indirect' ? '<span class="badge" style="background:#f9731622;color:#f97316">📊 Indirect</span>' : ''}
           </div>
           <div class="entry-meta">${formatDateTime(e.date)} · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span></div>
         </div>
@@ -501,6 +522,8 @@ function editEntry(id) {
   document.getElementById('eContenu').value = e.contenu || '';
   const vis = document.querySelector(`input[name="eVisibilite"][value="${e.visibilite||'equipe'}"]`);
   if (vis) vis.checked = true;
+  const sp = document.getElementById('eSerafinph');
+  if (sp) sp.value = e.serafinphType || '';
   document.getElementById('btnDeleteEntry').style.display = '';
   openModal('modalEntry');
 }
@@ -526,6 +549,7 @@ function saveEntry() {
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
+    serafinphType: document.getElementById('eSerafinph')?.value || '',
     author: userName,
     authorId: session?.userId,
     updatedAt: new Date().toISOString()

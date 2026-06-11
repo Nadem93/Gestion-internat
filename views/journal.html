@@ -46,12 +46,22 @@
         </div>
         <textarea id="eContenu" rows="6" placeholder="Décrivez l'événement, l'observation ou l'intervention…"></textarea>
       </div>
-      <div class="form-group">
-        <label>Visibilité</label>
-        <div style="display:flex;gap:1rem">
-          <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="equipe" checked/> Équipe uniquement</label>
-          <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="tous"/> Tous</label>
-          <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="confidentiel"/> Confidentiel</label>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Visibilité</label>
+          <div style="display:flex;gap:1rem">
+            <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="equipe" checked/> Équipe uniquement</label>
+            <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="tous"/> Tous</label>
+            <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="confidentiel"/> Confidentiel</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>SERAFIN-PH</label>
+          <select id="eSerafinph" class="form-input">
+            <option value="">Aucun</option>
+            <option value="direct">Prestation directe</option>
+            <option value="indirect">Prestation indirecte</option>
+          </select>
         </div>
       </div>
     </div>

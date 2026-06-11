@@ -320,6 +320,12 @@ function generateForCurrentEtab() {
     for (let k = 0; k < rand(1,2); k++) { const overdue = Math.random() < .3; vaccins.push({ id:'dv-'+ri+'-'+k, nom: pick(VACCINS), date: dWinStr(r), rappel: overdue ? dAgo(40) : (active ? dAhead(300) : '') }); }
     r.sante = { groupeSanguin: pick(['A+','A-','B+','B-','O+','O-','AB+','AB-','']), notesMedicales: Math.random()<.3 ? 'Suivi médical régulier. Pas de contre-indication particulière.' : '', traitements, rdv, vaccins };
 
+    // SERAFIN-PH
+    const serafinKeys = ['pd_soins','pd_accomp_educatif','pd_accomp_social','pd_orientation','pd_education','pd_scolarite','pi_coordination','pi_communication','pi_gestion','pi_logistique','pi_administration','pi_services_generaux'];
+    const prestations = {};
+    serafinKeys.forEach(k => { prestations[k] = { niveau: rand(0,4) }; });
+    r.serafinph = { prestations, dateEvaluation: dWinStr(r), notes: Math.random()<.3 ? 'Profil établi en équipe pluridisciplinaire.' : '' };
+
     // Sorties & permissions (dans la fenêtre ; sortie en cours uniquement si présent)
     const sorties = [];
     for (let k = 0; k < rand(0,8); k++) {
@@ -473,6 +479,7 @@ function generateForCurrentEtab() {
       date: d.toISOString(),
       contenu,
       visibilite,
+      serafinphType: Math.random() < .25 ? pick(['direct','indirect']) : '',
       objectif: '',
       author: author.name,
       authorId: author.id,
@@ -929,6 +936,107 @@ function generateForCurrentEtab() {
   if (loginHistory.length > 200) loginHistory.length = 200;
   DB.set(DB.keys.loginHistory, loginHistory);
 
+  // ── AUDIT LOG ──
+  const _pickName = arr => { const o = arr && arr.length ? pick(arr) : null; return o ? (o.prenom||'') + ' ' + (o.nom||'') : ''; };
+  const _demoUsers = users.length > 1 ? users.slice(1) : resList;
+  const auditActions = ['resident_create','resident_update','journal_create','incident_create','user_create','vehicle_create','ppe_create'];
+  const auditDetails = {
+    resident_create: () => _pickName(resList),
+    resident_update: () => _pickName(resList),
+    journal_create: () => (rand(3,8)) + ' entrée(s) de suivi',
+    incident_create: () => { const i = pick(incList || []); return i ? (i.titre || i.description || 'Incident') : 'Incident'; },
+    user_create: () => _pickName(_demoUsers),
+    vehicle_create: () => pick(vehList || ['Véhicule']) || 'Véhicule',
+    ppe_create: () => _pickName(resList)
+  };
+  const auditUsernames = [{name:'Admin',role:'admin',userId:1}, {name:'Sophie Martin',role:'admin',userId:2}, {name:'Pierre Dubois',role:'educ',userId:3}];
+  const auditLog = [];
+  for (let i = 0; i < rand(15,40); i++) {
+    const action = pick(auditActions);
+    const au = pick(auditUsernames);
+    auditLog.push({
+      id: 'dal-' + (i + 1),
+      date: new Date(now.getTime() - rand(0,30) * 86400000).toISOString(),
+      userId: au.userId,
+      user: au.name,
+      role: au.role,
+      action,
+      details: auditDetails[action] ? auditDetails[action]() : ''
+    });
+  }
+  auditLog.sort((a,b) => new Date(b.date) - new Date(a.date));
+  localStorage.setItem('ftr_audit_log', JSON.stringify(auditLog));
+
+  // ── VIATRAJECTOIRE ──
+  const vtStatuts = ['brouillon','envoye','en_cours','accepte','refuse','cloture'];
+  const vtTypes = ['orientation','renouvellement','reorientation'];
+  const vts = [];
+  const nbVt = rand(2, Math.min(8, resList.length));
+  const shuffled = [...resList].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < nbVt; i++) {
+    vts.push({
+      id: 'vt-' + genId(),
+      residentId: shuffled[i].id,
+      type: pick(vtTypes),
+      mdph: pick(['mape','cdaph']),
+      date: new Date(now.getTime() - rand(0,180) * 86400000).toISOString(),
+      statut: pick(vtStatuts),
+      commentaire: pick(['','Demande en cours d\'instruction','Complément d\'information demandé','Décision favorable attendue','','',''])
+    });
+  }
+  localStorage.setItem('ftr_viatrajectoire', JSON.stringify(vts));
+
+  // ── PLANNING ÉQUIPE ──
+  const pe = [];
+  const employesList = DB.get(DB.keys.employes) || [];
+  if (employesList.length) {
+    for (let i = 0; i < rand(10, 30); i++) {
+      const emp = pick(employesList);
+      const d = new Date(now);
+      d.setDate(d.getDate() - rand(0, 60));
+      const debut = new Date(d); debut.setHours(rand(6, 10), 0, 0, 0);
+      const fin = new Date(debut); fin.setHours(debut.getHours() + rand(4, 10));
+      pe.push({
+        id: 'pe-' + genId(),
+        employeId: emp.id,
+        date: d.toISOString().slice(0,10),
+        debut: debut.toTimeString().slice(0,5),
+        fin: fin.toTimeString().slice(0,5),
+        service: pick(['Matin','Après-midi','Nuit','Journée']),
+        notes: ''
+      });
+    }
+  }
+  localStorage.setItem('ftr_planning_equipe', JSON.stringify(pe));
+
+  // ── CONGÉS ──
+  const conges = [];
+  const typeLabels = ['cp','rtt','maladie','enfant_malade','formation'];
+  const statuts = ['en_attente','accepte','refuse'];
+  if (employesList.length) {
+    for (let i = 0; i < rand(5, 15); i++) {
+      const emp = pick(employesList);
+      const d = new Date(now);
+      d.setDate(d.getDate() + rand(-30, 60));
+      const d2 = new Date(d); d2.setDate(d2.getDate() + rand(0, 5));
+      const statut = pick(statuts);
+      conges.push({
+        id: 'cg-' + genId(),
+        employeId: emp.id, employeNom: emp.prenom+' '+emp.nom,
+        type: pick(typeLabels),
+        debut: d.toISOString().slice(0,10),
+        fin: d2.toISOString().slice(0,10),
+        motif: pick(['','Rendez-vous médical','Raison personnelle','Formation obligatoire','','']),
+        statut,
+        dateDemande: new Date(now.getTime() - rand(0, 60) * 86400000).toISOString(),
+        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom+' '+u.nom).filter(Boolean)) : '',
+        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
+        reponseMotif: statut === 'refuse' ? pick(['Effectif insuffisant','Période de forte activité','Doublon avec autre demande','']) : ''
+      });
+    }
+  }
+  localStorage.setItem('ftr_conges', JSON.stringify(conges));
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
@@ -950,7 +1058,11 @@ function generateForCurrentEtab() {
     rdvMedicaux: resList.reduce((a,r) => a + ((r.sante&&r.sante.rdv)||[]).length, 0),
     sorties: resList.reduce((a,r) => a + ((r.sorties)||[]).length, 0),
     operationsBudget: resList.reduce((a,r) => a + ((r.budget&&r.budget.operations)||[]).length, 0),
-    evaluations: resList.reduce((a,r) => a + ((r.evaluations)||[]).length, 0)
+    evaluations: resList.reduce((a,r) => a + ((r.evaluations)||[]).length, 0),
+    auditLog: auditLog.length,
+    viatrajectoire: vts.length,
+    planning_equipe: pe.length,
+    conges: conges.length
   };
 }
 
@@ -965,13 +1077,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);

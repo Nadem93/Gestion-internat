@@ -96,15 +96,24 @@
         </div>
         <textarea id="eContenu" rows="6" placeholder="Décrivez l'événement, l'observation ou l'intervention…"></textarea>
       </div>
-      <div class="form-group">
-        <label>Visibilité</label>
-        <div style="display:flex;gap:1rem">
-          <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="equipe" checked/> Équipe uniquement</label>
-          <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="tous"/> Tous</label>
-          <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="confidentiel"/> Confidentiel</label>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Visibilité</label>
+          <div style="display:flex;gap:1rem">
+            <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="equipe" checked/> Équipe uniquement</label>
+            <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="tous"/> Tous</label>
+            <label class="checkbox-wrap"><input type="radio" name="eVisibilite" value="confidentiel"/> Confidentiel</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>SERAFIN-PH</label>
+          <select id="eSerafinph" class="form-input">
+            <option value="">Aucun</option>
+            <option value="direct">Prestation directe (soins, éducatif, social…)</option>
+            <option value="indirect">Prestation indirecte (coordination, gestion…)</option>
+          </select>
         </div>
       </div>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-outline btn-sm" onclick="closeAllModals()">Annuler</button>
       <button class="btn btn-danger btn-sm" id="btnDeleteEntry" style="margin-right:auto;display:none" onclick="deleteEntry()">Supprimer</button>
