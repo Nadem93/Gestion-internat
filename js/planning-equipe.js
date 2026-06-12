@@ -68,10 +68,53 @@ function peShiftType(debut, fin) {
   return 'apresmidi';
 }
 
+// ── DÉTECTION DE CHEVAUCHEMENTS ──
+function peToRange(s) {
+  const [h1,m1] = s.debut.split(':').map(Number);
+  const [h2,m2] = s.fin.split(':').map(Number);
+  let start = h1*60+m1, end = h2*60+m2;
+  if (end <= start) end += 24*60;
+  return [start, end];
+}
+
+function peOverlaps(a, b) {
+  const [s1,e1] = peToRange(a);
+  const [s2,e2] = peToRange(b);
+  return s1 < e2 && s2 < e1;
+}
+
 // ── NAVIGATION SEMAINE ──
 function pePrevWeek() { peWeekStart.setDate(peWeekStart.getDate()-7); renderPlanningEquipe(); }
 function peNextWeek() { peWeekStart.setDate(peWeekStart.getDate()+7); renderPlanningEquipe(); }
 function peToday() { peWeekStart = peGetMonday(new Date()); renderPlanningEquipe(); }
+
+// ── COPIER LA SEMAINE PRÉCÉDENTE ──
+function peCopyPreviousWeek() {
+  if (!peCanEditPlanning()) return;
+  const prevDays = [], curDays = [];
+  for (let i = 0; i < 7; i++) {
+    const dPrev = new Date(peWeekStart); dPrev.setDate(dPrev.getDate() - 7 + i);
+    const dCur = new Date(peWeekStart); dCur.setDate(dCur.getDate() + i);
+    prevDays.push(peISO(dPrev));
+    curDays.push(peISO(dCur));
+  }
+  const shifts = getPeShifts();
+  const prevShifts = shifts.filter(s => prevDays.includes(s.date));
+  if (!prevShifts.length) { toast('Aucun créneau à copier la semaine précédente', 'error'); return; }
+  const curShifts = shifts.filter(s => curDays.includes(s.date));
+  if (curShifts.length && !confirm(`La semaine actuelle contient déjà ${curShifts.length} créneau(x). Ajouter les ${prevShifts.length} créneau(x) de la semaine précédente quand même ?`)) return;
+  const copies = prevShifts.map(s => ({
+    id: 'pe-' + genId(),
+    employeId: s.employeId,
+    employeNom: s.employeNom,
+    date: curDays[prevDays.indexOf(s.date)],
+    debut: s.debut, fin: s.fin
+  }));
+  setPeShifts(shifts.concat(copies));
+  auditLog('modification', `Planning équipe — copie de ${copies.length} créneau(x) depuis la semaine précédente`);
+  toast(`${copies.length} créneau(x) copié(s) ✓`, 'success');
+  renderPlanningEquipe();
+}
 
 // ── DONNÉES ──
 function getPeShifts() {
@@ -235,6 +278,7 @@ function renderPlanningEquipe() {
   document.getElementById('peWeekLabel').textContent =
     `Semaine du ${peFormatShort(weekDays[0])} au ${peFormatShort(weekDays[6])}/${weekDays[6].getFullYear()}`;
   document.getElementById('peHint').textContent = canEdit ? 'Cliquez sur une case pour ajouter ou modifier un créneau' : '';
+  document.getElementById('peCopyBtn').style.display = canEdit ? '' : 'none';
 
   const employes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
   const shifts = getPeShifts();
@@ -261,6 +305,22 @@ function renderPlanningEquipe() {
       : 'display:inline-block;margin-top:2px;font-weight:400';
     return `<th style="padding:.6rem .35rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;min-width:90px">${DAYS[i]}<br/><span style="${numStyle}">${d.getDate()}</span></th>`;
   }).join('');
+
+  const coverageRow = `<tr style="border-top:1px solid var(--border)">
+    <td style="padding:.4rem .75rem;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase">Couverture</td>
+    ${weekDays.map(d => {
+      const dateStr = peISO(d);
+      const counts = {};
+      Object.keys(PE_TYPES).forEach(k => counts[k] = 0);
+      shiftsWeek.filter(s => s.date === dateStr).forEach(s => counts[peShiftType(s.debut,s.fin)]++);
+      const badges = Object.entries(PE_TYPES).map(([k,t]) => {
+        const n = counts[k];
+        return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:.62rem;font-weight:700;color:${n ? t.color : 'var(--g300)'}"><span style="width:7px;height:7px;border-radius:2px;background:${n ? t.color : 'var(--g200)'};display:inline-block"></span>${n}</span>`;
+      }).join('');
+      return `<td style="padding:.4rem .35rem;text-align:center"><div style="display:flex;justify-content:center;gap:.4rem;flex-wrap:wrap">${badges}</div></td>`;
+    }).join('')}
+    <td></td>
+  </tr>`;
 
   const naShifts = byEmp['NA'] || [];
   const naRow = `<tr style="border-top:1px solid var(--border);background:var(--g50)">
@@ -292,10 +352,13 @@ function renderPlanningEquipe() {
     const cells = weekDays.map(d => {
       const dateStr = peISO(d);
       const dayShifts = empShifts.filter(s => s.date === dateStr);
-      const blocks = dayShifts.map(s => {
+      const blocks = dayShifts.map((s,idx) => {
         const tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
-        return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')" style="cursor:pointer;background:${tc}20;border:1px solid ${tc}55;border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
-          <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}</div>
+        const conflict = dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2));
+        const border = conflict ? '2px solid var(--red)' : `1px solid ${tc}55`;
+        const title = conflict ? ' title="⚠ Chevauchement avec un autre créneau ce jour"' : '';
+        return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')"${title} style="cursor:pointer;background:${tc}20;border:${border};border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
+          <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}${conflict ? ' ⚠️' : ''}</div>
           <div style="font-size:.62rem;font-weight:500;color:${tc};opacity:.85">${peFormatDuration(peDuration(s.debut,s.fin))}</div>
         </div>`;
       }).join('');
@@ -342,6 +405,7 @@ function renderPlanningEquipe() {
       </tr>
     </thead>
     <tbody>
+      ${coverageRow}
       ${naRow}
       ${empRows}
       <tr style="border-top:2px solid var(--border);background:var(--g50)">
