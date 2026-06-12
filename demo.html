@@ -1119,6 +1119,69 @@ function generateForCurrentEtab() {
   }
   DB.set(DB.keys.budgetDemandes, budgetDemandes);
 
+  // ── FICHES DE PAIE ──
+  const fichesPaie = [];
+  if (employesList.length) {
+    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+      for (let m = 1; m <= 6; m++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+        const periode = d.toISOString().slice(0, 7);
+        const txt = `Bulletin de paie — ${emp.prenom} ${emp.nom}\nPériode : ${periode}\nDocument généré automatiquement (démo).`;
+        fichesPaie.push({
+          id: 'pie-' + genId(),
+          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+          periode,
+          fichier: { name: `bulletin_${periode}.txt`, mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
+          dateAjout: new Date(d.getFullYear(), d.getMonth() + 1, 5).toISOString(),
+          ajoutePar: 'Service RH'
+        });
+      }
+    });
+  }
+  DB.set(DB.keys.fichesPaie, fichesPaie);
+
+  // ── ENTRETIENS PROFESSIONNELS ──
+  const entretiens = [];
+  const ENTRETIEN_TYPES = ['annuel', 'professionnel', 'suivi'];
+  const ENTRETIEN_BILANS = [
+    'Bonne implication dans les projets éducatifs, posture professionnelle adaptée.',
+    'Période marquée par une charge de travail importante, accompagnement renforcé proposé.',
+    'Progression notable sur la gestion des situations de crise.',
+    'Investissement constant, bonne intégration dans l\'équipe.',
+    'Quelques difficultés relationnelles avec l\'équipe, points d\'amélioration identifiés.'
+  ];
+  const ENTRETIEN_OBJECTIFS = [
+    'Poursuivre la formation sur les TSA / TND.',
+    'Renforcer la coordination avec les familles.',
+    'Développer les écrits professionnels.',
+    'Prendre en charge un projet d\'activité collective.',
+    'Améliorer la gestion du temps et des priorités.'
+  ];
+  const ENTRETIEN_FORMATIONS = ['', 'Formation gestes et postures', 'Formation premiers secours (PSC1)', 'Formation gestion de la violence', 'Formation à l\'écrit professionnel', ''];
+  if (employesList.length) {
+    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+      const n = rand(1, 2);
+      for (let k = 0; k < n; k++) {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - rand(1, 11));
+        const statut = d < now ? pick(['realise', 'realise', 'planifie']) : 'planifie';
+        entretiens.push({
+          id: 'et-' + genId(),
+          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+          date: d.toISOString().slice(0, 10),
+          type: pick(ENTRETIEN_TYPES),
+          statut,
+          evaluateur: pick(REFFERENTS),
+          bilan: statut === 'realise' ? pick(ENTRETIEN_BILANS) : '',
+          objectifs: pick(ENTRETIEN_OBJECTIFS),
+          formations: pick(ENTRETIEN_FORMATIONS),
+          createdAt: d.toISOString()
+        });
+      }
+    });
+  }
+  DB.set(DB.keys.entretiens, entretiens);
+
   // ── CHAMBRES & ÉTATS DES LIEUX ──
   const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
   const rooms = roomNames.map(nom => ({
@@ -1466,7 +1529,9 @@ function generateForCurrentEtab() {
     planning_equipe: pe.length,
     conges: conges.length,
     budgetEnveloppes: budgetEnveloppes.length,
-    budgetDemandes: budgetDemandes.length
+    budgetDemandes: budgetDemandes.length,
+    fichesPaie: fichesPaie.length,
+    entretiens: entretiens.length
   };
 }
 
@@ -1481,13 +1546,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
