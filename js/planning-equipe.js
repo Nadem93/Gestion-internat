@@ -107,12 +107,6 @@ function peSetView(mode) {
   renderPlanningEquipe();
 }
 
-function peGoToWeek(dateStr) {
-  peWeekStart = peGetMonday(new Date(dateStr + 'T00:00:00'));
-  peViewMode = 'semaine';
-  renderPlanningEquipe();
-}
-
 // ── COPIER LA SEMAINE PRÉCÉDENTE ──
 function peCopyPreviousWeek() {
   if (!peCanEditPlanning()) return;
@@ -302,28 +296,48 @@ function renderPlanningEquipe() {
 }
 
 function renderPlanningEquipeWeek() {
-  const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   const weekDays = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(peWeekStart);
     d.setDate(d.getDate() + i);
     weekDays.push(d);
   }
-  const weekDayStrs = weekDays.map(peISO);
-  const todayStr = today();
-  const canEdit = peCanEditPlanning();
-
   document.getElementById('peWeekLabel').textContent =
     `Semaine du ${peFormatShort(weekDays[0])} au ${peFormatShort(weekDays[6])}/${weekDays[6].getFullYear()}`;
+  renderPlanningGrid(weekDays, true);
+}
+
+// ── RENDU VUE MOIS ──
+function renderPlanningEquipeMonth() {
+  const monthStart = new Date(peMonthCursor);
+  const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth()+1, 0);
+  const days = [];
+  for (let day = 1; day <= monthEnd.getDate(); day++) {
+    days.push(new Date(monthStart.getFullYear(), monthStart.getMonth(), day));
+  }
+  document.getElementById('peWeekLabel').textContent =
+    monthStart.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  renderPlanningGrid(days, false);
+}
+
+// ── RENDU GRILLE (commun semaine / mois) ──
+function renderPlanningGrid(days, isWeek) {
+  const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const dayStrs = days.map(peISO);
+  const todayStr = today();
+  const canEdit = peCanEditPlanning();
+  const periodLabel = isWeek ? 'sem' : 'mois';
+  const minWidth = isWeek ? 90 : 56;
+
   document.getElementById('peHint').textContent = canEdit ? 'Cliquez sur une case pour ajouter ou modifier un créneau' : '';
-  document.getElementById('peCopyBtn').style.display = canEdit ? '' : 'none';
+  document.getElementById('peCopyBtn').style.display = (canEdit && isWeek) ? '' : 'none';
 
   const employes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
   const shifts = getPeShifts();
-  const shiftsWeek = shifts.filter(s => weekDayStrs.includes(s.date));
+  const shiftsPeriod = shifts.filter(s => dayStrs.includes(s.date));
 
   const byEmp = {};
-  shiftsWeek.forEach(s => {
+  shiftsPeriod.forEach(s => {
     const key = s.employeId || 'NA';
     (byEmp[key] = byEmp[key] || []).push(s);
   });
@@ -336,21 +350,22 @@ function renderPlanningEquipeWeek() {
     return;
   }
 
-  const dayHeader = weekDays.map((d,i) => {
-    const isToday = weekDayStrs[i] === todayStr;
+  const dayHeader = days.map((d,i) => {
+    const isToday = dayStrs[i] === todayStr;
+    const dow = (d.getDay() + 6) % 7;
     const numStyle = isToday
       ? 'display:inline-block;width:22px;height:22px;line-height:22px;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;margin-top:2px'
       : 'display:inline-block;margin-top:2px;font-weight:400';
-    return `<th style="padding:.6rem .35rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;min-width:90px">${DAYS[i]}<br/><span style="${numStyle}">${d.getDate()}</span></th>`;
+    return `<th style="padding:.6rem .35rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;min-width:${minWidth}px">${DAYS[dow]}<br/><span style="${numStyle}">${d.getDate()}</span></th>`;
   }).join('');
 
   const coverageRow = `<tr style="border-top:1px solid var(--border)">
-    <td style="padding:.4rem .75rem;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase">Couverture</td>
-    ${weekDays.map(d => {
+    <td style="padding:.4rem .75rem;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Couverture</td>
+    ${days.map(d => {
       const dateStr = peISO(d);
       const counts = {};
       Object.keys(PE_TYPES).forEach(k => counts[k] = 0);
-      shiftsWeek.filter(s => s.date === dateStr).forEach(s => counts[peShiftType(s.debut,s.fin)]++);
+      shiftsPeriod.filter(s => s.date === dateStr).forEach(s => counts[peShiftType(s.debut,s.fin)]++);
       const badges = Object.entries(PE_TYPES).map(([k,t]) => {
         const n = counts[k];
         return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:.62rem;font-weight:700;color:${n ? t.color : 'var(--g300)'}"><span style="width:7px;height:7px;border-radius:2px;background:${n ? t.color : 'var(--g200)'};display:inline-block"></span>${n}</span>`;
@@ -368,7 +383,7 @@ function renderPlanningEquipeWeek() {
         <div style="font-weight:600;font-size:.8rem;color:var(--muted)">Non assignés</div>
       </div>
     </td>
-    ${weekDays.map(d => {
+    ${days.map(d => {
       const dateStr = peISO(d);
       const dayShifts = naShifts.filter(s => s.date === dateStr);
       const content = dayShifts.map(s => {
@@ -384,10 +399,11 @@ function renderPlanningEquipeWeek() {
     const empShifts = byEmp[emp.id] || [];
     const totalMins = empShifts.reduce((sum,s) => sum + peDuration(s.debut, s.fin), 0);
     const contractH = emp.heuresContrat ?? 35;
-    const deltaMins = totalMins - contractH * 60;
+    const contractMins = Math.round(contractH * 60 * days.length / 7);
+    const deltaMins = totalMins - contractMins;
     const deltaColor = deltaMins >= 0 ? 'var(--green)' : 'var(--red)';
 
-    const cells = weekDays.map(d => {
+    const cells = days.map(d => {
       const dateStr = peISO(d);
       const dayShifts = empShifts.filter(s => s.date === dateStr);
       const blocks = dayShifts.map((s,idx) => {
@@ -423,9 +439,9 @@ function renderPlanningEquipeWeek() {
   }).join('');
 
   let grandTotal = 0;
-  const footerCells = weekDays.map(d => {
+  const footerCells = days.map(d => {
     const dateStr = peISO(d);
-    const dayTotal = shiftsWeek.filter(s => s.date === dateStr).reduce((sum,s) => sum + peDuration(s.debut,s.fin), 0);
+    const dayTotal = shiftsPeriod.filter(s => s.date === dateStr).reduce((sum,s) => sum + peDuration(s.debut,s.fin), 0);
     grandTotal += dayTotal;
     return `<td style="padding:.5rem .35rem;text-align:center;font-weight:700;font-size:.78rem">${peFormatDuration(dayTotal)}</td>`;
   }).join('');
@@ -439,7 +455,7 @@ function renderPlanningEquipeWeek() {
       <tr>
         <th style="padding:.6rem .75rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Employé</th>
         ${dayHeader}
-        <th style="padding:.6rem .75rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Total</th>
+        <th style="padding:.6rem .75rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Total (${periodLabel})</th>
       </tr>
     </thead>
     <tbody>
@@ -447,121 +463,11 @@ function renderPlanningEquipeWeek() {
       ${naRow}
       ${empRows}
       <tr style="border-top:2px solid var(--border);background:var(--g50)">
-        <td style="padding:.5rem .75rem;font-weight:700;font-size:.78rem">Heures travaillées</td>
+        <td style="padding:.5rem .75rem;font-weight:700;font-size:.78rem;white-space:nowrap">Heures travaillées</td>
         ${footerCells}
         <td style="padding:.5rem .75rem;text-align:center;font-weight:800;font-size:.8rem">${peFormatDuration(grandTotal)}</td>
       </tr>
     </tbody>
-  </table>`;
-}
-
-// ── RENDU VUE MOIS ──
-function renderPlanningEquipeMonth() {
-  const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-  const monthStart = new Date(peMonthCursor);
-  const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth()+1, 0);
-  const gridStart = peGetMonday(monthStart);
-  const gridEnd = peGetMonday(monthEnd);
-  gridEnd.setDate(gridEnd.getDate() + 6);
-  const todayStr = today();
-
-  document.getElementById('peWeekLabel').textContent =
-    monthStart.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  document.getElementById('peHint').textContent = 'Cliquez sur un jour pour ouvrir la semaine correspondante';
-  document.getElementById('peCopyBtn').style.display = 'none';
-
-  const employes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
-  const shifts = getPeShifts();
-
-  const el = document.getElementById('peGrid');
-  const body = el.querySelector('.card-body');
-
-  if (!employes.length) {
-    body.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucun employé enregistré. Ajoutez des employés pour gérer le planning.</p></div>';
-    return;
-  }
-
-  const headerCells = DAYS.map(d => `<th style="padding:.5rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">${d}</th>`).join('');
-
-  const weeks = [];
-  const cursor = new Date(gridStart);
-  while (cursor <= gridEnd) {
-    const week = [];
-    for (let i = 0; i < 7; i++) { week.push(new Date(cursor)); cursor.setDate(cursor.getDate()+1); }
-    weeks.push(week);
-  }
-
-  const rows = weeks.map(week => {
-    const cells = week.map(d => {
-      const dateStr = peISO(d);
-      const inMonth = d.getMonth() === monthStart.getMonth();
-      const isToday = dateStr === todayStr;
-      const dayShifts = shifts.filter(s => s.date === dateStr);
-      const totalMins = dayShifts.reduce((sum,s) => sum + peDuration(s.debut, s.fin), 0);
-      const counts = {};
-      Object.keys(PE_TYPES).forEach(k => counts[k] = 0);
-      dayShifts.forEach(s => counts[peShiftType(s.debut,s.fin)]++);
-      const badges = Object.entries(PE_TYPES).filter(([k]) => counts[k] > 0).map(([k,t]) =>
-        `<span style="display:inline-flex;align-items:center;gap:2px;font-size:.6rem;font-weight:700;color:${t.color}"><span style="width:6px;height:6px;border-radius:2px;background:${t.color};display:inline-block"></span>${counts[k]}</span>`
-      ).join('');
-      const numStyle = isToday
-        ? 'display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;font-size:.72rem'
-        : `display:inline-block;font-weight:600;font-size:.78rem;color:${inMonth ? 'inherit' : 'var(--g300)'}`;
-      return `<td onclick="peGoToWeek('${dateStr}')" style="cursor:pointer;padding:.4rem;vertical-align:top;height:64px;${inMonth ? '' : 'background:var(--g50)'}">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="${numStyle}">${d.getDate()}</span>
-          ${totalMins ? `<span style="font-size:.6rem;font-weight:700;color:var(--muted)">${peFormatDuration(totalMins)}</span>` : ''}
-        </div>
-        <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">${badges}</div>
-      </td>`;
-    }).join('');
-    return `<tr style="border-top:1px solid var(--border)">${cells}</tr>`;
-  }).join('');
-
-  const monthDayStrs = [];
-  for (let day = 1; day <= monthEnd.getDate(); day++) {
-    monthDayStrs.push(peISO(new Date(monthStart.getFullYear(), monthStart.getMonth(), day)));
-  }
-
-  const totalsRows = employes.map(emp => {
-    const empShifts = shifts.filter(s => s.employeId === emp.id && monthDayStrs.includes(s.date));
-    const totalMins = empShifts.reduce((sum,s) => sum + peDuration(s.debut, s.fin), 0);
-    const contractH = emp.heuresContrat ?? 35;
-    const contractMonthMins = Math.round(contractH * 60 / 7 * monthDayStrs.length);
-    const deltaMins = totalMins - contractMonthMins;
-    const deltaColor = deltaMins >= 0 ? 'var(--green)' : 'var(--red)';
-    return `<tr style="border-top:1px solid var(--border)">
-      <td style="padding:.5rem .75rem;white-space:nowrap">
-        <div style="display:flex;align-items:center;gap:.5rem">
-          ${residentPhoto(emp, 28)}
-          <div style="font-weight:600;font-size:.8rem">${escHtml((emp.prenom||'')+' '+(emp.nom||''))}</div>
-        </div>
-      </td>
-      <td style="padding:.5rem .75rem;text-align:center;font-weight:700;font-size:.8rem">${peFormatDuration(totalMins)}</td>
-      <td style="padding:.5rem .75rem;text-align:center;font-size:.78rem;color:var(--muted)">${peFormatDuration(contractMonthMins)}</td>
-      <td style="padding:.5rem .75rem;text-align:center;font-weight:600;font-size:.78rem;color:${deltaColor}">${peFormatSigned(deltaMins)}</td>
-    </tr>`;
-  }).join('');
-
-  const legend = `<div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted)">
-    ${Object.values(PE_TYPES).map(t => `<span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:${t.color};display:inline-block"></span>${t.label}</span>`).join('')}
-  </div>`;
-
-  body.innerHTML = legend + `<table style="width:100%;border-collapse:collapse;font-size:.82rem;table-layout:fixed">
-    <thead style="background:var(--g50)"><tr>${headerCells}</tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
-  <div style="padding:1rem .75rem .5rem;font-weight:700;font-size:.8rem;border-top:1px solid var(--border);margin-top:.5rem">Totaux mensuels par employé</div>
-  <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-    <thead style="background:var(--g50)">
-      <tr>
-        <th style="padding:.5rem .75rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Employé</th>
-        <th style="padding:.5rem .75rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Heures travaillées</th>
-        <th style="padding:.5rem .75rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Contrat (mois)</th>
-        <th style="padding:.5rem .75rem;text-align:center;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Écart</th>
-      </tr>
-    </thead>
-    <tbody>${totalsRows}</tbody>
   </table>`;
 }
 
