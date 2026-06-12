@@ -1082,6 +1082,43 @@ function generateForCurrentEtab() {
   }
   localStorage.setItem('ftr_conges', JSON.stringify(conges));
 
+  // ── BUDGET & DÉPENSES ──
+  const budgetEnveloppes = [
+    { id: 'benv-' + genId(), nom: 'Activités éducatives', montant: rand(1500, 3000), description: 'Sorties, ateliers et activités collectives', createdAt: new Date(now.getTime() - 200 * 86400000).toISOString() },
+    { id: 'benv-' + genId(), nom: 'Matériel pédagogique', montant: rand(800, 1500), description: 'Fournitures, jeux éducatifs, supports d\'activité', createdAt: new Date(now.getTime() - 200 * 86400000).toISOString() },
+    { id: 'benv-' + genId(), nom: 'Frais de déplacement', montant: rand(1000, 2000), description: 'Transports professionnels, carburant, péages', createdAt: new Date(now.getTime() - 180 * 86400000).toISOString() },
+    { id: 'benv-' + genId(), nom: 'Entretien & maintenance', montant: rand(1200, 2500), description: 'Petites réparations, fournitures d\'entretien', createdAt: new Date(now.getTime() - 180 * 86400000).toISOString() }
+  ];
+  DB.set(DB.keys.budgetEnveloppes, budgetEnveloppes);
+
+  const budgetDemandes = [];
+  const BUDGET_MOTIFS = ['Achat de matériel pour l\'atelier', 'Sortie pédagogique', 'Frais de déplacement professionnel', 'Achat de fournitures', 'Remboursement repas en mission', 'Petit matériel d\'entretien', 'Carburant véhicule de service', 'Activité éducative jeunes', 'Achat de jeux éducatifs', 'Péage / parking mission'];
+  const BUDGET_REFUS = ['Justificatif manquant ou illisible', 'Montant non conforme au plafond', 'Dépense hors enveloppe', 'Demande déjà traitée via une autre enveloppe', ''];
+  if (employesList.length) {
+    for (let i = 0; i < rand(8, 18); i++) {
+      const emp = pick(employesList);
+      const env = pick(budgetEnveloppes);
+      const dDep = new Date(now);
+      dDep.setDate(dDep.getDate() - rand(0, 60));
+      const statut = pick(statuts);
+      budgetDemandes.push({
+        id: 'bg-' + genId(),
+        employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+        enveloppeId: env.id, enveloppeNom: env.nom,
+        montant: rand(15, 220),
+        motif: pick(BUDGET_MOTIFS),
+        dateDepense: dDep.toISOString().slice(0, 10),
+        justificatifs: [],
+        statut,
+        dateDemande: new Date(dDep.getTime() + rand(0, 3) * 86400000).toISOString(),
+        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom + ' ' + u.nom).filter(Boolean)) : '',
+        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
+        reponseMotif: statut === 'refuse' ? pick(BUDGET_REFUS) : ''
+      });
+    }
+  }
+  DB.set(DB.keys.budgetDemandes, budgetDemandes);
+
   // ── CHAMBRES & ÉTATS DES LIEUX ──
   const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
   const rooms = roomNames.map(nom => ({
@@ -1427,7 +1464,9 @@ function generateForCurrentEtab() {
     auditLog: auditLog.length,
     viatrajectoire: vts.length,
     planning_equipe: pe.length,
-    conges: conges.length
+    conges: conges.length,
+    budgetEnveloppes: budgetEnveloppes.length,
+    budgetDemandes: budgetDemandes.length
   };
 }
 
@@ -1442,13 +1481,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
