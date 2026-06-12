@@ -227,13 +227,66 @@ function empCongesHtml() {
     </div>`;
   }).join('');
   return `<div class="card" style="margin-bottom:1rem">
-    <div class="card-body" style="display:flex;gap:1.5rem;align-items:center">
+    <div class="card-body" style="display:flex;gap:1.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap">
       <div><div style="font-size:.7rem;color:var(--muted);font-weight:700">JOURS PRIS EN ${curYear}</div><div style="font-size:1.6rem;font-weight:800">${joursPris}</div></div>
+      <button class="btn btn-primary btn-sm" onclick="empOpenDemandeConge()">🗓 Demander un congé</button>
     </div>
   </div>
   <div class="card"><div class="card-header"><span class="card-title">🗓 Demandes de congés</span></div>
     <div class="card-body" style="padding:0">${list.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune demande.</p></div>'}</div>
   </div>`;
+}
+
+function empOpenDemandeConge() {
+  const types = [
+    { v:'cp', l:'Congés payés' }, { v:'rtt', l:'RTT' }, { v:'maladie', l:'Arrêt maladie' },
+    { v:'enfant_malade', l:'Enfant malade' }, { v:'formation', l:'Formation' }, { v:'autre', l:'Autre' }
+  ];
+  const tOpts = types.map(t => `<option value="${t.v}">${t.l}</option>`).join('');
+  const html = `<div class="modal-overlay" id="modalEmpConge" style="display:flex" onclick="closeModal('modalEmpConge')">
+    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-header"><span class="modal-title">🗓 Nouvelle demande de congés</span><button class="modal-close" onclick="closeModal('modalEmpConge')">&times;</button></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="form-group"><label>Type *</label><select id="ecType" class="form-input">${tOpts}</select></div>
+        <div class="form-row">
+          <div class="form-group"><label>Date début *</label><input type="date" id="ecDebut" class="form-input"/></div>
+          <div class="form-group"><label>Date fin *</label><input type="date" id="ecFin" class="form-input"/></div>
+        </div>
+        <div class="form-group"><label>Motif</label><textarea id="ecMotif" class="form-input" rows="2" placeholder="Raison de la demande…"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalEmpConge')">Annuler</button>
+        <button class="btn btn-primary" onclick="empSaveConge()">Envoyer la demande</button>
+      </div>
+    </div>
+  </div>`;
+  const old = document.getElementById('modalEmpConge');
+  if (old) old.remove();
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  document.body.appendChild(div);
+  requestAnimationFrame(() => document.getElementById('modalEmpConge')?.classList.add('open'));
+}
+
+function empSaveConge() {
+  const type = document.getElementById('ecType').value;
+  const debut = document.getElementById('ecDebut').value;
+  const fin = document.getElementById('ecFin').value;
+  const motif = document.getElementById('ecMotif').value.trim();
+  if (!debut || !fin) { toast('Champs obligatoires manquants', 'error'); return; }
+  if (debut > fin) { toast('La date de fin doit être après la date de début', 'error'); return; }
+  const e = getEmploye();
+  const list = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
+  list.push({
+    id: genId(), employeId: currentEmployeId, employeNom: `${e.prenom||''} ${e.nom||''}`.trim(),
+    type, debut, fin, motif, statut: 'en_attente', dateDemande: new Date().toISOString()
+  });
+  localStorage.setItem('ftr_conges', JSON.stringify(list));
+  auditLog('conge', `Nouvelle demande — ${e.prenom||''} ${e.nom||''}`.trim());
+  closeModal('modalEmpConge');
+  toast('Demande de congés envoyée ✓', 'success');
+  const tab = document.getElementById('tab-conges');
+  if (tab) tab.innerHTML = empCongesHtml();
 }
 
 function empJournalHtml(e) {

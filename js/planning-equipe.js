@@ -3,6 +3,7 @@ let _peCtx = null;
 let peViewMode = 'semaine'; // 'semaine' | 'mois'
 let peMonthCursor = (() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })();
 let peMetierFilter = ''; // '' = tous les métiers, sinon valeur de e.poste
+let _peLastDays = [];
 
 function initPlanningEquipe() {
   const _s = Auth.requireAuth();
@@ -111,6 +112,42 @@ function peSetView(mode) {
 function peSetMetierFilter(val) {
   peMetierFilter = val;
   renderPlanningEquipe();
+}
+
+// ── EXPORT CSV ──
+function peCsvCell(v) {
+  const s = String(v ?? '');
+  return /[,"\n;]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function peExportCsv() {
+  const days = _peLastDays;
+  if (!days.length) return;
+  const dayStrs = days.map(peISO);
+  const allEmployes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
+  const employes = peMetierFilter ? allEmployes.filter(e => e.poste === peMetierFilter) : allEmployes;
+  const empIds = new Set(employes.map(e => e.id));
+  const shifts = getPeShifts().filter(s => dayStrs.includes(s.date) && (!peMetierFilter || empIds.has(s.employeId)));
+  const empById = {};
+  employes.forEach(e => empById[e.id] = (e.prenom||'')+' '+(e.nom||''));
+  shifts.sort((a,b) => a.date.localeCompare(b.date) || a.debut.localeCompare(b.debut));
+  const rows = [['Employé','Date','Début','Fin','Type','Durée']];
+  shifts.forEach(s => {
+    const nom = empById[s.employeId] || s.employeNom || 'Non assigné';
+    const type = PE_TYPES[peShiftType(s.debut,s.fin)].label;
+    rows.push([nom, s.date, s.debut, s.fin, type, peFormatDuration(peDuration(s.debut,s.fin))]);
+  });
+  const csv = rows.map(r => r.map(peCsvCell).join(',')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const suffix = peMetierFilter ? '_' + peMetierFilter.replace(/[^a-zA-Z0-9]+/g,'_') : '';
+  a.download = `planning${suffix}_${peISO(days[0])}_${peISO(days[days.length-1])}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // ── COPIER LA SEMAINE PRÉCÉDENTE ──
@@ -328,6 +365,7 @@ function renderPlanningEquipeMonth() {
 
 // ── RENDU GRILLE (commun semaine / mois) ──
 function renderPlanningGrid(days, isWeek) {
+  _peLastDays = days;
   const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   const dayStrs = days.map(peISO);
   const todayStr = today();
@@ -359,6 +397,10 @@ function renderPlanningGrid(days, isWeek) {
     const key = s.employeId || 'NA';
     (byEmp[key] = byEmp[key] || []).push(s);
   });
+
+  // ── CONGÉS VALIDÉS ──
+  const congesAcceptes = (JSON.parse(localStorage.getItem('ftr_conges') || '[]')).filter(c => c.statut === 'accepte');
+  const peIsOnConge = (employeId, dateStr) => congesAcceptes.some(c => c.employeId === employeId && dateStr >= c.debut && dateStr <= c.fin);
 
   const el = document.getElementById('peGrid');
   const body = el.querySelector('.card-body');
@@ -426,18 +468,23 @@ function renderPlanningGrid(days, isWeek) {
     const cells = days.map(d => {
       const dateStr = peISO(d);
       const dayShifts = empShifts.filter(s => s.date === dateStr);
+      const onConge = peIsOnConge(emp.id, dateStr);
       const blocks = dayShifts.map((s,idx) => {
         const tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
-        const conflict = dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2));
+        const conflict = dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2)) || onConge;
         const border = conflict ? '2px solid var(--red)' : `1px solid ${tc}55`;
-        const title = conflict ? ' title="⚠ Chevauchement avec un autre créneau ce jour"' : '';
+        const titleParts = [];
+        if (dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2))) titleParts.push('⚠ Chevauchement avec un autre créneau ce jour');
+        if (onConge) titleParts.push('🏖 Cet employé est en congé ce jour');
+        const title = titleParts.length ? ` title="${titleParts.join(' / ')}"` : '';
         return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')"${title} style="cursor:pointer;background:${tc}20;border:${border};border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
           <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}${conflict ? ' ⚠️' : ''}</div>
           <div style="font-size:.62rem;font-weight:500;color:${tc};opacity:.85">${peFormatDuration(peDuration(s.debut,s.fin))}</div>
         </div>`;
       }).join('');
-      const addBtn = (canEdit && !dayShifts.length) ? '<div style="text-align:center;color:var(--g300);font-size:.9rem;line-height:1.4">+</div>' : '';
-      return `<td style="padding:.35rem;vertical-align:top"${canEdit ? ` onclick="openPeShiftModal('${emp.id}','${dateStr}')" style="cursor:pointer"` : ''}>${blocks}${addBtn}</td>`;
+      const congeBadge = (onConge && !dayShifts.length) ? '<div style="text-align:center;background:var(--g100);color:var(--muted);border-radius:6px;padding:.3rem .4rem;font-size:.65rem;font-weight:700" title="Congé accepté">🏖 Congé</div>' : '';
+      const addBtn = (canEdit && !dayShifts.length && !onConge) ? '<div style="text-align:center;color:var(--g300);font-size:.9rem;line-height:1.4">+</div>' : '';
+      return `<td style="padding:.35rem;vertical-align:top"${canEdit ? ` onclick="openPeShiftModal('${emp.id}','${dateStr}')" style="cursor:pointer"` : ''}>${blocks}${congeBadge}${addBtn}</td>`;
     }).join('');
 
     return `<tr style="border-top:1px solid var(--border)">
@@ -468,6 +515,8 @@ function renderPlanningGrid(days, isWeek) {
 
   const legend = `<div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted)">
     ${Object.values(PE_TYPES).map(t => `<span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:${t.color};display:inline-block"></span>${t.label}</span>`).join('')}
+    <span style="display:flex;align-items:center;gap:.35rem">🏖 Congé accepté</span>
+    <span style="display:flex;align-items:center;gap:.35rem">⚠️ Conflit (chevauchement ou congé)</span>
   </div>`;
 
   body.innerHTML = legend + `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
