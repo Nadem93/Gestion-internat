@@ -193,6 +193,9 @@ function renderEditMode(e) {
           ${inputField('eDateEmbauche','Date d\'embauche',e.dateEmbauche,'date')}
           ${inputField('eColor','Couleur',e.color||'var(--primary)','color')}
         </div>
+        <div class="grid grid-2" style="gap:.75rem">
+          ${inputField('eHeuresContrat','Heures contractuelles / semaine',e.heuresContrat ?? 35,'number')}
+        </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6366f1;margin-bottom:.25rem">📝 Notes</div>
         <textarea id="eNotes" class="form-input" rows="4" style="resize:vertical">${escHtml(e.notes||'')}</textarea>
@@ -214,6 +217,7 @@ function savePageEdit() {
     telephone: g('eTel'), email: g('eEmail'),
     dateEmbauche: g('eDateEmbauche'), statut: g('eStatut'),
     color: g('eColor') || '#3b82f6',
+    heuresContrat: parseFloat(g('eHeuresContrat')) || 35,
     notes: g('eNotes'),
     updatedAt: new Date().toISOString()
   };

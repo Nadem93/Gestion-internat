@@ -356,6 +356,7 @@ const PERM_GROUPS = [
   { label: 'Général', keys: ['view_dashboard'] },
   { label: 'Résidents & projet', keys: ['view_residents', 'edit_residents', 'access_ppe', 'access_sante', 'access_medicaments'] },
   { label: 'Suivi quotidien', keys: ['access_journal', 'access_presences', 'access_repertoire', 'access_documents', 'access_vehicules', 'access_activites'] },
+  { label: 'Planning équipe', keys: ['access_planning_equipe', 'edit_planning_equipe'] },
   { label: 'Incidents', keys: ['view_incidents', 'validate_incidents'] },
   { label: 'Instances', keys: ['access_cvs'] },
   { label: 'Administration', keys: ['access_interventions', 'access_employes', 'access_admin', 'manage_users'] }
