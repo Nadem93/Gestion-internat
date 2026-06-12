@@ -2,6 +2,7 @@ let peWeekStart = peGetMonday(new Date());
 let _peCtx = null;
 let peViewMode = 'semaine'; // 'semaine' | 'mois'
 let peMonthCursor = (() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })();
+let peMetierFilter = ''; // '' = tous les métiers, sinon valeur de e.poste
 
 function initPlanningEquipe() {
   const _s = Auth.requireAuth();
@@ -104,6 +105,11 @@ function peToday() {
 
 function peSetView(mode) {
   peViewMode = mode;
+  renderPlanningEquipe();
+}
+
+function peSetMetierFilter(val) {
+  peMetierFilter = val;
   renderPlanningEquipe();
 }
 
@@ -332,9 +338,21 @@ function renderPlanningGrid(days, isWeek) {
   document.getElementById('peHint').textContent = canEdit ? 'Cliquez sur une case pour ajouter ou modifier un créneau' : '';
   document.getElementById('peCopyBtn').style.display = (canEdit && isWeek) ? '' : 'none';
 
-  const employes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
+  const allEmployes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
+
+  const metierSelect = document.getElementById('peMetierFilter');
+  if (metierSelect) {
+    const metiers = [...new Set(allEmployes.map(e => e.poste).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+    metierSelect.innerHTML = '<option value="">Tous les métiers</option>' +
+      metiers.map(m => `<option value="${escHtml(m)}"${m === peMetierFilter ? ' selected' : ''}>${escHtml(m)}</option>`).join('');
+    metierSelect.value = peMetierFilter;
+  }
+
+  const employes = peMetierFilter ? allEmployes.filter(e => e.poste === peMetierFilter) : allEmployes;
+  const empIds = new Set(employes.map(e => e.id));
   const shifts = getPeShifts();
   const shiftsPeriod = shifts.filter(s => dayStrs.includes(s.date));
+  const shiftsStats = peMetierFilter ? shiftsPeriod.filter(s => empIds.has(s.employeId)) : shiftsPeriod;
 
   const byEmp = {};
   shiftsPeriod.forEach(s => {
@@ -346,7 +364,9 @@ function renderPlanningGrid(days, isWeek) {
   const body = el.querySelector('.card-body');
 
   if (!employes.length) {
-    body.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucun employé enregistré. Ajoutez des employés pour gérer le planning.</p></div>';
+    body.innerHTML = peMetierFilter
+      ? `<div class="empty" style="padding:3rem;text-align:center"><p>Aucun employé pour le métier « ${escHtml(peMetierFilter)} ».</p></div>`
+      : '<div class="empty" style="padding:3rem;text-align:center"><p>Aucun employé enregistré. Ajoutez des employés pour gérer le planning.</p></div>';
     return;
   }
 
@@ -365,7 +385,7 @@ function renderPlanningGrid(days, isWeek) {
       const dateStr = peISO(d);
       const counts = {};
       Object.keys(PE_TYPES).forEach(k => counts[k] = 0);
-      shiftsPeriod.filter(s => s.date === dateStr).forEach(s => counts[peShiftType(s.debut,s.fin)]++);
+      shiftsStats.filter(s => s.date === dateStr).forEach(s => counts[peShiftType(s.debut,s.fin)]++);
       const badges = Object.entries(PE_TYPES).map(([k,t]) => {
         const n = counts[k];
         return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:.62rem;font-weight:700;color:${n ? t.color : 'var(--g300)'}"><span style="width:7px;height:7px;border-radius:2px;background:${n ? t.color : 'var(--g200)'};display:inline-block"></span>${n}</span>`;
@@ -376,7 +396,7 @@ function renderPlanningGrid(days, isWeek) {
   </tr>`;
 
   const naShifts = byEmp['NA'] || [];
-  const naRow = `<tr style="border-top:1px solid var(--border);background:var(--g50)">
+  const naRow = peMetierFilter ? '' : `<tr style="border-top:1px solid var(--border);background:var(--g50)">
     <td style="padding:.5rem .75rem;white-space:nowrap">
       <div style="display:flex;align-items:center;gap:.5rem">
         <div style="width:32px;height:32px;border-radius:50%;background:var(--g200);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:var(--muted);flex-shrink:0">NA</div>
@@ -441,7 +461,7 @@ function renderPlanningGrid(days, isWeek) {
   let grandTotal = 0;
   const footerCells = days.map(d => {
     const dateStr = peISO(d);
-    const dayTotal = shiftsPeriod.filter(s => s.date === dateStr).reduce((sum,s) => sum + peDuration(s.debut,s.fin), 0);
+    const dayTotal = shiftsStats.filter(s => s.date === dateStr).reduce((sum,s) => sum + peDuration(s.debut,s.fin), 0);
     grandTotal += dayTotal;
     return `<td style="padding:.5rem .35rem;text-align:center;font-weight:700;font-size:.78rem">${peFormatDuration(dayTotal)}</td>`;
   }).join('');

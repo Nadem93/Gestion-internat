@@ -40,6 +40,9 @@
             <button class="btn btn-sm btn-primary" id="peViewWeekBtn" onclick="peSetView('semaine')">Semaine</button>
             <button class="btn btn-sm btn-outline" id="peViewMonthBtn" onclick="peSetView('mois')">Mois</button>
           </div>
+          <select id="peMetierFilter" class="form-input" style="max-width:170px;margin-left:.5rem" onchange="peSetMetierFilter(this.value)">
+            <option value="">Tous les métiers</option>
+          </select>
         </div>
         <div id="peWeekLabel" style="font-weight:700;font-size:.95rem"></div>
         <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
