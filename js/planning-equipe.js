@@ -50,6 +50,24 @@ function peFormatSigned(mins) {
   return sign + peFormatDuration(Math.abs(mins));
 }
 
+// ── CODE COULEUR AUTOMATIQUE PAR TYPE DE CRÉNEAU ──
+const PE_TYPES = {
+  matin:       { label: 'Matin',       color: '#f59e0b' },
+  apresmidi:   { label: 'Après-midi',  color: '#3b82f6' },
+  journee:     { label: 'Journée',     color: '#10b981' },
+  nuit:        { label: 'Nuit',        color: '#6366f1' }
+};
+
+function peShiftType(debut, fin) {
+  const [h1,m1] = debut.split(':').map(Number);
+  const [h2,m2] = fin.split(':').map(Number);
+  const startMin = h1*60+m1, endMin = h2*60+m2;
+  if (endMin <= startMin || h1 >= 19) return 'nuit';
+  if (peDuration(debut,fin) >= 420 && h1 < 14) return 'journee';
+  if (h1 < 13) return 'matin';
+  return 'apresmidi';
+}
+
 // ── NAVIGATION SEMAINE ──
 function pePrevWeek() { peWeekStart.setDate(peWeekStart.getDate()-7); renderPlanningEquipe(); }
 function peNextWeek() { peWeekStart.setDate(peWeekStart.getDate()+7); renderPlanningEquipe(); }
@@ -255,7 +273,10 @@ function renderPlanningEquipe() {
     ${weekDays.map(d => {
       const dateStr = peISO(d);
       const dayShifts = naShifts.filter(s => s.date === dateStr);
-      const content = dayShifts.map(s => `<div onclick="openPeShiftModal(null,'${dateStr}','${s.id}')" style="cursor:pointer;background:var(--g100);border:1px solid var(--border);border-radius:6px;padding:.3rem .4rem;margin-bottom:2px;font-size:.68rem;font-weight:600;color:var(--muted)">${escHtml(s.employeNom||'?')}<br/>${s.debut} - ${s.fin}</div>`).join('');
+      const content = dayShifts.map(s => {
+        const tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
+        return `<div onclick="openPeShiftModal(null,'${dateStr}','${s.id}')" style="cursor:pointer;background:${tc}20;border:1px solid ${tc}55;border-radius:6px;padding:.3rem .4rem;margin-bottom:2px;font-size:.68rem;font-weight:600;color:${tc}">${escHtml(s.employeNom||'?')}<br/>${s.debut} - ${s.fin}</div>`;
+      }).join('');
       return `<td style="padding:.35rem;vertical-align:top">${content || '<span style="color:var(--g300)">—</span>'}</td>`;
     }).join('')}
     <td></td>
@@ -263,7 +284,6 @@ function renderPlanningEquipe() {
 
   const empRows = employes.map(emp => {
     const empShifts = byEmp[emp.id] || [];
-    const color = emp.color || 'var(--primary)';
     const totalMins = empShifts.reduce((sum,s) => sum + peDuration(s.debut, s.fin), 0);
     const contractH = emp.heuresContrat ?? 35;
     const deltaMins = totalMins - contractH * 60;
@@ -272,10 +292,13 @@ function renderPlanningEquipe() {
     const cells = weekDays.map(d => {
       const dateStr = peISO(d);
       const dayShifts = empShifts.filter(s => s.date === dateStr);
-      const blocks = dayShifts.map(s => `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')" style="cursor:pointer;background:${color}20;border:1px solid ${color}55;border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
-          <div style="font-size:.7rem;font-weight:700;color:${color}">${s.debut} - ${s.fin}</div>
-          <div style="font-size:.62rem;font-weight:500;color:${color};opacity:.85">${peFormatDuration(peDuration(s.debut,s.fin))}</div>
-        </div>`).join('');
+      const blocks = dayShifts.map(s => {
+        const tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
+        return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')" style="cursor:pointer;background:${tc}20;border:1px solid ${tc}55;border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
+          <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}</div>
+          <div style="font-size:.62rem;font-weight:500;color:${tc};opacity:.85">${peFormatDuration(peDuration(s.debut,s.fin))}</div>
+        </div>`;
+      }).join('');
       const addBtn = (canEdit && !dayShifts.length) ? '<div style="text-align:center;color:var(--g300);font-size:.9rem;line-height:1.4">+</div>' : '';
       return `<td style="padding:.35rem;vertical-align:top"${canEdit ? ` onclick="openPeShiftModal('${emp.id}','${dateStr}')" style="cursor:pointer"` : ''}>${blocks}${addBtn}</td>`;
     }).join('');
@@ -306,7 +329,11 @@ function renderPlanningEquipe() {
     return `<td style="padding:.5rem .35rem;text-align:center;font-weight:700;font-size:.78rem">${peFormatDuration(dayTotal)}</td>`;
   }).join('');
 
-  body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
+  const legend = `<div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted)">
+    ${Object.values(PE_TYPES).map(t => `<span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:${t.color};display:inline-block"></span>${t.label}</span>`).join('')}
+  </div>`;
+
+  body.innerHTML = legend + `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
     <thead style="background:var(--g50)">
       <tr>
         <th style="padding:.6rem .75rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Employé</th>
