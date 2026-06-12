@@ -1182,6 +1182,35 @@ function generateForCurrentEtab() {
   }
   DB.set(DB.keys.entretiens, entretiens);
 
+  // ── DOCUMENTATION DE L'ÉTABLISSEMENT ──
+  const documentation = [];
+  const DOCU_ITEMS = [
+    { titre: "Projet d'établissement 2023-2028", categorie: "Projet d'établissement", mois: 18 },
+    { titre: "Règlement de fonctionnement", categorie: 'Règlement intérieur', mois: 14 },
+    { titre: 'Charte des droits et libertés de la personne accueillie', categorie: 'Règlement intérieur', mois: 14 },
+    { titre: 'Note de service — Organisation des astreintes de nuit', categorie: 'Notes de service', mois: 3 },
+    { titre: 'Note de service — Procédure de signalement des incidents', categorie: 'Notes de service', mois: 5 },
+    { titre: 'Procédure — Conduite à tenir en cas d\'urgence médicale', categorie: 'Procédures', mois: 9 },
+    { titre: 'Procédure — Admission et accueil d\'un nouveau résident', categorie: 'Procédures', mois: 12 },
+    { titre: 'Compte-rendu — Réunion d\'équipe pluridisciplinaire', categorie: 'Comptes-rendus de réunion', mois: 1 },
+    { titre: 'Compte-rendu — Conseil de la vie sociale', categorie: 'Comptes-rendus de réunion', mois: 2 },
+    { titre: 'Plan de continuité d\'activité', categorie: 'Autre', mois: 10 }
+  ];
+  DOCU_ITEMS.forEach(item => {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - item.mois);
+    const txt = `${item.titre}\nCatégorie : ${item.categorie}\nDocument généré automatiquement (démo).`;
+    documentation.push({
+      id: 'docu-' + genId(),
+      titre: item.titre,
+      categorie: item.categorie,
+      fichier: { name: item.titre.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase() + '.txt', mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
+      dateAjout: d.toISOString(),
+      ajoutePar: 'Direction'
+    });
+  });
+  DB.set(DB.keys.documentation, documentation);
+
   // ── CHAMBRES & ÉTATS DES LIEUX ──
   const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
   const rooms = roomNames.map(nom => ({
@@ -1531,7 +1560,8 @@ function generateForCurrentEtab() {
     budgetEnveloppes: budgetEnveloppes.length,
     budgetDemandes: budgetDemandes.length,
     fichesPaie: fichesPaie.length,
-    entretiens: entretiens.length
+    entretiens: entretiens.length,
+    documentation: documentation.length
   };
 }
 
@@ -1546,7 +1576,7 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
