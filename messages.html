@@ -122,7 +122,7 @@
 </div>
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
-<script>Auth.requireAuth();</script>
+<script>Auth.requireAuth(); if (!requireModule('access_messages')) { document.querySelector('.content').innerHTML = ''; }</script>
 <script src="js/messages.js"></script>
 </body>
 </html>

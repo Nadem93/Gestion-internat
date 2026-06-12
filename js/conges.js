@@ -102,6 +102,37 @@ function supprimerConge(id) {
   renderConges();
 }
 
+const CONGE_TYPE_LABELS = { cp:'Congés payés', rtt:'RTT', maladie:'Arrêt maladie', enfant_malade:'Enfant malade', formation:'Formation', autre:'Autre' };
+const CONGE_STATUT_STYLES = { en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' }, accepte: { bg:'#16a34a18', c:'#16a34a', l:'Accepté' }, refuse: { bg:'#ef444418', c:'#ef4444', l:'Refusé' } };
+
+function congeItemHtml(d, isAdmin) {
+  const st = CONGE_STATUT_STYLES[d.statut] || CONGE_STATUT_STYLES.en_attente;
+  const jours = Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1;
+  const canRepondre = isAdmin && d.statut === 'en_attente';
+  return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)">
+    <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${d.type === 'maladie' ? '🤒' : d.type === 'enfant_malade' ? '👶' : d.type === 'formation' ? '📚' : '🗓'}</span>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:.85rem">${escHtml(d.employeNom)}</span>
+        <span style="padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
+        <span style="font-size:.7rem;color:var(--g400)">${CONGE_TYPE_LABELS[d.type]||d.type}</span>
+      </div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">
+        ${formatDate(d.debut)} → ${formatDate(d.fin)} · ${jours} jour${jours>1?'s':''}
+        · Demandé le ${new Date(d.dateDemande).toLocaleDateString('fr-FR')}
+      </div>
+      ${d.motif ? `<div style="font-size:.75rem;color:var(--g600);margin-top:.25rem">${escHtml(d.motif)}</div>` : ''}
+      ${d.statut === 'refuse' && d.reponseMotif ? `<div style="font-size:.73rem;color:var(--red);margin-top:.15rem">Motif du refus : ${escHtml(d.reponseMotif)}</div>` : ''}
+      ${d.traitePar ? `<div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Traité par ${escHtml(d.traitePar)}</div>` : ''}
+    </div>
+    <div style="display:flex;gap:.25rem;flex-shrink:0">
+      ${canRepondre ? `<button class="btn btn-ghost btn-sm" style="color:#16a34a;font-size:.72rem;padding:2px 10px" onclick="repondreConge('${d.id}','accepte')">✅ Accepter</button>
+      <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:.72rem;padding:2px 10px" onclick="repondreConge('${d.id}','refuse')">❌ Refuser</button>` : ''}
+      ${isAdmin ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="supprimerConge('${d.id}')">✕</button>` : ''}
+    </div>
+  </div>`;
+}
+
 function renderConges() {
   const list = getConges();
   const filtreStatut = document.getElementById('cgFiltreStatut').value;
@@ -111,20 +142,27 @@ function renderConges() {
   if (filtreStatut) filtered = filtered.filter(d => d.statut === filtreStatut);
   if (filtreEmploye) filtered = filtered.filter(d => d.employeId === filtreEmploye);
 
-  const enAttente = list.filter(d => d.statut === 'en_attente').length;
+  const enAttente = list.filter(d => d.statut === 'en_attente');
   const acceptes = list.filter(d => d.statut === 'accepte').length;
   const refuses = list.filter(d => d.statut === 'refuse').length;
 
-  document.getElementById('cgStatEnAttente').textContent = enAttente;
+  document.getElementById('cgStatEnAttente').textContent = enAttente.length;
   document.getElementById('cgStatAcceptes').textContent = acceptes;
   document.getElementById('cgStatRefuses').textContent = refuses;
 
   const isAdmin = Auth.isAdmin();
-  const session = Auth.getSession();
-  const userId = session?.userId;
 
-  const TYPE_LABELS = { cp:'Congés payés', rtt:'RTT', maladie:'Arrêt maladie', enfant_malade:'Enfant malade', formation:'Formation', autre:'Autre' };
-  const STATUT_STYLES = { en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' }, accepte: { bg:'#16a34a18', c:'#16a34a', l:'Accepté' }, refuse: { bg:'#ef444418', c:'#ef4444', l:'Refusé' } };
+  const pendingCard = document.getElementById('cgPendingCard');
+  if (pendingCard) {
+    if (isAdmin && enAttente.length) {
+      pendingCard.style.display = '';
+      document.getElementById('cgPendingList').innerHTML = enAttente
+        .sort((a,b) => (a.dateDemande||'').localeCompare(b.dateDemande||''))
+        .map(d => congeItemHtml(d, isAdmin)).join('');
+    } else {
+      pendingCard.style.display = 'none';
+    }
+  }
 
   const el = document.getElementById('cgList');
   if (!filtered.length) {
@@ -132,33 +170,7 @@ function renderConges() {
     return;
   }
 
-  el.innerHTML = filtered.sort((a,b) => (b.dateDemande||'').localeCompare(a.dateDemande||'')).map(d => {
-    const st = STATUT_STYLES[d.statut] || STATUT_STYLES.en_attente;
-    const jours = Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1;
-    const canRepondre = isAdmin && d.statut === 'en_attente';
-    return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)">
-      <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${d.type === 'maladie' ? '🤒' : d.type === 'enfant_malade' ? '👶' : d.type === 'formation' ? '📚' : '🗓'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:.85rem">${escHtml(d.employeNom)}</span>
-          <span style="padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
-          <span style="font-size:.7rem;color:var(--g400)">${TYPE_LABELS[d.type]||d.type}</span>
-        </div>
-        <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">
-          ${formatDate(d.debut)} → ${formatDate(d.fin)} · ${jours} jour${jours>1?'s':''}
-          · Demandé le ${new Date(d.dateDemande).toLocaleDateString('fr-FR')}
-        </div>
-        ${d.motif ? `<div style="font-size:.75rem;color:var(--g600);margin-top:.25rem">${escHtml(d.motif)}</div>` : ''}
-        ${d.statut === 'refuse' && d.reponseMotif ? `<div style="font-size:.73rem;color:var(--red);margin-top:.15rem">Motif du refus : ${escHtml(d.reponseMotif)}</div>` : ''}
-        ${d.traitePar ? `<div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Traité par ${escHtml(d.traitePar)}</div>` : ''}
-      </div>
-      <div style="display:flex;gap:.25rem;flex-shrink:0">
-        ${canRepondre ? `<button class="btn btn-ghost btn-sm" style="color:#16a34a;font-size:.72rem;padding:2px 10px" onclick="repondreConge('${d.id}','accepte')">✅ Accepter</button>
-        <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:.72rem;padding:2px 10px" onclick="repondreConge('${d.id}','refuse')">❌ Refuser</button>` : ''}
-        ${isAdmin ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="supprimerConge('${d.id}')">✕</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+  el.innerHTML = filtered.sort((a,b) => (b.dateDemande||'').localeCompare(a.dateDemande||'')).map(d => congeItemHtml(d, isAdmin)).join('');
 }
 
 document.addEventListener('DOMContentLoaded', initConges);

@@ -29,6 +29,10 @@
         <div style="flex:1;text-align:center"><div id="cgStatRefuses" style="font-weight:800;font-size:1.4rem;color:#ef4444">0</div><div style="font-size:.72rem;color:var(--muted)">Refusés</div></div>
       </div>
     </div>
+    <div class="card" id="cgPendingCard" style="margin-bottom:1rem;display:none;border:1px solid #d9770640">
+      <div style="padding:.75rem 1rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;color:#d97706">⏳ Demandes en attente de validation</div>
+      <div id="cgPendingList" style="padding:.5rem 1rem"></div>
+    </div>
     <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
       <select id="cgFiltreStatut" class="form-input" style="width:160px" onchange="renderConges()"><option value="">Tous</option><option value="en_attente">En attente</option><option value="accepte">Acceptés</option><option value="refuse">Refusés</option></select>
       <select id="cgFiltreEmploye" class="form-input" style="width:200px" onchange="renderConges()"><option value="">Tous</option></select>

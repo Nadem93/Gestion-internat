@@ -81,7 +81,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
-<script>Auth.requireAuth();</script>
+<script>Auth.requireAuth(); if (!requireModule('access_notes')) { document.querySelector('.content').innerHTML = ''; }</script>
 <script>
 function notesKey() { const s = Auth.getSession(); return 'ftr_notes_' + (s ? s.userId : 'anon'); }
 function getNotes() { try { return JSON.parse(localStorage.getItem(notesKey()) || '[]'); } catch (e) { return []; } }
