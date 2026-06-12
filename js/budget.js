@@ -53,7 +53,7 @@ function openEnveloppeModal(id) {
   const env = id ? enveloppes.find(e => e.id === id) : null;
   const html = `<div class="modal-overlay" id="modalBudgetEnv" style="display:flex" onclick="closeModal('modalBudgetEnv')">
     <div class="modal" style="max-width:440px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">${env ? '✎ Modifier l’enveloppe' : '📁 Nouvelle enveloppe budgétaire'}</span><button class="modal-close" onclick="closeModal('modalBudgetEnv')">&times;</button></div>
+      <div class="modal-header"><span class="modal-title">${env ? '✎ Modifier l’enveloppe' : '📁 Demande de budget'}</span><button class="modal-close" onclick="closeModal('modalBudgetEnv')">&times;</button></div>
       <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
         <div class="form-group"><label>Nom *</label><input type="text" id="benvNom" class="form-input" value="${env ? escHtml(env.nom) : ''}" placeholder="Ex: Activités éducatives"/></div>
         <div class="form-group"><label>Montant alloué (€) *</label><input type="number" id="benvMontant" class="form-input" min="0" step="0.01" value="${env ? env.montant : ''}"/></div>
