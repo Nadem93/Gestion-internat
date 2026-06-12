@@ -852,6 +852,7 @@ function generateForCurrentEtab() {
     prenom: e.prenom, nom: e.nom, poste: e.poste, telephone: e.tel, email: e.email,
     dateEmbauche: new Date(now.getTime() - rand(60, 1800) * 86400000).toISOString().slice(0,10),
     statut: Math.random() < .9 ? 'actif' : 'conge',
+    color: pick(COULEURS), heuresContrat: pick([24,28,30,35,35,35,39,40]),
     photo: '', notes: '', createdAt: now.toISOString()
   }));
   DB.set(DB.keys.employes, employes);
@@ -1035,25 +1036,23 @@ function generateForCurrentEtab() {
   // ── PLANNING ÉQUIPE ──
   const pe = [];
   const employesList = DB.get(DB.keys.employes) || [];
+  const peShiftTemplates = [['08:00','16:00'],['07:00','15:00'],['09:00','17:00'],['13:00','21:00'],['21:00','07:00']];
   if (employesList.length) {
-    for (let i = 0; i < rand(10, 30); i++) {
-      const emp = pick(employesList);
-      const d = new Date(now);
-      d.setDate(d.getDate() - rand(0, 60));
-      const debut = new Date(d); debut.setHours(rand(6, 10), 0, 0, 0);
-      const fin = new Date(debut); fin.setHours(debut.getHours() + rand(4, 10));
-      pe.push({
-        id: 'pe-' + genId(),
-        employeId: emp.id,
-        date: d.toISOString().slice(0,10),
-        debut: debut.toTimeString().slice(0,5),
-        fin: fin.toTimeString().slice(0,5),
-        service: pick(['Matin','Après-midi','Nuit','Journée']),
-        notes: ''
-      });
-    }
+    const peMonday = new Date(now);
+    peMonday.setDate(peMonday.getDate() - ((peMonday.getDay() + 6) % 7) - 14);
+    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+      for (let day = 0; day < 28; day++) {
+        const d = new Date(peMonday);
+        d.setDate(d.getDate() + day);
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        if (Math.random() < (isWeekend ? 0.2 : 0.75)) {
+          const [debut, fin] = pick(peShiftTemplates);
+          pe.push({ id: 'pe-' + genId(), employeId: emp.id, date: d.toISOString().slice(0,10), debut, fin });
+        }
+      }
+    });
   }
-  localStorage.setItem('ftr_planning_equipe', JSON.stringify(pe));
+  DB.set(DB.keys.planningEquipe, pe);
 
   // ── CONGÉS ──
   const conges = [];
