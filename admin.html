@@ -1127,22 +1127,24 @@ function genererRapportPDF() {
   activeRes.forEach(r => { const p = protLabels[r.protection] || r.protection || 'Non renseigné'; protDist[p] = (protDist[p] || 0) + 1; });
 
   // ── SERAFIN-PH ──
-  const spPrestations = ['pd_soins','pd_accomp_educatif','pd_accomp_social','pd_orientation','pd_education','pd_scolarite','pi_coordination','pi_communication','pi_gestion','pi_logistique','pi_administration','pi_services_generaux'];
-  const spLabels = { pd_soins:'Soins', pd_accomp_educatif:'Accomp. éducatif', pd_accomp_social:'Accomp. social', pd_orientation:'Orientation', pd_education:'Éducation', pd_scolarite:'Scolarité', pi_coordination:'Coordination', pi_communication:'Communication', pi_gestion:'Gestion', pi_logistique:'Logistique', pi_administration:'Administration', pi_services_generaux:'Services généraux' };
-  const withSp = activeRes.filter(r => r.serafinph && Object.values(r.serafinph.prestations||{}).some(p => p.niveau > 0));
+  const withSp = activeRes.filter(r => (r.serafinph?.selected||[]).length > 0);
   const allScores = withSp.map(r => {
+    const sp = r.serafinph || {};
+    const selected = sp.selected || [];
     const prestations = {};
-    spPrestations.forEach(k => { prestations[k] = (r.serafinph?.prestations?.[k]?.niveau) || 0; });
-    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations };
+    selected.forEach(code => { prestations[code] = (sp.prestations?.[code]?.niveau) || 0; });
+    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations, selected };
   });
-  const gmps = allScores.length ? (allScores.reduce((a, s) => a + s.total / spPrestations.length, 0) / allScores.length).toFixed(1) : null;
+  const gmps = allScores.length ? (allScores.reduce((a, s) => a + (s.selected.length ? s.total / s.selected.length : 0), 0) / allScores.length).toFixed(1) : null;
   const spNivRepart = [0, 0, 0, 0, 0];
   allScores.forEach(s => Object.values(s.prestations).forEach(n => spNivRepart[n]++));
   const spByPrest = {};
-  spPrestations.forEach(k => {
-    const niveaux = allScores.map(s => s.prestations[k]);
-    const moy = niveaux.length ? (niveaux.reduce((a, n) => a + n, 0) / niveaux.length) : 0;
-    spByPrest[spLabels[k]] = Math.round(moy * 10) / 10;
+  SP_NOMENCLATURE.forEach(p => {
+    const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);
+    if (niveaux.length) {
+      const moy = niveaux.reduce((a, n) => a + n, 0) / niveaux.length;
+      spByPrest[p.label] = Math.round(moy * 10) / 10;
+    }
   });
 
   // Tables HTML
@@ -1409,15 +1411,15 @@ function renderDocBars() {
 function renderSerafinphStats() {
   const residents = DB.get(DB.keys.residents) || [];
   const actifs = residents.filter(r => r.statut !== 'sorti');
-  const spPrestations = ['pd_soins','pd_accomp_educatif','pd_accomp_social','pd_orientation','pd_education','pd_scolarite','pi_coordination','pi_communication','pi_gestion','pi_logistique','pi_administration','pi_services_generaux'];
-  const spLabels = { pd_soins:'Soins', pd_accomp_educatif:'Accomp. éducatif', pd_accomp_social:'Accomp. social', pd_orientation:'Orientation', pd_education:'Éducation', pd_scolarite:'Scolarité', pi_coordination:'Coordination', pi_communication:'Communication', pi_gestion:'Gestion', pi_logistique:'Logistique', pi_administration:'Administration', pi_services_generaux:'Services généraux' };
-  const withSp = actifs.filter(r => r.serafinph && Object.values(r.serafinph.prestations||{}).some(p => p.niveau > 0));
+  const withSp = actifs.filter(r => (r.serafinph?.selected||[]).length > 0);
   const allScores = withSp.map(r => {
+    const sp = r.serafinph || {};
+    const selected = sp.selected || [];
     const prestations = {};
-    spPrestations.forEach(k => { prestations[k] = (r.serafinph?.prestations?.[k]?.niveau) || 0; });
-    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations };
+    selected.forEach(code => { prestations[code] = (sp.prestations?.[code]?.niveau) || 0; });
+    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations, selected };
   });
-  const gmps = allScores.length ? (allScores.reduce((a, s) => a + s.total / spPrestations.length, 0) / allScores.length).toFixed(1) : null;
+  const gmps = allScores.length ? (allScores.reduce((a, s) => a + (s.selected.length ? s.total / s.selected.length : 0), 0) / allScores.length).toFixed(1) : null;
   const totalScore = allScores.reduce((a, s) => a + s.total, 0);
   document.getElementById('spEvalues').textContent = withSp.length > 0 ? `${withSp.length} / ${actifs.length}` : '—';
   document.getElementById('spGmps').textContent = gmps != null ? gmps : '—';
@@ -1431,10 +1433,11 @@ function renderSerafinphStats() {
   else if (pct >= 40) { c5b.textContent = 'Partiel'; c5b.className = 'stat-circ-badge scb-yellow'; }
   else { c5b.textContent = 'À évaluer'; c5b.className = 'stat-circ-badge scb-red'; }
   const spByPrest = {};
-  spPrestations.forEach(k => {
-    const niveaux = allScores.map(s => s.prestations[k]);
-    const moy = niveaux.length ? (niveaux.reduce((a, n) => a + n, 0) / niveaux.length) : 0;
-    spByPrest[spLabels[k]] = Math.round(moy * 10) / 10;
+  SP_NOMENCLATURE.forEach(p => {
+    const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);
+    if (!niveaux.length) return;
+    const moy = niveaux.reduce((a, n) => a + n, 0) / niveaux.length;
+    spByPrest[p.label] = Math.round(moy * 10) / 10;
   });
   const barsEl = document.getElementById('spBars');
   if (barsEl) barsEl.innerHTML = svgHBar(spByPrest, '#8b5cf6', true);

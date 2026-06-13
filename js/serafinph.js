@@ -1,27 +1,18 @@
-const SP_PRESTATIONS = [
-  { key:'pd_soins', label:'Soins', cat:'Directe', icon:'🏥' },
-  { key:'pd_accomp_educatif', label:'Accompagnement éducatif', cat:'Directe', icon:'📚' },
-  { key:'pd_accomp_social', label:'Accompagnement social', cat:'Directe', icon:'🤝' },
-  { key:'pd_orientation', label:'Orientation', cat:'Directe', icon:'🧭' },
-  { key:'pd_education', label:'Éducation', cat:'Directe', icon:'✏️' },
-  { key:'pd_scolarite', label:'Scolarité', cat:'Directe', icon:'🎒' },
-  { key:'pi_coordination', label:'Coordination', cat:'Indirecte', icon:'🔄' },
-  { key:'pi_communication', label:'Communication', cat:'Indirecte', icon:'📢' },
-  { key:'pi_gestion', label:'Gestion', cat:'Indirecte', icon:'📊' },
-  { key:'pi_logistique', label:'Logistique', cat:'Indirecte', icon:'📦' },
-  { key:'pi_administration', label:'Administration', cat:'Indirecte', icon:'📋' },
-  { key:'pi_services_generaux', label:'Services généraux', cat:'Indirecte', icon:'🏗️' }
-];
-
 function seedSpExemples() {
   const residents = DB.get(DB.keys.residents) || [];
   let changed = false;
   residents.forEach(r => {
-    if (r.serafinph && Object.values(r.serafinph.prestations||{}).some(p => p.niveau > 0)) return;
+    if (r.serafinph && Array.isArray(r.serafinph.selected) && r.serafinph.selected.length > 0) return;
+    const codes = SP_NOMENCLATURE.map(p => p.code);
+    for (let i = codes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [codes[i], codes[j]] = [codes[j], codes[i]];
+    }
+    const selected = codes.slice(0, 5 + Math.floor(Math.random() * 6));
     const prestations = {};
-    const spKeys = ['pd_soins','pd_accomp_educatif','pd_accomp_social','pd_orientation','pd_education','pd_scolarite','pi_coordination','pi_communication','pi_gestion','pi_logistique','pi_administration','pi_services_generaux'];
-    spKeys.forEach(k => { prestations[k] = { niveau: Math.floor(Math.random() * 5) }; });
+    selected.forEach(c => { prestations[c] = { niveau: 1 + Math.floor(Math.random() * 4) }; });
     r.serafinph = {
+      selected,
       prestations,
       dateEvaluation: new Date(Date.now() - Math.random() * 180 * 86400000).toISOString().slice(0,10),
       notes: Math.random() < 0.3 ? 'Profil établi en équipe pluridisciplinaire.' : ''
@@ -46,29 +37,21 @@ function initSerafinph() {
   renderSerafinph();
 }
 
-function getSpData(r) {
-  const sp = r.serafinph || {};
-  const prestations = {};
-  SP_PRESTATIONS.forEach(p => {
-    prestations[p.key] = { niveau: (sp.prestations && sp.prestations[p.key] && sp.prestations[p.key].niveau) || 0 };
-  });
-  return { prestations, dateEvaluation: sp.dateEvaluation || '', notes: sp.notes || '' };
-}
-
 function renderSerafinph() {
   const residents = DB.get(DB.keys.residents) || [];
-  const withSp = residents.filter(r => r.serafinph && Object.values(r.serafinph.prestations||{}).some(p => p.niveau > 0));
+  const withSp = residents.filter(r => getSpData(r).selected.length > 0);
   const total = residents.length;
 
   // Stats
   const allScores = withSp.map(r => {
     const sp = getSpData(r);
-    return { total: Object.values(sp.prestations).reduce((a,p) => a + p.niveau, 0), resident: r, sp };
+    const sum = Object.values(sp.prestations).reduce((a,p) => a + p.niveau, 0);
+    return { resident: r, sp, total: sum, gmpsResident: sp.selected.length ? sum / sp.selected.length : 0 };
   });
 
-  const gmps = allScores.length ? (allScores.reduce((a,s) => a + s.total / SP_PRESTATIONS.length, 0) / allScores.length).toFixed(1) : '—';
+  const gmps = allScores.length ? (allScores.reduce((a,s) => a + s.gmpsResident, 0) / allScores.length).toFixed(1) : '—';
   const totalScore = allScores.reduce((a,s) => a + s.total, 0);
-  const nbEleves = allScores.filter(s => Object.values(s.sp.prestations).filter(p => p.niveau >= 3).length > 0).length;
+  const nbEleves = allScores.filter(s => Object.values(s.sp.prestations).some(p => p.niveau >= 3)).length;
 
   document.getElementById('spStatGmps').textContent = gmps;
   document.getElementById('spStatTotal').textContent = totalScore;
@@ -90,10 +73,10 @@ function renderSerafinph() {
       : '<div style="font-size:.75rem;color:var(--muted);padding:.25rem 0">Aucune entrée de journal associée au SERAFIN-PH. Utilisez le champ « SERAFIN-PH » dans le journal pour taguer vos transmissions.</div>';
   }
 
-  // Vue par prestation
-  const prestStats = SP_PRESTATIONS.map(p => {
-    const niveaux = allScores.map(s => s.sp.prestations[p.key].niveau);
-    const moy = niveaux.length ? (niveaux.reduce((a,n) => a + n, 0) / niveaux.length).toFixed(1) : '0.0';
+  // Vue par prestation (uniquement les résidents ayant sélectionné chaque prestation)
+  const prestStats = SP_NOMENCLATURE.map(p => {
+    const niveaux = allScores.filter(s => s.sp.selected.includes(p.code)).map(s => s.sp.prestations[p.code].niveau);
+    const moy = niveaux.length ? (niveaux.reduce((a,n) => a + n, 0) / niveaux.length).toFixed(1) : '—';
     const repart = [0,0,0,0,0];
     niveaux.forEach(n => repart[n]++);
     return { ...p, moy, repart, count: niveaux.length };
@@ -101,8 +84,8 @@ function renderSerafinph() {
 
   document.getElementById('spPrestationsList').innerHTML = prestStats.map(p => {
     const nivLabel = ['0','Faible','Modéré','Important','Très important'];
-    const cols = p.repart.map((c, i) => {
-      const pct = p.count ? (c / p.count * 100).toFixed(0) : 0;
+    const cols = p.count ? p.repart.map((c, i) => {
+      const pct = (c / p.count * 100).toFixed(0);
       return `<div style="display:flex;align-items:center;gap:.25rem;font-size:.68rem">
         <span style="width:14px;text-align:center;font-weight:700;color:${['#94a3b8','#16a34a','#d97706','#f97316','#ef4444'][i]}">${i}</span>
         <div style="flex:1;height:8px;border-radius:99px;background:#e2e8f0;overflow:hidden">
@@ -110,12 +93,12 @@ function renderSerafinph() {
         </div>
         <span style="width:20px;text-align:right;color:var(--g400)">${c}</span>
       </div>`;
-    }).join('');
+    }).join('') : '<div style="font-size:.7rem;color:var(--g400)">Aucun résident ne suit cette prestation</div>';
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 1.25rem;border-bottom:1px solid var(--border)">
       <span style="font-size:1rem">${p.icon}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.82rem">${p.label}</div>
-        <div style="font-size:.7rem;color:var(--muted)">${p.cat}</div>
+        <div style="font-weight:600;font-size:.82rem">${p.label} <span style="color:var(--g400);font-weight:400;font-size:.7rem">${p.code}</span></div>
+        <div style="font-size:.7rem;color:var(--muted)">${p.cat} · ${p.count} résident${p.count>1?'s':''} suivi${p.count>1?'s':''}</div>
       </div>
       <div style="width:140px;display:flex;flex-direction:column;gap:2px">${cols}</div>
       <div style="font-weight:700;font-size:.85rem;color:#8b5cf6;width:40px;text-align:right">${p.moy}</div>
@@ -125,8 +108,8 @@ function renderSerafinph() {
   // Detail par resident
   const nivColors = ['#d1d5db','#22c55e','#eab308','#f97316','#ef4444'];
   document.getElementById('spResidentsList').innerHTML = allScores.sort((a,b) => b.total - a.total).map(s => {
-    const prestItems = SP_PRESTATIONS.map(p => {
-      const n = s.sp.prestations[p.key].niveau;
+    const prestItems = SP_NOMENCLATURE.filter(p => s.sp.selected.includes(p.code)).map(p => {
+      const n = s.sp.prestations[p.code].niveau;
       return `<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 3px;background:#f8fafc;border-radius:6px;padding:4px 8px;border:1px solid #e2e8f0">
         <span style="font-size:.85rem">${p.icon}</span>
         <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:${nivColors[n]};color:#fff;font-size:.7rem;font-weight:700;padding:0 4px">${n}</span>

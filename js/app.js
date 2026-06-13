@@ -208,6 +208,40 @@ function applyTerminology() {
 
 const API_URL = 'http://localhost:3001';
 
+// ── SERAFIN-PH — nomenclature officielle (sous-domaines, validée le 27/04/2018) ──
+const SP_NOMENCLATURE = [
+  // Prestations directes (PD) — soins et accompagnements
+  { code:'2.1.1', label:'Soins somatiques et psychiques', cat:'Directe', icon:'🏥' },
+  { code:'2.1.2', label:'Rééducation et réadaptation fonctionnelle', cat:'Directe', icon:'🦾' },
+  { code:'2.2.1', label:"Prestations en matière d'autonomie", cat:'Directe', icon:'🧍' },
+  { code:'2.3.1', label:'Accompagnements pour exercer ses droits', cat:'Directe', icon:'⚖️' },
+  { code:'2.3.2', label:'Accompagnements au logement', cat:'Directe', icon:'🏠' },
+  { code:'2.3.3', label:'Accompagnements pour exercer ses rôles sociaux', cat:'Directe', icon:'🎓' },
+  { code:'2.3.4', label:'Accompagnements pour participer à la vie sociale', cat:'Directe', icon:'🤝' },
+  { code:'2.3.5', label:"Accompagnements en matière de ressources et d'autogestion", cat:'Directe', icon:'💰' },
+  { code:'2.4.1', label:'Coordination renforcée pour la cohérence du parcours', cat:'Directe', icon:'🧭' },
+  // Prestations indirectes (PI) — pilotage et fonctions support
+  { code:'3.1.1', label:'Gestion des ressources humaines', cat:'Indirecte', icon:'👥' },
+  { code:'3.1.2', label:'Gestion administrative, budgétaire, financière et comptable', cat:'Indirecte', icon:'📊' },
+  { code:'3.1.3', label:'Information et communication', cat:'Indirecte', icon:'💬' },
+  { code:'3.1.4', label:'Qualité et sécurité', cat:'Indirecte', icon:'🛡️' },
+  { code:'3.1.5', label:'Relations avec le territoire', cat:'Indirecte', icon:'🌍' },
+  { code:'3.1.6', label:'Transports liés à gérer, manager, coopérer', cat:'Indirecte', icon:'🚐' },
+  { code:'3.2.1', label:'Locaux et autres ressources pour accueillir', cat:'Indirecte', icon:'🏛️' },
+  { code:'3.2.2', label:'Fournir des repas', cat:'Indirecte', icon:'🍽️' },
+  { code:'3.2.3', label:'Entretenir le linge', cat:'Indirecte', icon:'🧺' },
+  { code:'3.2.4', label:'Transports liés au projet individuel', cat:'Indirecte', icon:'🚗' },
+  { code:'3.2.5', label:'Transports des biens et matériels liés à la restauration et au linge', cat:'Indirecte', icon:'📦' }
+];
+
+function getSpData(r) {
+  const sp = r.serafinph || {};
+  const selected = Array.isArray(sp.selected) ? sp.selected.filter(c => SP_NOMENCLATURE.some(p => p.code === c)) : [];
+  const prestations = {};
+  selected.forEach(code => { prestations[code] = { niveau: (sp.prestations && sp.prestations[code] && sp.prestations[code].niveau) || 0 }; });
+  return { selected, prestations, dateEvaluation: sp.dateEvaluation || '', notes: sp.notes || '' };
+}
+
 // ── DEFAULT DATA ──
 const DEFAULTS = {
   categories: [

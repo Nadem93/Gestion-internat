@@ -335,10 +335,12 @@ function generateForCurrentEtab() {
     r.sante = { groupeSanguin: pick(['A+','A-','B+','B-','O+','O-','AB+','AB-','']), notesMedicales: Math.random()<.3 ? 'Suivi médical régulier. Pas de contre-indication particulière.' : '', traitements, rdv, vaccins };
 
     // SERAFIN-PH
-    const serafinKeys = ['pd_soins','pd_accomp_educatif','pd_accomp_social','pd_orientation','pd_education','pd_scolarite','pi_coordination','pi_communication','pi_gestion','pi_logistique','pi_administration','pi_services_generaux'];
+    const spCodes = SP_NOMENCLATURE.map(p => p.code);
+    for (let k = spCodes.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [spCodes[k], spCodes[j]] = [spCodes[j], spCodes[k]]; }
+    const spSelected = spCodes.slice(0, 5 + Math.floor(Math.random() * 6));
     const prestations = {};
-    serafinKeys.forEach(k => { prestations[k] = { niveau: rand(0,4) }; });
-    r.serafinph = { prestations, dateEvaluation: dWinStr(r), notes: Math.random()<.3 ? 'Profil établi en équipe pluridisciplinaire.' : '' };
+    spSelected.forEach(c => { prestations[c] = { niveau: 1 + rand(0,3) }; });
+    r.serafinph = { selected: spSelected, prestations, dateEvaluation: dWinStr(r), notes: Math.random()<.3 ? 'Profil établi en équipe pluridisciplinaire.' : '' };
 
     // Sorties & permissions (dans la fenêtre ; sortie en cours uniquement si présent)
     const sorties = [];
