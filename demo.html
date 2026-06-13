@@ -1285,6 +1285,43 @@ function generateForCurrentEtab() {
   });
   DB.set(DB.keys.factures, factures);
 
+  // ── PLAN DE FORMATION COLLECTIF ──
+  const formations = [];
+  const FORMATION_ITEMS = [
+    { titre: 'PSC1 — Prévention et secours civiques de niveau 1', organisme: 'Croix-Rouge française', domaine: "Sécurité & gestes d'urgence", mois: -8, duree: 7, cout: 600, statut: 'realisee' },
+    { titre: 'Gestes et postures — manutention des personnes', organisme: 'AFPA', domaine: 'Hygiène, santé & soins', mois: -6, duree: 14, cout: 1200, statut: 'realisee' },
+    { titre: 'Prévention et gestion des comportements-défis', organisme: 'IRTS', domaine: 'Accompagnement éducatif & pédagogique', mois: -4, duree: 21, cout: 2400, statut: 'realisee' },
+    { titre: 'Communication non violente', organisme: "Cabinet Form'Action", domaine: 'Communication & gestion des conflits', mois: -2, duree: 14, cout: 1600, statut: 'realisee' },
+    { titre: 'Mise à jour réglementation RGPD & secret professionnel', organisme: 'CNAPE', domaine: 'Réglementation & droit des usagers', mois: -1, duree: 7, cout: 450, statut: 'realisee' },
+    { titre: 'Prise en main du logiciel de gestion (FTR)', organisme: 'Formation interne', domaine: 'Numérique & outils professionnels', mois: 0, duree: 3.5, cout: 0, statut: 'realisee' },
+    { titre: 'Habilitation incendie — manipulation des extincteurs', organisme: 'SDIS', domaine: "Sécurité & gestes d'urgence", mois: 1, duree: 3.5, cout: 350, statut: 'planifiee' },
+    { titre: "Management d'équipe et conduite de réunion", organisme: 'IRTS', domaine: 'Management & encadrement', mois: 2, duree: 14, cout: 1800, statut: 'planifiee' },
+    { titre: 'Sensibilisation aux écrans et usages numériques des jeunes', organisme: 'Association e-Enfance', domaine: 'Accompagnement éducatif & pédagogique', mois: 3, duree: 7, cout: 700, statut: 'planifiee' },
+    { titre: 'Formation tuteur de stage (session annulée)', organisme: 'GRETA', domaine: 'Management & encadrement', mois: -3, duree: 14, cout: 0, statut: 'annulee' }
+  ];
+  FORMATION_ITEMS.forEach(item => {
+    const dd = new Date(now);
+    dd.setMonth(dd.getMonth() + item.mois);
+    const df = new Date(dd);
+    df.setDate(df.getDate() + Math.ceil(item.duree / 7));
+    const pool = [...employes];
+    const nbParticipants = pool.length ? rand(2, Math.min(5, pool.length)) : 0;
+    const participants = [];
+    for (let i = 0; i < nbParticipants; i++) {
+      const idx = rand(0, pool.length - 1);
+      participants.push(pool.splice(idx, 1)[0].id);
+    }
+    formations.push({
+      id: 'form-' + genId(),
+      titre: item.titre, organisme: item.organisme, domaine: item.domaine,
+      dateDebut: dd.toISOString().slice(0, 10), dateFin: df.toISOString().slice(0, 10),
+      dureeHeures: item.duree, cout: item.cout, statut: item.statut,
+      participants, notes: '',
+      createdAt: now.toISOString(), updatedAt: now.toISOString()
+    });
+  });
+  DB.set(DB.keys.formations, formations);
+
   // ── CHAMBRES & ÉTATS DES LIEUX ──
   const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
   const rooms = roomNames.map(nom => ({
@@ -1637,7 +1674,8 @@ function generateForCurrentEtab() {
     entretiens: entretiens.length,
     documentation: documentation.length,
     admissions: admissions.length,
-    factures: factures.length
+    factures: factures.length,
+    formations: formations.length
   };
 }
 
@@ -1652,13 +1690,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0, formations:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
