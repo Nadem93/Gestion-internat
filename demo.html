@@ -1211,6 +1211,41 @@ function generateForCurrentEtab() {
   });
   DB.set(DB.keys.documentation, documentation);
 
+  // ── ADMISSIONS / LISTE D'ATTENTE ──
+  const admissions = [];
+  const ADM_ITEMS = [
+    { prenom: 'Lina', nom: 'Bouzid', dateNaissance: '2010-03-12', origine: 'MDPH', statut: 'en_attente', jours: 5, contactNom: 'Mme Bouzid (mère)', contactTel: '06 12 34 56 78', notes: 'Orientation MDPH en cours, dossier complet à étudier.' },
+    { prenom: 'Yanis', nom: 'Tomasini', dateNaissance: '2011-07-22', origine: 'ASE', statut: 'en_attente', jours: 2, contactNom: 'Service ASE 74', contactTel: '04 50 11 22 33', notes: 'Placement urgent demandé par l\'ASE, disponibilité de chambre à vérifier.' },
+    { prenom: 'Maëlys', nom: 'Petitjean', dateNaissance: '2009-11-04', origine: 'Établissement', statut: 'etude', jours: 18, contactNom: 'IME Les Tilleuls', contactTel: '03 80 44 55 66', notes: 'Réorientation suite à fermeture de section, dossier en étude par l\'équipe pluridisciplinaire.' },
+    { prenom: 'Noah', nom: 'Richer', dateNaissance: '2012-01-30', origine: 'Famille', statut: 'etude', jours: 25, contactNom: 'M. Richer (père)', contactTel: '06 98 76 54 32', notes: 'Demande directe de la famille, première visite effectuée, en attente de décision de la commission.' },
+    { prenom: 'Inès', nom: 'Charvet', dateNaissance: '2010-09-17', origine: 'MDPH', statut: 'admis', jours: 60, contactNom: 'Mme Charvet (mère)', contactTel: '06 33 22 11 00', notes: 'Dossier validé, admission effectuée.' },
+    { prenom: 'Tom', nom: 'Lacroix', dateNaissance: '2011-04-08', origine: 'ASE', statut: 'refuse', jours: 90, contactNom: 'Service ASE 73', contactTel: '04 79 22 33 44', notes: 'Profil non adapté à l\'agrément de l\'établissement, réorientation proposée vers un autre IME.' },
+    { prenom: 'Camille', nom: 'Dufresne', dateNaissance: '2009-05-26', origine: 'Autre', statut: 'abandon', jours: 45, contactNom: 'Mme Dufresne (tutrice)', contactTel: '06 55 44 33 22', notes: 'Famille a finalement opté pour un établissement plus proche du domicile.' },
+    { prenom: 'Sacha', nom: 'Mercier', dateNaissance: '2012-08-14', origine: 'Établissement', statut: 'en_attente', jours: 1, contactNom: 'CMP de secteur', contactTel: '04 50 77 88 99', notes: 'Pré-orientation transmise par le CMP, premier contact à organiser.' }
+  ];
+  ADM_ITEMS.forEach(item => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - item.jours);
+    const adm = {
+      id: 'adm-' + genId(),
+      prenom: item.prenom, nom: item.nom,
+      dateNaissance: item.dateNaissance,
+      dateDemande: d.toISOString().slice(0, 10),
+      origine: item.origine,
+      statut: item.statut,
+      contactNom: item.contactNom, contactTel: item.contactTel,
+      notes: item.notes,
+      createdAt: d.toISOString(), updatedAt: d.toISOString()
+    };
+    if (item.statut === 'admis' || item.statut === 'refuse' || item.statut === 'abandon') {
+      const dd = new Date(now);
+      dd.setDate(dd.getDate() - Math.max(item.jours - 10, 0));
+      adm.dateDecision = dd.toISOString().slice(0, 10);
+    }
+    admissions.push(adm);
+  });
+  DB.set(DB.keys.admissions, admissions);
+
   // ── CHAMBRES & ÉTATS DES LIEUX ──
   const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
   const rooms = roomNames.map(nom => ({
@@ -1561,7 +1596,8 @@ function generateForCurrentEtab() {
     budgetDemandes: budgetDemandes.length,
     fichesPaie: fichesPaie.length,
     entretiens: entretiens.length,
-    documentation: documentation.length
+    documentation: documentation.length,
+    admissions: admissions.length
   };
 }
 
@@ -1576,13 +1612,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
