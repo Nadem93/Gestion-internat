@@ -38,17 +38,28 @@
         <div class="card-body" style="padding:0"><div id="spPrestationsList"></div></div>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title">Détail par résident</span>
-          <div style="display:flex;gap:.35rem;align-items:center;font-size:.65rem">
+        <div class="card-header" style="cursor:pointer" onclick="toggleSpResidentsCard()">
+          <span class="card-title">Détail par résident</span>
+          <div style="display:flex;gap:.35rem;align-items:center;font-size:.65rem" id="spResidentsLegend">
             <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#d1d5db;color:#fff;font-weight:700;font-size:.55rem">0</span><span style="color:var(--muted)">Nul</span>
             <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#22c55e;color:#fff;font-weight:700;font-size:.55rem">1</span><span style="color:var(--muted)">Faible</span>
             <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#eab308;color:#fff;font-weight:700;font-size:.55rem">2</span><span style="color:var(--muted)">Modéré</span>
             <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#f97316;color:#fff;font-weight:700;font-size:.55rem">3</span><span style="color:var(--muted)">Important</span>
             <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#ef4444;color:#fff;font-weight:700;font-size:.55rem">4</span><span style="color:var(--muted)">Très important</span>
           </div>
+          <button class="btn btn-ghost btn-sm" id="spResidentsToggle" style="margin-left:.5rem" onclick="event.stopPropagation();toggleSpResidentsCard()">▸</button>
         </div>
-        <div class="card-body" style="padding:0"><div id="spResidentsList"></div></div>
+        <div class="card-body" id="spResidentsBody" style="padding:0;display:none"><div id="spResidentsList"></div></div>
       </div>
+      <script>
+        function toggleSpResidentsCard() {
+          const body = document.getElementById('spResidentsBody');
+          const btn = document.getElementById('spResidentsToggle');
+          const open = body.style.display !== 'none';
+          body.style.display = open ? 'none' : '';
+          btn.textContent = open ? '▸' : '▾';
+        }
+      </script>
     </main>
   </div>
 </div>

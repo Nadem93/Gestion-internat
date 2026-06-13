@@ -110,10 +110,10 @@ function renderSerafinph() {
   document.getElementById('spResidentsList').innerHTML = allScores.sort((a,b) => b.total - a.total).map(s => {
     const prestItems = SP_NOMENCLATURE.filter(p => s.sp.selected.includes(p.code)).map(p => {
       const n = s.sp.prestations[p.code].niveau;
-      return `<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 3px;background:#f8fafc;border-radius:6px;padding:4px 8px;border:1px solid #e2e8f0">
-        <span style="font-size:.85rem">${p.icon}</span>
-        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:${nivColors[n]};color:#fff;font-size:.7rem;font-weight:700;padding:0 4px">${n}</span>
-        <span style="color:#334155;font-size:.7rem;font-weight:500">${p.label}</span>
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin:1px;background:#f8fafc;border-radius:5px;padding:1px 5px;border:1px solid #e2e8f0">
+        <span style="font-size:.68rem">${p.icon}</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:13px;height:13px;border-radius:3px;background:${nivColors[n]};color:#fff;font-size:.58rem;font-weight:700;padding:0 2px">${n}</span>
+        <span style="color:#334155;font-size:.6rem;font-weight:500">${p.label}</span>
       </span>`;
     }).join('');
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.65rem 1.25rem;border-bottom:1px solid var(--border)">
