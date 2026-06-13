@@ -1246,6 +1246,45 @@ function generateForCurrentEtab() {
   });
   DB.set(DB.keys.admissions, admissions);
 
+  // ── TARIFICATION & FACTURATION ──
+  const FACT_CATEGORIES = [
+    { id: 'internat_complet', label: 'Internat complet (7j/7)', prixJour: 120 },
+    { id: 'internat_sequentiel', label: 'Internat séquentiel', prixJour: 95 },
+    { id: 'externat', label: 'Accueil de jour / externat', prixJour: 60 },
+    { id: 'accueil_temporaire', label: 'Accueil temporaire / urgence', prixJour: 140 }
+  ];
+  const FACT_ORGANISMES = ['ASE', 'MDPH / Conseil départemental', 'Sécurité sociale', 'Famille', 'Autre'];
+  const affectations = {};
+  const activeResidents = resList.filter(r => r.statut !== 'sorti');
+  activeResidents.forEach(r => {
+    affectations[r.id] = { categorieId: pick(FACT_CATEGORIES).id, organisme: pick(FACT_ORGANISMES) };
+  });
+  DB.set(DB.keys.tarifs, { categories: FACT_CATEGORIES, affectations });
+
+  const factures = [];
+  const periodeActuelle = now.toISOString().slice(0, 7);
+  const moisPrecedent = new Date(now); moisPrecedent.setMonth(moisPrecedent.getMonth() - 1);
+  const periodePrecedente = moisPrecedent.toISOString().slice(0, 7);
+  [{ periode: periodePrecedente, statuts: ['payee', 'envoyee'] }, { periode: periodeActuelle, statuts: ['brouillon', 'envoyee'] }].forEach(({ periode, statuts }) => {
+    activeResidents.forEach(r => {
+      const aff = affectations[r.id];
+      const cat = FACT_CATEGORIES.find(c => c.id === aff.categorieId);
+      const nbJours = Object.keys(presences).filter(date => date.startsWith(periode) && presences[date][r.id] === 'present').length;
+      if (!nbJours) return;
+      const montant = nbJours * cat.prixJour;
+      const facture = {
+        id: 'fact-' + genId(), periode, residentId: r.id, residentNom: `${r.prenom} ${r.nom}`,
+        organisme: aff.organisme, categorieId: cat.id, categorieLabel: cat.label,
+        nbJours, prixJour: cat.prixJour, montant,
+        statut: pick(statuts), createdAt: now.toISOString(), updatedAt: now.toISOString()
+      };
+      if (facture.statut === 'envoyee') facture.dateEnvoi = periodePrecedente === periode ? periode + '-28' : today();
+      if (facture.statut === 'payee') { facture.dateEnvoi = periode + '-05'; facture.datePaiement = periode + '-20'; }
+      factures.push(facture);
+    });
+  });
+  DB.set(DB.keys.factures, factures);
+
   // ── CHAMBRES & ÉTATS DES LIEUX ──
   const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
   const rooms = roomNames.map(nom => ({
@@ -1597,7 +1636,8 @@ function generateForCurrentEtab() {
     fichesPaie: fichesPaie.length,
     entretiens: entretiens.length,
     documentation: documentation.length,
-    admissions: admissions.length
+    admissions: admissions.length,
+    factures: factures.length
   };
 }
 
@@ -1612,13 +1652,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
