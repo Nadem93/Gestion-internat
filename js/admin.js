@@ -632,30 +632,23 @@ async function saveCredentials() {
 }
 
 // ── DONNÉES ──
+// Clés DB.keys exclues du backup : état de session/navigateur, pas des données métier.
+const BACKUP_EXCLUDE_KEYS = ['session', 'etablissements', 'onboarded'];
+
 function exportData(type) {
   let data = {};
   const k = DB.keys;
   if (type === 'residents' || type === 'all') data.residents = DB.get(k.residents) || [];
   if (type === 'journal'   || type === 'all') data.journal   = DB.get(k.journal)   || [];
   if (type === 'all') {
-    data.categories    = DB.get(k.categories)    || [];
-    data.objectives    = DB.get(k.objectives)    || [];
-    data.presences     = DB.get(k.presences)     || {};
-    data.planning      = DB.get(k.planning)      || [];
-    data.incidents     = DB.get(k.incidents)     || [];
-    data.ppe           = DB.get(k.ppe)           || [];
-    data.repertoire    = DB.get(k.repertoire)    || [];
-    data.vehicules     = DB.get(k.vehicules)     || [];
-    data.documents     = JSON.parse(localStorage.getItem(k.documents) || '{}');
-    data.messages      = DB.get(k.messages)      || [];
+    Object.keys(k).forEach(name => {
+      if (BACKUP_EXCLUDE_KEYS.includes(name) || name in data) return;
+      const val = DB.get(k[name]);
+      if (val !== null) data[name] = val;
+    });
     data.conversations = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
-    data.interventions = DB.get(k.interventions) || [];
-    data.settings      = DB.get(k.settings)      || {};
-    data.branding      = DB.get(k.branding)      || {};
-    data.users         = DB.get(k.users)         || [];
-    data.fonctionColors= DB.get(k.fonctionColors)|| [];
     data._exportedAt   = new Date().toISOString();
-    data._version      = '1.0';
+    data._version      = '2.0';
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -682,23 +675,11 @@ function importData() {
           `Restaurer la sauvegarde du ${data._exportedAt ? new Date(data._exportedAt).toLocaleString('fr-FR') : 'fichier sélectionné'} ?\n\nLes données actuelles seront écrasées.`,
           () => {
             const k = DB.keys;
-            if (data.residents)     DB.set(k.residents,     data.residents);
-            if (data.journal)       DB.set(k.journal,       data.journal);
-            if (data.categories)    DB.set(k.categories,    data.categories);
-            if (data.objectives)    DB.set(k.objectives,    data.objectives);
-            if (data.presences)     DB.set(k.presences,     data.presences);
-            if (data.planning)      DB.set(k.planning,      data.planning);
-            if (data.incidents)     DB.set(k.incidents,     data.incidents);
-            if (data.ppe)           DB.set(k.ppe,           data.ppe);
-            if (data.repertoire)    DB.set(k.repertoire,    data.repertoire);
-            if (data.vehicules)     DB.set(k.vehicules,     data.vehicules);
-            if (data.documents)     localStorage.setItem(k.documents, JSON.stringify(data.documents));
-            if (data.messages)      DB.set(k.messages,      data.messages);
+            Object.keys(k).forEach(name => {
+              if (BACKUP_EXCLUDE_KEYS.includes(name)) return;
+              if (data[name] !== undefined) DB.set(k[name], data[name]);
+            });
             if (data.conversations) localStorage.setItem('ftr_conversations', JSON.stringify(data.conversations));
-            if (data.interventions) DB.set(k.interventions, data.interventions);
-            if (data.settings)      DB.set(k.settings,      data.settings);
-            if (data.branding)      DB.set(k.branding,      data.branding);
-            if (data.fonctionColors)DB.set(k.fonctionColors,data.fonctionColors);
             toast('Données restaurées avec succès — rechargement…', 'success');
             setTimeout(() => location.reload(), 1500);
           }
