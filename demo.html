@@ -1280,7 +1280,7 @@ function generateForCurrentEtab() {
         nbJours, prixJour: cat.prixJour, montant,
         statut: pick(statuts), createdAt: now.toISOString(), updatedAt: now.toISOString()
       };
-      if (facture.statut === 'envoyee') facture.dateEnvoi = periodePrecedente === periode ? periode + '-28' : today();
+      if (facture.statut === 'envoyee') facture.dateEnvoi = periodePrecedente === periode ? periode + '-28' : today;
       if (facture.statut === 'payee') { facture.dateEnvoi = periode + '-05'; facture.datePaiement = periode + '-20'; }
       factures.push(facture);
     });
