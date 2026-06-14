@@ -17,7 +17,13 @@ const DB = {
     loginHistory:'ftr_login_history', auditLog:'ftr_audit_log', fonctionColors:'ftr_fonction_colors',
     aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
-    etablissements:'ftr_etablissements'
+    chambres:'ftr_chambres', edl:'ftr_edl', echeances:'ftr_echeances', releves:'ftr_releves',
+    repas:'ftr_repas', visites:'ftr_visites', nuits:'ftr_nuits', activites:'ftr_activites', cvs:'ftr_cvs', medicaments:'ftr_medicaments',
+    planningEquipe:'ftr_planning_equipe',
+    etablissements:'ftr_etablissements', viatrajectoire:'ftr_viatrajectoire',
+    budgetEnveloppes:'ftr_budget_enveloppes', budgetDemandes:'ftr_budget_demandes',
+    fichesPaie:'ftr_fiches_paie', entretiens:'ftr_entretiens', documentation:'ftr_documentation', admissions:'ftr_admissions',
+    tarifs:'ftr_tarifs', factures:'ftr_factures', formations:'ftr_formations'
   }
 };
 
@@ -64,6 +70,7 @@ function createEtab(nom, type, color) {
   initKey(DB.keys.ppe, []);
   initKey(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
   initKey(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
+  initKey(DB.keys.viatrajectoire, []);
   return etab;
 }
 
@@ -201,6 +208,40 @@ function applyTerminology() {
 
 const API_URL = 'http://localhost:3001';
 
+// ── SERAFIN-PH — nomenclature officielle (sous-domaines, validée le 27/04/2018) ──
+const SP_NOMENCLATURE = [
+  // Prestations directes (PD) — soins et accompagnements
+  { code:'2.1.1', label:'Soins somatiques et psychiques', cat:'Directe', icon:'🏥' },
+  { code:'2.1.2', label:'Rééducation et réadaptation fonctionnelle', cat:'Directe', icon:'🦾' },
+  { code:'2.2.1', label:"Prestations en matière d'autonomie", cat:'Directe', icon:'🧍' },
+  { code:'2.3.1', label:'Accompagnements pour exercer ses droits', cat:'Directe', icon:'⚖️' },
+  { code:'2.3.2', label:'Accompagnements au logement', cat:'Directe', icon:'🏠' },
+  { code:'2.3.3', label:'Accompagnements pour exercer ses rôles sociaux', cat:'Directe', icon:'🎓' },
+  { code:'2.3.4', label:'Accompagnements pour participer à la vie sociale', cat:'Directe', icon:'🤝' },
+  { code:'2.3.5', label:"Accompagnements en matière de ressources et d'autogestion", cat:'Directe', icon:'💰' },
+  { code:'2.4.1', label:'Coordination renforcée pour la cohérence du parcours', cat:'Directe', icon:'🧭' },
+  // Prestations indirectes (PI) — pilotage et fonctions support
+  { code:'3.1.1', label:'Gestion des ressources humaines', cat:'Indirecte', icon:'👥' },
+  { code:'3.1.2', label:'Gestion administrative, budgétaire, financière et comptable', cat:'Indirecte', icon:'📊' },
+  { code:'3.1.3', label:'Information et communication', cat:'Indirecte', icon:'💬' },
+  { code:'3.1.4', label:'Qualité et sécurité', cat:'Indirecte', icon:'🛡️' },
+  { code:'3.1.5', label:'Relations avec le territoire', cat:'Indirecte', icon:'🌍' },
+  { code:'3.1.6', label:'Transports liés à gérer, manager, coopérer', cat:'Indirecte', icon:'🚐' },
+  { code:'3.2.1', label:'Locaux et autres ressources pour accueillir', cat:'Indirecte', icon:'🏛️' },
+  { code:'3.2.2', label:'Fournir des repas', cat:'Indirecte', icon:'🍽️' },
+  { code:'3.2.3', label:'Entretenir le linge', cat:'Indirecte', icon:'🧺' },
+  { code:'3.2.4', label:'Transports liés au projet individuel', cat:'Indirecte', icon:'🚗' },
+  { code:'3.2.5', label:'Transports des biens et matériels liés à la restauration et au linge', cat:'Indirecte', icon:'📦' }
+];
+
+function getSpData(r) {
+  const sp = r.serafinph || {};
+  const selected = Array.isArray(sp.selected) ? sp.selected.filter(c => SP_NOMENCLATURE.some(p => p.code === c)) : [];
+  const prestations = {};
+  selected.forEach(code => { prestations[code] = { niveau: (sp.prestations && sp.prestations[code] && sp.prestations[code].niveau) || 0 }; });
+  return { selected, prestations, dateEvaluation: sp.dateEvaluation || '', notes: sp.notes || '' };
+}
+
 // ── DEFAULT DATA ──
 const DEFAULTS = {
   categories: [
@@ -228,19 +269,19 @@ const DEFAULTS = {
   users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
-    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
-    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents'] },
-    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_sante','view_incidents'] },
-    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents'] },
-    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_sante'] },
-    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_vehicules'] },
-    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents'] },
-    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules'] },
-    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules'] },
-    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions'] },
-    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions'] },
-    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents'] },
-    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_admin','access_employes','manage_users'] }
+    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_medicaments'] },
+    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_medicaments'] },
+    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_sante','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites'] },
+    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
+    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_sante','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
+    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
+    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
+    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
+    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_medicaments'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions','access_activites','access_cvs','access_medicaments','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
+    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_medicaments','access_admin','access_employes','manage_users'] }
   ],
   aiPrompts: {
     ppe: {
@@ -285,6 +326,8 @@ function initDefaults() {
   if (!DB.get(DB.keys.documents)) DB.set(DB.keys.documents, {});
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
+  if (!localStorage.getItem('ftr_conges')) localStorage.setItem('ftr_conges', '[]');
+  if (!DB.get(DB.keys.viatrajectoire)) DB.set(DB.keys.viatrajectoire, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
   else migrateFonctionColors();
   // Migration unique : applique les permissions par défaut aux rôles standard
@@ -365,12 +408,20 @@ function logConnexion(action, user) {
 }
 
 // ── AUTH ──
-// ── HACHAGE DES MOTS DE PASSE (SHA-256 + sel) ──
+// ── HACHAGE DES MOTS DE PASSE (SHA-256 + sel, fallback simple si crypto.subtle indisponible) ──
 const _PWD_SALT = 'ftr.internalis.pwd.v1';
 async function hashPassword(pwd) {
-  const data = new TextEncoder().encode(_PWD_SALT + ':' + (pwd || ''));
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return 'h$' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const data = new TextEncoder().encode(_PWD_SALT + ':' + (pwd || ''));
+    const buf = await crypto.subtle.digest('SHA-256', data);
+    return 'h$' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    // Fallback : hash simple pour environnements non-sécurisés (file://, etc.)
+    let h = 0;
+    const s = _PWD_SALT + ':' + (pwd || '');
+    for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
+    return 'h$' + Math.abs(h).toString(16).padStart(8, '0');
+  }
 }
 function isHashedPwd(s) { return typeof s === 'string' && s.startsWith('h$'); }
 
@@ -398,6 +449,7 @@ const Auth = {
     const s = DB.get(DB.keys.session);
     if (s) logConnexion('logout', s);
     DB.remove(DB.keys.session);
+    sessionStorage.removeItem('ftr_current_etab');
     window.location.href = 'index.html';
   },
   requireAuth() {
@@ -785,6 +837,9 @@ function initMenuPopup() {
       { page:'vehicules.html', color:'#6366f1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg>', label:'Véhicules' },
       { page:'incidents.html', color:'#e11d48', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', label:'Incidents' },
       { page:'messages.html', color:'#0284c7', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>', label:'Messages' },
+      { page:'viatrajectoire.html', color:'#e11d48', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>', label:'ViaTrajectoire' },
+      { page:'serafinph.html', color:'#8b5cf6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><path d="M6 4h12"/><path d="M6 20h12"/></svg>', label:'SERAFIN-PH' },
+      { page:'pilotage.html', color:'#0f2b4a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Portail' },
       { page:'repertoire.html', color:'#7c3aed', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label:'Répertoire' },
       { page:'admin-modules.html', color:'#78716c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Administration', admin:true }
     ];
@@ -966,6 +1021,20 @@ const PERMISSION_LABELS = {
   access_repertoire: 'Répertoire',
   access_admin: 'Administration',
   access_employes: 'Employés',
+  access_viatrajectoire: 'ViaTrajectoire',
+  access_serafinph: 'SERAFIN-PH',
+  access_planning_equipe: 'Planning équipe',
+  edit_planning_equipe: 'Modifier le planning équipe',
+  access_conges: 'Congés',
+  access_notes: 'Notes rapides',
+  access_messages: 'Messages',
+  access_budget: 'Budget & dépenses',
+  access_paie: 'Fiches de paie',
+  access_entretiens: 'Entretiens professionnels',
+  access_annuaire: 'Annuaire du personnel', access_documentation: 'Documentation de l\'établissement', access_admissions: 'Admissions / liste d\'attente', access_facturation: 'Facturation / tarification', access_formations: 'Plan de formation collectif',
+  access_activites: 'Activités éducatives',
+  access_cvs: 'Conseil de la Vie Sociale (CVS)',
+  access_medicaments: 'Distribution des médicaments',
   manage_users: 'Gérer les utilisateurs'
 };
 
@@ -1093,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!Auth.isSuperAdmin()) {
     document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
   }
-  if ('serviceWorker' in navigator) {
+  if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
   initAutoLock();

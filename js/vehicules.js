@@ -100,7 +100,7 @@ function renderReservations() {
   const users = DB.get(DB.keys.users) || [];
 
   function renderRow(e) {
-    const u = users.find(x => x.id === e.reservedPrenom && x.prenom === e.reservedPrenom);
+    const u = users.find(x => x.prenom === e.reservedPrenom);
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
       <div style="width:36px;height:36px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" style="width:18px;height:18px"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/></svg>
