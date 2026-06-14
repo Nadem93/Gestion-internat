@@ -170,7 +170,18 @@
             <div class="form-group"><label>Tél. médecin</label><input type="tel" id="rMedecinTel" placeholder="Téléphone cabinet"/></div>
           </div>
           <div class="form-group"><label>Allergies / Contre-indications</label><textarea id="rAllergies" rows="2" placeholder="Ex : pénicilline, arachides…"></textarea></div>
-          <div class="form-group"><label>N° Sécurité sociale</label><input type="text" id="rNSS" placeholder="1 85 06 75 021 085 — (stocké localement)" autocomplete="off"/></div>
+          <div class="form-row">
+            <div class="form-group"><label>N° Sécurité sociale (NIR)</label><input type="text" id="rNSS" placeholder="1 85 06 75 021 085" autocomplete="off"/></div>
+            <div class="form-group"><label>INS (Identifiant National de Santé)</label><input type="text" id="rINS" placeholder="1 85 06 75 021 085 12 — 15 chiffres" autocomplete="off"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>DMP (Dossier Médical Partagé)</label><select id="rDMP"><option value="">—</option><option value="actif">Actif</option><option value="en_attente">En attente de création</option><option value="non_ouvert">Non ouvert</option></select></div>
+            <div class="form-group"><label>Date ouverture DMP</label><input type="date" id="rDMPDate"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Consentement partage données santé</label><select id="rConsent"><option value="">—</option><option value="oui">Oui, consentement donné</option><option value="non">Non, pas de consentement</option><option value="en_attente">En attente</option></select></div>
+            <div class="form-group"><label>Date consentement</label><input type="date" id="rConsentDate"/></div>
+          </div>
         </div>
 
         <div class="form-group" style="margin-top:.5rem"><label>Couleur d'identification</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="rColor" value="#3b82f6" style="width:48px"/><span style="font-size:.8rem;color:var(--muted)">Couleur pour identifier visuellement ce résident</span></div></div>

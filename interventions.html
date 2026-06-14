@@ -58,7 +58,8 @@
   const _s = Auth.getSession();
   function canAccessPage() {
     if (!_s) return false;
-    if (_s.role === 'admin') return true;
+    if (_s.role === 'admin' || _s.role === 'superadmin') return true;
+    if (hasPermission(_s.userId, 'access_interventions')) return true;
     const users = DB.get(DB.keys.users) || [];
     const user = users.find(u => String(u.id) === String(_s.userId));
     return user?.fonction?.toLowerCase().includes('technicien') || user?.fonction?.toLowerCase().includes('maintenance');

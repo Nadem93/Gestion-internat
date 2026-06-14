@@ -4,48 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Démo — FTR</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,sans-serif;background:#f1f5f9;color:#334155;min-height:100vh;padding:2rem;display:flex;flex-direction:column;align-items:center}
-.card{background:#fff;border-radius:12px;padding:2.5rem;max-width:920px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1.5px solid #0f2b4a;margin-bottom:1.5rem}
-h1{font-size:1.6rem;font-weight:800;color:#0f2b4a;margin-bottom:.25rem}
+body{font-family:Inter,sans-serif;background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);background-attachment:fixed;color:#334155;min-height:100vh;padding:2rem;display:flex;flex-direction:column;align-items:center}
+/* Champ d'aurores v4 */
+body::before,body::after{content:'';position:fixed;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(70px)}
+body::before{width:55vw;height:55vw;top:-18vw;right:-12vw;background:radial-gradient(circle at 35% 35%,rgba(6,182,212,.11),rgba(99,102,241,.07) 55%,transparent 75%);animation:aur-a 46s ease-in-out infinite alternate}
+body::after{width:48vw;height:48vw;bottom:-20vw;left:-10vw;background:radial-gradient(circle at 60% 60%,rgba(168,85,247,.08),rgba(6,182,212,.05) 55%,transparent 75%);animation:aur-b 58s ease-in-out infinite alternate}
+@keyframes aur-a{from{transform:translate(0,0)}to{transform:translate(-8vw,6vh) scale(1.12)}}
+@keyframes aur-b{from{transform:translate(0,0)}to{transform:translate(7vw,-5vh) scale(1.1)}}
+.card{background:rgba(255,255,255,.78);backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%);border-radius:20px;padding:2.5rem;max-width:920px;width:100%;box-shadow:0 8px 32px rgba(15,43,74,.1);border:1px solid rgba(255,255,255,.85);margin-bottom:1.5rem;position:relative;overflow:hidden;animation:rise .5s cubic-bezier(.22,1,.36,1) backwards}
+/* Scan-line signature en haut de la carte */
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#06b6d4 20%,#6366f1 50%,#a855f7 80%,transparent);background-size:220% 100%;animation:scan 16s linear infinite}
+@keyframes scan{from{background-position:0% 0}to{background-position:220% 0}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color:#0f2b4a;margin-bottom:.25rem}
 .sub{color:#64748b;font-size:.85rem;margin-bottom:1.5rem}
-.btn{display:inline-flex;align-items:center;gap:.6rem;background:#0f2b4a;color:#fff;border:none;padding:.85rem 2rem;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;width:100%;justify-content:center;transition:background .2s,transform .1s}
-.btn:hover{background:#1a4a7a}
+.btn{display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:none;padding:.85rem 2rem;border-radius:12px;font-size:.9rem;font-weight:600;cursor:pointer;width:100%;justify-content:center;transition:box-shadow .2s,transform .1s;box-shadow:0 4px 16px rgba(124,58,237,.3);position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;top:0;bottom:0;left:-80%;width:50%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-18deg);transition:left .45s ease}
+.btn:hover{box-shadow:0 5px 18px rgba(124,58,237,.3)}
+.btn:hover::after{left:130%}
 .btn:active{transform:scale(.98)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.status{text-align:left;margin-top:1.5rem;font-size:.82rem;color:#475569;background:#f8fafc;border-radius:8px;padding:1.25rem;max-height:360px;overflow-y:auto;line-height:1.8;border:1px solid #e2e8f0}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.status{text-align:left;margin-top:1.5rem;font-size:.82rem;color:#475569;background:rgba(248,250,252,.85);border-radius:12px;padding:1.25rem;max-height:360px;overflow-y:auto;line-height:1.8;border:1px solid #e2e8f0}
 .status .ok{color:#16a34a;font-weight:600}
 .status .sep{border-top:1px dashed #e2e8f0;margin:.6rem 0}
 .sel-label{font-size:.78rem;font-weight:600;color:#64748b;margin-bottom:.5rem;display:block}
 .etab-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem}
-.etab-chip{display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem .4rem .5rem;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;font-size:.78rem;font-weight:500}
-.etab-chip:hover{border-color:#94a3b8}
+.etab-chip{display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem .4rem .5rem;background:rgba(248,250,252,.9);border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;font-size:.78rem;font-weight:500}
+.etab-chip:hover{border-color:#67e8f9;box-shadow:0 0 12px rgba(6,182,212,.15)}
 .etab-chip input{display:none}
-.etab-chip input:checked+.etab-dot{box-shadow:0 0 0 2.5px #0f2b4a}
-.etab-chip:has(input:checked){border-color:#0f2b4a;background:#eff6ff}
+.etab-chip input:checked+.etab-dot{box-shadow:0 0 0 2.5px #6366f1}
+.etab-chip:has(input:checked){border-color:#6366f1;background:#eef2ff}
 .etab-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:box-shadow .1s}
 .footer{font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center}
 .config-sect{margin-bottom:1.25rem}
-.config-sect-title{font-size:.78rem;font-weight:700;color:#0f2b4a;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1.5px solid #e2e8f0}
+.config-sect-title{font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:700;color:#0f2b4a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1.5px solid #e2e8f0}
 .config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:.6rem}
-.config-item{background:#f8fafc;border-radius:8px;padding:.5rem .65rem;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:3px}
+.config-item{background:rgba(248,250,252,.9);border-radius:10px;padding:.5rem .65rem;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:3px;transition:border-color .15s,box-shadow .15s}
+.config-item:focus-within{border-color:#67e8f9;box-shadow:0 0 12px rgba(6,182,212,.15)}
 .config-item label{font-size:.65rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.03em}
-.config-item input[type=number]{border:1px solid #cbd5e1;border-radius:5px;padding:.2rem .4rem;font-size:.82rem;font-weight:600;color:#0f2b4a;width:100%;background:#fff;outline:none;font-family:inherit}
-.config-item input[type=number]:focus{border-color:#0f2b4a;box-shadow:0 0 0 2px #0f2b4a20}
+.config-item input[type=number]{border:1px solid #cbd5e1;border-radius:6px;padding:.2rem .4rem;font-size:.82rem;font-weight:600;color:#0f2b4a;width:100%;background:#fff;outline:none;font-family:inherit}
+.config-item input[type=number]:focus{border-color:#06b6d4;box-shadow:0 0 0 2px rgba(6,182,212,.18)}
 .config-item .hint{font-size:.6rem;color:#94a3b8}
 .etab-grid{display:grid;gap:10px;margin:1rem 0}
-.etab-item{background:#f8fafc;border-radius:8px;padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;border:1px solid #e2e8f0}
+.etab-item{background:rgba(248,250,252,.9);border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;border:1px solid #e2e8f0}
 .etab-name{font-weight:600;font-size:.82rem;flex:1;min-width:0}
 .etab-count{font-size:.72rem;color:#64748b}
+@media (prefers-reduced-motion: reduce){body::before,body::after,.card::before{animation:none!important}.card{animation:none!important}}
 </style>
 </head>
 <body>
 
 <div class="card">
   <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem">
-    <div style="width:48px;height:48px;background:#0f2b4a;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0">FTR</div>
+    <div style="width:48px;height:48px;background:linear-gradient(135deg,#06b6d4,#6366f1 55%,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0;font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 14px rgba(99,102,241,.35)">FTR</div>
     <div style="flex:1">
       <h1>Générateur de données de démonstration</h1>
       <div class="sub">Configurez les quantités puis générez des données réalistes pour un ou plusieurs établissements</div>
@@ -286,10 +300,10 @@ function generateForCurrentEtab() {
   const dWinStr = r => dWin(r).toISOString().slice(0,10);
   const isActive = r => r.statut !== 'sorti';
   const MEDS = [
-    { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur' }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir' },
-    { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun' }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne' },
-    { nom:'Méthylphénidate 18mg', pos:'1 cp', freq:'le matin' }, { nom:'Escitalopram 10mg', pos:'1 cp', freq:'le soir' },
-    { nom:'Hydroxyzine 25mg', pos:'1 cp', freq:'au coucher' }, { nom:'Mélatonine 2mg', pos:'1 cp', freq:'au coucher' }
+    { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur', moments:[] }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir', moments:['matin','soir'] },
+    { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun', moments:['matin'] }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne', moments:[] },
+    { nom:'Méthylphénidate 18mg', pos:'1 cp', freq:'le matin', moments:['matin'] }, { nom:'Escitalopram 10mg', pos:'1 cp', freq:'le soir', moments:['soir'] },
+    { nom:'Hydroxyzine 25mg', pos:'1 cp', freq:'au coucher', moments:['coucher'] }, { nom:'Mélatonine 2mg', pos:'1 cp', freq:'au coucher', moments:['coucher'] }
   ];
   const VACCINS = ['DTP (rappel)','Hépatite B','ROR','Méningocoque C','COVID-19','Grippe saisonnière','Papillomavirus'];
   const RDV_TYPES = ['Médecin traitant','Dentiste','Ophtalmologue','CMP','Dermatologue','Kinésithérapeute','Psychiatre'];
@@ -312,13 +326,21 @@ function generateForCurrentEtab() {
 
     // Santé (dans la fenêtre de présence ; RDV/rappels à venir uniquement si présent)
     const traitements = [];
-    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '' }); }
+    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '', moments: med.moments.slice() }); }
     const rdv = [];
     for (let k = 0; k < rand(1,4); k++) rdv.push({ id:'dr-'+ri+'-'+k, date: dWinStr(r), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: true });
     if (active && Math.random() < .7) rdv.push({ id:'dr-'+ri+'-f', date: dAhead(40), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: false });
     const vaccins = [];
     for (let k = 0; k < rand(1,2); k++) { const overdue = Math.random() < .3; vaccins.push({ id:'dv-'+ri+'-'+k, nom: pick(VACCINS), date: dWinStr(r), rappel: overdue ? dAgo(40) : (active ? dAhead(300) : '') }); }
     r.sante = { groupeSanguin: pick(['A+','A-','B+','B-','O+','O-','AB+','AB-','']), notesMedicales: Math.random()<.3 ? 'Suivi médical régulier. Pas de contre-indication particulière.' : '', traitements, rdv, vaccins };
+
+    // SERAFIN-PH
+    const spCodes = SP_NOMENCLATURE.map(p => p.code);
+    for (let k = spCodes.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [spCodes[k], spCodes[j]] = [spCodes[j], spCodes[k]]; }
+    const spSelected = spCodes.slice(0, 5 + Math.floor(Math.random() * 6));
+    const prestations = {};
+    spSelected.forEach(c => { prestations[c] = { niveau: 1 + rand(0,3) }; });
+    r.serafinph = { selected: spSelected, prestations, dateEvaluation: dWinStr(r), notes: Math.random()<.3 ? 'Profil établi en équipe pluridisciplinaire.' : '' };
 
     // Sorties & permissions (dans la fenêtre ; sortie en cours uniquement si présent)
     const sorties = [];
@@ -473,6 +495,7 @@ function generateForCurrentEtab() {
       date: d.toISOString(),
       contenu,
       visibilite,
+      serafinphType: Math.random() < .25 ? pick(['direct','indirect']) : '',
       objectif: '',
       author: author.name,
       authorId: author.id,
@@ -653,6 +676,38 @@ function generateForCurrentEtab() {
       createdAt: d.toISOString()
     });
   }
+  // Marquage EIG (Événements Indésirables Graves) sur les incidents graves
+  const eigGraves = incList.filter(i => ['grave','critique'].includes(i.gravite));
+  eigGraves.forEach((i, idx) => {
+    const declareDate = new Date(new Date(i.date).getTime() + 24 * 3600 * 1000).toISOString().slice(0,10);
+    if (idx === 0) {
+      i.eig = {
+        declarable: true, declareARS: true, dateDeclarationARS: declareDate,
+        numeroSignalement: 'ARS-' + new Date(i.date).getFullYear() + '-' + String(rand(1000,9999)),
+        destinataires: ['ars', 'cd'],
+        mesuresImmediates: 'Mise en sécurité du résident, contact famille et forces de l ordre, renforcement de la surveillance de nuit.',
+        mesuresCorrectives: 'Révision du protocole de surveillance nocturne et installation d une alarme sur les issues du RDC.',
+        cloture: true, dateCloture: new Date(new Date(i.date).getTime() + 20 * 86400000).toISOString().slice(0,10),
+        suites: 'Retour ARS sans suite particulière. Mesures correctives mises en œuvre et suivies en réunion d équipe.'
+      };
+    } else if (idx === 1) {
+      i.eig = {
+        declarable: true, declareARS: true, dateDeclarationARS: declareDate,
+        numeroSignalement: 'ARS-' + new Date(i.date).getFullYear() + '-' + String(rand(1000,9999)),
+        destinataires: ['ars', 'famille'],
+        mesuresImmediates: 'Entretien individuel avec le résident, information de la famille et du référent ASE.',
+        mesuresCorrectives: '',
+        cloture: false, dateCloture: '', suites: ''
+      };
+    } else {
+      i.eig = {
+        declarable: true, declareARS: false, dateDeclarationARS: '', numeroSignalement: '',
+        destinataires: ['ars'],
+        mesuresImmediates: 'Mise en sécurité et information de la direction.',
+        mesuresCorrectives: '', cloture: false, dateCloture: '', suites: ''
+      };
+    }
+  });
   DB.set(DB.keys.incidents, incList);
 
   // ── INTERVENTIONS ──
@@ -799,6 +854,7 @@ function generateForCurrentEtab() {
     prenom: e.prenom, nom: e.nom, poste: e.poste, telephone: e.tel, email: e.email,
     dateEmbauche: new Date(now.getTime() - rand(60, 1800) * 86400000).toISOString().slice(0,10),
     statut: Math.random() < .9 ? 'actif' : 'conge',
+    color: pick(COULEURS), heuresContrat: pick([24,28,30,35,35,35,39,40]),
     photo: '', notes: '', createdAt: now.toISOString()
   }));
   DB.set(DB.keys.employes, employes);
@@ -929,10 +985,669 @@ function generateForCurrentEtab() {
   if (loginHistory.length > 200) loginHistory.length = 200;
   DB.set(DB.keys.loginHistory, loginHistory);
 
+  // ── AUDIT LOG ──
+  const _pickName = arr => { const o = arr && arr.length ? pick(arr) : null; return o ? (o.prenom||'') + ' ' + (o.nom||'') : ''; };
+  const _demoUsers = users.length > 1 ? users.slice(1) : resList;
+  const auditActions = ['resident_create','resident_update','journal_create','incident_create','user_create','vehicle_create','ppe_create'];
+  const auditDetails = {
+    resident_create: () => _pickName(resList),
+    resident_update: () => _pickName(resList),
+    journal_create: () => (rand(3,8)) + ' entrée(s) de suivi',
+    incident_create: () => { const i = pick(incList || []); return i ? (i.titre || i.description || 'Incident') : 'Incident'; },
+    user_create: () => _pickName(_demoUsers),
+    vehicle_create: () => pick(vehList || ['Véhicule']) || 'Véhicule',
+    ppe_create: () => _pickName(resList)
+  };
+  const auditUsernames = [{name:'Admin',role:'admin',userId:1}, {name:'Sophie Martin',role:'admin',userId:2}, {name:'Pierre Dubois',role:'educ',userId:3}];
+  const auditLog = [];
+  for (let i = 0; i < rand(15,40); i++) {
+    const action = pick(auditActions);
+    const au = pick(auditUsernames);
+    auditLog.push({
+      id: 'dal-' + (i + 1),
+      date: new Date(now.getTime() - rand(0,30) * 86400000).toISOString(),
+      userId: au.userId,
+      user: au.name,
+      role: au.role,
+      action,
+      details: auditDetails[action] ? auditDetails[action]() : ''
+    });
+  }
+  auditLog.sort((a,b) => new Date(b.date) - new Date(a.date));
+  localStorage.setItem('ftr_audit_log', JSON.stringify(auditLog));
+
+  // ── VIATRAJECTOIRE ──
+  const vtStatuts = ['brouillon','envoye','en_cours','accepte','refuse','cloture'];
+  const vtTypes = ['orientation','renouvellement','reorientation'];
+  const vts = [];
+  const nbVt = rand(2, Math.min(8, resList.length));
+  const shuffled = [...resList].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < nbVt; i++) {
+    vts.push({
+      id: 'vt-' + genId(),
+      residentId: shuffled[i].id,
+      type: pick(vtTypes),
+      mdph: pick(['mape','cdaph']),
+      date: new Date(now.getTime() - rand(0,180) * 86400000).toISOString(),
+      statut: pick(vtStatuts),
+      commentaire: pick(['','Demande en cours d\'instruction','Complément d\'information demandé','Décision favorable attendue','','',''])
+    });
+  }
+  localStorage.setItem('ftr_viatrajectoire', JSON.stringify(vts));
+
+  // ── PLANNING ÉQUIPE ──
+  const pe = [];
+  const employesList = DB.get(DB.keys.employes) || [];
+  const peShiftTemplates = [['08:00','16:00'],['07:00','15:00'],['09:00','17:00'],['13:00','21:00'],['21:00','07:00']];
+  if (employesList.length) {
+    const peMonday = new Date(now);
+    peMonday.setDate(peMonday.getDate() - ((peMonday.getDay() + 6) % 7) - 14);
+    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+      for (let day = 0; day < 28; day++) {
+        const d = new Date(peMonday);
+        d.setDate(d.getDate() + day);
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        if (Math.random() < (isWeekend ? 0.2 : 0.75)) {
+          const [debut, fin] = pick(peShiftTemplates);
+          pe.push({ id: 'pe-' + genId(), employeId: emp.id, date: d.toISOString().slice(0,10), debut, fin });
+        }
+      }
+    });
+  }
+  DB.set(DB.keys.planningEquipe, pe);
+
+  // ── CONGÉS ──
+  const conges = [];
+  const typeLabels = ['cp','rtt','maladie','enfant_malade','formation'];
+  const statuts = ['en_attente','accepte','refuse'];
+  if (employesList.length) {
+    for (let i = 0; i < rand(5, 15); i++) {
+      const emp = pick(employesList);
+      const d = new Date(now);
+      d.setDate(d.getDate() + rand(-30, 60));
+      const d2 = new Date(d); d2.setDate(d2.getDate() + rand(0, 5));
+      const statut = pick(statuts);
+      conges.push({
+        id: 'cg-' + genId(),
+        employeId: emp.id, employeNom: emp.prenom+' '+emp.nom,
+        type: pick(typeLabels),
+        debut: d.toISOString().slice(0,10),
+        fin: d2.toISOString().slice(0,10),
+        motif: pick(['','Rendez-vous médical','Raison personnelle','Formation obligatoire','','']),
+        statut,
+        dateDemande: new Date(now.getTime() - rand(0, 60) * 86400000).toISOString(),
+        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom+' '+u.nom).filter(Boolean)) : '',
+        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
+        reponseMotif: statut === 'refuse' ? pick(['Effectif insuffisant','Période de forte activité','Doublon avec autre demande','']) : ''
+      });
+    }
+  }
+  localStorage.setItem('ftr_conges', JSON.stringify(conges));
+
+  // ── BUDGET & DÉPENSES ──
+  const budgetEnveloppes = [
+    { id: 'benv-' + genId(), nom: 'Activités éducatives', montant: rand(1500, 3000), description: 'Sorties, ateliers et activités collectives', createdAt: new Date(now.getTime() - 200 * 86400000).toISOString() },
+    { id: 'benv-' + genId(), nom: 'Matériel pédagogique', montant: rand(800, 1500), description: 'Fournitures, jeux éducatifs, supports d\'activité', createdAt: new Date(now.getTime() - 200 * 86400000).toISOString() },
+    { id: 'benv-' + genId(), nom: 'Frais de déplacement', montant: rand(1000, 2000), description: 'Transports professionnels, carburant, péages', createdAt: new Date(now.getTime() - 180 * 86400000).toISOString() },
+    { id: 'benv-' + genId(), nom: 'Entretien & maintenance', montant: rand(1200, 2500), description: 'Petites réparations, fournitures d\'entretien', createdAt: new Date(now.getTime() - 180 * 86400000).toISOString() }
+  ];
+  DB.set(DB.keys.budgetEnveloppes, budgetEnveloppes);
+
+  const budgetDemandes = [];
+  const BUDGET_MOTIFS = ['Achat de matériel pour l\'atelier', 'Sortie pédagogique', 'Frais de déplacement professionnel', 'Achat de fournitures', 'Remboursement repas en mission', 'Petit matériel d\'entretien', 'Carburant véhicule de service', 'Activité éducative jeunes', 'Achat de jeux éducatifs', 'Péage / parking mission'];
+  const BUDGET_REFUS = ['Justificatif manquant ou illisible', 'Montant non conforme au plafond', 'Dépense hors enveloppe', 'Demande déjà traitée via une autre enveloppe', ''];
+  if (employesList.length) {
+    for (let i = 0; i < rand(8, 18); i++) {
+      const emp = pick(employesList);
+      const env = pick(budgetEnveloppes);
+      const dDep = new Date(now);
+      dDep.setDate(dDep.getDate() - rand(0, 60));
+      const statut = pick(statuts);
+      budgetDemandes.push({
+        id: 'bg-' + genId(),
+        employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+        enveloppeId: env.id, enveloppeNom: env.nom,
+        montant: rand(15, 220),
+        motif: pick(BUDGET_MOTIFS),
+        dateDepense: dDep.toISOString().slice(0, 10),
+        justificatifs: [],
+        statut,
+        dateDemande: new Date(dDep.getTime() + rand(0, 3) * 86400000).toISOString(),
+        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom + ' ' + u.nom).filter(Boolean)) : '',
+        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
+        reponseMotif: statut === 'refuse' ? pick(BUDGET_REFUS) : ''
+      });
+    }
+  }
+  DB.set(DB.keys.budgetDemandes, budgetDemandes);
+
+  // ── FICHES DE PAIE ──
+  const fichesPaie = [];
+  if (employesList.length) {
+    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+      for (let m = 1; m <= 6; m++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+        const periode = d.toISOString().slice(0, 7);
+        const txt = `Bulletin de paie — ${emp.prenom} ${emp.nom}\nPériode : ${periode}\nDocument généré automatiquement (démo).`;
+        fichesPaie.push({
+          id: 'pie-' + genId(),
+          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+          periode,
+          fichier: { name: `bulletin_${periode}.txt`, mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
+          dateAjout: new Date(d.getFullYear(), d.getMonth() + 1, 5).toISOString(),
+          ajoutePar: 'Service RH'
+        });
+      }
+    });
+  }
+  DB.set(DB.keys.fichesPaie, fichesPaie);
+
+  // ── ENTRETIENS PROFESSIONNELS ──
+  const entretiens = [];
+  const ENTRETIEN_TYPES = ['annuel', 'professionnel', 'suivi'];
+  const ENTRETIEN_BILANS = [
+    'Bonne implication dans les projets éducatifs, posture professionnelle adaptée.',
+    'Période marquée par une charge de travail importante, accompagnement renforcé proposé.',
+    'Progression notable sur la gestion des situations de crise.',
+    'Investissement constant, bonne intégration dans l\'équipe.',
+    'Quelques difficultés relationnelles avec l\'équipe, points d\'amélioration identifiés.'
+  ];
+  const ENTRETIEN_OBJECTIFS = [
+    'Poursuivre la formation sur les TSA / TND.',
+    'Renforcer la coordination avec les familles.',
+    'Développer les écrits professionnels.',
+    'Prendre en charge un projet d\'activité collective.',
+    'Améliorer la gestion du temps et des priorités.'
+  ];
+  const ENTRETIEN_FORMATIONS = ['', 'Formation gestes et postures', 'Formation premiers secours (PSC1)', 'Formation gestion de la violence', 'Formation à l\'écrit professionnel', ''];
+  if (employesList.length) {
+    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+      const n = rand(1, 2);
+      for (let k = 0; k < n; k++) {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - rand(1, 11));
+        const statut = d < now ? pick(['realise', 'realise', 'planifie']) : 'planifie';
+        entretiens.push({
+          id: 'et-' + genId(),
+          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+          date: d.toISOString().slice(0, 10),
+          type: pick(ENTRETIEN_TYPES),
+          statut,
+          evaluateur: pick(REFFERENTS),
+          bilan: statut === 'realise' ? pick(ENTRETIEN_BILANS) : '',
+          objectifs: pick(ENTRETIEN_OBJECTIFS),
+          formations: pick(ENTRETIEN_FORMATIONS),
+          createdAt: d.toISOString()
+        });
+      }
+    });
+  }
+  DB.set(DB.keys.entretiens, entretiens);
+
+  // ── DOCUMENTATION DE L'ÉTABLISSEMENT ──
+  const documentation = [];
+  const DOCU_ITEMS = [
+    { titre: "Projet d'établissement 2023-2028", categorie: "Projet d'établissement", mois: 18 },
+    { titre: "Règlement de fonctionnement", categorie: 'Règlement intérieur', mois: 14 },
+    { titre: 'Charte des droits et libertés de la personne accueillie', categorie: 'Règlement intérieur', mois: 14 },
+    { titre: 'Note de service — Organisation des astreintes de nuit', categorie: 'Notes de service', mois: 3 },
+    { titre: 'Note de service — Procédure de signalement des incidents', categorie: 'Notes de service', mois: 5 },
+    { titre: 'Procédure — Conduite à tenir en cas d\'urgence médicale', categorie: 'Procédures', mois: 9 },
+    { titre: 'Procédure — Admission et accueil d\'un nouveau résident', categorie: 'Procédures', mois: 12 },
+    { titre: 'Compte-rendu — Réunion d\'équipe pluridisciplinaire', categorie: 'Comptes-rendus de réunion', mois: 1 },
+    { titre: 'Compte-rendu — Conseil de la vie sociale', categorie: 'Comptes-rendus de réunion', mois: 2 },
+    { titre: 'Plan de continuité d\'activité', categorie: 'Autre', mois: 10 }
+  ];
+  DOCU_ITEMS.forEach(item => {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - item.mois);
+    const txt = `${item.titre}\nCatégorie : ${item.categorie}\nDocument généré automatiquement (démo).`;
+    documentation.push({
+      id: 'docu-' + genId(),
+      titre: item.titre,
+      categorie: item.categorie,
+      fichier: { name: item.titre.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase() + '.txt', mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
+      dateAjout: d.toISOString(),
+      ajoutePar: 'Direction'
+    });
+  });
+  DB.set(DB.keys.documentation, documentation);
+
+  // ── ADMISSIONS / LISTE D'ATTENTE ──
+  const admissions = [];
+  const ADM_ITEMS = [
+    { prenom: 'Lina', nom: 'Bouzid', dateNaissance: '2010-03-12', origine: 'MDPH', statut: 'en_attente', jours: 5, contactNom: 'Mme Bouzid (mère)', contactTel: '06 12 34 56 78', notes: 'Orientation MDPH en cours, dossier complet à étudier.' },
+    { prenom: 'Yanis', nom: 'Tomasini', dateNaissance: '2011-07-22', origine: 'ASE', statut: 'en_attente', jours: 2, contactNom: 'Service ASE 74', contactTel: '04 50 11 22 33', notes: 'Placement urgent demandé par l\'ASE, disponibilité de chambre à vérifier.' },
+    { prenom: 'Maëlys', nom: 'Petitjean', dateNaissance: '2009-11-04', origine: 'Établissement', statut: 'etude', jours: 18, contactNom: 'IME Les Tilleuls', contactTel: '03 80 44 55 66', notes: 'Réorientation suite à fermeture de section, dossier en étude par l\'équipe pluridisciplinaire.' },
+    { prenom: 'Noah', nom: 'Richer', dateNaissance: '2012-01-30', origine: 'Famille', statut: 'etude', jours: 25, contactNom: 'M. Richer (père)', contactTel: '06 98 76 54 32', notes: 'Demande directe de la famille, première visite effectuée, en attente de décision de la commission.' },
+    { prenom: 'Inès', nom: 'Charvet', dateNaissance: '2010-09-17', origine: 'MDPH', statut: 'admis', jours: 60, contactNom: 'Mme Charvet (mère)', contactTel: '06 33 22 11 00', notes: 'Dossier validé, admission effectuée.' },
+    { prenom: 'Tom', nom: 'Lacroix', dateNaissance: '2011-04-08', origine: 'ASE', statut: 'refuse', jours: 90, contactNom: 'Service ASE 73', contactTel: '04 79 22 33 44', notes: 'Profil non adapté à l\'agrément de l\'établissement, réorientation proposée vers un autre IME.' },
+    { prenom: 'Camille', nom: 'Dufresne', dateNaissance: '2009-05-26', origine: 'Autre', statut: 'abandon', jours: 45, contactNom: 'Mme Dufresne (tutrice)', contactTel: '06 55 44 33 22', notes: 'Famille a finalement opté pour un établissement plus proche du domicile.' },
+    { prenom: 'Sacha', nom: 'Mercier', dateNaissance: '2012-08-14', origine: 'Établissement', statut: 'en_attente', jours: 1, contactNom: 'CMP de secteur', contactTel: '04 50 77 88 99', notes: 'Pré-orientation transmise par le CMP, premier contact à organiser.' }
+  ];
+  ADM_ITEMS.forEach(item => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - item.jours);
+    const adm = {
+      id: 'adm-' + genId(),
+      prenom: item.prenom, nom: item.nom,
+      dateNaissance: item.dateNaissance,
+      dateDemande: d.toISOString().slice(0, 10),
+      origine: item.origine,
+      statut: item.statut,
+      contactNom: item.contactNom, contactTel: item.contactTel,
+      notes: item.notes,
+      createdAt: d.toISOString(), updatedAt: d.toISOString()
+    };
+    if (item.statut === 'admis' || item.statut === 'refuse' || item.statut === 'abandon') {
+      const dd = new Date(now);
+      dd.setDate(dd.getDate() - Math.max(item.jours - 10, 0));
+      adm.dateDecision = dd.toISOString().slice(0, 10);
+    }
+    admissions.push(adm);
+  });
+  DB.set(DB.keys.admissions, admissions);
+
+  // ── TARIFICATION & FACTURATION ──
+  const FACT_CATEGORIES = [
+    { id: 'internat_complet', label: 'Internat complet (7j/7)', prixJour: 120 },
+    { id: 'internat_sequentiel', label: 'Internat séquentiel', prixJour: 95 },
+    { id: 'externat', label: 'Accueil de jour / externat', prixJour: 60 },
+    { id: 'accueil_temporaire', label: 'Accueil temporaire / urgence', prixJour: 140 }
+  ];
+  const FACT_ORGANISMES = ['ASE', 'MDPH / Conseil départemental', 'Sécurité sociale', 'Famille', 'Autre'];
+  const affectations = {};
+  const activeResidents = resList.filter(r => r.statut !== 'sorti');
+  activeResidents.forEach(r => {
+    affectations[r.id] = { categorieId: pick(FACT_CATEGORIES).id, organisme: pick(FACT_ORGANISMES) };
+  });
+  DB.set(DB.keys.tarifs, { categories: FACT_CATEGORIES, affectations });
+
+  const factures = [];
+  const periodeActuelle = now.toISOString().slice(0, 7);
+  const moisPrecedent = new Date(now); moisPrecedent.setMonth(moisPrecedent.getMonth() - 1);
+  const periodePrecedente = moisPrecedent.toISOString().slice(0, 7);
+  [{ periode: periodePrecedente, statuts: ['payee', 'envoyee'] }, { periode: periodeActuelle, statuts: ['brouillon', 'envoyee'] }].forEach(({ periode, statuts }) => {
+    activeResidents.forEach(r => {
+      const aff = affectations[r.id];
+      const cat = FACT_CATEGORIES.find(c => c.id === aff.categorieId);
+      const nbJours = Object.keys(presences).filter(date => date.startsWith(periode) && presences[date][r.id] === 'present').length;
+      if (!nbJours) return;
+      const montant = nbJours * cat.prixJour;
+      const facture = {
+        id: 'fact-' + genId(), periode, residentId: r.id, residentNom: `${r.prenom} ${r.nom}`,
+        organisme: aff.organisme, categorieId: cat.id, categorieLabel: cat.label,
+        nbJours, prixJour: cat.prixJour, montant,
+        statut: pick(statuts), createdAt: now.toISOString(), updatedAt: now.toISOString()
+      };
+      if (facture.statut === 'envoyee') facture.dateEnvoi = periodePrecedente === periode ? periode + '-28' : today;
+      if (facture.statut === 'payee') { facture.dateEnvoi = periode + '-05'; facture.datePaiement = periode + '-20'; }
+      factures.push(facture);
+    });
+  });
+  DB.set(DB.keys.factures, factures);
+
+  // ── PLAN DE FORMATION COLLECTIF ──
+  const formations = [];
+  const FORMATION_ITEMS = [
+    { titre: 'PSC1 — Prévention et secours civiques de niveau 1', organisme: 'Croix-Rouge française', domaine: "Sécurité & gestes d'urgence", mois: -8, duree: 7, cout: 600, statut: 'realisee' },
+    { titre: 'Gestes et postures — manutention des personnes', organisme: 'AFPA', domaine: 'Hygiène, santé & soins', mois: -6, duree: 14, cout: 1200, statut: 'realisee' },
+    { titre: 'Prévention et gestion des comportements-défis', organisme: 'IRTS', domaine: 'Accompagnement éducatif & pédagogique', mois: -4, duree: 21, cout: 2400, statut: 'realisee' },
+    { titre: 'Communication non violente', organisme: "Cabinet Form'Action", domaine: 'Communication & gestion des conflits', mois: -2, duree: 14, cout: 1600, statut: 'realisee' },
+    { titre: 'Mise à jour réglementation RGPD & secret professionnel', organisme: 'CNAPE', domaine: 'Réglementation & droit des usagers', mois: -1, duree: 7, cout: 450, statut: 'realisee' },
+    { titre: 'Prise en main du logiciel de gestion (FTR)', organisme: 'Formation interne', domaine: 'Numérique & outils professionnels', mois: 0, duree: 3.5, cout: 0, statut: 'realisee' },
+    { titre: 'Habilitation incendie — manipulation des extincteurs', organisme: 'SDIS', domaine: "Sécurité & gestes d'urgence", mois: 1, duree: 3.5, cout: 350, statut: 'planifiee' },
+    { titre: "Management d'équipe et conduite de réunion", organisme: 'IRTS', domaine: 'Management & encadrement', mois: 2, duree: 14, cout: 1800, statut: 'planifiee' },
+    { titre: 'Sensibilisation aux écrans et usages numériques des jeunes', organisme: 'Association e-Enfance', domaine: 'Accompagnement éducatif & pédagogique', mois: 3, duree: 7, cout: 700, statut: 'planifiee' },
+    { titre: 'Formation tuteur de stage (session annulée)', organisme: 'GRETA', domaine: 'Management & encadrement', mois: -3, duree: 14, cout: 0, statut: 'annulee' }
+  ];
+  FORMATION_ITEMS.forEach(item => {
+    const dd = new Date(now);
+    dd.setMonth(dd.getMonth() + item.mois);
+    const df = new Date(dd);
+    df.setDate(df.getDate() + Math.ceil(item.duree / 7));
+    const pool = [...employes];
+    const nbParticipants = pool.length ? rand(2, Math.min(5, pool.length)) : 0;
+    const participants = [];
+    for (let i = 0; i < nbParticipants; i++) {
+      const idx = rand(0, pool.length - 1);
+      participants.push(pool.splice(idx, 1)[0].id);
+    }
+    formations.push({
+      id: 'form-' + genId(),
+      titre: item.titre, organisme: item.organisme, domaine: item.domaine,
+      dateDebut: dd.toISOString().slice(0, 10), dateFin: df.toISOString().slice(0, 10),
+      dureeHeures: item.duree, cout: item.cout, statut: item.statut,
+      participants, notes: '',
+      createdAt: now.toISOString(), updatedAt: now.toISOString()
+    });
+  });
+  DB.set(DB.keys.formations, formations);
+
+  // ── CHAMBRES & ÉTATS DES LIEUX ──
+  const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
+  const rooms = roomNames.map(nom => ({
+    id: 'demo-ch-' + nom,
+    nom,
+    unite: 'Unité ' + ['A','B','C','D'][Math.floor((parseInt(nom) - 100) / 10) % 4],
+    capacite: Math.random() < .2 ? 2 : 1,
+    notes: Math.random() < .12 ? pick(['Accès PMR','Proche sanitaires','Lit médicalisé','Vue jardin']) : ''
+  }));
+  DB.set(DB.keys.chambres, rooms);
+  const edls = [];
+  shuffle([...resList]).slice(0, Math.min(12, resList.length)).forEach(r => {
+    const room = rooms.find(c => c.nom === r.chambre);
+    if (!room) return;
+    edls.push({
+      id: 'demo-edl-' + r.id, chambreId: room.id, chambreNom: room.nom,
+      residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+      type: 'entree', date: r.entree,
+      etat: { murs: pick(['Bon','Bon','Moyen']), sol: pick(['Bon','Bon','Moyen']), mobilier: pick(['Bon','Moyen']), literie: 'Bon', sanitaires: pick(['Bon','Bon','Moyen','Dégradé']) },
+      observations: Math.random() < .3 ? pick(['RAS','Trace d\'usure sur le bureau','Rideau à remplacer','Peinture défraîchie côté fenêtre']) : '',
+      author: pick(REFFERENTS), createdAt: new Date(r.entree + 'T10:00').toISOString()
+    });
+  });
+  DB.set(DB.keys.edl, edls);
+
+  // ── TROUSSEAU & EFFETS PERSONNELS ──
+  const TR_POOL = [
+    ['Vêtements','Jean'],['Vêtements','T-shirts'],['Vêtements','Pull'],['Vêtements','Blouson'],['Vêtements','Paire de baskets'],
+    ['Linge de maison','Parure de lit'],['Linge de maison','Serviettes de toilette'],
+    ['Hygiène','Trousse de toilette'],['Multimédia','Téléphone portable'],['Multimédia','Casque audio'],['Multimédia','Console de jeux'],
+    ['Papiers','Carte d\'identité'],['Papiers','Carte vitale'],['Objets de valeur','Montre'],['Objets de valeur','Bijou de famille'],
+    ['Mobilier personnel','Lampe de chevet'],['Autre','Vélo'],['Autre','Instrument de musique']
+  ];
+  resList.forEach(r => {
+    if (Math.random() < .7) {
+      const n = rand(3, 8);
+      const pool = shuffle([...TR_POOL]).slice(0, n);
+      r.trousseau = pool.map(([categorie, designation], k) => {
+        const restitue = r.statut === 'sorti' && Math.random() < .8;
+        const dAjout = Math.random() < .8 ? r.entree : new Date(new Date(r.entree).getTime() + rand(5, 120) * 86400000).toISOString().slice(0,10);
+        return {
+          id: 'demo-tr-' + r.id + '-' + k,
+          designation, categorie,
+          quantite: designation.endsWith('s') ? rand(2, 6) : 1,
+          etat: pick(['Neuf','Bon','Bon','Bon','Usé','Abîmé']),
+          dateAjout: dAjout,
+          notes: Math.random() < .2 ? pick(['Marque Nike','Couleur bleue','Étiquetée au nom du résident','Avec chargeur','N° série relevé']) : '',
+          restitue,
+          dateRestitution: restitue ? (r.dateSortie || today) : undefined
+        };
+      });
+    }
+  });
+
+  // ── RÉGIMES & REPAS DU JOUR ──
+  const regimePool = ['sansporc','sansporc','vegetarien','diabetique','hyposode','halal','hypocalorique'];
+  resList.forEach(r => {
+    if (Math.random() < .3) {
+      r.regime = {
+        type: pick(regimePool),
+        autreLabel: '',
+        texture: Math.random() < .12 ? pick(['hachee','mixee']) : 'normale',
+        allergiesAlim: r.allergies || '',
+        notes: Math.random() < .15 ? pick(['Petites portions','Aide à la découpe','Double ration de légumes','Mange lentement — prévoir du temps']) : ''
+      };
+    }
+  });
+  DB.set(DB.keys.residents, resList);
+  const repasDay = { midi: {}, soir: {} };
+  shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.midi[r.id] = 0; });
+  shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.soir[r.id] = 0; });
+  DB.set(DB.keys.repas, { [today]: repasDay });
+
+  // ── DROITS DE VISITE & VISITES FAMILLE ──
+  const VIS_PERSONNES = [
+    ['Mme {N}','Mère'],['M. {N}','Père'],['M. et Mme {N}','Parents'],['Mme {N}','Grand-mère'],
+    ['M. {N}','Grand-père'],['Mme {N}','Tante'],['M. {N}','Oncle'],['Mme {N}','Sœur'],['M. {N}','Frère']
+  ];
+  const visites = [];
+  resList.forEach(r => {
+    if (Math.random() < .6) {
+      // Cadre : 1-2 personnes autorisées
+      const nb = Math.random() < .35 ? 2 : 1;
+      const picked = shuffle([...VIS_PERSONNES]).slice(0, nb);
+      r.droitsVisite = picked.map(([tpl, lien], k) => {
+        const type = pick(['libre','libre','libre','mediatisee','hebergement','telephone']);
+        return {
+          id: 'demo-dv-' + r.id + '-' + k,
+          personne: tpl.replace('{N}', r.nom),
+          lien, type,
+          modalites: type === 'hebergement' ? pick(['1 week-end sur 2','Vacances scolaires','1 week-end par mois']) : type === 'mediatisee' ? pick(['1 h en présence d\'un éducateur','2 h au point rencontre']) : pick(['Libre en journée','Mercredis et week-ends','']),
+          decision: Math.random() < .5 ? pick(['Ordonnance JE du ' + new Date(now.getTime() - rand(60, 400) * 86400000).toLocaleDateString('fr-FR'),'Accord ASE','Décision MDPH','Accord famille/établissement']) : ''
+        };
+      });
+      // Visites sur l'année : passées + à venir
+      const nbVis = rand(2, 8);
+      for (let k = 0; k < nbVis; k++) {
+        const d = r.droitsVisite[rand(0, r.droitsVisite.length - 1)];
+        const offset = rand(-300, 21);
+        const dateV = new Date(now.getTime() + offset * 86400000);
+        const past = offset < 0;
+        const type = d.type;
+        const dateStr = dateV.toISOString().slice(0,10);
+        visites.push({
+          id: 'demo-vis-' + r.id + '-' + k,
+          residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+          type, personne: d.personne, lien: d.lien,
+          date: dateStr,
+          heure: pick(['10:00','14:00','14:30','15:00','16:00']),
+          dateRetour: type === 'hebergement' ? new Date(dateV.getTime() + rand(1, 2) * 86400000).toISOString().slice(0,10) : '',
+          heureRetour: type === 'hebergement' ? pick(['17:00','18:00','19:00']) : '',
+          lieu: type === 'mediatisee' ? 'Point rencontre' : type === 'hebergement' ? 'Domicile familial' : 'Établissement',
+          notes: past && Math.random() < .3 ? pick(['Visite qui s\'est bien déroulée','Moment chaleureux, le résident était ravi','Échanges tendus en début de visite puis apaisés','Le résident a présenté ses progrès']) : '',
+          statut: past ? pick(['realisee','realisee','realisee','realisee','annulee','absent']) : 'prevue',
+          createdBy: pick(REFFERENTS), createdAt: now.toISOString()
+        });
+      }
+    }
+  });
+  DB.set(DB.keys.visites, visites);
+  DB.set(DB.keys.residents, resList); // persiste les droitsVisite ajoutés ci-dessus
+
+  // ── CAHIER DE NUIT ──
+  const VEILLEURS = ['Karim Benyahia', 'Sylvie Rocher', 'Marc Antoine'];
+  const NUIT_EVT_POOL = [
+    ['reveil', 'Réveillé vers {h}, a demandé un verre d\'eau puis s\'est rendormi.'],
+    ['reveil', 'Insomnie, a regardé la télé au salon une heure avant de remonter.'],
+    ['angoisse', 'Crise d\'angoisse, temps d\'écoute et de réassurance d\'une vingtaine de minutes.'],
+    ['soin', 'Maux de tête, paracétamol donné selon protocole, à surveiller.'],
+    ['conflit', 'Tension verbale entre deux résidents dans le couloir, retour au calme rapide.'],
+    ['retour', 'Retour tardif de soirée, dans le cadre de son autorisation.'],
+    ['fugue', 'Absence constatée à la ronde, retour de lui-même 40 min plus tard. Cadre informé.']
+  ];
+  const nuits = [];
+  for (let k = 1; k <= 45; k++) {
+    const dN = new Date(now.getTime() - k * 86400000).toISOString().slice(0,10);
+    const nbEvt = Math.random() < .5 ? 0 : rand(1, 3);
+    const evts = [];
+    for (let e = 0; e < nbEvt; e++) {
+      const [type, tpl] = pick(NUIT_EVT_POOL);
+      const heure = `${String(rand(0, 5)).padStart(2,'0')}:${pick(['00','15','30','45'])}`;
+      const rr = pick(resList.filter(x => x.statut !== 'sorti'));
+      evts.push({ id: 'demo-ne-' + k + '-' + e, type, heure, residentId: rr ? rr.id : null, residentName: rr ? `${rr.prenom} ${rr.nom}` : '', description: tpl.replace('{h}', heure) });
+    }
+    const hasFugue = evts.some(e => e.type === 'fugue');
+    nuits.push({
+      id: 'demo-nuit-' + k, date: dN,
+      veilleur: pick(VEILLEURS), veilleurId: null,
+      ambiance: hasFugue ? 'tres_agitee' : nbEvt >= 2 ? 'agitee' : 'calme',
+      effectif: resList.filter(x => x.statut !== 'sorti').length - rand(0, 4),
+      rondes: ['22:30','00:30','02:30','04:30','06:00'].map((h, ri) => ({ id: 'demo-rd-' + k + '-' + ri, heure: h, ras: Math.random() < .85, note: Math.random() < .15 ? pick(['Lumière restée allumée ch. 112','Porte du local mal fermée','Bruit côté cuisine, RAS après vérification']) : '' })),
+      evenements: evts,
+      astreintes: hasFugue ? [{ id: 'demo-as-' + k, heure: pick(['01:10','02:40','03:20']), cadre: 'N. Petit (chef de service)', motif: 'Absence d\'un résident constatée à la ronde', decision: 'Surveillance renforcée, rappel à 30 min, signalement si non-retour à 1 h' }] : [],
+      transmission: nbEvt ? 'Nuit ' + (hasFugue ? 'marquée par une absence temporaire — voir événements.' : 'avec quelques réveils, voir le détail des événements.') : 'Nuit calme, rien à signaler.',
+      createdAt: new Date(dN + 'T22:00').toISOString()
+    });
+  }
+  DB.set(DB.keys.nuits, nuits);
+
+  // ── ÉCHÉANCIER ADMINISTRATIF ──
+  const echTypes = ['mdph','jugement','identite','css','contrat','ppe','medical'];
+  const echLibelles = {
+    mdph: 'Renouvellement notification MDPH', jugement: 'Renouvellement mesure de protection',
+    identite: 'Renouvellement carte d\'identité', css: 'Renouvellement CSS',
+    contrat: 'Révision du contrat de séjour', ppe: 'Révision du projet personnalisé', medical: 'Visite médicale annuelle'
+  };
+  const echeances = [];
+  resList.filter(r => r.statut !== 'sorti').forEach(r => {
+    if (Math.random() < .55) {
+      const n = Math.random() < .25 ? 2 : 1;
+      for (let k = 0; k < n; k++) {
+        const type = pick(echTypes);
+        const offset = rand(-25, 320); // quelques retards, beaucoup à venir
+        echeances.push({
+          id: 'demo-ec-' + r.id + '-' + k, type,
+          libelle: echLibelles[type], date: new Date(now.getTime() + offset * 86400000).toISOString().slice(0,10),
+          residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+          notes: '', done: offset < -10 && Math.random() < .5,
+          author: pick(REFFERENTS), createdAt: now.toISOString()
+        });
+      }
+    }
+  });
+  echeances.push({ id: 'demo-ec-etab-1', type: 'autre', libelle: 'Commission de sécurité incendie', date: new Date(now.getTime() + rand(40, 120) * 86400000).toISOString().slice(0,10), residentId: null, residentName: '', notes: 'Préparer les registres', done: false, author: 'Direction', createdAt: now.toISOString() });
+  DB.set(DB.keys.echeances, echeances);
+
+  // ── ACTIVITÉS ÉDUCATIVES ──
+  const ACT_CATALOGUE_DEMO = [
+    { nom: 'Atelier cuisine', categorie: 'autonomie', jour: 'Mercredi', heureDebut: '14:00', heureFin: '16:00', lieu: 'Cuisine pédagogique', animateur: 'Maîtresse de maison', placesMax: 6, description: "Préparation d'un repas en autonomie : courses, équilibre alimentaire, hygiène." },
+    { nom: 'Football / sport collectif', categorie: 'sportive', jour: 'Mardi', heureDebut: '17:00', heureFin: '18:30', lieu: 'Gymnase municipal', animateur: 'Éducateur sportif', placesMax: 10, description: 'Travail du collectif, respect des règles, dépense physique.' },
+    { nom: 'Atelier arts plastiques', categorie: 'creative', jour: 'Lundi', heureDebut: '16:30', heureFin: '18:00', lieu: "Salle d'activités", animateur: 'Éducatrice référente', placesMax: 8, description: 'Expression par le dessin, la peinture et le collage.' },
+    { nom: 'Soutien scolaire', categorie: 'scolaire', jour: 'Jeudi', heureDebut: '17:00', heureFin: '18:00', lieu: "Salle d'étude", animateur: 'Bénévole AFEV', placesMax: 4, description: 'Aide aux devoirs et révisions.' },
+    { nom: 'Sortie médiathèque', categorie: 'sortie', jour: 'Samedi', heureDebut: '10:00', heureFin: '12:00', lieu: 'Médiathèque municipale', animateur: 'Éducateur référent', placesMax: 5, description: 'Découverte de la lecture, emprunt de livres.' },
+    { nom: 'Conseil des jeunes', categorie: 'citoyennete', jour: 'Vendredi', heureDebut: '18:00', heureFin: '19:00', lieu: 'Salle commune', animateur: 'Chef de service', placesMax: 0, description: 'Expression collective, propositions sur la vie quotidienne.' },
+    { nom: 'Atelier musique', categorie: 'culturelle', jour: 'Mercredi', heureDebut: '16:00', heureFin: '17:00', lieu: 'Salle polyvalente', animateur: 'Intervenant musique', placesMax: 6, description: 'Initiation aux instruments et au chant.' },
+    { nom: 'Piscine', categorie: 'sportive', jour: 'Samedi', heureDebut: '14:00', heureFin: '16:00', lieu: 'Piscine municipale', animateur: 'Maître-nageur + éducateur', placesMax: 8, description: 'Activité aquatique, apprentissage de la natation.', actif: false }
+  ];
+  const activites = ACT_CATALOGUE_DEMO.map((a, k) => ({ id: 'demo-act-' + k, actif: true, ...a, createdAt: now.toISOString() }));
+  const ACT_BILAN_POOL = [
+    'Bonne participation, motivation en hausse.',
+    "S'est montré(e) en retrait au début puis intégré(e) au groupe.",
+    'Progrès notables dans la relation aux autres.',
+    'A pris des responsabilités dans le déroulement de la séance.',
+    'Quelques difficultés de concentration mais investissement réel.',
+    'Très bon comportement, à poursuivre sur cette dynamique.',
+    'Absent(e) sans justification, à recontacter.',
+    'A exprimé du plaisir à participer, demande à continuer.'
+  ];
+  const activitesActives = activites.filter(a => a.actif);
+  resList.filter(r => r.statut !== 'sorti').forEach(r => {
+    const chosen = shuffle([...activitesActives]).slice(0, rand(0, 3));
+    r.activites = chosen.map((a, k) => {
+      const terminee = Math.random() < .15;
+      const bilans = [];
+      const nbBilans = rand(0, 2);
+      for (let b = 0; b < nbBilans; b++) {
+        bilans.push({ id: 'demo-actb-' + r.id + '-' + k + '-' + b, date: new Date(now.getTime() - rand(1, 60) * 86400000).toISOString().slice(0,10), texte: pick(ACT_BILAN_POOL), auteur: pick(REFFERENTS) });
+      }
+      const inscr = {
+        id: 'demo-acti-' + r.id + '-' + k,
+        activiteId: a.id,
+        dateInscription: new Date(now.getTime() - rand(10, 200) * 86400000).toISOString().slice(0,10),
+        statut: terminee ? 'terminee' : 'active',
+        bilans
+      };
+      if (terminee) inscr.dateFin = new Date(now.getTime() - rand(1, 30) * 86400000).toISOString().slice(0,10);
+      return inscr;
+    });
+  });
+  DB.set(DB.keys.activites, activites);
+  DB.set(DB.keys.residents, resList);
+
+  // ── CONSEIL DE LA VIE SOCIALE (CVS) ──
+  const cvsResidentsMembres = shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, 2);
+  const cvsMembresDemo = [
+    ...cvsResidentsMembres.map((r, k) => ({ id: 'demo-cvsm-res-' + k, nom: `${r.prenom} ${r.nom}`, college: 'residents', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() })),
+    { id: 'demo-cvsm-fam-1', nom: 'Mme Diallo (représentante des familles)', college: 'familles', role: 'titulaire', contact: 'famille.diallo@email.fr', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-fam-2', nom: 'M. Lefebvre (représentant des familles, suppléant)', college: 'familles', role: 'suppleant', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-pers-1', nom: pick(REFFERENTS) + ' (éducateur référent)', college: 'personnel', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-dir-1', nom: 'Directeur d\'établissement', college: 'direction', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: '', statut: 'actif', createdAt: now.toISOString() },
+    { id: 'demo-cvsm-anc-1', nom: 'Ancien représentant des résidents', college: 'residents', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 560 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() - 210 * 86400000).toISOString().slice(0,10), statut: 'ancien', createdAt: now.toISOString() }
+  ];
+  const cvsSeancesDemo = [
+    {
+      id: 'demo-cvss-1',
+      date: new Date(now.getTime() - 95 * 86400000).toISOString().slice(0,10), heure: '17:00', lieu: 'Salle commune',
+      presents: cvsMembresDemo.filter(m => m.statut === 'actif').map(m => m.nom).join(', '),
+      excuses: 'M. Lefebvre (représentant des familles, suppléant)',
+      ordreDuJour: 'Bilan des activités du trimestre, projet de menus, organisation des sorties d\'été, point sur les travaux de la salle de bain commune.',
+      compteRendu: "Les résidents expriment leur satisfaction concernant les nouvelles activités proposées (atelier cuisine, sortie médiathèque). Une demande est faite pour diversifier les menus du week-end. La direction informe de l'avancement des travaux de rénovation de la salle de bain commune, prévus avant la fin de l'année. Discussion sur l'organisation d'une sortie collective pour l'été.",
+      resolutions: [
+        { id: 'demo-cvsr-1', texte: 'Proposer un menu végétarien une fois par semaine et recueillir les avis des résidents', responsable: 'Maîtresse de maison', echeance: new Date(now.getTime() - 30 * 86400000).toISOString().slice(0,10), statut: 'fait' },
+        { id: 'demo-cvsr-2', texte: "Planifier une sortie collective d'été et présenter 3 propositions de destination au prochain CVS", responsable: 'Chef de service', echeance: new Date(now.getTime() + 25 * 86400000).toISOString().slice(0,10), statut: 'en_cours' },
+        { id: 'demo-cvsr-3', texte: 'Communiquer le calendrier des travaux de la salle de bain commune aux résidents', responsable: 'Direction', echeance: new Date(now.getTime() - 10 * 86400000).toISOString().slice(0,10), statut: 'fait' }
+      ],
+      createdAt: now.toISOString()
+    },
+    {
+      id: 'demo-cvss-2',
+      date: new Date(now.getTime() - 5 * 86400000).toISOString().slice(0,10), heure: '17:30', lieu: 'Salle commune',
+      presents: cvsMembresDemo.filter(m => m.statut === 'actif').map(m => m.nom).join(', '),
+      excuses: '',
+      ordreDuJour: 'Retour sur la sortie d\'été, règlement de fonctionnement, point sur le registre des EIG, questions diverses des résidents.',
+      compteRendu: "Retour très positif sur la sortie organisée cet été. Les résidents souhaitent que ce type de sortie soit reconduit chaque trimestre. Présentation du registre des EIG et rappel du circuit de signalement. Plusieurs résidents demandent un accès plus large au wifi dans les chambres en soirée.",
+      resolutions: [
+        { id: 'demo-cvsr-4', texte: 'Étudier la possibilité d\'élargir les horaires d\'accès au wifi en soirée', responsable: 'Direction', echeance: new Date(now.getTime() + 40 * 86400000).toISOString().slice(0,10), statut: 'a_faire' },
+        { id: 'demo-cvsr-5', texte: 'Inscrire une sortie collective trimestrielle au planning d\'activités', responsable: 'Chef de service', echeance: new Date(now.getTime() + 20 * 86400000).toISOString().slice(0,10), statut: 'a_faire' }
+      ],
+      createdAt: now.toISOString()
+    },
+    {
+      id: 'demo-cvss-3',
+      date: new Date(now.getTime() + 55 * 86400000).toISOString().slice(0,10), heure: '17:00', lieu: 'Salle commune',
+      presents: '', excuses: '', ordreDuJour: 'Préparation du renouvellement du règlement de fonctionnement, bilan annuel.',
+      compteRendu: '', resolutions: [], createdAt: now.toISOString()
+    }
+  ];
+  DB.set(DB.keys.cvs, { membres: cvsMembresDemo, seances: cvsSeancesDemo });
+
+  // ── DISTRIBUTION DES MÉDICAMENTS ──
+  const MED_HEURES = { matin: '08:00', midi: '12:00', soir: '18:00', coucher: '21:00' };
+  const MED_OBS = {
+    refuse: ['Refus du résident, médicament non administré.', "Refus malgré la proposition à plusieurs reprises."],
+    absent: ['Résident absent au moment de la distribution.', 'Résident en sortie, prise non effectuée.'],
+    report: ['Prise reportée au moment suivant.', 'Reporté à la demande du résident, repas en cours.']
+  };
+  const medicamentsDemo = [];
+  resList.filter(r => isActive(r)).forEach(r => {
+    const traitsAvecMoments = (r.sante.traitements || []).filter(t => (t.moments || []).length);
+    if (!traitsAvecMoments.length) return;
+    for (let d = 6; d >= 0; d--) {
+      const date = new Date(now.getTime() - d * 86400000).toISOString().slice(0,10);
+      traitsAvecMoments.forEach(t => {
+        t.moments.forEach(moment => {
+          const roll = Math.random();
+          let statut = 'donne';
+          if (roll < 0.04) statut = 'refuse';
+          else if (roll < 0.07) statut = 'absent';
+          else if (roll < 0.10) statut = 'report';
+          medicamentsDemo.push({
+            id: 'demo-med-' + r.id + '-' + t.id + '-' + date + '-' + moment,
+            date, residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
+            traitementId: t.id, medicament: t.nom, posologie: t.posologie, moment, statut,
+            heure: new Date(date + 'T' + MED_HEURES[moment] + ':00').toISOString(),
+            auteur: pick(REFFERENTS),
+            observation: statut !== 'donne' ? pick(MED_OBS[statut]) : ''
+          });
+        });
+      });
+    }
+  });
+  DB.set(DB.keys.medicaments, medicamentsDemo);
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
   return {
+    chambres: rooms.length,
+    echeances: echeances.length,
+    visites: visites.length,
+    nuits: nuits.length,
+    activites: activites.length,
+    cvs: cvsSeancesDemo.length,
+    medicaments: medicamentsDemo.length,
     residents: resList.length,
     journal: journal.length,
     planning: planning.length,
@@ -950,7 +1665,19 @@ function generateForCurrentEtab() {
     rdvMedicaux: resList.reduce((a,r) => a + ((r.sante&&r.sante.rdv)||[]).length, 0),
     sorties: resList.reduce((a,r) => a + ((r.sorties)||[]).length, 0),
     operationsBudget: resList.reduce((a,r) => a + ((r.budget&&r.budget.operations)||[]).length, 0),
-    evaluations: resList.reduce((a,r) => a + ((r.evaluations)||[]).length, 0)
+    evaluations: resList.reduce((a,r) => a + ((r.evaluations)||[]).length, 0),
+    auditLog: auditLog.length,
+    viatrajectoire: vts.length,
+    planning_equipe: pe.length,
+    conges: conges.length,
+    budgetEnveloppes: budgetEnveloppes.length,
+    budgetDemandes: budgetDemandes.length,
+    fichesPaie: fichesPaie.length,
+    entretiens: entretiens.length,
+    documentation: documentation.length,
+    admissions: admissions.length,
+    factures: factures.length,
+    formations: formations.length
   };
 }
 
@@ -965,13 +1692,13 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0, formations:0 };
   etabs.forEach((etab, ei) => {
     sessionStorage.setItem('ftr_current_etab', etab.id);
     log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
     const r = generateForCurrentEtab();
     Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex</span>');
+    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations</span>');
   });
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);

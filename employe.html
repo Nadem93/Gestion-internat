@@ -33,6 +33,39 @@ const DOC_CAT_LABELS = {
 let currentEmployeId = null;
 let pageEditMode = false;
 let pageDocFile = null;
+let empPlanningMonth = new Date();
+empPlanningMonth.setDate(1);
+empPlanningMonth.setHours(0,0,0,0);
+
+const PE_TYPES = {
+  matin:       { label: 'Matin',       color: '#f59e0b' },
+  apresmidi:   { label: 'Après-midi',  color: '#3b82f6' },
+  journee:     { label: 'Journée',     color: '#10b981' },
+  nuit:        { label: 'Nuit',        color: '#6366f1' }
+};
+
+function peDuration(debut, fin) {
+  const [h1,m1] = debut.split(':').map(Number);
+  const [h2,m2] = fin.split(':').map(Number);
+  let mins = (h2*60+m2) - (h1*60+m1);
+  if (mins <= 0) mins += 24*60;
+  return mins;
+}
+
+function peFormatDuration(mins) {
+  const h = Math.floor(mins/60), m = Math.round(mins%60);
+  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2,'0')}`;
+}
+
+function peShiftType(debut, fin) {
+  const [h1,m1] = debut.split(':').map(Number);
+  const [h2,m2] = fin.split(':').map(Number);
+  const startMin = h1*60+m1, endMin = h2*60+m2;
+  if (endMin <= startMin || h1 >= 19) return 'nuit';
+  if (peDuration(debut,fin) >= 420 && h1 < 14) return 'journee';
+  if (h1 < 13) return 'matin';
+  return 'apresmidi';
+}
 
 function docTypeIcon(mime) {
   if (!mime) return '📎';
@@ -115,10 +148,160 @@ function renderViewMode(e) {
     </div>
     <div class="tabs" style="margin-bottom:1rem">
       <button class="tab active" data-tab="documents">📎 Documents ${docs.length ? `<span class="badge badge-gray" style="margin-left:.3rem">${docs.length}</span>` : ''}</button>
+      <button class="tab" data-tab="planning">📅 Planning</button>
+      <button class="tab" data-tab="conges">🗓 Congés</button>
+      <button class="tab" data-tab="journal">🕘 Journal</button>
     </div>
-    <div id="tab-documents">${docsHtml(docs)}</div>`;
+    <div id="tab-documents">${docsHtml(docs)}</div>
+    <div id="tab-planning" style="display:none">${empPlanningHtml()}</div>
+    <div id="tab-conges" style="display:none">${empCongesHtml()}</div>
+    <div id="tab-journal" style="display:none">${empJournalHtml(e)}</div>`;
 
   initPageDocUpload();
+  initPageTabs();
+}
+
+function empPlanningHtml() {
+  const shifts = (DB.get(DB.keys.planningEquipe) || []).filter(s => s.employeId === currentEmployeId);
+  const y = empPlanningMonth.getFullYear(), m = empPlanningMonth.getMonth();
+  const prefix = `${y}-${String(m+1).padStart(2,'0')}`;
+  const monthShifts = shifts.filter(s => s.date && s.date.startsWith(prefix)).sort((a,b) => a.date.localeCompare(b.date) || a.debut.localeCompare(b.debut));
+  const totalMin = monthShifts.reduce((sum,s) => sum + peDuration(s.debut, s.fin), 0);
+  const monthLabel = empPlanningMonth.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+  const rows = monthShifts.map(s => {
+    const type = peShiftType(s.debut, s.fin);
+    const t = PE_TYPES[type];
+    const d = new Date(s.date + 'T00:00:00');
+    const dayLabel = d.toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' });
+    return `<tr>
+      <td style="font-weight:600;text-transform:capitalize">${dayLabel}</td>
+      <td><span class="badge" style="background:${t.color}22;color:${t.color}">${t.label}</span></td>
+      <td>${s.debut} – ${s.fin}</td>
+      <td>${peFormatDuration(peDuration(s.debut, s.fin))}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="card">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <span class="card-title">📅 Planning</span>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <button class="btn btn-icon btn-outline btn-sm" onclick="empPlanningShiftMonth(-1)">‹</button>
+        <span style="font-weight:700;font-size:.85rem;text-transform:capitalize;min-width:120px;text-align:center">${monthLabel}</span>
+        <button class="btn btn-icon btn-outline btn-sm" onclick="empPlanningShiftMonth(1)">›</button>
+      </div>
+      <span style="font-size:.8rem;color:var(--muted)">Total : <strong>${peFormatDuration(totalMin)}</strong></span>
+    </div>
+    <div class="card-body" style="padding:0">
+      ${monthShifts.length ? `<table class="table"><thead><tr><th>Jour</th><th>Type</th><th>Horaire</th><th>Durée</th></tr></thead><tbody>${rows}</tbody></table>`
+        : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucun créneau ce mois-ci.</p></div>'}
+    </div>
+  </div>`;
+}
+
+function empPlanningShiftMonth(delta) {
+  empPlanningMonth.setMonth(empPlanningMonth.getMonth() + delta);
+  const tab = document.getElementById('tab-planning');
+  if (tab) tab.innerHTML = empPlanningHtml();
+}
+
+function empCongesHtml() {
+  const TYPE_LABELS = { cp:'Congés payés', rtt:'RTT', maladie:'Arrêt maladie', enfant_malade:'Enfant malade', formation:'Formation', autre:'Autre' };
+  const STATUT_STYLES = { en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' }, accepte: { bg:'#16a34a18', c:'#16a34a', l:'Accepté' }, refuse: { bg:'#ef444418', c:'#ef4444', l:'Refusé' } };
+  const list = (JSON.parse(localStorage.getItem('ftr_conges') || '[]')).filter(d => d.employeId === currentEmployeId);
+  const curYear = new Date().getFullYear();
+  const joursPris = list.filter(d => d.statut === 'accepte' && new Date(d.debut).getFullYear() === curYear)
+    .reduce((sum,d) => sum + (Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1), 0);
+  const rows = list.slice().sort((a,b) => (b.dateDemande||'').localeCompare(a.dateDemande||'')).map(d => {
+    const st = STATUT_STYLES[d.statut] || STATUT_STYLES.en_attente;
+    const jours = Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1;
+    return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${d.type === 'maladie' ? '🤒' : d.type === 'enfant_malade' ? '👶' : d.type === 'formation' ? '📚' : '🗓'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span style="padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
+          <span style="font-size:.7rem;color:var(--g400)">${TYPE_LABELS[d.type]||d.type}</span>
+        </div>
+        <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">${formatDate(d.debut)} → ${formatDate(d.fin)} · ${jours} jour${jours>1?'s':''}</div>
+        ${d.motif ? `<div style="font-size:.75rem;color:var(--g600);margin-top:.25rem">${escHtml(d.motif)}</div>` : ''}
+        ${d.statut === 'refuse' && d.reponseMotif ? `<div style="font-size:.73rem;color:var(--red);margin-top:.15rem">Motif du refus : ${escHtml(d.reponseMotif)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card" style="margin-bottom:1rem">
+    <div class="card-body" style="display:flex;gap:1.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap">
+      <div><div style="font-size:.7rem;color:var(--muted);font-weight:700">JOURS PRIS EN ${curYear}</div><div style="font-size:1.6rem;font-weight:800">${joursPris}</div></div>
+      <button class="btn btn-primary btn-sm" onclick="empOpenDemandeConge()">🗓 Demander un congé</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-header"><span class="card-title">🗓 Demandes de congés</span></div>
+    <div class="card-body" style="padding:0">${list.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune demande.</p></div>'}</div>
+  </div>`;
+}
+
+function empOpenDemandeConge() {
+  const types = [
+    { v:'cp', l:'Congés payés' }, { v:'rtt', l:'RTT' }, { v:'maladie', l:'Arrêt maladie' },
+    { v:'enfant_malade', l:'Enfant malade' }, { v:'formation', l:'Formation' }, { v:'autre', l:'Autre' }
+  ];
+  const tOpts = types.map(t => `<option value="${t.v}">${t.l}</option>`).join('');
+  const html = `<div class="modal-overlay" id="modalEmpConge" style="display:flex" onclick="closeModal('modalEmpConge')">
+    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-header"><span class="modal-title">🗓 Nouvelle demande de congés</span><button class="modal-close" onclick="closeModal('modalEmpConge')">&times;</button></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="form-group"><label>Type *</label><select id="ecType" class="form-input">${tOpts}</select></div>
+        <div class="form-row">
+          <div class="form-group"><label>Date début *</label><input type="date" id="ecDebut" class="form-input"/></div>
+          <div class="form-group"><label>Date fin *</label><input type="date" id="ecFin" class="form-input"/></div>
+        </div>
+        <div class="form-group"><label>Motif</label><textarea id="ecMotif" class="form-input" rows="2" placeholder="Raison de la demande…"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modalEmpConge')">Annuler</button>
+        <button class="btn btn-primary" onclick="empSaveConge()">Envoyer la demande</button>
+      </div>
+    </div>
+  </div>`;
+  const old = document.getElementById('modalEmpConge');
+  if (old) old.remove();
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  document.body.appendChild(div);
+  requestAnimationFrame(() => document.getElementById('modalEmpConge')?.classList.add('open'));
+}
+
+function empSaveConge() {
+  const type = document.getElementById('ecType').value;
+  const debut = document.getElementById('ecDebut').value;
+  const fin = document.getElementById('ecFin').value;
+  const motif = document.getElementById('ecMotif').value.trim();
+  if (!debut || !fin) { toast('Champs obligatoires manquants', 'error'); return; }
+  if (debut > fin) { toast('La date de fin doit être après la date de début', 'error'); return; }
+  const e = getEmploye();
+  const list = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
+  list.push({
+    id: genId(), employeId: currentEmployeId, employeNom: `${e.prenom||''} ${e.nom||''}`.trim(),
+    type, debut, fin, motif, statut: 'en_attente', dateDemande: new Date().toISOString()
+  });
+  localStorage.setItem('ftr_conges', JSON.stringify(list));
+  auditLog('conge', `Nouvelle demande — ${e.prenom||''} ${e.nom||''}`.trim());
+  closeModal('modalEmpConge');
+  toast('Demande de congés envoyée ✓', 'success');
+  const tab = document.getElementById('tab-conges');
+  if (tab) tab.innerHTML = empCongesHtml();
+}
+
+function empJournalHtml(e) {
+  const fullName = `${e.prenom||''} ${e.nom||''}`.trim();
+  const log = (DB.get(DB.keys.auditLog) || []).filter(l => l.user === fullName || (l.details && l.details.includes(fullName)));
+  const rows = log.slice(0, 100).map(l => `<div style="display:flex;gap:.75rem;padding:.6rem 1rem;border-bottom:1px solid var(--border)">
+    <div style="font-size:.72rem;color:var(--muted);min-width:120px;flex-shrink:0">${new Date(l.date).toLocaleString('fr-FR')}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:.85rem">${escHtml(l.action)}</div>
+      ${l.details ? `<div style="font-size:.78rem;color:var(--muted)">${escHtml(l.details)}</div>` : ''}
+    </div>
+  </div>`).join('');
+  return `<div class="card"><div class="card-header"><span class="card-title">🕘 Journal d'activité</span></div>
+    <div class="card-body" style="padding:0">${log.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune activité enregistrée.</p></div>'}</div>
+  </div>`;
 }
 
 function docsHtml(docs) {
@@ -150,7 +333,7 @@ function docsHtml(docs) {
           <div style="font-size:.78rem;color:var(--muted)">PDF, Word, image — max 3 Mo</div>
         </div>
         <input type="file" id="pageDocFileInput" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp"/>
-        <div id="pageDocPending" style="display:none;padding:.75rem 1rem;border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;gap:.75rem">
+        <div id="pageDocPending" style="display:none;padding:.75rem 1rem;border:1px solid var(--border);border-radius:var(--r-sm);align-items:center;gap:.75rem">
           <span style="font-size:1.2rem">📎</span>
           <div style="flex:1;min-width:0">
             <div id="pageDocPendingName" style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
@@ -193,6 +376,9 @@ function renderEditMode(e) {
           ${inputField('eDateEmbauche','Date d\'embauche',e.dateEmbauche,'date')}
           ${inputField('eColor','Couleur',e.color||'var(--primary)','color')}
         </div>
+        <div class="grid grid-2" style="gap:.75rem">
+          ${inputField('eHeuresContrat','Heures contractuelles / semaine',e.heuresContrat ?? 35,'number')}
+        </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6366f1;margin-bottom:.25rem">📝 Notes</div>
         <textarea id="eNotes" class="form-input" rows="4" style="resize:vertical">${escHtml(e.notes||'')}</textarea>
@@ -214,6 +400,7 @@ function savePageEdit() {
     telephone: g('eTel'), email: g('eEmail'),
     dateEmbauche: g('eDateEmbauche'), statut: g('eStatut'),
     color: g('eColor') || '#3b82f6',
+    heuresContrat: parseFloat(g('eHeuresContrat')) || 35,
     notes: g('eNotes'),
     updatedAt: new Date().toISOString()
   };

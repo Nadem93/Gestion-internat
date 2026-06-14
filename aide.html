@@ -75,10 +75,16 @@
           <a href="#s-accueil">Accueil</a>
           <a href="#s-dashboard">Tableau de bord</a>
           <a href="#s-residents">Résidents</a>
+          <a href="#s-chambres">Chambres & repas</a>
+          <a href="#s-quotidien">Vie quotidienne</a>
+          <a href="#s-echeances">Échéancier</a>
           <a href="#s-fiche">Fiche résident</a>
           <a href="#s-journal">Journal</a>
           <a href="#s-avenant">Avenants (PPE)</a>
+          <a href="#s-dossiers">Dossiers & suivi</a>
           <a href="#s-planning">Planning & présences</a>
+          <a href="#s-portail">Portail employé</a>
+          <a href="#s-interventions">Interventions</a>
           <a href="#s-recherche">Recherche & notes</a>
           <a href="#s-admin" class="admin-only">Administration</a>
         </div>
@@ -187,6 +193,82 @@
           </ul>
         </section>
 
+        <!-- CHAMBRES & REPAS -->
+        <section class="help-sec" id="s-chambres">
+          <h2>🛏️ Chambres & repas</h2>
+          <p class="lead">Le quotidien de l'internat : plan d'occupation des chambres, attribution des lits, états des lieux, et gestion des repas avec régimes alimentaires.</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>chambres</span></div>
+            <div class="screen-body">
+              <div class="mk-head">🏢 Unité A <span class="mk-badge" style="margin-left:auto">12 chambres</span></div>
+              <div class="mk-row">
+                <div class="mk-card" style="flex:1;border-left:3px solid #16a34a">Ch. 101<div class="mk-badge" style="margin-top:4px;background:#dcfce7;color:#16a34a">Libre</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #d97706">Ch. 102<div class="mk-badge" style="margin-top:4px;background:#fef3c7;color:#d97706">1/1</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #d97706">Ch. 103<div class="mk-badge" style="margin-top:4px">📋 EDL</div></div>
+              </div>
+              <div class="pin" style="top:80px;left:30px">1<span class="bub">Une carte par chambre : état coloré (libre, complète, sur-occupée), occupants cliquables.</span></div>
+              <div class="pin" style="top:80px;right:60px">2<span class="bub">États des lieux d'entrée et de sortie avec historique par chambre.</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Plan d'occupation</div><div class="lg-desc">Vue par unité/étage. Attribuer un lit met à jour automatiquement la fiche du résident ; les chambres existantes sont importées automatiquement à la première ouverture.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">États des lieux</div><div class="lg-desc">Grille murs / sol / mobilier / literie / sanitaires (Bon, Moyen, Dégradé) avec observations, à l'entrée comme à la sortie. Tout l'historique reste consultable.</div></div></li>
+          </ul>
+          <div class="tip">🍽️ Le module <strong>Repas</strong> fonctionne par jour : tous les résidents actifs sont inscrits midi et soir par défaut, on décoche les absents. La synthèse « Effectifs cuisine par régime » et la feuille imprimable donnent à la cuisine exactement ce dont elle a besoin. Les allergies remontent de la fiche santé.</div>
+        </section>
+
+        <!-- VIE QUOTIDIENNE -->
+        <section class="help-sec" id="s-quotidien">
+          <h2>🏠 Vie quotidienne</h2>
+          <p class="lead">Le hub du quotidien : présences, chambres & repas, visites, cahier de nuit, activités éducatives et distribution des médicaments.</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>vie quotidienne</span></div>
+            <div class="screen-body">
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">✅</span>Présences</div>
+                <div class="mk-tile"><span class="ic">🛏️</span>Chambres</div>
+                <div class="mk-tile"><span class="ic">🍽️</span>Repas</div>
+                <div class="mk-tile"><span class="ic">👪</span>Visites</div>
+              </div>
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">🌙</span>Cahier de nuit</div>
+                <div class="mk-tile"><span class="ic">🎨</span>Activités</div>
+                <div class="mk-tile"><span class="ic">💊</span>Médicaments</div>
+              </div>
+              <div class="pin" style="top:26px;left:20px">1<span class="bub">Chaque carte ouvre un module du quotidien. Seules celles correspondant à vos droits s'affichent.</span></div>
+              <div class="pin" style="bottom:20px;left:calc(50% - 6px)">2<span class="bub">Le pointage des présences alimente directement la facturation et les statistiques d'occupation.</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Présences</div><div class="lg-desc">Pointez chaque résident jour par jour (présent / absent / sorti). Ces données servent ensuite à générer les factures (prix de journée) et les statistiques d'occupation.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Visites, cahier de nuit, activités & médicaments</div><div class="lg-desc">Suivi des visites de la famille, observations du veilleur de nuit, programmation des activités éducatives (ateliers, sorties) et suivi de la distribution des médicaments.</div></div></li>
+          </ul>
+          <div class="tip">💡 Les modules « Chambres & repas » ont leur propre section détaillée ci-dessus.</div>
+        </section>
+
+        <!-- ÉCHÉANCIER -->
+        <section class="help-sec" id="s-echeances">
+          <h2>⏰ Échéancier administratif</h2>
+          <p class="lead">Les renouvellements à ne jamais manquer : MDPH, jugements, pièces d'identité, CSS, contrats de séjour…</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>échéancier</span></div>
+            <div class="screen-body">
+              <div class="mk-row">
+                <div class="mk-card" style="flex:1;border-left:3px solid #dc2626;text-align:center">En retard<div style="font-weight:800;color:#dc2626">2</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #d97706;text-align:center">Sous 30 j<div style="font-weight:800;color:#d97706">5</div></div>
+                <div class="mk-card" style="flex:1;border-left:3px solid #0891b2;text-align:center">Sous 90 j<div style="font-weight:800;color:#0891b2">8</div></div>
+              </div>
+              <div class="mk-card" style="border-left:3px solid #dc2626">🧾 Renouvellement MDPH — <span style="color:#dc2626;font-weight:700">12 j de retard</span></div>
+              <div class="pin" style="top:30px;left:30px">1<span class="bub">Tri automatique par urgence : retard (rouge), sous 30 jours (orange), sous 90 jours (cyan).</span></div>
+              <div class="pin" style="bottom:30px;left:30px">2<span class="bub">Chaque échéance est liée au résident, avec compte des jours restants et bouton « traité ✓ ».</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Alertes par urgence</div><div class="lg-desc">Le tableau de bord affiche aussi une carte « Échéances urgentes » dès qu'une échéance approche ou est dépassée — impossible de manquer un renouvellement.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Suivi par résident</div><div class="lg-desc">Types métier : notification MDPH, jugement/mesure, pièce d'identité, CSS/mutuelle, contrat de séjour, révision PPE, visite médicale. Filtrable par résident et par type.</div></div></li>
+          </ul>
+        </section>
+
         <!-- FICHE RESIDENT -->
         <section class="help-sec" id="s-fiche">
           <h2>🗂️ Fiche résident</h2>
@@ -260,6 +342,36 @@
           </ul>
         </section>
 
+        <!-- DOSSIERS & SUIVI -->
+        <section class="help-sec" id="s-dossiers">
+          <h2>📂 Dossiers & suivi</h2>
+          <p class="lead">Le hub des dossiers transversaux : admissions, avenants, documents, échéancier, ViaTrajectoire, répertoire, registre EIG et vie sociale (CVS).</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>dossiers & suivi</span></div>
+            <div class="screen-body">
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">🧑‍🤝‍🧑</span>Admissions</div>
+                <div class="mk-tile"><span class="ic">📄</span>Avenants</div>
+                <div class="mk-tile"><span class="ic">📎</span>Documents</div>
+                <div class="mk-tile"><span class="ic">⏰</span>Échéancier</div>
+              </div>
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">🧭</span>ViaTrajectoire</div>
+                <div class="mk-tile"><span class="ic">📇</span>Répertoire</div>
+                <div class="mk-tile"><span class="ic">🚨</span>Registre EIG</div>
+                <div class="mk-tile"><span class="ic">🤝</span>CVS</div>
+              </div>
+              <div class="pin" style="top:26px;left:20px">1<span class="bub">Chaque carte ouvre un module de suivi. Seules celles correspondant à vos droits s'affichent.</span></div>
+              <div class="pin" style="bottom:20px;left:calc(50% - 6px)">2<span class="bub">Admissions : gérez la liste d'attente des candidats avant leur entrée à l'internat.</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Admissions / liste d'attente</div><div class="lg-desc">Enregistrez les candidats en attente d'admission (coordonnées, situation, organisme orienteur). Suivez leur statut (en attente, admis, refusé) ; un candidat admis peut être transformé directement en fiche résident.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">ViaTrajectoire, répertoire, EIG & CVS</div><div class="lg-desc">ViaTrajectoire pour le suivi des orientations, le répertoire des contacts utiles, le registre des événements indésirables graves (EIG), et le suivi du Conseil de la Vie Sociale (CVS).</div></div></li>
+          </ul>
+          <div class="tip">💡 Les avenants (PPE) et l'échéancier ont leur propre section détaillée ci-dessus.</div>
+        </section>
+
         <!-- PLANNING -->
         <section class="help-sec" id="s-planning">
           <h2>📅 Planning & présences</h2>
@@ -279,6 +391,63 @@
             <li><span class="num">1</span><div><div class="lg-title">Ajout & synchronisation</div><div class="lg-desc">Cliquez un jour pour ajouter un RDV, une activité ou une réservation de véhicule. Un RDV médical saisi ici apparaît automatiquement dans la fiche du résident concerné (et inversement).</div></div></li>
           </ul>
           <div class="tip">✅ Le module Présences permet de pointer chaque résident (présent / absent / sorti) jour par jour.</div>
+        </section>
+
+        <!-- PORTAIL EMPLOYÉ -->
+        <section class="help-sec" id="s-portail">
+          <h2>💼 Portail employé</h2>
+          <p class="lead">Votre espace personnel : planning d'équipe, congés, notes, messages, documentation, budget, paie, entretiens, annuaire, facturation et plan de formation.</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>portail employé</span></div>
+            <div class="screen-body">
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">📆</span>Planning équipe</div>
+                <div class="mk-tile"><span class="ic">🏖️</span>Congés</div>
+                <div class="mk-tile"><span class="ic">🗒️</span>Notes</div>
+                <div class="mk-tile"><span class="ic">💬</span>Messages</div>
+              </div>
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">📚</span>Documentation</div>
+                <div class="mk-tile"><span class="ic">💰</span>Budget</div>
+                <div class="mk-tile"><span class="ic">🧾</span>Paie</div>
+                <div class="mk-tile"><span class="ic">🧑‍💼</span>Entretiens</div>
+              </div>
+              <div class="mk-row">
+                <div class="mk-tile"><span class="ic">📇</span>Annuaire</div>
+                <div class="mk-tile"><span class="ic">💳</span>Facturation</div>
+                <div class="mk-tile"><span class="ic">🎓</span>Formations</div>
+              </div>
+              <div class="pin" style="top:26px;left:20px">1<span class="bub">Chaque carte ouvre un module du portail. Seules celles correspondant à vos droits s'affichent.</span></div>
+              <div class="pin" style="bottom:16px;right:18px">2<span class="bub">Congés : déposez une demande, votre responsable la valide ou la refuse.</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Planning équipe & congés</div><div class="lg-desc">Consultez le planning de toute l'équipe et déposez vos demandes de congés. Chaque demande suit un circuit de validation par la hiérarchie.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Notes, messages & documentation</div><div class="lg-desc">Bloc-notes partagé, messagerie interne entre collègues, et documentation de l'établissement (protocoles, procédures, fichiers utiles).</div></div></li>
+            <li><span class="num">3</span><div><div class="lg-title">Budget, paie, entretiens & annuaire</div><div class="lg-desc">Suivi du budget et des dépenses, consultation des fiches de paie, comptes-rendus d'entretiens professionnels périodiques et annuaire de tout le personnel.</div></div></li>
+            <li><span class="num">4</span><div><div class="lg-title">Facturation & plan de formation</div><div class="lg-desc">Facturation : définissez les tarifs (prix de journée) par catégorie, rattachez chaque résident à un organisme payeur, et générez chaque mois les factures à partir des présences. Plan de formation : recensez et suivez les formations du personnel (organisme, domaine, dates, coût, statut et participants).</div></div></li>
+          </ul>
+          <div class="tip">🔒 Les fiches de paie ne sont visibles que par leur titulaire et les administrateurs.</div>
+        </section>
+
+        <!-- INTERVENTIONS -->
+        <section class="help-sec" id="s-interventions">
+          <h2>🔧 Interventions</h2>
+          <p class="lead">Signalez un problème technique (maintenance, réparation) et suivez son traitement jusqu'à sa résolution.</p>
+          <div class="screen">
+            <div class="screen-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>interventions</span></div>
+            <div class="screen-body">
+              <div class="mk-card" style="border-left:3px solid #ef4444;margin-bottom:8px">🚨 Chambre 104 — <span class="mk-badge" style="background:#fee2e2;color:#ef4444">critique</span> <span class="mk-badge" style="margin-left:6px;background:#fef3c7;color:#d97706">En attente</span></div>
+              <div class="mk-card" style="border-left:3px solid #94a3b8;opacity:.75">⬇ Couloir étage — <span class="mk-badge">basse</span> <span class="mk-badge badge-green" style="margin-left:6px">✔ Fait</span></div>
+              <div class="pin" style="top:30px;left:24px">1<span class="bub">Niveau d'urgence : basse, normale, haute ou critique — code couleur et icône associés.</span></div>
+              <div class="pin" style="bottom:24px;left:24px">2<span class="bub">Le technicien joint une photo des travaux réalisés pour clôturer ; un administrateur peut aussi marquer « Fait » sans photo.</span></div>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><span class="num">1</span><div><div class="lg-title">Signalement</div><div class="lg-desc">Chaque demande indique le lieu, une description du problème, le niveau d'urgence, la date et la personne qui a signalé. Accessible aux administrateurs et aux techniciens de maintenance.</div></div></li>
+            <li><span class="num">2</span><div><div class="lg-title">Traitement & clôture</div><div class="lg-desc">Une intervention « en attente » passe à « fait » lorsqu'une photo des travaux (avec commentaire) est jointe, ou directement par un administrateur.</div></div></li>
+          </ul>
+          <div class="tip">💡 N'importe qui peut signaler une intervention via le bouton flottant de la page d'accueil (voir section « Accueil »).</div>
         </section>
 
         <!-- RECHERCHE / NOTES -->

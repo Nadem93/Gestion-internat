@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
-    .mini-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.5rem}
+    .mini-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.85rem;margin-bottom:1.5rem}
     .mini-card{display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:inherit;background:#f1f5f9;border:1px solid rgba(15,43,74,.08);border-radius:14px;padding:1rem 1.15rem;box-shadow:0 1px 3px rgba(15,43,74,.06);transition:box-shadow .2s,transform .2s;min-width:0;min-height:96px}
     a.mini-card:hover{box-shadow:0 6px 16px rgba(15,43,74,.1);transform:translateY(-2px)}
     .mini-card .mc-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:flex;align-items:center;gap:.4rem}
@@ -56,6 +56,17 @@
           <div class="mc-label" style="color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg>Véhicules du jour</div>
           <div class="mc-val" id="miniVehVal">0</div>
           <div class="mc-sub" id="miniVehSub">Réservés aujourd'hui</div>
+        </a>
+        <a href="echeances.html" class="mini-card" id="miniEcheanceCard" title="Échéancier administratif">
+          <div class="mc-label" style="color:#0369a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>Échéances urgentes</div>
+          <div class="mc-val" id="miniEcheanceVal">0</div>
+          <div class="mc-sub" id="miniEcheanceSub">Sous 30 jours</div>
+          <div class="mc-alert" id="miniEcheanceAlert" style="display:none">⚠ Échéances en retard</div>
+        </a>
+        <a href="repas.html" class="mini-card" id="miniRepasCard" title="Repas du jour">
+          <div class="mc-label" style="color:#ea580c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Repas du jour</div>
+          <div class="mc-val" id="miniRepasVal">0</div>
+          <div class="mc-sub" id="miniRepasSub">couverts midi / soir</div>
         </a>
       </div>
 
@@ -442,6 +453,25 @@
     setText('miniVehVal', vehToday.length);
     setText('miniVehSub', vehToday.length ? [...new Set(vehToday.map(v => v.vehicule).filter(Boolean))].join(', ') : 'Aucun aujourd\'hui');
 
+    // Échéances administratives urgentes (retard + sous 30 j)
+    const echList = (DB.keys.echeances ? (DB.get(DB.keys.echeances) || []) : []).filter(e => !e.done);
+    const echLate = echList.filter(e => (e.date || '') < todayStr).length;
+    const echSoon = echList.filter(e => {
+      if ((e.date || '') < todayStr) return false;
+      return Math.ceil((new Date(e.date) - new Date(todayStr)) / 86400000) <= 30;
+    }).length;
+    setText('miniEcheanceVal', echLate + echSoon);
+    setText('miniEcheanceSub', echLate ? `${echLate} en retard · ${echSoon} sous 30 j` : 'Sous 30 jours');
+    const echAlert = document.getElementById('miniEcheanceAlert');
+    if (echAlert) echAlert.style.display = echLate ? '' : 'none';
+
+    // Repas du jour (inscrits par défaut sauf décochés)
+    const repasAll = (DB.keys.repas ? (DB.get(DB.keys.repas) || {}) : {});
+    const repasDay = repasAll[todayStr] || {};
+    const actifs = allResidents.filter(r => r.statut !== 'sorti');
+    const cnt = m => actifs.filter(r => { const v = (repasDay[m] || {})[r.id]; return v === undefined ? true : !!v; }).length;
+    setText('miniRepasVal', `${cnt('midi')} / ${cnt('soir')}`);
+
     // Résidents sans avenant actif
     const ppeList = DB.get(DB.keys.ppe) || [];
     const residentsWithPpe = new Set(ppeList.filter(p => p.statut === 'actif').map(p => p.residentId));
@@ -631,6 +661,8 @@
     hideIf('miniPresenceCard', 'access_presences');
     hideIf('miniVehCard', 'access_vehicules');
     hideIf('miniAnnivCard', 'view_residents');
+    hideIf('miniEcheanceCard', 'view_residents');
+    hideIf('miniRepasCard', 'view_residents');
     hideIf('dashCardJournal', 'access_journal');
     hideIf('dashCardAvenants', 'access_ppe');
     hideIf('dashCardSansAvenant', 'access_ppe');

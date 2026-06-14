@@ -256,6 +256,18 @@
     <div style="font-size:.7rem;color:var(--muted)" id="c4sub">non traités</div>
     <span class="stat-circ-badge scb-red" id="c4badge">—</span>
   </div>
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c5bar" cx="44" cy="44" r="36" stroke="#8b5cf6" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label" style="font-size:.9rem"><span id="c5val">0</span></div>
+    </div>
+    <div class="stat-circ-name">SERAFIN-PH</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c5sub">résidents évalués</div>
+    <span class="stat-circ-badge scb-violet" id="c5badge">—</span>
+  </div>
 </div>
 
 <!-- ══════════ DETAIL STATS ══════════ -->
@@ -294,6 +306,16 @@
       <div class="qstat-row"><span class="qstat-label">Véhicules réservés</span><span class="qstat-value" id="qVehi">—</span></div>
       <div class="qstat-row"><span class="qstat-label">Messages non lus</span><span class="qstat-value" id="qMessages">—</span></div>
       <div class="qstat-row"><span class="qstat-label">Documents stockés</span><span class="qstat-value" id="qDocs">—</span></div>
+    </div>
+  </div>
+  <div class="sdcard">
+    <div class="sdcard-head"><span class="sdcard-title">🧬 SERAFIN-PH</span></div>
+    <div class="sdcard-body">
+      <div class="qstat-row"><span class="qstat-label">Résidents évalués</span><span class="qstat-value" id="spEvalues" style="color:var(--accent)">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">GMPS moyen</span><span class="qstat-value" id="spGmps" style="color:var(--primary)">—</span></div>
+      <div class="qstat-row"><span class="qstat-label">Score total cumulé</span><span class="qstat-value" id="spScore" style="color:var(--primary)">—</span></div>
+      <div id="spBars" style="margin-top:.75rem"></div>
+      <div id="spNiveau" style="margin-top:.5rem"></div>
     </div>
   </div>
 </div>
@@ -498,6 +520,12 @@
     <div class="role-grid" id="fonctionList"></div>
   </div>
 
+  <!-- ═══ SÉGUR / CONFORMITÉ ═══ -->
+  <div id="tab-segur" class="admin-panel" style="display:none">
+    <div class="panel-header"><div><div class="panel-title">🛡️ Ségur</div><div class="panel-sub">Préparation à l'interopérabilité : DMP, INS, MSSanté, Pro Santé Connect</div></div></div>
+    <div id="segurDashboard" style="display:flex;flex-direction:column;gap:1rem"></div>
+  </div>
+
   <!-- ═══ MON COMPTE ═══ -->
   <div id="tab-compte" class="admin-panel" style="display:none">
     <div class="panel-header"><div><div class="panel-title">Mon compte</div><div class="panel-sub">Informations personnelles et identifiants</div></div></div>
@@ -521,9 +549,35 @@
   <div id="tab-donnees" class="admin-panel" style="display:none">
     <div class="panel-header"><div><div class="panel-title">Données &amp; historique</div><div class="panel-sub">Export, réinitialisation et journal des connexions</div></div></div>
     <div class="grid grid-2" style="gap:1.5rem;align-items:start">
+      <div class="card"><div class="card-header"><span class="card-title">Conformité RGPD / HDS</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.65rem">
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
+          <span style="font-size:1.1rem">✅</span>
+          <span>Consentement des résidents — <strong>champ présent</strong> dans les fiches</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
+          <span style="font-size:1.1rem">✅</span>
+          <span>Droit d'accès &amp; d'export — <strong>bouton Export</strong> dans chaque fiche résident</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
+          <span style="font-size:1.1rem">✅</span>
+          <span>Droit à l'effacement — <strong>Anonymisation</strong> disponible dans chaque fiche</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
+          <span style="font-size:1.1rem">✅</span>
+          <span>Journal d'accès — <strong>audit log</strong> actif (onglet Données ci-dessous)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#fffbeb;border-radius:var(--r-sm);border:1px solid #d9770630;font-size:.78rem;color:#92400e">
+          <span style="font-size:1.1rem">⚠️</span>
+          <span>Hébergement HDS — <strong>non certifié</strong> (données stockées localement dans le navigateur). Hébergement professionnel recommandé.</span>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);line-height:1.5;margin-top:.25rem">
+          🔐 Les données de santé sont stockées exclusivement dans le <strong>localStorage</strong> du navigateur. Aucune transmission externe.
+          Pour une conformité HDS complète, déployez l'application sur un <strong>serveur certifié HDS</strong> (hébergement professionnel de données de santé).
+        </div>
+      </div></div>
       <div class="card"><div class="card-header"><span class="card-title">Sauvegarde &amp; restauration</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
         <div style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)">
-          💡 Sauvegardez régulièrement vos données. En cas de réinitialisation du navigateur, elles seraient perdues.
+          💡 Sauvegardez régulièrement vos données. En cas de réinitialisation du navigateur, elles seraient perdues. Le « backup complet » couvre désormais tous les modules (résidents, équipe, planning, budget, paie, entretiens, annuaire, documentation, etc.).
         </div>
         <button class="btn btn-outline" onclick="exportData('residents')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -649,9 +703,9 @@
 const PANEL_NAMES = {
   stats:'Statistiques', etablissement:'Établissement & personnalisation',
   fonctions:'Catégories & Objectifs',
-  employes:'Employés', educateurs:'Utilisateurs', permissions:'Permissions', compte:'Mon compte', donnees:'Données'
+  employes:'Employés', educateurs:'Utilisateurs', permissions:'Permissions', segur:'Ségur / Conformité', compte:'Mon compte', donnees:'Données'
 };
-const ALL_TABS = ['stats','etablissement','fonctions','employes','educateurs','permissions','compte','donnees'];
+const ALL_TABS = ['stats','etablissement','fonctions','employes','educateurs','permissions','segur','compte','donnees'];
 
 function adminNav(btn) { activateTab(btn.dataset.tab); }
 
@@ -870,6 +924,7 @@ function refreshAllStats() {
   renderKeyStats(residents, presences, incidents);
   renderPpeBars();
   renderDocBars();
+  renderSerafinphStats();
 }
 
 function renderKeyStats(residents, presences, incidents) {
@@ -1071,6 +1126,27 @@ function genererRapportPDF() {
   const protDist = {};
   activeRes.forEach(r => { const p = protLabels[r.protection] || r.protection || 'Non renseigné'; protDist[p] = (protDist[p] || 0) + 1; });
 
+  // ── SERAFIN-PH ──
+  const withSp = activeRes.filter(r => (r.serafinph?.selected||[]).length > 0);
+  const allScores = withSp.map(r => {
+    const sp = r.serafinph || {};
+    const selected = sp.selected || [];
+    const prestations = {};
+    selected.forEach(code => { prestations[code] = (sp.prestations?.[code]?.niveau) || 0; });
+    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations, selected };
+  });
+  const gmps = allScores.length ? (allScores.reduce((a, s) => a + (s.selected.length ? s.total / s.selected.length : 0), 0) / allScores.length).toFixed(1) : null;
+  const spNivRepart = [0, 0, 0, 0, 0];
+  allScores.forEach(s => Object.values(s.prestations).forEach(n => spNivRepart[n]++));
+  const spByPrest = {};
+  SP_NOMENCLATURE.forEach(p => {
+    const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);
+    if (niveaux.length) {
+      const moy = niveaux.reduce((a, n) => a + n, 0) / niveaux.length;
+      spByPrest[p.label] = Math.round(moy * 10) / 10;
+    }
+  });
+
   // Tables HTML
   const barTable = (obj, color) => {
     const entries = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
@@ -1163,6 +1239,8 @@ function genererRapportPDF() {
   ${kpi(iPeriod.length, 'Incidents déclarés')}
   ${kpi(avCrees, 'Avenants rédigés')}
   ${kpi(nbObjAtteints, 'Objectifs atteints')}
+  ${kpi(gmps != null ? gmps : '—', 'GMPS moyen')}
+  ${kpi(withSp.length + '/' + activeRes.length, 'Résidents évalués SERAFIN-PH')}
 </div>
 ${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accueil » dans Administration → Établissement pour calculer le taux d\'occupation.</p>'}
 
@@ -1194,6 +1272,14 @@ ${svgHBar(jByCat, '#e85d04')}
 
 <h2>Accompagnement</h2>
 <p class="note"><strong>${nbEvals}</strong> évaluation${nbEvals > 1 ? 's' : ''} d'autonomie réalisée${nbEvals > 1 ? 's' : ''} · <strong>${nbObjAtteints}</strong> objectif${nbObjAtteints > 1 ? 's' : ''} marqué${nbObjAtteints > 1 ? 's' : ''} comme atteint${nbObjAtteints > 1 ? 's' : ''} · <strong>${nbSorties}</strong> sortie${nbSorties > 1 ? 's' : ''} / permission${nbSorties > 1 ? 's' : ''} enregistrée${nbSorties > 1 ? 's' : ''}.</p>
+
+<h2>Profil SERAFIN-PH</h2>
+<p class="note"><strong>${withSp.length}</strong> résident${withSp.length > 1 ? 's' : ''} évalué${withSp.length > 1 ? 's' : ''} sur <strong>${activeRes.length}</strong> résident${activeRes.length > 1 ? 's' : ''} présents · GMPS moyen : <strong>${gmps != null ? gmps : '—'}</strong> · Score total cumulé : <strong>${allScores.reduce((a, s) => a + s.total, 0)}</strong>.</p>
+${withSp.length ? `<div style="display:flex;gap:.4cm;flex-wrap:wrap;margin-bottom:.3cm">
+  <div style="flex:1;min-width:260px"><div class="chart-title">Moyenne par prestation</div>${svgHBar(spByPrest, '#8b5cf6', true)}</div>
+  <div style="flex:0 0 auto"><div class="chart-title">Répartition des niveaux</div>${svgDonut([{ label: 'Niveau 0 (Nul)', value: spNivRepart[0], color: '#d1d5db' }, { label: 'Niveau 1 (Faible)', value: spNivRepart[1], color: '#22c55e' }, { label: 'Niveau 2 (Modéré)', value: spNivRepart[2], color: '#eab308' }, { label: 'Niveau 3 (Important)', value: spNivRepart[3], color: '#f97316' }, { label: 'Niveau 4 (Très important)', value: spNivRepart[4], color: '#ef4444' }], 'niveaux')}</div>
+</div>
+<p class="note">Les niveaux SERAFIN-PH vont de 0 (aucun besoin) à 4 (besoin très important). Les prestations directes concernent la relation avec la personne accompagnée, les prestations indirectes le fonctionnement de l'établissement.</p>` : '<p class="empty-line">Aucune évaluation SERAFIN-PH renseignée pour la période.</p>'}
 
 <div class="footer">${escHtml(settings.etablissement || 'Établissement')} · Rapport d'activité ${escHtml(label)} · Document interne</div>
 </body></html>`);
@@ -1320,6 +1406,53 @@ function renderDocBars() {
   const data = {}, colorMap = {};
   Object.entries(counts).forEach(([cat, c]) => { const lbl = catLabels[cat] || cat; data[lbl] = c; colorMap[lbl] = catColors[cat] || '#94a3b8'; });
   el.innerHTML = svgHBar(data, '#3b82f6', false, colorMap);
+}
+
+function renderSerafinphStats() {
+  const residents = DB.get(DB.keys.residents) || [];
+  const actifs = residents.filter(r => r.statut !== 'sorti');
+  const withSp = actifs.filter(r => (r.serafinph?.selected||[]).length > 0);
+  const allScores = withSp.map(r => {
+    const sp = r.serafinph || {};
+    const selected = sp.selected || [];
+    const prestations = {};
+    selected.forEach(code => { prestations[code] = (sp.prestations?.[code]?.niveau) || 0; });
+    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations, selected };
+  });
+  const gmps = allScores.length ? (allScores.reduce((a, s) => a + (s.selected.length ? s.total / s.selected.length : 0), 0) / allScores.length).toFixed(1) : null;
+  const totalScore = allScores.reduce((a, s) => a + s.total, 0);
+  document.getElementById('spEvalues').textContent = withSp.length > 0 ? `${withSp.length} / ${actifs.length}` : '—';
+  document.getElementById('spGmps').textContent = gmps != null ? gmps : '—';
+  document.getElementById('spScore').textContent = totalScore > 0 ? totalScore : '—';
+  document.getElementById('c5val').textContent = withSp.length;
+  document.getElementById('c5sub').textContent = `${withSp.length} / ${actifs.length}`;
+  const pct = actifs.length > 0 ? Math.round((withSp.length / actifs.length) * 100) : 0;
+  setCirc('c5bar', pct);
+  const c5b = document.getElementById('c5badge');
+  if (pct >= 80) { c5b.textContent = 'Optimal'; c5b.className = 'stat-circ-badge scb-violet'; }
+  else if (pct >= 40) { c5b.textContent = 'Partiel'; c5b.className = 'stat-circ-badge scb-yellow'; }
+  else { c5b.textContent = 'À évaluer'; c5b.className = 'stat-circ-badge scb-red'; }
+  const spByPrest = {};
+  SP_NOMENCLATURE.forEach(p => {
+    const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);
+    if (!niveaux.length) return;
+    const moy = niveaux.reduce((a, n) => a + n, 0) / niveaux.length;
+    spByPrest[p.label] = Math.round(moy * 10) / 10;
+  });
+  const barsEl = document.getElementById('spBars');
+  if (barsEl) barsEl.innerHTML = svgHBar(spByPrest, '#8b5cf6', true);
+  const spNivRepart = [0, 0, 0, 0, 0];
+  allScores.forEach(s => Object.values(s.prestations).forEach(n => spNivRepart[n]++));
+  const niveauxEl = document.getElementById('spNiveau');
+  if (niveauxEl && spNivRepart.some(v => v > 0)) {
+    niveauxEl.innerHTML = svgDonut([
+      { label: 'Niveau 0 (Nul)', value: spNivRepart[0], color: '#d1d5db' },
+      { label: 'Niveau 1 (Faible)', value: spNivRepart[1], color: '#22c55e' },
+      { label: 'Niveau 2 (Modéré)', value: spNivRepart[2], color: '#eab308' },
+      { label: 'Niveau 3 (Important)', value: spNivRepart[3], color: '#f97316' },
+      { label: 'Niveau 4 (Très important)', value: spNivRepart[4], color: '#ef4444' }
+    ], 'niveaux');
+  }
 }
 
 function renderPresenceChart(residents, presences, freq) {
@@ -1489,6 +1622,134 @@ function adminCreateEtab() {
 }
 function adminDeleteEtab(id) { confirmDialog('Supprimer cet établissement et toutes ses données ?', () => { deleteEtab(id); renderEtabAdminList(); toast('Établissement supprimé', 'info'); }); }
 
+function seedSegurExemples() {
+  const residents = DB.get(DB.keys.residents) || [];
+  let changed = false;
+  residents.forEach(r => {
+    if (!r.ins && Math.random() < 0.6) { r.ins = '9' + String(Math.floor(Math.random() * 9e13 + 1e13)); changed = true; }
+    if (!r.nss && Math.random() < 0.7) { r.nss = '1' + String(Math.floor(Math.random() * 9e12 + 1e12)); changed = true; }
+    if (!r.dmp) { r.dmp = ['actif','en_attente','non_ouvert'][Math.floor(Math.random() * 3)]; changed = true; }
+    if (!r.consent) { r.consent = ['oui','non','en_attente'][Math.floor(Math.random() * 3)]; changed = true; }
+  });
+  if (changed) DB.set(DB.keys.residents, residents);
+}
+
+function renderSegurDashboard() {
+  seedSegurExemples();
+  const residents = DB.get(DB.keys.residents) || [];
+  const rAvecINS = residents.filter(r => r.ins && r.ins.trim());
+  const rAvecDMP = residents.filter(r => r.dmp === 'actif');
+  const rAvecConsent = residents.filter(r => r.consent === 'oui');
+  const rAvecNSS = residents.filter(r => r.nss && r.nss.trim());
+
+  const total = residents.length;
+  const pct = (n) => total ? Math.round(n / total * 100) : 0;
+
+  const card = (icon, title, score, details, color) => `<div class="card"><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span style="font-size:1.8rem">${icon}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:.95rem">${title}</div>
+        <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem">
+          <div style="flex:1;height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden">
+            <div style="width:${score}%;height:100%;background:${color||'#16a34a'};border-radius:99px;transition:width .6s ease"></div>
+          </div>
+          <span style="font-size:.78rem;font-weight:700;color:${color||'#16a34a'};white-space:nowrap">${score}%</span>
+        </div>
+      </div>
+    </div>
+    ${details ? `<div style="font-size:.8rem;color:var(--g600);line-height:1.6">${details}</div>` : ''}
+  </div></div>`;
+
+  const segurConfig = JSON.parse(localStorage.getItem('ftr_segur_config') || '{}');
+  const mssante = segurConfig.mssante || '';
+  const proSante = segurConfig.proSanteConnect || '';
+  const autoLock = localStorage.getItem('ftr_auto_lock') !== 'off';
+
+  document.getElementById('segurDashboard').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      ${card('🆔', 'INS (Identifiant National de Santé)', pct(rAvecINS.length),
+        `${rAvecINS.length}/${total} résidents avec INS renseigné.` + (pct(rAvecINS.length) < 80 ? ` <span style="color:#d97706">Objectif : >80%</span>` : ''),
+        pct(rAvecINS.length) >= 80 ? '#16a34a' : pct(rAvecINS.length) >= 40 ? '#d97706' : '#ef4444')}
+      ${card('📋', 'DMP (Dossier Médical Partagé)', pct(rAvecDMP.length),
+        `${rAvecDMP.length}/${total} DMP actifs.` + (pct(rAvecDMP.length) < 50 ? ` <span style="color:#d97706">Objectif : >50%</span>` : ''),
+        pct(rAvecDMP.length) >= 50 ? '#16a34a' : pct(rAvecDMP.length) >= 20 ? '#d97706' : '#ef4444')}
+      ${card('✍️', 'Consentement partage données santé', pct(rAvecConsent.length),
+        `${rAvecConsent.length}/${total} consentements donnés.`,
+        pct(rAvecConsent.length) >= 80 ? '#16a34a' : pct(rAvecConsent.length) >= 40 ? '#d97706' : '#ef4444')}
+      ${card('🔢', 'NIR (Numéro d\'Inscription au Répertoire)', pct(rAvecNSS.length),
+        `${rAvecNSS.length}/${total} NIR renseignés.`,
+        pct(rAvecNSS.length) >= 80 ? '#16a34a' : pct(rAvecNSS.length) >= 40 ? '#d97706' : '#ef4444')}
+    </div>
+
+    <div class="card"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-weight:700;font-size:.9rem">🔌 Services d'interopérabilité</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openSegurConfig()">✎ Configurer</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div style="padding:.85rem;border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
+            <span style="font-size:1.1rem">📧</span>
+            <span style="font-weight:600;font-size:.82rem">MSSanté</span>
+            <span style="margin-left:auto;padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${mssante?'#16a34a18':'#e2e8f0'};color:${mssante?'#16a34a':'#94a3b8'}">${mssante?'Configuré':'Non configuré'}</span>
+          </div>
+          <div style="font-size:.74rem;color:var(--muted)">${mssante ? escHtml(mssante) : 'Adresse MSSanté non renseignée'}</div>
+        </div>
+        <div style="padding:.85rem;border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
+            <span style="font-size:1.1rem">🔐</span>
+            <span style="font-weight:600;font-size:.82rem">Pro Santé Connect</span>
+            <span style="margin-left:auto;padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${proSante?'#16a34a18':'#e2e8f0'};color:${proSante?'#16a34a':'#94a3b8'}">${proSante?'Configuré':'Non configuré'}</span>
+          </div>
+          <div style="font-size:.74rem;color:var(--muted)">${proSante ? 'Client ID : '+escHtml(proSante) : 'Aucun client configuré'}</div>
+        </div>
+      </div>
+      <div style="padding:.85rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534;line-height:1.6">
+        <strong>ℹ️ Certification Ségur Vague 2</strong><br>
+        L'intégration pleine aux services DMP, MSSanté, INS et Pro Santé Connect nécessite une certification auprès de l'ANS (Agence du Numérique en Santé).
+        Les champs ci-dessus permettent de préparer la structure des données en interne.<br>
+        <span style="font-weight:600">Modules préparés :</span> INS · DMP · Consentement · NIR · MSSanté · Pro Santé Connect
+      </div>
+    </div></div>
+  `;
+}
+
+function openSegurConfig() {
+  const cfg = JSON.parse(localStorage.getItem('ftr_segur_config') || '{}');
+  const html = `
+    <div class="modal-overlay" id="modalSegurConfig" style="display:flex" onclick="closeModal('modalSegurConfig')">
+      <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+        <div class="modal-header"><span class="modal-title">🔌 Configuration Ségur</span><button class="modal-close" onclick="closeModal('modalSegurConfig')">&times;</button></div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+          <div class="form-group"><label>Adresse MSSanté (messagerie sécurisée de santé)</label>
+            <input type="email" id="segurMssante" class="form-control" placeholder="prenom.nom@mssante.fr" value="${escHtml(cfg.mssante||'')}"/></div>
+          <div class="form-group"><label>Client ID Pro Santé Connect</label>
+            <input type="text" id="segurProSante" class="form-control" placeholder="ID client fourni par l'ANS" value="${escHtml(cfg.proSanteConnect||'')}"/></div>
+          <div style="font-size:.75rem;color:var(--muted);line-height:1.5">
+            Ces paramètres sont stockés localement et servent de préparation avant la certification officielle.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('modalSegurConfig')">Annuler</button>
+          <button class="btn btn-primary" onclick="saveSegurConfig()">Enregistrer</button>
+        </div>
+      </div>
+    </div>`;
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  document.body.appendChild(div);
+}
+
+function saveSegurConfig() {
+  const mssante = document.getElementById('segurMssante').value.trim();
+  const proSanteConnect = document.getElementById('segurProSante').value.trim();
+  localStorage.setItem('ftr_segur_config', JSON.stringify({ mssante, proSanteConnect }));
+  closeModal('modalSegurConfig');
+  toast('Configuration Ségur enregistrée', 'success');
+  renderSegurDashboard();
+}
+
 function activateTab(name) {
   if (!ALL_TABS.includes(name)) name = 'stats';
   document.querySelectorAll('.admin-nav-card').forEach(i => i.classList.toggle('active', i.dataset.tab === name));
@@ -1499,6 +1760,7 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
+  if (name === 'segur') renderSegurDashboard();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
   const strip = document.getElementById('statsStrip');

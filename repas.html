@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Repas & régimes — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    @media print{
+      .header,.toolbar,.no-print{display:none!important}
+      body::before,body::after{display:none!important}
+      .content{padding:0}
+      .card{box-shadow:none;border:1px solid #cbd5e1}
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="main">
+    <header class="header">
+      <div class="header-info"><div class="header-title">Repas & régimes</div></div>
+      <div class="header-right">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Feuille cuisine</button>
+        <a href="accueil.html" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Accueil
+        </a>
+      </div>
+    </header>
+
+    <main class="content" style="max-width:1080px">
+      <!-- Navigation de date -->
+      <div class="toolbar" style="margin-bottom:1.25rem;align-items:center">
+        <button class="btn btn-ghost btn-icon" onclick="rpShiftDate(-1)" title="Jour précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <input type="date" id="rpDate" style="width:auto"/>
+        <button class="btn btn-ghost btn-icon" onclick="rpShiftDate(1)" title="Jour suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <span id="rpDateLabel" style="font-weight:700;color:var(--primary);text-transform:capitalize"></span>
+        <div class="search-box" style="margin-left:auto;max-width:260px">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="rpSearch" placeholder="Rechercher…"/>
+        </div>
+      </div>
+
+      <div id="rpStats" class="grid grid-4" style="margin-bottom:1.25rem"></div>
+
+      <!-- Synthèse cuisine -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-header"><span class="card-title">👨‍🍳 Effectifs cuisine par régime</span></div>
+        <div class="card-body" id="rpCuisine" style="padding:1rem 1.25rem"></div>
+      </div>
+
+      <!-- Liste des résidents -->
+      <div id="rpList"></div>
+      <p class="no-print" style="font-size:.74rem;color:var(--muted);margin-top:.75rem">
+        Par défaut, tous les résidents actifs sont inscrits aux deux repas — décochez les absents.
+        Les allergies proviennent de la fiche santé du résident.
+      </p>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL RÉGIME -->
+<div class="modal-overlay" id="modalRegime">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="rgTitle">Régime alimentaire</span>
+      <button class="modal-close" onclick="closeModal('modalRegime')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Régime</label>
+          <select id="rgType">
+            <option value="normal">Normal</option>
+            <option value="vegetarien">Végétarien</option>
+            <option value="sansporc">Sans porc</option>
+            <option value="halal">Halal</option>
+            <option value="casher">Casher</option>
+            <option value="diabetique">Diabétique</option>
+            <option value="hyposode">Hyposodé</option>
+            <option value="hypocalorique">Hypocalorique</option>
+            <option value="autre">Autre…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Texture</label>
+          <select id="rgTexture">
+            <option value="normale">Normale</option>
+            <option value="hachee">Hachée</option>
+            <option value="mixee">Mixée</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="rgAutreWrap" style="display:none">
+        <label>Précisez le régime</label>
+        <input type="text" id="rgAutre" placeholder="Ex : sans gluten, sans lactose…"/>
+      </div>
+      <div class="form-group">
+        <label>Allergies alimentaires</label>
+        <input type="text" id="rgAllergies" placeholder="Ex : arachide, fruits à coque…"/>
+        <span class="form-hint">Pré-rempli depuis la fiche santé. Modifiable ici pour le volet alimentaire.</span>
+      </div>
+      <div class="form-group">
+        <label>Notes pour la cuisine</label>
+        <textarea id="rgNotes" rows="2" placeholder="Portions, aversions, aide au repas…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalRegime')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveRegime()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script src="js/repas.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Portail — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout"><div class="main">
+  <header class="header">
+    <div class="header-info"><div class="header-title">Portail</div></div>
+    <div class="header-right"><button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button></div>
+  </header>
+  <main class="content" id="plContent">
+    <div style="max-width:620px;margin:0 auto;padding:2rem 0">
+      <div class="am-grid">
+        <a href="planning-equipe.html" class="am-card" data-perm="access_planning_equipe" style="background:linear-gradient(135deg,#0891b225,#22d3ee15)">
+          <span class="am-icon" style="background:#0891b220;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span> Planning équipe
+        </a>
+        <a href="conges.html" class="am-card" data-perm="access_conges" style="background:linear-gradient(135deg,#f9731625,#fb923c15)">
+          <span class="am-icon" style="background:#f9731620;color:#f97316"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg></span> Demandes congés
+        </a>
+        <a href="notes.html" class="am-card" data-perm="access_notes" style="background:linear-gradient(135deg,#f59e0b25,#fcd34d15)">
+          <span class="am-icon" style="background:#f59e0b20;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> Notes
+        </a>
+        <a href="messages.html" class="am-card" data-perm="access_messages" style="background:linear-gradient(135deg,#0284c725,#38bdf815)">
+          <span class="am-icon" style="background:#0284c720;color:#0284c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span> Messages
+        </a>
+        <a href="documentation.html" class="am-card" data-perm="access_documentation" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)">
+          <span class="am-icon" style="background:#8b5cf620;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span> Documentation
+        </a>
+        <a href="budget.html" class="am-card" data-perm="access_budget" style="background:linear-gradient(135deg,#16a34a25,#4ade8015)">
+          <span class="am-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Budget & dépenses
+        </a>
+        <a href="paie.html" class="am-card" data-perm="access_paie" style="background:linear-gradient(135deg,#0f766e25,#2dd4bf15)">
+          <span class="am-icon" style="background:#0f766e20;color:#0f766e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span> Fiches de paie
+        </a>
+        <a href="entretiens.html" class="am-card" data-perm="access_entretiens" style="background:linear-gradient(135deg,#9333ea25,#c084fc15)">
+          <span class="am-icon" style="background:#9333ea20;color:#9333ea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></span> Entretiens professionnels
+        </a>
+        <a href="annuaire.html" class="am-card" data-perm="access_annuaire" style="background:linear-gradient(135deg,#0284c725,#7dd3fc15)">
+          <span class="am-icon" style="background:#0284c720;color:#0284c7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg></span> Annuaire
+        </a>
+        <a href="facturation.html" class="am-card" data-perm="access_facturation" style="background:linear-gradient(135deg,#be185d25,#f472b615)">
+          <span class="am-icon" style="background:#be185d20;color:#be185d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg></span> Facturation
+        </a>
+        <a href="formations.html" class="am-card" data-perm="access_formations" style="background:linear-gradient(135deg,#7c2d1225,#fb923c15)">
+          <span class="am-icon" style="background:#7c2d1220;color:#7c2d12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span> Plan de formation
+        </a>
+      </div>
+    </div>
+  </main>
+</div></div>
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script>
+  Auth.requireAuth();
+  document.querySelectorAll('[data-perm]').forEach(el => {
+    const _s = Auth.getSession();
+    const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || hasPermission(_s.userId, el.dataset.perm));
+    if (!ok) el.style.display = 'none';
+  });
+</script>
+</body></html>
