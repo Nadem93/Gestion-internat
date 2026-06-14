@@ -1690,16 +1690,28 @@ function generateDemo() {
 
   const originalEtabId = sessionStorage.getItem('ftr_current_etab');
   const etabs = getSelectedEtabs();
-  if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; return; }
+  if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; btn.textContent = 'Générer les données'; return; }
 
   let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0, formations:0 };
-  etabs.forEach((etab, ei) => {
-    sessionStorage.setItem('ftr_current_etab', etab.id);
-    log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
-    const r = generateForCurrentEtab();
-    Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-    log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations</span>');
-  });
+  try {
+    etabs.forEach((etab, ei) => {
+      sessionStorage.setItem('ftr_current_etab', etab.id);
+      log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
+      const r = generateForCurrentEtab();
+      Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
+      log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations</span>');
+    });
+  } catch (err) {
+    console.error(err);
+    log('<div class="sep"></div>');
+    log('<span style="color:#dc2626;font-weight:700">❌ Erreur pendant la génération : ' + escHtml(err && err.message ? err.message : String(err)) + '</span>');
+    log('<div style="margin-top:.5rem;font-size:.78rem;color:#475569">Astuce : si l\'erreur mentionne une variable non définie (ex. SP_NOMENCLATURE), faites un rechargement forcé (Ctrl+Maj+R) pour vider le cache du service worker.</div>');
+    if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
+    else sessionStorage.removeItem('ftr_current_etab');
+    btn.disabled = false;
+    btn.textContent = 'Générer les données';
+    return;
+  }
 
   if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
   else sessionStorage.removeItem('ftr_current_etab');
