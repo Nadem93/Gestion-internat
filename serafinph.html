@@ -5,6 +5,42 @@
   <title>SERAFIN-PH — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
+      @page { margin: 1.5cm 1.2cm; size: A4; }
+
+      .header, #toast-container, .no-print, .btn, .tab, .tabs { display: none !important; }
+
+      html, body { height: auto !important; overflow: visible !important; background: #fff !important; margin: 0 !important; font-size: 10pt !important; }
+      .app-layout, .main { display: block !important; height: auto !important; overflow: visible !important; }
+      .content { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; margin: 0 !important; flex: none !important; }
+
+      .grid-4 { grid-template-columns: repeat(4, 1fr) !important; gap: .5rem !important; }
+
+      .card { box-shadow: none !important; background: #fff !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: .5rem !important; }
+      .card-body { padding: .6rem .85rem !important; }
+      .card-header { padding: .5rem .85rem !important; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
+      .card-title { font-size: .75rem !important; }
+      .stat-card { box-shadow: none !important; break-inside: avoid; }
+
+      #printHeader { display: block !important; }
+      #spResidentsBody { display: block !important; }
+
+      h1, h2, h3 { font-size: 11pt !important; }
+      p, div, span, td, th { font-size: 9pt !important; line-height: 1.4 !important; }
+    }
+
+    #printHeader {
+      display: none;
+      border-bottom: 3px solid #0f2b4a;
+      padding-bottom: .5cm;
+      margin-bottom: .5cm;
+    }
+    #printHeader .ph-etab { font-size: 9pt; color: #64748b; }
+    #printHeader .ph-title { font-size: 16pt; font-weight: 800; color: #0f2b4a; margin: 2px 0; }
+    #printHeader .ph-meta { font-size: 8pt; color: #94a3b8; }
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -13,8 +49,17 @@
       <div class="header-info"><div class="header-title">SERAFIN-PH</div></div>
       <div class="header-right">
         <button class="btn btn-outline btn-sm" onclick="history.back()">←<span class="btn-add-label"> Retour</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="printSerafinph()" title="Télécharger / Imprimer le rapport">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="btn-add-label"> Télécharger</span>
+        </button>
       </div>
     </header>
+    <div id="printHeader">
+      <div class="ph-etab" id="phEtab"></div>
+      <div class="ph-title" id="phTitle">Rapport SERAFIN-PH</div>
+      <div class="ph-meta" id="phMeta"></div>
+    </div>
     <main class="content" id="spContent">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
         <div>

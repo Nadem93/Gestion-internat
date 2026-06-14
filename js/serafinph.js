@@ -127,5 +127,24 @@ function renderSerafinph() {
   }).join('') || '<div class="empty" style="padding:2rem"><p>Aucun résident évalué</p></div>';
 }
 
+function printSerafinph() {
+  const settings = DB.get(DB.keys.settings) || {};
+  const phEtab = document.getElementById('phEtab');
+  const phTitle = document.getElementById('phTitle');
+  const phMeta = document.getElementById('phMeta');
+  if (phEtab) phEtab.textContent = settings.etablissement || 'Foyer d\'Hébergement';
+  if (phTitle) phTitle.textContent = 'Rapport SERAFIN-PH';
+  if (phMeta) phMeta.textContent = `Imprimé le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`;
+
+  const body = document.getElementById('spResidentsBody');
+  const wasHidden = body && body.style.display === 'none';
+  if (wasHidden) body.style.display = '';
+
+  document.title = 'Rapport SERAFIN-PH';
+  window.print();
+  document.title = 'SERAFIN-PH — FTR';
+  if (wasHidden) body.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', initSerafinph);
 if (typeof registerPageInit === 'function') registerPageInit('serafinph', initSerafinph);
