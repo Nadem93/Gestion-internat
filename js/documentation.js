@@ -104,7 +104,20 @@ function renderDocumentation() {
     el.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucun document trouvé.</p></div>';
     return;
   }
-  el.innerHTML = filtered.sort((a, b) => (b.dateAjout || '').localeCompare(a.dateAjout || '')).map(d => docuItemHtml(d, isAdmin)).join('');
+
+  const categories = Object.keys(DOCU_CATEGORIE_ICONS);
+  el.innerHTML = categories.map(cat => {
+    const items = filtered.filter(d => d.categorie === cat).sort((a, b) => (b.dateAjout || '').localeCompare(a.dateAjout || ''));
+    if (!items.length) return '';
+    return `<div style="margin-bottom:1.25rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;padding-bottom:.25rem;border-bottom:1px solid var(--border)">
+        <span style="font-size:1.1rem">${DOCU_CATEGORIE_ICONS[cat] || '📄'}</span>
+        <span style="font-weight:700;font-size:.85rem">${escHtml(cat)}</span>
+        <span style="font-size:.72rem;color:var(--muted)">(${items.length})</span>
+      </div>
+      ${items.map(d => docuItemHtml(d, isAdmin)).join('')}
+    </div>`;
+  }).join('');
 }
 
 document.addEventListener('DOMContentLoaded', () => { if (requireModule('access_documentation')) renderDocumentation(); });
