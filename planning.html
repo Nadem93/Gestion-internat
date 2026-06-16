@@ -42,7 +42,9 @@
     .pl-time-col .plt-label{position:absolute;right:6px;font-size:.66rem;color:#94a3b8;font-weight:600;transform:translateY(-6px)}
     .pl-days{display:grid;grid-template-columns:repeat(7,1fr)}
     .pl-day{position:relative;border-left:1px solid var(--border);cursor:pointer}
-    .pl-day .pl-ev{position:absolute;border-radius:5px;color:#fff;padding:3px 5px;font-size:.66rem;line-height:1.2;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.35);cursor:pointer}
+    .pl-day .pl-ev-wrap{position:absolute;pointer-events:none}
+    .pl-day .pl-ev-band{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px;pointer-events:auto;cursor:pointer}
+    .pl-day .pl-ev{position:absolute;left:0;right:0;top:0;border-radius:5px;color:#fff;padding:3px 5px 3px 8px;font-size:.66rem;line-height:1.2;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.35);pointer-events:auto;cursor:pointer}
     .pl-day .pl-ev .pl-ev-time{font-weight:400;opacity:.9}
     .pl-day .pl-ev .pl-ev-title{font-weight:700}
   </style>
