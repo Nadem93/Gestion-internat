@@ -308,7 +308,7 @@
       <div class="qstat-row"><span class="qstat-label">Documents stockés</span><span class="qstat-value" id="qDocs">—</span></div>
     </div>
   </div>
-  <div class="sdcard">
+  <div class="sdcard" style="grid-column:1/-1">
     <div class="sdcard-head"><span class="sdcard-title">🧬 SERAFIN-PH</span></div>
     <div class="sdcard-body">
       <div class="qstat-row"><span class="qstat-label">Résidents évalués</span><span class="qstat-value" id="spEvalues" style="color:var(--accent)">—</span></div>
@@ -975,19 +975,21 @@ function toggleRapportPeriode() {
 }
 
 // ── GRAPHIQUES SVG (partagés : rapport PDF + page Statistiques) ──
-function svgHBar(obj, color, keepOrder, colorMap) {
+function svgHBar(obj, color, keepOrder, colorMap, labelW) {
   let entries = Object.entries(obj).filter(([, v]) => v > 0);
   if (!keepOrder) entries = entries.sort((a, b) => b[1] - a[1]);
   if (!entries.length) return '<p class="empty-line" style="font-size:.82rem;color:#94a3b8;font-style:italic">Aucune donnée.</p>';
   const max = Math.max(...entries.map(e => e[1]), 1);
-  const rowH = 26, labelW = 150, barMax = 470, padL = 6, padT = 6, padB = 16;
+  labelW = labelW || 150;
+  const maxChars = Math.floor(labelW / 4.7);
+  const rowH = 26, barMax = 470, padL = 6, padT = 6, padB = 16;
   const W = padL + labelW + barMax + 44, H = padT + entries.length * rowH + padB;
   let grid = '';
   for (let k = 0; k <= 4; k++) { const x = padL + labelW + barMax * k / 4; grid += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + entries.length * rowH}" stroke="#e8edf2" stroke-width="1"/><text x="${x}" y="${padT + entries.length * rowH + 12}" text-anchor="middle" font-size="7" fill="#94a3b8">${Math.round(max * k / 4)}</text>`; }
   const bars = entries.map(([label, v], i) => {
     const y = padT + i * rowH, bw = Math.max(2, Math.round(v / max * barMax));
     const col = (colorMap && colorMap[label]) || color;
-    return `<text x="${padL + labelW - 6}" y="${y + rowH / 2 + 3}" text-anchor="end" font-size="9" fill="#334155">${escHtml(String(label)).slice(0, 26)}</text><rect x="${padL + labelW}" y="${y + 4}" width="${bw}" height="${rowH - 10}" rx="3" fill="${col}"/><text x="${padL + labelW + bw + 5}" y="${y + rowH / 2 + 3}" font-size="9" font-weight="700" fill="#0f2b4a">${v}</text>`;
+    return `<text x="${padL + labelW - 6}" y="${y + rowH / 2 + 3}" text-anchor="end" font-size="9" fill="#334155">${escHtml(String(label)).slice(0, maxChars)}</text><rect x="${padL + labelW}" y="${y + 4}" width="${bw}" height="${rowH - 10}" rx="3" fill="${col}"/><text x="${padL + labelW + bw + 5}" y="${y + rowH / 2 + 3}" font-size="9" font-weight="700" fill="#0f2b4a">${v}</text>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${grid}${bars}</svg>`;
 }
@@ -1276,7 +1278,7 @@ ${svgHBar(jByCat, '#e85d04')}
 <h2>Profil SERAFIN-PH</h2>
 <p class="note"><strong>${withSp.length}</strong> résident${withSp.length > 1 ? 's' : ''} évalué${withSp.length > 1 ? 's' : ''} sur <strong>${activeRes.length}</strong> résident${activeRes.length > 1 ? 's' : ''} présents · GMPS moyen : <strong>${gmps != null ? gmps : '—'}</strong> · Score total cumulé : <strong>${allScores.reduce((a, s) => a + s.total, 0)}</strong>.</p>
 ${withSp.length ? `<div style="display:flex;gap:.4cm;flex-wrap:wrap;margin-bottom:.3cm">
-  <div style="flex:1;min-width:260px"><div class="chart-title">Moyenne par prestation</div>${svgHBar(spByPrest, '#8b5cf6', true)}</div>
+  <div style="flex:1;min-width:260px"><div class="chart-title">Moyenne par prestation</div>${svgHBar(spByPrest, '#8b5cf6', true, null, 330)}</div>
   <div style="flex:0 0 auto"><div class="chart-title">Répartition des niveaux</div>${svgDonut([{ label: 'Niveau 0 (Nul)', value: spNivRepart[0], color: '#d1d5db' }, { label: 'Niveau 1 (Faible)', value: spNivRepart[1], color: '#22c55e' }, { label: 'Niveau 2 (Modéré)', value: spNivRepart[2], color: '#eab308' }, { label: 'Niveau 3 (Important)', value: spNivRepart[3], color: '#f97316' }, { label: 'Niveau 4 (Très important)', value: spNivRepart[4], color: '#ef4444' }], 'niveaux')}</div>
 </div>
 <p class="note">Les niveaux SERAFIN-PH vont de 0 (aucun besoin) à 4 (besoin très important). Les prestations directes concernent la relation avec la personne accompagnée, les prestations indirectes le fonctionnement de l'établissement.</p>` : '<p class="empty-line">Aucune évaluation SERAFIN-PH renseignée pour la période.</p>'}
@@ -1440,7 +1442,7 @@ function renderSerafinphStats() {
     spByPrest[p.label] = Math.round(moy * 10) / 10;
   });
   const barsEl = document.getElementById('spBars');
-  if (barsEl) barsEl.innerHTML = svgHBar(spByPrest, '#8b5cf6', true);
+  if (barsEl) barsEl.innerHTML = svgHBar(spByPrest, '#8b5cf6', true, null, 330);
   const spNivRepart = [0, 0, 0, 0, 0];
   allScores.forEach(s => Object.values(s.prestations).forEach(n => spNivRepart[n]++));
   const niveauxEl = document.getElementById('spNiveau');
