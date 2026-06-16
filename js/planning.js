@@ -29,8 +29,52 @@ function dateStr(d) { return d.toISOString().slice(0,10); }
 function getFilteredEvents() {
   const res = document.getElementById('filterEventResident')?.value || '';
   let events = DB.get(DB.keys.planning) || [];
+  // Les réservations de véhicule (gérées dans le module Véhicules) ne s'affichent pas dans l'agenda
+  events = events.filter(e => e.type !== 'vehicule');
   if (res) events = events.filter(e => e.residentId === res || !e.residentId);
   return events;
+}
+
+const PL_DAY_START = 7;   // 7h
+const PL_DAY_END = 21;    // 21h
+const PL_HOUR_H = 52;     // px par heure
+
+function evStartMin(ev) {
+  const t = (ev.heure || ev.time || '09:00');
+  const [h, m] = t.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+function evDurMin(ev) {
+  if (ev.duree === 'journee') return (PL_DAY_END - PL_DAY_START) * 60;
+  const d = parseInt(ev.duree);
+  return isNaN(d) ? 60 : d;
+}
+
+// Répartit les événements d'une journée en colonnes pour gérer les chevauchements
+function layoutDayEvents(evs) {
+  const items = evs.map(ev => {
+    const start = evStartMin(ev);
+    return { ev, start, end: start + evDurMin(ev) };
+  }).sort((a, b) => a.start - b.start || a.end - b.end);
+  // Regroupe en grappes d'événements qui se chevauchent
+  let clusters = [], cur = [], curEnd = -1;
+  items.forEach(it => {
+    if (cur.length && it.start >= curEnd) { clusters.push(cur); cur = []; curEnd = -1; }
+    cur.push(it); curEnd = Math.max(curEnd, it.end);
+  });
+  if (cur.length) clusters.push(cur);
+  clusters.forEach(cluster => {
+    const colEnds = [];
+    cluster.forEach(it => {
+      let placed = false;
+      for (let i = 0; i < colEnds.length; i++) {
+        if (colEnds[i] <= it.start) { it.col = i; colEnds[i] = it.end; placed = true; break; }
+      }
+      if (!placed) { it.col = colEnds.length; colEnds.push(it.end); }
+    });
+    cluster.forEach(it => it.ncols = colEnds.length);
+  });
+  return items;
 }
 
 function renderWeek() {
@@ -39,31 +83,135 @@ function renderWeek() {
   const todayD = new Date();
   document.getElementById('calTitle').textContent = `${monday.getDate()} ${MONTHS[monday.getMonth()]} — ${days[6].getDate()} ${MONTHS[days[6].getMonth()]} ${days[6].getFullYear()}`;
   const events = getFilteredEvents();
-  const hours = Array.from({length:14}, (_,i) => i+7); // 7h-20h
+  const nHours = PL_DAY_END - PL_DAY_START;
+  const bodyH = nHours * PL_HOUR_H;
+  const gridBg = `repeating-linear-gradient(to bottom, var(--g100) 0 1px, transparent 1px ${PL_HOUR_H}px)`;
 
-  let html = `<div class="card" style="overflow:hidden">
-    <div style="display:grid;grid-template-columns:60px repeat(7,1fr);background:var(--g50);border-bottom:2px solid var(--border)">
-      <div style="padding:.75rem;border-right:1px solid var(--border)"></div>
-      ${days.map(d => {
-        const isTod = sameDay(d, todayD);
-        return `<div style="padding:.75rem .5rem;text-align:center;border-left:1px solid var(--border)">
-          <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase">${DAYS[d.getDay()===0?6:d.getDay()-1].slice(0,3)}</div>
-          <div style="font-size:1.2rem;font-weight:800;${isTod?'background:var(--blue);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:4px auto 0':'color:var(--text);margin-top:4px'}">${d.getDate()}</div>
-        </div>`;
-      }).join('')}
+  // En-tête : année + jours
+  const head = `<div class="pl-week-head">
+    <div class="plh-year">${monday.getFullYear()}</div>
+    ${days.map(d => {
+      const isTod = sameDay(d, todayD);
+      return `<div class="plh-day${isTod?' is-today':''}">
+        <div class="plh-dow">${DAYS[d.getDay()===0?6:d.getDay()-1].slice(0,3)}</div>
+        <div class="plh-num">${d.getDate()}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  // Colonne des heures
+  const timeCol = `<div class="pl-time-col" style="height:${bodyH}px">
+    ${Array.from({length:nHours+1}, (_,i) => {
+      const h = PL_DAY_START + i;
+      return `<div class="plt-label" style="top:${i*PL_HOUR_H}px">${h} h</div>`;
+    }).join('')}
+  </div>`;
+
+  // Colonnes des jours avec événements positionnés
+  const dayCols = days.map(d => {
+    const dStr = dateStr(d);
+    const dayEvents = events.filter(e => eventOnDay(e, dStr) && (e.heure || e.time));
+    const laid = layoutDayEvents(dayEvents);
+    const blocks = laid.map(it => {
+      const ev = it.ev;
+      const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
+      const h = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
+      const wPct = 100 / it.ncols;
+      const leftPct = it.col * wPct;
+      const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+      const veh = ev.vehicule ? '🚗 ' : '';
+      return `<div class="pl-ev" style="top:${top}px;height:${h}px;left:calc(${leftPct}% + 2px);width:calc(${wPct}% - 4px);background:${bg}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
+        <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
+        <div class="pl-ev-title">${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</div>
+      </div>`;
+    }).join('');
+    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')">${blocks}</div>`;
+  }).join('');
+
+  const html = `<div class="pl-week">
+    ${head}
+    <div class="pl-week-body">
+      ${timeCol}
+      <div class="pl-days">${dayCols}</div>
     </div>
-    ${hours.map(h => `
-      <div style="display:grid;grid-template-columns:60px repeat(7,1fr);min-height:52px">
-        <div style="padding:.35rem .5rem;text-align:right;font-size:.7rem;color:var(--g400);font-weight:500;border-right:1px solid var(--border);border-top:1px solid var(--g100)">${h}:00</div>
-        ${days.map(d => {
-          const dayEvents = events.filter(e => eventOnDay(e, dateStr(d)) && (e.heure||e.time) && parseInt(e.heure||e.time) === h);
-          return `<div style="border-left:1px solid var(--border);border-top:1px solid var(--g100);padding:2px;position:relative;cursor:pointer" onclick="quickAddEvent('${dateStr(d)}','${h}:00')">
-            ${dayEvents.map(ev => `<div class="cal-event" style="background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">${ev.vehicule?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;vertical-align:middle;margin-right:2px"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M19 17a2 2 0 1 0-4 0"/></svg>':''}<span style="opacity:.85;font-weight:400;margin-right:3px">${(ev.heure||ev.time||'').slice(0,5)}</span>${ev.residentName?'<span style="font-weight:400;opacity:.85">'+escHtml(ev.residentName)+'</span> ':''}${escHtml(ev.titre)}</div>`).join('')}
-          </div>`;
-        }).join('')}
-      </div>`).join('')}
   </div>`;
   document.getElementById('calContainer').innerHTML = html;
+}
+
+// Clic sur une zone vide d'une journée → pré-remplit l'heure d'après la position verticale
+function quickAddFromClick(e, dStr) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  let h = PL_DAY_START + Math.floor(y / PL_HOUR_H);
+  h = Math.max(PL_DAY_START, Math.min(PL_DAY_END - 1, h));
+  quickAddEvent(dStr, String(h).padStart(2,'0') + ':00');
+}
+
+// ── Mini-calendriers (barre latérale) ──
+function isoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function renderMiniCalendars() {
+  const el = document.getElementById('planningSidebar');
+  if (!el) return;
+  const base = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  let html = '';
+  for (let k = 0; k < 3; k++) {
+    html += miniMonth(new Date(base.getFullYear(), base.getMonth() + k, 1), k === 0);
+  }
+  el.innerHTML = html;
+}
+
+function miniMonth(monthDate, withNav) {
+  const y = monthDate.getFullYear(), m = monthDate.getMonth();
+  const todayD = new Date();
+  const weekMon = getMondayOf(currentDate);
+  const weekDays = Array.from({length:7}, (_,i) => { const d=new Date(weekMon); d.setDate(d.getDate()+i); return dateStr(d); });
+  const first = new Date(y, m, 1);
+  const startDay = first.getDay() === 0 ? 6 : first.getDay() - 1;
+  const gridStart = new Date(y, m, 1 - startDay);
+
+  let cells = '';
+  const dows = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+  cells += `<div class="mg-cell mg-wh"></div>` + dows.map(d => `<div class="mg-cell mg-wh">${d}</div>`).join('');
+  for (let w = 0; w < 6; w++) {
+    const rowStart = new Date(gridStart); rowStart.setDate(gridStart.getDate() + w*7);
+    if (w > 0 && rowStart.getMonth() !== m && !(w === 0)) { /* keep simple */ }
+    cells += `<div class="mg-cell mg-wk">${isoWeek(rowStart)}</div>`;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(gridStart); d.setDate(gridStart.getDate() + w*7 + i);
+      const ds = dateStr(d);
+      const out = d.getMonth() !== m;
+      const isTod = sameDay(d, todayD);
+      const inWeek = weekDays.includes(ds);
+      const cls = ['mg-cell','mg-day', out?'mg-out':'', inWeek?'mg-inweek':'', isTod?'mg-today':''].filter(Boolean).join(' ');
+      cells += `<div class="${cls}" onclick="goToDate('${ds}')">${d.getDate()}</div>`;
+    }
+    // arrêter si la semaine suivante déborde entièrement du mois
+    const nextRow = new Date(gridStart); nextRow.setDate(gridStart.getDate() + (w+1)*7);
+    if (nextRow.getMonth() !== m && nextRow > new Date(y, m+1, 0)) break;
+  }
+
+  const nav = withNav
+    ? `<button onclick="event.stopPropagation();navigate(-1)" title="Précédent">‹</button>
+       <span class="mc-title">${MONTHS[m]} ${y}</span>
+       <button onclick="event.stopPropagation();navigate(1)" title="Suivant">›</button>`
+    : `<span style="width:20px"></span><span class="mc-title">${MONTHS[m]} ${y}</span><span style="width:20px"></span>`;
+
+  return `<div class="mini-cal">
+    <div class="mini-cal-head">${nav}</div>
+    <div class="mini-grid">${cells}</div>
+  </div>`;
+}
+
+function goToDate(ds) {
+  currentDate = new Date(ds + 'T12:00:00');
+  render();
 }
 
 function renderMonth() {
@@ -123,6 +271,11 @@ function renderListView() {
 function render() {
   document.getElementById('calContainer').style.display = '';
   document.getElementById('listContainer').style.display = 'none';
+  const sidebar = document.getElementById('planningSidebar');
+  if (sidebar) {
+    if (currentView === 'list') { sidebar.style.display = 'none'; }
+    else { sidebar.style.display = ''; renderMiniCalendars(); }
+  }
   if (currentView === 'week') renderWeek();
   else if (currentView === 'month') renderMonth();
   else renderListView();

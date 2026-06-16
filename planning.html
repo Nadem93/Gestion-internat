@@ -5,6 +5,47 @@
   <title>Planning — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Layout agenda (sidebar + timeline) ── */
+    .pl-layout{display:flex;gap:1rem;align-items:flex-start}
+    .pl-sidebar{width:212px;flex-shrink:0;display:flex;flex-direction:column;gap:.85rem}
+    .pl-content{flex:1;min-width:0}
+    @media(max-width:880px){.pl-sidebar{display:none}}
+
+    /* ── Mini-calendriers ── */
+    .mini-cal{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
+    .mini-cal-head{display:flex;align-items:center;justify-content:space-between;padding:.4rem .55rem;background:linear-gradient(135deg,#1e9be6,#1786cf);color:#fff}
+    .mini-cal-head .mc-title{font-size:.78rem;font-weight:700}
+    .mini-cal-head button{background:rgba(255,255,255,.18);border:none;color:#fff;width:20px;height:20px;border-radius:5px;cursor:pointer;font-size:.8rem;line-height:1;display:flex;align-items:center;justify-content:center}
+    .mini-cal-head button:hover{background:rgba(255,255,255,.35)}
+    .mini-grid{display:grid;grid-template-columns:22px repeat(7,1fr);font-size:.64rem}
+    .mini-grid .mg-cell{text-align:center;padding:3px 0;color:var(--text)}
+    .mini-grid .mg-wh{color:#94a3b8;font-weight:700}
+    .mini-grid .mg-wk{color:#b0bcc9;font-weight:600;background:#f6f8fa}
+    .mini-grid .mg-day{cursor:pointer;border-radius:4px;font-weight:500}
+    .mini-grid .mg-day:hover{background:#e8f4fd}
+    .mini-grid .mg-out{color:#cbd5e1}
+    .mini-grid .mg-inweek{background:#d6ecfb}
+    .mini-grid .mg-today{background:#1786cf;color:#fff;font-weight:700}
+    .mini-grid .mg-today.mg-inweek{background:#1786cf}
+
+    /* ── Timeline semaine ── */
+    .pl-week{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
+    .pl-week-head{display:grid;grid-template-columns:56px repeat(7,1fr);background:#f3f7fb;border-bottom:1px solid var(--border)}
+    .pl-week-head .plh-year{display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;color:#1786cf;border-right:1px solid var(--border)}
+    .pl-week-head .plh-day{text-align:center;padding:.5rem .25rem;border-left:1px solid var(--border)}
+    .pl-week-head .plh-day .plh-dow{font-size:.64rem;font-weight:700;color:var(--muted);text-transform:uppercase}
+    .pl-week-head .plh-day .plh-num{font-size:1.05rem;font-weight:800;color:var(--text);margin-top:2px}
+    .pl-week-head .plh-day.is-today .plh-num{background:#1786cf;color:#fff;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+    .pl-week-body{display:grid;grid-template-columns:56px 1fr;max-height:68vh;overflow-y:auto}
+    .pl-time-col{position:relative}
+    .pl-time-col .plt-label{position:absolute;right:6px;font-size:.66rem;color:#94a3b8;font-weight:600;transform:translateY(-6px)}
+    .pl-days{display:grid;grid-template-columns:repeat(7,1fr)}
+    .pl-day{position:relative;border-left:1px solid var(--border);cursor:pointer}
+    .pl-day .pl-ev{position:absolute;border-radius:5px;color:#fff;padding:3px 5px;font-size:.66rem;line-height:1.2;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.35);cursor:pointer}
+    .pl-day .pl-ev .pl-ev-time{font-weight:400;opacity:.9}
+    .pl-day .pl-ev .pl-ev-title{font-weight:700}
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -34,13 +75,18 @@
         <select id="filterEventResident" style="width:auto;margin-left:auto"><option value="">Tous les résidents</option></select>
       </div>
 
-      <div id="calContainer"></div>
+      <div class="pl-layout">
+        <aside class="pl-sidebar" id="planningSidebar"></aside>
+        <div class="pl-content">
+          <div id="calContainer"></div>
 
-      <!-- Vue liste -->
-      <div id="listContainer" style="display:none">
-        <div class="table-wrap">
-          <table><thead><tr><th>Titre</th><th>Résident</th><th>Date</th><th>Heure</th><th>Type</th><th>Actions</th></tr></thead>
-          <tbody id="eventTableBody"></tbody></table>
+          <!-- Vue liste -->
+          <div id="listContainer" style="display:none">
+            <div class="table-wrap">
+              <table><thead><tr><th>Titre</th><th>Résident</th><th>Date</th><th>Heure</th><th>Type</th><th>Actions</th></tr></thead>
+              <tbody id="eventTableBody"></tbody></table>
+            </div>
+          </div>
         </div>
       </div>
     </main>
