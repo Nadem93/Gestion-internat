@@ -1,5 +1,7 @@
 let currentView = 'week';
 let currentDate = new Date();
+// Mois affiché en premier dans les mini-calendriers (indépendant de la date sélectionnée)
+let sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -24,7 +26,16 @@ function sameDay(a, b) {
   return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
 }
 
-function dateStr(d) { return d.toISOString().slice(0,10); }
+function dateStr(d) {
+  // Date locale (évite le décalage d'un jour dû à toISOString qui passe en UTC)
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Types désactivés dans la légende (vide = tout afficher)
+let hiddenTypes = new Set();
 
 function getFilteredEvents() {
   const res = document.getElementById('filterEventResident')?.value || '';
@@ -32,7 +43,26 @@ function getFilteredEvents() {
   // Les réservations de véhicule (gérées dans le module Véhicules) ne s'affichent pas dans l'agenda
   events = events.filter(e => e.type !== 'vehicule');
   if (res) events = events.filter(e => e.residentId === res || !e.residentId);
+  if (hiddenTypes.size) events = events.filter(e => !hiddenTypes.has(e.type || 'autre'));
   return events;
+}
+
+// Légende cliquable servant aussi de filtre par type
+function renderTypeLegend() {
+  const el = document.getElementById('typeLegend');
+  if (!el) return;
+  const types = Object.keys(TYPE_LABELS).filter(t => t !== 'vehicule');
+  el.innerHTML = types.map(t => {
+    const off = hiddenTypes.has(t);
+    return `<span class="lg-chip${off?' off':''}" onclick="toggleType('${t}')">
+      <span class="lg-dot" style="background:${TYPE_COLORS[t]||'#3b82f6'}"></span>${TYPE_LABELS[t]}
+    </span>`;
+  }).join('');
+}
+
+function toggleType(t) {
+  if (hiddenTypes.has(t)) hiddenTypes.delete(t); else hiddenTypes.add(t);
+  render();
 }
 
 const PL_DAY_START = 7;   // 7h
@@ -92,20 +122,39 @@ function layoutDayEvents(evs) {
 function renderWeek() {
   const monday = getMondayOf(currentDate);
   const days = Array.from({length:7}, (_,i) => { const d=new Date(monday); d.setDate(d.getDate()+i); return d; });
-  const todayD = new Date();
   document.getElementById('calTitle').textContent = `${monday.getDate()} ${MONTHS[monday.getMonth()]} — ${days[6].getDate()} ${MONTHS[days[6].getMonth()]} ${days[6].getFullYear()}`;
+  renderTimeline(days);
+}
+
+function renderDay() {
+  const d = new Date(currentDate);
+  document.getElementById('calTitle').textContent = `${DAYS[d.getDay()===0?6:d.getDay()-1]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  renderTimeline([d]);
+}
+
+// Rendu générique de la timeline (1 jour ou 7 jours)
+function renderTimeline(days) {
+  const todayD = new Date();
   const events = getFilteredEvents();
   const nHours = PL_DAY_END - PL_DAY_START;
   const bodyH = nHours * PL_HOUR_H;
   const gridBg = `repeating-linear-gradient(to bottom, var(--g100) 0 1px, transparent 1px ${PL_HOUR_H}px)`;
+  const headCols = `56px repeat(${days.length},1fr)`;
+  const daysCols = `repeat(${days.length},1fr)`;
+
+  // Position de la ligne « maintenant »
+  const nowMin = todayD.getHours()*60 + todayD.getMinutes();
+  const showNow = nowMin >= PL_DAY_START*60 && nowMin <= PL_DAY_END*60;
+  const nowTop = (nowMin - PL_DAY_START*60) / 60 * PL_HOUR_H;
+  const weekHasToday = days.some(d => sameDay(d, todayD));
 
   // En-tête : année + jours
-  const head = `<div class="pl-week-head">
-    <div class="plh-year">${monday.getFullYear()}</div>
+  const head = `<div class="pl-week-head" style="grid-template-columns:${headCols}">
+    <div class="plh-year">${days[0].getFullYear()}</div>
     ${days.map(d => {
       const isTod = sameDay(d, todayD);
       return `<div class="plh-day${isTod?' is-today':''}">
-        <div class="plh-dow">${DAYS[d.getDay()===0?6:d.getDay()-1].slice(0,3)}</div>
+        <div class="plh-dow">${DAYS[d.getDay()===0?6:d.getDay()-1].slice(0, days.length===1?20:3)}</div>
         <div class="plh-num">${d.getDate()}</div>
       </div>`;
     }).join('')}
@@ -130,14 +179,12 @@ function renderWeek() {
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
-      // Bande : empilée à gauche selon bandCol
       const bandLeft = it.bandCol * PL_BAND_W;
-      // Contenu : commence après toutes les bandes, puis réparti en colonnes selon contentCol
       const inset = it.bandN * PL_BAND_W + 2;
       const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
       const cWidth = `calc(${colW} - 2px)`;
-      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
+      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
         <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
         <div class="pl-ev" style="left:${cLeft};width:${cWidth};background:${bg}">
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
@@ -145,17 +192,25 @@ function renderWeek() {
         </div>
       </div>`;
     }).join('');
-    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')">${blocks}</div>`;
+    const nowLine = (sameDay(d, todayD) && showNow) ? `<div class="pl-now" style="top:${nowTop}px"></div>` : '';
+    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')">${nowLine}${blocks}</div>`;
   }).join('');
 
   const html = `<div class="pl-week">
     ${head}
     <div class="pl-week-body">
       ${timeCol}
-      <div class="pl-days">${dayCols}</div>
+      <div class="pl-days" style="grid-template-columns:${daysCols}">${dayCols}</div>
     </div>
   </div>`;
   document.getElementById('calContainer').innerHTML = html;
+
+  // Défilement auto : vers l'heure actuelle si la période contient aujourd'hui, sinon vers 8 h
+  const body = document.querySelector('.pl-week-body');
+  if (body) {
+    const target = (weekHasToday && showNow) ? nowTop : (8 - PL_DAY_START) * PL_HOUR_H;
+    body.scrollTop = Math.max(0, target - 90);
+  }
 }
 
 // Clic sur une zone vide d'une journée → pré-remplit l'heure d'après la position verticale
@@ -179,7 +234,7 @@ function isoWeek(date) {
 function renderMiniCalendars() {
   const el = document.getElementById('planningSidebar');
   if (!el) return;
-  const base = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const base = sidebarBase;
   let html = '';
   for (let k = 0; k < 3; k++) {
     html += miniMonth(new Date(base.getFullYear(), base.getMonth() + k, 1), k === 0);
@@ -218,9 +273,9 @@ function miniMonth(monthDate, withNav) {
   }
 
   const nav = withNav
-    ? `<button onclick="event.stopPropagation();navigate(-1)" title="Précédent">‹</button>
+    ? `<button onclick="event.stopPropagation();shiftSidebar(-1)" title="Mois précédent">‹</button>
        <span class="mc-title">${MONTHS[m]} ${y}</span>
-       <button onclick="event.stopPropagation();navigate(1)" title="Suivant">›</button>`
+       <button onclick="event.stopPropagation();shiftSidebar(1)" title="Mois suivant">›</button>`
     : `<span style="width:20px"></span><span class="mc-title">${MONTHS[m]} ${y}</span><span style="width:20px"></span>`;
 
   return `<div class="mini-cal">
@@ -230,8 +285,17 @@ function miniMonth(monthDate, withNav) {
 }
 
 function goToDate(ds) {
+  // Sélectionne la date sans déplacer les 3 mois affichés dans la barre latérale
   currentDate = new Date(ds + 'T12:00:00');
-  render();
+  if (currentView === 'week') renderWeek();
+  else renderMonth();
+  renderMiniCalendars(); // met à jour le surlignage de la semaine, sans changer sidebarBase
+}
+
+// Fait défiler les mini-calendriers d'un mois (flèches), sans changer la date sélectionnée
+function shiftSidebar(dir) {
+  sidebarBase = new Date(sidebarBase.getFullYear(), sidebarBase.getMonth() + dir, 1);
+  renderMiniCalendars();
 }
 
 function renderMonth() {
@@ -244,27 +308,37 @@ function renderMonth() {
   const todayD = new Date();
 
   let cells = [];
-  for (let i=0; i<startDay; i++) cells.push(null);
-  for (let d=1; d<=last.getDate(); d++) cells.push(new Date(y,m,d));
+  for (let i = 0; i < startDay; i++) cells.push(null);
+  for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(y, m, d));
 
-  let html = `<div class="card" style="overflow:hidden">
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--g50);border-bottom:2px solid var(--border)">
-      ${DAYS.map(d=>`<div style="padding:.5rem;text-align:center;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-left:1px solid var(--border)">${d.slice(0,3)}</div>`).join('')}
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr)">
-      ${cells.map(d => {
-        if (!d) return `<div style="min-height:90px;background:var(--g50);border:1px solid var(--border)"></div>`;
-        const isTod = sameDay(d, todayD);
-        const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
-        return `<div style="min-height:90px;padding:.4rem;border:1px solid var(--border);${isTod?'background:#eff6ff':''}" onclick="quickAddEvent('${dateStr(d)}','')">
-          <div style="font-size:.8rem;font-weight:700;${isTod?'background:var(--blue);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:3px':'color:var(--text);margin-bottom:3px'}">${d.getDate()}</div>
-          ${dayEvs.slice(0,3).map(ev=>`<div style="background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};color:#fff;border-radius:3px;padding:1px 5px;font-size:.68rem;font-weight:600;cursor:pointer;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="event.stopPropagation();editEvent('${ev.id}')">${ev.vehicule?'🚗 ':''}${(ev.heure||ev.time)?'<span style="opacity:.85;font-weight:400">'+((ev.heure||ev.time).slice(0,5))+'</span> ':''}${ev.residentName?escHtml(ev.residentName)+' ':' '}${escHtml(ev.titre)}</div>`).join('')}
-          ${dayEvs.length>3?`<div style="font-size:.68rem;color:var(--muted)">+${dayEvs.length-3} autres</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-  </div>`;
-  document.getElementById('calContainer').innerHTML = html;
+  const head = DAYS.map(d => `<div class="plm-dow">${d.slice(0,3)}</div>`).join('');
+
+  const grid = cells.map(d => {
+    if (!d) return `<div class="plm-cell plm-empty"></div>`;
+    const isTod = sameDay(d, todayD);
+    const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
+    const num = `<div class="plm-num${isTod?' is-today':''}">${d.getDate()}</div>`;
+    const evHtml = dayEvs.slice(0, 3).map(ev => {
+      const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+      const time = (ev.heure || ev.time || '').slice(0, 5);
+      const timeHtml = time ? '<span class="plm-ev-time">' + time + '</span> ' : '';
+      const resHtml = ev.residentName ? escHtml(ev.residentName) + ' — ' : '';
+      return '<div class="plm-ev" onclick="event.stopPropagation();viewEvent(\'' + ev.id + '\')">'
+        + '<span class="plm-ev-band" style="background:' + bg + '"></span>'
+        + '<span class="plm-ev-txt">' + timeHtml + resHtml + escHtml(ev.titre) + '</span>'
+        + '</div>';
+    }).join('');
+    const more = dayEvs.length > 3 ? `<div class="plm-more">+${dayEvs.length - 3} autres</div>` : '';
+    return `<div class="plm-cell${isTod ? ' plm-today' : ''}" onclick="quickAddEvent('${dateStr(d)}','')">
+      ${num}${evHtml}${more}
+    </div>`;
+  }).join('');
+
+  document.getElementById('calContainer').innerHTML =
+    '<div class="card" style="overflow:hidden;padding:0">'
+    + '<div class="plm-head">' + head + '</div>'
+    + '<div class="plm-grid">' + grid + '</div>'
+    + '</div>';
 }
 
 function renderListView() {
@@ -296,14 +370,19 @@ function render() {
     if (currentView === 'list') { sidebar.style.display = 'none'; }
     else { sidebar.style.display = ''; renderMiniCalendars(); }
   }
-  if (currentView === 'week') renderWeek();
+  const legend = document.getElementById('typeLegend');
+  if (legend) { legend.style.display = currentView === 'list' ? 'none' : ''; renderTypeLegend(); }
+  if (currentView === 'day') renderDay();
+  else if (currentView === 'week') renderWeek();
   else if (currentView === 'month') renderMonth();
   else renderListView();
 }
 
 function navigate(dir) {
-  if (currentView === 'week') currentDate.setDate(currentDate.getDate() + dir*7);
+  if (currentView === 'day') currentDate.setDate(currentDate.getDate() + dir);
+  else if (currentView === 'week') currentDate.setDate(currentDate.getDate() + dir*7);
   else if (currentView === 'month') currentDate.setMonth(currentDate.getMonth() + dir);
+  sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   render();
 }
 
@@ -323,6 +402,34 @@ function resetVehiculeFields() {
   const veh = document.getElementById('evVehicule'); if (veh) veh.value = '';
   const dest = document.getElementById('evDestination'); if (dest) dest.value = '';
   const mot = document.getElementById('evMotif'); if (mot) mot.value = '';
+}
+
+// Affiche les détails d'un événement en lecture seule (fenêtre flipYIn)
+function viewEvent(id) {
+  const ev = (DB.get(DB.keys.planning) || []).find(e => e.id === id);
+  if (!ev) return;
+  const color = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+  const dureeLabels = { '30':'30 min', '60':'1h', '90':'1h30', '120':'2h', '180':'3h', 'journee':'Journée' };
+  const dureeLabel = dureeLabels[ev.duree] || (ev.duree ? ev.duree + ' min' : '');
+  const heure = (ev.heure || ev.time || '').slice(0,5);
+  const row = (ic, lbl, val) => val ? `<div class="ev-detail-row"><div class="ev-detail-ic">${ic}</div><div style="min-width:0"><div class="ev-detail-lbl">${lbl}</div><div class="ev-detail-val">${val}</div></div></div>` : '';
+
+  let body = `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem"><span style="width:14px;height:14px;border-radius:4px;background:${color};flex-shrink:0"></span><span class="badge badge-gray">${TYPE_LABELS[ev.type] || ev.type || '—'}</span></div>`;
+  body += row('👤', 'Résident', ev.residentName ? escHtml(ev.residentName) : 'Tous / Groupe');
+  body += row('📅', 'Date', ev.date ? formatDate(ev.date) : '—');
+  body += row('🕒', 'Horaire', [heure, dureeLabel].filter(Boolean).join(' · '));
+  body += row('📝', 'Description', ev.desc ? escHtml(ev.desc) : '');
+  if (ev.vehicule) {
+    body += row('🚗', 'Véhicule', escHtml(ev.vehicule));
+    body += row('📍', 'Destination', ev.destination ? escHtml(ev.destination) : '');
+    body += row('🎯', 'Motif', ev.motif ? escHtml(ev.motif) : '');
+  }
+
+  document.getElementById('evViewTitle').textContent = ev.titre || 'Détails du rendez-vous';
+  document.getElementById('evViewBody').innerHTML = body;
+  document.getElementById('evViewEdit').onclick = () => { closeModal('modalEventView'); editEvent(id); };
+  document.getElementById('evViewDelete').onclick = () => { document.getElementById('eventId').value = id; deleteEvent(); };
+  openModal('modalEventView');
 }
 
 function editEvent(id) {
@@ -495,8 +602,9 @@ function initPlanning() {
   render();
   document.getElementById('prevBtn').onclick = () => navigate(-1);
   document.getElementById('nextBtn').onclick = () => navigate(1);
-  document.getElementById('todayBtn').onclick = () => { currentDate = new Date(); render(); };
+  document.getElementById('todayBtn').onclick = () => { currentDate = new Date(); sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); render(); };
   document.getElementById('filterEventResident').onchange = render;
+  document.getElementById('viewDay').onclick = () => { currentView='day'; setViewBtn('viewDay'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewWeek').onclick = () => { currentView='week'; setViewBtn('viewWeek'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewMonth').onclick = () => { currentView='month'; setViewBtn('viewMonth'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewList').onclick = () => { currentView='list'; setViewBtn('viewList'); render(); };
@@ -505,7 +613,7 @@ document.addEventListener('DOMContentLoaded', initPlanning);
 if (typeof registerPageInit === 'function') registerPageInit('planning', initPlanning);
 
 function setViewBtn(active) {
-  ['viewWeek','viewMonth','viewList'].forEach(id => {
+  ['viewDay','viewWeek','viewMonth','viewList'].forEach(id => {
     const btn = document.getElementById(id);
     if (id === active) { btn.style.background='#fff'; btn.style.boxShadow='var(--shadow-sm)'; btn.classList.remove('btn-ghost'); }
     else { btn.style.background=''; btn.style.boxShadow=''; btn.classList.add('btn-ghost'); }

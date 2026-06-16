@@ -47,6 +47,46 @@
     .pl-day .pl-ev{position:absolute;top:0;border-radius:5px;color:#fff;padding:3px 5px 3px 8px;font-size:.66rem;line-height:1.2;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.35);pointer-events:auto;cursor:pointer}
     .pl-day .pl-ev .pl-ev-time{font-weight:400;opacity:.9}
     .pl-day .pl-ev .pl-ev-title{font-weight:700}
+    /* Ligne « maintenant » */
+    .pl-day .pl-now{position:absolute;left:0;right:0;height:2px;background:#ef4444;z-index:5;pointer-events:none}
+    .pl-day .pl-now::before{content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:#ef4444}
+
+    /* ── Vue Mois ── */
+    .plm-head{display:grid;grid-template-columns:repeat(7,1fr);background:#f3f7fb;border-bottom:1px solid var(--border)}
+    .plm-dow{text-align:center;padding:.5rem .25rem;font-size:.64rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-left:1px solid var(--border)}
+    .plm-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(96px,auto)}
+    .plm-cell{padding:.4rem .45rem;border:1px solid var(--border);cursor:pointer;transition:background .1s}
+    .plm-cell:hover:not(.plm-empty){background:#f8fbff}
+    .plm-empty{background:var(--g50);cursor:default}
+    .plm-today{background:#eff6ff}
+    .plm-num{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:3px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+    .plm-num.is-today{background:#1786cf;color:#fff}
+    .plm-ev{display:flex;align-items:center;gap:0;border-radius:4px;padding:0;font-size:.66rem;font-weight:600;cursor:pointer;margin-bottom:2px;overflow:hidden;background:#fff;border:1px solid rgba(0,0,0,.07);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .plm-ev:hover{filter:brightness(.96)}
+    .plm-ev-band{width:4px;min-height:18px;align-self:stretch;flex-shrink:0;border-radius:3px 0 0 3px}
+    .plm-ev-txt{padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+    .plm-ev-time{opacity:.7;font-weight:400}
+    .plm-more{font-size:.65rem;color:var(--muted);padding:1px 0;margin-top:1px}
+
+    /* Légende / filtre par type */
+    .pl-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+    .pl-legend .lg-chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:600;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:opacity .15s,filter .15s}
+    .pl-legend .lg-chip .lg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .pl-legend .lg-chip.off{opacity:.4;filter:grayscale(.6)}
+
+    /* ── Fenêtre de détails (effet flipYIn) ── */
+    @keyframes flipYIn {
+      0%   { transform: perspective(800px) rotateY(90deg); opacity: 0; }
+      40%  { transform: perspective(800px) rotateY(-12deg); opacity: 1; }
+      70%  { transform: perspective(800px) rotateY(6deg); }
+      100% { transform: perspective(800px) rotateY(0deg); opacity: 1; }
+    }
+    .modal-overlay.open .modal.modal-flip{ animation: flipYIn .55s ease-out both; transform-origin:50% 50%; }
+    .ev-detail-row{display:flex;gap:.6rem;align-items:flex-start;padding:.5rem 0;border-bottom:1px solid var(--border)}
+    .ev-detail-row:last-child{border-bottom:none}
+    .ev-detail-ic{width:18px;flex-shrink:0;text-align:center;opacity:.8}
+    .ev-detail-lbl{font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+    .ev-detail-val{font-size:.88rem;color:var(--text);font-weight:500;white-space:pre-wrap}
   </style>
 </head>
 <body>
@@ -56,6 +96,7 @@
       <div class="header-info"><div class="header-title">Planning</div></div>
       <div class="header-right">
         <div class="planning-view-switch" style="display:flex;gap:.4rem;background:var(--g100);border-radius:var(--r-sm);padding:3px">
+          <button class="btn btn-ghost btn-sm" id="viewDay">Jour</button>
           <button class="btn btn-sm" id="viewWeek" style="background:#fff;box-shadow:var(--shadow-sm)">Semaine</button>
           <button class="btn btn-ghost btn-sm" id="viewMonth">Mois</button>
           <button class="btn btn-ghost btn-sm" id="viewList">Liste</button>
@@ -80,6 +121,7 @@
       <div class="pl-layout">
         <aside class="pl-sidebar" id="planningSidebar"></aside>
         <div class="pl-content">
+          <div class="pl-legend" id="typeLegend"></div>
           <div id="calContainer"></div>
 
           <!-- Vue liste -->
@@ -92,6 +134,22 @@
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- MODAL DÉTAILS ÉVÉNEMENT (lecture seule, effet flipYIn) -->
+<div class="modal-overlay" id="modalEventView">
+  <div class="modal modal-flip" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title" id="evViewTitle">Détails du rendez-vous</span>
+      <button class="modal-close" onclick="closeModal('modalEventView')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="evViewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="evViewDelete" style="margin-right:auto">Supprimer</button>
+      <button class="btn btn-outline" onclick="closeModal('modalEventView')">Fermer</button>
+      <button class="btn btn-primary" id="evViewEdit">Modifier</button>
+    </div>
   </div>
 </div>
 
