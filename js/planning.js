@@ -38,7 +38,8 @@ function getFilteredEvents() {
 const PL_DAY_START = 7;   // 7h
 const PL_DAY_END = 21;    // 21h
 const PL_HOUR_H = 52;     // px par heure
-const PL_EV_MAX_H = 104;  // hauteur max d'un bloc (~2h) pour éviter qu'un événement long n'occupe toute la colonne
+const PL_BAND_W = 5;      // largeur d'une bande latérale (px)
+const PL_CONTENT_MIN = 55;// durée (min) considérée pour le chevauchement des blocs de contenu
 
 function evStartMin(ev) {
   const t = (ev.heure || ev.time || '09:00');
@@ -51,17 +52,14 @@ function evDurMin(ev) {
   return isNaN(d) ? 60 : d;
 }
 
-// Répartit les événements d'une journée en colonnes pour gérer les chevauchements
-function layoutDayEvents(evs) {
-  const items = evs.map(ev => {
-    const start = evStartMin(ev);
-    return { ev, start, end: start + evDurMin(ev) };
-  }).sort((a, b) => a.start - b.start || a.end - b.end);
-  // Regroupe en grappes d'événements qui se chevauchent
+// Assigne des colonnes (col/ncols) à un ensemble d'items selon le chevauchement
+// de l'intervalle [sKey, eKey], en regroupant par grappes.
+function assignColumns(items, sKey, eKey, colKey, nKey) {
+  const sorted = [...items].sort((a, b) => a[sKey] - b[sKey] || a[eKey] - b[eKey]);
   let clusters = [], cur = [], curEnd = -1;
-  items.forEach(it => {
-    if (cur.length && it.start >= curEnd) { clusters.push(cur); cur = []; curEnd = -1; }
-    cur.push(it); curEnd = Math.max(curEnd, it.end);
+  sorted.forEach(it => {
+    if (cur.length && it[sKey] >= curEnd) { clusters.push(cur); cur = []; curEnd = -1; }
+    cur.push(it); curEnd = Math.max(curEnd, it[eKey]);
   });
   if (cur.length) clusters.push(cur);
   clusters.forEach(cluster => {
@@ -69,13 +67,26 @@ function layoutDayEvents(evs) {
     cluster.forEach(it => {
       let placed = false;
       for (let i = 0; i < colEnds.length; i++) {
-        if (colEnds[i] <= it.start) { it.col = i; colEnds[i] = it.end; placed = true; break; }
+        if (colEnds[i] <= it[sKey]) { it[colKey] = i; colEnds[i] = it[eKey]; placed = true; break; }
       }
-      if (!placed) { it.col = colEnds.length; colEnds.push(it.end); }
+      if (!placed) { it[colKey] = colEnds.length; colEnds.push(it[eKey]); }
     });
-    cluster.forEach(it => it.ncols = colEnds.length);
+    cluster.forEach(it => it[nKey] = colEnds.length);
   });
-  return items;
+}
+
+// Répartit les événements d'une journée :
+//  - bandCol/bandN : empilement des fines bandes latérales (selon la durée totale)
+//  - contentCol/contentN : colonnes des blocs de contenu (selon la hauteur du texte seulement)
+// Ainsi un événement qui ne chevauche que la « traîne » (bande) d'un autre prend toute la largeur.
+function layoutDayEvents(evs) {
+  const items = evs.map(ev => {
+    const start = evStartMin(ev);
+    return { ev, start, end: start + evDurMin(ev), cStart: start, cEnd: start + PL_CONTENT_MIN };
+  });
+  assignColumns(items, 'start', 'end', 'bandCol', 'bandN');       // bandes (durée réelle)
+  assignColumns(items, 'cStart', 'cEnd', 'contentCol', 'contentN'); // blocs (hauteur de texte)
+  return items.sort((a, b) => a.start - b.start);
 }
 
 function renderWeek() {
@@ -117,14 +128,18 @@ function renderWeek() {
       const ev = it.ev;
       const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
-      const contentH = Math.min(fullH, PL_EV_MAX_H);
-      const wPct = 100 / it.ncols;
-      const leftPct = it.col * wPct;
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
-      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:calc(${leftPct}% + 2px);width:calc(${wPct}% - 4px)" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
-        <div class="pl-ev-band" style="background:${bg}"></div>
-        <div class="pl-ev" style="height:${contentH}px;background:${bg}">
+      // Bande : empilée à gauche selon bandCol
+      const bandLeft = it.bandCol * PL_BAND_W;
+      // Contenu : commence après toutes les bandes, puis réparti en colonnes selon contentCol
+      const inset = it.bandN * PL_BAND_W + 2;
+      const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
+      const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
+      const cWidth = `calc(${colW} - 2px)`;
+      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
+        <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
+        <div class="pl-ev" style="left:${cLeft};width:${cWidth};background:${bg}">
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
           <div class="pl-ev-title">${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</div>
         </div>
