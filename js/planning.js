@@ -321,11 +321,10 @@ function renderMonth() {
     const evHtml = dayEvs.slice(0, 3).map(ev => {
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const time = (ev.heure || ev.time || '').slice(0, 5);
-      const timeHtml = time ? '<span class="plm-ev-time">' + time + '</span> ' : '';
-      const resHtml = ev.residentName ? escHtml(ev.residentName) + ' — ' : '';
+      const label = (time ? time + ' ' : '') + escHtml(ev.titre);
       return '<div class="plm-ev" onclick="event.stopPropagation();viewEvent(\'' + ev.id + '\')">'
         + '<span class="plm-ev-band" style="background:' + bg + '"></span>'
-        + '<span class="plm-ev-txt">' + timeHtml + resHtml + escHtml(ev.titre) + '</span>'
+        + '<span class="plm-ev-txt">' + label + '</span>'
         + '</div>';
     }).join('');
     const more = dayEvs.length > 3 ? `<div class="plm-more">+${dayEvs.length - 3} autres</div>` : '';
