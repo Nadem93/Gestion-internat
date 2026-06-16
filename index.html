@@ -134,7 +134,7 @@
 <script>
   sessionStorage.removeItem('ftr_current_etab');
   initDefaults();
-  if (Auth.getSession()) window.location.href = 'app.html';
+  if (Auth.getSession()) window.location.href = 'accueil.html';
   if (sessionStorage.getItem('ftr_lock_reason') === 'idle') {
     const li = document.getElementById('lockInfo'); if (li) li.style.display = 'block';
     sessionStorage.removeItem('ftr_lock_reason');
@@ -145,7 +145,7 @@
     const username = document.getElementById('login').value;
     const password = document.getElementById('pw').value;
     if (await Auth.login(username, password)) {
-      window.location.href = 'app.html';
+      window.location.href = 'accueil.html';
     } else {
       document.getElementById('loginError').style.display = 'block';
       document.getElementById('pw').value = '';
