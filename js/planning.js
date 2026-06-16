@@ -38,6 +38,7 @@ function getFilteredEvents() {
 const PL_DAY_START = 7;   // 7h
 const PL_DAY_END = 21;    // 21h
 const PL_HOUR_H = 52;     // px par heure
+const PL_EV_MAX_H = 104;  // hauteur max d'un bloc (~2h) pour éviter qu'un événement long n'occupe toute la colonne
 
 function evStartMin(ev) {
   const t = (ev.heure || ev.time || '09:00');
@@ -115,14 +116,18 @@ function renderWeek() {
     const blocks = laid.map(it => {
       const ev = it.ev;
       const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
-      const h = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
+      const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
+      const contentH = Math.min(fullH, PL_EV_MAX_H);
       const wPct = 100 / it.ncols;
       const leftPct = it.col * wPct;
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
-      return `<div class="pl-ev" style="top:${top}px;height:${h}px;left:calc(${leftPct}% + 2px);width:calc(${wPct}% - 4px);background:${bg}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
-        <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
-        <div class="pl-ev-title">${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</div>
+      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:calc(${leftPct}% + 2px);width:calc(${wPct}% - 4px)" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
+        <div class="pl-ev-band" style="background:${bg}"></div>
+        <div class="pl-ev" style="height:${contentH}px;background:${bg}">
+          <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
+          <div class="pl-ev-title">${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</div>
+        </div>
       </div>`;
     }).join('');
     return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')">${blocks}</div>`;
