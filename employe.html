@@ -94,7 +94,9 @@ function getEmploye(id) {
   const u = users.find(x => String(x.id) === String(targetId));
   if (!u) return null;
   const empStore = JSON.parse(localStorage.getItem(DB.keys.employes) || '[]');
-  const emp = empStore.find(x => String(x.id) === String(targetId)) || {};
+  const empById   = empStore.find(x => String(x.id) === String(targetId));
+  const empByName = empStore.find(x => x.prenom === u.prenom && x.nom === u.nom);
+  const emp = empById || empByName || {};
   return {
     id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
     poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',

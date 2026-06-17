@@ -788,7 +788,8 @@ function generateForCurrentEtab() {
     const maxUsers = Math.min(cfgUsers - 1, profils.length);
     for (let i = 0; i < maxUsers; i++) {
       const p = profils[i];
-      users.push({ id: i + 2, ...p, password: 'educ123', role: 'educ' });
+      const tpl = employesTpl.find(t => t.prenom === p.prenom && t.nom === p.nom) || {};
+      users.push({ id: i + 2, ...p, telephone: tpl.tel || '', email: tpl.email || '', password: 'educ123', role: 'educ' });
     }
     DB.set(DB.keys.users, users);
     users.forEach(u => addUserToAllEtabs(u));

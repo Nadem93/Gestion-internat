@@ -584,45 +584,14 @@
     <!-- Barre d'outils -->
     <div class="emp-toolbar">
       <div class="emp-toolbar-left">
-        <button class="emp-tool-btn">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          Vue tableau
-          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <button class="emp-tool-btn">
-          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-          Filtrer
-        </button>
-        <button class="emp-tool-btn">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-          Trier
-        </button>
+        <input type="text" id="empSearch" class="form-input" placeholder="Rechercher…" style="width:200px;padding:.32rem .7rem;font-size:.82rem" oninput="renderEmployes()"/>
       </div>
       <div class="emp-toolbar-right">
         <button class="btn btn-violet btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button>
-        <button class="emp-tool-btn">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-          Paramètres d'affichage
-        </button>
       </div>
     </div>
-    <!-- Tableau -->
-    <div class="emp-table-wrap">
-      <table class="emp-table">
-        <thead>
-          <tr>
-            <th>Personne</th>
-            <th>Poste</th>
-            <th>Statut</th>
-            <th>Email</th>
-            <th>Téléphone</th>
-            <th>Date embauche</th>
-            <th style="width:80px">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="employesList"></tbody>
-      </table>
-    </div>
+    <!-- Grille cartes -->
+    <div id="employesList" style="margin-top:.75rem"></div>
     <!-- Popup profil (hover) -->
     <div id="empPopup" class="emp-popup" style="display:none" onmouseenter="clearEmpPopupTimer()" onmouseleave="hideEmpPopup()"></div>
   </div>
@@ -934,52 +903,55 @@ function renderEmployes() {
   if (!el) return;
   const users = DB.get(DB.keys.users) || [];
   const empStore = getEmployes();
-  const list = users.map(u => {
-    const emp = empStore.find(e => String(e.id) === String(u.id)) || {};
+  const q = (document.getElementById('empSearch')?.value || '').trim().toLowerCase();
+  let list = users.map(u => {
+    const empById   = empStore.find(e => String(e.id) === String(u.id));
+    const empByName = empStore.find(e => e.prenom === u.prenom && e.nom === u.nom);
+    const emp = empById || empByName || {};
     return {
-      id: String(u.id),
-      prenom: u.prenom || '',
-      nom: u.nom || '',
-      poste: emp.poste || u.fonction || '',
-      telephone: emp.telephone || u.telephone || '',
-      email: emp.email || u.email || '',
-      statut: emp.statut || (u.role === 'admin' ? 'admin' : 'actif'),
-      dateEmbauche: emp.dateEmbauche || '',
+      id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
+      poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',
+      email: emp.email||u.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
+      dateEmbauche: emp.dateEmbauche||''
     };
   });
+  if (q) list = list.filter(e =>
+    (e.prenom+' '+e.nom).toLowerCase().includes(q) ||
+    (e.poste).toLowerCase().includes(q) ||
+    (e.email).toLowerCase().includes(q) ||
+    (e.telephone).includes(q)
+  );
   if (!list.length) {
-    el.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9a9aae;padding:3rem;font-size:.85rem">Aucun employé — cliquez sur "+ Ajouter"</td></tr>`;
+    el.innerHTML = `<div style="text-align:center;color:#9a9aae;padding:3rem;font-size:.85rem">Aucun employé — cliquez sur "+ Ajouter"</div>`;
     return;
   }
-  const statusPill = s => {
-    if (s === 'inactif') return '<span class="emp-pill emp-pill-inactif">Inactif</span>';
-    if (s === 'actif' || !s) return '<span class="emp-pill emp-pill-actif">Actif</span>';
-    return `<span class="emp-pill emp-pill-none">${escHtml(s)}</span>`;
+  const pillStyle = s => {
+    if (s === 'inactif') return 'background:#fef2f2;color:#ef4444';
+    if (s === 'admin')   return 'background:#ede9fe;color:#7c3aed';
+    return 'background:#f0fdf4;color:#16a34a';
   };
-  el.innerHTML = list.map(e => {
-    const initiales = ((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'');
-    const color = empColor(e);
-    const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-    return `<tr style="cursor:pointer" onclick="window.location='employe.html?id=${e.id}'" onmouseenter="showEmpPopup(event,'${e.id}')" onmouseleave="scheduleHidePopup()">
-      <td>
-        <div class="emp-person">
-          <div class="emp-av" style="background:${color}">${escHtml(initiales)}</div>
-          <div class="emp-person-info">
-            <div class="emp-person-name">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
-            <div class="emp-person-phone">${escHtml(e.telephone||'—')}</div>
-          </div>
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">${
+    list.map(e => {
+      const initiales = ((e.prenom||'')[0]||'').toUpperCase() + ((e.nom||'')[0]||'').toUpperCase();
+      const color = empColor(e);
+      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '';
+      return `<div style="background:#fff;border:1px solid #e8e8f0;border-radius:16px;padding:1.5rem 1.25rem 1rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.45rem;cursor:pointer;transition:box-shadow .15s,transform .15s"
+        onclick="window.location='employe.html?id=${e.id}'"
+        onmouseenter="this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)';this.style.transform='translateY(-2px)'"
+        onmouseleave="this.style.boxShadow='';this.style.transform=''">
+        <div style="width:60px;height:60px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff;margin-bottom:.25rem">${escHtml(initiales)}</div>
+        <div style="font-weight:700;font-size:.92rem;color:#1a1a2e">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
+        <div style="font-size:.78rem;color:#6b6b8a">${escHtml(e.poste||'—')}</div>
+        <span style="font-size:.68rem;font-weight:700;padding:2px 10px;border-radius:99px;${pillStyle(e.statut)}">${e.statut==='inactif'?'Inactif':e.statut==='admin'?'Admin':'Actif'}</span>
+        <div style="font-size:.75rem;color:#9a9aae;display:flex;flex-direction:column;align-items:center;gap:.2rem;margin-top:.1rem">
+          ${e.telephone ? `<span>📞 ${escHtml(e.telephone)}</span>` : ''}
+          ${e.email    ? `<span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✉️ ${escHtml(e.email)}</span>` : ''}
+          ${dateEmb    ? `<span>📅 ${dateEmb}</span>` : ''}
         </div>
-      </td>
-      <td>${escHtml(e.poste||'—')}</td>
-      <td>${statusPill(e.statut)}</td>
-      <td style="color:#6b6b8a">${escHtml(e.email||'—')}</td>
-      <td style="color:#6b6b8a">${escHtml(e.telephone||'—')}</td>
-      <td style="color:#9a9aae">${dateEmb}</td>
-      <td>
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="padding:3px 8px;font-size:.72rem">✎ Modifier</button>
-      </td>
-    </tr>`;
-  }).join('');
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="margin-top:.5rem;padding:3px 12px;font-size:.72rem;width:100%">✎ Modifier</button>
+      </div>`;
+    }).join('')
+  }</div>`;
 }
 
 let _empPopupTimer = null;
