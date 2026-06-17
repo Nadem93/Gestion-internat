@@ -127,6 +127,22 @@ function layoutDayEvents(evs) {
   return items.sort((a, b) => a.start - b.start);
 }
 
+function getRecurDates(startDate, freq, until) {
+  const dates = [];
+  const cur = new Date(startDate + 'T12:00:00');
+  const end = new Date(until + 'T12:00:00');
+  let guard = 0;
+  while (cur <= end && guard++ < 200) {
+    dates.push(dateStr(cur));
+    if (freq === 'daily')     cur.setDate(cur.getDate() + 1);
+    else if (freq === 'weekly')    cur.setDate(cur.getDate() + 7);
+    else if (freq === 'biweekly')  cur.setDate(cur.getDate() + 14);
+    else if (freq === 'monthly')   cur.setMonth(cur.getMonth() + 1);
+    else break;
+  }
+  return dates;
+}
+
 function getConflictIds(dayEvents) {
   const ids = new Set();
   for (let i = 0; i < dayEvents.length; i++) {
@@ -212,7 +228,7 @@ function renderTimeline(days) {
         <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
         <div class="pl-ev${isConflict?' pl-ev-conflict':''}" style="left:${cLeft};width:${cWidth};background:${bg}">
           ${isConflict?'<span class="pl-ev-conflict-ic">⚠</span>':''}
-          <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
+          <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}${ev.recurId?' <span style="opacity:.75;font-size:.55rem">↻</span>':''}</div>
           <div class="pl-ev-title">${escHtml(ev.titre)}</div>
         </div>
       </div>`;
@@ -417,6 +433,12 @@ function quickAddEvent(date, heure) {
   document.getElementById('modalEventTitle').textContent = 'Nouvel événement';
   document.getElementById('eventId').value = '';
   resetVehiculeFields();
+  const recurRow = document.getElementById('evRecurRow');
+  if (recurRow) recurRow.style.display = '';
+  const evRecur = document.getElementById('evRecur');
+  if (evRecur) evRecur.value = '';
+  const recurUntilWrap = document.getElementById('evRecurUntilWrap');
+  if (recurUntilWrap) recurUntilWrap.style.display = 'none';
   openModal('modalEvent');
 }
 
@@ -453,6 +475,15 @@ function viewEvent(id) {
   document.getElementById('evViewBody').innerHTML = body;
   document.getElementById('evViewEdit').onclick = () => { closeModal('modalEventView'); editEvent(id); };
   document.getElementById('evViewDelete').onclick = () => { document.getElementById('eventId').value = id; deleteEvent(); };
+  const seriesBtn = document.getElementById('evViewDeleteSeries');
+  if (seriesBtn) {
+    if (ev.recurId) {
+      const cnt = (DB.get(DB.keys.planning) || []).filter(e => e.recurId === ev.recurId).length;
+      seriesBtn.style.display = '';
+      seriesBtn.textContent = `↻ Série (${cnt})`;
+      seriesBtn.onclick = () => deleteEventSeries(ev.recurId);
+    } else { seriesBtn.style.display = 'none'; }
+  }
   openModal('modalEventView');
 }
 
@@ -471,6 +502,9 @@ function editEvent(id) {
   document.getElementById('evColor').value = ev.color || '#3b82f6';
   document.getElementById('evDesc').value = ev.desc || '';
   document.getElementById('btnDeleteEvent').style.display = '';
+  // Masquer la récurrence en mode édition (on édite un seul événement)
+  const recurRow = document.getElementById('evRecurRow');
+  if (recurRow) recurRow.style.display = 'none';
   const cb = document.getElementById('evVehiculeCheck');
   const hasVeh = ev.vehicule;
   if (cb) cb.checked = !!hasVeh;
@@ -488,6 +522,9 @@ function saveEvent() {
   const residentId = document.getElementById('evResident').value;
   const residents = DB.get(DB.keys.residents) || [];
   const res = residents.find(r => r.id === residentId);
+  const id = document.getElementById('eventId').value;
+  const recur = document.getElementById('evRecur')?.value || '';
+  const recurUntil = document.getElementById('evRecurUntil')?.value || '';
   const data = {
     titre,
     residentId,
@@ -516,8 +553,20 @@ function saveEvent() {
     delete data.destination;
     delete data.motif;
   }
+  // Création d'une série récurrente
+  if (!id && recur && recurUntil && recurUntil >= data.date) {
+    const dates = getRecurDates(data.date, recur, recurUntil);
+    if (!dates.length) { toast('Plage de dates invalide', 'error'); return; }
+    const recurId = genId();
+    let evs = DB.get(DB.keys.planning) || [];
+    const newEvs = dates.map(date => ({ ...data, id: genId(), date, recurId, recurFreq: recur, recurUntil }));
+    DB.set(DB.keys.planning, evs.concat(newEvs));
+    newEvs.forEach(ev => syncEventToResidentRdv(ev));
+    toast(`${dates.length} événement${dates.length > 1 ? 's créés' : ' créé'}`);
+    closeAllModals(); render(); return;
+  }
+
   let events = DB.get(DB.keys.planning) || [];
-  const id = document.getElementById('eventId').value;
   let finalEvent;
   if (id) { events = events.map(e => { if (e.id === id) { finalEvent = {...e,...data}; return finalEvent; } return e; }); toast('Événement mis à jour'); }
   else { data.id = genId(); finalEvent = data; events.push(data); toast('Événement ajouté'); }
@@ -586,6 +635,24 @@ function syncEventToResidentRdv(event) {
   }
   DB.set(DB.keys.residents, residents);
   if (event.santeRdvId !== santeRdvId) setEventLink(santeRdvId);
+}
+
+function deleteEventSeries(recurId) {
+  const events = DB.get(DB.keys.planning) || [];
+  const seriesEvs = events.filter(e => e.recurId === recurId);
+  confirmDialog(`Supprimer les ${seriesEvs.length} événements de cette série ?`, () => {
+    const residents = DB.get(DB.keys.residents) || [];
+    seriesEvs.forEach(ev => {
+      if (ev.santeRdvId && ev.residentId) {
+        const r = residents.find(x => String(x.id) === String(ev.residentId));
+        if (r?.sante?.rdv) r.sante.rdv = r.sante.rdv.filter(x => x.id !== ev.santeRdvId);
+      }
+    });
+    DB.set(DB.keys.residents, residents);
+    DB.set(DB.keys.planning, events.filter(e => e.recurId !== recurId));
+    closeAllModals(); render();
+    toast(`${seriesEvs.length} événements supprimés`, 'info');
+  });
 }
 
 function deleteEvent() {
