@@ -1042,18 +1042,23 @@ function generateForCurrentEtab() {
   // ── PLANNING ÉQUIPE ──
   const pe = [];
   const employesList = DB.get(DB.keys.employes) || [];
+  // Liste du personnel avec IDs utilisateurs (pour les pages employe.html?id=X)
+  const staffList = users.filter(u => !u.super && u.id !== 1).map(u => {
+    const emp = employesList.find(e => e.prenom === u.prenom && e.nom === u.nom) || {};
+    return { id: String(u.id), prenom: u.prenom||'', nom: u.nom||'', poste: emp.poste||u.fonction||'', statut: emp.statut||'actif' };
+  });
   const peShiftTemplates = [['08:00','16:00'],['07:00','15:00'],['09:00','17:00'],['13:00','21:00'],['21:00','07:00']];
-  if (employesList.length) {
+  if (staffList.length) {
     const peMonday = new Date(now);
     peMonday.setDate(peMonday.getDate() - ((peMonday.getDay() + 6) % 7) - 14);
-    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+    staffList.forEach(u => {
       for (let day = 0; day < 28; day++) {
         const d = new Date(peMonday);
         d.setDate(d.getDate() + day);
         const isWeekend = d.getDay() === 0 || d.getDay() === 6;
         if (Math.random() < (isWeekend ? 0.2 : 0.75)) {
           const [debut, fin] = pick(peShiftTemplates);
-          pe.push({ id: 'pe-' + genId(), employeId: emp.id, date: d.toISOString().slice(0,10), debut, fin });
+          pe.push({ id: 'pe-' + genId(), employeId: u.id, date: d.toISOString().slice(0,10), debut, fin });
         }
       }
     });
@@ -1064,27 +1069,26 @@ function generateForCurrentEtab() {
   const conges = [];
   const typeLabels = ['cp','rtt','maladie','enfant_malade','formation'];
   const statuts = ['en_attente','accepte','refuse'];
-  if (employesList.length) {
-    for (let i = 0; i < rand(5, 15); i++) {
-      const emp = pick(employesList);
-      const d = new Date(now);
-      d.setDate(d.getDate() + rand(-30, 60));
-      const d2 = new Date(d); d2.setDate(d2.getDate() + rand(0, 5));
-      const statut = pick(statuts);
-      conges.push({
-        id: 'cg-' + genId(),
-        employeId: emp.id, employeNom: emp.prenom+' '+emp.nom,
-        type: pick(typeLabels),
-        debut: d.toISOString().slice(0,10),
-        fin: d2.toISOString().slice(0,10),
-        motif: pick(['','Rendez-vous médical','Raison personnelle','Formation obligatoire','','']),
-        statut,
-        dateDemande: new Date(now.getTime() - rand(0, 60) * 86400000).toISOString(),
-        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom+' '+u.nom).filter(Boolean)) : '',
-        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
-        reponseMotif: statut === 'refuse' ? pick(['Effectif insuffisant','Période de forte activité','Doublon avec autre demande','']) : ''
-      });
-    }
+  const staffForConges = staffList.length ? staffList : users.slice(1);
+  for (let i = 0; i < rand(8, 20); i++) {
+    const u = pick(staffForConges);
+    const d = new Date(now);
+    d.setDate(d.getDate() + rand(-45, 60));
+    const d2 = new Date(d); d2.setDate(d2.getDate() + rand(1, 7));
+    const statut = pick(statuts);
+    conges.push({
+      id: 'cg-' + genId(),
+      employeId: String(u.id), employeNom: (u.prenom||'')+' '+(u.nom||''),
+      type: pick(typeLabels),
+      debut: d.toISOString().slice(0,10),
+      fin: d2.toISOString().slice(0,10),
+      motif: pick(['','Rendez-vous médical','Raison personnelle','Formation obligatoire','Congés annuels planifiés','']),
+      statut,
+      dateDemande: new Date(now.getTime() - rand(1, 60) * 86400000).toISOString(),
+      traitePar: statut !== 'en_attente' ? pick(users.map(u2 => (u2.prenom||'')+' '+(u2.nom||'')).filter(Boolean)) : '',
+      dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
+      reponseMotif: statut === 'refuse' ? pick(['Effectif insuffisant','Période de forte activité','Doublon avec autre demande','']) : ''
+    });
   }
   localStorage.setItem('ftr_conges', JSON.stringify(conges));
 
@@ -1100,51 +1104,87 @@ function generateForCurrentEtab() {
   const budgetDemandes = [];
   const BUDGET_MOTIFS = ['Achat de matériel pour l\'atelier', 'Sortie pédagogique', 'Frais de déplacement professionnel', 'Achat de fournitures', 'Remboursement repas en mission', 'Petit matériel d\'entretien', 'Carburant véhicule de service', 'Activité éducative jeunes', 'Achat de jeux éducatifs', 'Péage / parking mission'];
   const BUDGET_REFUS = ['Justificatif manquant ou illisible', 'Montant non conforme au plafond', 'Dépense hors enveloppe', 'Demande déjà traitée via une autre enveloppe', ''];
-  if (employesList.length) {
-    for (let i = 0; i < rand(8, 18); i++) {
-      const emp = pick(employesList);
-      const env = pick(budgetEnveloppes);
-      const dDep = new Date(now);
-      dDep.setDate(dDep.getDate() - rand(0, 60));
-      const statut = pick(statuts);
-      budgetDemandes.push({
-        id: 'bg-' + genId(),
-        employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
-        enveloppeId: env.id, enveloppeNom: env.nom,
-        montant: rand(15, 220),
-        motif: pick(BUDGET_MOTIFS),
-        dateDepense: dDep.toISOString().slice(0, 10),
-        justificatifs: [],
-        statut,
-        dateDemande: new Date(dDep.getTime() + rand(0, 3) * 86400000).toISOString(),
-        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom + ' ' + u.nom).filter(Boolean)) : '',
-        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
-        reponseMotif: statut === 'refuse' ? pick(BUDGET_REFUS) : ''
-      });
-    }
+  for (let i = 0; i < rand(8, 18); i++) {
+    const u = pick(staffForConges);
+    const env = pick(budgetEnveloppes);
+    const dDep = new Date(now);
+    dDep.setDate(dDep.getDate() - rand(0, 60));
+    const statut = pick(statuts);
+    budgetDemandes.push({
+      id: 'bg-' + genId(),
+      employeId: String(u.id), employeNom: (u.prenom||'')+' '+(u.nom||''),
+      enveloppeId: env.id, enveloppeNom: env.nom,
+      montant: rand(15, 220),
+      motif: pick(BUDGET_MOTIFS),
+      dateDepense: dDep.toISOString().slice(0, 10),
+      justificatifs: [],
+      statut,
+      dateDemande: new Date(dDep.getTime() + rand(0, 3) * 86400000).toISOString(),
+      traitePar: statut !== 'en_attente' ? pick(users.map(u2 => (u2.prenom||'')+' '+(u2.nom||'')).filter(Boolean)) : '',
+      dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
+      reponseMotif: statut === 'refuse' ? pick(BUDGET_REFUS) : ''
+    });
   }
   DB.set(DB.keys.budgetDemandes, budgetDemandes);
 
-  // ── FICHES DE PAIE ──
-  const fichesPaie = [];
-  if (employesList.length) {
-    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
-      for (let m = 1; m <= 6; m++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
-        const periode = d.toISOString().slice(0, 7);
-        const txt = `Bulletin de paie — ${emp.prenom} ${emp.nom}\nPériode : ${periode}\nDocument généré automatiquement (démo).`;
-        fichesPaie.push({
-          id: 'pie-' + genId(),
-          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
-          periode,
-          fichier: { name: `bulletin_${periode}.txt`, mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
-          dateAjout: new Date(d.getFullYear(), d.getMonth() + 1, 5).toISOString(),
-          ajoutePar: 'Service RH'
-        });
-      }
-    });
-  }
-  DB.set(DB.keys.fichesPaie, fichesPaie);
+  // ── FICHES DE PAIE (format employe.html : dict {userId:[...]}) ──
+  const fichesPaieDict = {};
+  const SALAIRES = [[1800,1420],[2100,1650],[2400,1880],[2600,2040],[3000,2350],[1950,1530],[2250,1760]];
+  staffList.forEach(u => {
+    const [brut, net] = pick(SALAIRES);
+    fichesPaieDict[u.id] = [];
+    for (let m = 1; m <= 6; m++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      const periode = d.toISOString().slice(0, 7);
+      const mLabel = d.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+      const txt = `BULLETIN DE PAIE — DÉMO\n\nEmployé : ${u.prenom} ${u.nom}\nPoste : ${u.poste||'Éducateur'}\nPériode : ${mLabel}\n\nSalaire brut : ${brut} €\nCotisations : ${brut - net} €\nSalaire net : ${net} €\n\nDocument généré automatiquement (démo).`;
+      fichesPaieDict[u.id].push({
+        id: 'fp-' + genId(),
+        name: `Fiche de paie ${mLabel}`,
+        periode,
+        salaireBrut: String(brut),
+        salaireNet: String(net),
+        fileName: `bulletin_${periode}.txt`,
+        size: txt.length,
+        mimeType: 'text/plain',
+        date: new Date(d.getFullYear(), d.getMonth() + 1, 5).toISOString(),
+        data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt)
+      });
+    }
+  });
+  localStorage.setItem('ftr_fiches_paie', JSON.stringify(fichesPaieDict));
+
+  // ── DOCUMENTS EMPLOYÉS (format employe.html : dict {userId:[...]}) ──
+  const empDocsDict = {};
+  const EMP_DOC_TYPES = [
+    { name:'Contrat de travail', category:'contrat' },
+    { name:'Fiche de poste', category:'fiche' },
+    { name:'Avenant au contrat', category:'contrat' },
+    { name:'Attestation de formation PSC1', category:'formation' },
+    { name:'Diplôme d\'État éducateur spécialisé', category:'administratif' },
+    { name:'Attestation permis de conduire', category:'administratif' }
+  ];
+  staffList.forEach(u => {
+    const nbDocs = rand(1, 3);
+    empDocsDict[u.id] = [];
+    for (let k = 0; k < nbDocs; k++) {
+      const tpl = EMP_DOC_TYPES[k % EMP_DOC_TYPES.length];
+      const docDate = new Date(now.getTime() - rand(30, 700) * 86400000).toISOString().slice(0,10);
+      const txt = `${tpl.name}\nEmployé : ${u.prenom} ${u.nom}\nDate : ${docDate}\n\nDocument de démo.`;
+      empDocsDict[u.id].push({
+        id: 'ed-' + genId(),
+        name: tpl.name,
+        fileName: tpl.name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '.txt',
+        size: txt.length,
+        mimeType: 'text/plain',
+        category: tpl.category,
+        docDate,
+        date: new Date(now.getTime() - rand(0, 30) * 86400000).toISOString(),
+        data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt)
+      });
+    }
+  });
+  localStorage.setItem('ftr_employes_docs', JSON.stringify(empDocsDict));
 
   // ── ENTRETIENS PROFESSIONNELS ──
   const entretiens = [];
@@ -1164,8 +1204,8 @@ function generateForCurrentEtab() {
     'Améliorer la gestion du temps et des priorités.'
   ];
   const ENTRETIEN_FORMATIONS = ['', 'Formation gestes et postures', 'Formation premiers secours (PSC1)', 'Formation gestion de la violence', 'Formation à l\'écrit professionnel', ''];
-  if (employesList.length) {
-    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
+  if (staffList.length) {
+    staffList.forEach(u => {
       const n = rand(1, 2);
       for (let k = 0; k < n; k++) {
         const d = new Date(now);
@@ -1173,7 +1213,7 @@ function generateForCurrentEtab() {
         const statut = d < now ? pick(['realise', 'realise', 'planifie']) : 'planifie';
         entretiens.push({
           id: 'et-' + genId(),
-          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
+          employeId: String(u.id), employeNom: (u.prenom||'')+' '+(u.nom||''),
           date: d.toISOString().slice(0, 10),
           type: pick(ENTRETIEN_TYPES),
           statut,
