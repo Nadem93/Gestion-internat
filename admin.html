@@ -898,21 +898,41 @@ function editEmploye(id) {
 const EMP_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
 function empColor(e) { const s = (e.prenom||'') + (e.nom||''); let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) & 0xffff; return EMP_COLORS[h % EMP_COLORS.length]; }
 
+function patchUsersFromEmployes() {
+  const users = DB.get(DB.keys.users) || [];
+  const empStore = getEmployes();
+  let changed = false;
+  const patched = users.map(u => {
+    if (u.telephone && u.email && u.dateEmbauche) return u;
+    const emp = empStore.find(e =>
+      (String(e.id) === String(u.id)) ||
+      (e.prenom && e.nom && e.prenom === u.prenom && e.nom === u.nom)
+    );
+    if (!emp) return u;
+    const update = { ...u };
+    if (!u.telephone && emp.telephone) { update.telephone = emp.telephone; changed = true; }
+    if (!u.email && emp.email)         { update.email = emp.email;         changed = true; }
+    if (!u.dateEmbauche && emp.dateEmbauche) { update.dateEmbauche = emp.dateEmbauche; changed = true; }
+    if (!u.fonction && (emp.poste || emp.fonction)) { update.fonction = emp.poste || emp.fonction; changed = true; }
+    return update;
+  });
+  if (changed) DB.set(DB.keys.users, patched);
+  return patched;
+}
+
 function renderEmployes() {
   const el = document.getElementById('employesList');
   if (!el) return;
-  const users = DB.get(DB.keys.users) || [];
+  const users = patchUsersFromEmployes();
   const empStore = getEmployes();
   const q = (document.getElementById('empSearch')?.value || '').trim().toLowerCase();
   let list = users.map(u => {
-    const empById   = empStore.find(e => String(e.id) === String(u.id));
-    const empByName = empStore.find(e => e.prenom === u.prenom && e.nom === u.nom);
-    const emp = empById || empByName || {};
+    const emp = empStore.find(e => String(e.id) === String(u.id) || (e.prenom === u.prenom && e.nom === u.nom)) || {};
     return {
       id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
-      poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',
-      email: emp.email||u.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
-      dateEmbauche: emp.dateEmbauche||''
+      poste: emp.poste||u.fonction||'', telephone: u.telephone||emp.telephone||'',
+      email: u.email||emp.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
+      dateEmbauche: u.dateEmbauche||emp.dateEmbauche||''
     };
   });
   if (q) list = list.filter(e =>
