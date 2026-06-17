@@ -1716,7 +1716,7 @@ function generateForCurrentEtab() {
     conges: conges.length,
     budgetEnveloppes: budgetEnveloppes.length,
     budgetDemandes: budgetDemandes.length,
-    fichesPaie: fichesPaie.length,
+    fichesPaie: Object.values(fichesPaieDict).reduce((a,v) => a + v.length, 0),
     entretiens: entretiens.length,
     documentation: documentation.length,
     admissions: admissions.length,
