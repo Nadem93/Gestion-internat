@@ -188,7 +188,7 @@ function renderTimeline(days) {
         <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
         <div class="pl-ev" style="left:${cLeft};width:${cWidth};background:${bg}">
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
-          <div class="pl-ev-title">${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</div>
+          <div class="pl-ev-title">${escHtml(ev.titre)}</div>
         </div>
       </div>`;
     }).join('');
@@ -318,7 +318,7 @@ function renderMonth() {
     const isTod = sameDay(d, todayD);
     const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
     const num = `<div class="plm-num${isTod?' is-today':''}">${d.getDate()}</div>`;
-    const evHtml = dayEvs.slice(0, 3).map(ev => {
+    const evHtml = dayEvs.map(ev => {
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const time = (ev.heure || ev.time || '').slice(0, 5);
       const label = (time ? time + ' ' : '') + escHtml(ev.titre);
@@ -327,7 +327,7 @@ function renderMonth() {
         + '<span class="plm-ev-txt">' + label + '</span>'
         + '</div>';
     }).join('');
-    const more = dayEvs.length > 3 ? `<div class="plm-more">+${dayEvs.length - 3} autres</div>` : '';
+    const more = '';
     return `<div class="plm-cell${isTod ? ' plm-today' : ''}" onclick="quickAddEvent('${dateStr(d)}','')">
       ${num}${evHtml}${more}
     </div>`;
