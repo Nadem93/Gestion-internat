@@ -5,6 +5,24 @@ let peMonthCursor = (() => { const d = new Date(); d.setDate(1); d.setHours(0,0,
 let peMetierFilter = ''; // '' = tous les métiers, sinon valeur de e.poste
 let _peLastDays = [];
 
+function getPeEmployes() {
+  const users = DB.get(DB.keys.users) || [];
+  const empStore = DB.get(DB.keys.employes) || [];
+  return users
+    .filter(u => !u.super && u.role !== 'superadmin')
+    .map(u => {
+      const emp = empStore.find(e => String(e.id) === String(u.id) || (e.prenom === u.prenom && e.nom === u.nom)) || {};
+      return {
+        id: String(u.id),
+        prenom: u.prenom || '',
+        nom: u.nom || '',
+        poste: emp.poste || u.fonction || '',
+        statut: emp.statut || (u.role === 'admin' ? 'admin' : 'actif')
+      };
+    })
+    .filter(e => e.statut !== 'inactif');
+}
+
 function initPlanningEquipe() {
   const _s = Auth.requireAuth();
   if (!_s) return;
@@ -124,7 +142,7 @@ function peExportCsv() {
   const days = _peLastDays;
   if (!days.length) return;
   const dayStrs = days.map(peISO);
-  const allEmployes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
+  const allEmployes = getPeEmployes();
   const employes = peMetierFilter ? allEmployes.filter(e => e.poste === peMetierFilter) : allEmployes;
   const empIds = new Set(employes.map(e => e.id));
   const shifts = getPeShifts().filter(s => dayStrs.includes(s.date) && (!peMetierFilter || empIds.has(s.employeId)));
@@ -240,7 +258,7 @@ function handlePeImport(e) {
       toast('Format CSV incorrect. Colonnes attendues : employé, date, début, fin', 'error'); return;
     }
     const imported = [];
-    const employes = DB.get(DB.keys.employes) || [];
+    const employes = getPeEmployes();
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(/[;,]/).map(c => c.trim().replace(/['"]/g,''));
       const nom = cols[empIdx];
@@ -271,7 +289,7 @@ function handlePeImport(e) {
 function openPeShiftModal(employeId, date, shiftId) {
   if (!peCanEditPlanning()) return;
   const shifts = getPeShifts();
-  const employes = DB.get(DB.keys.employes) || [];
+  const employes = getPeEmployes();
   const shift = shiftId ? shifts.find(s => s.id === shiftId) : null;
   let finalEmployeId, finalDate, empNom;
   if (shift) {
@@ -376,7 +394,7 @@ function renderPlanningGrid(days, isWeek) {
   document.getElementById('peHint').textContent = canEdit ? 'Cliquez sur une case pour ajouter ou modifier un créneau' : '';
   document.getElementById('peCopyBtn').style.display = (canEdit && isWeek) ? '' : 'none';
 
-  const allEmployes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
+  const allEmployes = getPeEmployes();
 
   const metierSelect = document.getElementById('peMetierFilter');
   if (metierSelect) {

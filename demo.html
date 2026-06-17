@@ -753,8 +753,10 @@ function generateForCurrentEtab() {
   DB.set(DB.keys.interventions, intervsList);
 
   // ── UTILISATEURS ──
-  const users = DB.get(DB.keys.users) || [];
-  if (users.length <= 1) {
+  const existingUsers = DB.get(DB.keys.users) || [];
+  const adminUser = existingUsers.find(u => u.id === 1) || null;
+  const users = adminUser ? [adminUser] : [];
+  {
     const profils = [
       { prenom:'Sophie', nom:'Martin', fonction:'Éducatrice spécialisée', username:'smartin' },
       { prenom:'Pierre', nom:'Dubois', fonction:'Éducateur jeunesse', username:'pdubois' },
