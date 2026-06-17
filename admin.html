@@ -903,18 +903,25 @@ function deleteEmploye() {
   toast('Employé supprimé');
 }
 function editEmploye(id) {
-  const list = getEmployes();
-  const e = list.find(x => x.id === id);
-  if (!e) return;
-  document.getElementById('empId').value = e.id;
-  document.getElementById('empPrenom').value = e.prenom || '';
-  document.getElementById('empNom').value = e.nom || '';
-  document.getElementById('empPoste').value = e.poste || '';
-  document.getElementById('empTel').value = e.telephone || '';
-  document.getElementById('empEmail').value = e.email || '';
-  document.getElementById('empDate').value = e.dateEmbauche || '';
-  document.getElementById('empNotes').value = e.notes || '';
-  document.getElementById('btnDeleteEmp').style.display = '';
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => String(x.id) === String(id));
+  const empStore = getEmployes();
+  const emp = empStore.find(x => String(x.id) === String(id)) || {};
+  if (!u) return;
+  // Peupler le select Poste avant d'ouvrir
+  const fonctions = DB.get(DB.keys.fonctionColors) || [];
+  const sel = document.getElementById('empPoste');
+  sel.innerHTML = '<option value="">— Sélectionner un poste —</option>'
+    + fonctions.map(f => `<option value="${escHtml(f.fonction)}">${escHtml(f.fonction)}</option>`).join('');
+  document.getElementById('empId').value = u.id;
+  document.getElementById('empPrenom').value = u.prenom || '';
+  document.getElementById('empNom').value = u.nom || '';
+  sel.value = emp.poste || u.fonction || '';
+  document.getElementById('empTel').value = emp.telephone || u.telephone || '';
+  document.getElementById('empEmail').value = emp.email || u.email || '';
+  document.getElementById('empDate').value = emp.dateEmbauche || '';
+  document.getElementById('empNotes').value = emp.notes || '';
+  document.getElementById('btnDeleteEmp').style.display = 'none';
   document.getElementById('modalEmployeTitle').textContent = 'Modifier employé';
   document.getElementById('empCreatedAccount').style.display = 'none';
   openModal('modalEmploye');
