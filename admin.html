@@ -960,7 +960,7 @@ function renderEmployes() {
     const initiales = ((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'');
     const color = empColor(e);
     const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-    return `<tr onmouseenter="showEmpPopup(event,'${e.id}')" onmouseleave="scheduleHidePopup()">
+    return `<tr style="cursor:pointer" onclick="window.location='employe.html?id=${e.id}'" onmouseenter="showEmpPopup(event,'${e.id}')" onmouseleave="scheduleHidePopup()">
       <td>
         <div class="emp-person">
           <div class="emp-av" style="background:${color}">${escHtml(initiales)}</div>
@@ -989,9 +989,17 @@ function hideEmpPopup() { const p = document.getElementById('empPopup'); if (p) 
 
 function showEmpPopup(event, id) {
   clearEmpPopupTimer();
-  const list = getEmployes();
-  const e = list.find(x => x.id === id);
-  if (!e) return;
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => String(x.id) === String(id));
+  if (!u) return;
+  const empStore = getEmployes();
+  const emp = empStore.find(x => String(x.id) === String(id)) || {};
+  const e = {
+    id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
+    poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',
+    email: emp.email||u.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
+    dateEmbauche: emp.dateEmbauche||''
+  };
   const popup = document.getElementById('empPopup');
   if (!popup) return;
   const color = empColor(e);
