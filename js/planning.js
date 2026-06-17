@@ -188,7 +188,7 @@ function renderTimeline(days) {
         <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
         <div class="pl-ev" style="left:${cLeft};width:${cWidth};background:${bg}">
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
-          <div class="pl-ev-title">${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</div>
+          <div class="pl-ev-title">${escHtml(ev.titre)}</div>
         </div>
       </div>`;
     }).join('');
