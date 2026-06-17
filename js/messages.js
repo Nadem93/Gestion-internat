@@ -88,25 +88,28 @@ function renderConvs() {
     const preview = lastMsg ? (lastMsg.body||'') : '';
 
     const isActive = currentConvId === conv.id;
-    const roleText = otherIds.length === 1
-      ? (users.find(x => String(x.id) === String(otherIds[0]))?.fonction || '')
-      : (otherIds.length > 1 ? `Groupe (${otherIds.length + 1} membres)` : '');
-    return `<div class="chat-conv ${isActive?'active':''}" onclick="selectConv('${conv.id}')">
-      <div class="chat-conv-ck${isActive?' checked':''}"></div>
-      <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
+    const showOnline = otherIds.length === 1;
+    return `<div class="chat-conv${isActive?' active':''}" onclick="selectConv('${conv.id}')">
+      <div class="chat-conv-av-wrap">
+        <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
+        ${showOnline ? '<div class="chat-conv-online"></div>' : ''}
+      </div>
       <div class="chat-conv-info">
         <div class="chat-conv-name">${escHtml(name)}</div>
-        <div class="chat-conv-role">${escHtml(roleText || preview)}</div>
+        <div class="chat-conv-preview">${escHtml(preview)}</div>
       </div>
-      <div class="chat-conv-count">${msgs.length || ''}</div>
+      <div class="chat-conv-meta">
+        <div class="chat-conv-time">${time}</div>
+        ${unreadCount > 0 ? `<div class="chat-conv-badge">${unreadCount}</div>` : `<div class="chat-conv-pin">📌</div>`}
+      </div>
       <button class="chat-conv-del" onclick="event.stopPropagation();deleteConv('${conv.id}')" title="Supprimer"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
     </div>`;
   }
 
-  let html = '';
+  let groupHtml = '';
+  groupConvs.map(convToHtml).filter(Boolean).forEach(h => groupHtml += h);
 
-  groupConvs.map(convToHtml).filter(Boolean).forEach(h => html += h);
-
+  let recentHtml = '';
   users.forEach(u => {
     const uid = String(u.id);
     if (uid === myUserId) return;
@@ -118,19 +121,24 @@ function renderConvs() {
 
     const conv = userConvMap[uid];
     if (conv) {
-      html += convToHtml(conv);
+      recentHtml += convToHtml(conv);
     } else {
-      html += `<div class="chat-conv" onclick="openUserChat('${uid}')">
-        <div class="chat-conv-ck"></div>
-        <div class="chat-conv-avatar" style="background:#007aff">${initials}</div>
+      recentHtml += `<div class="chat-conv" onclick="openUserChat('${uid}')">
+        <div class="chat-conv-av-wrap">
+          <div class="chat-conv-avatar" style="background:#5b5fc7">${initials}</div>
+        </div>
         <div class="chat-conv-info">
           <div class="chat-conv-name">${escHtml(name)}</div>
-          <div class="chat-conv-role">${escHtml(u.fonction || '')}</div>
+          <div class="chat-conv-preview">${escHtml(u.fonction || 'Cliquez pour discuter')}</div>
         </div>
-        <div class="chat-conv-count"></div>
+        <div class="chat-conv-meta"></div>
       </div>`;
     }
   });
+
+  let html = '';
+  if (groupHtml) html += `<div class="ml-section"><span class="ml-section-label">Épinglés</span><span class="ml-section-chevron">^</span></div>` + groupHtml;
+  if (recentHtml) html += `<div class="ml-section"><span class="ml-section-label">Récents</span><span class="ml-section-chevron">^</span></div>` + recentHtml;
 
   if (!html) {
     html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">
@@ -400,15 +408,17 @@ function renderChat() {
     const isUnread = !isOwn && !m.readBy?.includes(session.userId);
 
     const av = isOwn ? myInitials : (((author?.prenom||'')[0]||'') + ((author?.nom||'')[0]||'') || '?');
-    const avColor = isOwn ? '#6366f1' : '#1786cf';
+    const avColor = isOwn ? '#6366f1' : '#5b5fc7';
     const dispName = isOwn ? myName : authorName;
-    html += `<div class="act-item${isOwn?' own':''}">
-      <div class="act-av" style="background:${avColor}">${av}</div>
-      <div class="act-body">
-        <div class="act-head">
-          <strong class="act-author">${escHtml(dispName)}</strong><span class="act-verb"> a envoyé un message</span><span class="act-time">${time}</span>
+    const timeLabel = new Date(m.date).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    html += `<div class="chat-row ${isOwn?'own':'other'}">
+      <div class="chat-msg-av" style="background:${avColor}">${av}</div>
+      <div class="chat-msg-content">
+        <div class="chat-msg-meta">
+          <span class="chat-msg-author">${escHtml(dispName)}</span>
+          <span class="chat-msg-time">${timeLabel}</span>
         </div>
-        <div class="act-msg${isUnread?' unread':''}">
+        <div class="chat-bubble${isUnread?' unread-bubble':''}">
           ${isUnread ? '<span class="act-new">Nouveau</span>' : ''}${escHtml(m.body)}
         </div>
         ${readerAvatars}
