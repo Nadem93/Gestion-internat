@@ -854,10 +854,31 @@ function saveEmploye() {
   const dateEmbauche = document.getElementById('empDate').value;
   const notes = document.getElementById('empNotes').value.trim();
   if (!prenom || !nom) { toast('Prénom et nom requis', 'error'); return; }
-  let list = getEmployes();
-  if (id) { const idx = list.findIndex(e => e.id === id); if (idx >= 0) list[idx] = { ...list[idx], prenom, nom, poste, telephone, email, dateEmbauche, notes }; }
-  else { list.unshift({ id:genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo:'', notes, createdAt:new Date().toISOString() }); }
-  saveEmployes(list);
+
+  if (id) {
+    // Mise à jour dans ftr_users (source principale des cartes)
+    const users = DB.get(DB.keys.users) || [];
+    const uIdx = users.findIndex(u => String(u.id) === String(id));
+    if (uIdx >= 0) {
+      users[uIdx] = { ...users[uIdx], prenom, nom, telephone, email, dateEmbauche, fonction: poste };
+      DB.set(DB.keys.users, users);
+    }
+    // Upsert dans ftr_employes pour les champs RH (poste, notes…)
+    let list = getEmployes();
+    const eIdx = list.findIndex(e => String(e.id) === String(id) || (e.prenom === prenom && e.nom === nom));
+    if (eIdx >= 0) {
+      list[eIdx] = { ...list[eIdx], prenom, nom, poste, telephone, email, dateEmbauche, notes };
+    } else {
+      list.push({ id, prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', notes, createdAt: new Date().toISOString() });
+    }
+    saveEmployes(list);
+  } else {
+    // Nouvel employé : uniquement dans ftr_employes
+    let list = getEmployes();
+    list.unshift({ id: genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo:'', notes, createdAt: new Date().toISOString() });
+    saveEmployes(list);
+  }
+
   closeModal('modalEmploye');
   renderEmployes();
   toast(id ? 'Employé modifié' : 'Employé ajouté');
