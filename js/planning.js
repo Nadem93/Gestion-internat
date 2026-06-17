@@ -36,6 +36,7 @@ function dateStr(d) {
 
 // Types désactivés dans la légende (vide = tout afficher)
 let hiddenTypes = new Set();
+let searchQuery = '';
 
 function getFilteredEvents() {
   const res = document.getElementById('filterEventResident')?.value || '';
@@ -44,6 +45,13 @@ function getFilteredEvents() {
   events = events.filter(e => e.type !== 'vehicule');
   if (res) events = events.filter(e => e.residentId === res || !e.residentId);
   if (hiddenTypes.size) events = events.filter(e => !hiddenTypes.has(e.type || 'autre'));
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    events = events.filter(e =>
+      (e.titre || '').toLowerCase().includes(q) ||
+      (e.residentName || '').toLowerCase().includes(q)
+    );
+  }
   return events;
 }
 
@@ -119,6 +127,20 @@ function layoutDayEvents(evs) {
   return items.sort((a, b) => a.start - b.start);
 }
 
+function getConflictIds(dayEvents) {
+  const ids = new Set();
+  for (let i = 0; i < dayEvents.length; i++) {
+    if (!dayEvents[i].residentId) continue;
+    for (let j = i + 1; j < dayEvents.length; j++) {
+      if (dayEvents[j].residentId !== dayEvents[i].residentId) continue;
+      const si = evStartMin(dayEvents[i]), ei = si + evDurMin(dayEvents[i]);
+      const sj = evStartMin(dayEvents[j]), ej = sj + evDurMin(dayEvents[j]);
+      if (si < ej && ei > sj) { ids.add(dayEvents[i].id); ids.add(dayEvents[j].id); }
+    }
+  }
+  return ids;
+}
+
 function renderWeek() {
   const monday = getMondayOf(currentDate);
   const days = Array.from({length:7}, (_,i) => { const d=new Date(monday); d.setDate(d.getDate()+i); return d; });
@@ -172,9 +194,11 @@ function renderTimeline(days) {
   const dayCols = days.map(d => {
     const dStr = dateStr(d);
     const dayEvents = events.filter(e => eventOnDay(e, dStr) && (e.heure || e.time));
+    const conflictIds = getConflictIds(dayEvents);
     const laid = layoutDayEvents(dayEvents);
     const blocks = laid.map(it => {
       const ev = it.ev;
+      const isConflict = conflictIds.has(ev.id);
       const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
@@ -186,7 +210,8 @@ function renderTimeline(days) {
       const cWidth = `calc(${colW} - 2px)`;
       return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
         <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
-        <div class="pl-ev" style="left:${cLeft};width:${cWidth};background:${bg}">
+        <div class="pl-ev${isConflict?' pl-ev-conflict':''}" style="left:${cLeft};width:${cWidth};background:${bg}">
+          ${isConflict?'<span class="pl-ev-conflict-ic">⚠</span>':''}
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}</div>
           <div class="pl-ev-title">${escHtml(ev.titre)}</div>
         </div>
@@ -498,6 +523,13 @@ function saveEvent() {
   else { data.id = genId(); finalEvent = data; events.push(data); toast('Événement ajouté'); }
   DB.set(DB.keys.planning, events);
   syncEventToResidentRdv(finalEvent);
+  if (finalEvent.residentId && finalEvent.date) {
+    const allEvs = DB.get(DB.keys.planning) || [];
+    const sameDayEvs = allEvs.filter(e => e.id !== finalEvent.id && e.residentId === finalEvent.residentId && e.date === finalEvent.date && e.type !== 'vehicule');
+    const fStart = evStartMin(finalEvent), fEnd = fStart + evDurMin(finalEvent);
+    const conflicts = sameDayEvs.filter(e => { const s = evStartMin(e), en = s + evDurMin(e); return fStart < en && fEnd > s; });
+    if (conflicts.length) toast('⚠️ Conflit détecté : ' + conflicts.map(c => c.titre).join(', '), 'error');
+  }
   closeAllModals();
   render();
 }
@@ -603,6 +635,12 @@ function initPlanning() {
   document.getElementById('nextBtn').onclick = () => navigate(1);
   document.getElementById('todayBtn').onclick = () => { currentDate = new Date(); sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); render(); };
   document.getElementById('filterEventResident').onchange = render;
+  const searchEl = document.getElementById('searchEvent');
+  if (searchEl) searchEl.oninput = () => { searchQuery = searchEl.value.trim(); render(); };
+  if (window.innerWidth < 640) { currentView = 'day'; setViewBtn('viewDay'); }
+  window.addEventListener('resize', () => {
+    if (window.innerWidth < 640 && currentView !== 'day') { currentView = 'day'; setViewBtn('viewDay'); render(); }
+  });
   document.getElementById('viewDay').onclick = () => { currentView='day'; setViewBtn('viewDay'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewWeek').onclick = () => { currentView='week'; setViewBtn('viewWeek'); document.getElementById('listContainer').style.display='none'; render(); };
   document.getElementById('viewMonth').onclick = () => { currentView='month'; setViewBtn('viewMonth'); document.getElementById('listContainer').style.display='none'; render(); };
