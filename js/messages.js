@@ -87,17 +87,19 @@ function renderConvs() {
     const time = lastMsg ? formatConvTime(new Date(lastMsg.date)) : '';
     const preview = lastMsg ? (lastMsg.body||'') : '';
 
-    return `<div class="chat-conv ${currentConvId===conv.id?'active':''}" onclick="selectConv('${conv.id}')">
+    const isActive = currentConvId === conv.id;
+    const roleText = otherIds.length === 1
+      ? (users.find(x => String(x.id) === String(otherIds[0]))?.fonction || '')
+      : (otherIds.length > 1 ? `Groupe (${otherIds.length + 1} membres)` : '');
+    return `<div class="chat-conv ${isActive?'active':''}" onclick="selectConv('${conv.id}')">
+      <div class="chat-conv-ck${isActive?' checked':''}"></div>
       <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
       <div class="chat-conv-info">
-        <div class="chat-conv-name">${escHtml(name)}${unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0"></span>' : ''}</div>
-        <div class="chat-conv-preview">${escHtml(preview)}</div>
+        <div class="chat-conv-name">${escHtml(name)}</div>
+        <div class="chat-conv-role">${escHtml(roleText || preview)}</div>
       </div>
-      <div class="chat-conv-right">
-        <div class="chat-conv-time">${time}</div>
-        ${unreadCount > 0 ? `<div class="chat-conv-badge">${unreadCount}</div>` : ''}
-      </div>
-      <button class="chat-conv-del" onclick="event.stopPropagation();deleteConv('${conv.id}')" title="Supprimer la conversation"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+      <div class="chat-conv-count">${msgs.length || ''}</div>
+      <button class="chat-conv-del" onclick="event.stopPropagation();deleteConv('${conv.id}')" title="Supprimer"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
     </div>`;
   }
 
@@ -119,12 +121,13 @@ function renderConvs() {
       html += convToHtml(conv);
     } else {
       html += `<div class="chat-conv" onclick="openUserChat('${uid}')">
+        <div class="chat-conv-ck"></div>
         <div class="chat-conv-avatar" style="background:#007aff">${initials}</div>
         <div class="chat-conv-info">
           <div class="chat-conv-name">${escHtml(name)}</div>
-          <div class="chat-conv-preview" style="color:var(--muted);font-style:italic">Cliquez pour discuter</div>
+          <div class="chat-conv-role">${escHtml(u.fonction || '')}</div>
         </div>
-        <div class="chat-conv-right"></div>
+        <div class="chat-conv-count"></div>
       </div>`;
     }
   });
@@ -135,6 +138,11 @@ function renderConvs() {
     </div>`;
   }
   document.getElementById('chatConvs').innerHTML = html;
+  const mcEl = document.getElementById('memberCount');
+  if (mcEl) {
+    const total = getUsers().filter(u => String(u.id) !== String(session.userId)).length;
+    mcEl.textContent = `(${total})`;
+  }
 }
 
 function openUserChat(userId) {
@@ -294,6 +302,7 @@ function renderChat() {
       <p>Messages</p>
     </div>`;
     updateConvCount();
+    updateChips();
     return;
   }
 
@@ -341,16 +350,23 @@ function renderChat() {
   if (!msgs.length) {
     msgsEl.innerHTML = `<div class="chat-empty"><p style="color:var(--muted)">Aucun message</p></div>`;
     updateConvCount();
+    updateChips();
     return;
   }
 
-  let currentDate = '';
+  const todayStr = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const myUser = users.find(x => String(x.id) === String(session.userId));
+  const myInitials = ((myUser?.prenom||'')[0]||'') + ((myUser?.nom||'')[0]||'') || 'M';
+  const myName = myUser ? `${myUser.prenom||''} ${myUser.nom||''}`.trim() || myUser.username || 'Moi' : 'Moi';
+
+  let curDateGroup = '';
   let html = '';
   for (const m of msgs) {
     const msgDate = new Date(m.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
-    if (msgDate !== currentDate) {
-      currentDate = msgDate;
-      html += `<div class="chat-date-sep">${currentDate}</div>`;
+    if (msgDate !== curDateGroup) {
+      curDateGroup = msgDate;
+      const dateLabel = msgDate === todayStr ? "Aujourd'hui" : msgDate;
+      html += `<div class="chat-date-sep"><span>${dateLabel}</span></div>`;
     }
     const isOwn = String(m.from) === String(session.userId);
     const author = users.find(u => String(u.id) === String(m.from));
@@ -383,12 +399,17 @@ function renderChat() {
 
     const isUnread = !isOwn && !m.readBy?.includes(session.userId);
 
-    html += `<div class="chat-row ${isOwn ? 'own' : 'other'}">
-      <div class="chat-bubble" style="${isUnread ? 'background:#faecd0;border:2px solid #f5a623;font-weight:600' : ''}">${isUnread ? '<span style="font-size:.55rem;text-transform:uppercase;color:#f5a623;font-weight:800;letter-spacing:.04em;display:block;margin-bottom:2px">Nouveau</span>' : ''}
-        ${!isOwn && otherIds.length > 1 ? `<div class="chat-bubble-author">${escHtml(authorName)}</div>` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:6px">
-          <span>${escHtml(m.body)}</span>
-          <span class="chat-bubble-time">${time}</span>
+    const av = isOwn ? myInitials : (((author?.prenom||'')[0]||'') + ((author?.nom||'')[0]||'') || '?');
+    const avColor = isOwn ? '#6366f1' : '#1786cf';
+    const dispName = isOwn ? myName : authorName;
+    html += `<div class="act-item${isOwn?' own':''}">
+      <div class="act-av" style="background:${avColor}">${av}</div>
+      <div class="act-body">
+        <div class="act-head">
+          <strong class="act-author">${escHtml(dispName)}</strong><span class="act-verb"> a envoyé un message</span><span class="act-time">${time}</span>
+        </div>
+        <div class="act-msg${isUnread?' unread':''}">
+          ${isUnread ? '<span class="act-new">Nouveau</span>' : ''}${escHtml(m.body)}
         </div>
         ${readerAvatars}
       </div>
@@ -403,6 +424,7 @@ function renderChat() {
   renderConvs();
   msgsEl.innerHTML = html;
   msgsEl.scrollTop = msgsEl.scrollHeight;
+  updateChips();
   // Store unread count for accueil
   const sessionId = session?.userId;
   const allM = getMessages();
@@ -417,6 +439,24 @@ function updateConvCount() {
   const unread = allMsgs.filter(m => m.from !== session.userId && !m.readBy?.includes(session.userId)).length;
   document.getElementById('convCount').textContent = unread ? `${unread} non lu${unread>1?'s':''}` : '';
   localStorage.setItem('ftr_notif_msg_unread_' + session.userId, unread);
+  // Mise à jour compteur onglet
+  const convMsgs = currentConvId ? getConvMessages(currentConvId) : [];
+  const ctEl = document.getElementById('tabAllCt');
+  if (ctEl) ctEl.textContent = convMsgs.length || 0;
+}
+
+function updateChips() {
+  const chipsEl = document.getElementById('actChips');
+  if (!chipsEl) return;
+  if (!currentConvId) { chipsEl.innerHTML = ''; return; }
+  const session = Auth.getSession();
+  const participants = getConvParticipants(currentConvId).filter(id => String(id) !== String(session.userId));
+  const users = getUsers();
+  chipsEl.innerHTML = participants.map(id => {
+    const u = users.find(x => String(x.id) === String(id));
+    const name = u ? `${u.prenom||''} ${u.nom||''}`.trim() || u.username : 'Inconnu';
+    return `<div class="act-chip">${escHtml(name)} <span class="act-chip-x">×</span></div>`;
+  }).join('');
 }
 
 function sendChatMsg() {

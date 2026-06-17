@@ -4,62 +4,163 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Messages — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
-    .chat-wrap{display:grid;grid-template-columns:300px 1fr;gap:0;height:calc(100vh - 140px);min-height:450px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:#fff}
-    .chat-list{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg);overflow:hidden;min-height:0}
-    .chat-list-header{display:flex;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--border);gap:.5rem;background:#fff}
-    .chat-list-header h3{margin:0;font-size:.85rem;font-weight:700;flex:1}
-    .chat-list-search{padding:.5rem .75rem;border-bottom:1px solid var(--border)}
-    .chat-list-search input{width:100%;padding:.35rem .65rem;border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem;outline:none;box-sizing:border-box}
-    .chat-list-search input:focus{border-color:var(--blue)}
-    .chat-convs{flex:1;overflow-y:auto;min-height:0}
-    .chat-conv{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)}
-    .chat-conv:hover{background:var(--b50)}
-    .chat-conv.active{background:#e8f0fe}
-    .chat-conv-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff;flex-shrink:0}
-    .chat-conv-info{flex:1;min-width:0}
-    .chat-conv-name{font-weight:600;font-size:.82rem;display:flex;align-items:center;gap:.3rem}
-    .chat-conv-preview{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-    .chat-conv-right{text-align:right;flex-shrink:0}
-    .chat-conv-time{font-size:.65rem;color:var(--muted);white-space:nowrap}
-    .chat-conv-badge{background:var(--blue);color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-top:2px;margin-left:auto;padding:0 4px;box-sizing:border-box}
-    .chat-main{display:flex;flex-direction:column;background:#fff;min-height:0}
-    .chat-main-header{display:flex;align-items:center;gap:.6rem;padding:.5rem .85rem;border-bottom:1px solid var(--border);background:#fff;min-height:48px}
-    .chat-main-header .avatar{width:30px;height:30px;font-size:.7rem}
-    .chat-main-header-info{flex:1;min-width:0}
-    .chat-main-header-name{font-weight:600;font-size:.82rem}
-    .chat-main-header-status{font-size:.68rem;color:var(--muted)}
+    /* ── Layout ── */
+    .msg-wrap{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 112px);min-height:500px;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 2px 16px rgba(0,0,0,.07);margin:0}
 
-    .chat-input{display:flex;gap:.5rem;align-items:flex-end;padding:.5rem .75rem;border-top:1px solid var(--border);background:#fff}
-    .chat-input textarea{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:.45rem .75rem;font-size:.82rem;outline:none;resize:none;min-height:36px;font-family:inherit}
-    .chat-input textarea:focus{border-color:var(--blue)}
-    .chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:2rem}
-    .chat-empty svg{width:40px;height:40px;opacity:.25;margin-bottom:.5rem}
-    .chat-empty p{font-size:.85rem;margin:0}
-    .chat-overlay{position:absolute;top:52px;left:8px;width:280px;max-height:360px;background:#fff;z-index:10;display:flex;flex-direction:column;border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,.2);border:1px solid var(--border);overflow:hidden}
-    .chat-overlay-header{display:flex;align-items:center;gap:.5rem;padding:.6rem .85rem;border-bottom:1px solid var(--border)}
-    .chat-overlay-header h3{margin:0;font-size:.85rem;font-weight:700;flex:1}
-    .chat-overlay-search{padding:.4rem .75rem;border-bottom:1px solid var(--border)}
-    .chat-overlay-search input{width:100%;padding:.35rem .65rem;border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem;outline:none;box-sizing:border-box}
-    .chat-overlay-search input:focus{border-color:var(--blue)}
-    .chat-overlay-list{flex:1;overflow-y:auto}
-    .chat-overlay-user{display:flex;align-items:center;gap:.55rem;padding:.45rem .75rem;cursor:pointer;transition:background .08s}
-    .chat-overlay-user:hover{background:var(--b50)}
-    .chat-overlay-user .ck{width:20px;height:20px;border-radius:50%;border:2px solid #c7c7cc;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s}
-    .chat-overlay-user .ck.checked{background:var(--blue);border-color:var(--blue)}
-    .chat-overlay-user .ck.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
-    .chat-overlay-user .avatar{width:34px;height:34px;font-size:.72rem}
-    .chat-overlay-user-info{flex:1;min-width:0}
-    .chat-overlay-user-name{font-weight:600;font-size:.8rem}
-    .chat-overlay-user-role{font-size:.68rem;color:var(--muted)}
-    .chat-overlay-btn{padding:.5rem .75rem;border-top:1px solid var(--border)}
-    .chat-overlay-btn button{width:100%}
-    .btn-circle{width:30px;height:30px;border-radius:50%;border:none;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-    .btn-circle svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none}
-    .chat-conv-del{opacity:0;transition:opacity .12s;width:20px;height:20px;border-radius:50%;border:none;background:#ff3b30;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;margin-left:2px}
-    .chat-conv-del svg{width:10px;height:10px;stroke:currentColor;stroke-width:3;fill:none}
+    /* ══════════════════════════════════════
+       PANNEAU GAUCHE — Member list
+    ══════════════════════════════════════ */
+    .msg-left{background:#fff;border-right:1px solid #eef0f4;display:flex;flex-direction:column;overflow:hidden}
+
+    /* En-tête "Member (N) | Activities" */
+    .ml-head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.25rem .75rem}
+    .ml-head-title{font-size:1rem;font-weight:700;color:#1a1d23}
+    .ml-head-title span{color:#9aa0ac;font-weight:400;font-size:.9rem}
+    .ml-head-link{font-size:.83rem;color:#9aa0ac;cursor:pointer;transition:color .12s}
+    .ml-head-link:hover{color:#1a1d23}
+
+    /* Barre de recherche */
+    .ml-search{padding:.2rem 1rem .65rem;position:relative}
+    .ml-search svg{position:absolute;left:1.6rem;top:50%;transform:translateY(-50%);width:13px;height:13px;color:#bbb;pointer-events:none}
+    .ml-search input{width:100%;padding:.42rem .8rem .42rem 2rem;border:1.5px solid #e4e8ed;border-radius:8px;font-size:.8rem;background:#f8f9fb;outline:none;box-sizing:border-box;color:#1a1d23;transition:border-color .15s,background .15s}
+    .ml-search input:focus{border-color:#1786cf;background:#fff}
+
+    /* Liste membres */
+    .chat-convs{flex:1;overflow-y:auto;min-height:0}
+
+    /* Ligne membre */
+    .chat-conv{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.25rem;cursor:pointer;border-bottom:1px solid #f5f6f8;transition:background .1s;position:relative}
+    .chat-conv:hover{background:#f8f9fb}
+    .chat-conv.active{background:#f0f6ff}
+
+    /* Case à cocher */
+    .chat-conv-ck{width:20px;height:20px;border-radius:5px;border:1.5px solid #d0d5dd;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:#fff}
+    .chat-conv-ck.checked{background:#1786cf;border-color:#1786cf}
+    .chat-conv-ck.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:800;line-height:1}
+
+    /* Avatar */
+    .chat-conv-avatar{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;color:#fff}
+
+    /* Info */
+    .chat-conv-info{flex:1;min-width:0}
+    .chat-conv-name{font-weight:600;font-size:.84rem;color:#1a1d23;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chat-conv-role{font-size:.72rem;color:#9aa0ac;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* Compteur */
+    .chat-conv-count{font-size:.82rem;color:#bbb;font-weight:500;flex-shrink:0;min-width:18px;text-align:right}
+
+    /* Bouton supprimer */
+    .chat-conv-del{opacity:0;transition:opacity .12s;width:20px;height:20px;border-radius:50%;border:none;background:#ff3b30;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+    .chat-conv-del svg{width:9px;height:9px;stroke:currentColor;stroke-width:3;fill:none}
     .chat-conv:hover .chat-conv-del{opacity:1}
+
+    /* Éléments cachés pour compatibilité JS */
+    .chat-conv-right{display:none}
+    .chat-conv-badge{display:none}
+    .chat-conv-preview{display:none}
+    .chat-conv-time{display:none}
+
+    /* État vide liste */
+    #chatConvs > div[style*="padding:2rem"]{color:#9aa0ac;font-size:.82rem}
+
+    /* Pagination */
+    .ml-pagination{display:flex;align-items:center;justify-content:center;gap:.3rem;padding:.7rem 1rem;border-top:1px solid #eef0f4}
+    .ml-page-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid #e4e8ed;background:#fff;color:#555;font-size:.76rem;font-weight:500;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;user-select:none}
+    .ml-page-btn:hover{border-color:#1786cf;color:#1786cf}
+    .ml-page-btn.pg-active{background:#1786cf;border-color:#1786cf;color:#fff}
+    .ml-page-btn.pg-arrow{background:#1786cf;border-color:#1786cf;color:#fff;font-size:.9rem}
+    .ml-page-btn.pg-arrow:first-child{background:#fff;color:#555}
+    .ml-page-sep{font-size:.75rem;color:#bbb;padding:0 .1rem;display:flex;align-items:center}
+
+    /* ══════════════════════════════════════
+       PANNEAU DROIT — Activity feed
+    ══════════════════════════════════════ */
+    .msg-right{display:flex;flex-direction:column;background:#fff;min-height:0;overflow:hidden}
+
+    /* Barre d'onglets */
+    .act-tabs{display:flex;align-items:stretch;padding:0 1.5rem;border-bottom:1.5px solid #eef0f4;min-height:52px;gap:0}
+    .act-tab{display:flex;align-items:center;gap:.35rem;padding:.75rem 1rem;font-size:.82rem;font-weight:500;color:#9aa0ac;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:color .12s,border-color .12s;white-space:nowrap;user-select:none}
+    .act-tab:hover{color:#555}
+    .act-tab svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;stroke-width:1.8;fill:none}
+    .act-tab .tab-ct{display:inline-flex;align-items:center;justify-content:center;background:#e9f0ff;color:#1786cf;font-size:.62rem;font-weight:700;border-radius:10px;padding:1px 6px;min-width:18px;transition:all .12s}
+    .act-tab.active{color:#1786cf;border-bottom-color:#1786cf;font-weight:600}
+    .act-tab.active .tab-ct{background:#1786cf;color:#fff}
+
+    /* Barre "Today + chips" */
+    .act-filter-bar{display:flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;border-bottom:1px solid #eef0f4;flex-wrap:wrap;min-height:50px;background:#fafbfc}
+    .act-date-label{font-size:.95rem;font-weight:700;color:#1a1d23;flex-shrink:0;margin-right:.2rem}
+    .act-chip{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .55rem .2rem .7rem;border:1.5px solid #b3d4f5;border-radius:20px;font-size:.74rem;color:#1786cf;font-weight:500;background:#f0f6ff;white-space:nowrap}
+    .act-chip-x{font-size:.82rem;color:#90bde8;cursor:pointer;line-height:1;padding:0 2px;transition:color .1s}
+    .act-chip-x:hover{color:#ef4444}
+    .act-add-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid #e4e8ed;background:#fff;color:#9aa0ac;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;line-height:1;flex-shrink:0;transition:all .12s}
+    .act-add-btn:hover{border-color:#1786cf;color:#1786cf}
+
+    /* En-tête conversation (caché — compatibilité JS) */
+    #chatMainHeader{display:none!important}
+
+    /* Zone messages */
+    .chat-msgs{flex:1;overflow-y:auto;padding:1rem 1.5rem;display:flex;flex-direction:column;gap:0;min-height:0}
+
+    /* Séparateur de date */
+    .chat-date-sep{display:flex;align-items:center;gap:.7rem;font-size:.8rem;font-weight:700;color:#9aa0ac;margin:1rem 0 .6rem;text-transform:uppercase;letter-spacing:.03em}
+    .chat-date-sep::before{content:'';height:1px;background:#eef0f4;flex:0 0 0}
+    .chat-date-sep::after{content:'';flex:1;height:1px;background:#eef0f4}
+
+    /* Item d'activité */
+    .act-item{display:flex;gap:.9rem;align-items:flex-start;padding:.55rem 0}
+    .act-item.own{flex-direction:row-reverse}
+    .act-av{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff}
+    .act-body{flex:1;min-width:0}
+    .act-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:.15rem;margin-bottom:.3rem}
+    .act-item.own .act-head{flex-direction:row-reverse;text-align:right}
+    .act-author{font-weight:700;font-size:.85rem;color:#1a1d23}
+    .act-verb{font-size:.82rem;color:#6b7280}
+    .act-time{font-size:.72rem;color:#bbb;margin-left:auto;padding-left:.5rem;flex-shrink:0}
+    .act-item.own .act-time{margin-left:0;margin-right:auto;padding-left:0;padding-right:.5rem}
+    .act-msg{background:#fff;border:1.5px solid #e4e8ef;border-radius:0 12px 12px 12px;padding:.6rem .9rem;font-size:.83rem;color:#1a1d23;line-height:1.6;word-break:break-word}
+    .act-msg.unread{background:#fffbf0;border-color:#f5c842}
+    .act-item.own .act-msg{background:#eef5ff;border-color:#bdd9f5;border-radius:12px 0 12px 12px}
+    .act-new{font-size:.6rem;font-weight:800;color:#f5a623;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block}
+
+    /* État vide */
+    .chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#bbb;text-align:center;padding:3rem;gap:.75rem}
+    .chat-empty svg{width:50px;height:50px;opacity:.18;stroke:currentColor;stroke-width:1.2;fill:none}
+    .chat-empty p{font-size:.9rem;margin:0;color:#9aa0ac}
+
+    /* Barre de saisie */
+    .chat-input{display:flex;gap:.6rem;align-items:flex-end;padding:.65rem 1.25rem;background:#fff;border-top:1.5px solid #eef0f4}
+    .chat-input-wrap{flex:1;border:1.5px solid #e4e8ed;border-radius:12px;background:#f9fafb;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+    .chat-input-wrap:focus-within{border-color:#1786cf;background:#fff;box-shadow:0 0 0 3px rgba(23,134,207,.1)}
+    .chat-input-tools{display:flex;gap:.2rem;padding:.28rem .5rem .1rem;border-bottom:1px solid #f0f2f5}
+    .chat-input-tools button{padding:2px 7px;font-size:.62rem;color:#9aa0ac;background:none;border:none;border-radius:4px;cursor:pointer;transition:background .1s,color .1s}
+    .chat-input-tools button:hover{background:#eef0f4;color:#1a1d23}
+    .chat-input textarea{display:block;width:100%;padding:.42rem .75rem;background:transparent;border:none;font-size:.83rem;outline:none;resize:none;min-height:34px;font-family:inherit;color:#1a1d23;box-sizing:border-box}
+    .chat-send-btn{width:38px;height:38px;border-radius:50%;background:#1786cf;border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,transform .1s}
+    .chat-send-btn:hover:not(:disabled){background:#1570b5;transform:scale(1.07)}
+    .chat-send-btn:disabled{background:#d0d5dd;cursor:not-allowed}
+    .chat-send-btn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.5;fill:none}
+
+    /* ── Overlay Compose ── */
+    .chat-overlay-backdrop{position:absolute;inset:0;background:rgba(15,30,60,.22);z-index:9;backdrop-filter:blur(2px)}
+    .chat-overlay{position:absolute;top:54px;left:8px;width:295px;max-height:400px;background:#fff;z-index:10;display:flex;flex-direction:column;border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,.16);border:1px solid #e4e8ed;overflow:hidden}
+    .chat-overlay-header{display:flex;align-items:center;gap:.5rem;padding:.65rem 1rem;border-bottom:1px solid #eef0f4}
+    .chat-overlay-header h3{margin:0;font-size:.88rem;font-weight:700;flex:1;text-align:center}
+    .chat-overlay-search{padding:.5rem .85rem;border-bottom:1px solid #eef0f4}
+    .chat-overlay-search input{width:100%;padding:.38rem .7rem;border:1.5px solid #e4e8ed;border-radius:8px;font-size:.78rem;outline:none;box-sizing:border-box;background:#f8f9fb}
+    .chat-overlay-search input:focus{border-color:#1786cf;background:#fff}
+    .chat-overlay-list{flex:1;overflow-y:auto}
+    .chat-overlay-user{display:flex;align-items:center;gap:.6rem;padding:.5rem .9rem;cursor:pointer;transition:background .08s}
+    .chat-overlay-user:hover{background:#f0f6ff}
+    .chat-overlay-user .ck{width:20px;height:20px;border-radius:50%;border:2px solid #d0d5dd;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
+    .chat-overlay-user .ck.checked{background:#1786cf;border-color:#1786cf}
+    .chat-overlay-user .ck.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+    .chat-overlay-user .avatar{width:34px;height:34px;font-size:.72rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
+    .chat-overlay-user-info{flex:1;min-width:0}
+    .chat-overlay-user-name{font-weight:600;font-size:.8rem;color:#1a1d23}
+    .chat-overlay-user-role{font-size:.68rem;color:#9aa0ac}
+    .chat-overlay-btn{padding:.6rem .85rem;border-top:1px solid #eef0f4}
+    .chat-overlay-btn button{width:100%}
   </style>
 </head>
 <body>
@@ -67,59 +168,120 @@
   <div class="main">
     <header class="header">
       <div class="header-info"><div class="header-title">Messages</div></div>
-      <div class="header-right"><span id="convCount" style="font-size:.8rem;color:var(--muted)"></span></div>
+      <div class="header-right">
+        <span id="convCount" style="font-size:.8rem;color:var(--muted)"></span>
+        <button class="btn btn-accent btn-sm" onclick="openCompose(null)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau
+        </button>
+      </div>
     </header>
+
     <main class="content" style="padding-bottom:0">
-      <div class="chat-wrap" style="position:relative">
-        <div class="chat-list">
-          <div class="chat-list-header">
-            <h3>Conversations</h3>
+      <div class="msg-wrap" style="position:relative">
+
+        <!-- ── PANNEAU GAUCHE ── -->
+        <div class="msg-left">
+          <div class="ml-head">
+            <div class="ml-head-title">Member <span id="memberCount">(0)</span></div>
+            <div class="ml-head-link">Activities</div>
           </div>
-          <div class="chat-list-search"><input type="text" id="convSearch" placeholder="Rechercher" oninput="renderConvs()"/></div>
+          <div class="ml-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="convSearch" placeholder="Rechercher…" oninput="renderConvs()"/>
+          </div>
           <div class="chat-convs" id="chatConvs"></div>
+          <!-- Pagination -->
+          <div class="ml-pagination">
+            <div class="ml-page-btn pg-arrow">‹</div>
+            <div class="ml-page-btn pg-active">1</div>
+            <div class="ml-page-btn">2</div>
+            <div class="ml-page-sep">…</div>
+            <div class="ml-page-btn">10</div>
+            <div class="ml-page-btn pg-arrow">›</div>
+          </div>
         </div>
-        <div class="chat-main" id="chatMain">
-          <div class="chat-main-header" id="chatMainHeader" style="display:none">
-            <button class="btn-circle" id="addParticipantBtn" style="flex-shrink:0;display:none" onclick="openCompose(currentConvId)" title="Ajouter un participant"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-            <div class="avatar" id="chatMainAvatar" style="background:var(--blue)">?</div>
-            <div class="chat-main-header-info">
-              <div class="chat-main-header-name" id="chatMainName">—</div>
-              <div class="chat-main-header-status" id="chatMainStatus">Conversation</div>
+
+        <!-- ── PANNEAU DROIT ── -->
+        <div class="msg-right" id="chatMain">
+
+          <!-- Header caché — pour compatibilité JS -->
+          <div id="chatMainHeader" style="display:none">
+            <div id="chatMainAvatar"></div>
+            <div id="chatMainName"></div>
+            <div id="chatMainStatus"></div>
+            <button id="addParticipantBtn" style="display:none" onclick="openCompose(currentConvId)"></button>
+          </div>
+
+          <!-- Onglets : Tout / Canal / Groupes -->
+          <div class="act-tabs">
+            <div class="act-tab active" id="actTabAll">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Tout <span class="tab-ct" id="tabAllCt">0</span>
+            </div>
+            <div class="act-tab">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              Canal <span class="tab-ct">12</span>
+            </div>
+            <div class="act-tab">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+              Groupes <span class="tab-ct">6</span>
             </div>
           </div>
+
+          <!-- Barre date + chips -->
+          <div class="act-filter-bar">
+            <span class="act-date-label" id="actDateLabel">Aujourd'hui</span>
+            <div id="actChips" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center"></div>
+            <div class="act-add-btn" title="Ajouter un participant" onclick="currentConvId && openCompose(currentConvId)">+</div>
+          </div>
+
+          <!-- Fil d'activité / messages -->
           <div class="chat-msgs" id="chatMsgs">
             <div class="chat-empty">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <p>Messages</p>
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <p>Sélectionnez une conversation<br>ou démarrez-en une nouvelle</p>
             </div>
           </div>
+
+          <!-- Barre de saisie -->
           <div class="chat-input" id="chatInputBar">
-            <div style="display:flex;flex-direction:column;flex:1;gap:.25rem">
-              <div style="display:flex;gap:.25rem">
-                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('redaction')" title="Rédiger">✍</button>
-                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('correction')" title="Corriger">✓</button>
-                <button class="btn btn-ghost btn-sm" style="font-size:.6rem;padding:1px 5px" onclick="aiAssistMessage('reformulation')" title="Reformuler">🏛</button>
+            <div class="chat-input-wrap">
+              <div class="chat-input-tools">
+                <button onclick="aiAssistMessage('redaction')">✍ Rédiger</button>
+                <button onclick="aiAssistMessage('correction')">✓ Corriger</button>
+                <button onclick="aiAssistMessage('reformulation')">↺ Reformuler</button>
               </div>
-              <textarea id="chatInput" rows="1" placeholder="Message" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}" disabled style="width:100%;box-sizing:border-box"></textarea>
+              <textarea id="chatInput" rows="1" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}" disabled style="width:100%;box-sizing:border-box"></textarea>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="sendChatMsg()" id="sendBtn" disabled>Envoyer</button>
+            <button class="chat-send-btn" onclick="sendChatMsg()" id="sendBtn" disabled>
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
           </div>
-          <div class="chat-overlay-backdrop" id="composeBackdrop" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.15);z-index:9" onclick="closeCompose()"></div>
+
+          <!-- Overlay compose -->
+          <div class="chat-overlay-backdrop" id="composeBackdrop" style="display:none" onclick="closeCompose()"></div>
           <div class="chat-overlay" id="composeOverlay" style="display:none">
             <div class="chat-overlay-header">
-              <button class="btn btn-ghost btn-sm" onclick="closeCompose()" style="font-size:.8rem">Annuler</button>
+              <button class="btn btn-ghost btn-sm" onclick="closeCompose()">Annuler</button>
               <h3>Nouveau message</h3>
-              <div style="width:50px"></div>
+              <div style="width:64px"></div>
             </div>
-            <div class="chat-overlay-search"><input type="text" id="composeSearch" placeholder="Rechercher" oninput="renderComposeUsers()"/></div>
+            <div class="chat-overlay-search">
+              <input type="text" id="composeSearch" placeholder="Rechercher un utilisateur…" oninput="renderComposeUsers()"/>
+            </div>
             <div class="chat-overlay-list" id="composeList"></div>
-            <div class="chat-overlay-btn"><button class="btn btn-primary" id="composeStartBtn" disabled onclick="startComposeConv()">Démarrer</button></div>
+            <div class="chat-overlay-btn">
+              <button class="btn btn-primary" id="composeStartBtn" disabled onclick="startComposeConv()">Démarrer</button>
+            </div>
           </div>
         </div>
+
       </div>
     </main>
   </div>
 </div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth(); if (!requireModule('access_messages')) { document.querySelector('.content').innerHTML = ''; }</script>
