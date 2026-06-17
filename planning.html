@@ -171,7 +171,10 @@
     </div>
     <div class="modal-body" id="evViewBody"></div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="evViewDelete" style="margin-right:auto">Supprimer</button>
+      <div style="display:flex;gap:.4rem;margin-right:auto">
+        <button class="btn btn-danger btn-sm" id="evViewDelete">Supprimer</button>
+        <button class="btn btn-sm" id="evViewDeleteSeries" style="display:none;color:#ef4444;border:1px solid #ef4444;background:transparent">↻ Série</button>
+      </div>
       <button class="btn btn-outline" onclick="closeModal('modalEventView')">Fermer</button>
       <button class="btn btn-primary" id="evViewEdit">Modifier</button>
     </div>
@@ -199,6 +202,23 @@
       <div class="form-row">
         <div class="form-group"><label>Durée</label><select id="evDuree"><option value="30">30 min</option><option value="60" selected>1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option><option value="journee">Journée</option></select></div>
         <div class="form-group"><label>Couleur</label><input type="color" id="evColor" value="#3b82f6"/></div>
+      </div>
+      <!-- Récurrence (masquée en mode édition) -->
+      <div class="form-row" id="evRecurRow">
+        <div class="form-group">
+          <label>Récurrence</label>
+          <select id="evRecur" onchange="document.getElementById('evRecurUntilWrap').style.display=this.value?'block':'none'">
+            <option value="">Aucune</option>
+            <option value="daily">Chaque jour</option>
+            <option value="weekly">Chaque semaine</option>
+            <option value="biweekly">Toutes les 2 semaines</option>
+            <option value="monthly">Chaque mois</option>
+          </select>
+        </div>
+        <div class="form-group" id="evRecurUntilWrap" style="display:none">
+          <label class="required">Répéter jusqu'au</label>
+          <input type="date" id="evRecurUntil"/>
+        </div>
       </div>
       <div class="form-group"><label>Description</label><textarea id="evDesc" rows="3" placeholder="Détails, lieu, intervenants…"></textarea></div>
       <div class="form-group" style="margin-top:.75rem">
