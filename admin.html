@@ -950,25 +950,35 @@ function renderEmployes() {
     if (s === 'admin')   return 'background:#ede9fe;color:#7c3aed';
     return 'background:#f0fdf4;color:#16a34a';
   };
-  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">${
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.1rem">${
     list.map(e => {
       const initiales = ((e.prenom||'')[0]||'').toUpperCase() + ((e.nom||'')[0]||'').toUpperCase();
       const color = empColor(e);
-      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '';
-      return `<div style="background:#fff;border:1px solid #e8e8f0;border-radius:16px;padding:1.5rem 1.25rem 1rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.45rem;cursor:pointer;transition:box-shadow .15s,transform .15s"
+      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      return `<div style="background:#fff;border:1px solid #e8e8f0;border-radius:18px;padding:1.75rem 1.5rem 1.25rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer;transition:box-shadow .15s,transform .15s"
         onclick="window.location='employe.html?id=${e.id}'"
-        onmouseenter="this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)';this.style.transform='translateY(-2px)'"
+        onmouseenter="this.style.boxShadow='0 8px 24px rgba(0,0,0,.11)';this.style.transform='translateY(-2px)'"
         onmouseleave="this.style.boxShadow='';this.style.transform=''">
-        <div style="width:60px;height:60px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff;margin-bottom:.25rem">${escHtml(initiales)}</div>
-        <div style="font-weight:700;font-size:.92rem;color:#1a1a2e">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
-        <div style="font-size:.78rem;color:#6b6b8a">${escHtml(e.poste||'—')}</div>
+        <div style="width:68px;height:68px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.35rem;color:#fff;margin-bottom:.3rem;flex-shrink:0">${escHtml(initiales)}</div>
+        <div style="font-weight:700;font-size:.95rem;color:#1a1a2e;line-height:1.2">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
+        <div style="font-size:.8rem;color:#6b6b8a;font-weight:500">${escHtml(e.poste||'—')}</div>
         <span style="font-size:.68rem;font-weight:700;padding:2px 10px;border-radius:99px;${pillStyle(e.statut)}">${e.statut==='inactif'?'Inactif':e.statut==='admin'?'Admin':'Actif'}</span>
-        <div style="font-size:.75rem;color:#9a9aae;display:flex;flex-direction:column;align-items:center;gap:.2rem;margin-top:.1rem">
-          ${e.telephone ? `<span>📞 ${escHtml(e.telephone)}</span>` : ''}
-          ${e.email    ? `<span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✉️ ${escHtml(e.email)}</span>` : ''}
-          ${dateEmb    ? `<span>📅 ${dateEmb}</span>` : ''}
+        <div style="width:100%;border-top:1px solid #f0f0f6;margin:.3rem 0"></div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:.35rem;text-align:left">
+          <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#444">
+            <span style="font-size:.95rem;flex-shrink:0">📞</span>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${e.telephone?'#1a1a2e':'#b0b0c0'}">${e.telephone ? escHtml(e.telephone) : '—'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#444">
+            <span style="font-size:.95rem;flex-shrink:0">✉️</span>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${e.email?'#1a1a2e':'#b0b0c0'}">${e.email ? escHtml(e.email) : '—'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#444">
+            <span style="font-size:.95rem;flex-shrink:0">📅</span>
+            <span style="color:${e.dateEmbauche?'#1a1a2e':'#b0b0c0'}">${dateEmb}</span>
+          </div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="margin-top:.5rem;padding:3px 12px;font-size:.72rem;width:100%">✎ Modifier</button>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="margin-top:.4rem;padding:4px 12px;font-size:.72rem;width:100%;border:1px solid #e8e8f0">✎ Modifier</button>
       </div>`;
     }).join('')
   }</div>`;
