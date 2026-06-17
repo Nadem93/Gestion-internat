@@ -611,7 +611,6 @@
       <table class="emp-table">
         <thead>
           <tr>
-            <th style="width:36px"><input type="checkbox" onclick="event.stopPropagation()"/></th>
             <th>Personne</th>
             <th>Poste</th>
             <th>Statut</th>
@@ -955,7 +954,6 @@ function renderEmployes() {
     const color = empColor(e);
     const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
     return `<tr onmouseenter="showEmpPopup(event,'${e.id}')" onmouseleave="scheduleHidePopup()">
-      <td><input type="checkbox" onclick="event.stopPropagation()"/></td>
       <td>
         <div class="emp-person">
           <div class="emp-av" style="background:${color}">${escHtml(initiales)}</div>
