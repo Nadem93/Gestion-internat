@@ -846,8 +846,13 @@ function getEmployes() { return JSON.parse(localStorage.getItem(DB.keys.employes
 function saveEmployes(list) { localStorage.setItem(DB.keys.employes, JSON.stringify(list)); }
 function resetEmployeForm() {
   document.getElementById('empId').value = '';
-  ['empPrenom','empNom','empPoste','empTel','empEmail','empNotes'].forEach(id => document.getElementById(id).value = '');
+  ['empPrenom','empNom','empTel','empEmail','empNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('empDate').value = '';
+  // Peupler le select Poste avec les fonctions définies
+  const fonctions = DB.get(DB.keys.fonctionColors) || [];
+  const sel = document.getElementById('empPoste');
+  sel.innerHTML = '<option value="">— Sélectionner un poste —</option>'
+    + fonctions.map(f => `<option value="${escHtml(f.fonction)}">${escHtml(f.fonction)}</option>`).join('');
   document.getElementById('btnDeleteEmp').style.display = 'none';
   document.getElementById('modalEmployeTitle').textContent = 'Nouvel employé';
   document.getElementById('empCreatedAccount').style.display = 'none';
