@@ -68,6 +68,27 @@
     .plm-ev-time{opacity:.7;font-weight:400}
     .plm-more{font-size:.65rem;color:var(--muted);padding:1px 0;margin-top:1px}
 
+    /* ── Recherche ── */
+    .pl-search-wrap{position:relative;display:flex;align-items:center}
+    .pl-search-wrap svg{position:absolute;left:8px;width:13px;height:13px;color:var(--muted);pointer-events:none}
+    .pl-search-wrap input{padding:.35rem .6rem .35rem 26px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:.8rem;width:170px;background:#fff;transition:border-color .2s,box-shadow .2s}
+    .pl-search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(23,134,207,.13);outline:none}
+
+    /* ── Détection de conflits ── */
+    .pl-ev-conflict{box-shadow:0 0 0 2px #ef4444 inset!important}
+    .pl-ev-conflict-ic{position:absolute;top:2px;right:3px;font-size:.58rem;line-height:1;z-index:3;color:#ef4444;font-weight:800}
+
+    /* ── Responsive mobile ── */
+    @media(max-width:640px){
+      #planningSidebar{display:none!important}
+      .pl-week-head{grid-template-columns:36px 1fr!important}
+      .pl-week-body{grid-template-columns:36px 1fr!important}
+      .pl-days{grid-template-columns:1fr!important}
+      .plh-day .plh-dow{font-size:.55rem}
+      .pl-search-wrap input{width:110px}
+      .btn-add-label{display:none}
+    }
+
     /* Légende / filtre par type */
     .pl-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
     .pl-legend .lg-chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:600;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:opacity .15s,filter .15s}
@@ -115,7 +136,11 @@
         <h2 id="calTitle" style="font-size:1.1rem;font-weight:700;min-width:220px;text-align:center"></h2>
         <button class="btn btn-outline btn-sm" id="nextBtn">&#8594;</button>
         <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
-        <select id="filterEventResident" style="width:auto;margin-left:auto"><option value="">Tous les résidents</option></select>
+        <div class="pl-search-wrap" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="searchEvent" placeholder="Rechercher…" autocomplete="off"/>
+        </div>
+        <select id="filterEventResident" style="width:auto"><option value="">Tous les résidents</option></select>
       </div>
 
       <div class="pl-layout">
