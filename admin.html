@@ -832,6 +832,7 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
+  if (name === 'educateurs') renderEducateurs();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
   const strip = document.getElementById('statsStrip');
@@ -920,7 +921,21 @@ function empColor(e) { const s = (e.prenom||'') + (e.nom||''); let h = 0; for (c
 function renderEmployes() {
   const el = document.getElementById('employesList');
   if (!el) return;
-  const list = getEmployes();
+  const users = DB.get(DB.keys.users) || [];
+  const empStore = getEmployes();
+  const list = users.map(u => {
+    const emp = empStore.find(e => String(e.id) === String(u.id)) || {};
+    return {
+      id: String(u.id),
+      prenom: u.prenom || '',
+      nom: u.nom || '',
+      poste: emp.poste || u.fonction || '',
+      telephone: emp.telephone || u.telephone || '',
+      email: emp.email || u.email || '',
+      statut: emp.statut || (u.role === 'admin' ? 'admin' : 'actif'),
+      dateEmbauche: emp.dateEmbauche || '',
+    };
+  });
   if (!list.length) {
     el.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9a9aae;padding:3rem;font-size:.85rem">Aucun employé — cliquez sur "+ Ajouter"</td></tr>`;
     return;
@@ -1993,6 +2008,7 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
+  if (name === 'educateurs') renderEducateurs();
   if (name === 'segur') renderSegurDashboard();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;

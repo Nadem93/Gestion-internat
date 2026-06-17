@@ -458,7 +458,7 @@ function renderEtabCheckboxes(userEtabIds = []) {
 
 function renderEducateurs() {
   const users = DB.get(DB.keys.users) || [];
-  const educateurs = users.filter(u => u.role === 'educateur');
+  const educateurs = users.filter(u => !u.super);
   const etabs = getEtabs();
   const el = document.getElementById('eduList');
   if (!el) return;
