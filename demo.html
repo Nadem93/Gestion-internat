@@ -788,8 +788,11 @@ function generateForCurrentEtab() {
     const maxUsers = Math.min(cfgUsers - 1, profils.length);
     for (let i = 0; i < maxUsers; i++) {
       const p = profils[i];
-      const tpl = employesTpl.find(t => t.prenom === p.prenom && t.nom === p.nom) || {};
-      users.push({ id: i + 2, ...p, telephone: tpl.tel || '', email: tpl.email || '', password: 'educ123', role: 'educ' });
+      const tel = '06 11 22 33 ' + String(i + 1).padStart(2, '0');
+      const emailStr = (p.prenom + '.' + p.nom).toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[éèêë]/g,'e').replace(/[^a-z.]/g,'') + '@ftr.fr';
+      const dateEmb = new Date(now.getTime() - (Math.floor(Math.random() * 1740) + 60) * 86400000).toISOString().slice(0,10);
+      users.push({ id: i + 2, ...p, telephone: tel, email: emailStr, dateEmbauche: dateEmb, password: 'educ123', role: 'educ' });
     }
     DB.set(DB.keys.users, users);
     users.forEach(u => addUserToAllEtabs(u));
