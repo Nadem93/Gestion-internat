@@ -181,6 +181,41 @@
     .emp-title{font-size:1.25rem;font-weight:800;color:#1a1a2e}
     .emp-title-actions{display:flex;gap:.5rem}
 
+    /* ════ Cartes profil — Chrome doré ════ */
+    .emp-cards-grid{display:flex;flex-wrap:wrap;gap:32px;padding:1.5rem 0}
+    .profile-card{width:280px;padding:32px 24px;border-radius:28px;
+      background:linear-gradient(160deg,#f1edfb,#e4daf7);
+      box-shadow:0 20px 45px rgba(124,58,237,.18),0 4px 12px rgba(124,58,237,.1),inset 0 0 0 1px rgba(255,255,255,.6);
+      text-align:center;transition:transform .25s ease,box-shadow .25s ease;cursor:pointer}
+    .profile-card:hover{transform:translateY(-6px);
+      box-shadow:0 28px 55px rgba(124,58,237,.25),0 6px 16px rgba(245,158,11,.2),inset 0 0 0 1px rgba(245,158,11,.3)}
+    .pc-avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+      font-size:26px;font-weight:800;color:#facc15;
+      background:linear-gradient(135deg,#fde68a 0%,#f59e0b 40%,#b45309 100%);
+      box-shadow:0 10px 25px rgba(245,158,11,.45),inset 0 -4px 8px rgba(0,0,0,.25),inset 0 4px 6px rgba(255,255,255,.4);
+      text-shadow:0 1px 1px rgba(255,255,255,.4),0 -1px 2px rgba(0,0,0,.5);transition:box-shadow .25s ease}
+    .profile-card:hover .pc-avatar{box-shadow:0 10px 30px rgba(245,158,11,.65),inset 0 -4px 8px rgba(0,0,0,.25),inset 0 4px 6px rgba(255,255,255,.45)}
+    .pc-name{margin:0 0 4px;font-size:20px;font-weight:800;color:#4c1d95;
+      text-shadow:0 1px 0 rgba(255,255,255,.7),0 0 18px rgba(167,139,250,.35);letter-spacing:.3px}
+    .pc-role{color:#7c6fa8;font-size:13px;margin-bottom:14px}
+    .pc-badge{display:inline-block;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;
+      background:linear-gradient(135deg,#fde68a,#f59e0b);color:#78350f;
+      box-shadow:0 4px 10px rgba(245,158,11,.4),inset 0 1px 1px rgba(255,255,255,.6)}
+    .pc-badge.inactive{background:linear-gradient(135deg,#94a3b8,#475569);color:#1e293b;
+      box-shadow:0 4px 10px rgba(71,85,105,.4),inset 0 1px 1px rgba(255,255,255,.3)}
+    .pc-badge.admin{background:linear-gradient(135deg,#c4b5fd,#7c3aed);color:#fff;
+      box-shadow:0 4px 10px rgba(124,58,237,.4),inset 0 1px 1px rgba(255,255,255,.4)}
+    .pc-info{margin-top:20px;padding-top:16px;border-top:1px solid rgba(124,58,237,.15);text-align:left;font-size:13px;color:#4c1d95}
+    .pc-info div{display:flex;gap:10px;padding:5px 0;align-items:center}
+    .pc-info svg{flex-shrink:0;stroke:#a855f7}
+    .pc-info span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pc-info span.empty{color:#b3a5d9}
+    .pc-btn{margin-top:18px;width:100%;padding:10px;border-radius:14px;border:none;
+      background:linear-gradient(160deg,#a855f7,#7c3aed);color:#fff;font-weight:700;font-size:14px;
+      box-shadow:0 6px 16px rgba(124,58,237,.4);cursor:pointer;transition:box-shadow .2s ease,transform .1s ease}
+    .pc-btn:hover{box-shadow:0 8px 20px rgba(124,58,237,.5)}
+    .pc-btn:active{transform:scale(.97)}
+
     .emp-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0 .75rem;border-bottom:1.5px solid #f0f0f4;margin-bottom:0}
     .emp-toolbar-left,.emp-toolbar-right{display:flex;align-items:center;gap:.4rem}
     .emp-tool-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .75rem;border:1.5px solid #e4e8ed;border-radius:8px;background:#fff;font-size:.78rem;font-weight:500;color:#444;cursor:pointer;transition:all .12s;white-space:nowrap}
@@ -966,40 +1001,30 @@ function renderEmployes() {
     el.innerHTML = `<div style="text-align:center;color:#9a9aae;padding:3rem;font-size:.85rem">Aucun employé — cliquez sur "+ Ajouter"</div>`;
     return;
   }
-  const pillStyle = s => {
-    if (s === 'inactif') return 'background:#fef2f2;color:#ef4444';
-    if (s === 'admin')   return 'background:#ede9fe;color:#7c3aed';
-    return 'background:#f0fdf4;color:#16a34a';
+  const iconPhone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const iconMail = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  const iconCal = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`;
+  const field = (value, icon) => {
+    const isEmpty = !value || value === '—';
+    return `<div>${icon}<span class="${isEmpty?'empty':''}">${isEmpty?'—':escHtml(value)}</span></div>`;
   };
-  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.1rem">${
+  el.innerHTML = `<div class="emp-cards-grid">${
     list.map(e => {
-      const initiales = ((e.prenom||'')[0]||'').toUpperCase() + ((e.nom||'')[0]||'').toUpperCase();
-      const color = empColor(e);
-      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-      return `<div style="background:#fff;border:1px solid #e8e8f0;border-radius:18px;padding:1.75rem 1.5rem 1.25rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer;transition:box-shadow .15s,transform .15s"
-        onclick="window.location='employe.html?id=${e.id}'"
-        onmouseenter="this.style.boxShadow='0 8px 24px rgba(0,0,0,.11)';this.style.transform='translateY(-2px)'"
-        onmouseleave="this.style.boxShadow='';this.style.transform=''">
-        <div style="width:68px;height:68px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.35rem;color:#fff;margin-bottom:.3rem;flex-shrink:0">${escHtml(initiales)}</div>
-        <div style="font-weight:700;font-size:.95rem;color:#1a1a2e;line-height:1.2">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
-        <div style="font-size:.8rem;color:#6b6b8a;font-weight:500">${escHtml(e.poste||'—')}</div>
-        <span style="font-size:.68rem;font-weight:700;padding:2px 10px;border-radius:99px;${pillStyle(e.statut)}">${e.statut==='inactif'?'Inactif':e.statut==='admin'?'Admin':'Actif'}</span>
-        <div style="width:100%;border-top:1px solid #f0f0f6;margin:.3rem 0"></div>
-        <div style="width:100%;display:flex;flex-direction:column;gap:.35rem;text-align:left">
-          <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#444">
-            <span style="font-size:.95rem;flex-shrink:0">📞</span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${e.telephone?'#1a1a2e':'#b0b0c0'}">${e.telephone ? escHtml(e.telephone) : '—'}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#444">
-            <span style="font-size:.95rem;flex-shrink:0">✉️</span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${e.email?'#1a1a2e':'#b0b0c0'}">${e.email ? escHtml(e.email) : '—'}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#444">
-            <span style="font-size:.95rem;flex-shrink:0">📅</span>
-            <span style="color:${e.dateEmbauche?'#1a1a2e':'#b0b0c0'}">${dateEmb}</span>
-          </div>
+      const initiales = (((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'')).toUpperCase();
+      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '';
+      const badgeClass = e.statut==='inactif' ? 'inactive' : e.statut==='admin' ? 'admin' : '';
+      const badgeLabel = e.statut==='inactif' ? 'Inactif' : e.statut==='admin' ? 'Admin' : 'Actif';
+      return `<div class="profile-card" onclick="window.location='employe.html?id=${e.id}'">
+        <div class="pc-avatar">${escHtml(initiales)}</div>
+        <h3 class="pc-name">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</h3>
+        <div class="pc-role">${escHtml(e.poste||'—')}</div>
+        <span class="pc-badge ${badgeClass}">${badgeLabel}</span>
+        <div class="pc-info">
+          ${field(e.telephone, iconPhone)}
+          ${field(e.email, iconMail)}
+          ${field(dateEmb, iconCal)}
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="margin-top:.4rem;padding:4px 12px;font-size:.72rem;width:100%;border:1px solid #e8e8f0">✎ Modifier</button>
+        <button class="pc-btn" onclick="event.stopPropagation();editEmploye('${e.id}')">✎ Modifier</button>
       </div>`;
     }).join('')
   }</div>`;
