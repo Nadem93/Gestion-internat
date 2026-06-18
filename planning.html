@@ -211,11 +211,33 @@
       100% { transform: perspective(800px) rotateY(0deg); opacity: 1; }
     }
     .modal-overlay.open .modal.modal-flip{ animation: flipYIn .55s ease-out both; transform-origin:50% 50%; }
-    .ev-detail-row{display:flex;gap:.6rem;align-items:flex-start;padding:.5rem 0;border-bottom:1px solid var(--border)}
-    .ev-detail-row:last-child{border-bottom:none}
-    .ev-detail-ic{width:18px;flex-shrink:0;text-align:center;opacity:.8}
-    .ev-detail-lbl{font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
-    .ev-detail-val{font-size:.88rem;color:var(--text);font-weight:500;white-space:pre-wrap}
+    /* ── Modal vue événement (nouveau design) ── */
+    .evm-card{background:#fff;border-radius:24px;width:500px;max-width:calc(100% - 2rem);max-height:90vh;overflow-y:auto;padding:28px 28px 20px;position:relative}
+    .evm-close-btn{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;transition:background .15s}
+    .evm-close-btn:hover{background:#e2e8f0}
+    .evm-close-btn svg{width:16px;height:16px}
+    .evm-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:22px;padding-right:40px}
+    .evm-hicon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+    .evm-htitle{font-size:1.25rem;font-weight:800;color:#0f172a;line-height:1.25;margin-bottom:6px}
+    .evm-hbadge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#f1f5f9;border-radius:20px;font-size:.72rem;font-weight:600;color:#475569}
+    .evm-hbadge-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .evm-row{display:flex;align-items:center;gap:12px;padding:13px 15px;background:#f8fafc;border-radius:14px;margin-bottom:7px}
+    .evm-row-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .evm-row-icon svg{width:18px;height:18px}
+    .evm-row-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .evm-row-body{flex:1;min-width:0}
+    .evm-row-lbl{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+    .evm-row-val{font-size:.92rem;font-weight:500;color:#0f172a}
+    .evm-row-ric{flex-shrink:0;color:#cbd5e1}
+    .evm-row-ric svg{width:17px;height:17px}
+    .evm-footer{display:flex;align-items:center;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid #f1f5f9}
+    .evm-footer-left{display:flex;gap:8px;margin-right:auto}
+    .evm-btn{padding:10px 18px;border-radius:12px;border:none;cursor:pointer;font-size:.88rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:filter .15s}
+    .evm-btn:hover{filter:brightness(.96)}
+    .evm-btn-danger{background:#fef2f2;color:#dc2626}
+    .evm-btn-series{background:transparent;border:1.5px solid #ef4444;color:#ef4444}
+    .evm-btn-close{background:#f1f5f9;color:#334155}
+    .evm-btn-edit{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff}
   </style>
 </head>
 <body>
@@ -272,19 +294,29 @@
 
 <!-- MODAL DÉTAILS ÉVÉNEMENT (lecture seule, effet flipYIn) -->
 <div class="modal-overlay" id="modalEventView">
-  <div class="modal modal-flip" style="max-width:440px">
-    <div class="modal-header">
-      <span class="modal-title" id="evViewTitle">Détails du rendez-vous</span>
-      <button class="modal-close" onclick="closeModal('modalEventView')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body" id="evViewBody"></div>
-    <div class="modal-footer">
-      <div style="display:flex;gap:.4rem;margin-right:auto">
-        <button class="btn btn-danger btn-sm" id="evViewDelete">Supprimer</button>
-        <button class="btn btn-sm" id="evViewDeleteSeries" style="display:none;color:#ef4444;border:1px solid #ef4444;background:transparent">↻ Série</button>
+  <div class="evm-card modal-flip">
+    <button class="evm-close-btn" onclick="closeModal('modalEventView')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <!-- Contenu dynamique (header + rows) -->
+    <div id="evViewContent"></div>
+    <!-- IDs legacy pour compatibilité planning.js -->
+    <span id="evViewTitle" style="display:none"></span>
+    <div id="evViewBody" style="display:none"></div>
+    <!-- Footer -->
+    <div class="evm-footer">
+      <div class="evm-footer-left">
+        <button class="evm-btn evm-btn-danger" id="evViewDelete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Supprimer
+        </button>
+        <button class="evm-btn evm-btn-series" id="evViewDeleteSeries" style="display:none">↻ Série</button>
       </div>
-      <button class="btn btn-outline" onclick="closeModal('modalEventView')">Fermer</button>
-      <button class="btn btn-primary" id="evViewEdit">Modifier</button>
+      <button class="evm-btn evm-btn-close" onclick="closeModal('modalEventView')">Fermer</button>
+      <button class="evm-btn evm-btn-edit" id="evViewEdit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifier
+      </button>
     </div>
   </div>
 </div>
@@ -488,7 +520,17 @@ function updateMevPreview() {
   const elRes = document.getElementById('mevSumResTxt');
   const elDur = document.getElementById('mevSumDurTxt');
   const elVeh = document.getElementById('mevSumVeh');
-  if (elRes) elRes.textContent = resLabel;
+  if (elRes) {
+    if (_mevResSelected && _mevResSelected.size > 1) {
+      elRes.innerHTML = Array.from(_mevResSelected).map(rid => {
+        const opt = resSel ? Array.from(resSel.options).find(o => o.value === rid) : null;
+        const name = opt ? opt.textContent : rid;
+        return `<span style="display:block;background:rgba(255,255,255,.18);border-radius:6px;padding:2px 7px;margin-bottom:3px;font-size:.75rem;font-weight:600">${name}</span>`;
+      }).join('');
+    } else {
+      elRes.textContent = resLabel;
+    }
+  }
   if (elDur) elDur.textContent = _MEV_DUREE[duree] || (duree + ' min');
   if (elVeh) elVeh.style.display = vehicule ? 'flex' : 'none';
 }
@@ -618,37 +660,33 @@ function selectMevColor(color) {
   });
 }
 
-// Patch saveEvent pour inclure le champ serafin
+// Patch saveEvent pour inclure serafin, lieu et résidents (multi)
 const _origSaveEvent = window.saveEvent;
 window.saveEvent = function() {
-  const serafin = document.getElementById('evSerafin')?.value || 'directe';
-  const editId  = document.getElementById('eventId')?.value || '';
-  const beforeIds = new Set((DB.get(DB.keys.events) || []).map(e => e.id));
-  if (typeof _origSaveEvent === 'function') _origSaveEvent();
-  const events = DB.get(DB.keys.events) || [];
-  let changed = false;
-  if (editId) {
-    const ev = events.find(e => String(e.id) === String(editId));
-    if (ev) { ev.serafin = serafin; changed = true; }
-  } else {
-    events.forEach(ev => { if (!beforeIds.has(ev.id)) { ev.serafin = serafin; changed = true; } });
-  }
-  // Inject lieu + residentIds
-  const lieu = document.getElementById('evLieu')?.value.trim() || '';
-  const sel = document.getElementById('evResident');
+  const serafin     = document.getElementById('evSerafin')?.value || 'directe';
+  const lieu        = document.getElementById('evLieu')?.value.trim() || '';
+  const editId      = document.getElementById('eventId')?.value || '';
+  const sel         = document.getElementById('evResident');
   const residentIds = Array.from(_mevResSelected);
   const residentNames = residentIds.map(id => {
     const opt = sel ? Array.from(sel.options).find(o => o.value === id) : null;
     return opt ? opt.textContent : id;
   });
-  const eventsAfter = DB.get(DB.keys.events) || [];
-  if (editId) {
-    const ev = eventsAfter.find(e => String(e.id) === String(editId));
-    if (ev) { ev.lieu = lieu; ev.residentIds = residentIds; ev.residentNames = residentNames; changed = true; }
-  } else {
-    eventsAfter.forEach(ev => { if (!beforeIds.has(ev.id)) { ev.lieu = lieu; ev.residentIds = residentIds; ev.residentNames = residentNames; changed = true; } });
-  }
-  if (changed) DB.set(DB.keys.events, eventsAfter);
+  const beforeIds = new Set((DB.get(DB.keys.planning) || []).map(e => e.id));
+  if (typeof _origSaveEvent === 'function') _origSaveEvent();
+  const events = DB.get(DB.keys.planning) || [];
+  let changed = false;
+  events.forEach(ev => {
+    const isTarget = editId ? String(ev.id) === String(editId) : !beforeIds.has(ev.id);
+    if (isTarget) {
+      ev.serafin       = serafin;
+      ev.lieu          = lieu;
+      ev.residentIds   = residentIds;
+      ev.residentNames = residentNames;
+      changed = true;
+    }
+  });
+  if (changed) DB.set(DB.keys.planning, events);
 };
 
 // Patch editEvent pour restaurer le champ serafin
@@ -656,7 +694,7 @@ const _origEditEvent = window.editEvent;
 window.editEvent = function(id) {
   if (typeof _origEditEvent === 'function') _origEditEvent(id);
   setTimeout(() => {
-    const events = DB.get(DB.keys.events) || [];
+    const events = DB.get(DB.keys.planning) || [];
     const ev = events.find(e => String(e.id) === String(id));
     if (ev) {
       selectMevSerafin(ev.serafin || 'directe');
@@ -697,6 +735,182 @@ const _origCloseAllModals = window.closeAllModals;
 window.closeAllModals = function() {
   if (typeof _origCloseAllModals === 'function') _origCloseAllModals();
   resetModalEvent();
+};
+
+// ── Synchronisation Activités → Planning ──
+const _ACT_CAT_COLORS = { sportive:'#16a34a', creative:'#db2777', culturelle:'#8b5cf6', scolaire:'#0369a1', autonomie:'#d97706', sortie:'#0d9488', citoyennete:'#6366f1', autre:'#64748b' };
+const _ACT_CAT_ICONS  = { sportive:'⚽', creative:'🎨', culturelle:'🎭', scolaire:'📚', autonomie:'🧺', sortie:'🚌', citoyennete:'🗳️', autre:'✨' };
+const _JOUR_DOW = { Lundi:1, Mardi:2, Mercredi:3, Jeudi:4, Vendredi:5, Samedi:6, Dimanche:0 };
+
+function _calcDureeAct(debut, fin) {
+  if (!debut || !fin) return '60';
+  const [h1,m1] = debut.split(':').map(Number);
+  const [h2,m2] = fin.split(':').map(Number);
+  const d = (h2*60+m2)-(h1*60+m1);
+  return d > 0 ? String(d) : '60';
+}
+
+function _generateActVirtualEvents() {
+  const activites = (DB.get(DB.keys.activites)||[]).filter(a => a.actif !== false && _JOUR_DOW[a.jour] !== undefined);
+  if (!activites.length) return [];
+  const now = new Date();
+  const start = new Date(now); start.setDate(start.getDate()-30);
+  const end   = new Date(now); end.setDate(end.getDate()+90);
+  const result = [];
+  activites.forEach(act => {
+    const dow   = _JOUR_DOW[act.jour];
+    const color = _ACT_CAT_COLORS[act.categorie] || '#3b82f6';
+    const icon  = _ACT_CAT_ICONS[act.categorie]  || '✨';
+    const d = new Date(start);
+    d.setDate(d.getDate() + ((dow - d.getDay() + 7) % 7));
+    while (d <= end) {
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      result.push({
+        id: `act_${act.id}_${ds}`,
+        titre: `${icon} ${act.nom}`,
+        date: ds,
+        time: act.heureDebut || '09:00',
+        heure: act.heureDebut || '09:00',
+        duree: _calcDureeAct(act.heureDebut, act.heureFin),
+        type: 'activite',
+        color, lieu: act.lieu||'', residentName: act.animateur||'',
+        _isVirtual: true, _activiteId: act.id
+      });
+      d.setDate(d.getDate()+7);
+    }
+  });
+  return result;
+}
+
+const _origGetFilteredEvents = window.getFilteredEvents;
+window.getFilteredEvents = function() {
+  const base = typeof _origGetFilteredEvents === 'function' ? _origGetFilteredEvents() : [];
+  return [...base, ..._generateActVirtualEvents()];
+};
+
+const _EVM_SVG = {
+  person:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
+  clock:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  location: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21C12 21 5 13.5 5 8a7 7 0 0 1 14 0c0 5.5-7 13-7 13z"/><circle cx="12" cy="8" r="2.5"/></svg>`,
+  people:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  doc:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>`,
+  car:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M19 17a2 2 0 1 0-4 0"/></svg>`,
+  pin:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+};
+
+function _evmRow(label, value, color, svgKey) {
+  if (!value) return '';
+  return `<div class="evm-row">
+    <div class="evm-row-icon" style="background:${color}1a;color:${color}">${_EVM_SVG[svgKey]||''}</div>
+    <span class="evm-row-dot" style="background:${color}"></span>
+    <div class="evm-row-body">
+      <div class="evm-row-lbl" style="color:${color}">${label}</div>
+      <div class="evm-row-val">${value}</div>
+    </div>
+    <div class="evm-row-ric" style="color:${color}40">${_EVM_SVG[svgKey]||''}</div>
+  </div>`;
+}
+
+function _evmRender({ iconEmoji, iconBg, titre, badgeLabel, badgeColor, rows, isVirtual }) {
+  const editBtn   = document.getElementById('evViewEdit');
+  const delBtn    = document.getElementById('evViewDelete');
+  const seriesBtn = document.getElementById('evViewDeleteSeries');
+  if (editBtn)   editBtn.style.display   = isVirtual ? 'none' : '';
+  if (delBtn)    delBtn.style.display    = isVirtual ? 'none' : '';
+  if (seriesBtn && isVirtual) seriesBtn.style.display = 'none';
+  document.getElementById('evViewContent').innerHTML =
+    `<div class="evm-header">
+      <div class="evm-hicon" style="background:${iconBg}">${iconEmoji}</div>
+      <div>
+        <div class="evm-htitle">${escHtml(titre)}</div>
+        <span class="evm-hbadge"><span class="evm-hbadge-dot" style="background:${badgeColor}"></span>${escHtml(badgeLabel)}</span>
+      </div>
+    </div>
+    ${rows.join('')}`;
+}
+
+window.viewEvent = function(id) {
+  // ── Activité récurrente virtuelle ──
+  if (String(id).startsWith('act_')) {
+    const actId = id.split('_')[1];
+    const act   = (DB.get(DB.keys.activites)||[]).find(a => a.id === actId);
+    if (!act) return;
+    const color    = _ACT_CAT_COLORS[act.categorie]||'#3b82f6';
+    const icon     = _ACT_CAT_ICONS[act.categorie]||'✨';
+    const inscrits = (DB.get(DB.keys.residents)||[]).filter(r=>(r.activites||[]).some(i=>String(i.activiteId)===String(actId)&&i.statut==='active')).length;
+    _evmRender({
+      iconEmoji: icon, iconBg: color, titre: act.nom,
+      badgeLabel: `Activité récurrente · ${act.jour}`, badgeColor: color,
+      isVirtual: true,
+      rows: [
+        _evmRow('HORAIRE',   [act.heureDebut, act.heureFin].filter(Boolean).join(' – '), '#8b5cf6', 'clock'),
+        _evmRow('LIEU',      act.lieu ? escHtml(act.lieu) : '', '#f59e0b', 'location'),
+        _evmRow('ANIMATEUR', act.animateur ? escHtml(act.animateur) : '', '#3b82f6', 'person'),
+        _evmRow('INSCRITS',  `${inscrits} résident${inscrits!==1?'s':''}`, '#ec4899', 'people'),
+        _evmRow('DESCRIPTION', act.description ? escHtml(act.description) : '', '#6366f1', 'doc'),
+      ]
+    });
+    openModal('modalEventView');
+    return;
+  }
+
+  // ── Événement normal ──
+  const ev = (DB.get(DB.keys.planning)||[]).find(e => e.id === id);
+  if (!ev) return;
+  const color  = ev.color || (typeof TYPE_COLORS !== 'undefined' ? TYPE_COLORS[ev.type] : '') || '#3b82f6';
+  const typeLabel = (typeof TYPE_LABELS !== 'undefined' ? TYPE_LABELS[ev.type] : '') || ev.type || 'Événement';
+  const icon   = (typeof _MEV_ICONS !== 'undefined' ? _MEV_ICONS[ev.type] : '') || '📅';
+  const dureeLabels = {'30':'30 min','60':'1h','90':'1h30','120':'2h','180':'3h','journee':'Journée'};
+  const heure  = (ev.heure||ev.time||'').slice(0,5);
+  const duree  = dureeLabels[ev.duree] || (ev.duree ? ev.duree+' min' : '');
+  const horaire = [heure, duree].filter(Boolean).join(' · ');
+  // Résidents (multi ou simple)
+  const resNames = ev.residentNames?.length ? ev.residentNames : (ev.residentName ? [ev.residentName] : []);
+  const resRowHtml = (() => {
+    if (!resNames.length) return _evmRow('RÉSIDENT', 'Tous / Groupe', '#3b82f6', 'person');
+    const chips = resNames.map(n =>
+      `<span style="display:inline-flex;align-items:center;padding:3px 10px;background:#eff6ff;color:#2563eb;border-radius:20px;font-size:.78rem;font-weight:600;white-space:nowrap">${escHtml(n)}</span>`
+    ).join('');
+    return `<div class="evm-row">
+      <div class="evm-row-icon" style="background:#3b82f61a;color:#3b82f6">${_EVM_SVG.person}</div>
+      <span class="evm-row-dot" style="background:#3b82f6"></span>
+      <div class="evm-row-body">
+        <div class="evm-row-lbl" style="color:#3b82f6">RÉSIDENT${resNames.length > 1 ? 'S' : ''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">${chips}</div>
+      </div>
+    </div>`;
+  })();
+
+  _evmRender({
+    iconEmoji: icon, iconBg: color, titre: ev.titre || 'Événement',
+    badgeLabel: typeLabel, badgeColor: color,
+    isVirtual: false,
+    rows: [
+      resRowHtml,
+      _evmRow('DATE',        ev.date ? (typeof formatDate==='function'?formatDate(ev.date):ev.date) : '', '#10b981', 'calendar'),
+      _evmRow('HORAIRE',     horaire, '#8b5cf6', 'clock'),
+      _evmRow('LIEU',        ev.lieu ? escHtml(ev.lieu) : '', '#f59e0b', 'location'),
+      ev.vehicule ? _evmRow('VÉHICULE',    escHtml(ev.vehicule), '#6366f1', 'car') : '',
+      ev.destination ? _evmRow('DESTINATION', escHtml(ev.destination), '#6366f1', 'pin') : '',
+      _evmRow('DESCRIPTION', ev.desc ? escHtml(ev.desc) : '', '#6366f1', 'doc'),
+    ]
+  });
+
+  const editBtn   = document.getElementById('evViewEdit');
+  const delBtn    = document.getElementById('evViewDelete');
+  const seriesBtn = document.getElementById('evViewDeleteSeries');
+  if (editBtn)  editBtn.onclick  = () => { closeModal('modalEventView'); editEvent(id); };
+  if (delBtn)   delBtn.onclick   = () => { document.getElementById('eventId').value = id; deleteEvent(); };
+  if (seriesBtn) {
+    if (ev.recurId) {
+      const cnt = (DB.get(DB.keys.planning)||[]).filter(e => e.recurId === ev.recurId).length;
+      seriesBtn.style.display = '';
+      seriesBtn.textContent = `↻ Série (${cnt})`;
+      seriesBtn.onclick = () => deleteEventSeries(ev.recurId);
+    } else { seriesBtn.style.display = 'none'; }
+  }
+  openModal('modalEventView');
 };
 
 // Sync le panneau gauche à l'ouverture du modal (création ET édition)
