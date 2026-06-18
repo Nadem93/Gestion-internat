@@ -95,6 +95,114 @@
     .pl-legend .lg-chip .lg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
     .pl-legend .lg-chip.off{opacity:.4;filter:grayscale(.6)}
 
+    /* ── Modal Nouvel évènement (reproduction mockup) ── */
+    #modalEvent .modal.modal-event-modern{
+      width:820px;max-width:calc(100% - 2rem);max-height:92vh;
+      background:#fff;border-radius:30px;overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,.25);
+      display:flex!important;flex-direction:row!important;align-items:stretch!important;padding:0!important;
+    }
+    /* Panneau gauche bleu */
+    .mev-left{
+      width:230px;flex-shrink:0;
+      background:linear-gradient(180deg,#2563eb,#1d4ed8);
+      color:#fff;padding:25px;display:flex;flex-direction:column;
+    }
+    .mev-icon{
+      width:70px;height:70px;border-radius:50%;
+      background:#fff;color:#2563eb;
+      display:flex;align-items:center;justify-content:center;
+      font-size:30px;margin:0 auto 20px;transition:transform .2s;
+    }
+    .mev-left h3{margin:0;font-size:1rem;font-weight:700}
+    .mev-menu{margin-top:16px;display:flex;flex-direction:column;gap:5px}
+    .mev-menu div{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:9px;
+      background:rgba(255,255,255,.1);font-size:.78rem;font-weight:500;
+      transition:background .15s,transform .15s;cursor:pointer;
+    }
+    .mev-menu-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+    .mev-menu div.mev-menu-active{background:rgba(255,255,255,.34);font-weight:700;transform:translateX(2px)}
+    .mev-footer-left{margin-top:auto;font-size:14px;line-height:1.2}
+    .mev-footer-left p{margin:0 0 10px;display:flex;align-items:center;gap:.5rem}
+    /* Panneau droit formulaire */
+    .mev-right{flex:1;padding:25px;display:flex;flex-direction:column;min-width:0;overflow-y:auto}
+    .mev-right .mev-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .mev-right .mev-head h2{margin:0;font-size:1.4rem;font-weight:800;color:#0f172a}
+    .mev-right .mev-close{background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;display:flex}
+    .mev-right .mev-close svg{width:22px;height:22px}
+    .mev-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .mev-grid .mev-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .mev-grid .full{grid-column:1/-1}
+    .mev-field label{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.02em}
+    .mev-field input,.mev-field select,.mev-field textarea{
+      width:100%;padding:12px;border:1px solid #dbe2ea;border-radius:12px;
+      font-size:.9rem;font-family:inherit;background:#fff;color:#0f172a;
+      transition:border-color .15s,box-shadow .15s;
+    }
+    .mev-field input:focus,.mev-field select:focus,.mev-field textarea:focus{
+      outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.13);
+    }
+    .mev-field textarea{resize:vertical}
+    .mev-colors{display:flex;gap:10px;padding-top:8px;align-items:center}
+    .mev-c{
+      width:22px;height:22px;border-radius:50%;cursor:pointer;
+      border:2.5px solid transparent;transition:transform .15s,box-shadow .15s,border-color .15s;
+    }
+    .mev-c:hover{transform:scale(1.18);box-shadow:0 2px 8px rgba(0,0,0,.22)}
+    .mev-c.mev-c-on{border-color:#1d4ed8;box-shadow:0 0 0 2.5px #bfdbfe}
+    #evColor{width:24px;height:24px;border-radius:50%;border:1px solid #dbe2ea;cursor:pointer;padding:0;background:none}
+    .mev-checkrow{grid-column:1/-1;display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:600;font-size:.85rem;color:#0f172a}
+    .mev-veh-fields{grid-column:1/-1;display:none;flex-direction:column;gap:12px;padding:14px;background:#f1f5f9;border-radius:14px}
+    .mev-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:22px;align-items:center}
+    .mev-actions button{padding:12px 22px;border:none;border-radius:12px;cursor:pointer;font-size:.9rem;font-weight:600}
+    .mev-btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+    .mev-btn-primary:hover{filter:brightness(1.06)}
+    .mev-btn-secondary{background:#eef2f7;color:#334155}
+    .mev-btn-secondary:hover{background:#e2e8f0}
+    .mev-btn-danger{background:#fee2e2;color:#dc2626;margin-right:auto}
+    /* Multi-select résidents */
+    .mev-multi-wrap{position:relative}
+    .mev-multi-box{display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 10px;border:1px solid #dbe2ea;border-radius:12px;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s;flex-wrap:wrap}
+    .mev-multi-box:focus-within,.mev-multi-box.open{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.13)}
+    .mev-res-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:#eff6ff;color:#2563eb;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap}
+    .mev-res-chip button{background:none;border:none;cursor:pointer;color:#93c5fd;font-size:.85rem;padding:0;line-height:1;display:flex}
+    .mev-res-chip button:hover{color:#2563eb}
+    .mev-res-placeholder{font-size:.9rem;color:#94a3b8;padding:2px 2px}
+    .mev-multi-chevron{margin-left:auto;flex-shrink:0;color:#94a3b8;transition:transform .15s}
+    .mev-multi-box.open .mev-multi-chevron{transform:rotate(180deg)}
+    .mev-multi-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);z-index:200;max-height:220px;overflow-y:auto;display:none}
+    .mev-multi-dropdown.open{display:block}
+    .mev-multi-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;font-size:.85rem;transition:background .12s}
+    .mev-multi-item:hover{background:#f1f5f9}
+    .mev-multi-item.selected{background:#eff6ff;color:#2563eb;font-weight:600}
+    .mev-multi-item .mev-mi-check{width:16px;height:16px;border-radius:4px;border:2px solid #cbd5e1;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
+    .mev-multi-item.selected .mev-mi-check{background:#2563eb;border-color:#2563eb}
+    .mev-multi-item.selected .mev-mi-check::after{content:'✓';color:#fff;font-size:10px;font-weight:700}
+    .mev-multi-all{border-bottom:1px solid #f1f5f9;color:#64748b;font-style:italic}
+    /* Bouton véhicule */
+    .mev-veh-toggle{display:flex;align-items:center;gap:10px;padding:11px 16px;border:2px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:.85rem;font-weight:600;color:#64748b;transition:all .18s;width:100%;text-align:left}
+    .mev-veh-toggle:hover{border-color:#cbd5e1;background:#f1f5f9}
+    .mev-veh-toggle.veh-on{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+    .mev-veh-toggle .veh-pill{margin-left:auto;width:36px;height:20px;border-radius:999px;background:#cbd5e1;position:relative;transition:background .18s;flex-shrink:0}
+    .mev-veh-toggle .veh-pill::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .mev-veh-toggle.veh-on .veh-pill{background:#2563eb}
+    .mev-veh-toggle.veh-on .veh-pill::after{transform:translateX(16px)}
+    /* Toggle SERAFIN */
+    .mev-serafin-toggle{display:flex;gap:6px;padding-top:4px}
+    .mev-serafin-btn{flex:1;padding:9px 6px;border:2px solid #e2e8f0;border-radius:10px;background:#f8fafc;cursor:pointer;font-size:.75rem;font-weight:600;color:#64748b;text-align:center;transition:all .15s;line-height:1.3}
+    .mev-serafin-btn:hover{border-color:#cbd5e1;background:#f1f5f9}
+    .mev-serafin-btn.active-direct{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+    .mev-serafin-btn.active-indirect{border-color:#f59e0b;background:#fffbeb;color:#d97706}
+    .mev-serafin-btn.active-nc{border-color:#94a3b8;background:#f1f5f9;color:#475569}
+    .mev-btn-danger:hover{background:#fecaca}
+    @media(max-width:600px){
+      .mev-left{display:none}
+      #modalEvent .modal.modal-event-modern{width:calc(100% - 1.5rem);border-radius:22px}
+      .mev-grid{grid-template-columns:1fr}
+    }
+
     /* ── Fenêtre de détails (effet flipYIn) ── */
     @keyframes flipYIn {
       0%   { transform: perspective(800px) rotateY(90deg); opacity: 0; }
@@ -183,31 +291,120 @@
 
 <!-- MODAL ÉVÉNEMENT -->
 <div class="modal-overlay" id="modalEvent">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modalEventTitle">Nouvel événement</span>
-      <button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div class="modal modal-event-modern">
+
+    <!-- Panneau gauche -->
+    <div class="mev-left">
+      <div class="mev-icon" id="mevPreviewIcon">📅</div>
+      <h3>Évènement</h3>
+
+      <div class="mev-menu" id="mevMenu">
+        <div data-type="activite" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#3b82f6"></span>Activité</div>
+        <div data-type="rdv" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#ef4444"></span>Rendez-vous</div>
+        <div data-type="sortie" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#10b981"></span>Sortie</div>
+        <div data-type="reunion" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#8b5cf6"></span>Réunion</div>
+        <div data-type="avenant" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#f59e0b"></span>Avenant</div>
+        <div data-type="projet" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#06b6d4"></span>Projet personnalisé</div>
+        <div data-type="evaluation" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#9333ea"></span>Évaluation</div>
+        <div data-type="autre" onclick="selectMevType(this.dataset.type)"><span class="mev-menu-dot" style="background:#94a3b8"></span>Autre</div>
+      </div>
+
+      <div class="mev-footer-left">
+        <p>👥 <span id="mevSumResTxt">Tous / Groupe</span></p>
+        <p>⏱ <span id="mevSumDurTxt">1 heure</span></p>
+        <p id="mevSumVeh" style="display:none">🚐 Véhicule requis</p>
+        <p id="mevSumSerafin">🔵 <span id="mevSumSerafinTxt">Prestation directe</span></p>
+      </div>
     </div>
-    <div class="modal-body">
+
+    <!-- Panneau droit -->
+    <div class="mev-right">
+      <div class="mev-head">
+        <h2 id="modalEventTitle">Nouvel évènement</h2>
+        <button class="mev-close" onclick="closeModal('modalEvent')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+
       <input type="hidden" id="eventId"/>
-      <div class="form-group"><label class="required">Titre</label><input type="text" id="evTitre" placeholder="Titre de l'événement"/></div>
-      <div class="form-row">
-        <div class="form-group"><label>Résident</label><select id="evResident"><option value="">Tous / Groupe</option></select></div>
-        <div class="form-group"><label>Type</label><select id="evType"><option value="activite">Activité</option><option value="rdv">Rendez-vous</option><option value="sortie">Sortie</option><option value="reunion">Réunion</option><option value="avenant">Avenant</option><option value="projet">Projet personnalisé</option><option value="evaluation">Évaluation</option><option value="autre">Autre</option></select></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Date</label><input type="date" id="evDate"/></div>
-        <div class="form-group"><label>Heure de début</label><input type="time" id="evHeure" value="09:00"/></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Durée</label><select id="evDuree"><option value="30">30 min</option><option value="60" selected>1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option><option value="journee">Journée</option></select></div>
-        <div class="form-group"><label>Couleur</label><input type="color" id="evColor" value="#3b82f6"/></div>
-      </div>
-      <!-- Récurrence (masquée en mode édition) -->
-      <div class="form-row" id="evRecurRow">
-        <div class="form-group">
+
+      <div class="mev-grid">
+        <div class="mev-field full">
+          <label>Titre</label>
+          <input type="text" id="evTitre" placeholder="Titre de l'évènement" oninput="updateMevPreview()"/>
+        </div>
+
+        <div class="mev-field full">
+          <label>Résidents</label>
+          <select id="evResident" style="display:none"><option value="">Tous / Groupe</option></select>
+          <div class="mev-multi-wrap">
+            <div class="mev-multi-box" id="mevResBox" onclick="toggleMevResDropdown(event)">
+              <div id="mevResChips"><span class="mev-res-placeholder">Tous / Groupe</span></div>
+              <svg class="mev-multi-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="mev-multi-dropdown" id="mevResDropdown"></div>
+          </div>
+        </div>
+
+        <div class="mev-field" style="display:none">
+          <label>Type</label>
+          <select id="evType" onchange="updateMevPreview()">
+            <option value="activite">Activité</option>
+            <option value="rdv">Rendez-vous</option>
+            <option value="sortie">Sortie</option>
+            <option value="reunion">Réunion</option>
+            <option value="avenant">Avenant</option>
+            <option value="projet">Projet personnalisé</option>
+            <option value="evaluation">Évaluation</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+
+        <div class="mev-field">
+          <label>Date</label>
+          <input type="date" id="evDate" onchange="updateMevPreview()"/>
+        </div>
+
+        <div class="mev-field">
+          <label>Heure</label>
+          <input type="time" id="evHeure" value="09:00"/>
+        </div>
+
+        <div class="mev-field">
+          <label>Durée</label>
+          <select id="evDuree" onchange="updateMevPreview()">
+            <option value="30">30 min</option>
+            <option value="60" selected>1h</option>
+            <option value="90">1h30</option>
+            <option value="120">2h</option>
+            <option value="180">3h</option>
+            <option value="journee">Journée</option>
+          </select>
+        </div>
+
+        <div class="mev-field full">
+          <label>Lieu</label>
+          <input type="text" id="evLieu" placeholder="Adresse ou lieu de l'événement"/>
+        </div>
+
+        <div class="mev-field full">
+          <label>Prestation SERAFIN-PH</label>
+          <div class="mev-serafin-toggle">
+            <button type="button" class="mev-serafin-btn active-direct" data-serafin="directe" onclick="selectMevSerafin('directe')">🔵 Directe</button>
+            <button type="button" class="mev-serafin-btn" data-serafin="indirecte" onclick="selectMevSerafin('indirecte')">🟡 Indirecte</button>
+            <button type="button" class="mev-serafin-btn" data-serafin="nc" onclick="selectMevSerafin('nc')">⚪ Non comptabilisé</button>
+          </div>
+          <select id="evSerafin" style="display:none">
+            <option value="directe">Directe</option>
+            <option value="indirecte">Indirecte</option>
+            <option value="nc">Non comptabilisé</option>
+          </select>
+        </div>
+
+        <input type="hidden" id="evColor" value="#2563eb"/>
+
+        <!-- Récurrence (masquée en mode édition) -->
+        <div class="mev-field" id="evRecurRow">
           <label>Récurrence</label>
-          <select id="evRecur" onchange="document.getElementById('evRecurUntilWrap').style.display=this.value?'block':'none'">
+          <select id="evRecur" onchange="document.getElementById('evRecurUntilWrap').style.display=this.value?'flex':'none'">
             <option value="">Aucune</option>
             <option value="daily">Chaque jour</option>
             <option value="weekly">Chaque semaine</option>
@@ -215,32 +412,38 @@
             <option value="monthly">Chaque mois</option>
           </select>
         </div>
-        <div class="form-group" id="evRecurUntilWrap" style="display:none">
-          <label class="required">Répéter jusqu'au</label>
+        <div class="mev-field" id="evRecurUntilWrap" style="display:none">
+          <label>Répéter jusqu'au</label>
           <input type="date" id="evRecurUntil"/>
         </div>
-      </div>
-      <div class="form-group"><label>Description</label><textarea id="evDesc" rows="3" placeholder="Détails, lieu, intervenants…"></textarea></div>
-      <div class="form-group" style="margin-top:.75rem">
-        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:600;font-size:.85rem">
-          <input type="checkbox" id="evVehiculeCheck" onchange="document.getElementById('evVehiculeFields').style.display=this.checked?'flex':'none'"/>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M19 17a2 2 0 1 0-4 0"/></svg>
+
+        <div class="mev-field full">
+          <label>Description</label>
+          <textarea id="evDesc" rows="4" placeholder="Détails, lieu, intervenants…"></textarea>
+        </div>
+
+        <input type="checkbox" id="evVehiculeCheck" style="display:none"/>
+        <button type="button" class="mev-veh-toggle full" id="evVehiculeToggle" onclick="toggleMevVehicule()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M19 17a2 2 0 1 0-4 0"/></svg>
           Réserver un véhicule
-        </label>
-        <div id="evVehiculeFields" style="display:none;flex-direction:column;gap:.75rem;margin-top:.75rem;padding:.75rem;background:var(--g50);border-radius:var(--r)">
-          <div class="form-group"><label class="required">Véhicule</label><input type="text" id="evVehicule" list="evVehiculeList" placeholder="Sélectionner un véhicule"/><datalist id="evVehiculeList"></datalist></div>
-          <div class="form-row">
-            <div class="form-group"><label class="required">Destination</label><input type="text" id="evDestination" placeholder="Lieu de destination"/></div>
-            <div class="form-group"><label>Motif</label><input type="text" id="evMotif" placeholder="Objet du déplacement"/></div>
+          <span class="veh-pill"></span>
+        </button>
+        <div class="mev-veh-fields" id="evVehiculeFields">
+          <div class="mev-field"><label>Véhicule</label><input type="text" id="evVehicule" list="evVehiculeList" placeholder="Sélectionner un véhicule"/><datalist id="evVehiculeList"></datalist></div>
+          <div class="mev-grid">
+            <div class="mev-field"><label>Destination</label><input type="text" id="evDestination" placeholder="Lieu de destination"/></div>
+            <div class="mev-field"><label>Motif</label><input type="text" id="evMotif" placeholder="Objet du déplacement"/></div>
           </div>
         </div>
       </div>
+
+      <div class="mev-actions">
+        <button class="mev-btn-danger" id="btnDeleteEvent" style="display:none" onclick="deleteEvent()">Supprimer</button>
+        <button class="mev-btn-secondary" onclick="closeAllModals()">Annuler</button>
+        <button class="mev-btn-primary" onclick="saveEvent()">Enregistrer</button>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAllModals()">Annuler</button>
-      <button class="btn btn-danger btn-sm" id="btnDeleteEvent" style="margin-right:auto;display:none" onclick="deleteEvent()">Supprimer</button>
-      <button class="btn btn-primary" onclick="saveEvent()">Enregistrer</button>
-    </div>
+
   </div>
 </div>
 
@@ -248,5 +451,275 @@
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
 <script src="js/planning.js"></script>
+<script>
+// ── Panneau gauche (aperçu) du modal « Nouvel évènement » ──
+const _MEV_ICONS = { activite:'🎨', rdv:'🏥', sortie:'🚶', reunion:'👥', avenant:'📄', projet:'⭐', evaluation:'📊', autre:'📌' };
+const _MEV_DUREE = { '30':'30 min','60':'1 heure','90':'1h 30','120':'2 heures','180':'3 heures','journee':'Journée' };
+
+function updateMevPreview() {
+  const type     = document.getElementById('evType')?.value || 'activite';
+  const resSel   = document.getElementById('evResident');
+  let resLabel;
+  if (_mevResSelected && _mevResSelected.size > 0) {
+    resLabel = Array.from(_mevResSelected).map(id => {
+      const opt = resSel ? Array.from(resSel.options).find(o => o.value === id) : null;
+      return opt ? opt.textContent : id;
+    }).join(', ');
+  } else {
+    resLabel = 'Tous / Groupe';
+  }
+  const duree    = document.getElementById('evDuree')?.value || '60';
+  const vehicule = document.getElementById('evVehiculeCheck')?.checked;
+
+  // Icône centrale
+  const elIcon = document.getElementById('mevPreviewIcon');
+  if (elIcon) {
+    elIcon.textContent = _MEV_ICONS[type] || '📅';
+    elIcon.style.transform = 'scale(1.12)';
+    setTimeout(() => { if (elIcon) elIcon.style.transform = ''; }, 200);
+  }
+
+  // Surbrillance du menu (Activité / Rendez-vous / Sortie)
+  document.querySelectorAll('#mevMenu div').forEach(d => {
+    d.classList.toggle('mev-menu-active', d.dataset.type === type);
+  });
+
+  // Résumé bas
+  const elRes = document.getElementById('mevSumResTxt');
+  const elDur = document.getElementById('mevSumDurTxt');
+  const elVeh = document.getElementById('mevSumVeh');
+  if (elRes) elRes.textContent = resLabel;
+  if (elDur) elDur.textContent = _MEV_DUREE[duree] || (duree + ' min');
+  if (elVeh) elVeh.style.display = vehicule ? 'flex' : 'none';
+}
+
+const _SERAFIN_LABELS = { directe:'Prestation directe', indirecte:'Prestation indirecte', nc:'Non comptabilisé' };
+const _SERAFIN_ICONS  = { directe:'🔵', indirecte:'🟡', nc:'⚪' };
+const _SERAFIN_CLASS  = { directe:'active-direct', indirecte:'active-indirect', nc:'active-nc' };
+
+// ── Multi-select résidents ──
+let _mevResSelected = new Set();
+
+function buildMevResDropdown() {
+  const sel = document.getElementById('evResident');
+  const drop = document.getElementById('mevResDropdown');
+  if (!sel || !drop) return;
+  drop.innerHTML = '';
+  // Option "Tous / Groupe"
+  const allItem = document.createElement('div');
+  allItem.className = 'mev-multi-item mev-multi-all' + (_mevResSelected.size === 0 ? ' selected' : '');
+  allItem.innerHTML = `<span class="mev-mi-check"></span>Tous / Groupe`;
+  allItem.onclick = (e) => { e.stopPropagation(); _mevResSelected.clear(); renderMevResChips(); buildMevResDropdown(); syncMevResHiddenSelect(); updateMevPreview(); };
+  drop.appendChild(allItem);
+  // Résidents
+  Array.from(sel.options).forEach(opt => {
+    if (!opt.value) return;
+    const item = document.createElement('div');
+    const on = _mevResSelected.has(opt.value);
+    item.className = 'mev-multi-item' + (on ? ' selected' : '');
+    item.dataset.id = opt.value;
+    item.innerHTML = `<span class="mev-mi-check"></span>${opt.textContent}`;
+    item.onclick = (e) => { e.stopPropagation(); toggleMevResResident(opt.value, opt.textContent); };
+    drop.appendChild(item);
+  });
+}
+
+function toggleMevResResident(id, label) {
+  if (_mevResSelected.has(id)) _mevResSelected.delete(id);
+  else _mevResSelected.add(id);
+  renderMevResChips();
+  buildMevResDropdown();
+  syncMevResHiddenSelect();
+  updateMevPreview();
+}
+
+function renderMevResChips() {
+  const el = document.getElementById('mevResChips');
+  if (!el) return;
+  if (_mevResSelected.size === 0) {
+    el.innerHTML = '<span class="mev-res-placeholder">Tous / Groupe</span>';
+    return;
+  }
+  const sel = document.getElementById('evResident');
+  el.innerHTML = Array.from(_mevResSelected).map(id => {
+    const opt = Array.from(sel.options).find(o => o.value === id);
+    const name = opt ? opt.textContent : id;
+    return `<span class="mev-res-chip">${name}<button type="button" onclick="event.stopPropagation();toggleMevResResident('${id}')">×</button></span>`;
+  }).join('');
+}
+
+function syncMevResHiddenSelect() {
+  const sel = document.getElementById('evResident');
+  if (!sel) return;
+  const first = Array.from(_mevResSelected)[0] || '';
+  sel.value = first;
+}
+
+function toggleMevResDropdown(e) {
+  if (e) e.stopPropagation();
+  const box = document.getElementById('mevResBox');
+  const drop = document.getElementById('mevResDropdown');
+  if (!box || !drop) return;
+  const isOpen = drop.classList.contains('open');
+  if (!isOpen) buildMevResDropdown();
+  drop.classList.toggle('open', !isOpen);
+  box.classList.toggle('open', !isOpen);
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.mev-multi-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('mevResDropdown')?.classList.remove('open');
+    document.getElementById('mevResBox')?.classList.remove('open');
+  }
+});
+
+function toggleMevVehicule() {
+  const cb  = document.getElementById('evVehiculeCheck');
+  const btn = document.getElementById('evVehiculeToggle');
+  const fields = document.getElementById('evVehiculeFields');
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  btn.classList.toggle('veh-on', cb.checked);
+  if (fields) fields.style.display = cb.checked ? 'flex' : 'none';
+  updateMevPreview();
+}
+
+function syncVehiculeToggle() {
+  const cb  = document.getElementById('evVehiculeCheck');
+  const btn = document.getElementById('evVehiculeToggle');
+  if (cb && btn) btn.classList.toggle('veh-on', cb.checked);
+}
+
+function selectMevSerafin(val) {
+  const sel = document.getElementById('evSerafin');
+  if (sel) sel.value = val;
+  document.querySelectorAll('.mev-serafin-btn').forEach(b => {
+    b.classList.remove('active-direct','active-indirect','active-nc');
+    if (b.dataset.serafin === val) b.classList.add(_SERAFIN_CLASS[val]);
+  });
+  const elIcon = document.getElementById('mevSumSerafin');
+  const elTxt  = document.getElementById('mevSumSerafinTxt');
+  if (elIcon) elIcon.firstChild.textContent = _SERAFIN_ICONS[val] + ' ';
+  if (elTxt)  elTxt.textContent = _SERAFIN_LABELS[val] || val;
+}
+
+function selectMevType(type) {
+  const sel = document.getElementById('evType');
+  if (sel) sel.value = type;
+  updateMevPreview();
+}
+
+function selectMevColor(color) {
+  const inp = document.getElementById('evColor');
+  if (inp) inp.value = color;
+  document.querySelectorAll('.mev-c').forEach(d => {
+    d.classList.toggle('mev-c-on', d.dataset.color === color);
+  });
+}
+
+// Patch saveEvent pour inclure le champ serafin
+const _origSaveEvent = window.saveEvent;
+window.saveEvent = function() {
+  const serafin = document.getElementById('evSerafin')?.value || 'directe';
+  const editId  = document.getElementById('eventId')?.value || '';
+  const beforeIds = new Set((DB.get(DB.keys.events) || []).map(e => e.id));
+  if (typeof _origSaveEvent === 'function') _origSaveEvent();
+  const events = DB.get(DB.keys.events) || [];
+  let changed = false;
+  if (editId) {
+    const ev = events.find(e => String(e.id) === String(editId));
+    if (ev) { ev.serafin = serafin; changed = true; }
+  } else {
+    events.forEach(ev => { if (!beforeIds.has(ev.id)) { ev.serafin = serafin; changed = true; } });
+  }
+  // Inject lieu + residentIds
+  const lieu = document.getElementById('evLieu')?.value.trim() || '';
+  const sel = document.getElementById('evResident');
+  const residentIds = Array.from(_mevResSelected);
+  const residentNames = residentIds.map(id => {
+    const opt = sel ? Array.from(sel.options).find(o => o.value === id) : null;
+    return opt ? opt.textContent : id;
+  });
+  const eventsAfter = DB.get(DB.keys.events) || [];
+  if (editId) {
+    const ev = eventsAfter.find(e => String(e.id) === String(editId));
+    if (ev) { ev.lieu = lieu; ev.residentIds = residentIds; ev.residentNames = residentNames; changed = true; }
+  } else {
+    eventsAfter.forEach(ev => { if (!beforeIds.has(ev.id)) { ev.lieu = lieu; ev.residentIds = residentIds; ev.residentNames = residentNames; changed = true; } });
+  }
+  if (changed) DB.set(DB.keys.events, eventsAfter);
+};
+
+// Patch editEvent pour restaurer le champ serafin
+const _origEditEvent = window.editEvent;
+window.editEvent = function(id) {
+  if (typeof _origEditEvent === 'function') _origEditEvent(id);
+  setTimeout(() => {
+    const events = DB.get(DB.keys.events) || [];
+    const ev = events.find(e => String(e.id) === String(id));
+    if (ev) {
+      selectMevSerafin(ev.serafin || 'directe');
+      const lieu = document.getElementById('evLieu');
+      if (lieu) lieu.value = ev.lieu || '';
+      _mevResSelected = new Set(ev.residentIds || (ev.residentId ? [ev.residentId] : []));
+      renderMevResChips();
+      syncMevResHiddenSelect();
+    }
+  }, 50);
+};
+
+function resetModalEvent() {
+  _mevResSelected = new Set();
+  renderMevResChips();
+  syncMevResHiddenSelect();
+  selectMevSerafin('directe');
+  selectMevType('activite');
+  const lieu = document.getElementById('evLieu');
+  if (lieu) lieu.value = '';
+  const cb  = document.getElementById('evVehiculeCheck');
+  const btn = document.getElementById('evVehiculeToggle');
+  const fields = document.getElementById('evVehiculeFields');
+  if (cb) cb.checked = false;
+  if (btn) btn.classList.remove('veh-on');
+  if (fields) fields.style.display = 'none';
+  document.getElementById('mevResDropdown')?.classList.remove('open');
+  document.getElementById('mevResBox')?.classList.remove('open');
+}
+
+const _origCloseModal = window.closeModal;
+window.closeModal = function(id) {
+  if (typeof _origCloseModal === 'function') _origCloseModal(id);
+  if (id === 'modalEvent') resetModalEvent();
+};
+
+const _origCloseAllModals = window.closeAllModals;
+window.closeAllModals = function() {
+  if (typeof _origCloseAllModals === 'function') _origCloseAllModals();
+  resetModalEvent();
+};
+
+// Sync le panneau gauche à l'ouverture du modal (création ET édition)
+const _origOpenModal = window.openModal;
+window.openModal = function(id) {
+  if (typeof _origOpenModal === 'function') _origOpenModal(id);
+  if (id === 'modalEvent') {
+    setTimeout(() => {
+      // Reset si nouvel événement (avant updateMevPreview)
+      if (!document.getElementById('eventId')?.value) {
+        _mevResSelected = new Set();
+        renderMevResChips();
+        syncMevResHiddenSelect();
+        const lieu = document.getElementById('evLieu');
+        if (lieu) lieu.value = '';
+      }
+      updateMevPreview();
+      selectMevColor(document.getElementById('evColor')?.value || '#2563eb');
+      selectMevSerafin(document.getElementById('evSerafin')?.value || 'directe');
+      syncVehiculeToggle();
+    }, 30);
+  }
+};
+</script>
 </body>
 </html>
