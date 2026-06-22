@@ -1,4 +1,16 @@
 const PPE_KEY = DB.keys.ppe;
+const DOMAINE_SERAFIN_MAP = {
+  autonomie: ['2.2.1'],
+  sante:     ['2.1.1','2.1.2'],
+  viePro:    ['2.3.3'],
+  logement:  ['2.3.2'],
+  vieSociale:['2.3.4'],
+  vieAffective:['2.3.3','2.3.4'],
+  budget:    ['2.3.5'],
+  transport: ['3.2.4'],
+  orientation:['2.4.1']
+};
+
 const DOMAINES = [
   { id:'autonomie', label:'Autonomie', icon:'🧍' },
   { id:'sante', label:'Santé et bien-être', icon:'❤️' },
@@ -142,6 +154,7 @@ function renderAvenantFull(p) {
       </div>
     </div>
     ${DOMAINES.map(d => renderSectionCard(p, d)).join('')}
+    ${renderSerafinSync(p)}
     <div class="section-card">
       <div class="section-header" style="cursor:default"><strong>Conclusion</strong></div>
       <div class="section-body">
@@ -169,7 +182,10 @@ function renderSectionCard(p, domaine) {
     <div class="section-header" onclick="toggleSection('${p.id}','${domaine.id}')">
       <span>${domaine.icon}</span>
       <span>${domaine.label}</span>
-      <span style="margin-left:auto;font-size:.7rem;color:var(--muted)">${s.objectifs.length} obj.</span>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem">
+        ${(DOMAINE_SERAFIN_MAP[domaine.id]||[]).map(c=>`<span style="font-size:.6rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:1px 6px;border-radius:999px;font-weight:600">${c}</span>`).join('')}
+        <span style="font-size:.7rem;color:#CECBF6;margin-left:.25rem">${s.objectifs.length} obj.</span>
+      </span>
     </div>
     <div class="section-body" id="sectionBody_${p.id}_${domaine.id}">
       <div style="display:flex;gap:.5rem;align-items:flex-start">
@@ -498,25 +514,51 @@ function renderAvenant() {
   }
 
   const residents = DB.get(DB.keys.residents) || [];
-  container.innerHTML = `<div class="table-wrap"><table class="table" style="width:100%;border-collapse:separate;border-spacing:0 6px">
-    <thead><tr>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Résident</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Date</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Statut</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Référent</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Actions</th>
-    </tr></thead>
-    <tbody>${list.map((p, i) => {
+  function _avInitials(name) {
+    return (name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+  }
+  function _avStatutDot(s) {
+    return s==='actif'?'●':s==='brouillon'?'◐':'○';
+  }
+  function _avRow(icon, label, val) {
+    if (!val || val === '—') return '';
+    return `<div class="av-card-row"><span class="av-icon">${icon}</span><span class="av-label">${label}</span><span class="av-val">${escHtml(String(val))}</span></div>`;
+  }
+  function _hexToRgba(hex, a) {
+    const h = (hex||'#0f2b4a').replace('#','');
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  container.innerHTML = `<div class="av-grid">${list.map(p => {
     const r = residents.find(x => x.id === p.residentId);
-    const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
-    return `<tr style="cursor:pointer;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.04);background:${i%2===0?'#fff':'#f8fafc'};transition:background .15s,box-shadow .15s" onmouseenter="this.style.background='#eef2ff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseleave="this.style.background='${i%2===0?'#fff':'#f8fafc'}';this.style.boxShadow='0 2px 6px rgba(0,0,0,.04)'" onclick="openAvenant('${p.id}')">
-      <td style="padding:.7rem .75rem;border-radius:12px 0 0 12px"><div style="display:flex;align-items:center;gap:.6rem"><span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
-      <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${formatDate(p.dateRedaction)}</td>
-      <td style="padding:.7rem .75rem"><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></td>
-      <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${p.referent ? escHtml(p.referent) : '—'}</td>
-      <td style="padding:.7rem .75rem;border-radius:0 12px 12px 0"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAvenant('${p.id}')">Voir</button></td>
-    </tr>`;
-  }).join('')}</tbody></table></div>`;
+    const col = r?.color || '#0f2b4a';
+    const totalObj = Object.values(p.sections||{}).reduce((a,s)=>a+(s.objectifs?.filter(o=>o.objectif?.trim()).length||0),0);
+    const domainesActifs = Object.values(p.sections||{}).filter(s=>(s.bilan||'').trim()).length;
+    const avatarHtml = r?.photo
+      ? `<img src="${r.photo}" class="av-card-avatar" style="object-fit:cover" alt="${escHtml(p.residentName)}"/>`
+      : `<div class="av-card-avatar" style="background:${_hexToRgba(col,.25)};border-color:${_hexToRgba(col,.5)}">${_avInitials(p.residentName)}</div>`;
+    return `<div class="av-card" style="border-color:${_hexToRgba(col,.25)}" onclick="openAvenant('${p.id}')">
+      <div class="av-card-head" style="background:${col}">
+        ${avatarHtml}
+        <div class="av-card-name">${escHtml(p.residentName||'—')}</div>
+        <div><span class="av-card-statut ${p.statut}">${_avStatutDot(p.statut)} ${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>
+      </div>
+      <div class="av-card-body">
+        ${_avRow('👤','Ouvert par', p.createdBy||'—')}
+        ${_avRow('📅','Rédaction', formatDate(p.dateRedaction))}
+        ${_avRow('🔄','Révision', formatDate(p.dateRevision))}
+        ${_avRow('🧑‍🏫','Référent', p.referent)}
+        ${_avRow('🏭','Atelier', p.atelier)}
+        ${_avRow('🛡️','Protection', p.protection)}
+        <div class="av-card-row"><span class="av-icon">🎯</span><span class="av-label">Objectifs</span><span class="av-val" style="font-weight:700;color:var(--accent)">${totalObj} objectif${totalObj>1?'s':''} · ${domainesActifs} domaine${domainesActifs>1?'s':''}</span></div>
+      </div>
+      <div class="av-card-footer" style="border-top-color:${_hexToRgba(col,.15)}">
+        <button class="btn btn-sm" style="flex:1;justify-content:center;background:${col};color:#fff;border:none" onclick="event.stopPropagation();openAvenant('${p.id}')">Ouvrir</button>
+        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;border-color:${_hexToRgba(col,.4)};color:${col}" onclick="event.stopPropagation();editAvenant('${p.id}')">Modifier</button>
+        <button class="btn btn-ghost btn-sm" style="color:#dc2626;flex:0" onclick="event.stopPropagation();deleteAvenant('${p.id}')" title="Supprimer">✕</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function editAvenant(id) {
@@ -831,6 +873,101 @@ function ensureSectionsComplete(sections) {
 
 function regenerateAvenantFromJournal(id) {
   genererAvenantFromJournal(id);
+}
+
+// ═══════════════════════════════════════════
+//  SYNCHRONISATION SERAFIN-PH
+// ═══════════════════════════════════════════
+
+const SP_DESCRIPTIONS = {
+  '2.1.1': { desc: 'Soins médicaux, paramédicaux et psychologiques dispensés au résident.', ex: 'Suivi infirmier quotidien, consultation psychiatrique, distribution des médicaments.' },
+  '2.1.2': { desc: 'Maintien ou restauration des capacités motrices, cognitives ou sensorielles.', ex: 'Séances de kinésithérapie, ergothérapie, orthophonie.' },
+  '2.2.1': { desc: 'Soutien aux actes essentiels de la vie quotidienne : toilette, repas, hygiène, déplacements.', ex: 'Aide à la douche, accompagnement pour cuisiner, guidage dans les déplacements internes.' },
+  '2.3.1': { desc: 'Aide à la compréhension et à l\'exercice des droits civiques, administratifs et juridiques.', ex: 'Démarches pour la carte d\'invalidité, déclaration de revenus, accompagnement chez le tuteur.' },
+  '2.3.2': { desc: 'Soutien dans la gestion du cadre de vie et la préparation à un logement autonome.', ex: 'Apprentissage du rangement, entretien de la chambre, préparation à un appartement extérieur.' },
+  '2.3.3': { desc: 'Aide à l\'insertion professionnelle, scolaire ou en formation adaptée.', ex: 'Accompagnement à l\'ESAT, soutien en atelier, aide à la rédaction d\'un CV ou dossier de formation.' },
+  '2.3.4': { desc: 'Soutien à la participation aux activités culturelles, sportives, citoyennes et aux relations sociales.', ex: 'Sorties culturelles, clubs de sport, maintien du lien familial, participation à des associations.' },
+  '2.3.5': { desc: 'Aide à la gestion du budget, des ressources financières et des démarches administratives courantes.', ex: 'Suivi du budget mensuel, apprentissage du paiement de factures, gestion de l\'argent de poche.' },
+  '2.4.1': { desc: 'Coordination entre les intervenants pour garantir la cohérence du projet de vie du résident.', ex: 'Réunion de synthèse pluridisciplinaire, coordination MDPH, lien avec la famille et les partenaires externes.' }
+};
+
+function renderSerafinSync(p) {
+  const serafin = p.serafin || {};
+  const prestations = serafin.prestations || {};
+  const directes = (typeof SP_NOMENCLATURE !== 'undefined' ? SP_NOMENCLATURE : []).filter(s => s.cat === 'Directe');
+  const niveauLabels = ['0 — Nul', '1 — Faible', '2 — Modéré', '3 — Important', '4 — Très important'];
+  const niveauColors = ['#d1d5db', '#22c55e', '#eab308', '#f97316', '#ef4444'];
+  const activeCount = Object.values(prestations).filter(v => v.active).length;
+
+  return `<div class="section-card">
+    <div class="section-header" style="cursor:default">
+      <span>📊</span>
+      <span>Synchronisation SERAFIN-PH</span>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
+        ${activeCount ? `<span style="font-size:.68rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:2px 8px;border-radius:999px">${activeCount} prestation${activeCount>1?'s':''}</span>` : ''}
+        <button class="btn btn-sm" style="background:#7F77DD;color:#fff;border:none;font-size:.72rem;padding:3px 10px;border-radius:6px" onclick="syncSerafinToResident('${p.id}')">⟳ Synchroniser → résident</button>
+      </span>
+    </div>
+    <div class="section-body">
+      <p style="font-size:.78rem;margin:0 0 .85rem;color:#534AB7">Cochez les prestations SERAFIN-PH concernées par cet avenant et définissez le niveau de besoin. Cliquez sur <strong>Synchroniser</strong> pour mettre à jour la fiche SERAFIN-PH du résident.</p>
+      <div style="display:flex;flex-direction:column;gap:.45rem">
+        ${directes.map(sp => {
+          const item = prestations[sp.code] || { active: false, niveau: 0 };
+          const isActive = !!item.active;
+          const dotColor = niveauColors[item.niveau] || niveauColors[0];
+          const info = SP_DESCRIPTIONS[sp.code] || {};
+          return `<div style="padding:.65rem .85rem;background:${isActive?'#fff':'rgba(255,255,255,.45)'};border:0.5px solid ${isActive?'#7F77DD':'#CECBF6'};border-radius:8px" id="sp_row_${p.id}_${sp.code.replace(/\./g,'_')}">
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <input type="checkbox" ${isActive?'checked':''} onchange="saveSerafinItem('${p.id}','${sp.code}','active',this.checked)" style="width:15px;height:15px;accent-color:#534AB7;flex-shrink:0;cursor:pointer"/>
+              <span style="font-size:.8rem;flex:1;font-weight:600;color:${isActive?'#26215C':'#534AB7'}">${sp.icon} <span style="font-size:.72rem;color:#7F77DD;font-weight:700">${sp.code}</span> ${sp.label}</span>
+              ${isActive ? `<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
+                <span style="width:9px;height:9px;border-radius:50%;background:${dotColor};display:inline-block"></span>
+                <select onchange="saveSerafinItem('${p.id}','${sp.code}','niveau',parseInt(this.value))" style="font-size:.72rem;padding:2px 6px;border:0.5px solid #CECBF6;border-radius:6px;background:#fff;color:#26215C;cursor:pointer">
+                  ${niveauLabels.map((l,i)=>`<option value="${i}" ${item.niveau===i?'selected':''}>${l}</option>`).join('')}
+                </select>
+              </div>` : ''}
+            </div>
+            ${info.desc ? `<div style="margin-top:.4rem;padding-left:27px">
+              <div style="font-size:.73rem;color:#534AB7;line-height:1.45">${info.desc}</div>
+              <div style="font-size:.7rem;color:#7F77DD;margin-top:.2rem;font-style:italic">Ex : ${info.ex}</div>
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveSerafinItem(ppeId, code, field, value) {
+  const list = getPpe();
+  const p = list.find(x => x.id === ppeId);
+  if (!p) return;
+  if (!p.serafin) p.serafin = { prestations: {} };
+  if (!p.serafin.prestations[code]) p.serafin.prestations[code] = { active: false, niveau: 0 };
+  p.serafin.prestations[code][field] = value;
+  savePpe(list);
+  const full = document.getElementById('avenantFullView');
+  if (full) renderAvenantFull(p);
+}
+
+function syncSerafinToResident(ppeId) {
+  const list = getPpe();
+  const p = list.find(x => x.id === ppeId);
+  if (!p) { toast('Avenant introuvable', 'error'); return; }
+  const spData = p.serafin && p.serafin.prestations ? p.serafin.prestations : {};
+  const selected = Object.entries(spData).filter(([,v]) => v.active).map(([k]) => k);
+  if (!selected.length) { toast('Aucune prestation sélectionnée', 'error'); return; }
+  const residents = DB.get(DB.keys.residents) || [];
+  const rIdx = residents.findIndex(x => x.id === p.residentId);
+  if (rIdx < 0) { toast('Résident introuvable', 'error'); return; }
+  const prestations = {};
+  selected.forEach(code => { prestations[code] = { niveau: spData[code].niveau || 0 }; });
+  if (!residents[rIdx].serafinph) residents[rIdx].serafinph = {};
+  residents[rIdx].serafinph.selected = selected;
+  residents[rIdx].serafinph.prestations = prestations;
+  residents[rIdx].serafinph.dateEvaluation = new Date().toISOString().slice(0,10);
+  DB.set(DB.keys.residents, residents);
+  toast(`✅ SERAFIN synchronisé pour ${p.residentName} — ${selected.length} prestation${selected.length>1?'s':''}`, 'success');
 }
 
 function initPpePage() {

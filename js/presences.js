@@ -39,8 +39,9 @@ function renderStats() {
   const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
   const presences = getPresencesForDate(getDateStr());
   let present=0, absent=0, sortie=0, unknown=0;
+  const dateStr = getDateStr();
   residents.forEach(r => {
-    const s = presences[r.id] || 'unknown';
+    const s = presences[r.id] || (getPlanningAbsenceJour(r, dateStr) ? 'sortie' : 'unknown');
     if (s==='present') present++;
     else if (s==='absent') absent++;
     else if (s==='sortie') sortie++;
@@ -52,62 +53,70 @@ function renderStats() {
   document.getElementById('countUnknown').textContent = unknown;
 }
 
+const JOURS_SEMAINE = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+
+function getPlanningAbsenceJour(r, date) {
+  if (!r.planningHebdo) return null;
+  const dow = new Date(date + 'T00:00:00').getDay();
+  const jour = JOURS_SEMAINE[dow];
+  const d = r.planningHebdo[jour];
+  return (d && d.actif) ? d : null;
+}
+
 function renderPresenceTable() {
   const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
   const presences = getPresencesForDate(getDateStr());
   const el = document.getElementById('presenceTable');
 
   if (!residents.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3>Aucun résident actif</h3><p><a href="residents.html">Ajouter des résidents</a></p></div>`;
+    el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3>Aucun résident actif</h3><p><a href="residents.html">Ajouter des résidents</a></p></div>`;
     return;
   }
 
-  const statusStyle = {
-    present: 'background:#ecfdf5;color:#047857;font-weight:700',
-    absent: 'background:#fef2f2;color:#b91c1c;font-weight:700',
-    sortie: 'background:#fffbeb;color:#92400e;font-weight:700',
-    unknown: 'color:var(--g300)'
-  };
-  const statusLabel = { present:'✓ Présent', absent:'✕ Absent', sortie:'↗ Sortie', unknown:'— ' };
+  const BTNS = [
+    { key: 'present', label: 'Présent', letter: 'P', active: 'background:#16a34a;color:#fff;border-color:#16a34a', inactive: 'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0' },
+    { key: 'absent',  label: 'Absent',  letter: 'A', active: 'background:#dc2626;color:#fff;border-color:#dc2626', inactive: 'background:#fef2f2;color:#dc2626;border-color:#fecaca' },
+    { key: 'sortie',  label: 'Sortie',  letter: 'S', active: 'background:#d97706;color:#fff;border-color:#d97706', inactive: 'background:#fffbeb;color:#d97706;border-color:#fde68a' },
+    { key: 'unknown', label: 'N/R',     letter: 'X', active: 'background:#6b7280;color:#fff;border-color:#6b7280', inactive: 'background:#f9fafb;color:#9ca3af;border-color:#e5e7eb' },
+  ];
 
-  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.875rem">
-    <thead style="background:var(--g50)">
-      <tr>
-        <th style="padding:.75rem 1.25rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">Résident</th>
-        <th style="padding:.75rem 1rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">Chambre</th>
-        <th style="padding:.75rem 1rem;text-align:center;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">Statut</th>
-        <th style="padding:.75rem 1rem;text-align:left;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)">Modifier</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${residents.map(r => {
-        const s = presences[r.id] || 'unknown';
-        return `<tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:.85rem 1.25rem">
-            <div style="display:flex;align-items:center;gap:.75rem">
-              ${r.photo?`<img src="${sanitizeUrl(r.photo)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="width:36px;height:36px;font-size:.75rem;background:${r.color||'var(--blue)'}">${initials(r.prenom,r.nom)}</div>`}
-              <div>
-                <div style="font-weight:600">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
-                <div style="font-size:.72rem;color:var(--muted)">${r.dob ? age(r.dob) : ''}</div>
-              </div>
-            </div>
-          </td>
-          <td style="padding:.85rem 1rem">${escHtml(r.chambre) || '—'}</td>
-          <td style="padding:.85rem 1rem;text-align:center">
-            <span style="display:inline-block;padding:.3rem .75rem;border-radius:var(--r-full);font-size:.8rem;${statusStyle[s]}">${statusLabel[s]}</span>
-          </td>
-          <td style="padding:.85rem 1rem">
-            <div style="display:flex;gap:.35rem;align-items:center">
-              <button onclick="setPresence('${r.id}','present')" style="width:28px;height:28px;border-radius:50%;border:2px solid #047857;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;transition:all .15s;background:${s==='present'?'#047857':'transparent'};color:${s==='present'?'#fff':'#047857'}">${s==='present'?'✓':'P'}</button>
-              <button onclick="setPresence('${r.id}','absent')" style="width:28px;height:28px;border-radius:50%;border:2px solid #b91c1c;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;transition:all .15s;background:${s==='absent'?'#b91c1c':'transparent'};color:${s==='absent'?'#fff':'#b91c1c'}">${s==='absent'?'✓':'A'}</button>
-              <button onclick="setPresence('${r.id}','sortie')" style="width:28px;height:28px;border-radius:50%;border:2px solid #92400e;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;transition:all .15s;background:${s==='sortie'?'#92400e':'transparent'};color:${s==='sortie'?'#fff':'#92400e'}">${s==='sortie'?'✓':'S'}</button>
-              <button onclick="setPresence('${r.id}','unknown')" style="width:20px;height:20px;border-radius:50%;border:1px solid var(--g300);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.5rem;color:var(--g300);background:transparent;transition:all .15s">✕</button>
-            </div>
-          </td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>`;
+  const dateStr = getDateStr();
+  const cards = residents.map(r => {
+    const manualStatus = presences[r.id];
+    const planningJour = getPlanningAbsenceJour(r, dateStr);
+    const s = manualStatus || (planningJour ? 'sortie' : 'unknown');
+    const isPlanningDefault = !manualStatus && planningJour;
+    const color = r.color || '#6b7280';
+    const avatar = r.photo
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid ${color}44;flex-shrink:0" alt=""/>`
+      : `<div style="width:64px;height:64px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
+
+    const planningTag = isPlanningDefault
+      ? `<div style="font-size:.65rem;color:#0369a1;background:#e0f2fe;border-radius:5px;padding:1px 5px;margin-top:2px;display:inline-block">📅 ${escHtml(planningJour.label||'Absence planifiée')}${planningJour.debut ? ' · '+planningJour.debut : ''}</div>`
+      : '';
+
+    const btns = BTNS.map(b => {
+      const isActive = s === b.key;
+      return `<button onclick="setPresence('${r.id}','${b.key}')" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:.55rem .25rem;border-radius:10px;border:1.5px solid;cursor:pointer;transition:all .15s;font-family:inherit;${isActive ? b.active : b.inactive}">
+        <span style="font-size:.9rem;font-weight:800;line-height:1">${b.letter}</span>
+        <span style="font-size:.6rem;font-weight:500;line-height:1;opacity:${isActive?'1':'.7'}">${b.label}</span>
+      </button>`;
+    }).join('');
+
+    return `<div style="background:${color}0d;border:1.5px solid ${color}44;border-top:3px solid ${color};border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:.85rem;transition:box-shadow .12s" onmouseover="this.style.boxShadow='0 4px 16px ${color}22'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:.7rem">
+        ${avatar}
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:1px">Chambre ${escHtml(r.chambre||'—')}</div>
+          ${planningTag}
+        </div>
+      </div>
+      <div style="display:flex;gap:.35rem">${btns}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.85rem;padding:1.25rem">${cards}</div>`;
 }
 
 function updateDateLabel() {

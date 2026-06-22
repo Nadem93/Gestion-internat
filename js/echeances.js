@@ -10,6 +10,7 @@ const EC_TYPES = {
   contrat: { label: 'Contrat de séjour', icon: '📜' },
   ppe: { label: 'Révision PPE', icon: '📄' },
   medical: { label: 'Visite médicale', icon: '🩺' },
+  cvs_mandat: { label: 'Fin de mandat CVS', icon: '🗳️' },
   autre: { label: 'Autre', icon: '📌' }
 };
 

@@ -53,6 +53,18 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
 .etab-name{font-weight:600;font-size:.82rem;flex:1;min-width:0}
 .etab-count{font-size:.72rem;color:#64748b}
 @media (prefers-reduced-motion: reduce){body::before,body::after,.card::before{animation:none!important}.card{animation:none!important}}
+
+/* ── Module grid ── */
+.mod-section{margin-bottom:1.35rem}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;margin-top:.55rem}
+.mod-card{display:flex;flex-direction:column;gap:4px;padding:.7rem .85rem;background:rgba(248,250,252,.9);border:1.5px solid #e2e8f0;border-radius:12px;text-decoration:none;color:#334155;transition:border-color .15s,box-shadow .15s,transform .12s}
+.mod-card:hover{border-color:#6366f1;box-shadow:0 0 16px rgba(99,102,241,.18);transform:translateY(-2px)}
+.mod-card.mc-new{border-color:#06b6d4;background:rgba(6,182,212,.04)}
+.mod-card.mc-new:hover{border-color:#0284c7;box-shadow:0 0 18px rgba(6,182,212,.22);transform:translateY(-2px)}
+.mod-card .mi{font-size:1.45rem;line-height:1}
+.mod-card .mt{font-size:.8rem;font-weight:700;color:#0f2b4a;margin-top:3px;line-height:1.2}
+.mod-card .ms{font-size:.68rem;color:#64748b;line-height:1.35;margin-top:1px}
+.mod-card .mnew{display:inline-flex;font-size:.58rem;font-weight:700;background:#e0f2fe;color:#0284c7;padding:1px 6px;border-radius:10px;align-self:flex-start;margin-top:3px}
 </style>
 </head>
 <body>
@@ -93,6 +105,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
       <div class="config-item"><label>Messages</label><input type="number" id="cfgMessages" value="20" min="0" max="100"><span class="hint">Conversations</span></div>
       <div class="config-item"><label>Répertoire</label><input type="number" id="cfgContacts" value="30" min="0" max="100"><span class="hint">Contacts externes</span></div>
       <div class="config-item"><label>Connexions</label><input type="number" id="cfgLoginHist" value="30" min="0" max="200"><span class="hint">Historique connexions</span></div>
+      <div class="config-item"><label>Transmissions</label><input type="number" id="cfgTransmissions" value="80" min="0" max="500"><span class="hint">Entrées de relève</span></div>
     </div>
   </div>
 
@@ -106,6 +119,16 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
     </div>
   </div>
 
+  <div class="config-sect">
+    <div class="config-sect-title">Modules complémentaires</div>
+    <div class="config-grid">
+      <div class="config-item"><label>Évaluations</label><input type="number" id="cfgEvals" value="15" min="0" max="500"><span class="hint">Résidents évalués MIF/Barthel</span></div>
+      <div class="config-item"><label>Semaines astreinte</label><input type="number" id="cfgAstWeeks" value="4" min="1" max="52"><span class="hint">Planning des gardes</span></div>
+      <div class="config-item"><label>Satisfaction</label><input type="number" id="cfgSatisfaction" value="20" min="0" max="200"><span class="hint">Questionnaires résidents</span></div>
+      <div class="config-item"><label>Inventaire</label><input type="number" id="cfgInventaire" value="25" min="0" max="100"><span class="hint">Équipements enregistrés</span></div>
+    </div>
+  </div>
+
   <label class="sel-label">Établissements à générer</label>
   <div class="etab-selector" id="etabSelector"></div>
 
@@ -116,6 +139,207 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
 
   <div class="status" id="status">Cliquez sur le bouton pour lancer la génération.</div>
   <div class="footer">Identifiants : <strong>admin / admin123</strong></div>
+</div>
+
+<!-- ══ MODULES SHOWCASE ══ -->
+<div class="card" style="animation-delay:.18s">
+  <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem">
+    <div style="width:48px;height:48px;background:linear-gradient(135deg,#0ea5e9,#6366f1 55%,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;flex-shrink:0;box-shadow:0 4px 14px rgba(99,102,241,.35)">🖥️</div>
+    <div style="flex:1">
+      <h1>Accéder aux modules</h1>
+      <div class="sub">Générez d'abord les données de démonstration, puis explorez chaque module ci-dessous</div>
+    </div>
+  </div>
+
+  <!-- Résidents & Suivi -->
+  <div class="mod-section">
+    <div class="config-sect-title">Résidents &amp; Suivi</div>
+    <div class="mod-grid">
+      <a class="mod-card" href="residents.html">
+        <span class="mi">👥</span><span class="mt">Résidents</span>
+        <span class="ms">Fiches individuelles, dossiers et suivi</span>
+      </a>
+      <a class="mod-card" href="journal.html">
+        <span class="mi">📓</span><span class="mt">Journal de bord</span>
+        <span class="ms">Observations quotidiennes par résident</span>
+      </a>
+      <a class="mod-card" href="ppe.html">
+        <span class="mi">📋</span><span class="mt">PPE / Avenants</span>
+        <span class="ms">Projets personnalisés et objectifs</span>
+      </a>
+      <a class="mod-card" href="presences.html">
+        <span class="mi">📅</span><span class="mt">Présences</span>
+        <span class="ms">Pointage journalier et absences</span>
+      </a>
+      <a class="mod-card mc-new" href="transmissions.html">
+        <span class="mi">📡</span><span class="mt">Transmissions</span>
+        <span class="ms">Relèves soignantes en kanban</span>
+        <span class="mnew">✦ Kanban redesigné</span>
+      </a>
+      <a class="mod-card" href="admissions.html">
+        <span class="mi">🚪</span><span class="mt">Admissions</span>
+        <span class="ms">Dossiers et suivi des admissions</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Santé & Soins -->
+  <div class="mod-section">
+    <div class="config-sect-title">Santé &amp; Soins</div>
+    <div class="mod-grid">
+      <a class="mod-card" href="plan-soins.html">
+        <span class="mi">🩺</span><span class="mt">Plan de soins</span>
+        <span class="ms">Protocoles et soins quotidiens</span>
+      </a>
+      <a class="mod-card" href="medicaments.html">
+        <span class="mi">💊</span><span class="mt">Médicaments</span>
+        <span class="ms">Traitements et administrations</span>
+      </a>
+      <a class="mod-card" href="evaluations.html">
+        <span class="mi">📊</span><span class="mt">Évaluations</span>
+        <span class="ms">Grilles MIF, Barthel et autonomie</span>
+      </a>
+      <a class="mod-card" href="incidents.html">
+        <span class="mi">⚠️</span><span class="mt">Incidents</span>
+        <span class="ms">Signalements et déclarations EIG</span>
+      </a>
+      <a class="mod-card" href="satisfaction.html">
+        <span class="mi">⭐</span><span class="mt">Satisfaction</span>
+        <span class="ms">Questionnaires résidents et familles</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Planning & Organisation -->
+  <div class="mod-section">
+    <div class="config-sect-title">Planning &amp; Organisation</div>
+    <div class="mod-grid">
+      <a class="mod-card mc-new" href="planning.html">
+        <span class="mi">📆</span><span class="mt">Planning</span>
+        <span class="ms">Agenda collectif avec mini-calendriers masquables</span>
+        <span class="mnew">✦ Sidebar toggle</span>
+      </a>
+      <a class="mod-card" href="vehicules.html">
+        <span class="mi">🚗</span><span class="mt">Véhicules</span>
+        <span class="ms">Réservations et parc auto</span>
+      </a>
+      <a class="mod-card" href="activites.html">
+        <span class="mi">🎯</span><span class="mt">Activités</span>
+        <span class="ms">Programme d'activités résidents</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Administration & Direction -->
+  <div class="mod-section">
+    <div class="config-sect-title">Administration &amp; Direction</div>
+    <div class="mod-grid">
+      <a class="mod-card mc-new" href="admin.html">
+        <span class="mi">📈</span><span class="mt">Statistiques</span>
+        <span class="ms">Tableaux de bord et rapports PDF</span>
+        <span class="mnew">✦ Graphique satisfaction</span>
+      </a>
+      <a class="mod-card" href="dashboard.html">
+        <span class="mi">🎛️</span><span class="mt">Dashboard</span>
+        <span class="ms">Vue d'ensemble de la direction</span>
+      </a>
+      <a class="mod-card" href="messages.html">
+        <span class="mi">💬</span><span class="mt">Messages</span>
+        <span class="ms">Messagerie interne équipe</span>
+      </a>
+      <a class="mod-card" href="documents.html">
+        <span class="mi">📁</span><span class="mt">Documents</span>
+        <span class="ms">Bibliothèque de documents</span>
+      </a>
+      <a class="mod-card" href="interventions.html">
+        <span class="mi">🔧</span><span class="mt">Interventions</span>
+        <span class="ms">Maintenance et travaux</span>
+      </a>
+      <a class="mod-card" href="inventaire.html">
+        <span class="mi">📦</span><span class="mt">Inventaire</span>
+        <span class="ms">Équipements et matériel</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Personnel -->
+  <div class="mod-section">
+    <div class="config-sect-title">Personnel &amp; RH</div>
+    <div class="mod-grid">
+      <a class="mod-card mc-new" href="rh.html">
+        <span class="mi">👥</span><span class="mt">Portail RH</span>
+        <span class="ms">Accès centralisé à tous les modules RH</span>
+        <span class="mnew">✦ Nouveau portail</span>
+      </a>
+      <a class="mod-card mc-new" href="rh-dashboard.html">
+        <span class="mi">📊</span><span class="mt">Tableau de bord RH</span>
+        <span class="ms">Échéances, absences, congés, entretiens en un coup d'œil</span>
+        <span class="mnew">✦ Nouveau</span>
+      </a>
+      <a class="mod-card" href="employe.html">
+        <span class="mi">👤</span><span class="mt">Fiche employé</span>
+        <span class="ms">Dossiers du personnel, offboarding intégré</span>
+      </a>
+      <a class="mod-card mc-new" href="contrats.html">
+        <span class="mi">📑</span><span class="mt">Contrats</span>
+        <span class="ms">CDI/CDD, périodes d'essai, avenants, alertes d'échéance</span>
+        <span class="mnew">✦ Nouveau</span>
+      </a>
+      <a class="mod-card mc-new" href="absences.html">
+        <span class="mi">🩺</span><span class="mt">Absences & AT</span>
+        <span class="ms">Arrêts maladie, accidents du travail, visites de reprise</span>
+        <span class="mnew">✦ Nouveau</span>
+      </a>
+      <a class="mod-card mc-new" href="pointage.html">
+        <span class="mi">⏱️</span><span class="mt">Pointage</span>
+        <span class="ms">Heures réelles, calcul des heures supplémentaires</span>
+        <span class="mnew">✦ Nouveau</span>
+      </a>
+      <a class="mod-card mc-new" href="recrutement.html">
+        <span class="mi">📋</span><span class="mt">Recrutement</span>
+        <span class="ms">Pipeline candidats de la candidature à l'embauche</span>
+        <span class="mnew">✦ Nouveau</span>
+      </a>
+      <a class="mod-card" href="conges.html">
+        <span class="mi">🏖️</span><span class="mt">Congés</span>
+        <span class="ms">Demandes et validation congés</span>
+      </a>
+      <a class="mod-card mc-new" href="entretiens.html">
+        <span class="mi">🤝</span><span class="mt">Entretiens</span>
+        <span class="ms">Grille de compétences notée + export PDF</span>
+        <span class="mnew">✦ Grille notée</span>
+      </a>
+      <a class="mod-card" href="formations.html">
+        <span class="mi">🎓</span><span class="mt">Formations</span>
+        <span class="ms">Plan de formation du personnel</span>
+      </a>
+      <a class="mod-card mc-new" href="paie.html">
+        <span class="mi">💰</span><span class="mt">Fiches de paie</span>
+        <span class="ms">Éléments de salaire, net calculé, récap annuel</span>
+        <span class="mnew">✦ Calcul automatique</span>
+      </a>
+      <a class="mod-card" href="annuaire.html">
+        <span class="mi">📇</span><span class="mt">Annuaire</span>
+        <span class="ms">Annuaire interne du personnel</span>
+      </a>
+      <a class="mod-card" href="astreintes.html">
+        <span class="mi">🔔</span><span class="mt">Astreintes</span>
+        <span class="ms">Gardes et permanences</span>
+      </a>
+      <a class="mod-card" href="planning-equipe.html">
+        <span class="mi">👔</span><span class="mt">Planning équipe</span>
+        <span class="ms">Plannings du personnel</span>
+      </a>
+      <a class="mod-card" href="repertoire.html">
+        <span class="mi">📒</span><span class="mt">Répertoire</span>
+        <span class="ms">Contacts et annuaire externe</span>
+      </a>
+    </div>
+  </div>
+
+  <div style="font-size:.75rem;color:#94a3b8;text-align:center;padding-top:.5rem;border-top:1px solid #e2e8f0">
+    Les badges <span style="background:#e0f2fe;color:#0284c7;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:8px">✦ nouveau</span> indiquent les pages récemment redessinées
+  </div>
 </div>
 
 <script src="js/app.js"></script>
@@ -237,6 +461,11 @@ function generateForCurrentEtab() {
   const cfgEmp = getCfg('Employes');
   const cfgDocsPerRes = getCfg('DocsPerRes');
   const cfgDocsRsrc = getCfg('DocsRsrc');
+  const cfgTransmissions = getCfg('Transmissions');
+  const cfgEvals = getCfg('Evals');
+  const cfgAstWeeks = Math.max(1, getCfg('AstWeeks'));
+  const cfgSat = getCfg('Satisfaction');
+  const cfgInv = getCfg('Inventaire');
 
   const usedNames = new Set();
   const resList = [];
@@ -864,6 +1093,81 @@ function generateForCurrentEtab() {
     photo: '', notes: '', createdAt: now.toISOString()
   }));
   DB.set(DB.keys.employes, employes);
+
+  // ── CONTRATS ──
+  const contrats = employes.map((e, i) => {
+    const type = pick(['cdi','cdi','cdi','cdi','cdd','cdd','vacation','alternance']);
+    const debut = e.dateEmbauche;
+    let fin = '', essai = '';
+    if (type === 'cdi') {
+      // Période d'essai uniquement si embauche récente
+      if (Math.random() < .5 && now.getTime() - new Date(debut).getTime() < 90 * _MS) essai = new Date(new Date(debut).getTime() + rand(60,90) * _MS).toISOString().slice(0,10);
+    } else if (type === 'cdd' || type === 'vacation' || type === 'alternance') {
+      fin = new Date(now.getTime() + rand(-30, 180) * _MS).toISOString().slice(0,10);
+    }
+    const avenants = [];
+    if (Math.random() < .25) avenants.push({ id:'av-'+i, date: dAgo(300), texte: pick(['Passage à temps plein','Changement de poste','Augmentation du temps de travail à 32h/semaine','Avenant de mobilité interne']) });
+    return {
+      id: 'dc-' + (i+1), employeId: e.id, type, debut, fin, essai,
+      temps: e.heuresContrat >= 35 ? 'plein' : 'partiel', heures: e.heuresContrat,
+      poste: e.poste, notes: '', avenants, statut: e.statut === 'sorti' ? 'termine' : 'actif',
+      createdAt: now.toISOString()
+    };
+  });
+  DB.set(DB.keys.contrats, contrats);
+
+  // ── ABSENCES & ACCIDENTS DU TRAVAIL ──
+  const absencesAT = [];
+  const empForAbsences = shuffle([...employes]).slice(0, Math.max(1, Math.round(employes.length * 0.18)));
+  empForAbsences.forEach((e, i) => {
+    const type = pick(['maladie','maladie','maladie','at','maladie_pro']);
+    const enCours = Math.random() < .25;
+    const debut = dAgo(120);
+    const duree = type === 'at' ? rand(3,21) : rand(2,30);
+    const fin = enCours ? '' : new Date(new Date(debut).getTime() + duree * _MS).toISOString().slice(0,10);
+    const visiteDate = (!enCours && duree > 10) ? new Date(new Date(debut).getTime() + (duree+2) * _MS).toISOString().slice(0,10) : '';
+    absencesAT.push({
+      id: 'da-' + (i+1), employeId: e.id, type, debut, fin,
+      prolongation: Math.random() < .15,
+      visiteDate, visiteFaite: visiteDate ? Math.random() < .6 : false,
+      notes: type === 'at' ? pick(['Chute lors du transfert d\'un résident','Accident de trajet','Effort de manutention']) : '',
+      createdAt: now.toISOString()
+    });
+  });
+  DB.set(DB.keys.absencesAT, absencesAT);
+
+  // ── RECRUTEMENT ──
+  const candidatPostes = ['Éducateur spécialisé','Moniteur éducateur','Veilleur de nuit','Psychologue','Infirmier','Maîtresse de maison'];
+  const candidatStatuts = ['recu','recu','entretien_planifie','entretien_fait','accepte','refuse'];
+  const candidats = Array.from({length: 6}, (_, i) => {
+    const prenom = i % 2 === 0 ? pick(PRENOMS_M) : pick(PRENOMS_F);
+    const nom = pick(NOMS);
+    const statut = candidatStatuts[i];
+    return {
+      id: 'dca-' + (i+1), prenom, nom, poste: pick(candidatPostes),
+      tel: '06 ' + rand(10,99) + ' ' + rand(10,99) + ' ' + rand(10,99) + ' ' + rand(10,99),
+      email: prenom.toLowerCase() + '.' + nom.toLowerCase() + '@mail.fr',
+      date: dAgo(45), dateEntretien: ['entretien_planifie','entretien_fait','accepte','refuse'].includes(statut) ? dAgo(15) : '',
+      notes: statut === 'entretien_fait' || statut === 'accepte' ? 'Bon profil, motivé, expérience pertinente avec le public accueilli.' : '',
+      statut, createdAt: now.toISOString()
+    };
+  });
+  DB.set(DB.keys.candidats, candidats);
+
+  // ── POINTAGE (semaine en cours) ──
+  const pointages = [];
+  const _ptLocalStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const ptMonday = new Date(now); ptMonday.setDate(ptMonday.getDate() - ((ptMonday.getDay()+6)%7));
+  employes.filter(e => e.statut === 'actif').slice(0, 15).forEach((e, ei) => {
+    for (let j = 0; j < 5; j++) {
+      const d = new Date(ptMonday.getTime() + j * _MS);
+      if (d.getTime() > now.getTime()) continue;
+      const startH = pick([7,8,9]);
+      const durH = e.heuresContrat >= 35 ? 7 : 5;
+      pointages.push({ id:'dpt-'+ei+'-'+j, employeId: e.id, date: _ptLocalStr(d), arrivee: String(startH).padStart(2,'0')+':00', depart: String(startH+durH).padStart(2,'0')+':00', pauseMin: 30 });
+    }
+  });
+  DB.set(DB.keys.pointages, pointages);
 
   // ── MESSAGES ──
   const conversations = {};
@@ -1683,6 +1987,334 @@ function generateForCurrentEtab() {
   });
   DB.set(DB.keys.medicaments, medicamentsDemo);
 
+  // ── TRANSMISSIONS ──
+  const TR_CONTENT_POOL = {
+    sante: [
+      '{r} a présenté une légère fièvre ce matin (38,1 °C). Paracétamol administré selon protocole. À surveiller ce soir.',
+      'Plainte de maux de tête chez {r}. Prise de tension : 13/8. RAS. Médecin non requis.',
+      '{r} a bien pris son traitement du matin. Aucun effet secondaire signalé.',
+      'Chute légère de {r} dans le couloir. Aucune blessure visible. Incident déclaré. Famille informée.',
+      '{r} se plaint de douleurs abdominales depuis ce matin. À surveiller, appel médecin si aggravation.',
+      'Bonne nuit pour {r} : sommeil calme, aucun réveil signalé.',
+      '{r} a eu un saignement de nez en fin de soirée. Prise en charge immédiate, arrêt rapide. RAS.'
+    ],
+    comportement: [
+      '{r} a eu un comportement agité en début de soirée. Écoute et réassurance effectuées. Retour au calme.',
+      'Tension verbale entre {r} et un autre résident. Médiation effectuée. Situation apaisée.',
+      '{r} a refusé de participer aux activités de l\'après-midi. Pas d\'explication donnée. À suivre.',
+      'Bonne journée pour {r} : comportement calme et participation active aux activités.',
+      '{r} a exprimé des inquiétudes concernant sa situation familiale. Écoute effectuée, à relayer au référent.',
+      '{r} a montré une belle progression dans la gestion de ses émotions cette semaine.',
+      'Période difficile pour {r} : repli sur soi observé depuis hier. Point avec le psychologue suggéré.'
+    ],
+    activite: [
+      '{r} a participé avec enthousiasme à l\'atelier cuisine. Très bonne dynamique de groupe.',
+      'Sortie médiathèque avec {r} et 3 autres résidents. Bonne participation, retour positif.',
+      '{r} a terminé ses exercices de soutien scolaire. Progrès notable en mathématiques.',
+      '{r} très investi lors de l\'atelier sport. A fait preuve d\'un beau fair-play.',
+      '{r} a demandé à s\'inscrire à un nouveau cours de musique. Démarche à initier.'
+    ],
+    famille: [
+      'Appel de la famille de {r} ce matin. Échange positif, famille rassurée.',
+      'Visite de la mère de {r} cet après-midi. Bonne dynamique relationnelle observée.',
+      '{r} a reçu un courrier de sa famille. Apparaît perturbé. À suivre en soirée.',
+      'Contact pris avec le référent ASE de {r} pour point de situation. RDV la semaine prochaine.',
+      'La tutrice de {r} a appelé pour confirmer la visite de samedi prochain.'
+    ],
+    administratif: [
+      'Renouvellement MDPH de {r} à initier avant fin du mois. Dossier à préparer.',
+      'Carte vitale de {r} expirée. Démarche de renouvellement initiée avec la CPAM.',
+      'Convention de stage de {r} signée et transmise au lycée partenaire.',
+      'Attestation d\'hébergement établie pour {r} à sa demande.',
+      'RDV avec la mission locale confirmé pour {r} : jeudi prochain à 14 h.'
+    ],
+    alimentation: [
+      '{r} a bien mangé au déjeuner. Régime sans porc respecté.',
+      'Refus du repas du soir par {r}. A consommé un sandwich froid. À surveiller.',
+      '{r} a mangé en chambre ce midi sur sa demande. Repas consommé normalement.',
+      'Signalement : {r} grignote en dehors des repas. Rappel des règles effectué.',
+      'Bonne prise du petit-déjeuner pour {r} ce matin. Appétit satisfaisant.'
+    ],
+    hygiene: [
+      '{r} a réalisé sa toilette de manière autonome ce matin. Bonne évolution.',
+      'Rappel effectué auprès de {r} concernant le changement de vêtements. Compris et accepté.',
+      'Aide à la douche apportée à {r} ce soir. Coopération totale.',
+      '{r} a refusé la douche hebdomadaire. Négociation en cours, à reprendre demain.',
+      'Très bonne hygiène observée chez {r} cette semaine.'
+    ],
+    urgent: [
+      'URGENT — {r} absent(e) à la ronde de 22 h. Retour de lui-même à 23 h. Cadre informé. Incident déclaré.',
+      'URGENT — Malaise de {r} en soirée. SAMU contacté, retour à domicile préconisé.',
+      'URGENT — Comportement auto-agressif de {r}. Protocole crise activé. Famille et cadre informés.',
+      'INFO URGENTE — RDV médical demain matin pour {r} à 9 h. Transport à organiser.',
+      'URGENT — Conflit sérieux impliquant {r}. Séparation effectuée. Rapport à rédiger.'
+    ]
+  };
+  const TR_GENERAL = [
+    'Relève : nuit calme, aucun incident à signaler.',
+    'Réunion d\'équipe prévue demain à 14 h en salle de réunion. Présence souhaitée.',
+    'Rappel : vérifier les stocks d\'infirmerie avant la fin de semaine.',
+    'Le véhicule de service B est indisponible demain matin — sortie réservée.',
+    'Bon de commande de fournitures à valider avant vendredi. Voir avec la direction.',
+    'Nouvelle procédure incendie au tableau d\'affichage. À lire avant votre prochain service.',
+    'Planning du week-end affiché en salle de réunion. Pensez à vérifier vos horaires.',
+    'Relève : situation stable sur l\'ensemble des résidents. Aucun point d\'urgence.'
+  ];
+  const TR_CATS_LIST = ['sante','comportement','activite','famille','administratif','alimentation','hygiene','urgent'];
+  const TR_SHIFTS_LIST = ['matin','aprem','soir','nuit'];
+  const TR_PRIOS = ['info','normal','normal','normal','urgent'];
+  const TR_AUTHORS = [
+    { id:'1',  name:'Admin' },
+    { id:'2',  name:'Sophie Martin' },
+    { id:'3',  name:'Pierre Dubois' },
+    { id:'4',  name:'Camille Legrand' },
+    { id:'5',  name:'Julien Fontaine' },
+    { id:'8',  name:'David Moreau' }
+  ];
+  const transmissionsList = [];
+  const activeResForTr = resList.filter(r => r.statut !== 'sorti');
+
+  function _makeTr(idx, daysAgo, forceShift) {
+    const trDate = new Date(now.getTime() - daysAgo * 86400000).toISOString().slice(0,10);
+    const shift = forceShift || pick(TR_SHIFTS_LIST);
+    const isGeneral = Math.random() < .2 || !activeResForTr.length;
+    const author = pick(TR_AUTHORS);
+    let residentId = '', residentName = '', cat, content;
+    if (isGeneral) {
+      cat = 'administratif';
+      content = pick(TR_GENERAL);
+    } else {
+      const r = pick(activeResForTr);
+      residentId = r.id;
+      residentName = `${r.prenom||''} ${r.nom||''}`.trim();
+      cat = pick(TR_CATS_LIST);
+      content = pick(TR_CONTENT_POOL[cat]).replace(/\{r\}/g, residentName);
+    }
+    const priority = cat === 'urgent' ? 'urgent' : pick(TR_PRIOS);
+    return {
+      id: 'demo-tr-' + idx,
+      date: trDate,
+      residentId, residentName,
+      shift, cat, priority, content,
+      authorId: author.id,
+      authorName: author.name,
+      createdAt: new Date(trDate + 'T' + (shift === 'matin' ? '08' : shift === 'aprem' ? '14' : shift === 'soir' ? '19' : '23') + ':00:00').toISOString(),
+      readBy: [author.id]
+    };
+  }
+
+  // Garantir au minimum des entrées sur aujourd'hui et hier
+  const FIXED_TODAY = [
+    { daysAgo:0, shift:'matin' }, { daysAgo:0, shift:'matin' }, { daysAgo:0, shift:'aprem' },
+    { daysAgo:0, shift:'soir' },  { daysAgo:1, shift:'matin' }, { daysAgo:1, shift:'aprem' },
+    { daysAgo:1, shift:'soir' },  { daysAgo:1, shift:'nuit' }
+  ];
+  FIXED_TODAY.forEach((f, i) => transmissionsList.push(_makeTr(i + 1, f.daysAgo, f.shift)));
+
+  const remaining = Math.max(0, cfgTransmissions - FIXED_TODAY.length);
+  for (let i = 0; i < remaining; i++) {
+    const daysAgo = rand(0, 30);
+    transmissionsList.push(_makeTr(FIXED_TODAY.length + i + 1, daysAgo, null));
+  }
+
+  DB.set(DB.keys.transmissions, transmissionsList);
+
+  // ── PLAN DE SOINS ──
+  const PS_TPLS = [
+    { cat:'hygiene',      freq:'matin',     libelle:'Aide à la toilette du matin',            detail:'Aide partielle, supervision des soins de la peau',         intervenant:'Aide-soignant(e)' },
+    { cat:'hygiene',      freq:'soir',      libelle:'Hygiène du soir',                        detail:'Lavage mains et visage avant le coucher',                  intervenant:'Éducateur' },
+    { cat:'hygiene',      freq:'semaine',   libelle:'Douche hebdomadaire',                    detail:'Assistance selon le niveau d\'autonomie',                  intervenant:'AS' },
+    { cat:'medication',   freq:'matin',     libelle:'Prise du traitement du matin',           detail:'Supervision et aide à la prise médicamenteuse',            intervenant:'IDE' },
+    { cat:'medication',   freq:'soir',      libelle:'Prise du traitement du soir',            detail:'Supervision par l\'éducateur de nuit',                     intervenant:'IDE' },
+    { cat:'medication',   freq:'si_besoin', libelle:'Antalgique en cas de douleur',           detail:'Selon protocole médical en vigueur',                       intervenant:'IDE' },
+    { cat:'mobilite',     freq:'quotidien', libelle:'Aide aux transferts lit-fauteuil',       detail:'Utilisation du lève-personne si nécessaire',               intervenant:'AS' },
+    { cat:'mobilite',     freq:'semaine',   libelle:'Séance de mobilisation douce',           detail:'Exercices des membres, prévention des rétractions',        intervenant:'Kiné' },
+    { cat:'alimentation', freq:'midi',      libelle:'Aide à la prise du repas',               detail:'Aide au découpage, surveillance de la déglutition',        intervenant:'Éducateur' },
+    { cat:'alimentation', freq:'matin',     libelle:'Petit-déjeuner adapté',                  detail:'Texture mixée selon prescription médicale',                intervenant:'Maîtresse de maison' },
+    { cat:'soins_infirm', freq:'matin',     libelle:'Pansement quotidien',                   detail:'Soins de plaie chronique selon protocole infirmier',       intervenant:'IDE' },
+    { cat:'soins_infirm', freq:'semaine',   libelle:'Pesée hebdomadaire',                    detail:'Surveillance pondérale et transmission au médecin',        intervenant:'IDE' },
+    { cat:'soins_infirm', freq:'mensuel',   libelle:'Bilan clinique mensuel',                 detail:'Constantes, état général, transmission fiche de liaison',  intervenant:'IDE' },
+    { cat:'psy',          freq:'semaine',   libelle:'Entretien psychologique hebdomadaire',   detail:'Suivi de l\'état psychique, gestion de l\'anxiété',        intervenant:'Psychologue' },
+    { cat:'psy',          freq:'si_besoin', libelle:'Soutien psychologique en cas de crise', detail:'Activation du protocole de gestion de crise',              intervenant:'Psychologue' },
+    { cat:'social',       freq:'mensuel',   libelle:'Point parcours mensuel',                 detail:'Bilan des démarches administratives et sociales en cours', intervenant:'Assistante sociale' },
+    { cat:'social',       freq:'semaine',   libelle:'Atelier insertion socio-professionnelle',detail:'Accompagnement vers l\'emploi et le logement',             intervenant:'CESF' },
+    { cat:'autre',        freq:'quotidien', libelle:'Ronde de surveillance nocturne',         detail:'Vérification du bien-être et de la sécurité',              intervenant:'Veilleur de nuit' }
+  ];
+  const planSoinsList = [];
+  resList.filter(r => r.statut !== 'sorti').forEach(r => {
+    const nbSoins = rand(2, 5);
+    shuffle([...PS_TPLS]).slice(0, nbSoins).forEach((tpl, k) => {
+      planSoinsList.push({
+        id: 'demo-ps-' + r.id + '-' + k,
+        residentId: r.id,
+        cat: tpl.cat,
+        freq: tpl.freq,
+        libelle: tpl.libelle,
+        detail: tpl.detail,
+        intervenant: tpl.intervenant,
+        note: Math.random() < .2 ? pick(['Adapter selon tolérance','Vérifier avant exécution','Signaler tout changement au médecin','']) : '',
+        actif: Math.random() < .9,
+        createdAt: new Date(now.getTime() - rand(10, 200) * 86400000).toISOString()
+      });
+    });
+  });
+  DB.set(DB.keys.planSoins, planSoinsList);
+
+  // ── ÉVALUATIONS MIF / BARTHEL ──
+  const EV_MIF_ITEMS = ['alimentation','toilette','bain','habillage_haut','habillage_bas','soins_perinee','vesicale','anale','lit_chaise','toilettes','bain_douche','marche_fauteuil','escaliers','comprehension','expression','interaction','resolution','memoire'];
+  const EV_BARTHEL_OPTS = {
+    alimentation:[0,5,10], bain:[0,5], toilette:[0,5], habillage:[0,5,10],
+    intestin:[0,5,10], vesical:[0,5,10], toilettes:[0,5,10],
+    transfert:[0,5,10,15], marche:[0,5,10,15], escaliers:[0,5,10]
+  };
+  const EV_NOTES = [
+    'Évaluation initiale à l\'admission.','Réévaluation suite à changement clinique.','Bilan trimestriel.',
+    'Amélioration notable des capacités fonctionnelles.','Légère régression observée.','Bilan de synthèse annuel.',''
+  ];
+  const evaluationsList = [];
+  const activeResForEv = resList.filter(r => r.statut !== 'sorti');
+  shuffle([...activeResForEv]).slice(0, Math.min(cfgEvals, activeResForEv.length)).forEach(r => {
+    const nbEvals = rand(1, 2);
+    for (let k = 0; k < nbEvals; k++) {
+      const grille = Math.random() < .6 ? 'mif' : 'barthel';
+      const scores = {};
+      if (grille === 'mif') {
+        EV_MIF_ITEMS.forEach(id => { scores[id] = rand(1, 7); });
+      } else {
+        Object.entries(EV_BARTHEL_OPTS).forEach(([id, opts]) => { scores[id] = pick(opts); });
+      }
+      const evalDate = new Date(now.getTime() - rand(k * 30, k * 30 + 90) * 86400000).toISOString().slice(0,10);
+      evaluationsList.push({
+        id: 'demo-ev-' + r.id + '-' + k,
+        residentId: r.id,
+        grille,
+        date: evalDate,
+        scores,
+        note: pick(EV_NOTES),
+        createdAt: new Date(evalDate + 'T10:00').toISOString()
+      });
+    }
+  });
+  DB.set(DB.keys.evaluations, evaluationsList);
+
+  // ── ASTREINTES ──
+  const AST_TYPES_LIST = ['medecin','infirmier','cadre','technique','direction'];
+  const AST_NOMS = {
+    medecin:   ['Dr. Moreau', 'Dr. Lefèvre', 'Dr. Dupont', 'Dr. Tremblay'],
+    infirmier: ['Sophie Martin IDE', 'David Moreau IDE', 'Sandrine Carlier IDE', 'Valérie Blin IDE'],
+    cadre:     ['Nathalie Petit', 'Didier Barbier', 'Thibault Renaud'],
+    technique: ['Grégory Moulin', 'Gilles Lemoine'],
+    direction: ['Direction', 'Directeur(trice) adjoint(e)']
+  };
+  const AST_TELS = ['06 11 22 33 00','06 11 22 33 11','06 22 33 44 55','06 33 44 55 66','06 44 55 66 77','07 11 22 33 44'];
+  const astreintesList = [];
+  const astStart = new Date(now);
+  const astDow = (astStart.getDay() + 6) % 7;
+  astStart.setDate(astStart.getDate() - astDow - Math.max(0, cfgAstWeeks - 2) * 7);
+  for (let w = 0; w < cfgAstWeeks; w++) {
+    for (let d = 0; d < 7; d++) {
+      const dd = new Date(astStart.getTime() + (w * 7 + d) * 86400000);
+      const dateStr = dd.toISOString().slice(0,10);
+      AST_TYPES_LIST.forEach(type => {
+        if (Math.random() < (type === 'technique' ? 0.5 : 0.85)) {
+          astreintesList.push({
+            id: 'demo-ast-' + w + '-' + d + '-' + type,
+            type, date: dateStr,
+            nom: pick(AST_NOMS[type]),
+            tel: pick(AST_TELS),
+            note: Math.random() < .15 ? pick(['Rappeler en cas de doute','Disponible de 18h à 8h','Renfort possible si besoin','']) : '',
+            createdAt: now.toISOString()
+          });
+        }
+      });
+    }
+  }
+  DB.set(DB.keys.astreintes, astreintesList);
+
+  // ── SATISFACTION RÉSIDENTS ──
+  const SAT_Q_IDS = ['accueil','chambre','parties_com','repas_qualite','repas_quantite','activites','respect','disponibilite','soins','securite','communication','global'];
+  const SAT_REPONDANTS = ['Anonyme','Résident(e)','Famille','Résident(e)','Anonyme','Résident(e)','Famille','Représentant légal','Anonyme','Résident(e)'];
+  const SAT_LIENS = ['Résident','Résidente','Parent','Tuteur légal','Famille'];
+  const SAT_COMMENTS = [
+    'Je me sens bien accompagné(e). L\'équipe est très à l\'écoute.',
+    'Les repas pourraient être plus variés le week-end.',
+    'Bonne ambiance dans l\'établissement dans l\'ensemble.',
+    'L\'accueil lors de mon arrivée était très chaleureux.',
+    'Parfois difficile de joindre un éducateur en journée.',
+    'Je voudrais plus d\'activités sportives et de sorties.',
+    'L\'établissement répond bien à mes besoins actuels.',
+    '','',''
+  ];
+  const satList = [];
+  for (let i = 0; i < cfgSat; i++) {
+    const reponses = {};
+    SAT_Q_IDS.forEach(id => {
+      const roll = Math.random();
+      reponses[id] = roll < .04 ? 0 : roll < .14 ? 1 : roll < .30 ? 2 : roll < .58 ? 3 : 4;
+    });
+    const dSat = new Date(now.getTime() - rand(0, 180) * 86400000).toISOString().slice(0,10);
+    satList.push({
+      id: 'demo-sat-' + (i + 1),
+      repondant: pick(SAT_REPONDANTS),
+      lienResident: pick(SAT_LIENS),
+      date: dSat,
+      commentaire: pick(SAT_COMMENTS),
+      reponses,
+      createdAt: new Date(dSat + 'T10:00').toISOString()
+    });
+  }
+  DB.set(DB.keys.satisfaction, satList);
+
+  // ── INVENTAIRE & MATÉRIEL ──
+  const INV_ITEMS_POOL = [
+    { cat:'mobilier',      nom:'Lit médicalisé électrique',    ref:'LIT-MED-01',  quantite:1,   etat:'bon',        lieu:'Chambre 101' },
+    { cat:'mobilier',      nom:'Bureau réglable',              ref:'BUR-REG-12',  quantite:3,   etat:'bon',        lieu:'Salle d\'étude' },
+    { cat:'mobilier',      nom:'Table de réunion',             ref:'TAB-REU-01',  quantite:1,   etat:'usage',      lieu:'Salle de réunion' },
+    { cat:'mobilier',      nom:'Fauteuil ergonomique',         ref:'FAU-ERG-05',  quantite:5,   etat:'bon',        lieu:'Bureau éducateurs' },
+    { cat:'mobilier',      nom:'Canapé salle commune',         ref:'CAN-COM-02',  quantite:2,   etat:'usage',      lieu:'Salle commune' },
+    { cat:'medical',       nom:'Tensiomètre numérique',        ref:'TEN-NUM-01',  quantite:2,   etat:'bon',        lieu:'Infirmerie' },
+    { cat:'medical',       nom:'Glucomètre',                   ref:'GLU-01',      quantite:1,   etat:'bon',        lieu:'Infirmerie' },
+    { cat:'medical',       nom:'Oxymètre de pouls',            ref:'OXY-01',      quantite:2,   etat:'bon',        lieu:'Infirmerie' },
+    { cat:'medical',       nom:'Fauteuil roulant',             ref:'FAR-01',      quantite:1,   etat:'usage',      lieu:'Local matériel' },
+    { cat:'medical',       nom:'Lève-personne',                ref:'LEV-01',      quantite:1,   etat:'defaillant', lieu:'Chambre 205' },
+    { cat:'informatique',  nom:'Ordinateur portable',          ref:'PC-PORT-07',  quantite:3,   etat:'bon',        lieu:'Salle informatique' },
+    { cat:'informatique',  nom:'Tablette tactile',             ref:'TAB-TAC-03',  quantite:5,   etat:'bon',        lieu:'Salle d\'activités' },
+    { cat:'informatique',  nom:'Imprimante laser',             ref:'IMP-LAS-01',  quantite:1,   etat:'usage',      lieu:'Secrétariat' },
+    { cat:'informatique',  nom:'Vidéoprojecteur',              ref:'VID-PRO-01',  quantite:1,   etat:'bon',        lieu:'Salle polyvalente' },
+    { cat:'electromenager',nom:'Lave-linge professionnel',     ref:'LAV-PRO-02',  quantite:2,   etat:'bon',        lieu:'Buanderie' },
+    { cat:'electromenager',nom:'Réfrigérateur cuisine',        ref:'FRIG-CUI-01', quantite:1,   etat:'bon',        lieu:'Cuisine' },
+    { cat:'electromenager',nom:'Four combiné',                 ref:'FOUR-01',     quantite:1,   etat:'usage',      lieu:'Cuisine pédagogique' },
+    { cat:'electromenager',nom:'Micro-ondes',                  ref:'MIC-01',      quantite:3,   etat:'bon',        lieu:'Offices' },
+    { cat:'linge',         nom:'Parures de lit complètes',     ref:'PAR-LIT-01',  quantite:60,  etat:'bon',        lieu:'Lingerie' },
+    { cat:'linge',         nom:'Couvertures polaires',         ref:'COU-POL-01',  quantite:30,  etat:'bon',        lieu:'Lingerie' },
+    { cat:'hygiene',       nom:'Distributeur savon mains',     ref:'SAV-01',      quantite:15,  etat:'bon',        lieu:'Sanitaires' },
+    { cat:'hygiene',       nom:'Stock protections adultes',    ref:'PRO-ADU-01',  quantite:200, etat:'bon',        lieu:'Infirmerie' },
+    { cat:'securite',      nom:'Extincteur CO2 5 kg',          ref:'EXT-CO2-01',  quantite:8,   etat:'bon',        lieu:'Couloirs' },
+    { cat:'securite',      nom:'Défibrillateur automatique',   ref:'DEF-AUT-01',  quantite:1,   etat:'bon',        lieu:'Entrée principale' },
+    { cat:'securite',      nom:'Caméra de surveillance',       ref:'CAM-SUR-04',  quantite:6,   etat:'bon',        lieu:'Extérieur' },
+    { cat:'vehicule',      nom:'Minibus 9 places',             ref:'VEH-MIN-01',  quantite:1,   etat:'bon',        lieu:'Parking' },
+    { cat:'vehicule',      nom:'Véhicule léger de service A',  ref:'VEH-LEG-02',  quantite:1,   etat:'bon',        lieu:'Parking' },
+    { cat:'vehicule',      nom:'Véhicule léger de service B',  ref:'VEH-LEG-03',  quantite:1,   etat:'usage',      lieu:'Parking' },
+    { cat:'autre',         nom:'Photocopieuse multifonction',  ref:'PHO-01',      quantite:1,   etat:'defaillant', lieu:'Secrétariat' },
+    { cat:'autre',         nom:'Piano numérique',              ref:'PIA-NUM-01',  quantite:1,   etat:'bon',        lieu:'Salle polyvalente' }
+  ];
+  const invList = INV_ITEMS_POOL.slice(0, Math.min(cfgInv, INV_ITEMS_POOL.length)).map((item, k) => {
+    const moisAchat = rand(12, 48);
+    const maintenanceOld = Math.random() < .2;
+    return {
+      id: 'demo-inv-' + (k + 1),
+      cat: item.cat, nom: item.nom, ref: item.ref,
+      quantite: item.quantite, etat: item.etat, lieu: item.lieu,
+      dateAchat: new Date(now.getTime() - moisAchat * 30 * 86400000).toISOString().slice(0,10),
+      dateMaintenance: maintenanceOld
+        ? new Date(now.getTime() - rand(400, 730) * 86400000).toISOString().slice(0,10)
+        : (Math.random() < .6 ? new Date(now.getTime() - rand(30, 364) * 86400000).toISOString().slice(0,10) : ''),
+      notes: Math.random() < .2 ? pick(['À réviser prochainement','Contrat de maintenance actif','Vérification annuelle effectuée','']) : '',
+      createdAt: now.toISOString()
+    };
+  });
+  DB.set(DB.keys.inventaire, invList);
+
   // ── ONBOARDING ──
   localStorage.setItem('ftr_onboarded', 'true');
 
@@ -1723,7 +2355,17 @@ function generateForCurrentEtab() {
     documentation: documentation.length,
     admissions: admissions.length,
     factures: factures.length,
-    formations: formations.length
+    formations: formations.length,
+    transmissions: transmissionsList.length,
+    planSoins: planSoinsList.length,
+    evGrilles: evaluationsList.length,
+    astreintes: astreintesList.length,
+    satQuestionnaires: satList.length,
+    inventaire: invList.length,
+    contrats: contrats.length,
+    absencesAT: absencesAT.length,
+    candidats: candidats.length,
+    pointages: pointages.length
   };
 }
 
@@ -1738,14 +2380,14 @@ function generateDemo() {
   const etabs = getSelectedEtabs();
   if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; btn.textContent = 'Générer les données'; return; }
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0, formations:0 };
+  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0, formations:0, transmissions:0, planSoins:0, evGrilles:0, astreintes:0, satQuestionnaires:0, inventaire:0, contrats:0, absencesAT:0, candidats:0, pointages:0 };
   try {
     etabs.forEach((etab, ei) => {
       sessionStorage.setItem('ftr_current_etab', etab.id);
       log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
       const r = generateForCurrentEtab();
       Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-      log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations</span>');
+      log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations · ' + r.transmissions + ' transmissions · ' + r.planSoins + ' soins · ' + r.evGrilles + ' évals MIF/Barthel · ' + r.astreintes + ' astreintes · ' + r.satQuestionnaires + ' questionnaires sat · ' + r.inventaire + ' inventaire · ' + r.contrats + ' contrats · ' + r.absencesAT + ' absences/AT · ' + r.candidats + ' candidats · ' + r.pointages + ' pointages</span>');
     });
   } catch (err) {
     console.error(err);
@@ -1767,7 +2409,21 @@ function generateDemo() {
   log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:.75rem;font-size:.8rem">' +
     Object.entries(totals).map(([k,v]) => '<div><span style="color:#64748b">' + k + '</span> <strong>' + v + '</strong></div>').join('') +
   '</div>');
-  log('<a href="index.html" style="display:inline-block;margin-top:.8rem;background:#0f2b4a;color:#fff;padding:.7rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem">→ Aller à la page de connexion</a>');
+  log('<div style="margin-top:.85rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center">' +
+    '<a href="index.html" style="display:inline-flex;align-items:center;gap:.4rem;background:#0f2b4a;color:#fff;padding:.6rem 1.4rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem">🔑 Se connecter</a>' +
+    '<span style="font-size:.75rem;color:#94a3b8">ou accéder directement à un module ↓</span>' +
+    '</div>');
+  log('<div style="margin-top:.75rem;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:.75rem">' +
+    '<a href="transmissions.html" style="padding:.45rem .65rem;background:#e0f2fe;border-radius:7px;text-decoration:none;color:#0284c7;font-weight:600;display:flex;align-items:center;gap:.35rem">📡 Transmissions <span style="font-size:.6rem;opacity:.8">Kanban</span></a>' +
+    '<a href="planning.html" style="padding:.45rem .65rem;background:#f0fdf4;border-radius:7px;text-decoration:none;color:#15803d;font-weight:600;display:flex;align-items:center;gap:.35rem">📆 Planning</a>' +
+    '<a href="admin.html" style="padding:.45rem .65rem;background:#faf5ff;border-radius:7px;text-decoration:none;color:#7c3aed;font-weight:600;display:flex;align-items:center;gap:.35rem">📈 Statistiques</a>' +
+    '<a href="residents.html" style="padding:.45rem .65rem;background:#f8fafc;border-radius:7px;text-decoration:none;color:#334155;font-weight:600;display:flex;align-items:center;gap:.35rem">👥 Résidents</a>' +
+    '<a href="journal.html" style="padding:.45rem .65rem;background:#f8fafc;border-radius:7px;text-decoration:none;color:#334155;font-weight:600;display:flex;align-items:center;gap:.35rem">📓 Journal</a>' +
+    '<a href="incidents.html" style="padding:.45rem .65rem;background:#fff7ed;border-radius:7px;text-decoration:none;color:#c2410c;font-weight:600;display:flex;align-items:center;gap:.35rem">⚠️ Incidents</a>' +
+    '<a href="satisfaction.html" style="padding:.45rem .65rem;background:#fefce8;border-radius:7px;text-decoration:none;color:#854d0e;font-weight:600;display:flex;align-items:center;gap:.35rem">⭐ Satisfaction</a>' +
+    '<a href="plan-soins.html" style="padding:.45rem .65rem;background:#f8fafc;border-radius:7px;text-decoration:none;color:#334155;font-weight:600;display:flex;align-items:center;gap:.35rem">🩺 Plan de soins</a>' +
+    '<a href="dashboard.html" style="padding:.45rem .65rem;background:#f8fafc;border-radius:7px;text-decoration:none;color:#334155;font-weight:600;display:flex;align-items:center;gap:.35rem">🎛️ Dashboard</a>' +
+  '</div>');
   log('<div style="margin-top:.75rem;font-size:.78rem;color:#475569;background:#f0fdf4;border:1px solid #16a34a30;border-radius:8px;padding:.8rem 1rem">');
   log('<div style="font-weight:700;color:#16a34a;margin-bottom:.4rem">🔑 Comptes de démonstration</div>');
   log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 1rem;font-size:.75rem">');

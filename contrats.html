@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Contrats — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout">
+  <div class="main">
+    <header class="header">
+      <div class="header-info"><div class="header-title">Gestion des contrats</div></div>
+      <div class="header-right">
+        <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
+        <button id="btnAddContrat" class="btn btn-accent btn-sm" onclick="openContratModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau contrat
+        </button>
+        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
+      </div>
+    </header>
+
+    <main class="content" style="max-width:1100px">
+      <div id="ctStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
+
+      <div id="ctAlerts" style="margin-bottom:1.25rem"></div>
+
+      <div class="toolbar" style="margin-bottom:1.25rem">
+        <select id="ctFilterEmploye" style="width:auto"><option value="">Tous les employés</option></select>
+        <select id="ctFilterType" style="width:auto">
+          <option value="">Tous les types</option>
+          <option value="cdi">CDI</option>
+          <option value="cdd">CDD</option>
+          <option value="vacation">Vacation</option>
+          <option value="stage">Stage</option>
+          <option value="alternance">Alternance</option>
+        </select>
+        <select id="ctFilterStatut" style="width:auto">
+          <option value="">Tous statuts</option>
+          <option value="actif">Actif</option>
+          <option value="termine">Terminé</option>
+        </select>
+      </div>
+
+      <div id="ctList"></div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL CONTRAT -->
+<div class="modal-overlay" id="modalContrat">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="ctModalTitle">Nouveau contrat</span>
+      <button class="modal-close" onclick="closeModal('modalContrat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div class="form-row">
+        <div class="form-group"><label class="required">Employé</label><select id="ctEmploye"></select></div>
+        <div class="form-group"><label class="required">Type de contrat</label>
+          <select id="ctType">
+            <option value="cdi">CDI</option>
+            <option value="cdd">CDD</option>
+            <option value="vacation">Vacation</option>
+            <option value="stage">Stage</option>
+            <option value="alternance">Alternance</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="required">Date de début</label><input type="date" id="ctDebut"/></div>
+        <div class="form-group" id="ctFinWrap"><label>Date de fin</label><input type="date" id="ctFin"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Temps de travail</label>
+          <select id="ctTemps"><option value="plein">Temps plein</option><option value="partiel">Temps partiel</option></select>
+        </div>
+        <div class="form-group"><label>Heures / semaine</label><input type="number" id="ctHeures" min="0" max="48" step="0.5" placeholder="35"/></div>
+      </div>
+      <div class="form-group" id="ctEssaiWrap">
+        <label>Fin de période d'essai</label><input type="date" id="ctEssai"/>
+        <span class="form-hint">Une alerte sera affichée jusqu'à validation.</span>
+      </div>
+      <div class="form-group"><label>Poste</label><input type="text" id="ctPoste" placeholder="Intitulé du poste"/></div>
+      <div class="form-group"><label>Notes</label><textarea id="ctNotes" rows="2" placeholder="Particularités, clauses…"></textarea></div>
+
+      <div id="ctAvenantsSection" style="display:none">
+        <div class="section-label" style="margin-top:.25rem">Historique des avenants</div>
+        <div id="ctAvenantsList" style="margin-bottom:.5rem"></div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1"><input type="text" id="ctAvenantTxt" placeholder="Ex : passage à 28h/semaine au 01/09/2026"/></div>
+          <div class="form-group" style="flex:0"><button class="btn btn-outline btn-sm" onclick="addAvenant()">+ Avenant</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="color:#dc2626;margin-right:auto" id="ctDeleteBtn" onclick="deleteContrat()">Supprimer</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalContrat')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveContrat()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script src="js/contrats.js"></script>
+</body>
+</html>

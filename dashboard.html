@@ -63,6 +63,11 @@
           <div class="mc-sub" id="miniEcheanceSub">Sous 30 jours</div>
           <div class="mc-alert" id="miniEcheanceAlert" style="display:none">⚠ Échéances en retard</div>
         </a>
+        <a href="satisfaction.html" class="mini-card" id="miniSatCard" title="Satisfaction résidents">
+          <div class="mc-label" style="color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Satisfaction</div>
+          <div class="mc-val" id="miniSatVal" style="font-size:1.5rem">—</div>
+          <div class="mc-sub" id="miniSatSub">Score résidents</div>
+        </a>
         <a href="repas.html" class="mini-card" id="miniRepasCard" title="Repas du jour">
           <div class="mc-label" style="color:#ea580c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Repas du jour</div>
           <div class="mc-val" id="miniRepasVal">0</div>
@@ -471,6 +476,26 @@
     const actifs = allResidents.filter(r => r.statut !== 'sorti');
     const cnt = m => actifs.filter(r => { const v = (repasDay[m] || {})[r.id]; return v === undefined ? true : !!v; }).length;
     setText('miniRepasVal', `${cnt('midi')} / ${cnt('soir')}`);
+
+    // Score satisfaction
+    const satAllDash = DB.get(DB.keys.satisfaction) || [];
+    const satValEl = document.getElementById('miniSatVal');
+    const satSubEl = document.getElementById('miniSatSub');
+    if (satValEl) {
+      if (satAllDash.length) {
+        let st = 0, sc = 0;
+        satAllDash.forEach(s => { Object.values(s.reponses||{}).forEach(v => { if (v != null) { st += Number(v); sc++; } }); });
+        const satAvg = sc ? st/sc : null;
+        const satPct = satAvg !== null ? Math.round(satAvg*25) : null;
+        const satCol = satAvg === null ? '#94a3b8' : satAvg >= 3.5 ? '#0d9488' : satAvg >= 2.5 ? '#16a34a' : satAvg >= 1.5 ? '#d97706' : '#dc2626';
+        satValEl.textContent = satPct !== null ? satPct+'%' : '—';
+        satValEl.style.color = satCol;
+        if (satSubEl) satSubEl.textContent = satAllDash.length+' questionnaire'+(satAllDash.length!==1?'s':'');
+      } else {
+        satValEl.textContent = '—';
+        if (satSubEl) satSubEl.textContent = 'Aucun questionnaire';
+      }
+    }
 
     // Résidents sans avenant actif
     const ppeList = DB.get(DB.keys.ppe) || [];

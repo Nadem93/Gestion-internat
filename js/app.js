@@ -23,7 +23,12 @@ const DB = {
     etablissements:'ftr_etablissements', viatrajectoire:'ftr_viatrajectoire',
     budgetEnveloppes:'ftr_budget_enveloppes', budgetDemandes:'ftr_budget_demandes',
     fichesPaie:'ftr_fiches_paie', entretiens:'ftr_entretiens', documentation:'ftr_documentation', admissions:'ftr_admissions',
-    tarifs:'ftr_tarifs', factures:'ftr_factures', formations:'ftr_formations'
+    tarifs:'ftr_tarifs', factures:'ftr_factures', formations:'ftr_formations',
+    transmissions:'ftr_transmissions', planSoins:'ftr_plan_soins',
+    evaluations:'ftr_evaluations', astreintes:'ftr_astreintes',
+    satisfaction:'ftr_satisfaction', inventaire:'ftr_inventaire',
+    satQuestions:'ftr_sat_questions',
+    contrats:'ftr_contrats', absencesAT:'ftr_absences_at', pointages:'ftr_pointages', candidats:'ftr_candidats'
   }
 };
 
@@ -628,7 +633,7 @@ function shortName(fullName) {
 }
 
 // ── DATE HELPERS ──
-function today() { return new Date().toISOString().slice(0,10); }
+function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function formatDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
@@ -1040,16 +1045,21 @@ const PERMISSION_LABELS = {
 
 function hasPermission(userId, perm) {
   const users = DB.get(DB.keys.users) || [];
-  const u = users.find(x => x.id === userId);
-  if (!u || !u.fonction) return false;
-  const f = u.fonction.toLowerCase();
+  // Comparaison souple de l'id (la session stocke parfois un nombre, la liste de l'établissement une chaîne, ou l'inverse)
+  const u = users.find(x => String(x.id) === String(userId));
+  // La fonction peut manquer dans la fiche scopée établissement : on retombe sur celle de la session
+  const sess = DB.get(DB.keys.session);
+  const fonctionRaw = (u && u.fonction) || (sess && String(sess.userId) === String(userId) ? sess.fonction : '') || '';
+  const f = fonctionRaw.toLowerCase().trim();
+  if (!f) return false;
   const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
-  for (const item of list) {
-    if (f.includes(item.fonction.toLowerCase())) {
-      return (item.permissions || []).includes(perm);
-    }
-  }
-  return false;
+  const norm = s => (s || '').toLowerCase().trim();
+  // 1) Correspondance exacte du nom de la fonction (prioritaire, évite qu'un nom court masque un nom long)
+  let item = list.find(it => norm(it.fonction) === f);
+  // 2) Sinon correspondance partielle dans les deux sens (tolère un renommage ou un suffixe)
+  if (!item) item = list.find(it => { const r = norm(it.fonction); return r && (f.includes(r) || r.includes(f)); });
+  if (!item) return false;
+  return (item.permissions || []).includes(perm);
 }
 
 function canEditResidents(userId) {

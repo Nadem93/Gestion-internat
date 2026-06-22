@@ -5,6 +5,32 @@ let peMonthCursor = (() => { const d = new Date(); d.setDate(1); d.setHours(0,0,
 let peMetierFilter = ''; // '' = tous les métiers, sinon valeur de e.poste
 let _peLastDays = [];
 
+// ── Statut de pointage (synchro avec pointage.html) ──
+// Le planning équipe identifie le personnel par l'ID du compte utilisateur, alors que les
+// pointages sont stockés par ID de fiche employé (DB.keys.employes). On résout la correspondance
+// par prénom+nom, comme dans pointage.js (ptResolveUserId), mais en sens inverse.
+function peResolveEmployeFicheId(emp) {
+  const empStore = DB.get(DB.keys.employes) || [];
+  const fiche = empStore.find(x => String(x.id) === String(emp.id))
+             || empStore.find(x => x.prenom === emp.prenom && x.nom === emp.nom);
+  return fiche ? fiche.id : null;
+}
+
+function pePointageStatus(ficheId, dateStr) {
+  if (!ficheId) return null;
+  const entry = (DB.get(DB.keys.pointages) || []).find(p => String(p.employeId) === String(ficheId) && p.date === dateStr);
+  if (!entry || !entry.arrivee || !entry.depart) return null;
+  return entry.valide ? 'valide' : 'attente';
+}
+
+// ── Absences & AT (synchro avec absences.html) ──
+function peIsAbsent(ficheId, dateStr) {
+  if (!ficheId) return false;
+  return (DB.get(DB.keys.absencesAT) || []).some(a =>
+    String(a.employeId) === String(ficheId) && dateStr >= a.debut && (!a.fin || dateStr <= a.fin)
+  );
+}
+
 function getPeEmployes() {
   const users = DB.get(DB.keys.users) || [];
   const empStore = DB.get(DB.keys.employes) || [];
@@ -482,27 +508,38 @@ function renderPlanningGrid(days, isWeek) {
     const contractMins = Math.round(contractH * 60 * days.length / 7);
     const deltaMins = totalMins - contractMins;
     const deltaColor = deltaMins >= 0 ? 'var(--green)' : 'var(--red)';
+    const ficheId = peResolveEmployeFicheId(emp);
 
     const cells = days.map(d => {
       const dateStr = peISO(d);
       const dayShifts = empShifts.filter(s => s.date === dateStr);
       const onConge = peIsOnConge(emp.id, dateStr);
+      const onAbsence = peIsAbsent(ficheId, dateStr);
+      const pStatut = pePointageStatus(ficheId, dateStr);
       const blocks = dayShifts.map((s,idx) => {
-        const tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
-        const conflict = dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2)) || onConge;
+        let tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
+        if (pStatut === 'attente') tc = '#d97706';
+        else if (pStatut === 'valide') tc = '#16a34a';
+        if (onAbsence) tc = '#dc2626';
+        const conflict = dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2)) || onConge || onAbsence;
         const border = conflict ? '2px solid var(--red)' : `1px solid ${tc}55`;
         const titleParts = [];
         if (dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2))) titleParts.push('⚠ Chevauchement avec un autre créneau ce jour');
         if (onConge) titleParts.push('🏖 Cet employé est en congé ce jour');
+        if (onAbsence) titleParts.push('🤒 Cet employé est absent (arrêt/AT) ce jour');
+        if (pStatut === 'attente') titleParts.push('⏳ Pointage en attente de validation');
+        if (pStatut === 'valide') titleParts.push('✓ Pointage validé');
         const title = titleParts.length ? ` title="${titleParts.join(' / ')}"` : '';
+        const statutBadge = onAbsence ? ' 🤒' : pStatut === 'attente' ? ' ⏳' : pStatut === 'valide' ? ' ✓' : '';
         return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')"${title} style="cursor:pointer;background:${tc}20;border:${border};border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
-          <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}${conflict ? ' ⚠️' : ''}</div>
+          <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}${conflict ? ' ⚠️' : ''}${statutBadge}</div>
           <div style="font-size:.62rem;font-weight:500;color:${tc};opacity:.85">${peFormatDuration(peDuration(s.debut,s.fin))}</div>
         </div>`;
       }).join('');
-      const congeBadge = (onConge && !dayShifts.length) ? '<div style="text-align:center;background:var(--g100);color:var(--muted);border-radius:6px;padding:.3rem .4rem;font-size:.65rem;font-weight:700" title="Congé accepté">🏖 Congé</div>' : '';
-      const addBtn = (canEdit && !dayShifts.length && !onConge) ? '<div style="text-align:center;color:var(--g300);font-size:.9rem;line-height:1.4">+</div>' : '';
-      return `<td style="padding:.35rem;vertical-align:top"${canEdit ? ` onclick="openPeShiftModal('${emp.id}','${dateStr}')" style="cursor:pointer"` : ''}>${blocks}${congeBadge}${addBtn}</td>`;
+      const absentBadge = (onAbsence && !dayShifts.length) ? '<div style="text-align:center;background:#fee2e2;color:#dc2626;border-radius:6px;padding:.3rem .4rem;font-size:.65rem;font-weight:700" title="Arrêt / accident du travail">🤒 Absent</div>' : '';
+      const congeBadge = (onConge && !onAbsence && !dayShifts.length) ? '<div style="text-align:center;background:var(--g100);color:var(--muted);border-radius:6px;padding:.3rem .4rem;font-size:.65rem;font-weight:700" title="Congé accepté">🏖 Congé</div>' : '';
+      const addBtn = (canEdit && !dayShifts.length && !onConge && !onAbsence) ? '<div style="text-align:center;color:var(--g300);font-size:.9rem;line-height:1.4">+</div>' : '';
+      return `<td style="padding:.35rem;vertical-align:top"${canEdit ? ` onclick="openPeShiftModal('${emp.id}','${dateStr}')" style="cursor:pointer"` : ''}>${blocks}${absentBadge}${congeBadge}${addBtn}</td>`;
     }).join('');
 
     return `<tr style="border-top:1px solid var(--border)">

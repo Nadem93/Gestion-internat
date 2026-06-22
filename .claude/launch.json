@@ -4,7 +4,7 @@
     {
       "name": "gestion-internat",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["-e", "require('http').createServer((req,res)=>{const fs=require('fs'),path=require('path');let f=path.join('/Users/menad/Desktop/Claude.ai/Gestion-internat',req.url==='/'?'accueil.html':req.url);const m={'html':'text/html','js':'application/javascript','css':'text/css'};const ext=f.split('.').pop();try{res.writeHead(200,{'Content-Type':m[ext]||'text/plain'});fs.createReadStream(f).pipe(res)}catch(e){res.writeHead(404);res.end()}}).listen(5555)"],
+      "runtimeArgs": ["-e", "require('http').createServer((req,res)=>{const fs=require('fs'),path=require('path');let f=path.join('/Users/menad/Desktop/Claude.ai/gestion-internat',req.url==='/'?'accueil.html':req.url);const m={'html':'text/html','js':'application/javascript','css':'text/css'};const ext=f.split('.').pop();try{res.writeHead(200,{'Content-Type':m[ext]||'text/plain'});fs.createReadStream(f).pipe(res)}catch(e){res.writeHead(404);res.end()}}).listen(5555)"],
       "port": 5555
     }
   ]

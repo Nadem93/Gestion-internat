@@ -80,6 +80,7 @@
       <div class="form-row">
         <div class="form-group"><label>Durée (heures)</label><input type="number" id="frmFormDuree" class="form-input" min="0" step="0.5" placeholder="0"/></div>
         <div class="form-group"><label>Coût (€)</label><input type="number" id="frmFormCout" class="form-input" min="0" step="0.01" placeholder="0.00"/></div>
+        <div class="form-group"><label>Nb max participants</label><input type="number" id="frmFormMax" class="form-input" min="1" placeholder="Illimité"/></div>
         <div class="form-group"><label>Statut</label>
           <select id="frmFormStatut" class="form-input">
             <option value="planifiee">Planifiée</option>
@@ -95,9 +96,9 @@
       <div class="form-group"><label>Notes / objectifs</label><textarea id="frmFormNotes" class="form-input" rows="2" placeholder="Objectifs de la formation, remarques…"></textarea></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" id="frmDeleteBtn" style="color:var(--red);margin-right:auto;display:none" onclick="supprimerFormation()">Supprimer</button>
+      <button class="btn btn-ghost admin-only" id="frmDeleteBtn" style="color:var(--red);margin-right:auto;display:none" onclick="supprimerFormation()">Supprimer</button>
       <button class="btn btn-ghost" onclick="closeModal('modalFormation')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveFormation()">💾 Enregistrer</button>
+      <button class="btn btn-primary admin-only" onclick="saveFormation()">💾 Enregistrer</button>
     </div>
   </div>
 </div>

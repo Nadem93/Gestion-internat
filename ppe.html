@@ -17,9 +17,9 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
 }
 .section-card {
-  border:1px solid var(--border);
+  border:1px solid #AFA9EC;
   border-radius:var(--r);
-  background:var(--card-bg,#fff);
+  background:#EEEDFE;
   margin-bottom:1rem;
   overflow:hidden;
 }
@@ -32,19 +32,32 @@ input:focus, select:focus, textarea:focus {
   align-items:center;
   gap:.5rem;
   user-select:none;
-  border-bottom:1px solid var(--border);
+  background:#3C3489;
+  color:#EEEDFE;
+  border-bottom:1px solid #534AB7;
 }
-.section-card .section-body { padding:1rem; display:flex;flex-direction:column;gap:.75rem; }
-.section-card .section-header:hover { background:var(--bg-alt,#f9fafb); }
+.section-card .section-body {
+  padding:1rem;
+  display:flex;
+  flex-direction:column;
+  gap:.75rem;
+  background:#EEEDFE;
+  border-left:3px solid #7F77DD;
+  color:#26215C;
+}
+.section-card .section-header:hover { background:#534AB7; }
 .obj-row {
   display:grid;
   grid-template-columns:1fr 1fr 120px 1fr;
   gap:.5rem;
   padding:.5rem;
-  background:var(--bg-alt,#f9fafb);
+  background:#fff;
+  border:0.5px solid #CECBF6;
   border-radius:6px;
   align-items:start;
 }
+.section-card .section-header .muted-count { color:#CECBF6!important; }
+.section-card .section-body label { color:#534AB7!important; }
 .obj-row > div { font-size:.8rem; }
 .obj-row > div label { display:block;font-size:.68rem;color:var(--muted);margin-bottom:2px; }
 @media(max-width:768px){.obj-row{grid-template-columns:1fr 1fr;}}
@@ -54,6 +67,31 @@ input:focus, select:focus, textarea:focus {
   font-family:'Inter',sans-serif;
   line-height:1.6;
 }
+/* ── Cartes avenants ── */
+.av-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;max-width:1300px;margin:0 auto}
+@media(max-width:1100px){.av-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.av-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.av-grid{grid-template-columns:1fr}}
+.av-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(15,43,74,.10);border:1px solid rgba(15,43,74,.08);transition:transform .18s,box-shadow .18s;cursor:pointer}
+.av-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(15,43,74,.16)}
+.av-card-head{background:linear-gradient(135deg,#0f2b4a 0%,#1786cf 100%);padding:1.4rem 1.2rem .9rem;position:relative;overflow:hidden}
+.av-card-head::before,.av-card-head::after{content:'';position:absolute;border-radius:50%;background:rgba(255,255,255,.08)}
+.av-card-head::before{width:140px;height:140px;bottom:-40px;right:-30px}
+.av-card-head::after{width:80px;height:80px;top:-20px;left:40%}
+.av-card-avatar{width:82px;height:82px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:1.7rem;font-weight:800;color:#fff;margin-bottom:.7rem;letter-spacing:-.02em}
+.av-card-name{font-size:1rem;font-weight:700;color:#fff;line-height:1.2;margin-bottom:.25rem}
+.av-card-statut{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;padding:.2rem .55rem;border-radius:999px;backdrop-filter:blur(4px)}
+.av-card-statut.brouillon{background:rgba(245,158,11,.22);color:#fcd34d}
+.av-card-statut.actif{background:rgba(34,197,94,.22);color:#86efac}
+.av-card-statut.termine{background:rgba(148,163,184,.22);color:#cbd5e1}
+.av-card-body{padding:1rem 1.2rem}
+.av-card-row{display:flex;align-items:flex-start;gap:.55rem;padding:.35rem 0;border-bottom:1px solid #f1f5f9}
+.av-card-row:last-child{border-bottom:none}
+.av-card-row .av-icon{font-size:.85rem;width:18px;flex-shrink:0;margin-top:1px}
+.av-card-row .av-label{font-size:.7rem;color:var(--muted);font-weight:600;min-width:72px;flex-shrink:0}
+.av-card-row .av-val{font-size:.78rem;color:var(--text);font-weight:500;flex:1}
+.av-card-footer{padding:.75rem 1.2rem;background:#f8fafc;display:flex;gap:.5rem;border-top:1px solid #e2e8f0}
+.av-card-footer .btn{flex:1;justify-content:center;font-size:.72rem}
 .avenant-print h1 { font-size:1.5rem;text-align:center; }
 .avenant-print h2 { font-size:1rem;margin-top:1.5rem;border-bottom:1px solid #ccc;padding-bottom:.3rem; }
 .avenant-print table { width:100%;border-collapse:collapse;font-size:.8rem; }
@@ -68,6 +106,7 @@ input:focus, select:focus, textarea:focus {
     <header class="header">
       <div class="header-info"><div class="header-title">Avenants</div></div>
       <div class="header-right">
+        <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
         <button class="btn btn-accent btn-sm btn-add-resident" onclick="openModal('modalAvenant')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-add-label">Nouvel avenant</span></button>
       </div>
     </header>

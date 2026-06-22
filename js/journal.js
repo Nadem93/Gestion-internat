@@ -54,6 +54,38 @@ function populateSelects() {
   objs.forEach(o => { const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.name; oSel.appendChild(opt); });
 }
 
+function jrGoStep(step, sectionId) {
+  for (let i = 1; i <= 6; i++) {
+    const nav = document.getElementById('jrStep' + i + 'Nav');
+    if (!nav) continue;
+    const circle = nav.querySelector('span');
+    if (i === step) {
+      nav.style.background = 'rgba(255,255,255,.18)';
+      nav.style.opacity = '1';
+      if (circle) { circle.style.background = '#fff'; circle.style.color = '#059669'; }
+    } else {
+      nav.style.background = 'transparent';
+      nav.style.opacity = '.6';
+      if (circle) { circle.style.background = 'rgba(255,255,255,.2)'; circle.style.color = '#fff'; }
+    }
+  }
+  if (sectionId) {
+    const el = document.getElementById(sectionId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function _sectionCard(iconSvg, label, content) {
+  return `<div style="background:var(--surface,var(--bg));border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem">
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+      ${iconSvg}
+      <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">${label}</span>
+    </div>
+    ${content}
+  </div>`;
+}
+const _ico = (d,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--muted);flex-shrink:0${extra?';'+extra:''}"><${d}/></svg>`;
+
 function renderEntryForm() {
   const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
   const cats = DB.get(DB.keys.categories) || [];
@@ -64,155 +96,274 @@ function renderEntryForm() {
   const currentObjectif = document.getElementById('iObjectif')?.value || '';
   const currentVis = document.querySelector('input[name="iVisibilite"]:checked')?.value || 'equipe';
 
-  function pillStyle(isActive, color) {
-    return isActive ? `style="--pill-bg:${color || 'var(--accent)'}22;--pill-color:${color || 'var(--accent)'};--pill-border:${color || 'var(--accent)'}"` : '';
+  const CARD = 'background:#fff;border-radius:20px;padding:1.75rem 2rem;box-shadow:0 2px 16px rgba(0,0,0,.05);border:1px solid #f1f5f9';
+  const HDR_ICON = 'width:16px;height:16px;color:#94a3b8;flex-shrink:0';
+  const HDR_LABEL = 'font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8';
+
+  function catPillStyle(isActive, color) {
+    if (isActive) {
+      const bg = color ? color + '22' : '#F3E8FF';
+      const fg = color || '#7C3AED';
+      return `style="height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;border:1.5px solid ${fg};background:${bg};color:${fg};font-size:.78rem;font-weight:600;transition:all .15s"`;
+    }
+    return `style="height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.78rem;font-weight:500;transition:all .15s"`;
   }
 
+  function visPillStyle(isActive) {
+    return isActive
+      ? `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #7C4DFF;background:#F3E8FF;color:#7C3AED;font-size:.8rem;font-weight:600;transition:all .15s"`
+      : `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.8rem;font-weight:500;transition:all .15s"`;
+  }
+
+  function spPillStyle(val, isActive) {
+    const palettes = { '': ['#64748b','#e2e8f0','#f8fafc'], direct: ['#8b5cf6','#ddd6fe','#f5f3ff'], indirect: ['#f97316','#fed7aa','#fff7ed'] };
+    const [fg, border, bg] = palettes[val] || palettes[''];
+    return isActive
+      ? `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid ${border};background:${bg};color:${fg};font-size:.8rem;font-weight:600;transition:all .15s"`
+      : `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.8rem;font-weight:500;transition:all .15s"`;
+  }
+
+  const residentDropdownItems = residents.map(r => {
+    const name = `${r.prenom||''} ${r.nom||''}`.trim();
+    const on = currentRes.includes(r.id);
+    return `<div class="res-drop-item${on?' res-drop-sel':''}" data-id="${r.id}" data-name="${escHtml(name)}" onclick="selectResidentDropdown('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background .1s${on?';background:#faf5ff;color:#7C3AED':';color:#374151'}">
+      <span>${escHtml(name)}</span>
+      ${on ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;color:#7C4DFF;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+    </div>`;
+  }).join('');
+
+  const residentChips = currentRes.map(id => {
+    const r = residents.find(x => x.id === id);
+    if (!r) return '';
+    const name = `${r.prenom||''} ${r.nom||''}`.trim();
+    const color = r.color || '#7C4DFF';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1.5px solid ${color}44;border-radius:20px;font-size:.72rem;padding:3px 10px 3px 9px;font-weight:600">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.5;margin-left:2px;font-size:.9em">×</span></span>`;
+  }).join('');
+
   const html = `
-    <div class="entry-form-design">
+    <div class="entry-form-design" style="display:grid;grid-template-columns:7fr 3fr;gap:1.5rem;align-items:start">
       <input type="hidden" id="iCategorie" value="${currentCat}"/>
       <input type="hidden" id="iResident" value="${currentRes.join(',')}"/>
       <input type="hidden" id="iObjectif" value="${currentObjectif}"/>
       <input type="hidden" id="iPeriode" value=""/>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">1</span><span class="step-t">Catégorie</span></div>
-        <div class="step-b">
-          <div class="pill-group">
+
+      <!-- Colonne gauche -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Catégorie -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span style="${HDR_LABEL}">Catégorie</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem">
             ${cats.length ? cats.map(c => {
               const isActive = currentCat === c.id;
-              return `<div class="pill cat-pill${isActive?' active':''}" data-id="${c.id}" ${pillStyle(isActive, c.color)} onclick="selectCatPill('${c.id}')">${escHtml(c.name)}</div>`;
-            }).join('') : '<span class="pill-empty">Aucune catégorie — définissez-en dans Admin</span>'}
+              return `<div class="cat-pill${isActive?' active':''}" data-id="${c.id}" ${catPillStyle(isActive, c.color)} onclick="selectCatPill('${c.id}')">${escHtml(c.name)}</div>`;
+            }).join('') : '<span style="font-size:.82rem;color:#94a3b8">Aucune catégorie — définissez-en dans Admin</span>'}
           </div>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">2</span><span class="step-t">Résident(s) concerné(s)</span></div>
-        <div class="step-b">
-          <div style="position:relative;margin-bottom:.5rem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="residentSearch" placeholder="Rechercher un résident…" oninput="filterResidentPills()" style="width:100%;padding:.45rem .45rem .45rem 32px;border:1.5px solid var(--border);border-radius:var(--r-full);font-size:.78rem;outline:none;background:var(--g50);color:var(--text);transition:border-color var(--t)"/>
+
+        <!-- Observation / Contenu -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span style="${HDR_LABEL}">Observation / Contenu</span>
           </div>
-          <div class="pill-group" style="flex-wrap:wrap;max-height:170px;overflow-y:auto" id="residentPillGroup">
-            ${residents.map(r => {
-              const name = `${r.prenom || ''} ${r.nom || ''}`.trim();
-              const isActive = currentRes.includes(r.id);
-              return `<div class="pill resident-pill${isActive?' active':''}" data-id="${r.id}" ${pillStyle(isActive, r.color)} onclick="selectResidentPill('${r.id}')">${escHtml(name)}</div>`;
-            }).join('')}
-          </div>
-          ${currentRes.length > 0 ? `<div style="font-size:.72rem;color:var(--muted);margin-top:.5rem">${currentRes.length} résident${currentRes.length>1?'s':''} sélectionné${currentRes.length>1?'s':''}</div>` : ''}
-        </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">3</span><span class="step-t">Contenu</span></div>
-        <div class="step-b">
-          <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="max-width:280px;margin-bottom:.5rem"/>
-          <div class="ai-bar">
+          <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="margin-bottom:1rem"/>
+          <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
             <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('redaction')">✍ Rédiger</button>
             <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('correction')">✓ Corriger</button>
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('reformulation')">🏛 Reformuler</button>
+            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('reformulation')">✨ Reformuler</button>
           </div>
-          <textarea id="iContenu" class="form-control" rows="5" placeholder="Décrivez l'événement, l'observation ou l'intervention…">${escHtml(currentContenu)}</textarea>
+          <textarea id="iContenu" class="form-control" placeholder="Décrivez l'événement, l'observation ou l'intervention…" style="height:220px;resize:vertical">${escHtml(currentContenu)}</textarea>
         </div>
       </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">4</span><span class="step-t">Visibilité</span></div>
-        <div class="step-b">
-          <div class="pill-group">
-            <div class="pill vis-pill${currentVis==='equipe'?' active':''}" data-vis="equipe" onclick="selectVisPill('equipe')">Équipe uniquement</div>
-            <div class="pill vis-pill${currentVis==='tous'?' active':''}" data-vis="tous" onclick="selectVisPill('tous')">Tous</div>
-            <div class="pill vis-pill${currentVis==='confidentiel'?' active':''}" data-vis="confidentiel" onclick="selectVisPill('confidentiel')">Confidentiel</div>
+
+      <!-- Colonne droite -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Résident(s) -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span style="${HDR_LABEL}">Résident(s) concerné(s)</span>
           </div>
-          <div class="vis-radios">
+          <div style="position:relative">
+            <div style="display:flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;overflow:hidden;height:44px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:#94a3b8;flex-shrink:0;margin-left:12px;pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="residentSearch" placeholder="Rechercher un résident…" oninput="filterResidentDropdown()" onfocus="showResidentDropdown()" autocomplete="off" style="flex:1;padding:0 .5rem;border:none;outline:none;background:transparent;font-size:.82rem;color:#111827"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleResidentDropdown()" style="width:15px;height:15px;color:#94a3b8;flex-shrink:0;margin-right:12px;cursor:pointer"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="residentDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:14px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.1)">
+              ${residentDropdownItems}
+            </div>
+          </div>
+          <div id="selectedResidentChips" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem">${residentChips}</div>
+        </div>
+
+        <!-- Visibilité -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span style="${HDR_LABEL}">Visibilité</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <div class="vis-pill${currentVis==='equipe'?' active':''}" data-vis="equipe" onclick="selectVisPill('equipe')" ${visPillStyle(currentVis==='equipe')}>Équipe uniquement</div>
+            <div class="vis-pill${currentVis==='tous'?' active':''}" data-vis="tous" onclick="selectVisPill('tous')" ${visPillStyle(currentVis==='tous')}>Tous</div>
+            <div class="vis-pill${currentVis==='confidentiel'?' active':''}" data-vis="confidentiel" onclick="selectVisPill('confidentiel')" ${visPillStyle(currentVis==='confidentiel')}>Confidentiel</div>
+          </div>
+          <div class="vis-radios" style="display:none">
             <input type="radio" name="iVisibilite" value="equipe" ${currentVis==='equipe'?'checked':''}/>
             <input type="radio" name="iVisibilite" value="tous" ${currentVis==='tous'?'checked':''}/>
             <input type="radio" name="iVisibilite" value="confidentiel" ${currentVis==='confidentiel'?'checked':''}/>
           </div>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">5</span><span class="step-t">SERAFIN-PH <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
-        <div class="step-b">
-          <div class="pill-group">
-            <div class="pill sp-pill" data-sp="" onclick="selectSpPill('')" style="--pill-bg:#e2e8f022;--pill-color:#64748b;--pill-border:#cbd5e1">Aucun</div>
-            <div class="pill sp-pill" data-sp="direct" onclick="selectSpPill('direct')" style="--pill-bg:#8b5cf622;--pill-color:#8b5cf6;--pill-border:#8b5cf6">Prestation directe</div>
-            <div class="pill sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" style="--pill-bg:#f9731622;--pill-color:#f97316;--pill-border:#f97316">Prestation indirecte</div>
+
+        <!-- SERAFIN-PH -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style="${HDR_LABEL}">SERAFIN-PH <span style="font-weight:400;opacity:.6">(optionnel)</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <div class="sp-pill" data-sp="" onclick="selectSpPill('')" ${spPillStyle('', !document.getElementById('iSerafinph')?.value)}>Aucun</div>
+            <div class="sp-pill" data-sp="direct" onclick="selectSpPill('direct')" ${spPillStyle('direct', false)}>Direct</div>
+            <div class="sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" ${spPillStyle('indirect', false)}>Indirect</div>
           </div>
           <input type="hidden" id="iSerafinph" value=""/>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">6</span><span class="step-t">Pièces jointes <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
-        <div class="step-b">
-          <label class="btn btn-ghost btn-sm" style="cursor:pointer">📎 Ajouter un fichier
+
+        <!-- Pièces jointes -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            <span style="${HDR_LABEL}">Pièces jointes <span style="font-weight:400;opacity:.6">(optionnel)</span></span>
+          </div>
+          <label style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;cursor:pointer;font-size:.8rem;color:#64748b;background:#f8fafc">
+            📎 Ajouter un fichier
             <input type="file" accept="image/*,application/pdf" style="display:none" onchange="addInlineAttachment(this)"/>
           </label>
-          <div id="inlineAttachList" style="display:flex;flex-direction:column;gap:.35rem;margin-top:.5rem"></div>
+          <div id="inlineAttachList" style="display:flex;flex-direction:column;gap:.35rem;margin-top:.6rem"></div>
         </div>
+
+        <!-- Bouton -->
+        <button onclick="saveInlineEntry()" style="width:100%;height:48px;background:#7C4DFF;color:#fff;border:none;border-radius:12px;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s;letter-spacing:.01em" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+          Enregistrer l'entrée
+        </button>
       </div>
-      <button class="btn btn-primary" onclick="saveInlineEntry()" style="margin-top:1rem">Enregistrer l'entrée</button>
     </div>`;
+
   document.getElementById('entryFormContainer').innerHTML = html;
   renderInlineAttachList();
+  document.addEventListener('click', function _closeRes(e) {
+    if (!e.target.closest('#residentSearch') && !e.target.closest('#residentDropdown') && !e.target.closest('[onclick*="toggleResidentDropdown"]')) {
+      const dd = document.getElementById('residentDropdown');
+      if (dd) dd.style.display = 'none';
+      document.removeEventListener('click', _closeRes);
+    }
+  });
 }
 
 function selectSpPill(val) {
-  document.getElementById('iSerafinph').value = val;
+  const isp = document.getElementById('iSerafinph');
+  if (isp) isp.value = val;
+  const palettes = { '': ['#64748b','#e2e8f0','#f8fafc'], direct: ['#8b5cf6','#ddd6fe','#f5f3ff'], indirect: ['#f97316','#fed7aa','#fff7ed'] };
+  const BASE = 'padding:.45rem 1rem;border-radius:10px;cursor:pointer;font-size:.8rem;transition:all .15s';
   document.querySelectorAll('.sp-pill').forEach(el => {
-    el.classList.toggle('active', el.dataset.sp === val);
+    const on = el.dataset.sp === val;
+    el.classList.toggle('active', on);
+    const [fg, border, bg] = palettes[el.dataset.sp] || palettes[''];
+    el.style.cssText = on
+      ? `${BASE};border:1.5px solid ${border};background:${bg};color:${fg};font-weight:600`
+      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
   });
 }
 
 function selectCatPill(id) {
   const hid = document.getElementById('iCategorie');
+  if (!hid) return;
   hid.value = hid.value === id ? '' : id;
+  const activeId = hid.value;
+  const cats = DB.get(DB.keys.categories) || [];
+  const BASE = 'height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;font-size:.78rem;transition:all .15s';
   document.querySelectorAll('.cat-pill').forEach(el => {
-    const on = el.dataset.id === hid.value;
+    const on = String(el.dataset.id) === String(activeId);
     el.classList.toggle('active', on);
-    if (on) { const c = (DB.get(DB.keys.categories)||[]).find(x=>String(x.id)===String(hid.value)); if(c){el.style.setProperty('--pill-bg',c.color+'22');el.style.setProperty('--pill-color',c.color);el.style.setProperty('--pill-border',c.color)} }
-    else { el.style.removeProperty('--pill-bg');el.style.removeProperty('--pill-color');el.style.removeProperty('--pill-border') }
+    const cat = cats.find(c => String(c.id) === String(el.dataset.id));
+    const color = cat?.color || '#7C3AED';
+    el.style.cssText = on
+      ? `${BASE};border:1.5px solid ${color};background:${color}22;color:${color};font-weight:600`
+      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
   });
 }
 
-function selectResidentPill(id) {
+function selectResidentPill(id) { selectResidentDropdown(id); }
+
+function selectResidentDropdown(id) {
   const hid = document.getElementById('iResident');
+  if (!hid) return;
   let ids = hid.value ? hid.value.split(',').filter(Boolean) : [];
   const idx = ids.indexOf(id);
-  if (idx >= 0) ids.splice(idx, 1);
-  else ids.push(id);
+  if (idx >= 0) ids.splice(idx, 1); else ids.push(id);
   hid.value = ids.join(',');
-  document.querySelectorAll('.resident-pill').forEach(el => {
+  renderResidentChips(ids);
+  document.querySelectorAll('.res-drop-item').forEach(el => {
     const on = ids.includes(el.dataset.id);
-    el.classList.toggle('active', on);
-    if (on) { const r = (DB.get(DB.keys.residents)||[]).find(x=>x.id===el.dataset.id); if(r){el.style.setProperty('--pill-bg',(r.color||'var(--blue)')+'22');el.style.setProperty('--pill-color',r.color||'var(--blue)');el.style.setProperty('--pill-border',r.color||'var(--blue)')} }
-    else { el.style.removeProperty('--pill-bg');el.style.removeProperty('--pill-color');el.style.removeProperty('--pill-border') }
+    el.classList.toggle('res-drop-sel', on);
+    let chk = el.querySelector('svg');
+    if (on && !chk) {
+      el.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;color:var(--accent);flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`);
+    } else if (!on && chk) { chk.remove(); }
   });
-  updateResidentCount(ids.length);
 }
 
-function updateResidentCount(count) {
-  const step = document.querySelectorAll('.entry-form-design > .form-step')[1];
-  if (!step) return;
-  const body = step.querySelector('.step-b');
-  let el = body.querySelector('.resident-count');
-  if (count > 0) {
-    if (!el) { el = document.createElement('div'); el.className = 'resident-count'; el.style.cssText = 'font-size:.72rem;color:var(--muted);margin-top:.5rem'; body.appendChild(el); }
-    el.textContent = count + ' résident' + (count>1?'s':'') + ' sélectionné' + (count>1?'s':'');
-  } else {
-    if (el) el.remove();
-  }
+function renderResidentChips(ids) {
+  const container = document.getElementById('selectedResidentChips');
+  if (!container) return;
+  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  container.innerHTML = ids.map(id => {
+    const r = residents.find(x => x.id === id);
+    if (!r) return '';
+    const name = `${r.prenom||''} ${r.nom||''}`.trim();
+    const color = r.color || 'var(--accent)';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1px solid ${color};border-radius:20px;font-size:.72rem;padding:2px 8px 2px 7px;font-weight:500">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.55;margin-left:1px">×</span></span>`;
+  }).join('');
 }
 
-function filterResidentPills() {
+function showResidentDropdown() {
+  const dd = document.getElementById('residentDropdown');
+  if (dd) { dd.style.display = 'block'; filterResidentDropdown(); }
+}
+
+function toggleResidentDropdown() {
+  const dd = document.getElementById('residentDropdown');
+  if (!dd) return;
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function filterResidentDropdown() {
   const q = (document.getElementById('residentSearch')?.value || '').toLowerCase();
-  document.querySelectorAll('.resident-pill').forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  document.querySelectorAll('.res-drop-item').forEach(el => {
+    el.style.display = !q || (el.dataset.name || '').toLowerCase().includes(q) ? '' : 'none';
   });
 }
+
+function filterResidentPills() { filterResidentDropdown(); }
+
+function updateResidentCount() {}
 
 function selectVisPill(vis) {
   const radio = document.querySelector('input[name="iVisibilite"][value="'+vis+'"]');
   if (radio) radio.checked = true;
-  document.querySelectorAll('.vis-pill').forEach(el => el.classList.toggle('active', el.dataset.vis === vis));
+  const BASE = 'padding:.45rem 1rem;border-radius:10px;cursor:pointer;font-size:.8rem;transition:all .15s';
+  document.querySelectorAll('.vis-pill').forEach(el => {
+    const on = el.dataset.vis === vis;
+    el.classList.toggle('active', on);
+    el.style.cssText = on
+      ? `${BASE};border:1.5px solid #7C4DFF;background:#F3E8FF;color:#7C3AED;font-weight:600`
+      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
+  });
 }
 
 function saveInlineEntry() {

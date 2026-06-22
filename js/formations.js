@@ -18,6 +18,7 @@ function frmEur(n) { return (n || 0).toLocaleString('fr-FR', { minimumFractionDi
 
 function openFormationModal(id) {
   const isAdmin = Auth.isAdmin();
+  if (id && !isAdmin) return;
   const employes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
   const list = getFormations();
   const f = id ? list.find(x => x.id === id) : null;
@@ -33,6 +34,7 @@ function openFormationModal(id) {
   document.getElementById('frmFormDateFin').value = f ? f.dateFin || '' : '';
   document.getElementById('frmFormDuree').value = f ? f.dureeHeures || '' : '';
   document.getElementById('frmFormCout').value = f ? f.cout || '' : '';
+  document.getElementById('frmFormMax').value = f ? f.maxParticipants || '' : '';
   document.getElementById('frmFormStatut').value = f ? f.statut : 'planifiee';
   document.getElementById('frmFormNotes').value = f ? f.notes || '' : '';
 
@@ -47,6 +49,7 @@ function openFormationModal(id) {
 }
 
 function saveFormation() {
+  if (!Auth.isAdmin()) { toast('Action réservée aux administrateurs', 'error'); return; }
   const titre = document.getElementById('frmFormTitre').value.trim();
   const dateDebut = document.getElementById('frmFormDateDebut').value;
   if (!titre) { toast('Intitulé requis', 'error'); return; }
@@ -62,6 +65,7 @@ function saveFormation() {
     dateFin: document.getElementById('frmFormDateFin').value,
     dureeHeures: parseFloat(document.getElementById('frmFormDuree').value) || 0,
     cout: parseFloat(document.getElementById('frmFormCout').value) || 0,
+    maxParticipants: parseInt(document.getElementById('frmFormMax').value) || null,
     statut: document.getElementById('frmFormStatut').value,
     participants,
     notes: document.getElementById('frmFormNotes').value.trim(),
@@ -87,6 +91,7 @@ function saveFormation() {
 }
 
 function supprimerFormation(id) {
+  if (!Auth.isAdmin()) { toast('Action réservée aux administrateurs', 'error'); return; }
   id = id || document.getElementById('modalFormation').dataset.id;
   if (!id) return;
   if (!confirm('Supprimer cette formation ?')) return;
@@ -96,23 +101,92 @@ function supprimerFormation(id) {
   renderFormations();
 }
 
+function frmCurrentEmployeId() {
+  const session = Auth.getSession();
+  if (!session) return null;
+  const users = DB.get(DB.keys.users) || [];
+  const user = users.find(u => String(u.id) === String(session.userId));
+  const prenom = user?.prenom || session.prenom || '';
+  const nom = user?.nom || session.nom || '';
+  const employes = DB.get(DB.keys.employes) || [];
+  const emp = employes.find(e => prenom && nom && e.prenom === prenom && e.nom === nom);
+  return emp ? emp.id : null;
+}
+
+function frmInscrire(id) {
+  const empId = frmCurrentEmployeId();
+  if (!empId) { toast('Votre profil employé est introuvable', 'error'); return; }
+  const list = getFormations();
+  const f = list.find(x => x.id === id);
+  if (!f) return;
+  const parts = f.participants || [];
+  if (parts.includes(empId)) { toast('Vous êtes déjà inscrit', 'info'); return; }
+  if (f.maxParticipants && parts.length >= f.maxParticipants) { toast('Nombre maximum de participants atteint', 'error'); return; }
+  f.participants = [...parts, empId];
+  setFormations(list);
+  if (typeof auditLog === 'function') auditLog('formation_inscription', f.titre);
+  toast('Inscription confirmée', 'success');
+  renderFormations();
+}
+
+function frmDesinscrire(id) {
+  const empId = frmCurrentEmployeId();
+  if (!empId) return;
+  const list = getFormations();
+  const f = list.find(x => x.id === id);
+  if (!f) return;
+  f.participants = (f.participants || []).filter(p => p !== empId);
+  setFormations(list);
+  if (typeof auditLog === 'function') auditLog('formation_desinscription', f.titre);
+  toast('Désinscription effectuée', 'info');
+  renderFormations();
+}
+
 function formationItemHtml(f, isAdmin, employesMap) {
   const color = FORMATION_STATUT_COLORS[f.statut] || '#6b7280';
   const label = FORMATION_STATUT_LABELS[f.statut] || f.statut;
-  const noms = (f.participants || []).map(id => employesMap.get(id)).filter(Boolean);
-  return `<div style="padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer" onclick="openFormationModal('${f.id}')">
-    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-      <span style="font-weight:600;font-size:.85rem">${escHtml(f.titre)}</span>
-      <span class="badge" style="background:${color}20;color:${color}">${escHtml(label)}</span>
-      <span class="badge badge-gray">${escHtml(f.domaine)}</span>
+  const parts = f.participants || [];
+  const noms = parts.map(id => employesMap.get(id)).filter(Boolean);
+
+  // Bouton inscription (non-admins uniquement)
+  let inscriptionBtn = '';
+  if (!isAdmin && f.statut === 'planifiee') {
+    const dateRef = f.dateFin || f.dateDebut;
+    const datePassed = dateRef && dateRef < new Date().toISOString().slice(0, 10);
+    const empId = frmCurrentEmployeId();
+    const alreadyIn = empId && parts.includes(empId);
+    const full = f.maxParticipants && parts.length >= f.maxParticipants && !alreadyIn;
+
+    if (datePassed) {
+      inscriptionBtn = `<span style="font-size:.75rem;color:var(--muted);font-style:italic">Formation terminée</span>`;
+    } else if (alreadyIn) {
+      inscriptionBtn = `<button onclick="event.stopPropagation();frmDesinscrire('${f.id}')" style="background:#dcfce7;color:#16a34a;border:1.5px solid #16a34a40;border-radius:8px;padding:.3rem .85rem;font-size:.78rem;font-weight:600;cursor:pointer">✓ Inscrit · Se désinscrire</button>`;
+    } else if (full) {
+      inscriptionBtn = `<span style="background:#f1f5f9;color:#94a3b8;border:1.5px solid #e2e8f0;border-radius:8px;padding:.3rem .85rem;font-size:.78rem;font-weight:600">Complet (${parts.length}/${f.maxParticipants})</span>`;
+    } else {
+      const placesTxt = f.maxParticipants ? ` · ${parts.length}/${f.maxParticipants} place${f.maxParticipants > 1 ? 's' : ''}` : '';
+      inscriptionBtn = `<button onclick="event.stopPropagation();frmInscrire('${f.id}')" style="background:#0f2b4a;color:#fff;border:none;border-radius:8px;padding:.3rem .85rem;font-size:.78rem;font-weight:600;cursor:pointer">S'inscrire${placesTxt}</button>`;
+    }
+  }
+
+  const maxTxt = isAdmin && f.maxParticipants ? ` · max ${f.maxParticipants}` : '';
+
+  return `<div style="padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)${isAdmin ? ';cursor:pointer' : ''}" ${isAdmin ? `onclick="openFormationModal('${f.id}')"` : ''}>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:.85rem">${escHtml(f.titre)}</span>
+        <span class="badge" style="background:${color}20;color:${color}">${escHtml(label)}</span>
+        <span class="badge badge-gray">${escHtml(f.domaine)}</span>
+      </div>
+      ${inscriptionBtn ? `<div style="flex-shrink:0">${inscriptionBtn}</div>` : ''}
     </div>
     <div style="font-size:.74rem;color:var(--muted);margin-top:.2rem">
       ${formatDate(f.dateDebut)}${f.dateFin && f.dateFin !== f.dateDebut ? ' → ' + formatDate(f.dateFin) : ''}
       ${f.organisme ? ' · ' + escHtml(f.organisme) : ''}
       ${f.dureeHeures ? ' · ' + f.dureeHeures + ' h' : ''}
-      ${f.cout ? ' · ' + frmEur(f.cout) : ''}
+      ${f.cout ? ' · ' + frmEur(f.cout) : ''}${maxTxt}
     </div>
-    ${noms.length ? `<div style="font-size:.74rem;color:var(--g600);margin-top:.3rem"><strong>Participants :</strong> ${noms.map(escHtml).join(', ')}</div>` : ''}
+    ${noms.length ? `<div style="font-size:.74rem;color:var(--g600);margin-top:.3rem"><strong>Participants (${parts.length}${f.maxParticipants ? '/'+f.maxParticipants : ''}) :</strong> ${noms.map(escHtml).join(', ')}</div>` : ''}
     ${f.notes ? `<div style="font-size:.74rem;color:var(--muted);margin-top:.2rem">${escHtml(f.notes)}</div>` : ''}
   </div>`;
 }

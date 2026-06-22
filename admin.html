@@ -369,6 +369,18 @@
     <div style="font-size:.7rem;color:var(--muted)" id="c5sub">résidents évalués</div>
     <span class="stat-circ-badge scb-violet" id="c5badge">—</span>
   </div>
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c6bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label"><span id="c6pct">—</span><span style="font-size:.6rem" id="c6pctSign"></span></div>
+    </div>
+    <div class="stat-circ-name">Satisfaction</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c6sub">résidents</div>
+    <span class="stat-circ-badge scb-yellow" id="c6badge">—</span>
+  </div>
 </div>
 
 <!-- ══════════ DETAIL STATS ══════════ -->
@@ -476,6 +488,11 @@
         <div class="stat-card-top"><span class="stat-label">Incidents ouverts</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
         <div class="stat-num" id="sIncidentsOuverts">—</div>
       </div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#f59e0b25,#fde68a15)">
+        <div class="stat-card-top"><span class="stat-label">Satisfaction résidents</span><div class="stat-icon" style="background:#f59e0b20;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div></div>
+        <div class="stat-num" id="sSatScore">—</div>
+        <div style="font-size:.72rem;margin-top:.15rem;font-weight:600" id="sSatNiv"></div>
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
@@ -498,6 +515,19 @@
       <div class="card">
         <div class="card-header"><span class="card-title">📁 Documents par catégorie</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="docTotal"></span></div>
         <div class="card-body" style="padding:.9rem 1.25rem"><div id="docBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
+      </div>
+    </div>
+
+    <!-- Satisfaction évolution -->
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-header">
+        <span class="card-title">⭐ Évolution de la satisfaction résidents</span>
+        <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="satEvolTotal"></span>
+        <a href="satisfaction.html" style="font-size:.75rem;color:var(--primary);text-decoration:none;font-weight:600;margin-left:1rem">Voir le détail →</a>
+      </div>
+      <div class="card-body" style="padding:.9rem 1.25rem">
+        <div id="satEvolChart" style="min-height:80px"></div>
+        <div id="satCatBars" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem .9rem;margin-top:1rem"></div>
       </div>
     </div>
   </div>
@@ -1043,7 +1073,7 @@ function renderEmployes() {
   const users = patchUsersFromEmployes();
   const empStore = getEmployes();
   const q = (document.getElementById('empSearch')?.value || '').trim().toLowerCase();
-  let list = users.map(u => {
+  let list = users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => {
     const emp = empStore.find(e => String(e.id) === String(u.id) || (e.prenom === u.prenom && e.nom === u.nom)) || {};
     return {
       id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
@@ -1349,6 +1379,84 @@ function renderKeyStats(residents, presences, incidents) {
     el('sIncidentsOuverts').textContent = open;
     el('sIncidentsOuverts').style.color = open > 0 ? 'var(--red)' : 'inherit';
   }
+
+  // Satisfaction globale
+  const satAll = DB.get(DB.keys.satisfaction) || [];
+  if (satAll.length) {
+    const allVals = satAll.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const avg = allVals.length ? allVals.reduce((a, b) => a + b, 0) / allVals.length : null;
+    const pct = avg !== null ? Math.round(avg * 25) : null;
+    const col = avg === null ? '' : avg >= 3.5 ? '#0d9488' : avg >= 2.5 ? '#16a34a' : avg >= 1.5 ? '#d97706' : '#dc2626';
+    const niv = avg === null ? '' : avg >= 3.5 ? 'Très satisfaisant' : avg >= 2.5 ? 'Satisfaisant' : avg >= 1.5 ? 'À améliorer' : 'Insuffisant';
+    if (el('sSatScore')) { el('sSatScore').textContent = pct !== null ? pct + '%' : '—'; el('sSatScore').style.color = col; }
+    if (el('sSatNiv')) { el('sSatNiv').textContent = niv; el('sSatNiv').style.color = col; }
+  }
+  renderSatStats();
+}
+
+function renderSatStats() {
+  const chartEl = document.getElementById('satEvolChart');
+  const catsEl = document.getElementById('satCatBars');
+  const totalEl = document.getElementById('satEvolTotal');
+  if (!chartEl) return;
+
+  const satAll = DB.get(DB.keys.satisfaction) || [];
+  if (!satAll.length) {
+    chartEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Aucun questionnaire de satisfaction enregistré.</div>';
+    if (catsEl) catsEl.innerHTML = '';
+    return;
+  }
+  if (totalEl) totalEl.textContent = satAll.length + ' questionnaire' + (satAll.length > 1 ? 's' : '');
+
+  // ── Évolution 12 derniers mois ──
+  const now = new Date();
+  const evolPoints = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0');
+    const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+    const mSat = satAll.filter(s => s.date && s.date.startsWith(`${y}-${m}`));
+    if (!mSat.length) continue;
+    const vals = mSat.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    if (avg !== null) evolPoints.push({ label, value: Math.round(avg * 25) });
+  }
+
+  if (evolPoints.length >= 2) {
+    chartEl.innerHTML = svgLine(evolPoints, '#f59e0b', 100, '%');
+  } else if (evolPoints.length === 1) {
+    chartEl.innerHTML = `<div style="display:flex;align-items:center;gap:.5rem;padding:1rem 0;color:var(--muted);font-size:.82rem">Score ce mois : <strong style="font-size:1.4rem;color:#f59e0b">${evolPoints[0].value}%</strong> <span style="font-size:.72rem">(données insuffisantes pour tracer une courbe)</span></div>`;
+  } else {
+    chartEl.innerHTML = '<div style="padding:.75rem 0;color:var(--muted);font-size:.82rem">Aucune donnée pour les 12 derniers mois.</div>';
+  }
+
+  // ── Scores par catégorie ──
+  if (!catsEl) return;
+  const SAT_CATS = {
+    'Accueil & intégration': ['accueil'],
+    'Hébergement': ['chambre', 'parties_com'],
+    'Restauration': ['repas_qualite', 'repas_quantite'],
+    'Activités': ['activites'],
+    'Équipe & accompagnement': ['respect', 'disponibilite', 'soins'],
+    'Sécurité': ['securite'],
+    'Communication': ['communication'],
+    'Satisfaction globale': ['global']
+  };
+  catsEl.innerHTML = Object.entries(SAT_CATS).map(([cat, qIds]) => {
+    const vals = satAll.flatMap(s => qIds.map(q => s.reponses?.[q]).filter(v => v != null));
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    const pct = avg !== null ? Math.round(avg * 25) : null;
+    const col = avg === null ? '#94a3b8' : avg >= 3.5 ? '#0d9488' : avg >= 2.5 ? '#16a34a' : avg >= 1.5 ? '#d97706' : '#dc2626';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
+        <span style="font-size:.76rem;color:var(--text);font-weight:500">${cat}</span>
+        <span style="font-size:.76rem;font-weight:700;color:${col}">${pct !== null ? pct + '%' : '—'}</span>
+      </div>
+      <div style="height:6px;border-radius:999px;background:var(--g100);overflow:hidden">
+        <div style="height:100%;border-radius:999px;background:${col};width:${pct ?? 0}%;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── RAPPORT D'ACTIVITÉ PDF ──
@@ -1367,6 +1475,38 @@ function toggleRapportPeriode() {
 }
 
 // ── GRAPHIQUES SVG (partagés : rapport PDF + page Statistiques) ──
+function svgLine(points, color, yMax, yLabel) {
+  // points = [{label, value}], value 0..yMax
+  if (!points.length) return '<p class="empty-line" style="font-size:.82rem;color:#94a3b8;font-style:italic">Aucune donnée.</p>';
+  const W = 720, H = 190, padL = 38, padR = 14, padT = 20, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = points.length;
+  const ticks = 4;
+  let grid = '';
+  for (let k = 0; k <= ticks; k++) {
+    const y = padT + plotH - plotH * k / ticks;
+    const val = Math.round(yMax * k / ticks);
+    grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e8edf2" stroke-width="1"/>`;
+    grid += `<text x="${padL - 5}" y="${y + 3.5}" text-anchor="end" font-size="7.5" fill="#94a3b8">${val}${yLabel || ''}</text>`;
+  }
+  const xs = points.map((_, i) => padL + (n === 1 ? plotW / 2 : plotW * i / (n - 1)));
+  const ys = points.map(p => padT + plotH - Math.min(1, Math.max(0, p.value / yMax)) * plotH);
+  const area = `M${xs[0]},${padT + plotH} ` + xs.map((x, i) => `L${x},${ys[i]}`).join(' ') + ` L${xs[n-1]},${padT + plotH} Z`;
+  const line = `M${xs[0]},${ys[0]} ` + xs.slice(1).map((x, i) => `L${x},${ys[i+1]}`).join(' ');
+  let labels = '';
+  points.forEach((p, i) => {
+    labels += `<text x="${xs[i].toFixed(1)}" y="${H - padB + 13}" text-anchor="middle" font-size="7.5" fill="#475569">${escHtml(p.label)}</text>`;
+    labels += `<circle cx="${xs[i]}" cy="${ys[i]}" r="4" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+    labels += `<text x="${xs[i].toFixed(1)}" y="${(ys[i] - 7).toFixed(1)}" text-anchor="middle" font-size="7.5" font-weight="700" fill="${color}">${p.value}${yLabel||''}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">
+    <path d="${area}" fill="${color}" fill-opacity="0.08"/>
+    <line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#cbd5e1" stroke-width="1"/>
+    ${grid}
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${labels}
+  </svg>`;
+}
 function svgHBar(obj, color, keepOrder, colorMap, labelW) {
   let entries = Object.entries(obj).filter(([, v]) => v > 0);
   if (!keepOrder) entries = entries.sort((a, b) => b[1] - a[1]);
@@ -1520,6 +1660,52 @@ function genererRapportPDF() {
   const protDist = {};
   activeRes.forEach(r => { const p = protLabels[r.protection] || r.protection || 'Non renseigné'; protDist[p] = (protDist[p] || 0) + 1; });
 
+  // ── Satisfaction ──
+  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satPeriod = satAll.filter(s => inRange(s.date));
+  const SAT_CATS_PDF = {
+    'Accueil & intégration': ['accueil'],
+    'Hébergement': ['chambre','parties_com'],
+    'Restauration': ['repas_qualite','repas_quantite'],
+    'Activités': ['activites'],
+    'Équipe & accompagnement': ['respect','disponibilite','soins'],
+    'Sécurité': ['securite'],
+    'Communication': ['communication'],
+    'Satisfaction globale': ['global']
+  };
+  const satAvgQ = {};
+  Object.values(SAT_CATS_PDF).flat().forEach(qid => {
+    const vals = satPeriod.map(s => s.reponses?.[qid]).filter(v => v != null);
+    satAvgQ[qid] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  const satGlobalVals = Object.values(satAvgQ).filter(v => v !== null);
+  const satScore = satGlobalVals.length ? satGlobalVals.reduce((a,b)=>a+b,0)/satGlobalVals.length : null;
+  const satPct = satScore !== null ? Math.round(satScore*25) : null;
+  const satCol = satScore === null ? '#94a3b8' : satScore >= 3.5 ? '#0d9488' : satScore >= 2.5 ? '#16a34a' : satScore >= 1.5 ? '#d97706' : '#dc2626';
+  const satNiv = satScore === null ? '—' : satScore >= 3.5 ? 'Très satisfaisant' : satScore >= 2.5 ? 'Satisfaisant' : satScore >= 1.5 ? 'À améliorer' : 'Insuffisant';
+
+  // ── ÉVOLUTION SATISFACTION PAR MOIS ──
+  // Prend les 12 derniers mois glissants par rapport à la fin de période
+  const satEvolMonths = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(endStr + 'T00:00:00');
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0');
+    const label = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+    const mSat = satAll.filter(s => s.date && s.date.startsWith(`${y}-${m}`));
+    if (!mSat.length) { satEvolMonths.push({ label, value: null, count: 0 }); continue; }
+    const allVals = mSat.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const avg = allVals.length ? allVals.reduce((a, b) => a + b, 0) / allVals.length : null;
+    satEvolMonths.push({ label, value: avg !== null ? Math.round(avg * 25) : null, count: mSat.length });
+  }
+  // Filtre les mois sans données aux deux extrémités
+  const satEvolData = satEvolMonths.filter((_, i, arr) => {
+    const firstData = arr.findIndex(p => p.value !== null);
+    const lastData = arr.length - 1 - [...arr].reverse().findIndex(p => p.value !== null);
+    return i >= firstData && i <= lastData;
+  }).filter(p => p.value !== null);
+
   // ── SERAFIN-PH ──
   const withSp = activeRes.filter(r => (r.serafinph?.selected||[]).length > 0);
   const allScores = withSp.map(r => {
@@ -1573,37 +1759,58 @@ function genererRapportPDF() {
   const jSeries = buckets.map(b => jPeriod.filter(e => _inB(e.date, b)).length);
   const iSeries = buckets.map(b => iPeriod.filter(i => _inB(i.date, b)).length);
 
+  // ── TRANSMISSIONS ──
+  const transmissions = DB.get(DB.keys.transmissions) || [];
+  const trPeriod = transmissions.filter(t => t.date && t.date >= startStr && t.date <= endStr);
+  const trByShift = { matin: 0, aprem: 0, soir: 0, nuit: 0 };
+  const trByCat = {};
+  const trUrgent = trPeriod.filter(t => t.priority === 'urgent' || t.cat === 'urgent').length;
+  const trResidents = new Set(trPeriod.filter(t => t.residentId).map(t => t.residentId)).size;
+  trPeriod.forEach(t => {
+    if (trByShift[t.shift] !== undefined) trByShift[t.shift]++;
+    const catLabel = { sante:'Santé', medicament:'Médicament', comportement:'Comportement', alimentation:'Alimentation', hygiene:'Hygiène', activite:'Activité', famille:'Famille', sortie:'Sortie / Retour', administratif:'Administratif', maintenance:'Maintenance', urgent:'Urgent' }[t.cat] || (t.cat || 'Autre');
+    trByCat[catLabel] = (trByCat[catLabel] || 0) + 1;
+  });
+  const trByShiftLabel = { 'Matin (06h–14h)': trByShift.matin, 'Après-midi (14h–22h)': trByShift.aprem, 'Soir (18h–00h)': trByShift.soir, 'Nuit (00h–06h)': trByShift.nuit };
+  const trSeries = buckets.map(b => trPeriod.filter(t => t.date >= b.start && t.date <= b.end).length);
+
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Rapport d'activité — ${escHtml(label)}</title>
 <style>
   @page{margin:1.8cm 1.5cm}
-  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:9.5pt;line-height:1.55;color:#334155;max-width:820px;margin:0 auto}
+  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:11pt;line-height:1.6;color:#334155;max-width:820px;margin:0 auto}
   .top-stripe{height:6px;background:#0f2b4a;border-radius:0 0 4px 4px;margin-bottom:.5cm}
   .doc-header{margin-bottom:.6cm}
-  .doc-header .etab{font-size:11pt;font-weight:300;color:#0f2b4a}
+  .doc-header .etab{font-size:12pt;font-weight:300;color:#0f2b4a}
   .doc-header .etab strong{font-weight:700}
-  .doc-header .doc-title{font-size:16pt;font-weight:800;color:#0f2b4a;margin-top:.05cm}
-  .doc-header .doc-meta{font-size:7.5pt;color:#64748b;margin-top:.1cm}
-  h2{font-size:11pt;color:#0f2b4a;border-bottom:2px solid #0f2b4a;padding-bottom:2px;margin:.6cm 0 .25cm}
+  .doc-header .doc-title{font-size:18pt;font-weight:800;color:#0f2b4a;margin-top:.05cm}
+  .doc-header .doc-meta{font-size:9pt;color:#64748b;margin-top:.1cm}
+  h2{font-size:13pt;color:#0f2b4a;border-bottom:2px solid #0f2b4a;padding-bottom:3px;margin:.6cm 0 .3cm}
   .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.3cm;margin-bottom:.3cm}
-  .kpi{border:1px solid #e2e8f0;border-radius:7px;padding:.3cm;text-align:center;page-break-inside:avoid}
-  .kpi-num{font-size:15pt;font-weight:800;color:#0f2b4a;line-height:1.1}
-  .kpi-lbl{font-size:7pt;color:#64748b;margin-top:2px}
+  .kpi{border:1px solid #e2e8f0;border-radius:7px;padding:.35cm;text-align:center;page-break-inside:avoid}
+  .kpi-num{font-size:18pt;font-weight:800;color:#0f2b4a;line-height:1.1}
+  .kpi-lbl{font-size:9pt;color:#64748b;margin-top:3px}
   table.bars{width:100%;border-collapse:collapse}
-  table.bars td{padding:2px 4px;vertical-align:middle}
-  table.bars .bl{font-size:8pt;color:#334155;width:38%}
+  table.bars td{padding:3px 5px;vertical-align:middle}
+  table.bars .bl{font-size:10pt;color:#334155;width:38%}
   table.bars .bb{width:52%}
-  table.bars .bar{height:9px;border-radius:5px;min-width:2px}
-  table.bars .bv{font-size:8pt;font-weight:700;color:#0f2b4a;text-align:right;width:10%}
+  table.bars .bar{height:12px;border-radius:5px;min-width:2px}
+  table.bars .bv{font-size:10pt;font-weight:700;color:#0f2b4a;text-align:right;width:10%}
   .grav-row{display:flex;gap:.3cm;margin-bottom:.2cm}
-  .grav{flex:1;border-radius:6px;padding:.25cm;text-align:center;color:#fff;font-size:8pt;font-weight:600}
-  .empty-line{font-size:8pt;color:#94a3b8;font-style:italic}
-  .note{font-size:8pt;color:#475569;margin:.2cm 0}
+  .grav{flex:1;border-radius:6px;padding:.3cm;text-align:center;color:#fff;font-size:10pt;font-weight:600}
+  .empty-line{font-size:10pt;color:#94a3b8;font-style:italic}
+  .note{font-size:10pt;color:#475569;margin:.2cm 0;line-height:1.6}
+  .methode{font-size:9.5pt;color:#2d4a62;background:#f0f5fa;border-left:3px solid #0369a1;padding:.25cm .4cm;border-radius:0 6px 6px 0;margin:.15cm 0 .3cm;line-height:1.55}
   svg{page-break-inside:avoid;max-width:100%}
   h2{page-break-after:avoid}
-  .chart-title{font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.12cm}
-  .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:7pt;color:#94a3b8}
+  .chart-title{font-size:10pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm}
+  .sat-bar-row{display:flex;align-items:center;gap:.3cm;margin-bottom:.25cm}
+  .sat-bar-label{width:5.5cm;font-size:10pt;color:#334155;text-align:right;flex-shrink:0}
+  .sat-bar-track{flex:1;height:14px;background:#e2e8f0;border-radius:6px;overflow:hidden}
+  .sat-bar-fill{height:100%;border-radius:6px}
+  .sat-bar-val{width:2.5cm;font-size:10pt;font-weight:700;flex-shrink:0}
+  .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:9pt;color:#94a3b8}
   .actions{text-align:center;margin:.4cm 0}
   .actions button{padding:.35rem 1.1rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:9pt;margin:.2rem}
   @media print{.actions{display:none}}
@@ -1630,6 +1837,7 @@ function genererRapportPDF() {
   ${kpi(dureeMoyMois != null ? dureeMoyMois + ' mois' : '—', 'Durée moy. de séjour')}
   ${kpi(tauxPpe + '%', 'Résidents avec PPE actif')}
   ${kpi(jPeriod.length, 'Entrées au journal')}
+  ${kpi(trPeriod.length, 'Transmissions équipe')}
   ${kpi(iPeriod.length, 'Incidents déclarés')}
   ${kpi(avCrees, 'Avenants rédigés')}
   ${kpi(nbObjAtteints, 'Objectifs atteints')}
@@ -1639,7 +1847,8 @@ function genererRapportPDF() {
 ${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accueil » dans Administration → Établissement pour calculer le taux d\'occupation.</p>'}
 
 <h2>Public accompagné & mouvements</h2>
-<p class="note">File active : <strong>${fileActive}</strong> personne${fileActive > 1 ? 's' : ''} accompagnée${fileActive > 1 ? 's' : ''} sur la période · Entrées : <strong>${entrees}</strong> · Sorties : <strong>${sortiesCount}</strong> · Durée moyenne de séjour : <strong>${dureeMoyMois != null ? dureeMoyMois + ' mois' : '—'}</strong>${capacite ? ` · Capacité autorisée : <strong>${capacite}</strong> places · Taux d'occupation : <strong>${tauxOccup != null ? tauxOccup + '%' : '—'}</strong>` : ''}.</p>
+<p class="methode"><strong>📌 Méthode :</strong> La file active regroupe toutes les personnes dont la date d'entrée est antérieure ou égale à la fin de période et dont la date de sortie est postérieure ou égale au début de période. La durée moyenne de séjour est calculée sur les résidents présents ayant une date d'entrée renseignée. Le taux d'occupation rapporte les journées de présence effectivement enregistrées (module présences) à la capacité autorisée × les jours de la période.</p>
+<p class="note">File active : <strong>${fileActive}</strong> personne${fileActive > 1 ? 's' : ''} · Entrées : <strong>${entrees}</strong> · Sorties : <strong>${sortiesCount}</strong> · Durée moy. de séjour : <strong>${dureeMoyMois != null ? dureeMoyMois + ' mois' : '—'}</strong>${capacite ? ` · Capacité : <strong>${capacite}</strong> places · Taux d'occupation : <strong>${tauxOccup != null ? tauxOccup + '%' : '—'}</strong>` : ''}.</p>
 <div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
   <div style="flex:0 0 auto"><div class="chart-title">Répartition par sexe</div>${svgDonut([{ label: 'Hommes', value: profilSexe.Hommes, color: '#3b82f6' }, { label: 'Femmes', value: profilSexe.Femmes, color: '#ec4899' }, { label: 'Autre', value: profilSexe.Autre, color: '#94a3b8' }], 'résidents')}</div>
   <div style="flex:1;min-width:300px"><div class="chart-title">Par tranche d'âge</div>${svgHBar(ageTranches, '#0d9488', true)}</div>
@@ -1647,25 +1856,42 @@ ${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accue
 <div style="margin-top:.35cm"><div class="chart-title">Mesures de protection juridique</div>${svgHBar(protDist, '#8b5cf6')}</div>
 
 <h2>Évolution de l'activité</h2>
-<p class="note">Transmissions au journal et incidents déclarés par ${_days <= 45 ? 'semaine' : 'mois'} sur la période.</p>
+<p class="methode"><strong>📌 Méthode :</strong> Ce graphique croise sur le même axe temporel deux indicateurs d'activité : les entrées au journal de bord (transmissions d'équipe) et les incidents déclarés. Le découpage est hebdomadaire pour les périodes ≤ 45 jours, mensuel au-delà. Il permet d'identifier des pics d'activité ou de tension.</p>
+<p class="note">Transmissions et incidents par ${_days <= 45 ? 'semaine' : 'mois'} sur la période.</p>
 ${svgColumns(buckets.map(b => b.label), [{ name: 'Transmissions journal', color: '#e85d04', data: jSeries }, { name: 'Incidents', color: '#dc2626', data: iSeries }])}
 
 <h2>Activité du journal de bord</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Chaque entrée au journal correspond à une transmission enregistrée par l'équipe (observation, information, événement). Les entrées sont automatiquement classées selon les catégories paramétrées dans l'établissement. Le graphique montre la répartition par catégorie sur la période sélectionnée.</p>
 <p class="note">${jPeriod.length} entrée${jPeriod.length > 1 ? 's' : ''} sur la période, réparties par catégorie :</p>
 ${svgHBar(jByCat, '#e85d04')}
 
-<h2>Incidents</h2>
+<h2>Incidents & événements indésirables</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Les incidents sont déclarés manuellement par l'équipe dans le module dédié. Chaque déclaration précise le type (chute, agression, fugue…), la gravité (léger / modéré / grave) et le statut de traitement. Un incident est considéré comme « traité » lorsqu'il a été validé ou classé par un responsable.</p>
 <p class="note">${iPeriod.length} incident${iPeriod.length > 1 ? 's' : ''} déclaré${iPeriod.length > 1 ? 's' : ''}, dont <strong>${iTraites}</strong> traité${iTraites > 1 ? 's' : ''} (validés ou classés).</p>
 <div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
   <div style="flex:0 0 auto"><div class="chart-title">Par gravité</div>${svgDonut([{ label: 'Graves', value: iByGravite.grave, color: '#dc2626' }, { label: 'Modérés', value: iByGravite.modere, color: '#f59e0b' }, { label: 'Légers', value: iByGravite.leger, color: '#10b981' }], 'incidents')}</div>
-  <div style="flex:1;min-width:300px"><div style="font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm">Par type</div>${svgHBar(iByType, '#dc2626')}</div>
+  <div style="flex:1;min-width:300px"><div class="chart-title">Par type</div>${svgHBar(iByType, '#dc2626')}</div>
 </div>
 
+<h2>📡 Transmissions d'équipe</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Les transmissions sont les observations et consignes enregistrées par l'équipe à chaque vacation (Matin, Après-midi, Soir, Nuit). Elles permettent d'assurer la continuité du suivi entre les équipes. Une transmission est dite « urgente » si sa priorité ou sa catégorie est définie comme urgente. Ce module est distinct du journal de bord.</p>
+<p class="note"><strong>${trPeriod.length}</strong> transmission${trPeriod.length > 1 ? 's' : ''} sur la période · <strong>${trUrgent}</strong> urgente${trUrgent > 1 ? 's' : ''} · <strong>${trResidents}</strong> résident${trResidents > 1 ? 's' : ''} concerné${trResidents > 1 ? 's' : ''}.</p>
+${trPeriod.length ? `
+<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start;margin-bottom:.3cm">
+  <div style="flex:1;min-width:260px"><div class="chart-title">Par vacation</div>${svgHBar(trByShiftLabel, '#3b82f6', true, {'Matin (06h–14h)':'#f59e0b','Après-midi (14h–22h)':'#3b82f6','Soir (18h–00h)':'#8b5cf6','Nuit (00h–06h)':'#1e293b'}, 200)}</div>
+  <div style="flex:1;min-width:260px"><div class="chart-title">Par catégorie</div>${svgHBar(trByCat, '#6366f1')}</div>
+</div>
+<div class="chart-title">Évolution par ${_days <= 45 ? 'semaine' : 'mois'}</div>
+${svgLine(buckets.map((b, i) => ({ label: b.label, value: trSeries[i] })), '#3b82f6', Math.max(...trSeries, 1))}
+` : '<p class="empty-line">Aucune transmission enregistrée pour cette période.</p>'}
+
 <h2>Projets personnalisés (PPE)</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Le PPE (Projet Personnalisé d'Établissement) est le document contractuel définissant les objectifs d'accompagnement de chaque résident. Le nombre d'avenants rédigés sur la période indique l'activité de révision des projets. Un avenant « actif » est en vigueur à la date de génération du rapport.</p>
 <p class="note"><strong>${avCrees}</strong> avenant${avCrees > 1 ? 's' : ''} rédigé${avCrees > 1 ? 's' : ''} sur la période · <strong>${avActifs}</strong> avenant${avActifs > 1 ? 's' : ''} actuellement actif${avActifs > 1 ? 's' : ''} dans l'établissement.</p>
 
-<h2>Accompagnement</h2>
-<p class="note"><strong>${nbEvals}</strong> évaluation${nbEvals > 1 ? 's' : ''} d'autonomie réalisée${nbEvals > 1 ? 's' : ''} · <strong>${nbObjAtteints}</strong> objectif${nbObjAtteints > 1 ? 's' : ''} marqué${nbObjAtteints > 1 ? 's' : ''} comme atteint${nbObjAtteints > 1 ? 's' : ''} · <strong>${nbSorties}</strong> sortie${nbSorties > 1 ? 's' : ''} / permission${nbSorties > 1 ? 's' : ''} enregistrée${nbSorties > 1 ? 's' : ''}.</p>
+<h2>Accompagnement individuel</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Les évaluations d'autonomie sont réalisées via des grilles standardisées renseignées par l'équipe. Les objectifs sont définis dans le PPE et leur suivi est mis à jour manuellement. Les sorties et permissions sont saisies dans le dossier résident à chaque occurrence.</p>
+<p class="note"><strong>${nbEvals}</strong> évaluation${nbEvals > 1 ? 's' : ''} d'autonomie · <strong>${nbObjAtteints}</strong> objectif${nbObjAtteints > 1 ? 's' : ''} atteint${nbObjAtteints > 1 ? 's' : ''} · <strong>${nbSorties}</strong> sortie${nbSorties > 1 ? 's' : ''}/permission${nbSorties > 1 ? 's' : ''} enregistrée${nbSorties > 1 ? 's' : ''}.</p>
 
 <h2>Profil SERAFIN-PH</h2>
 <p class="note"><strong>${withSp.length}</strong> résident${withSp.length > 1 ? 's' : ''} évalué${withSp.length > 1 ? 's' : ''} sur <strong>${activeRes.length}</strong> résident${activeRes.length > 1 ? 's' : ''} présents · GMPS moyen : <strong>${gmps != null ? gmps : '—'}</strong> · Score total cumulé : <strong>${allScores.reduce((a, s) => a + s.total, 0)}</strong>.</p>
@@ -1674,6 +1900,47 @@ ${withSp.length ? `<div style="display:flex;gap:.4cm;flex-wrap:wrap;margin-botto
   <div style="flex:0 0 auto"><div class="chart-title">Répartition des niveaux</div>${svgDonut([{ label: 'Niveau 0 (Nul)', value: spNivRepart[0], color: '#d1d5db' }, { label: 'Niveau 1 (Faible)', value: spNivRepart[1], color: '#22c55e' }, { label: 'Niveau 2 (Modéré)', value: spNivRepart[2], color: '#eab308' }, { label: 'Niveau 3 (Important)', value: spNivRepart[3], color: '#f97316' }, { label: 'Niveau 4 (Très important)', value: spNivRepart[4], color: '#ef4444' }], 'niveaux')}</div>
 </div>
 <p class="note">Les niveaux SERAFIN-PH vont de 0 (aucun besoin) à 4 (besoin très important). Les prestations directes concernent la relation avec la personne accompagnée, les prestations indirectes le fonctionnement de l'établissement.</p>` : '<p class="empty-line">Aucune évaluation SERAFIN-PH renseignée pour la période.</p>'}
+
+<h2>⭐ Satisfaction résidents</h2>
+<p class="methode"><strong>📌 Méthode :</strong> La satisfaction est mesurée via des questionnaires remplis par les résidents ou leurs représentants légaux. Chaque question est notée de 0 à 4 (0 = Très insatisfait, 1 = Insatisfait, 2 = Neutre, 3 = Satisfait, 4 = Très satisfait). Le score est ensuite converti en pourcentage (score × 25). Les résultats sont regroupés en 8 catégories thématiques : Accueil & intégration, Hébergement, Restauration, Activités, Équipe & accompagnement, Sécurité, Communication, Satisfaction globale. Seuls les questionnaires dont la date de passation est comprise dans la période du rapport sont pris en compte.</p>
+${satPeriod.length === 0 ? '<p class="empty-line">Aucun questionnaire de satisfaction enregistré pour cette période.</p>' : `
+<div style="display:flex;align-items:center;gap:1cm;flex-wrap:wrap;margin-bottom:.45cm;padding:.4cm .5cm;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+  <div style="text-align:center;min-width:90px">
+    <div style="font-size:28pt;font-weight:800;color:${satCol};line-height:1">${satPct !== null ? satPct + '%' : '—'}</div>
+    <div style="font-size:8.5pt;color:#64748b;margin-top:2px">Score global</div>
+    <div style="font-size:8pt;font-weight:700;color:${satCol};margin-top:2px">${satNiv}</div>
+  </div>
+  <div style="flex:1;min-width:200px">
+    <div style="height:14px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin-bottom:.15cm">
+      <div style="height:100%;border-radius:7px;background:${satCol};width:${satPct !== null ? satPct : 0}%"></div>
+    </div>
+    <div style="font-size:8.5pt;color:#64748b">${satPeriod.length} questionnaire${satPeriod.length > 1 ? 's' : ''} analysé${satPeriod.length > 1 ? 's' : ''} sur la période</div>
+  </div>
+</div>
+${satEvolData.length >= 2 ? `
+<div class="chart-title" style="margin-top:.35cm">Évolution mensuelle du score de satisfaction (%)</div>
+${svgLine(satEvolData, '#0ea5e9', 100, '%')}
+<p style="font-size:8pt;color:#94a3b8;margin-top:.1cm;margin-bottom:.35cm">Moyenne de toutes les questions sur les 12 derniers mois glissants. Chaque point = score global du mois (0–100 %).</p>
+` : ''}
+<div class="chart-title" style="margin-top:.2cm">Scores par catégorie — période sélectionnée</div>
+<table style="width:100%;border-collapse:collapse">
+${Object.entries(SAT_CATS_PDF).map(([cat, qIds]) => {
+  const vals = qIds.map(q => satAvgQ[q]).filter(v => v !== null);
+  const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  const pct2 = avg !== null ? Math.round(avg * 25) : null;
+  const col2 = avg === null ? '#94a3b8' : avg >= 3.5 ? '#0d9488' : avg >= 2.5 ? '#16a34a' : avg >= 1.5 ? '#d97706' : '#dc2626';
+  return `<tr>
+    <td style="width:32%;font-size:9.5pt;padding:.12cm 0;color:#1e293b;font-weight:500">${cat}</td>
+    <td style="width:52%;padding:.12cm .3cm">
+      <div style="height:11px;border-radius:6px;background:#e2e8f0;overflow:hidden">
+        <div style="height:100%;border-radius:6px;background:${col2};width:${pct2 !== null ? pct2 : 0}%"></div>
+      </div>
+    </td>
+    <td style="width:8%;font-size:9.5pt;font-weight:700;color:${col2};text-align:right;padding:.12cm 0">${pct2 !== null ? pct2 + '%' : '—'}</td>
+    <td style="width:8%;font-size:8pt;color:#94a3b8;text-align:right;padding:.12cm 0 .12cm .2cm">${avg !== null ? (avg >= 3.5 ? 'Très sat.' : avg >= 2.5 ? 'Satisf.' : avg >= 1.5 ? 'À amél.' : 'Insuff.') : 'N/A'}</td>
+  </tr>`;
+}).join('')}
+</table>`}
 
 <div class="footer">${escHtml(settings.etablissement || 'Établissement')} · Rapport d'activité ${escHtml(label)} · Document interne</div>
 </body></html>`);
@@ -1826,6 +2093,33 @@ function renderSerafinphStats() {
   if (pct >= 80) { c5b.textContent = 'Optimal'; c5b.className = 'stat-circ-badge scb-violet'; }
   else if (pct >= 40) { c5b.textContent = 'Partiel'; c5b.className = 'stat-circ-badge scb-yellow'; }
   else { c5b.textContent = 'À évaluer'; c5b.className = 'stat-circ-badge scb-red'; }
+
+  // ── Satisfaction (c6) ──
+  const satAllC6 = DB.get(DB.keys.satisfaction) || [];
+  const c6b = document.getElementById('c6badge');
+  if (satAllC6.length) {
+    const satVals = satAllC6.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const satAvg = satVals.length ? satVals.reduce((a, b) => a + b, 0) / satVals.length : null;
+    const satPct = satAvg !== null ? Math.round(satAvg * 25) : null;
+    const satStroke = satAvg === null ? '#94a3b8' : satAvg >= 3.5 ? '#0d9488' : satAvg >= 2.5 ? '#16a34a' : satAvg >= 1.5 ? '#d97706' : '#dc2626';
+    document.getElementById('c6pct').textContent = satPct !== null ? satPct : '—';
+    document.getElementById('c6pctSign').textContent = satPct !== null ? '%' : '';
+    document.getElementById('c6sub').textContent = satAllC6.length + ' questionnaire' + (satAllC6.length > 1 ? 's' : '');
+    document.getElementById('c6bar').setAttribute('stroke', satStroke);
+    setCirc('c6bar', satPct ?? 0);
+    if (c6b) {
+      if (satAvg >= 3.5) { c6b.textContent = 'Très satisf.'; c6b.className = 'stat-circ-badge scb-green'; }
+      else if (satAvg >= 2.5) { c6b.textContent = 'Satisfaisant'; c6b.className = 'stat-circ-badge scb-green'; }
+      else if (satAvg >= 1.5) { c6b.textContent = 'À améliorer'; c6b.className = 'stat-circ-badge scb-yellow'; }
+      else { c6b.textContent = 'Insuffisant'; c6b.className = 'stat-circ-badge scb-red'; }
+    }
+  } else {
+    document.getElementById('c6pct').textContent = '—';
+    document.getElementById('c6pctSign').textContent = '';
+    document.getElementById('c6sub').textContent = 'aucun questionnaire';
+    if (c6b) { c6b.textContent = 'Sans données'; c6b.className = 'stat-circ-badge scb-yellow'; }
+  }
+
   const spByPrest = {};
   SP_NOMENCLATURE.forEach(p => {
     const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);

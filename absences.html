@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Absences & AT — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-layout">
+  <div class="main">
+    <header class="header">
+      <div class="header-info"><div class="header-title">Absences & accidents du travail</div></div>
+      <div class="header-right">
+        <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
+        <button id="btnAddAbsence" class="btn btn-accent btn-sm" onclick="openAbsenceModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Déclarer une absence
+        </button>
+        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
+      </div>
+    </header>
+
+    <main class="content" style="max-width:1100px">
+      <div id="abStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
+      <div id="abAlerts" style="margin-bottom:1.25rem"></div>
+
+      <div class="toolbar" style="margin-bottom:1.25rem">
+        <select id="abFilterEmploye" style="width:auto"><option value="">Tous les employés</option></select>
+        <select id="abFilterType" style="width:auto">
+          <option value="">Tous les types</option>
+          <option value="maladie">Arrêt maladie</option>
+          <option value="at">Accident du travail</option>
+          <option value="maladie_pro">Maladie professionnelle</option>
+        </select>
+      </div>
+
+      <div id="abList"></div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL ABSENCE -->
+<div class="modal-overlay" id="modalAbsence">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span class="modal-title" id="abModalTitle">Déclarer une absence</span>
+      <button class="modal-close" onclick="closeModal('modalAbsence')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div class="form-row">
+        <div class="form-group"><label class="required">Employé</label><select id="abEmploye"></select></div>
+        <div class="form-group"><label class="required">Type</label>
+          <select id="abType">
+            <option value="maladie">🤒 Arrêt maladie</option>
+            <option value="at">⚠️ Accident du travail</option>
+            <option value="maladie_pro">🏭 Maladie professionnelle</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="required">Date début</label><input type="date" id="abDebut"/></div>
+        <div class="form-group"><label>Date fin (si connue)</label><input type="date" id="abFin"/></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;cursor:pointer">
+        <input type="checkbox" id="abProlongation" style="width:16px;height:16px"/> Prolongation d'un arrêt précédent
+      </label>
+      <div class="form-group" id="abVisiteWrap" style="display:none">
+        <label>Visite médicale de reprise</label>
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <input type="date" id="abVisiteDate" style="flex:1"/>
+          <label style="display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap"><input type="checkbox" id="abVisiteFaite" style="width:16px;height:16px"/> Effectuée</label>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes / circonstances</label><textarea id="abNotes" rows="3" placeholder="Détails, contexte de l'accident…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="color:#dc2626;margin-right:auto" id="abDeleteBtn" onclick="deleteAbsence()">Supprimer</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalAbsence')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAbsence()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script src="js/absences.js"></script>
+</body>
+</html>

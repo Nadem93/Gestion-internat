@@ -45,9 +45,22 @@ function openFichePaieModal() {
   const employes = DB.get(DB.keys.employes) || [];
   const sel = document.getElementById('pieFormEmploye');
   sel.innerHTML = employes.map(e => `<option value="${e.id}">${escHtml(e.prenom + ' ' + e.nom)}</option>`).join('');
-  document.getElementById('pieFormPeriode').value = new Date().toISOString().slice(0, 7);
+  document.getElementById('pieFormPeriode').value = today().slice(0, 7);
   document.getElementById('pieFormFile').value = '';
+  ['pieBrut','piePrimes','pieHeuresSup','pieRetenues'].forEach(id => document.getElementById(id).value = '');
+  pieUpdateNet();
   openModal('modalFichePaie');
+}
+
+function pieUpdateNet() {
+  const brut   = Number(document.getElementById('pieBrut').value) || 0;
+  const primes = Number(document.getElementById('piePrimes').value) || 0;
+  const hs     = Number(document.getElementById('pieHeuresSup').value) || 0;
+  const ret    = Number(document.getElementById('pieRetenues').value) || 0;
+  const el = document.getElementById('pieNetLive');
+  if (!brut && !primes && !hs && !ret) { el.innerHTML = '<span style="color:var(--muted);font-size:.82rem">Net = Brut + Primes + Heures sup − Retenues</span>'; return; }
+  const net = brut + primes + hs - ret;
+  el.innerHTML = `<span style="font-size:1.3rem;font-weight:800;color:#16a34a">${net.toFixed(2)} €</span><span style="color:var(--muted);font-size:.78rem"> net</span>`;
 }
 
 async function saveFichePaie() {
@@ -59,14 +72,22 @@ async function saveFichePaie() {
   const file = fileInput.files[0];
   if (!employeId || !emp) { toast('Employé requis', 'error'); return; }
   if (!periode) { toast('Période requise', 'error'); return; }
-  if (!file) { toast('Fichier requis', 'error'); return; }
-  if (file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); return; }
-  const data = await fileToBase64(file);
+  if (file && file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); return; }
+
+  const brut   = Number(document.getElementById('pieBrut').value) || 0;
+  const primes = Number(document.getElementById('piePrimes').value) || 0;
+  const heuresSup = Number(document.getElementById('pieHeuresSup').value) || 0;
+  const retenues  = Number(document.getElementById('pieRetenues').value) || 0;
+  const net = (brut || primes || heuresSup || retenues) ? (brut + primes + heuresSup - retenues) : 0;
+
+  const data = file ? await fileToBase64(file) : null;
   const list = getFichesPaie();
   const session = Auth.getSession();
   list.push({
     id: genId(), employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
-    periode, fichier: { name: file.name, mimeType: file.type, size: file.size, data },
+    periode,
+    brut, primes, heuresSup, retenues, net,
+    fichier: file ? { name: file.name, mimeType: file.type, size: file.size, data } : null,
     dateAjout: new Date().toISOString(),
     ajoutePar: session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : ''
   });
@@ -88,7 +109,7 @@ function supprimerFichePaie(id) {
 
 function voirFichePaie(id) {
   const f = getFichesPaie().find(x => x.id === id);
-  if (!f) return;
+  if (!f || !f.fichier) return;
   const a = document.createElement('a');
   a.href = f.fichier.data;
   a.download = f.fichier.name;
@@ -106,16 +127,52 @@ function paieItemHtml(f, isAdmin) {
       <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
         <span style="font-weight:600;font-size:.85rem">${paieFmtPeriode(f.periode)}</span>
         ${isAdmin ? `<span style="font-size:.7rem;color:var(--g400)">${escHtml(f.employeNom)}</span>` : ''}
+        ${f.net ? `<span style="padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:#16a34a18;color:#16a34a">${f.net.toFixed(2)} € net</span>` : ''}
       </div>
       <div style="font-size:.74rem;color:var(--muted);margin-top:.2rem">
-        ${escHtml(f.fichier.name)} · ${paieFmtSize(f.fichier.size)} · Ajouté le ${new Date(f.dateAjout).toLocaleDateString('fr-FR')}${f.ajoutePar ? ' par ' + escHtml(f.ajoutePar) : ''}
+        ${f.fichier ? escHtml(f.fichier.name) + ' · ' + paieFmtSize(f.fichier.size) + ' · ' : ''}Ajouté le ${new Date(f.dateAjout).toLocaleDateString('fr-FR')}${f.ajoutePar ? ' par ' + escHtml(f.ajoutePar) : ''}
       </div>
     </div>
     <div style="display:flex;gap:.25rem;flex-shrink:0">
-      <button class="btn btn-outline btn-sm" onclick="voirFichePaie('${f.id}')">⬇ Télécharger</button>
+      ${f.fichier ? `<button class="btn btn-outline btn-sm" onclick="voirFichePaie('${f.id}')">⬇ Télécharger</button>` : ''}
       ${isAdmin ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="supprimerFichePaie('${f.id}')">✕</button>` : ''}
     </div>
   </div>`;
+}
+
+function renderRecapAnnuel(list, isAdmin) {
+  const card = document.getElementById('pieRecapCard');
+  if (!card) return;
+  if (!isAdmin) { card.style.display = 'none'; return; }
+  const withSalaire = list.filter(f => f.net > 0);
+  if (!withSalaire.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const byEmp = {};
+  withSalaire.forEach(f => {
+    const k = f.employeId;
+    if (!byEmp[k]) byEmp[k] = { nom: f.employeNom, brut:0, net:0, primes:0, heuresSup:0, count:0 };
+    byEmp[k].brut += f.brut||0; byEmp[k].net += f.net||0; byEmp[k].primes += f.primes||0; byEmp[k].heuresSup += f.heuresSup||0; byEmp[k].count++;
+  });
+
+  document.getElementById('pieRecapBody').innerHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.8rem">
+    <thead><tr style="border-bottom:2px solid var(--border)">
+      <th style="text-align:left;padding:.4rem .5rem">Employé</th>
+      <th style="text-align:right;padding:.4rem .5rem">Bulletins</th>
+      <th style="text-align:right;padding:.4rem .5rem">Total brut</th>
+      <th style="text-align:right;padding:.4rem .5rem">Primes</th>
+      <th style="text-align:right;padding:.4rem .5rem">Heures sup</th>
+      <th style="text-align:right;padding:.4rem .5rem">Total net</th>
+    </tr></thead>
+    <tbody>${Object.values(byEmp).map(e => `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:.4rem .5rem;font-weight:600">${escHtml(e.nom)}</td>
+      <td style="text-align:right;padding:.4rem .5rem">${e.count}</td>
+      <td style="text-align:right;padding:.4rem .5rem">${e.brut.toFixed(2)} €</td>
+      <td style="text-align:right;padding:.4rem .5rem">${e.primes.toFixed(2)} €</td>
+      <td style="text-align:right;padding:.4rem .5rem">${e.heuresSup.toFixed(2)} €</td>
+      <td style="text-align:right;padding:.4rem .5rem;font-weight:700;color:#16a34a">${e.net.toFixed(2)} €</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
 }
 
 function renderPaie() {
@@ -145,10 +202,15 @@ function renderPaie() {
   const filtreEmploye = isAdmin ? (document.getElementById('pieFiltreEmploye')?.value || '') : '';
   const filtreAnnee = document.getElementById('pieFiltreAnnee')?.value || '';
 
+  const session = Auth.getSession();
   let filtered = list;
-  if (!isAdmin) filtered = filtered.filter(f => f.employeId === cu.employeId);
+  if (!isAdmin) filtered = filtered.filter(f =>
+    f.employeId === cu.employeId || f.employeId === String(session?.userId)
+  );
   if (filtreEmploye) filtered = filtered.filter(f => f.employeId === filtreEmploye);
   if (filtreAnnee) filtered = filtered.filter(f => (f.periode || '').slice(0, 4) === filtreAnnee);
+
+  renderRecapAnnuel(filtered, isAdmin);
 
   const el = document.getElementById('pieList');
   if (!filtered.length) {
