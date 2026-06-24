@@ -80,11 +80,17 @@
         </div>
       </div>
       <div class="form-group"><label>Évaluateur</label><input type="text" id="etFormEvaluateur" class="form-input" placeholder="Nom du responsable"/></div>
+
+      <div class="section-label" style="margin-top:.25rem">Grille de compétences</div>
+      <div id="etGrilleLive" style="padding:.5rem .75rem;background:#f8fafc;border-radius:8px;border:1px solid var(--border);text-align:center;font-size:.85rem;margin-bottom:.25rem">Notez chaque item ci-dessous…</div>
+      <div id="etGrilleBody"></div>
+
       <div class="form-group"><label>Bilan</label><textarea id="etFormBilan" class="form-input" rows="3" placeholder="Bilan de la période écoulée…"></textarea></div>
       <div class="form-group"><label>Objectifs fixés</label><textarea id="etFormObjectifs" class="form-input" rows="3" placeholder="Objectifs pour la période à venir…"></textarea></div>
       <div class="form-group"><label>Besoins en formation</label><textarea id="etFormFormations" class="form-input" rows="2" placeholder="Formations souhaitées ou prévues…"></textarea></div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-ghost" id="etExportBtn" style="margin-right:auto;display:none" onclick="exportEntretienPdf(document.getElementById('modalEntretien').dataset.editId)">🖨 Export PDF</button>
       <button class="btn btn-ghost" onclick="closeModal('modalEntretien')">Annuler</button>
       <button class="btn btn-primary" onclick="saveEntretien()">💾 Enregistrer</button>
     </div>

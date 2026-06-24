@@ -1,4 +1,9 @@
-const BUDGET_STATUT_STYLES = { en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' }, accepte: { bg:'#16a34a18', c:'#16a34a', l:'Accepté' }, refuse: { bg:'#ef444418', c:'#ef4444', l:'Refusé' } };
+const BUDGET_STATUT_STYLES = {
+  en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' },
+  accepte:    { bg:'#0891b218', c:'#0891b2', l:'Accepté · justificatif attendu' },
+  justifie:   { bg:'#16a34a18', c:'#16a34a', l:'Justifié' },
+  refuse:     { bg:'#ef444418', c:'#ef4444', l:'Refusé' }
+};
 
 function getBudgetEnveloppes() { return DB.get(DB.keys.budgetEnveloppes) || []; }
 function setBudgetEnveloppes(d) { DB.set(DB.keys.budgetEnveloppes, d); }
@@ -32,7 +37,7 @@ function budgetCurrentUser() {
 }
 
 function budgetEnveloppeUtilise(enveloppeId) {
-  return getBudgetDemandes().filter(d => d.enveloppeId === enveloppeId && d.statut === 'accepte')
+  return getBudgetDemandes().filter(d => d.enveloppeId === enveloppeId && (d.statut === 'accepte' || d.statut === 'justifie'))
     .reduce((s, d) => s + (Number(d.montant) || 0), 0);
 }
 
@@ -53,7 +58,7 @@ function openEnveloppeModal(id) {
   const env = id ? enveloppes.find(e => e.id === id) : null;
   const html = `<div class="modal-overlay" id="modalBudgetEnv" style="display:flex" onclick="closeModal('modalBudgetEnv')">
     <div class="modal" style="max-width:440px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">${env ? '✎ Modifier l’enveloppe' : '📁 Demande de budget'}</span><button class="modal-close" onclick="closeModal('modalBudgetEnv')">&times;</button></div>
+      <div class="modal-header"><span class="modal-title">${env ? '✎ Modifier l’enveloppe' : '📁 Nouvelle enveloppe budgétaire'}</span><button class="modal-close" onclick="closeModal('modalBudgetEnv')">&times;</button></div>
       <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
         <div class="form-group"><label>Nom *</label><input type="text" id="benvNom" class="form-input" value="${env ? escHtml(env.nom) : ''}" placeholder="Ex: Activités éducatives"/></div>
         <div class="form-group"><label>Montant alloué (€) *</label><input type="number" id="benvMontant" class="form-input" min="0" step="0.01" value="${env ? env.montant : ''}"/></div>
@@ -106,6 +111,14 @@ function deleteEnveloppe(id) {
   renderBudget();
 }
 
+const BUDGET_ENV_THEMES = [
+  { icon: '🎓', c1: '#7c3aed', c2: '#c4b5fd', track: '#ede9fe', bg: '#ede9fe' },
+  { icon: '🧩', c1: '#ef4444', c2: '#fca5a5', track: '#fee2e2', bg: '#fee2e2' },
+  { icon: '🚗', c1: '#f59e0b', c2: '#fde68a', track: '#fef3c7', bg: '#fef3c7' },
+  { icon: '🔧', c1: '#3b82f6', c2: '#bfdbfe', track: '#dbeafe', bg: '#dbeafe' },
+  { icon: '🌴', c1: '#16a34a', c2: '#86efac', track: '#dcfce7', bg: '#dcfce7' }
+];
+
 function renderEnveloppes() {
   const list = getBudgetEnveloppes();
   const el = document.getElementById('bgEnveloppesList');
@@ -114,72 +127,147 @@ function renderEnveloppes() {
     el.innerHTML = '<div class="empty" style="padding:1.5rem;text-align:center"><p>Aucune enveloppe budgétaire définie.</p></div>';
     return;
   }
-  el.innerHTML = list.map(env => {
+  const demandes = getBudgetDemandes();
+  const isAdmin = Auth.isAdmin();
+  el.innerHTML = list.map((env, i) => {
     const utilise = budgetEnveloppeUtilise(env.id);
     const total = Number(env.montant) || 0;
     const pct = total > 0 ? Math.min(100, Math.round(utilise / total * 100)) : 0;
     const over = utilise > total;
-    return `<div style="padding:.75rem 1rem;background:#fff;border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
-        <div>
-          <div style="font-weight:600;font-size:.85rem">${escHtml(env.nom)}</div>
-          ${env.description ? `<div style="font-size:.72rem;color:var(--muted)">${escHtml(env.description)}</div>` : ''}
+    const theme = BUDGET_ENV_THEMES[i % BUDGET_ENV_THEMES.length];
+    const c1 = over ? '#dc2626' : theme.c1;
+    const c2 = over ? '#fca5a5' : theme.c2;
+    const liees = demandes.filter(d => d.enveloppeId === env.id && (d.statut === 'accepte' || d.statut === 'en_attente'));
+    const lieesHtml = liees.length
+      ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:var(--g50);border-radius:8px;padding:.5rem .75rem">
+          <span style="font-size:.8rem;color:var(--text)">⏳ ${liees.length} demande${liees.length>1?'s':''} en attente de ticket ou de remboursement</span>
+          <button class="btn btn-outline btn-sm" style="font-size:.72rem;padding:2px 10px;flex-shrink:0" onclick="voirDemandesEnveloppe('${env.id}')">Voir</button>
+        </div>`
+      : `<div style="font-size:.74rem;color:var(--muted)">Aucune demande en attente de ticket ou de remboursement.</div>`;
+    return `<div style="width:100%;box-sizing:border-box;background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;box-shadow:0 2px 10px rgba(15,43,74,.06);border-top:3px solid ${c1}">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="width:52px;height:52px;border-radius:14px;background:${theme.bg};display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">${theme.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.92rem;color:var(--text)">${escHtml(env.nom)}</div>
+          ${env.description ? `<div style="font-size:.76rem;color:var(--muted);margin-bottom:.5rem">${escHtml(env.description)}</div>` : ''}
+          <div style="height:8px;border-radius:99px;background:${theme.track};overflow:hidden">
+            <div style="height:100%;border-radius:99px;width:${pct}%;min-width:${pct>0?'6px':'0'};background:linear-gradient(90deg,${c1},${c2});transition:width 1s ease"></div>
+          </div>
+          <div style="font-size:.78rem;color:${c1};font-weight:600;margin-top:.4rem">${budgetFmtMontant(utilise)} dépensés (${pct}%)</div>
         </div>
-        <div class="admin-only" style="display:flex;gap:.25rem;flex-shrink:0">
-          <button class="btn btn-ghost btn-sm" onclick="openEnveloppeModal('${env.id}')" title="Modifier">✎</button>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-weight:700;font-size:1rem;color:var(--text)">${budgetFmtMontant(Math.max(0, total - utilise))}</div>
+          <div style="font-size:.76rem;color:var(--muted);white-space:nowrap">restants sur ${budgetFmtMontant(total)}</div>
         </div>
+        <button class="admin-only btn btn-ghost btn-sm" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0" onclick="openEnveloppeModal('${env.id}')" title="Modifier">›</button>
       </div>
-      <div class="progress-bar" style="margin-top:.5rem"><div class="progress-fill" style="width:${pct}%;background:${over ? '#ef4444' : '#16a34a'}"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:.25rem">
-        <span>${budgetFmtMontant(utilise)} dépensés (${pct}%)</span>
-        <span>${budgetFmtMontant(Math.max(0, total - utilise))} restants sur ${budgetFmtMontant(total)}</span>
-      </div>
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.5rem">${lieesHtml}</div>
     </div>`;
   }).join('');
 }
 
-// ── NOUVELLE DEMANDE ──
-window._pendingBudgetFiles = [];
+function voirDemandesEnveloppe(envId) {
+  const sel = document.getElementById('bgFiltreEnveloppe');
+  if (sel) sel.value = envId;
+  renderBudget();
+  document.getElementById('bgList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
+// ── NOUVELLE DEMANDE ──
 function openNouvelleDemandeBudget() {
-  window._pendingBudgetFiles = [];
   document.getElementById('bgFormMontant').value = '';
   document.getElementById('bgFormDate').value = today();
   document.getElementById('bgFormMotif').value = '';
-  document.getElementById('bgFormFileInput').value = '';
-  renderBudgetPendingFiles();
+  document.getElementById('bgMotifCount').textContent = '0';
+  document.getElementById('bgFormPartage50').checked = false;
+  document.getElementById('bgFormProjetInput').value = '';
+  window._pendingProjetFiles = [];
+  renderBudgetProjetFiles();
   const sel = document.getElementById('bgFormEnveloppe');
   const enveloppes = getBudgetEnveloppes();
-  sel.innerHTML = '<option value="">— Aucune enveloppe —</option>' + enveloppes.map(e => `<option value="${e.id}">${escHtml(e.nom)}</option>`).join('');
+  sel.innerHTML = '<option value="">Sélectionner une enveloppe</option>' + enveloppes.map(e => `<option value="${e.id}">${escHtml(e.nom)}</option>`).join('');
+  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+    .sort((a,b) => `${a.nom||''}`.localeCompare(`${b.nom||''}`,'fr'));
+  const resBox = document.getElementById('bgFormResidents');
+  if (resBox) resBox.innerHTML = residents.map(r => `
+    <label class="bg-res-chip" style="display:inline-flex;align-items:center;font-size:.78rem;font-weight:600;padding:.35rem .7rem;border:1px solid var(--border);border-radius:99px;cursor:pointer;transition:.15s">
+      <input type="checkbox" class="bg-res-check" value="${r.id}" style="display:none" onchange="updateBgResidentChipStyle(this);updateBgPrixParPersonne()"/>
+      ${escHtml((r.prenom||'')+' '+(r.nom||''))}
+    </label>`).join('') || '<span style="font-size:.78rem;color:var(--muted)">Aucun résident actif.</span>';
+  updateBgPrixParPersonne();
   openModal('modalBudgetDemande');
 }
 
-async function handleBudgetFileSelect(e) {
-  const files = Array.from(e.target.files || []);
-  for (const f of files) {
-    if (f.size > 3 * 1024 * 1024) { toast(`${f.name} trop lourd (max 3 Mo)`, 'error'); continue; }
-    try {
-      const data = await fileToBase64(f);
-      window._pendingBudgetFiles.push({ id: genId(), name: f.name, mimeType: f.type, size: f.size, data });
-    } catch { toast('Erreur de lecture : ' + f.name, 'error'); }
+function updateBgResidentChipStyle(checkbox) {
+  const chip = checkbox.closest('.bg-res-chip');
+  if (!chip) return;
+  if (checkbox.checked) {
+    chip.style.borderColor = '#4338ca';
+    chip.style.background = '#eef2ff';
+    chip.style.color = '#4338ca';
+  } else {
+    chip.style.borderColor = 'var(--border)';
+    chip.style.background = '';
+    chip.style.color = '';
   }
+}
+
+function handleBudgetProjetSelect(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  window._pendingProjetFiles = window._pendingProjetFiles || [];
+  Promise.all(files.map(f => fileToBase64(f).then(data => ({ id: genId(), nom: f.name, data })))).then(items => {
+    window._pendingProjetFiles.push(...items);
+    renderBudgetProjetFiles();
+  });
   e.target.value = '';
-  renderBudgetPendingFiles();
 }
 
-function removeBudgetPendingFile(id) {
-  window._pendingBudgetFiles = window._pendingBudgetFiles.filter(f => f.id !== id);
-  renderBudgetPendingFiles();
+function removeBudgetProjetFile(id) {
+  window._pendingProjetFiles = (window._pendingProjetFiles || []).filter(f => f.id !== id);
+  renderBudgetProjetFiles();
 }
 
-function renderBudgetPendingFiles() {
-  const el = document.getElementById('bgFormFiles');
-  if (!el) return;
-  if (!window._pendingBudgetFiles.length) { el.innerHTML = ''; return; }
-  el.innerHTML = window._pendingBudgetFiles.map(f => `<div style="display:flex;align-items:center;gap:.4rem;font-size:.76rem;padding:.25rem .5rem;background:var(--g50);border-radius:6px;margin-bottom:4px">
-    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📎 ${escHtml(f.name)} <span style="color:var(--muted)">(${budgetFmtSize(f.size)})</span></span>
-    <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:0 6px" onclick="removeBudgetPendingFile('${f.id}')">✕</button>
-  </div>`).join('');
+function renderBudgetProjetFiles() {
+  const box = document.getElementById('bgFormProjetFiles');
+  if (!box) return;
+  const files = window._pendingProjetFiles || [];
+  box.innerHTML = files.map(f => `
+    <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem;background:var(--g50);border-radius:8px;padding:.4rem .6rem;margin-bottom:.3rem">
+      <span>📄</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(f.nom)}</span>
+      <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 6px" onclick="removeBudgetProjetFile('${f.id}')">✕</button>
+    </div>`).join('');
+}
+
+function updateBgPrixParPersonne() {
+  const el = document.getElementById('bgPrixParPersonne');
+  const montant = parseFloat(document.getElementById('bgFormMontant').value) || 0;
+  const checked = Array.from(document.querySelectorAll('#bgFormResidents .bg-res-check:checked'));
+  const nb = checked.length;
+  if (el) {
+    if (nb > 0 && montant > 0) {
+      el.style.display = 'flex';
+      el.querySelector('strong').textContent = budgetFmtMontant(montant / nb) + ` (${nb} résident${nb>1?'s':''})`;
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  const partageEl = document.getElementById('bgPartageDetail');
+  const partage50 = document.getElementById('bgFormPartage50')?.checked;
+  if (!partageEl) return;
+  if (partage50 && montant > 0) {
+    const partFoyer = montant * 0.5;
+    const partResident = montant * 0.5;
+    const parPersonne = nb > 0 ? partResident / nb : partResident;
+    partageEl.style.display = '';
+    partageEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-weight:600"><span>🏠 Part foyer (50%)</span><span>${budgetFmtMontant(partFoyer)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-weight:600;color:#b45309;margin-top:.25rem"><span>👤 Part résident(s) (50%)</span><span>${budgetFmtMontant(partResident)}</span></div>
+      ${nb > 0 ? `<div style="font-size:.74rem;color:var(--muted);margin-top:.25rem">Soit ${budgetFmtMontant(parPersonne)} à rembourser par résident (${nb})</div>` : `<div style="font-size:.74rem;color:var(--red);margin-top:.25rem">⚠️ Sélectionnez au moins un résident pour répartir sa part.</div>`}`;
+  } else {
+    partageEl.style.display = 'none';
+  }
 }
 
 function saveBudgetDemande() {
@@ -188,22 +276,38 @@ function saveBudgetDemande() {
   const montant = parseFloat(document.getElementById('bgFormMontant').value);
   const dateDepense = document.getElementById('bgFormDate').value;
   const motif = document.getElementById('bgFormMotif').value.trim();
+  if (!enveloppeId) { toast('Enveloppe requise', 'error'); return; }
   if (!montant || montant <= 0) { toast('Montant invalide', 'error'); return; }
   if (!dateDepense) { toast('Date de la dépense requise', 'error'); return; }
   if (!motif) { toast('Motif requis', 'error'); return; }
   const cu = budgetCurrentUser();
+  const residents = DB.get(DB.keys.residents) || [];
+  const checked = document.querySelectorAll('#bgFormResidents .bg-res-check:checked');
+  const residentIds = Array.from(checked).map(c => c.value);
+  const residentNoms = residentIds.map(id => { const r = residents.find(x => String(x.id) === String(id)); return r ? `${r.prenom||''} ${r.nom||''}`.trim() : ''; }).filter(Boolean);
+  const partage50 = document.getElementById('bgFormPartage50').checked;
+  let remboursements = [];
+  if (partage50 && residentIds.length) {
+    const partParPersonne = (montant * 0.5) / residentIds.length;
+    remboursements = residentIds.map((id, i) => ({ residentId: id, residentNom: residentNoms[i] || '', montantDu: partParPersonne, paye: false, datePaiement: null }));
+  }
+  const projetDocuments = (window._pendingProjetFiles || []).map(f => ({ nom: f.nom, data: f.data }));
   const list = getBudgetDemandes();
   list.push({
     id: genId(), employeId: cu.employeId, employeNom: cu.employeNom,
     enveloppeId: env ? env.id : '', enveloppeNom: env ? env.nom : '',
     montant, motif, dateDepense,
-    justificatifs: window._pendingBudgetFiles,
+    residentIds, residentNoms,
+    partage50, partFoyer: partage50 ? montant * 0.5 : 0, partResident: partage50 ? montant * 0.5 : 0,
+    remboursements,
+    projetDocuments,
+    justificatifs: [],
     statut: 'en_attente', dateDemande: new Date().toISOString()
   });
   setBudgetDemandes(list);
   if (typeof auditLog === 'function') auditLog('budget_demande', `Nouvelle demande — ${cu.employeNom} — ${budgetFmtMontant(montant)}`);
   toast('Demande de remboursement envoyée ✓', 'success');
-  window._pendingBudgetFiles = [];
+  window._pendingProjetFiles = [];
   closeModal('modalBudgetDemande');
   renderBudget();
 }
@@ -238,7 +342,86 @@ function supprimerBudgetDemande(id) {
   renderBudget();
 }
 
+// ── REMBOURSEMENT RÉSIDENT (partage 50/50) ──
+// Une demande en partage 50/50 ne peut être clôturée que si TOUS les résidents
+// concernés ont remboursé leur part ET qu'un ticket/justificatif a été fourni.
+function budgetEstPretACloturer(d) {
+  const hasJustif = (d.justificatifs || []).length > 0;
+  const tousRembourses = !d.partage50 || (Array.isArray(d.remboursements) && d.remboursements.length > 0 && d.remboursements.every(r => r.paye));
+  return hasJustif && tousRembourses;
+}
+
+function syncRemboursementResidentBudget(d, r) {
+  const residents = DB.get(DB.keys.residents) || [];
+  const resident = residents.find(x => String(x.id) === String(r.residentId));
+  if (!resident) return;
+  resident.budget = resident.budget || { operations: [] };
+  resident.budget.operations = resident.budget.operations || [];
+  const opId = 'bgremb-' + d.id + '-' + r.residentId;
+  resident.budget.operations = resident.budget.operations.filter(o => o.id !== opId);
+  if (r.paye) {
+    resident.budget.operations.push({
+      id: opId, type: 'depense', montant: r.montantDu, date: r.datePaiement || today(),
+      categorie: 'Activité éducative', libelle: 'Remboursement — ' + (d.enveloppeNom || d.motif || 'activité éducative'),
+      notes: d.motif || ''
+    });
+  }
+  DB.set(DB.keys.residents, residents);
+}
+
+function marquerRemboursementResident(demandeId, residentId) {
+  const list = getBudgetDemandes();
+  const d = list.find(x => x.id === demandeId);
+  if (!d || !Array.isArray(d.remboursements)) return;
+  const r = d.remboursements.find(x => String(x.residentId) === String(residentId));
+  if (!r) return;
+  r.paye = !r.paye;
+  r.datePaiement = r.paye ? today() : null;
+  syncRemboursementResidentBudget(d, r);
+  if (budgetEstPretACloturer(d) && d.statut === 'accepte') {
+    d.statut = 'justifie';
+    d.dateJustifie = new Date().toISOString();
+    toast('Remboursements complets et ticket fourni — demande clôturée ✓', 'success');
+  } else if (!budgetEstPretACloturer(d) && d.statut === 'justifie') {
+    // Un remboursement a été décoché après clôture : on rouvre la demande
+    d.statut = 'accepte';
+    toast('Remboursement annulé — demande réouverte', 'info');
+  } else {
+    toast(r.paye ? 'Remboursement enregistré' : 'Remboursement annulé', 'info');
+  }
+  setBudgetDemandes(list);
+  renderBudget();
+}
+
 // ── JUSTIFICATIFS ──
+function ajouterJustificatifDemande(demandeId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,.pdf';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); return; }
+    let data;
+    try { data = await fileToBase64(file); } catch { toast('Erreur de lecture du fichier', 'error'); return; }
+    const list = getBudgetDemandes();
+    const d = list.find(x => x.id === demandeId);
+    if (!d) return;
+    d.justificatifs = [...(d.justificatifs || []), { id: genId(), name: file.name, mimeType: file.type, size: file.size, data }];
+    if (budgetEstPretACloturer(d)) {
+      d.statut = 'justifie';
+      d.dateJustifie = new Date().toISOString();
+      toast('Justificatif ajouté ✓ Demande clôturée', 'success');
+    } else {
+      toast('Justificatif ajouté — en attente du remboursement complet des résidents pour clôturer', 'info');
+    }
+    setBudgetDemandes(list);
+    if (typeof auditLog === 'function') auditLog('budget_justificatif', `${d.employeNom} — ${budgetFmtMontant(d.montant)}`);
+    renderBudget();
+  };
+  input.click();
+}
+
 function voirJustificatif(demandeId, idx) {
   const d = getBudgetDemandes().find(x => x.id === demandeId);
   const j = d?.justificatifs?.[idx];
@@ -256,9 +439,32 @@ function voirJustificatif(demandeId, idx) {
 // ── AFFICHAGE D'UNE DEMANDE ──
 function budgetItemHtml(d, isAdmin) {
   const st = BUDGET_STATUT_STYLES[d.statut] || BUDGET_STATUT_STYLES.en_attente;
+  const cu = budgetCurrentUser();
   const canRepondre = isAdmin && d.statut === 'en_attente';
+  const isOwner = String(d.employeId) === String(cu.employeId);
+  const canAddJustif = d.statut === 'accepte' && (isOwner || isAdmin);
   const justifs = (d.justificatifs || []).map((j, i) => `<button class="btn btn-outline btn-sm" style="font-size:.7rem;padding:1px 8px" onclick="voirJustificatif('${d.id}',${i})">📎 ${escHtml(j.name)}</button>`).join(' ');
-  return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)">
+  const remboursements = d.partage50 ? (d.remboursements || []) : [];
+  const tousRembourses = remboursements.length > 0 && remboursements.every(r => r.paye);
+  const hasJustif = (d.justificatifs || []).length > 0;
+  const closingBlockers = [];
+  if (d.partage50 && !tousRembourses) closingBlockers.push('le remboursement complet des résidents');
+  if (!hasJustif) closingBlockers.push('le ticket/justificatif');
+  const partageHtml = d.partage50 ? `
+    <div style="margin-top:.4rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:.5rem .65rem">
+      <div style="display:flex;justify-content:space-between;font-size:.74rem;font-weight:700;color:#b45309;margin-bottom:.35rem">
+        <span>🏠 Partage 50/50</span>
+        <span>Foyer ${budgetFmtMontant(d.partFoyer)} · Résidents ${budgetFmtMontant(d.partResident)}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:.25rem">
+        ${remboursements.map(r => `<label title="${r.paye && r.datePaiement ? 'Remboursé le ' + escHtml(formatDate(r.datePaiement)) : ''}" style="display:inline-flex;align-items:center;gap:.22rem;font-size:.64rem;padding:.12rem .4rem;border-radius:99px;background:${r.paye?'#dcfce7':'#fff'};border:1px solid ${r.paye?'#86efac':'#fed7aa'};cursor:${isAdmin?'pointer':'default'}">
+          <input type="checkbox" ${r.paye?'checked':''} ${isAdmin?'':'disabled'} onchange="marquerRemboursementResident('${d.id}','${r.residentId}')" style="width:10px;height:10px;flex-shrink:0"/>
+          <span style="${r.paye?'text-decoration:line-through;color:var(--muted)':''}">${escHtml(r.residentNom)} — ${budgetFmtMontant(r.montantDu)}</span>
+        </label>`).join('')}
+      </div>
+      ${!isAdmin ? `<div style="font-size:.68rem;color:var(--muted);margin-top:.2rem">Seul un admin peut confirmer la réception du remboursement.</div>` : ''}
+    </div>` : '';
+  return `<div style="width:100%;box-sizing:border-box;display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)">
     <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">💶</span>
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
@@ -271,6 +477,9 @@ function budgetItemHtml(d, isAdmin) {
         Dépense du ${formatDate(d.dateDepense)} · Demandé le ${new Date(d.dateDemande).toLocaleDateString('fr-FR')}
       </div>
       ${d.motif ? `<div style="font-size:.75rem;color:var(--g600);margin-top:.25rem">${escHtml(d.motif)}</div>` : ''}
+      ${(d.residentNoms||[]).length && !d.partage50 ? `<div style="margin-top:.3rem;display:flex;gap:.3rem;flex-wrap:wrap">${d.residentNoms.map(n => `<span style="font-size:.68rem;font-weight:600;padding:1px 8px;border-radius:99px;background:#eef2ff;color:#4338ca">🧑 ${escHtml(n)}</span>`).join('')}</div>` : ''}
+      ${partageHtml}
+      ${canAddJustif && closingBlockers.length ? `<div class="ctdoc-alert" style="background:#dbeafe;border:1px solid #93c5fd;color:#1d4ed8;font-size:.74rem;padding:.4rem .6rem;border-radius:6px;margin-top:.4rem">⏳ En attente de ${closingBlockers.join(' et de ')} pour clôturer.</div>` : ''}
       ${justifs ? `<div style="margin-top:.4rem;display:flex;gap:.35rem;flex-wrap:wrap">${justifs}</div>` : ''}
       ${d.statut === 'refuse' && d.reponseMotif ? `<div style="font-size:.73rem;color:var(--red);margin-top:.15rem">Motif du refus : ${escHtml(d.reponseMotif)}</div>` : ''}
       ${d.traitePar ? `<div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Traité par ${escHtml(d.traitePar)}</div>` : ''}
@@ -278,6 +487,7 @@ function budgetItemHtml(d, isAdmin) {
     <div style="display:flex;gap:.25rem;flex-shrink:0">
       ${canRepondre ? `<button class="btn btn-ghost btn-sm" style="color:#16a34a;font-size:.72rem;padding:2px 10px" onclick="repondreBudgetDemande('${d.id}','accepte')">✅ Accepter</button>
       <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:.72rem;padding:2px 10px" onclick="repondreBudgetDemande('${d.id}','refuse')">❌ Refuser</button>` : ''}
+      ${canAddJustif ? `<button class="btn btn-primary btn-sm" style="font-size:.72rem;padding:2px 10px" onclick="ajouterJustificatifDemande('${d.id}')">📎 Ajouter le ticket</button>` : ''}
       ${isAdmin ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="supprimerBudgetDemande('${d.id}')">✕</button>` : ''}
     </div>
   </div>`;
@@ -321,13 +531,15 @@ function renderBudget() {
   const statsSource = isAdmin ? list : list.filter(d => d.employeId === cu.employeId);
   const enAttente = statsSource.filter(d => d.statut === 'en_attente');
   const acceptes = statsSource.filter(d => d.statut === 'accepte');
+  const justifiees = statsSource.filter(d => d.statut === 'justifie');
   const refuses = statsSource.filter(d => d.statut === 'refuse');
-  const totalAccepte = acceptes.reduce((s, d) => s + (Number(d.montant) || 0), 0);
+  const totalEngage = [...acceptes, ...justifiees].reduce((s, d) => s + (Number(d.montant) || 0), 0);
 
   document.getElementById('bgStatEnAttente').textContent = enAttente.length;
   document.getElementById('bgStatAcceptes').textContent = acceptes.length;
+  document.getElementById('bgStatJustifiees').textContent = justifiees.length;
   document.getElementById('bgStatRefuses').textContent = refuses.length;
-  document.getElementById('bgStatTotal').textContent = budgetFmtMontant(totalAccepte);
+  document.getElementById('bgStatTotal').textContent = budgetFmtMontant(totalEngage);
 
   const pendingCard = document.getElementById('bgPendingCard');
   if (pendingCard) {
@@ -339,6 +551,19 @@ function renderBudget() {
         .map(d => budgetItemHtml(d, isAdmin)).join('');
     } else {
       pendingCard.style.display = 'none';
+    }
+  }
+
+  const justifCard = document.getElementById('bgJustifCard');
+  if (justifCard) {
+    const mesAttenteJustif = list.filter(d => d.statut === 'accepte' && String(d.employeId) === String(cu.employeId));
+    if (!isAdmin && mesAttenteJustif.length) {
+      justifCard.style.display = '';
+      document.getElementById('bgJustifList').innerHTML = mesAttenteJustif
+        .sort((a, b) => (a.dateTraitement || '').localeCompare(b.dateTraitement || ''))
+        .map(d => budgetItemHtml(d, isAdmin)).join('');
+    } else {
+      justifCard.style.display = 'none';
     }
   }
 

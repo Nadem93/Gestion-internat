@@ -3,19 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Démo — FTR</title>
+<title>Démo — Génération d'usage — FTR</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Inter,sans-serif;background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);background-attachment:fixed;color:#334155;min-height:100vh;padding:2rem;display:flex;flex-direction:column;align-items:center}
-/* Champ d'aurores v4 */
 body::before,body::after{content:'';position:fixed;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(70px)}
 body::before{width:55vw;height:55vw;top:-18vw;right:-12vw;background:radial-gradient(circle at 35% 35%,rgba(6,182,212,.11),rgba(99,102,241,.07) 55%,transparent 75%);animation:aur-a 46s ease-in-out infinite alternate}
 body::after{width:48vw;height:48vw;bottom:-20vw;left:-10vw;background:radial-gradient(circle at 60% 60%,rgba(168,85,247,.08),rgba(6,182,212,.05) 55%,transparent 75%);animation:aur-b 58s ease-in-out infinite alternate}
 @keyframes aur-a{from{transform:translate(0,0)}to{transform:translate(-8vw,6vh) scale(1.12)}}
 @keyframes aur-b{from{transform:translate(0,0)}to{transform:translate(7vw,-5vh) scale(1.1)}}
 .card{background:rgba(255,255,255,.78);backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%);border-radius:20px;padding:2.5rem;max-width:920px;width:100%;box-shadow:0 8px 32px rgba(15,43,74,.1);border:1px solid rgba(255,255,255,.85);margin-bottom:1.5rem;position:relative;overflow:hidden;animation:rise .5s cubic-bezier(.22,1,.36,1) backwards}
-/* Scan-line signature en haut de la carte */
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#06b6d4 20%,#6366f1 50%,#a855f7 80%,transparent);background-size:220% 100%;animation:scan 16s linear infinite}
 @keyframes scan{from{background-position:0% 0}to{background-position:220% 0}}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -27,9 +25,8 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
 .btn:hover::after{left:130%}
 .btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.status{text-align:left;margin-top:1.5rem;font-size:.82rem;color:#475569;background:rgba(248,250,252,.85);border-radius:12px;padding:1.25rem;max-height:360px;overflow-y:auto;line-height:1.8;border:1px solid #e2e8f0}
+.status{text-align:left;margin-top:1.5rem;font-size:.82rem;color:#475569;background:rgba(248,250,252,.85);border-radius:12px;padding:1.25rem;max-height:280px;overflow-y:auto;line-height:1.8;border:1px solid #e2e8f0}
 .status .ok{color:#16a34a;font-weight:600}
-.status .sep{border-top:1px dashed #e2e8f0;margin:.6rem 0}
 .sel-label{font-size:.78rem;font-weight:600;color:#64748b;margin-bottom:.5rem;display:block}
 .etab-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem}
 .etab-chip{display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem .4rem .5rem;background:rgba(248,250,252,.9);border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;font-size:.78rem;font-weight:500}
@@ -38,21 +35,25 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
 .etab-chip input:checked+.etab-dot{box-shadow:0 0 0 2.5px #6366f1}
 .etab-chip:has(input:checked){border-color:#6366f1;background:#eef2ff}
 .etab-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:box-shadow .1s}
-.footer{font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center}
-.config-sect{margin-bottom:1.25rem}
-.config-sect-title{font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:700;color:#0f2b4a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1.5px solid #e2e8f0}
-.config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:.6rem}
+.config-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1.25rem}
 .config-item{background:rgba(248,250,252,.9);border-radius:10px;padding:.5rem .65rem;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:3px;transition:border-color .15s,box-shadow .15s}
 .config-item:focus-within{border-color:#67e8f9;box-shadow:0 0 12px rgba(6,182,212,.15)}
 .config-item label{font-size:.65rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.03em}
 .config-item input[type=number]{border:1px solid #cbd5e1;border-radius:6px;padding:.2rem .4rem;font-size:.82rem;font-weight:600;color:#0f2b4a;width:100%;background:#fff;outline:none;font-family:inherit}
 .config-item input[type=number]:focus{border-color:#06b6d4;box-shadow:0 0 0 2px rgba(6,182,212,.18)}
 .config-item .hint{font-size:.6rem;color:#94a3b8}
-.etab-grid{display:grid;gap:10px;margin:1rem 0}
-.etab-item{background:rgba(248,250,252,.9);border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;border:1px solid #e2e8f0}
-.etab-name{font-weight:600;font-size:.82rem;flex:1;min-width:0}
-.etab-count{font-size:.72rem;color:#64748b}
+.footer{font-size:.75rem;color:#94a3b8;margin-top:1rem;text-align:center}
 @media (prefers-reduced-motion: reduce){body::before,body::after,.card::before{animation:none!important}.card{animation:none!important}}
+
+.chart-wrap{width:100%;overflow-x:auto}
+.chart-wrap svg{display:block}
+.chart-legend{display:flex;gap:1.25rem;justify-content:center;margin-top:.6rem;font-size:.74rem;color:#64748b}
+.chart-legend span{display:inline-flex;align-items:center;gap:.4rem;font-weight:600}
+.chart-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.usage-stats{display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.usage-stat{flex:1;min-width:120px;text-align:center;background:rgba(248,250,252,.9);border:1px solid #e2e8f0;border-radius:12px;padding:.75rem}
+.usage-stat .v{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:1.3rem;color:#0f2b4a}
+.usage-stat .l{font-size:.68rem;color:#64748b;margin-top:2px}
 </style>
 </head>
 <body>
@@ -61,61 +62,41 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
   <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem">
     <div style="width:48px;height:48px;background:linear-gradient(135deg,#06b6d4,#6366f1 55%,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0;font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 14px rgba(99,102,241,.35)">FTR</div>
     <div style="flex:1">
-      <h1>Générateur de données de démonstration</h1>
-      <div class="sub">Configurez les quantités puis générez des données réalistes pour un ou plusieurs établissements</div>
+      <h1>Générateur d'usage</h1>
+      <div class="sub">Génère une activité réaliste sur l'établissement sélectionné : 6 mois dans le passé (connexions, journal, présences, planning réalisé, budget) et 6 mois dans le futur (planning prévisionnel)</div>
     </div>
   </div>
 
-  <div class="config-sect">
-    <div class="config-sect-title">Résidents & Suivi</div>
-    <div class="config-grid">
-      <div class="config-item"><label>Résidents</label><input type="number" id="cfgResidents" value="50" min="1" max="500"><span class="hint">Profils individuels</span></div>
-      <div class="config-item"><label>Journal</label><input type="number" id="cfgJournal" value="200" min="0" max="2000"><span class="hint">Entrées de suivi</span></div>
-      <div class="config-item"><label>Jours présence</label><input type="number" id="cfgPresences" value="365" min="1" max="400"><span class="hint">Historique (1 an pour le rapport)</span></div>
-      <div class="config-item"><label>PPE / Avenants</label><input type="number" id="cfgPpe" value="15" min="0" max="100"><span class="hint">Projets personnalisés</span></div>
-    </div>
+  <div class="config-grid">
+    <div class="config-item"><label>Intensité</label><input type="number" id="cfgIntensite" value="3" min="1" max="10"><span class="hint">Évènements / jour ouvré</span></div>
   </div>
 
-  <div class="config-sect">
-    <div class="config-sect-title">Planning & Logistique</div>
-    <div class="config-grid">
-      <div class="config-item"><label>Événements</label><input type="number" id="cfgPlanning" value="50" min="0" max="500"><span class="hint">RDV / activités / sorties</span></div>
-      <div class="config-item"><label>Véhicules</label><input type="number" id="cfgVehicules" value="4" min="0" max="20"><span class="hint">Parc auto</span></div>
-      <div class="config-item"><label>Réservations</label><input type="number" id="cfgVehRes" value="50" min="0" max="200"><span class="hint">Réservations véhicules</span></div>
-      <div class="config-item"><label>Interventions</label><input type="number" id="cfgInterventions" value="30" min="0" max="200"><span class="hint">Demandes maintenance</span></div>
-    </div>
-  </div>
-
-  <div class="config-sect">
-    <div class="config-sect-title">Incidents & Échanges</div>
-    <div class="config-grid">
-      <div class="config-item"><label>Incidents</label><input type="number" id="cfgIncidents" value="15" min="0" max="100"><span class="hint">Signalements</span></div>
-      <div class="config-item"><label>Messages</label><input type="number" id="cfgMessages" value="20" min="0" max="100"><span class="hint">Conversations</span></div>
-      <div class="config-item"><label>Répertoire</label><input type="number" id="cfgContacts" value="30" min="0" max="100"><span class="hint">Contacts externes</span></div>
-      <div class="config-item"><label>Connexions</label><input type="number" id="cfgLoginHist" value="30" min="0" max="200"><span class="hint">Historique connexions</span></div>
-    </div>
-  </div>
-
-  <div class="config-sect">
-    <div class="config-sect-title">Personnel</div>
-    <div class="config-grid">
-      <div class="config-item"><label>Utilisateurs</label><input type="number" id="cfgUsers" value="28" min="1" max="100"><span class="hint">Comptes (dont admin)</span></div>
-      <div class="config-item"><label>Employés</label><input type="number" id="cfgEmployes" value="50" min="0" max="200"><span class="hint">Fiche personnel</span></div>
-      <div class="config-item"><label>Docs résidents</label><input type="number" id="cfgDocsPerRes" value="3" min="0" max="20"><span class="hint">Par résident</span></div>
-      <div class="config-item"><label>Docs ressources</label><input type="number" id="cfgDocsRsrc" value="3" min="0" max="20"><span class="hint">Documents généraux</span></div>
-    </div>
-  </div>
-
-  <label class="sel-label">Établissements à générer</label>
+  <label class="sel-label">Établissements concernés</label>
   <div class="etab-selector" id="etabSelector"></div>
 
-  <button class="btn" id="genBtn" onclick="generateDemo()">
+  <button class="btn" id="genBtn" onclick="generateUsage()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M4 12a8 8 0 018-8V0L18 6l-6 6V4a8 8 0 000 16 8 8 0 01-8-8z"/><path d="M12 20l6-6v4a8 8 0 01-8 8z"/></svg>
-    Générer les données
+    Générer l'usage (-6 mois / +6 mois)
   </button>
 
-  <div class="status" id="status">Cliquez sur le bouton pour lancer la génération.</div>
+  <div class="status" id="status">Cliquez sur le bouton pour générer l'activité. Nécessite des résidents/utilisateurs déjà créés sur l'établissement.</div>
   <div class="footer">Identifiants : <strong>admin / admin123</strong></div>
+</div>
+
+<div class="card" id="chartCard" style="display:none;animation-delay:.12s">
+  <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem">
+    <div style="width:48px;height:48px;background:linear-gradient(135deg,#0ea5e9,#6366f1 55%,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;flex-shrink:0;box-shadow:0 4px 14px rgba(99,102,241,.35)">📈</div>
+    <div style="flex:1">
+      <h1>Usage sur 1 an</h1>
+      <div class="sub">Volume d'activité par semaine, du plus ancien au plus récent puis vers le prévisionnel</div>
+    </div>
+  </div>
+  <div class="usage-stats" id="usageStats"></div>
+  <div class="chart-wrap" id="usageChart"></div>
+  <div class="chart-legend">
+    <span><i style="background:#6366f1"></i>Activité passée (réelle)</span>
+    <span><i style="background:#06b6d4"></i>Activité future (prévisionnelle)</span>
+  </div>
 </div>
 
 <script src="js/app.js"></script>
@@ -123,74 +104,9 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color
 
 function log(msg) { const s = $('status'); s.innerHTML += msg + '<br>'; s.scrollTop = s.scrollHeight; }
 function $(v) { return document.getElementById(v); }
-
-function ageFromDob(dob) {
-  if (!dob) return 0;
-  return Math.floor((Date.now() - new Date(dob).getTime()) / 31557600000);
-}
-
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function pick(arr) { return arr[rand(0, arr.length - 1)]; }
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-
-function getCfg(k) { return parseInt($('cfg' + k).value) || 0; }
-
-const PRENOMS_M = ['Amine','Thomas','Lucas','Yanis','Hugo','Moussa','Mehdi','Kwame','Ryan','Enzo','Adam','Mathis','Nathan','Sofiane','Lilian','Kylian','Samy','Axel','Noam','Rayane','Eliott','Ibrahim','Ilyes','Wassim','Rayan','Malik','Yacine','Bilal','Nassim','Samir','Kevin','Jordan','Antoine','Alexandre','Romain','Florian','Maxime','Jules','Raphaël','Gabriel','Louis','Arthur','Paul','Nicolas','Clément','Théo','Hugo','Quentin','Bastien','Damien','Rémi'];
-const PRENOMS_F = ['Sofia','Fatima','Clara','Emma','Leila','Sarah','Océane','Inès','Chloé','Nora','Lina','Manon','Zara','Elena','Camille','Selma','Romane','Jade','Assia','Juliette','Louna','Léa','Chloé','Mélissa','Amina','Nour','Sarah','Aïcha','Yasmine','Imane','Sandra','Laura','Marine','Céline','Audrey','Julie','Sophie','Caroline','Valérie','Stéphanie','Justine','Marion','Mathilde','Clémence','Morgane','Émilie','Laurine','Maeva','Elisa','Amélie'];
-const NOMS = ['Benali','Petit','Leroy','Zahra','Moreau','Bernard','Diallo','Garcia','Rousseau','Haddad','Martin','Cohen','Diara','Fabre','Bouaziz','Martinez','Ndiaye','Dubois','Bouchard','Ferrari','Rossi','Traoré','Girard','Da Silva','Fournier','Simon','Mercier','Renard','Fontaine','Lambert','Dupont','Gauthier','Lefevre','Roux','Morel','Garnier','Perrin','Chevallier','Bonnet','Caron','Gauthier','Moulin','Renard','Marchand','Legrand','Rivière','Schneider','Blanc','Weber','Durand'];
-const COULEURS = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#e11d48','#d946ef','#f97316','#14b8a6','#0ea5e9','#84cc16','#dc2626','#a855f7','#ec4899','#7c3aed','#2563eb','#ca8a04','#65a30d','#db2777','#4f46e5','#7e22ce','#059669','#0d9488','#d97706','#b45309','#0284c7','#9333ea','#0891b2','#6366f1'];
-const STATUTS = ['permanent','permanent','permanent','permanent','permanent','permanent','temporaire','temporaire','stage','urgence','urgence'];
-const SITPROS = ['formation','recherche','emploi','inactif','formation','recherche','emploi'];
-const RESSOURCES = ['','rsa','aah','salaire','bourse','rsa','aah','salaire'];
-const ORGANISMES = ['ase','ase','pjj','','ase','pjj','','ase'];
-const REFFERENTS = ['M. Dubois','Mme Martin','M. Dubois','Mme Martin','M. Dubois','Mme Martin'];
-const SITUADMIN = ['francais','francais','francais','francais','demandeur','francais','francais','francais'];
-const ECOLES = ['','Lycée Professionnel Charles de Gaulle','Collège Victor Hugo','École Élémentaire Jules Ferry','Université Paris Cité','GRETA Paris','','CFA Bâtiment Paris','Lycée Hôtelier Guillaume Tirel','Collège Georges Brassens','Lycée Marseille'];
-const CLASSES = ['','1ère Bac Pro MELEC','4ème','CM2','L3 Droit','CAP AEPE','CAP Cuisine','Seconde MELEC','6ème ULIS','SEGPA','CAP Restauration','BTS Commerce International','M1 Psychologie','3ème Prépa Métiers'];
-
-const NOTES = [
-  'Arrivé suite à une rupture familiale brutale. Bonne capacité d adaptation et de résilience.',
-  'A connu une période d errance avant d être orienté vers notre structure par le SIAO.',
-  'Suivi par l ASE depuis 2022. Placement faisant suite à des difficultés familiales persistantes.',
-  'Mère isolée d un enfant en bas âge. Suivie par le CCAS suite à une expulsion locative.',
-  'Présente des troubles du comportement nécessitant un encadrement éducatif renforcé.',
-  'Jeune femme dynamique déterminée. Travaille en contrat de professionnalisation.',
-  'Demandeur d asile. Apprentissage du français intensif en cours. DELF préparé.',
-  'Victime de violences conjugales. Suivi psychologique CIDFF. Procédure de divorce.',
-  'Placement d urgence. Bonne intégration scolaire. Progrès en lecture et écriture.',
-  'Étudiant(e) avec d excellents résultats académiques. Projet professionnel solide.',
-  'Réintégration familiale en cours après placement. Suivi social externalisé maintenu.',
-  'Sortie d hospitalisation psychiatrique. Suivi CMP régulier. Bonne évolution.',
-  'Jeune majeur isolé. Demande de titre de séjour en cours. Motivé par le sport.',
-  'Handicap auditif (appareillé). Communication en LSF. Formation professionnelle en cours.',
-  'Placement judiciaire. Suivi éducatif renforcé pour problèmes de comportement.',
-  'Victime d expulsion locative. Recherche active d emploi. Très organisé(e).',
-  'Placement suite à carences éducatives. Frère/sœur déjà suivi par l ASE.',
-  'Sortie de l aide sociale à l enfance. Formation supérieure. Travaille le week-end.',
-  'Décrochage scolaire. Violence envers les pairs. Suivi psychologique en cours.',
-  'Sortie réussie vers un logement autonome. CDI obtenu. Suivi externalisé maintenu.',
-  'Placement d urgence. Témoin de violences conjugales. Suivi psychologique intensif.',
-  'Ancien(ne) enfant placé(e). Étudiant(e) brillant(e). Projet d autonomie avancé.',
-  'Mineur non accompagné. Niveau scolaire faible mais bonne volonté.',
-  'Victime de violences intra-familiales. Placement à la majorité. Anxiété sociale.',
-  'Mineur non accompagné. Demande de titre de séjour en cours. Progrès en français.',
-  'Sortie de l ASE à 18 ans. Rupture familiale complète. Emploi en CDD.',
-  'Troubles de l attention avec hyperactivité (TDAH). Traité par méthylphénidate.',
-  'Grossesse récente (bébé confié à la famille d accueil). Suivi psychologique lourd.',
-  'Placement judiciaire pour violences. Suivi éducatif renforcé. SEGPA.',
-  'Ancien(ne) enfant placé(e). Perte du logement suite à rupture de contrat.',
-  'Syndrome de stress post-traumatique. Cauchemars récurrents. Suivi renforcé.',
-  'Sortie de longue hospitalisation psychiatrique (dépression sévère). Traitement stabilisé.',
-  'Jeune confié par la PJJ après détention éducative. Antécédents de vol.',
-  'Victime de violences conjugales. Enfants hébergés chez la grand-mère.',
-  'Grande difficulté scolaire (a redoublé trois fois). Formation en alternance.',
-  'Ancien(ne) enfant placé(e). CDI obtenu. Prépare son projet de sortie.',
-  'Placement d urgence suite à hospitalisation psychiatrique de la mère.',
-  'Sortie d un parcours de prostitution. Accompagnement spécialisé. Anonymat protégé.',
-  'Jeune confié suite à décision judiciaire. Absentéisme chronique. Suivi PJJ.',
-  'Mère célibataire d un bébé de 18 mois. Logement temporaire. Formation en cours.'
-];
-const NOTES_COURTES = NOTES.map(n => n.split('.')[0] + '.');
+function getCfg(k) { return parseInt($('cfg' + k).value) || 1; }
 
 function getSelectedEtabs() {
   const checks = document.querySelectorAll('#etabSelector input:checked');
@@ -211,1535 +127,186 @@ function populateEtabSelector() {
 
 function updateGenBtn() {
   const n = document.querySelectorAll('#etabSelector input:checked').length;
-  document.getElementById('genBtn').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M4 12a8 8 0 018-8V0L18 6l-6 6V4a8 8 0 000 16 8 8 0 01-8-8z"/><path d="M12 20l6-6v4a8 8 0 01-8 8z"/></svg> Générer les données' + (n ? ' (' + n + ' établissement' + (n > 1 ? 's' : '') + ')' : '');
+  document.getElementById('genBtn').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M4 12a8 8 0 018-8V0L18 6l-6 6V4a8 8 0 000 16 8 8 0 01-8-8z"/><path d="M12 20l6-6v4a8 8 0 01-8 8z"/></svg> Générer l\'usage (-6 mois / +6 mois)' + (n ? ' (' + n + ' établissement' + (n > 1 ? 's' : '') + ')' : '');
 }
 
-// ── GENERATEUR PRINCIPAL ──
-function generateForCurrentEtab() {
+// ── CONTENU RÉUTILISABLE ──
+const JOURNAL_SNIPPETS = [
+  "Échange avec le résident sur ses démarches en cours. Bonne participation, climat apaisé.",
+  "Point de suivi hebdomadaire. Quelques progrès observés depuis le dernier entretien.",
+  "Rendez-vous extérieur accompagné, déroulement sans difficulté particulière.",
+  "Observation en collectif : comportement adapté, bonne intégration au groupe.",
+  "Suivi administratif en cours, dossier complété pour la prochaine étape.",
+  "Atelier du jour : participation active et bon investissement du résident.",
+  "Difficulté ponctuelle gérée en équipe, retour au calme rapide.",
+  "Appel avec la famille, échange constructif sur la situation actuelle.",
+  "Consultation médicale de routine, aucun élément à signaler.",
+  "Temps individuel consacré aux objectifs du projet personnalisé."
+];
+const PLANNING_EVENTS = [
+  { titre:'Réunion d’équipe', type:'reunion', color:'#8b5cf6', time:'09:00', dur:'60' },
+  { titre:'Atelier collectif', type:'activite', color:'#3b82f6', time:'14:00', dur:'90' },
+  { titre:'RDV extérieur', type:'rdv', color:'#ef4444', time:'10:00', dur:'60' },
+  { titre:'Sortie éducative', type:'sortie', color:'#10b981', time:'13:00', dur:'180' },
+  { titre:'Consultation médicale', type:'rdv', color:'#ef4444', time:'11:00', dur:'45' },
+  { titre:'Suivi éducatif', type:'rdv', color:'#e11d48', time:'15:00', dur:'60' },
+  { titre:'Entretien psychologue', type:'rdv', color:'#9333ea', time:'15:30', dur:'60' }
+];
+const BUD_DEP_CAT = ['Alimentation','Hygiène','Vêtements','Loisirs','Transport','Téléphone','Santé'];
+
+// ── GÉNÉRATION POUR L'ÉTABLISSEMENT COURANT ──
+function generateUsageForCurrentEtab(intensite) {
   initDefaults();
-
   const now = new Date();
-  const today = now.toISOString().slice(0,10);
-  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
-  const cfgRes = getCfg('Residents');
-  const cfgJournal = getCfg('Journal');
-  const cfgPresJours = getCfg('Presences');
-  const cfgPpe = getCfg('Ppe');
-  const cfgPlanning = getCfg('Planning');
-  const cfgVeh = getCfg('Vehicules');
-  const cfgVehRes = getCfg('VehRes');
-  const cfgInterv = getCfg('Interventions');
-  const cfgInc = getCfg('Incidents');
-  const cfgMsg = getCfg('Messages');
-  const cfgContacts = getCfg('Contacts');
-  const cfgLogin = getCfg('LoginHist');
-  const cfgUsers = getCfg('Users');
-  const cfgEmp = getCfg('Employes');
-  const cfgDocsPerRes = getCfg('DocsPerRes');
-  const cfgDocsRsrc = getCfg('DocsRsrc');
-
-  const usedNames = new Set();
-  const resList = [];
-
-  // ── RÉSIDENTS ──
-  for (let i = 0; i < cfgRes; i++) {
-    let prenom, nom, key;
-    do {
-      prenom = i < Math.ceil(cfgRes/2) ? pick(PRENOMS_M) : pick(PRENOMS_F);
-      nom = pick(NOMS);
-      key = prenom + '_' + nom;
-    } while (usedNames.has(key));
-    usedNames.add(key);
-
-    const age = rand(14, 27);
-    const y = now.getFullYear() - age;
-    const m = String(rand(1,12)).padStart(2,'0');
-    const d = String(rand(1,28)).padStart(2,'0');
-    const dob = `${y}-${m}-${d}`;
-    const color = pick(COULEURS);
-    const chambre = String(100 + (i % 40));
-    const statut = pick(STATUTS);
-    const genre = prenom.endsWith('e') || prenom.endsWith('a') || ['Inès','Chloé','Camille','Romane','Juliette','Louna','Assia','Jade','Manon','Zara','Elena','Selma','Nora','Lina','Sofia','Fatima','Clara','Emma','Leila','Sarah','Océane','Mélissa','Amina','Nour','Aïcha','Yasmine','Imane','Sandra','Laura','Marine','Céline','Audrey','Julie','Sophie','Caroline','Valérie','Stéphanie','Justine','Marion','Mathilde','Clémence','Morgane','Émilie','Laurine','Maeva','Elisa','Amélie'].includes(prenom) ? 'F' : 'M';
-
-    resList.push({
-      id: 'demo-' + (i + 1),
-      prenom, nom, dob, genre,
-      entree: new Date(now.getTime() - rand(20, 360) * 86400000).toISOString().slice(0,10),
-      statut, chambre, color,
-      referent: pick(REFFERENTS),
-      photo: 'https://i.pravatar.cc/150?u=demo-' + (i + 1) + '&img=' + ((i % 70) + 1),
-      notes: pick(NOTES_COURTES),
-      contacts: '',
-      medecin: pick(['Dr Moreau','Dr Laurent','Dr Petit','Dr Rousseau','Dr Blanc','Dr Lefèvre','Dr Dubois','Dr Martin']),
-      tuteur: '', tuteurTel: '', ecole: pick(ECOLES), classe: pick(CLASSES),
-      organisme: pick(ORGANISMES), dossier: '',
-      situationPro: pick(SITPROS), ressources: pick(RESSOURCES),
-      organismeA: '', dossierA: '', situationAdmin: pick(SITUADMIN), protection: pick(['aucune','tutelle','curatelle','sauvegarde','accompagnement']),
-      allergies: Math.random() < .15 ? pick(['Arachides','Lactose','Gluten','Pollen']) : '',
-      nss: Math.random() < .3 ? String(rand(1000000000000, 2999999999999)) : '',
-      objectifs: [String(rand(1,7)), String(rand(1,7))],
-      updatedAt: now.toISOString()
-    });
-  }
-  DB.set(DB.keys.residents, []);
-  const sortedRes = shuffle([...resList]).map((r, i) => ({ ...r, id: 'demo-' + (i + 1) }));
-  resList.length = 0;
-  sortedRes.forEach(r => resList.push(r));
-  DB.set(DB.keys.residents, resList);
-
-  // ── MODULES FICHE RÉSIDENT (Santé, Sorties, Budget, Objectifs, Évaluations) — étalés sur 1 an ──
-  const _MS = 86400000;
-  const dAgo = n => new Date(now.getTime() - rand(0, n) * 86400000).toISOString().slice(0,10);
-  const dtAgo = n => new Date(now.getTime() - rand(0, n) * 86400000).toISOString();
-  const dAhead = n => new Date(now.getTime() + rand(1, n) * 86400000).toISOString().slice(0,10);
-  const hh = (a,b) => String(rand(a,b)).padStart(2,'0') + ':' + pick(['00','15','30','45']);
-  // Fenêtre de présence d'un résident (entrée → sortie ou aujourd'hui)
-  const winStart = r => new Date((r.entree || today) + 'T00:00:00').getTime();
-  const winEnd = r => Math.min(now.getTime(), r.dateSortie ? new Date(r.dateSortie + 'T00:00:00').getTime() : now.getTime());
-  const dWin = r => { const s = winStart(r), e = Math.max(winEnd(r), s + _MS); return new Date(s + Math.random() * (e - s)); };
-  const dWinStr = r => dWin(r).toISOString().slice(0,10);
-  const isActive = r => r.statut !== 'sorti';
-  const MEDS = [
-    { nom:'Doliprane 500mg', pos:'1 cp', freq:'si douleur', moments:[] }, { nom:'Rispéridone 1mg', pos:'1 cp', freq:'matin et soir', moments:['matin','soir'] },
-    { nom:'Lévothyrox 50µg', pos:'1 cp', freq:'le matin à jeun', moments:['matin'] }, { nom:'Ventoline', pos:'2 bouffées', freq:'si gêne', moments:[] },
-    { nom:'Méthylphénidate 18mg', pos:'1 cp', freq:'le matin', moments:['matin'] }, { nom:'Escitalopram 10mg', pos:'1 cp', freq:'le soir', moments:['soir'] },
-    { nom:'Hydroxyzine 25mg', pos:'1 cp', freq:'au coucher', moments:['coucher'] }, { nom:'Mélatonine 2mg', pos:'1 cp', freq:'au coucher', moments:['coucher'] }
-  ];
-  const VACCINS = ['DTP (rappel)','Hépatite B','ROR','Méningocoque C','COVID-19','Grippe saisonnière','Papillomavirus'];
-  const RDV_TYPES = ['Médecin traitant','Dentiste','Ophtalmologue','CMP','Dermatologue','Kinésithérapeute','Psychiatre'];
-  const PRATICIENS = ['Dr Moreau','Dr Laurent','Dr Petit','Dr Rousseau','Dr Blanc','Dr Lefèvre','Centre de santé'];
-  const LIEUX_MED = ['Cabinet médical','CMP Maison Blanche','Hôpital Saint-Antoine','Centre de santé','Maison médicale'];
-  const SORTIE_DEST = ['Domicile familial','RDV médical CMP','Sortie sportive','Stage professionnel','Démarches préfecture','Week-end en famille','Cinéma','Visite de logement','Entretien employeur','Bibliothèque'];
-  const SORTIE_MOTIF = ['Famille','Médical','Loisir','Travail / Stage','Démarches','Week-end'];
-  const SORTIE_ACC = ['Seul(e)','Accompagné(e) par un éducateur','Famille / Proche','Transport adapté'];
-  const BUD_REC = [['AAH',[900,1016]],['RSA',[580,610]],['Salaire',[400,950]],['Argent de poche',[30,60]],['Pension',[150,300]]];
-  const BUD_DEP_CAT = ['Alimentation','Hygiène','Vêtements','Loisirs','Transport','Téléphone','Tabac','Santé','Démarches'];
-  const EVAL_KEYS = ['toilette','habillage','sante','preparation','repas','chambre','linge','courrier','budget','relations','activites','deplacements','expression'];
-  const PROT_NOMS = ['UDAF 75','Me Lefranc (mandataire judiciaire)','ATP 94','Mme Garnier (tutrice familiale)','M. Bernard (curateur)','UDAF 93','Me Rolland (mandataire)'];
-
-  resList.forEach((r, ri) => {
-    if (['tutelle','curatelle','sauvegarde'].includes(r.protection)) r.protectionNom = pick(PROT_NOMS);
-    // Mouvements : ~8% de sorties — date cohérente (après l'entrée, avant aujourd'hui)
-    { const s = winStart(r) + 30 * _MS, e = now.getTime() - 7 * _MS;
-      if (Math.random() < 0.08 && e > s) { r.statut = 'sorti'; r.dateSortie = new Date(s + Math.random() * (e - s)).toISOString().slice(0,10); } }
-    const active = isActive(r);
-
-    // Santé (dans la fenêtre de présence ; RDV/rappels à venir uniquement si présent)
-    const traitements = [];
-    for (let k = 0; k < rand(0,3); k++) { const med = pick(MEDS); traitements.push({ id:'dt-'+ri+'-'+k, nom: med.nom, posologie: med.pos, frequence: med.freq, debut: dWinStr(r), fin: '', moments: med.moments.slice() }); }
-    const rdv = [];
-    for (let k = 0; k < rand(1,4); k++) rdv.push({ id:'dr-'+ri+'-'+k, date: dWinStr(r), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: true });
-    if (active && Math.random() < .7) rdv.push({ id:'dr-'+ri+'-f', date: dAhead(40), heure: hh(8,17), type: pick(RDV_TYPES), praticien: pick(PRATICIENS), lieu: pick(LIEUX_MED), notes:'', fait: false });
-    const vaccins = [];
-    for (let k = 0; k < rand(1,2); k++) { const overdue = Math.random() < .3; vaccins.push({ id:'dv-'+ri+'-'+k, nom: pick(VACCINS), date: dWinStr(r), rappel: overdue ? dAgo(40) : (active ? dAhead(300) : '') }); }
-    r.sante = { groupeSanguin: pick(['A+','A-','B+','B-','O+','O-','AB+','AB-','']), notesMedicales: Math.random()<.3 ? 'Suivi médical régulier. Pas de contre-indication particulière.' : '', traitements, rdv, vaccins };
-
-    // SERAFIN-PH
-    const spCodes = SP_NOMENCLATURE.map(p => p.code);
-    for (let k = spCodes.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [spCodes[k], spCodes[j]] = [spCodes[j], spCodes[k]]; }
-    const spSelected = spCodes.slice(0, 5 + Math.floor(Math.random() * 6));
-    const prestations = {};
-    spSelected.forEach(c => { prestations[c] = { niveau: 1 + rand(0,3) }; });
-    r.serafinph = { selected: spSelected, prestations, dateEvaluation: dWinStr(r), notes: Math.random()<.3 ? 'Profil établi en équipe pluridisciplinaire.' : '' };
-
-    // Sorties & permissions (dans la fenêtre ; sortie en cours uniquement si présent)
-    const sorties = [];
-    for (let k = 0; k < rand(0,8); k++) {
-      const dep = (active && k === 0 && Math.random() < .25) ? dAgo(2) : dWinStr(r);
-      const enCours = active && k === 0 && Math.random() < .25;
-      sorties.push({ id:'so-'+ri+'-'+k, date: dep, heure: String(rand(8,18)).padStart(2,'0')+':00', destination: pick(SORTIE_DEST), motif: pick(SORTIE_MOTIF), accompagnement: pick(SORTIE_ACC), retourPrevuDate: dep, retourPrevuHeure: String(rand(18,21)).padStart(2,'0')+':00', autorisePar: pick(REFFERENTS), notes:'', retourEffectif: enCours ? null : new Date(new Date(dep+'T18:00').getTime()+rand(1,5)*3600000).toISOString() });
-    }
-    r.sorties = sorties;
-
-    // Budget personnel (mensuel, uniquement pendant la présence)
-    const ops = [];
-    const enDifficulte = Math.random() < 0.18;
-    const rec = enDifficulte ? pick([['Argent de poche',[20,50]],['Pension',[120,200]]]) : pick(BUD_REC);
-    const ws = winStart(r), we = winEnd(r);
-    for (let mo = 11; mo >= 0; mo--) {
-      const dmoD = new Date(now.getFullYear(), now.getMonth() - mo, rand(1,5));
-      if (dmoD.getTime() < ws || dmoD.getTime() > we) continue;
-      ops.push({ id:'bu-'+ri+'-r'+mo, type:'recette', montant: rand(rec[1][0], rec[1][1]), date: dmoD.toISOString().slice(0,10), categorie: rec[0], libelle: rec[0]+' du mois', notes:'' });
-      const nbDep = enDifficulte ? rand(3,6) : rand(2,4);
-      for (let dd = 0; dd < nbDep; dd++) { const ddD = new Date(now.getFullYear(), now.getMonth() - mo, rand(6,27)); if (ddD.getTime() < ws || ddD.getTime() > we) continue; ops.push({ id:'bu-'+ri+'-d'+mo+'-'+dd, type:'depense', montant: enDifficulte ? rand(50,260) : rand(10,180), date: ddD.toISOString().slice(0,10), categorie: pick(BUD_DEP_CAT), libelle:'', notes:'' }); }
-    }
-    r.budget = { operations: ops };
-
-    // Suivi des objectifs
-    const suivi = {};
-    (r.objectifs || []).forEach(oid => { const st = pick(['non_commence','en_cours','en_cours','atteint','atteint','abandonne']); suivi[oid] = { statut: st, note: st==='atteint' ? 'Objectif atteint, à consolider.' : st==='en_cours' ? 'Progression régulière constatée.' : '', dateMaj: dWin(r).toISOString() }; });
-    r.objectifsSuivi = suivi;
-
-    // Grilles d'évaluation (dans la fenêtre)
-    const evals = [];
-    for (let k = 0; k < rand(1,3); k++) { const scores = {}; EVAL_KEYS.forEach(key => { if (Math.random() < .9) scores[key] = rand(1,4); }); evals.push({ id:'ev-'+ri+'-'+k, date: dWinStr(r), evaluateur: pick(REFFERENTS), note:"Bilan d'autonomie périodique.", scores }); }
-    r.evaluations = evals;
-  });
-  DB.set(DB.keys.residents, resList);
-
-  // Capacité d'accueil (pour le taux d'occupation du rapport)
-  const _settings = DB.get(DB.keys.settings) || {};
-  DB.set(DB.keys.settings, { ..._settings, capacite: Math.round(cfgRes * 1.1) });
-
-  // ── CATÉGORIES ──
-  const cats = [
-    { id: 1, name: 'Accompagnement', color: '#3b82f6' },
-    { id: 2, name: 'Médical', color: '#ef4444' },
-    { id: 3, name: 'Éducatif', color: '#10b981' },
-    { id: 4, name: 'Administratif', color: '#f59e0b' },
-    { id: 5, name: 'Familial', color: '#8b5cf6' },
-    { id: 6, name: 'Loisirs', color: '#06b6d4' },
-    { id: 7, name: 'Incident', color: '#dc2626' },
-    { id: 8, name: 'Psychologique', color: '#9333ea' }
-  ];
-  DB.set(DB.keys.categories, cats);
-
-  // ── JOURNAL ──
-  const journal = [];
-  const journalAuthors = [
-    { id: 2, name: 'Sophie Martin' }, { id: 3, name: 'Pierre Dubois' },
-    { id: 4, name: 'Camille Legrand' }, { id: 5, name: 'Julien Fontaine' },
-    { id: 6, name: 'Nathalie Petit' }, { id: 7, name: 'Antoine Leroy' },
-    { id: 8, name: 'Mélanie Roux' }, { id: 9, name: 'David Moreau' },
-    { id: 10, name: 'Élodie Fournier' }, { id: 11, name: 'Sébastien Girard' },
-    { id: 12, name: 'Caroline Bonnet' }, { id: 13, name: 'Alexandre Dupont' }
-  ];
-
-  const journalParCategorie = {
-    1: [ // Accompagnement
-      'Entretien individuel approfondi aujourd hui avec le résident. Il a exprimé le souhait clair de suivre une formation professionnelle dans le domaine de la restauration. Nous avons commencé à échanger sur les différentes options disponibles et je l ai encouragé à participer à l atelier CV prévu la semaine prochaine. Son projet semble mûrement réfléchi et il montre une motivation que je n avais pas observée depuis plusieurs mois.',
-      'Point mensuel sur le projet personnalisé du résident. Plusieurs objectifs fixés lors du dernier bilan ont été atteints : il a renoué le contact avec sa référente ASE et a entamé des démarches pour obtenir un logement autonome. Nous avons réajusté les échéances pour les objectifs restants et convenu d un point intermédiaire dans quinze jours.',
-      'Accompagnement à la sortie : le résident prépare activement son autonomie avec le service logement. Il a visité deux appartements cette semaine et le dossier de demande de logement social a été envoyé. Un point sera fait après la commission d attribution prévue dans trois semaines.',
-      'Suivi renforcé mis en place suite aux difficultés du résident à respecter le cadre. Après plusieurs absences non justifiées aux ateliers, j ai organisé un entretien avec le résident et sa référente ASE pour recadrer les attentes et trouver des solutions adaptées à ses besoins.',
-      'Première rencontre avec le nouveau résident arrivé ce matin. L accueil s est bien déroulé, nous avons visité les locaux et je lui ai présenté le règlement intérieur. Le résident semble fatigué mais coopérant. RDV programmé avec le médecin traitant pour la visite médicale d entrée.',
-      'Atelier d orientation professionnelle animé. Quatre résidents ont participé et montré un intérêt marqué pour la filière sanitaire et sociale. Des conventions de stage vont être préparées et envoyées aux structures partenaires. Le bilan de l atelier est très positif.'
-    ],
-    2: [ // Médical
-      'Consultation médicale mensuelle chez le Dr Moreau. Le traitement actuel est bien toléré et les analyses de contrôle sont revenues dans les normes. Un nouveau rendez-vous a été fixé dans trois mois, avec un bilan sanguin à réaliser entre temps. Le résistant se dit en bonne forme générale.',
-      'RDV au CMP pour le suivi psychiatrique habituel. Ajustement du traitement : augmentation légère de la posologie de l antidépresseur pour mieux gérer l anxiété matinale. Prochain rendez-vous dans quatre semaines. Le résident a bien accepté les changements et semble soulagé.',
-      'Visite médicale d entrée réalisée pour le nouveau résident. Poids, taille, bilan sanguin, examen clinique : RAS. Vaccinations à jour. Sensibilisation aux règles d hygiène et aux conduites à risque. Un suivi dentaire sera programmé dans le mois.',
-      'Suivi TDAH : consultation trimestrielle chez le pédopsychiatre. Le méthylphénidate reste efficace et bien toléré. Quelques troubles du sommeil signalés, sans retentissement sur la journée. Le médecin recommande de maintenir le traitement sans changement.',
-      'Malaise du résident ce matin au réveil. Pris en charge par l infirmier, la tension était basse (9/6). Après repos et collation, les signes se sont normalisés. Surveillance rapprochée dans la journée. Pas d hospitalisation nécessaire.',
-      'Consultation dentaire : extraction d une dent de sagesse programmée. Le résident est inquiet, nous avons pris le temps de le rassurer et d expliquer le déroulement de l intervention. Accompagnement prévu le jour J par un éducateur.'
-    ],
-    3: [ // Éducatif
-      'Entretien avec le professeur principal du résident à l occasion du conseil de classe. Les résultats sont en nette amélioration, notamment en mathématiques et en français. Le comportement en classe reste toutefois irrégulier avec quelques épisodes d agitation signalés par les enseignants.',
-      'Déception aujourd hui : le résident a été exclu temporairement du collège pour trois jours suite à une altercation avec un camarade. Une réunion d équipe éducative avec le CPE est programmée pour la semaine prochaine. Le résident semble regretter son geste.',
-      'Bilan de formation très encourageant pour le résident. Son tuteur de stage a salué sa ponctualité et son sérieux. Le contrat d apprentissage sera signé vendredi en présence du chef d établissement. Une belle réussite qui mérite d être valorisée.',
-      'Résultats du premier trimestre : le résident obtient une moyenne de 13/20 avec une mention aux appréciations. Il est passé de la 3e Prépa Métiers en CAP cuisine avec un bon retour de l équipe pédagogique. Progrès notables en expression écrite.',
-      'Atelier de soutien scolaire animé. Travail sur les fractions et les pourcentages avec trois résidents en difficulté. Exercices pratiques, chacun a pu progresser à son rythme. Un nouveau créneau sera proposé la semaine prochaine pour consolider les acquis.',
-      'Le résident a réussi son examen de langue DELF avec une note de 72/100. Il était très fier et a remercié l équipe pour le soutien. C est une étape importante dans son parcours d intégration et une belle reconnaissance de ses efforts.'
-    ],
-    4: [ // Administratif
-      'Dossier administratif du résident complété et envoyé à la MDPH. Certificat médical, bilan psychologique et projet personnalisé joints. Délai d instruction estimé à 4 à 6 semaines. Une copie a été remise au résident pour son information.',
-      'Renouvellement du titre de séjour du résident : dossier déposé à la préfecture ce matin. Tous les justificatifs étaient complets et conformes. Récépissé obtenu valable 3 mois. Nouveau rendez-vous de suivi administratif programmé dans un mois.',
-      'Point sur les droits CAF : révision du dossier de la résidente suite à son changement de situation. Le RSA jeune est maintenu mais la prime d activité sera recalculée. Le dossier a été mis à jour dans les délais impartis pour éviter toute interruption de versement.',
-      'Constitution du dossier d aide au logement pour le jeune majeur accompagné. Déclaration de ressources, contrat de location et justificatif d identité. Aide personnalisée au logement estimée à 180 EUR par mois. Suivi de la demande auprès de la CAF.',
-      'Préparation du dossier de renouvellement du contrat jeune majeur. Bilan du parcours, projet d autonomie actualisé et budget prévisionnel transmis à l ASE. Le dossier sera présenté en commission le 15 du mois prochain.'
-    ],
-    5: [ // Familial
-      'Appel téléphonique avec la mère du résident. Situation reste tendue mais la mère accepte le principe d une médiation familiale. Un rendez-vous va être pris avec le service de médiation du CIDFF pour organiser une première rencontre exploratoire.',
-      'Visite médiatisée au point rencontre : le résident a retrouvé sa mère dans le cadre habituel. L échange s est bien passé, dans un climat apaisé. La mère a apporté des photos de famille. Prochaine visite programmée dans quinze jours avec une éducatrice.',
-      'Entretien téléphonique avec le père qui souhaite reprendre contact avec son fils. Situation complexe car le droit de visite est suspendu depuis six mois. Nous allons organiser une rencontre avec le juge des affaires familiales pour faire le point.',
-      'Nouvelle importante : la sœur du résident a eu un bébé. Il est très ému et souhaiterait la rencontrer. Nous allons organiser un appel vidéo dans un premier temps, puis envisager une visite si la situation familiale le permet.',
-      'Médiation familiale : première séance aujourd hui en présence de la référente ASE. La communication entre le résident et sa famille est difficile mais les deux parties montrent une volonté de dialogue. Un prochain rendez-vous est fixé dans trois semaines.'
-    ],
-    6: [ // Loisirs
-      'Sortie culturelle au Musée d Orsay organisée pour six résidents. Très belle réaction de l ensemble du groupe qui a apprécié la collection impressionniste. Moment de partage et d échange autour des oeuvres. Pique-nique au bord de la Seine pour conclure la journée.',
-      'Tournoi de football inter-foyers : notre équipe termine à la deuxième place sur huit participants. Belle performance collective et fair-play exemplaire de nos résidents qui ont su gérer la pression et la défaite en demi-finale.',
-      'Atelier menuiserie animé par Laurent Gauthier. Les résidents ont fabriqué des étagères pour leurs chambres. Ambiance studieuse et conviviale. Deux résidents se sont découverts une vraie passion pour le travail du bois.',
-      'Après-midi bowling organisé pour les résidents. Très bonne cohésion du groupe, les équipes étaient mixtes et l ambiance était détendue. Moment convivial apprécié de tous, y compris des nouveaux arrivants qui ont pu créer des liens.',
-      'Sortie au parc zoologique de Vincennes. Les résidents ont particulièrement apprécié le vivarium et la grande volière. Atelier pédagogique sur la biodiversité animé par un soigneur. Retour au foyer vers 17h, tout le monde fatigué mais ravi.',
-      'Atelier théâtre : séance sur l improvisation et l expression corporelle. Des progrès notables chez les participants, notamment chez un résident habituellement très réservé qui a réussi à jouer une scène seul devant le groupe.'
-    ],
-    7: [ // Incident
-      'Incident ce soir au réfectoire : une altercation verbale a dégénéré entre deux résidents suite à une dispute pour une place à table. Intervention rapide de l éducateur de permanence. Les deux jeunes ont été séparés et un entretien individuel est prévu demain matin.',
-      'Fugue signalée ce jour : le résident n est pas rentré de son rendez-vous à la Mission Locale. Téléphone injoignable. La famille et la police ont été prévenues. L équipe de nuit est en alerte. Le résident a été retrouvé vers 23h au domicile d un ami.',
-      'Violence entre résidents dans la cour cet après-midi. Un résident en a bousculé un autre violemment après une provocation. Pas de blessure grave mais une entorse au poignet pour la victime qui a été examinée par l infirmier. Médiation éducative en cours.',
-      'Dégât matériel signalé dans la salle de bain collective : la robinetterie du lavabo a été forcée et une fuite d eau importante s est déclarée. Le plombier a été appelé en urgence. Les résidents concernés seront reçus individuellement pour faire le point.',
-      'Crise de colère du résident en fin de journée suite à l annulation de la visite de sa mère. Il a crié, donné des coups de pied dans le mobilier puis s est enfermé dans sa chambre. Après une heure d apaisement, il a accepté de parler avec l éducateur de nuit.',
-      'Agressivité verbale du résident envers un éducateur lors de l atelier. Propos déplacés et menaces. L atelier a été interrompu. Le résident a été isolé pour un temps de réflexion puis un entretien a eu lieu avec le chef de service en fin de journée.'
-    ],
-    8: [ // Psychologique
-      'Première séance avec la psychologue clinicienne. Le résident était anxieux en début de séance mais a réussi à verbaliser ses difficultés. Sentiments d abandon, angoisse de l avenir, difficultés à faire confiance. Un suivi hebdomadaire a été proposé et accepté.',
-      'Séance de suivi psychologique : le résident aborde plus facilement ses émotions aujourd hui. Il a parlé de son enfance et des événements traumatisants qu il a vécus. La psychologue note une amélioration de la confiance en soi. Exercice de relaxation en fin de séance.',
-      'Bilan psychologique réalisé dans le cadre du projet personnalisé. Tests projectifs et entretien clinique. Résultats montrant une anxiété sociale modérée à sévère mais de bonnes capacités d introspection. Des séances de thérapie cognitivo-comportementale sont recommandées.',
-      'Séance de psychomotricité avec Caroline Bonnet. Travail sur le schéma corporel et la régulation tonico-émotionnelle. Le résident a participé avec intérêt aux exercices de relaxation et de respiration. Progression constatée par rapport à la séance précédente.',
-      'Entretien psychologique en urgence suite à la crise de la semaine dernière. Le résident va mieux, le traitement anxiolytique semble faire effet. Il a accepté de participer au groupe de parole hebdomadaire à partir de la semaine prochaine.',
-      'Séance de groupe sur la gestion des émotions animée par la psychologue et l éducatrice. Six résidents participants. Thème du jour : identifier et nommer ses émotions. Exercices pratiques autour de situations du quotidien. Échanges riches et respectueux.'
-    ]
-  };
-
-  for (let i = 0; i < cfgJournal; i++) {
-    const res = resList[i % resList.length];
-    const cat = cats[i % cats.length];
-    const d = dWin(res);
-    const author = pick(journalAuthors);
-    const catTemplates = journalParCategorie[cat.id];
-    const usedSet = new Set();
-    const lignes = [];
-    const nb = rand(1, 2);
-    while (lignes.length < nb) {
-      const t = pick(catTemplates);
-      if (!usedSet.has(t)) { usedSet.add(t); lignes.push(t); }
-    }
-    const contenu = lignes.join('\n\n');
-    const visibilite = Math.random() < .1 ? 'confidentiel' : Math.random() < .2 ? 'tous' : 'equipe';
-    journal.push({
-      id: 'dj-' + (i + 1),
-      type: 'observation',
-      residentId: res.id,
-      resident: res.prenom + ' ' + res.nom,
-      residentColor: res.color,
-      categorie: cat.id,
-      date: d.toISOString(),
-      contenu,
-      visibilite,
-      serafinphType: Math.random() < .25 ? pick(['direct','indirect']) : '',
-      objectif: '',
-      author: author.name,
-      authorId: author.id,
-      replies: [],
-      readBy: [],
-      createdAt: d.toISOString(),
-      updatedAt: d.toISOString()
-    });
-  }
-  DB.set(DB.keys.journal, journal);
-
-  // ── PLANNING (événements) ──
-  const planning = [];
-  const eventTypes = [
-    { title: 'Réunion d équipe', type: 'reunion', color: '#8b5cf6', time: '09:00', dur: '60' },
-    { title: 'Atelier budget', type: 'activite', color: '#3b82f6', time: '14:00', dur: '90' },
-    { title: 'RDV Pôle Emploi', type: 'rdv', color: '#ef4444', time: '10:00', dur: '60' },
-    { title: 'Sortie culturelle', type: 'sortie', color: '#10b981', time: '13:00', dur: '240' },
-    { title: 'Consultation médicale', type: 'rdv', color: '#ef4444', time: '11:00', dur: '60' },
-    { title: 'Cours de français', type: 'activite', color: '#06b6d4', time: '09:00', dur: '120' },
-    { title: 'Atelier théâtre', type: 'activite', color: '#d946ef', time: '14:00', dur: '120' },
-    { title: 'Médiation familiale', type: 'rdv', color: '#f59e0b', time: '09:30', dur: '90' },
-    { title: 'Atelier CV', type: 'activite', color: '#14b8a6', time: '14:30', dur: '90' },
-    { title: 'Sortie sportive', type: 'sortie', color: '#84cc16', time: '09:00', dur: '300' },
-    { title: 'RDV CMP', type: 'rdv', color: '#9333ea', time: '15:00', dur: '60' },
-    { title: 'Atelier cuisine', type: 'activite', color: '#f97316', time: '10:00', dur: '180' },
-    { title: 'Entretien psychologue', type: 'rdv', color: '#9333ea', time: '15:00', dur: '60' },
-    { title: 'Sortie piscine', type: 'sortie', color: '#06b6d4', time: '14:00', dur: '120' },
-    { title: 'Atelier bois', type: 'activite', color: '#b45309', time: '10:00', dur: '180' },
-    { title: 'Suivi éducatif', type: 'rdv', color: '#e11d48', time: '14:00', dur: '60' },
-    { title: 'Visite logement', type: 'rdv', color: '#65a30d', time: '11:00', dur: '120' },
-    { title: 'Consultation pédopsy', type: 'rdv', color: '#0284c7', time: '09:00', dur: '60' },
-    { title: 'Atelier gestion des émotions', type: 'activite', color: '#dc2626', time: '15:00', dur: '60' },
-    { title: 'Sortie parc', type: 'sortie', color: '#0891b2', time: '10:00', dur: '240' }
-  ];
-
-  const planningRes = resList.filter(r => r.statut !== 'sorti');
-  const _planRes = planningRes.length ? planningRes : resList;
-  for (let i = 0; i < cfgPlanning; i++) {
-    const ev = pick(eventTypes);
-    const dayOffset = rand(-14, 21);
-    const d = new Date(now.getTime() + dayOffset * 86400000);
-    const dateStr = d.toISOString().slice(0,10);
-    const res = _planRes[i % _planRes.length];
-    planning.push({
-      id: 'dp-' + (i + 1),
-      titre: res ? ev.title + ' — ' + res.prenom + ' ' + res.nom : ev.title,
-      type: ev.type, color: ev.color,
-      date: dateStr, time: ev.time, duree: ev.dur,
-      residentId: res ? res.id : '',
-      residentName: res ? res.prenom + ' ' + res.nom : '',
-      desc: '', dateEnd: dateStr, timeEnd: '',
-      createdAt: d.toISOString(), updatedAt: d.toISOString()
-    });
-  }
-
-  // ── VÉHICULES ──
-  const vehs = ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'];
-  const vehList = cfgVeh <= 4 ? vehs.slice(0, cfgVeh) : vehs.concat(Array.from({length: cfgVeh - 4}, (_, i) => 'Véhicule ' + (i + 5)));
-  for (let vi = 0; vi < cfgVehRes; vi++) {
-    const dayOffset = rand(0, 30);
-    const d = new Date(now.getTime() + dayOffset * 86400000);
-    const ds = d.toISOString().slice(0,10);
-    const res = resList[rand(0, resList.length - 1)];
-    const v = pick(vehList);
-    planning.push({
-      id: 'dp-v' + (vi + 1),
-      titre: 'Véhicule — ' + v,
-      type: 'vehicule', color: '#6366f1',
-      date: ds, time: '09:00', dateEnd: ds, timeEnd: '17:00',
-      duree: '480', residentId: '', residentName: '',
-      desc: 'Réservé par : ' + res.prenom + ' ' + res.nom + '\nVéhicule : ' + v + '\nDestination : Sortie accompagnée',
-      vehicule: v, destination: 'Sortie accompagnée',
-      reservedBy: res.prenom + ' ' + res.nom,
-      reservedPrenom: res.prenom,
-      createdAt: d.toISOString(), updatedAt: d.toISOString()
-    });
-  }
-
-  DB.set(DB.keys.planning, planning);
-  DB.set(DB.keys.vehicules, vehList);
-
-  // ── PRÉSENCES ──
-  const presences = {};
-  for (let j = -(cfgPresJours - 1); j <= 0; j++) {
-    const d = new Date(today + 'T00:00:00');
-    d.setDate(d.getDate() + j);
-    const ds = d.toISOString().slice(0,10);
-    const dayMs = d.getTime();
-    const dayPresences = {};
-    resList.forEach(r => {
-      // Ne pointer que pendant la présence effective (après l'entrée, avant la sortie)
-      if (dayMs < winStart(r) || dayMs > winEnd(r)) return;
-      const rnd = Math.random();
-      dayPresences[r.id] = rnd < .7 ? 'present' : rnd < .85 ? 'absent' : 'sortie';
-    });
-    presences[ds] = dayPresences;
-  }
-  DB.set(DB.keys.presences, presences);
-
-  // ── PPE / AVENANTS ──
-  const domaines = ['autonomie','sante','viePro','logement','vieSociale','vieAffective','budget','transport','orientation'];
-  const avenants = [];
-  for (let i = 0; i < cfgPpe; i++) {
-    const idx = i % resList.length;
-    const res = resList[idx];
-    const statut = res.statut === 'sorti' ? 'termine' : pick(['actif','actif','actif','brouillon','termine']);
-    const dateRedac = dWin(res);
-    const dateRev = new Date(dateRedac.getTime() + rand(150, 210) * 86400000);
-    const sections = {};
-    domaines.forEach(d => {
-      sections[d] = {
-        bilan: 'Bilan pour ' + d + '. Évolution en cours.',
-        objectifs: [{ objectif: 'Objectif ' + d, moyens: 'Accompagnement éducatif adapté', echeance: dateRev.toISOString().slice(0,10), evaluation: '' }],
-        expression: res.prenom + ' souhaite progresser dans ce domaine.'
-      };
-    });
-    avenants.push({
-      id: 'da-' + (i + 1),
-      residentId: res.id,
-      residentName: res.prenom + ' ' + res.nom,
-      dateRedaction: dateRedac.toISOString().slice(0,10),
-      dateRevision: dateRev.toISOString().slice(0,10),
-      referent: pick(REFFERENTS),
-      protection: Math.random() < .2 ? pick(['Curatelle simple','Tutelle','Sauvegarde']) : '',
-      employeur: '', atelier: '', entreeEsat: '',
-      statut,
-      sections,
-      conclusion: 'Projet personnalisé pour ' + res.prenom + '. Accompagnement en cours.',
-      signatures: { resident: null, referent: null, direction: null, date: null },
-      createdBy: 'Admin',
-      createdAt: new Date(now.getTime() - (cfgPpe - i) * 86400000 * 3).toISOString()
-    });
-  }
-  DB.set(DB.keys.ppe, avenants);
-
-  // ── INCIDENTS ──
-  const incidentTemplates = [
-    { titre:'Chute dans l escalier', type:'chute', gravite:'moyen', lieu:'Escalier principal', desc:' glissé dans l escalier en courant. Entorse cheville droite.', statut:'classe' },
-    { titre:'Fugue', type:'fugue', gravite:'grave', lieu:'Foyer', desc:' s est enfui par la fenêtre du RDC après le coucher. Retrouvé par la police.', statut:'cours' },
-    { titre:'Violence entre résidents', type:'violence', gravite:'moyen', lieu:'Salle commune', desc:' a bousculé un autre résident. Médiation effectuée.', statut:'valide' },
-    { titre:'Crise d angoisse', type:'medical', gravite:'moyen', lieu:'Chambre', desc:'Crise d angoisse nocturne. Éducateur de nuit présent. Pas d hospitalisation.', statut:'cours' },
-    { titre:'Dégât matériel', type:'materiel', gravite:'leger', lieu:'Salle de bain', desc:'Robinet arraché du lavabo. Réparation prévue.', statut:'declare' },
-    { titre:'Bagarre au réfectoire', type:'violence', gravite:'moyen', lieu:'Réfectoire', desc:' s est battu pour une place à table. Intervention éducateur.', statut:'cours' },
-    { titre:'Tentative de fugue', type:'fugue', gravite:'grave', lieu:'Foyer', desc:'Tentative de quitter le foyer par l arrière. Rattrapé.', statut:'declare' },
-    { titre:'Accident de cuisine', type:'accident', gravite:'leger', lieu:'Cuisine', desc:'Coupure au doigt en épluchant des légumes. Pansement.', statut:'classe' },
-    { titre:'Malaise', type:'medical', gravite:'moyen', lieu:'Salle commune', desc:'Malaise vagal. Repos. RDV CMP programmé.', statut:'valide' },
-    { titre:'Conflit chambre', type:'violence', gravite:'leger', lieu:'Chambre', desc:'Dispute entre colocs pour le rangement. Médiation effectuée.', statut:'declare' },
-    { titre:'Chute de vélo', type:'accident', gravite:'moyen', lieu:'Cour extérieure', desc:' est tombé de vélo. Éraflures. Pansements.', statut:'classe' },
-    { titre:'Insomnie et anxiété', type:'medical', gravite:'leger', lieu:'Chambre', desc:' n a pas dormi de la nuit. Anxiété sociale. Présence éducateur.', statut:'cours' }
-  ];
-  const authorNames = ['Sophie Martin','Pierre Dubois','Camille Legrand','Julien Fontaine','Nathalie Petit','Antoine Leroy','David Moreau','Sébastien Girard'];
-
-  const incList = [];
-  for (let i = 0; i < cfgInc; i++) {
-    const tpl = pick(incidentTemplates);
-    const res = resList[rand(0, resList.length - 1)];
-    const d = dWin(res);
-    const h = String(rand(6, 23)).padStart(2,'0');
-    const m = String(rand(0, 59)).padStart(2,'0');
-    const author = pick(authorNames);
-    const desc = (res ? res.prenom : 'Un résident') + tpl.desc;
-    incList.push({
-      id: 'di-' + (i + 1),
-      titre: tpl.titre, type: tpl.type, gravite: tpl.gravite,
-      date: d.toISOString().slice(0,10), heure: h + ':' + m,
-      residentId: res ? res.id : null,
-      residentName: res ? res.prenom + ' ' + res.nom : '',
-      etabId: etab ? etab.id : null,
-      etabNom: etab ? etab.nom : '',
-      lieu: tpl.lieu + ' ' + (res ? res.chambre : ''),
-      description: desc,
-      statut: tpl.statut,
-      declaredBy: author, declaredById: rand(2, 13),
-      declaredAt: d.toISOString(),
-      validatedBy: null, validatedById: null, validatedAt: null,
-      notes: '',
-      createdAt: d.toISOString()
-    });
-  }
-  // Marquage EIG (Événements Indésirables Graves) sur les incidents graves
-  const eigGraves = incList.filter(i => ['grave','critique'].includes(i.gravite));
-  eigGraves.forEach((i, idx) => {
-    const declareDate = new Date(new Date(i.date).getTime() + 24 * 3600 * 1000).toISOString().slice(0,10);
-    if (idx === 0) {
-      i.eig = {
-        declarable: true, declareARS: true, dateDeclarationARS: declareDate,
-        numeroSignalement: 'ARS-' + new Date(i.date).getFullYear() + '-' + String(rand(1000,9999)),
-        destinataires: ['ars', 'cd'],
-        mesuresImmediates: 'Mise en sécurité du résident, contact famille et forces de l ordre, renforcement de la surveillance de nuit.',
-        mesuresCorrectives: 'Révision du protocole de surveillance nocturne et installation d une alarme sur les issues du RDC.',
-        cloture: true, dateCloture: new Date(new Date(i.date).getTime() + 20 * 86400000).toISOString().slice(0,10),
-        suites: 'Retour ARS sans suite particulière. Mesures correctives mises en œuvre et suivies en réunion d équipe.'
-      };
-    } else if (idx === 1) {
-      i.eig = {
-        declarable: true, declareARS: true, dateDeclarationARS: declareDate,
-        numeroSignalement: 'ARS-' + new Date(i.date).getFullYear() + '-' + String(rand(1000,9999)),
-        destinataires: ['ars', 'famille'],
-        mesuresImmediates: 'Entretien individuel avec le résident, information de la famille et du référent ASE.',
-        mesuresCorrectives: '',
-        cloture: false, dateCloture: '', suites: ''
-      };
-    } else {
-      i.eig = {
-        declarable: true, declareARS: false, dateDeclarationARS: '', numeroSignalement: '',
-        destinataires: ['ars'],
-        mesuresImmediates: 'Mise en sécurité et information de la direction.',
-        mesuresCorrectives: '', cloture: false, dateCloture: '', suites: ''
-      };
-    }
-  });
-  DB.set(DB.keys.incidents, incList);
-
-  // ── INTERVENTIONS ──
-  const intervs = [
-    { lieu:'Lavabo', desc:'Lavabo bouché, se vide très lentement.', urgence:'basse' },
-    { lieu:'Radiateur', desc:'Radiateur ne chauffe plus depuis hier.', urgence:'haute' },
-    { lieu:'Ampoule', desc:'Ampoule du plafonnier grillée.', urgence:'basse' },
-    { lieu:'Prises électriques', desc:'Deux prises électriques ne fonctionnent plus.', urgence:'moyenne' },
-    { lieu:'Volet roulant', desc:'Volet roulant bloqué à mi-hauteur.', urgence:'moyenne' },
-    { lieu:'Fuite d eau', desc:'Fuite d eau sous l évier. Flaque au sol.', urgence:'haute' },
-    { lieu:'Porte coupe-feu', desc:'Porte coupe-feu ne se ferme plus correctement.', urgence:'haute' },
-    { lieu:'Prise ordinateur', desc:'Prise de l ordinateur du bureau hors service.', urgence:'moyenne' },
-    { lieu:'Interrupteur', desc:'Interrupteur qui claque et étincelle.', urgence:'haute' },
-    { lieu:'Réfrigérateur', desc:'Réfrigérateur ne fait plus de froid.', urgence:'haute' },
-    { lieu:'Mitigeur', desc:'Mitigeur de l évier qui fuit.', urgence:'moyenne' },
-    { lieu:'Chasse d eau', desc:'Chasse d eau ne se vide plus.', urgence:'moyenne' },
-    { lieu:'Portail électrique', desc:'Portail grince et bloque en milieu de course.', urgence:'basse' },
-    { lieu:'Machine à laver', desc:'Machine à laver bruyante en essorage.', urgence:'moyenne' },
-    { lieu:'Prise murale', desc:'Prise murale près du lit desserrée.', urgence:'basse' },
-    { lieu:'Serrure de porte', desc:'Serrure de porte grippée, clé tourne difficilement.', urgence:'basse' },
-    { lieu:'Four', desc:'Four qui ne chauffe plus en position chaleur tournante.', urgence:'haute' },
-    { lieu:'Sèche-linge', desc:'Sèche-linge fait un bruit anormal en rotation.', urgence:'moyenne' },
-    { lieu:'Table', desc:'Pied de table cassé, instable.', urgence:'basse' },
-    { lieu:'Store enrouleur', desc:'Store enrouleur bloqué, ne remonte plus.', urgence:'basse' },
-    { lieu:'Néon', desc:'Néon du couloir qui clignote sans arrêt.', urgence:'moyenne' },
-    { lieu:'Micro-ondes', desc:'Micro-ondes ne chauffe plus les aliments.', urgence:'moyenne' },
-    { lieu:'Fenêtre', desc:'Fenêtre qui ferme mal, courant d air.', urgence:'moyenne' },
-    { lieu:'Miroir mural', desc:'Miroir mural décollé, risque de chute.', urgence:'haute' },
-    { lieu:'Chaudière', desc:'Voyant d alarme allumé sur la chaudière.', urgence:'haute' },
-    { lieu:'Portillon jardin', desc:'Portillon du jardin ne ferme plus correctement.', urgence:'haute' },
-    { lieu:'Vidéoprojecteur', desc:'Vidéoprojecteur qui affiche une image déformée.', urgence:'moyenne' },
-    { lieu:'Prise antenne TV', desc:'Prise antenne TV arrachée du mur.', urgence:'basse' }
-  ];
-
-  const intervsList = [];
-  for (let i = 0; i < cfgInterv; i++) {
-    const inc = intervs[i % intervs.length];
-    const d = new Date(now.getTime() - rand(0, 30) * 86400000);
-    const statut = Math.random() < .4 ? 'traitee' : 'ouverte';
-    const chambre = 'Chambre ' + (100 + rand(0, 39));
-    intervsList.push({ id: Date.now() + i, lieu: chambre + ' — ' + inc.lieu, desc: inc.desc, urgence: inc.urgence, date: d.toISOString(), statut });
-  }
-  DB.set(DB.keys.interventions, intervsList);
-
-  // ── UTILISATEURS ──
+  const residents = (DB.get(DB.keys.residents) || []);
+  const activeResidents = residents.filter(r => r.statut !== 'sorti');
   const users = DB.get(DB.keys.users) || [];
-  if (users.length <= 1) {
-    const profils = [
-      { prenom:'Sophie', nom:'Martin', fonction:'Éducatrice spécialisée', username:'smartin' },
-      { prenom:'Pierre', nom:'Dubois', fonction:'Éducateur jeunesse', username:'pdubois' },
-      { prenom:'Camille', nom:'Legrand', fonction:'Psychologue', username:'clegrand' },
-      { prenom:'Julien', nom:'Fontaine', fonction:'Moniteur éducateur', username:'jfontaine' },
-      { prenom:'Nathalie', nom:'Petit', fonction:'Chef de service', username:'npetit' },
-      { prenom:'Antoine', nom:'Leroy', fonction:'Éducateur sportif', username:'aleroy' },
-      { prenom:'Mélanie', nom:'Roux', fonction:'Assistante sociale', username:'mroux' },
-      { prenom:'David', nom:'Moreau', fonction:'Infirmier', username:'dmoreau' },
-      { prenom:'Élodie', nom:'Fournier', fonction:'Éducatrice jeunes enfants', username:'efournier' },
-      { prenom:'Sébastien', nom:'Girard', fonction:'Veilleur de nuit', username:'sgirard' },
-      { prenom:'Caroline', nom:'Bonnet', fonction:'Psychomotricienne', username:'cbonnet' },
-      { prenom:'Alexandre', nom:'Dupont', fonction:'Médiateur social', username:'adupont' },
-      { prenom:'Virginie', nom:'Lambert', fonction:'CESF', username:'vlambert' },
-      { prenom:'Romain', nom:'Chevallier', fonction:'Animateur socioculturel', username:'rchevallier' },
-      { prenom:'Isabelle', nom:'Perrin', fonction:'Coordinatrice de parcours', username:'iperrin' },
-      { prenom:'Laurent', nom:'Gauthier', fonction:'Éducateur technique', username:'lgauthier' },
-      { prenom:'Stéphanie', nom:'Caron', fonction:'Secrétaire médico-sociale', username:'scaron' },
-      { prenom:'Grégory', nom:'Moulin', fonction:'Agent de maintien', username:'gmoulin' },
-      { prenom:'Audrey', nom:'Renard', fonction:'Référente ASE', username:'arenard' },
-      { prenom:'Florian',nom:'Marchand', fonction:'Stagiaire éducateur', username:'fmarchand' },
-      { prenom:'Nicolas',nom:'Baron', fonction:'Éducateur spécialisé', username:'nbaron' },
-      { prenom:'Vanessa',nom:'Peltier', fonction:'Assistante sociale', username:'vpeltier' },
-      { prenom:'Jérôme',nom:'Lefebvre', fonction:'Moniteur éducateur', username:'jlefebvre' },
-      { prenom:'Hélène',nom:'Garnier', fonction:'Psychologue clinicienne', username:'hgarnier' },
-      { prenom:'Thibault',nom:'Renaud', fonction:'Coordonnateur', username:'trenaud' },
-      { prenom:'Marianne',nom:'Lacroix', fonction:'Éducatrice jeunesse', username:'mlacroix' },
-      { prenom:'Yannick',nom:'Legros', fonction:'Veilleur de nuit', username:'ylegros' },
-      { prenom:'Sandrine',nom:'Carlier', fonction:'Infirmière', username:'scarlier' }
-    ];
-    const maxUsers = Math.min(cfgUsers - 1, profils.length);
-    for (let i = 0; i < maxUsers; i++) {
-      const p = profils[i];
-      users.push({ id: i + 2, ...p, password: 'educ123', role: 'educ' });
-    }
-    DB.set(DB.keys.users, users);
-    users.forEach(u => addUserToAllEtabs(u));
+  if (!residents.length && !users.length) {
+    log('⚠️ Aucun résident ni utilisateur trouvé sur cet établissement — générez d’abord des données de base.');
+    return null;
   }
 
-  // ── EMPLOYÉS ──
-  const employesTpl = [
-    { prenom:'Sophie', nom:'Martin', poste:'Éducatrice spécialisée', tel:'06 11 22 33 01', email:'sophie.martin@ftr.fr' },
-    { prenom:'Pierre', nom:'Dubois', poste:'Éducateur jeunesse', tel:'06 11 22 33 02', email:'pierre.dubois@ftr.fr' },
-    { prenom:'Camille', nom:'Legrand', poste:'Psychologue', tel:'06 11 22 33 03', email:'camille.legrand@ftr.fr' },
-    { prenom:'Julien', nom:'Fontaine', poste:'Moniteur éducateur', tel:'06 11 22 33 04', email:'julien.fontaine@ftr.fr' },
-    { prenom:'Nathalie', nom:'Petit', poste:'Chef de service', tel:'06 11 22 33 05', email:'nathalie.petit@ftr.fr' },
-    { prenom:'Antoine', nom:'Leroy', poste:'Éducateur sportif', tel:'06 11 22 33 06', email:'antoine.leroy@ftr.fr' },
-    { prenom:'Mélanie', nom:'Roux', poste:'Assistante sociale', tel:'06 11 22 33 07', email:'melanie.roux@ftr.fr' },
-    { prenom:'David', nom:'Moreau', poste:'Infirmier', tel:'06 11 22 33 08', email:'david.moreau@ftr.fr' },
-    { prenom:'Élodie', nom:'Fournier', poste:'Éducatrice jeunes enfants', tel:'06 11 22 33 09', email:'elodie.fournier@ftr.fr' },
-    { prenom:'Sébastien', nom:'Girard', poste:'Veilleur de nuit', tel:'06 11 22 33 10', email:'sebastien.girard@ftr.fr' },
-    { prenom:'Caroline', nom:'Bonnet', poste:'Psychomotricienne', tel:'06 11 22 33 11', email:'caroline.bonnet@ftr.fr' },
-    { prenom:'Alexandre', nom:'Dupont', poste:'Médiateur social', tel:'06 11 22 33 12', email:'alexandre.dupont@ftr.fr' },
-    { prenom:'Virginie', nom:'Lambert', poste:'CESF', tel:'06 11 22 33 13', email:'virginie.lambert@ftr.fr' },
-    { prenom:'Romain', nom:'Chevallier', poste:'Animateur socioculturel', tel:'06 11 22 33 14', email:'romain.chevallier@ftr.fr' },
-    { prenom:'Isabelle', nom:'Perrin', poste:'Coordinatrice de parcours', tel:'06 11 22 33 15', email:'isabelle.perrin@ftr.fr' },
-    { prenom:'Laurent', nom:'Gauthier', poste:'Éducateur technique', tel:'06 11 22 33 16', email:'laurent.gauthier@ftr.fr' },
-    { prenom:'Stéphanie', nom:'Caron', poste:'Secrétaire médico-sociale', tel:'06 11 22 33 17', email:'stephanie.caron@ftr.fr' },
-    { prenom:'Grégory', nom:'Moulin', poste:'Agent de maintien', tel:'06 11 22 33 18', email:'gregory.moulin@ftr.fr' },
-    { prenom:'Audrey', nom:'Renard', poste:'Référente ASE', tel:'06 11 22 33 19', email:'audrey.renard@ftr.fr' },
-    { prenom:'Florian', nom:'Marchand', poste:'Stagiaire éducateur', tel:'06 11 22 33 20', email:'florian.marchand@ftr.fr' },
-    { prenom:'Nicolas', nom:'Baron', poste:'Éducateur spécialisé', tel:'06 11 22 33 21', email:'nicolas.baron@ftr.fr' },
-    { prenom:'Vanessa', nom:'Peltier', poste:'Assistante sociale', tel:'06 11 22 33 22', email:'vanessa.peltier@ftr.fr' },
-    { prenom:'Jérôme', nom:'Lefebvre', poste:'Moniteur éducateur', tel:'06 11 22 33 23', email:'jerome.lefebvre@ftr.fr' },
-    { prenom:'Hélène', nom:'Garnier', poste:'Psychologue clinicienne', tel:'06 11 22 33 24', email:'helene.garnier@ftr.fr' },
-    { prenom:'Thibault', nom:'Renaud', poste:'Coordonnateur', tel:'06 11 22 33 25', email:'thibault.renaud@ftr.fr' },
-    { prenom:'Marianne', nom:'Lacroix', poste:'Éducatrice jeunesse', tel:'06 11 22 33 26', email:'marianne.lacroix@ftr.fr' },
-    { prenom:'Yannick', nom:'Legros', poste:'Veilleur de nuit', tel:'06 11 22 33 27', email:'yannick.legros@ftr.fr' },
-    { prenom:'Sandrine', nom:'Carlier', poste:'Infirmière', tel:'06 11 22 33 28', email:'sandrine.carlier@ftr.fr' },
-    { prenom:'Michaël', nom:'André', poste:'Éducateur spécialisé', tel:'06 11 22 33 29', email:'michael.andre@ftr.fr' },
-    { prenom:'Céline', nom:'Bourgeois', poste:'Psychologue', tel:'06 11 22 33 30', email:'celine.bourgeois@ftr.fr' },
-    { prenom:'Loïc', nom:'Rivière', poste:'Moniteur éducateur', tel:'06 11 22 33 31', email:'loic.riviere@ftr.fr' },
-    { prenom:'Stéphane', nom:'Olivier', poste:'Animateur', tel:'06 11 22 33 32', email:'stephane.olivier@ftr.fr' },
-    { prenom:'Corine', nom:'Gilles', poste:'Assistante sociale', tel:'06 11 22 33 33', email:'corine.gilles@ftr.fr' },
-    { prenom:'Benoît', nom:'Noël', poste:'Éducateur technique', tel:'06 11 22 33 34', email:'benoit.noel@ftr.fr' },
-    { prenom:'Valérie', nom:'Blin', poste:'Infirmière', tel:'06 11 22 33 35', email:'valerie.blin@ftr.fr' },
-    { prenom:'Fabrice', nom:'Guyot', poste:'CESF', tel:'06 11 22 33 36', email:'fabrice.guyot@ftr.fr' },
-    { prenom:'Sylvie', nom:'Martineau', poste:'Coordinatrice', tel:'06 11 22 33 37', email:'sylvie.martineau@ftr.fr' },
-    { prenom:'Raphaël', nom:'Besson', poste:'Éducateur jeunesse', tel:'06 11 22 33 38', email:'raphael.besson@ftr.fr' },
-    { prenom:'Nadia', nom:'Gibert', poste:'Psychomotricienne', tel:'06 11 22 33 39', email:'nadia.gibert@ftr.fr' },
-    { prenom:'Gilles', nom:'Lemoine', poste:'Agent de maintenance', tel:'06 11 22 33 40', email:'gilles.lemoine@ftr.fr' },
-    { prenom:'Aurélie', nom:'Becker', poste:'Éducatrice jeunes enfants', tel:'06 11 22 33 41', email:'aurelie.becker@ftr.fr' },
-    { prenom:'Pascal', nom:'Marchal', poste:'Veilleur de nuit', tel:'06 11 22 33 42', email:'pascal.marchal@ftr.fr' },
-    { prenom:'Martine', nom:'Guérin', poste:'Secrétaire', tel:'06 11 22 33 43', email:'martine.guerin@ftr.fr' },
-    { prenom:'Alain', nom:'Boucher', poste:'Médiateur social', tel:'06 11 22 33 44', email:'alain.boucher@ftr.fr' },
-    { prenom:'Brigitte', nom:'Colin', poste:'Référente ASE', tel:'06 11 22 33 45', email:'brigitte.colin@ftr.fr' },
-    { prenom:'Didier', nom:'Barbier', poste:'Chef de service', tel:'06 11 22 33 46', email:'didier.barbier@ftr.fr' },
-    { prenom:'Lydie', nom:'Renault', poste:'Psychologue', tel:'06 11 22 33 47', email:'lydie.renault@ftr.fr' },
-    { prenom:'Hervé', nom:'Rolland', poste:'Éducateur sportif', tel:'06 11 22 33 48', email:'herve.rolland@ftr.fr' },
-    { prenom:'Danièle', nom:'Leclerc', poste:'Assistante sociale', tel:'06 11 22 33 49', email:'daniele.leclerc@ftr.fr' },
-    { prenom:'Patrick', nom:'Mathieu', poste:'Animateur socioculturel', tel:'06 11 22 33 50', email:'patrick.mathieu@ftr.fr' }
-  ];
+  const journal = DB.get(DB.keys.journal) || [];
+  const planning = DB.get(DB.keys.planning) || [];
+  const loginLog = DB.get(DB.keys.loginHistory) || [];
+  const presences = DB.get(DB.keys.presences) || {};
+  let journalAdded = 0, planningAdded = 0, loginsAdded = 0, presencesAdded = 0, budgetAdded = 0;
 
-  const empCount = Math.min(cfgEmp, employesTpl.length);
-  const employes = employesTpl.slice(0, empCount).map((e, i) => ({
-    id: 'de-' + (i + 1),
-    prenom: e.prenom, nom: e.nom, poste: e.poste, telephone: e.tel, email: e.email,
-    dateEmbauche: new Date(now.getTime() - rand(60, 1800) * 86400000).toISOString().slice(0,10),
-    statut: Math.random() < .9 ? 'actif' : 'conge',
-    color: pick(COULEURS), heuresContrat: pick([24,28,30,35,35,35,39,40]),
-    photo: '', notes: '', createdAt: now.toISOString()
-  }));
-  DB.set(DB.keys.employes, employes);
+  const dayBuckets = [];
 
-  // ── MESSAGES ──
-  const conversations = {};
-  const allMsgs = [];
-  const convDefs = [
-    { users: [1,2,3], msgs: ['Bonjour à tous, réunion d équipe demain à 14h. Merci de confirmer.','Présente, merci !','Présent également. Je dois faire le point sur le suivi.','Parfait. Préparez un rapport.','OK, je m en occupe.','J ai croisé sa référente, elle dit qu il progresse.','Bien, continuez comme ça.']},
-    { users: [1,4], msgs: ['Bonjour, RDV CMP pour Sarah confirmé demain 15h.','Merci. Le transport est organisé ?','Oui, j ai réservé le Kangoo.','Très bien. Tenez-moi au courant.','RDV passé. Le médecin ajuste son traitement.','Parfait. Et pour Enzo ?','Premier RDV programmé jeudi prochain.']},
-    { users: [2,3,4,5], msgs: ['Info : Fatima a trouvé un stage en crèche !','Super nouvelle ! Suivi rapproché la première semaine.','Je peux m en charger.','Parfait. Leila a aussi eu son stage.','Génial ! Bonne semaine pour les stages.','On prévoit un atelier préparation entretien ?','Bonne idée. Je peux animer jeudi.']},
-    { users: [1,6,14], msgs: ['Bonjour, point sur les budgets. Plusieurs dépassements.','Oui, Ryan a tout dépensé en une semaine.','On met un suivi renforcé ? Virginie tu prends ?','Bien sûr. Atelier budget 2x/semaine.','Parfait. Budget sorties collectives dans le vert.']},
-    { users: [12,13,15], msgs: ['Je propose un atelier psychomotricité pour Lucas et Mehdi.','Bonne idée. Je les prépare en amont.','Je veux bien co-animer.','Super ! Je propose mardi 14h.','Je confirme ma disponibilité.']},
-    { users: [8,10,18], msgs: ['Bonjour, point MDPH. Elena et Sarah à renouveler.','Il manque le certificat médical pour Elena.','Je relance le Dr Moreau.','Parfait. Et pour le logement d Assia ?','Commission d attribution le 15.','J ai préparé le dossier renouvellement contrat jeune majeur.']},
-    { users: [7,17,19], msgs: ['On organise un tournoi de foot inter-foyers ?','Excellente idée ! Je prépare les jeunes.','Je gère la logistique.','On vise samedi dans 3 semaines.','Sofiane et Amine sont chauds.','On inscrit aussi Kylian ?','Bonne idée, je valide avec son référent.']},
-    { users: [1,2], msgs: ['Nouvel arrivant prévu lundi. Chambre 105 à préparer.','OK, je m en occupe. Il faut commander un lit ?','Oui, vérifie le stock. Sinon bon de commande.','Compris. Briefing équipe demain matin ?','À 9h en salle de réunion. Présents : Sophie, Pierre, Julien.','Noté. Je prépare le dossier d accueil.']}
-  ];
-  const maxConvs = Math.min(cfgMsg, convDefs.length);
-  for (let ci = 0; ci < maxConvs; ci++) {
-    const cd = convDefs[ci];
-    const convId = cd.users.sort((a,b)=>a-b).join('_');
-    conversations[convId] = { id: convId, userIds: cd.users, createdAt: new Date(now.getTime() - (maxConvs - ci) * 86400000 * 2).toISOString() };
-    cd.msgs.forEach((body, mi) => {
-      const d = new Date(now.getTime() - ((cd.msgs.length - mi) + (maxConvs - ci) * 7) * 86400000);
-      d.setHours(rand(8, 18), rand(0, 59), 0, 0);
-      allMsgs.push({ id: 'dm-' + (ci + 1) + '-' + (mi + 1), convId, from: cd.users[mi % cd.users.length], body, date: d.toISOString(), readBy: [cd.users[mi % cd.users.length]] });
-    });
-  }
-  DB.set(DB.keys.messages, allMsgs);
-  localStorage.setItem('ftr_conversations', JSON.stringify(conversations));
+  for (let off = -180; off <= 180; off++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
+    const dateStr = d.toISOString().slice(0,10);
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const isPast = off <= 0;
+    const baseN = isWeekend ? Math.max(1, Math.round(intensite * 0.3)) : intensite;
+    let count = 0;
 
-  // ── RÉPERTOIRE ──
-  const contactsTpl = [
-    { organisme:'CMP Maison Blanche', nom:'Dr Anne Moreau', tel:'01 45 67 89 01', email:'anne.moreau@gh-paris.fr', fonction:'Pédopsychiatre', adresse:'15 Rue de la Santé, 75014 Paris', notes:'Suivi de Lucas et Sarah.' },
-    { organisme:'ASE Paris', nom:'Mme Valérie Legrand', tel:'01 23 45 67 10', email:'valerie.legrand@paris.fr', fonction:'Référente ASE', adresse:'12 Rue du Château, 75010 Paris', notes:'' },
-    { organisme:'PJJ Paris', nom:'M. Christophe Fontaine', tel:'01 23 45 67 20', email:'christophe.fontaine@justice.fr', fonction:'Éducateur PJJ', adresse:'3 Boulevard du Palais, 75001 Paris', notes:'' },
-    { organisme:'Mission Locale Paris Centre', nom:'Mme Karima Saadi', tel:'01 45 78 90 12', email:'k.saadi@ml-paris.fr', fonction:'Conseillère insertion', adresse:'8 Rue de la Paix, 75002 Paris', notes:'' },
-    { organisme:'CIDFF Paris', nom:'Mme Laure Blanc', tel:'01 45 67 89 34', email:'l.blanc@cidff.fr', fonction:'Psychologue', adresse:'20 Rue de la Roquette, 75011 Paris', notes:'' },
-    { organisme:'Hôpital Saint-Antoine', nom:'Dr Paul Lefèvre', tel:'01 49 28 20 00', email:'paul.lefevre@aphp.fr', fonction:'Psychiatre', adresse:'184 Rue du Faubourg Saint-Antoine, 75012 Paris', notes:'' },
-    { organisme:'OFII Paris', nom:'M. Amadou Ba', tel:'01 40 77 25 00', email:'amadou.ba@ofii.fr', fonction:'Référent intégration', adresse:'44 Rue Bargue, 75015 Paris', notes:'' },
-    { organisme:'Collège Victor Hugo', nom:'M. Laurent Roux', tel:'01 43 56 78 91', email:'ce.0751235b@ac-paris.fr', fonction:'CPE', adresse:'5 Rue Victor Hugo, 75011 Paris', notes:'' },
-    { organisme:'ESAT Les Ateliers du Val', nom:'M. Franck Morel', tel:'01 48 90 12 34', email:'f.morel@esat-val.fr', fonction:'Directeur adjoint', adresse:'Route de la Vallée, 94120 Fontenay', notes:'' },
-    { organisme:'MDPH Val-de-Marne', nom:'Mme Sophie Leroy', tel:'09 72 12 34 56', email:'sophie.leroy@mdph94.fr', fonction:'Chargée de dossier', adresse:'1 Place de la Préfecture, 94000 Créteil', notes:'' },
-    { organisme:'CCAS Paris 10e', nom:'M. David Cohen', tel:'01 45 67 89 50', email:'d.cohen@ccas-paris.fr', fonction:'Travailleur social', adresse:'10 Rue de la Grange aux Belles, 75010 Paris', notes:'' },
-    { organisme:'Service Solideo', nom:'Mme Fatou Ba', tel:'06 12 34 56 13', email:'f.ba@solideo.org', fonction:'Travailleuse sociale', adresse:'18 Rue des Martyrs, 75009 Paris', notes:'' },
-    { organisme:'Lycée Hôtelier Guillaume Tirel', nom:'M. Jean-Claude Roux', tel:'01 44 14 77 77', email:'jc.roux@ac-paris.fr', fonction:'Chef des travaux', adresse:'18 Rue Guillaume Tirel, 75014 Paris', notes:'' },
-    { organisme:'GRETA Paris', nom:'Mme Sylvie Mercier', tel:'01 44 62 36 00', email:'s.mercier@greta-paris.fr', fonction:'Coordinatrice', adresse:'164 Rue de Rivoli, 75001 Paris', notes:'' },
-    { organisme:'SPIP Paris', nom:'M. Franck Leblanc', tel:'01 45 67 89 60', email:'franck.leblanc@justice.fr', fonction:'Conseiller d insertion', adresse:'12 Rue de la Santé, 75014 Paris', notes:'' },
-    { organisme:'PMI Paris 11e', nom:'Mme Claire Fontaine', tel:'01 45 67 89 70', email:'claire.fontaine@paris.fr', fonction:'Puéricultrice', adresse:'8 Rue de la Vacquerie, 75011 Paris', notes:'' },
-    { organisme:'Foyer Jeunes', nom:'Mme Sylviane Roussel', tel:'01 45 67 89 80', email:'sylviane.roussel@foyerjeunes.org', fonction:'Directrice', adresse:'20 Rue des Lilas, 75020 Paris', notes:'Partenariat ateliers Insertion.' },
-    { organisme:'Hopital Cochin', nom:'Dr Martine Vergne', tel:'01 45 67 89 90', email:'martine.vergne@aphp.fr', fonction:'Pédiatre', adresse:'27 Rue du Faubourg Saint-Jacques, 75014 Paris', notes:'' },
-    { organisme:'Protection Civile', nom:'M. Emmanuel Dupuis', tel:'06 11 22 34 00', email:'e.dupuis@protection-civile.org', fonction:'Formateur secourisme', adresse:'5 Rue du Secours, 75012 Paris', notes:'' },
-    { organisme:'Club Sportif', nom:'Mme Karine Bello', tel:'06 11 22 34 01', email:'karine.bello@clubsportif.org', fonction:'Coach sportive', adresse:'Stade Municipal, 75012 Paris', notes:'' },
-    { organisme:'Service Intégration', nom:'M. Ali Hamdi', tel:'01 45 67 90 01', email:'ali.hamdi@integration.org', fonction:'Référent parcours', adresse:'10 Rue de l Insertion, 75018 Paris', notes:'' },
-    { organisme:'Association Espoir', nom:'Mme Nadia Cherfi', tel:'06 11 22 34 02', email:'n.cherfi@espoir-asso.fr', fonction:'Travailleuse sociale', adresse:'7 Rue de l Espoir, 75013 Paris', notes:'' },
-    { organisme:'Cap Emploi', nom:'M. Denis Cornet', tel:'01 45 67 90 10', email:'denis.cornet@capemploi.fr', fonction:'Conseiller', adresse:'32 Rue de l Emploi, 75015 Paris', notes:'' },
-    { organisme:'CROUS Paris', nom:'Mme Sylvie Albert', tel:'01 40 32 40 00', email:'s.albert@crous-paris.fr', fonction:'Gestionnaire logement', adresse:'15 Rue de Santeuil, 75005 Paris', notes:'' },
-    { organisme:'Centre de Loisirs', nom:'M. Luc Perret', tel:'06 11 22 34 03', email:'l.perret@centreloisirs.fr', fonction:'Animateur', adresse:'Place des Loisirs, 75011 Paris', notes:'' },
-    { organisme:'BAF - Bureau Aide Famille', nom:'Mme Anne-Claire Weiss', tel:'01 45 67 90 20', email:'ac.weiss@baf-paris.fr', fonction:'Assistante familiale', adresse:'5 Rue des Familles, 75010 Paris', notes:'' },
-    { organisme:'Service Logement', nom:'M. Jean-Baptiste Rey', tel:'01 45 67 90 30', email:'jb.rey@logement-paris.fr', fonction:'Chargé de location', adresse:'22 Rue du Logement, 75019 Paris', notes:'' },
-    { organisme:'Atelier Cuisine', nom:'M. Philippe Cheval', tel:'06 11 22 33 99', email:'p.cheval@atelier-cuisine.fr', fonction:'Chef cuisinier formateur', adresse:'15 Rue des Saveurs, 75012 Paris', notes:'' },
-    { organisme:'École Élémentaire Jules Ferry', nom:'Mme Christine Petit', tel:'01 43 56 78 90', email:'ce.0751234a@ac-paris.fr', fonction:'Directrice', adresse:'2 Rue Jules Ferry, 75011 Paris', notes:'' }
-  ];
-  const contactCount = Math.min(cfgContacts, contactsTpl.length);
-  const contacts = contactsTpl.slice(0, contactCount).map(c => ({
-    id: 'dc-' + rand(100000, 999999).toString(36),
-    updatedAt: new Date(now.getTime() - rand(0, 60) * 86400000).toISOString(), ...c
-  }));
-  DB.set(DB.keys.repertoire, contacts);
-
-  // ── DOCUMENTS ──
-  const docs = {};
-  for (let i = 0; i < resList.length && cfgDocsPerRes > 0; i++) {
-    const res = resList[i];
-    const resDocs = [];
-    for (let j = 0; j < cfgDocsPerRes; j++) {
-      const dueSoon = Math.random() < .25;
-      resDocs.push({
-        name: pick(['Compte rendu médical','Contrat de séjour','Projet personnalisé','Bilan social','Certificat médical','Convention de stage','Attestation hébergement','Avenant logement']),
-        category: pick(['medical','administratif','scolaire','judiciaire','contrat','autre']),
-        docDate: new Date(now.getTime() - rand(10, 365) * 86400000).toISOString().slice(0,10),
-        dueDate: dueSoon ? new Date(now.getTime() + rand(-30, 120) * 86400000).toISOString().slice(0,10) : '',
-        mimeType: 'application/pdf',
-        size: rand(100, 500) * 1024,
-        fileName: 'document.pdf',
-        date: new Date().toISOString(),
-        id: 'dd-r' + i + '-' + (j + 1)
-      });
-    }
-    docs[res.id] = resDocs;
-  }
-  if (cfgDocsRsrc > 0) {
-    docs['_resources'] = [];
-    for (let j = 0; j < cfgDocsRsrc; j++) {
-      docs['_resources'].push({
-        name: pick(['Règlement intérieur','Procédure urgences','Guide des partenaires','Charte des droits','Plan d évacuation','Livret d accueil','Protocole sanitaire','Règlement de sortie']),
-        category: 'administratif',
-        docDate: new Date(now.getTime() - rand(30, 200) * 86400000).toISOString().slice(0,10),
-        mimeType: 'application/pdf',
-        size: rand(200, 600) * 1024,
-        fileName: 'document.pdf',
-        date: new Date().toISOString(),
-        residentId: '_resources',
-        id: 'dd-rsrc-' + (j + 1)
-      });
-    }
-  }
-  DB.set(DB.keys.documents, docs);
-
-  // ── HISTORIQUE CONNEXIONS ──
-  const loginHistory = [];
-  const loginUsers = ['admin', 'smartin', 'pdubois', 'clegrand', 'jfontaine'];
-  const actions = ['connexion', 'connexion', 'connexion', 'déconnexion'];
-  for (let i = 0; i < cfgLogin; i++) {
-    const d = new Date(now.getTime() - rand(0, 30) * 86400000);
-    d.setHours(rand(6, 22), rand(0, 59), 0, 0);
-    loginHistory.push({
-      id: genId(),
-      date: d.toISOString(),
-      userId: rand(1, 5),
-      user: pick(loginUsers),
-      action: pick(actions),
-      role: pick(['admin', 'educ', 'educ', 'educ']),
-      details: Math.random() < .2 ? 'Échec de connexion' : ''
-    });
-  }
-  loginHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (loginHistory.length > 200) loginHistory.length = 200;
-  DB.set(DB.keys.loginHistory, loginHistory);
-
-  // ── AUDIT LOG ──
-  const _pickName = arr => { const o = arr && arr.length ? pick(arr) : null; return o ? (o.prenom||'') + ' ' + (o.nom||'') : ''; };
-  const _demoUsers = users.length > 1 ? users.slice(1) : resList;
-  const auditActions = ['resident_create','resident_update','journal_create','incident_create','user_create','vehicle_create','ppe_create'];
-  const auditDetails = {
-    resident_create: () => _pickName(resList),
-    resident_update: () => _pickName(resList),
-    journal_create: () => (rand(3,8)) + ' entrée(s) de suivi',
-    incident_create: () => { const i = pick(incList || []); return i ? (i.titre || i.description || 'Incident') : 'Incident'; },
-    user_create: () => _pickName(_demoUsers),
-    vehicle_create: () => pick(vehList || ['Véhicule']) || 'Véhicule',
-    ppe_create: () => _pickName(resList)
-  };
-  const auditUsernames = [{name:'Admin',role:'admin',userId:1}, {name:'Sophie Martin',role:'admin',userId:2}, {name:'Pierre Dubois',role:'educ',userId:3}];
-  const auditLog = [];
-  for (let i = 0; i < rand(15,40); i++) {
-    const action = pick(auditActions);
-    const au = pick(auditUsernames);
-    auditLog.push({
-      id: 'dal-' + (i + 1),
-      date: new Date(now.getTime() - rand(0,30) * 86400000).toISOString(),
-      userId: au.userId,
-      user: au.name,
-      role: au.role,
-      action,
-      details: auditDetails[action] ? auditDetails[action]() : ''
-    });
-  }
-  auditLog.sort((a,b) => new Date(b.date) - new Date(a.date));
-  localStorage.setItem('ftr_audit_log', JSON.stringify(auditLog));
-
-  // ── VIATRAJECTOIRE ──
-  const vtStatuts = ['brouillon','envoye','en_cours','accepte','refuse','cloture'];
-  const vtTypes = ['orientation','renouvellement','reorientation'];
-  const vts = [];
-  const nbVt = rand(2, Math.min(8, resList.length));
-  const shuffled = [...resList].sort(() => Math.random() - 0.5);
-  for (let i = 0; i < nbVt; i++) {
-    vts.push({
-      id: 'vt-' + genId(),
-      residentId: shuffled[i].id,
-      type: pick(vtTypes),
-      mdph: pick(['mape','cdaph']),
-      date: new Date(now.getTime() - rand(0,180) * 86400000).toISOString(),
-      statut: pick(vtStatuts),
-      commentaire: pick(['','Demande en cours d\'instruction','Complément d\'information demandé','Décision favorable attendue','','',''])
-    });
-  }
-  localStorage.setItem('ftr_viatrajectoire', JSON.stringify(vts));
-
-  // ── PLANNING ÉQUIPE ──
-  const pe = [];
-  const employesList = DB.get(DB.keys.employes) || [];
-  const peShiftTemplates = [['08:00','16:00'],['07:00','15:00'],['09:00','17:00'],['13:00','21:00'],['21:00','07:00']];
-  if (employesList.length) {
-    const peMonday = new Date(now);
-    peMonday.setDate(peMonday.getDate() - ((peMonday.getDay() + 6) % 7) - 14);
-    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
-      for (let day = 0; day < 28; day++) {
-        const d = new Date(peMonday);
-        d.setDate(d.getDate() + day);
-        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-        if (Math.random() < (isWeekend ? 0.2 : 0.75)) {
-          const [debut, fin] = pick(peShiftTemplates);
-          pe.push({ id: 'pe-' + genId(), employeId: emp.id, date: d.toISOString().slice(0,10), debut, fin });
+    if (isPast) {
+      // Connexions
+      const nbLogins = rand(0, baseN);
+      for (let i = 0; i < nbLogins; i++) {
+        const u = users.length ? pick(users) : { username: 'demo', prenom: 'Démo', nom: '', role: 'employe' };
+        loginLog.push({ id: genId(), action: 'login', username: u.username || 'demo', prenom: u.prenom || '', nom: u.nom || '', role: u.role || '', date: new Date(d.getTime() + rand(7,19)*3600000).toISOString() });
+        count++; loginsAdded++;
+      }
+      // Journal
+      if (activeResidents.length) {
+        const nbJournal = rand(0, Math.max(1, Math.round(baseN * 0.6)));
+        for (let i = 0; i < nbJournal; i++) {
+          const r = pick(activeResidents);
+          const author = users.length ? pick(users) : { prenom: 'Équipe', nom: '', id: 'demo' };
+          const dt = new Date(d.getTime() + rand(8,19)*3600000).toISOString();
+          journal.push({ id: 'usj-' + genId(), type: 'observation', residentId: r.id, resident: (r.prenom||'')+' '+(r.nom||''), residentColor: r.color || '#3b82f6', categorie: 1, date: dt, contenu: pick(JOURNAL_SNIPPETS), visibilite: 'equipe', author: (author.prenom||'')+' '+(author.nom||''), authorId: author.id || 'demo', replies: [], readBy: [], createdAt: dt, updatedAt: dt });
+          count++; journalAdded++;
         }
       }
-    });
-  }
-  DB.set(DB.keys.planningEquipe, pe);
-
-  // ── CONGÉS ──
-  const conges = [];
-  const typeLabels = ['cp','rtt','maladie','enfant_malade','formation'];
-  const statuts = ['en_attente','accepte','refuse'];
-  if (employesList.length) {
-    for (let i = 0; i < rand(5, 15); i++) {
-      const emp = pick(employesList);
-      const d = new Date(now);
-      d.setDate(d.getDate() + rand(-30, 60));
-      const d2 = new Date(d); d2.setDate(d2.getDate() + rand(0, 5));
-      const statut = pick(statuts);
-      conges.push({
-        id: 'cg-' + genId(),
-        employeId: emp.id, employeNom: emp.prenom+' '+emp.nom,
-        type: pick(typeLabels),
-        debut: d.toISOString().slice(0,10),
-        fin: d2.toISOString().slice(0,10),
-        motif: pick(['','Rendez-vous médical','Raison personnelle','Formation obligatoire','','']),
-        statut,
-        dateDemande: new Date(now.getTime() - rand(0, 60) * 86400000).toISOString(),
-        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom+' '+u.nom).filter(Boolean)) : '',
-        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
-        reponseMotif: statut === 'refuse' ? pick(['Effectif insuffisant','Période de forte activité','Doublon avec autre demande','']) : ''
-      });
-    }
-  }
-  localStorage.setItem('ftr_conges', JSON.stringify(conges));
-
-  // ── BUDGET & DÉPENSES ──
-  const budgetEnveloppes = [
-    { id: 'benv-' + genId(), nom: 'Activités éducatives', montant: rand(1500, 3000), description: 'Sorties, ateliers et activités collectives', createdAt: new Date(now.getTime() - 200 * 86400000).toISOString() },
-    { id: 'benv-' + genId(), nom: 'Matériel pédagogique', montant: rand(800, 1500), description: 'Fournitures, jeux éducatifs, supports d\'activité', createdAt: new Date(now.getTime() - 200 * 86400000).toISOString() },
-    { id: 'benv-' + genId(), nom: 'Frais de déplacement', montant: rand(1000, 2000), description: 'Transports professionnels, carburant, péages', createdAt: new Date(now.getTime() - 180 * 86400000).toISOString() },
-    { id: 'benv-' + genId(), nom: 'Entretien & maintenance', montant: rand(1200, 2500), description: 'Petites réparations, fournitures d\'entretien', createdAt: new Date(now.getTime() - 180 * 86400000).toISOString() }
-  ];
-  DB.set(DB.keys.budgetEnveloppes, budgetEnveloppes);
-
-  const budgetDemandes = [];
-  const BUDGET_MOTIFS = ['Achat de matériel pour l\'atelier', 'Sortie pédagogique', 'Frais de déplacement professionnel', 'Achat de fournitures', 'Remboursement repas en mission', 'Petit matériel d\'entretien', 'Carburant véhicule de service', 'Activité éducative jeunes', 'Achat de jeux éducatifs', 'Péage / parking mission'];
-  const BUDGET_REFUS = ['Justificatif manquant ou illisible', 'Montant non conforme au plafond', 'Dépense hors enveloppe', 'Demande déjà traitée via une autre enveloppe', ''];
-  if (employesList.length) {
-    for (let i = 0; i < rand(8, 18); i++) {
-      const emp = pick(employesList);
-      const env = pick(budgetEnveloppes);
-      const dDep = new Date(now);
-      dDep.setDate(dDep.getDate() - rand(0, 60));
-      const statut = pick(statuts);
-      budgetDemandes.push({
-        id: 'bg-' + genId(),
-        employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
-        enveloppeId: env.id, enveloppeNom: env.nom,
-        montant: rand(15, 220),
-        motif: pick(BUDGET_MOTIFS),
-        dateDepense: dDep.toISOString().slice(0, 10),
-        justificatifs: [],
-        statut,
-        dateDemande: new Date(dDep.getTime() + rand(0, 3) * 86400000).toISOString(),
-        traitePar: statut !== 'en_attente' ? pick(users.map(u => u.prenom + ' ' + u.nom).filter(Boolean)) : '',
-        dateTraitement: statut !== 'en_attente' ? new Date(now.getTime() - rand(0, 10) * 86400000).toISOString() : '',
-        reponseMotif: statut === 'refuse' ? pick(BUDGET_REFUS) : ''
-      });
-    }
-  }
-  DB.set(DB.keys.budgetDemandes, budgetDemandes);
-
-  // ── FICHES DE PAIE ──
-  const fichesPaie = [];
-  if (employesList.length) {
-    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
-      for (let m = 1; m <= 6; m++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
-        const periode = d.toISOString().slice(0, 7);
-        const txt = `Bulletin de paie — ${emp.prenom} ${emp.nom}\nPériode : ${periode}\nDocument généré automatiquement (démo).`;
-        fichesPaie.push({
-          id: 'pie-' + genId(),
-          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
-          periode,
-          fichier: { name: `bulletin_${periode}.txt`, mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
-          dateAjout: new Date(d.getFullYear(), d.getMonth() + 1, 5).toISOString(),
-          ajoutePar: 'Service RH'
-        });
+      // Présences
+      if (activeResidents.length) {
+        if (!presences[dateStr]) presences[dateStr] = {};
+        activeResidents.forEach(r => { presences[dateStr][r.id] = Math.random() < .92 ? 'present' : 'absent'; });
+        presencesAdded += activeResidents.length;
+        count += 1;
       }
-    });
-  }
-  DB.set(DB.keys.fichesPaie, fichesPaie);
-
-  // ── ENTRETIENS PROFESSIONNELS ──
-  const entretiens = [];
-  const ENTRETIEN_TYPES = ['annuel', 'professionnel', 'suivi'];
-  const ENTRETIEN_BILANS = [
-    'Bonne implication dans les projets éducatifs, posture professionnelle adaptée.',
-    'Période marquée par une charge de travail importante, accompagnement renforcé proposé.',
-    'Progression notable sur la gestion des situations de crise.',
-    'Investissement constant, bonne intégration dans l\'équipe.',
-    'Quelques difficultés relationnelles avec l\'équipe, points d\'amélioration identifiés.'
-  ];
-  const ENTRETIEN_OBJECTIFS = [
-    'Poursuivre la formation sur les TSA / TND.',
-    'Renforcer la coordination avec les familles.',
-    'Développer les écrits professionnels.',
-    'Prendre en charge un projet d\'activité collective.',
-    'Améliorer la gestion du temps et des priorités.'
-  ];
-  const ENTRETIEN_FORMATIONS = ['', 'Formation gestes et postures', 'Formation premiers secours (PSC1)', 'Formation gestion de la violence', 'Formation à l\'écrit professionnel', ''];
-  if (employesList.length) {
-    employesList.filter(e => e.statut !== 'inactif').forEach(emp => {
-      const n = rand(1, 2);
-      for (let k = 0; k < n; k++) {
-        const d = new Date(now);
-        d.setMonth(d.getMonth() - rand(1, 11));
-        const statut = d < now ? pick(['realise', 'realise', 'planifie']) : 'planifie';
-        entretiens.push({
-          id: 'et-' + genId(),
-          employeId: emp.id, employeNom: emp.prenom + ' ' + emp.nom,
-          date: d.toISOString().slice(0, 10),
-          type: pick(ENTRETIEN_TYPES),
-          statut,
-          evaluateur: pick(REFFERENTS),
-          bilan: statut === 'realise' ? pick(ENTRETIEN_BILANS) : '',
-          objectifs: pick(ENTRETIEN_OBJECTIFS),
-          formations: pick(ENTRETIEN_FORMATIONS),
-          createdAt: d.toISOString()
-        });
-      }
-    });
-  }
-  DB.set(DB.keys.entretiens, entretiens);
-
-  // ── DOCUMENTATION DE L'ÉTABLISSEMENT ──
-  const documentation = [];
-  const DOCU_ITEMS = [
-    { titre: "Projet d'établissement 2023-2028", categorie: "Projet d'établissement", mois: 18 },
-    { titre: "Règlement de fonctionnement", categorie: 'Règlement intérieur', mois: 14 },
-    { titre: 'Charte des droits et libertés de la personne accueillie', categorie: 'Règlement intérieur', mois: 14 },
-    { titre: 'Note de service — Organisation des astreintes de nuit', categorie: 'Notes de service', mois: 3 },
-    { titre: 'Note de service — Procédure de signalement des incidents', categorie: 'Notes de service', mois: 5 },
-    { titre: 'Procédure — Conduite à tenir en cas d\'urgence médicale', categorie: 'Procédures', mois: 9 },
-    { titre: 'Procédure — Admission et accueil d\'un nouveau résident', categorie: 'Procédures', mois: 12 },
-    { titre: 'Compte-rendu — Réunion d\'équipe pluridisciplinaire', categorie: 'Comptes-rendus de réunion', mois: 1 },
-    { titre: 'Compte-rendu — Conseil de la vie sociale', categorie: 'Comptes-rendus de réunion', mois: 2 },
-    { titre: 'Plan de continuité d\'activité', categorie: 'Autre', mois: 10 }
-  ];
-  DOCU_ITEMS.forEach(item => {
-    const d = new Date(now);
-    d.setMonth(d.getMonth() - item.mois);
-    const txt = `${item.titre}\nCatégorie : ${item.categorie}\nDocument généré automatiquement (démo).`;
-    documentation.push({
-      id: 'docu-' + genId(),
-      titre: item.titre,
-      categorie: item.categorie,
-      fichier: { name: item.titre.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase() + '.txt', mimeType: 'text/plain', size: txt.length, data: 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt) },
-      dateAjout: d.toISOString(),
-      ajoutePar: 'Direction'
-    });
-  });
-  DB.set(DB.keys.documentation, documentation);
-
-  // ── ADMISSIONS / LISTE D'ATTENTE ──
-  const admissions = [];
-  const ADM_ITEMS = [
-    { prenom: 'Lina', nom: 'Bouzid', dateNaissance: '2010-03-12', origine: 'MDPH', statut: 'en_attente', jours: 5, contactNom: 'Mme Bouzid (mère)', contactTel: '06 12 34 56 78', notes: 'Orientation MDPH en cours, dossier complet à étudier.' },
-    { prenom: 'Yanis', nom: 'Tomasini', dateNaissance: '2011-07-22', origine: 'ASE', statut: 'en_attente', jours: 2, contactNom: 'Service ASE 74', contactTel: '04 50 11 22 33', notes: 'Placement urgent demandé par l\'ASE, disponibilité de chambre à vérifier.' },
-    { prenom: 'Maëlys', nom: 'Petitjean', dateNaissance: '2009-11-04', origine: 'Établissement', statut: 'etude', jours: 18, contactNom: 'IME Les Tilleuls', contactTel: '03 80 44 55 66', notes: 'Réorientation suite à fermeture de section, dossier en étude par l\'équipe pluridisciplinaire.' },
-    { prenom: 'Noah', nom: 'Richer', dateNaissance: '2012-01-30', origine: 'Famille', statut: 'etude', jours: 25, contactNom: 'M. Richer (père)', contactTel: '06 98 76 54 32', notes: 'Demande directe de la famille, première visite effectuée, en attente de décision de la commission.' },
-    { prenom: 'Inès', nom: 'Charvet', dateNaissance: '2010-09-17', origine: 'MDPH', statut: 'admis', jours: 60, contactNom: 'Mme Charvet (mère)', contactTel: '06 33 22 11 00', notes: 'Dossier validé, admission effectuée.' },
-    { prenom: 'Tom', nom: 'Lacroix', dateNaissance: '2011-04-08', origine: 'ASE', statut: 'refuse', jours: 90, contactNom: 'Service ASE 73', contactTel: '04 79 22 33 44', notes: 'Profil non adapté à l\'agrément de l\'établissement, réorientation proposée vers un autre IME.' },
-    { prenom: 'Camille', nom: 'Dufresne', dateNaissance: '2009-05-26', origine: 'Autre', statut: 'abandon', jours: 45, contactNom: 'Mme Dufresne (tutrice)', contactTel: '06 55 44 33 22', notes: 'Famille a finalement opté pour un établissement plus proche du domicile.' },
-    { prenom: 'Sacha', nom: 'Mercier', dateNaissance: '2012-08-14', origine: 'Établissement', statut: 'en_attente', jours: 1, contactNom: 'CMP de secteur', contactTel: '04 50 77 88 99', notes: 'Pré-orientation transmise par le CMP, premier contact à organiser.' }
-  ];
-  ADM_ITEMS.forEach(item => {
-    const d = new Date(now);
-    d.setDate(d.getDate() - item.jours);
-    const adm = {
-      id: 'adm-' + genId(),
-      prenom: item.prenom, nom: item.nom,
-      dateNaissance: item.dateNaissance,
-      dateDemande: d.toISOString().slice(0, 10),
-      origine: item.origine,
-      statut: item.statut,
-      contactNom: item.contactNom, contactTel: item.contactTel,
-      notes: item.notes,
-      createdAt: d.toISOString(), updatedAt: d.toISOString()
-    };
-    if (item.statut === 'admis' || item.statut === 'refuse' || item.statut === 'abandon') {
-      const dd = new Date(now);
-      dd.setDate(dd.getDate() - Math.max(item.jours - 10, 0));
-      adm.dateDecision = dd.toISOString().slice(0, 10);
-    }
-    admissions.push(adm);
-  });
-  DB.set(DB.keys.admissions, admissions);
-
-  // ── TARIFICATION & FACTURATION ──
-  const FACT_CATEGORIES = [
-    { id: 'internat_complet', label: 'Internat complet (7j/7)', prixJour: 120 },
-    { id: 'internat_sequentiel', label: 'Internat séquentiel', prixJour: 95 },
-    { id: 'externat', label: 'Accueil de jour / externat', prixJour: 60 },
-    { id: 'accueil_temporaire', label: 'Accueil temporaire / urgence', prixJour: 140 }
-  ];
-  const FACT_ORGANISMES = ['ASE', 'MDPH / Conseil départemental', 'Sécurité sociale', 'Famille', 'Autre'];
-  const affectations = {};
-  const activeResidents = resList.filter(r => r.statut !== 'sorti');
-  activeResidents.forEach(r => {
-    affectations[r.id] = { categorieId: pick(FACT_CATEGORIES).id, organisme: pick(FACT_ORGANISMES) };
-  });
-  DB.set(DB.keys.tarifs, { categories: FACT_CATEGORIES, affectations });
-
-  const factures = [];
-  const periodeActuelle = now.toISOString().slice(0, 7);
-  const moisPrecedent = new Date(now); moisPrecedent.setMonth(moisPrecedent.getMonth() - 1);
-  const periodePrecedente = moisPrecedent.toISOString().slice(0, 7);
-  [{ periode: periodePrecedente, statuts: ['payee', 'envoyee'] }, { periode: periodeActuelle, statuts: ['brouillon', 'envoyee'] }].forEach(({ periode, statuts }) => {
-    activeResidents.forEach(r => {
-      const aff = affectations[r.id];
-      const cat = FACT_CATEGORIES.find(c => c.id === aff.categorieId);
-      const nbJours = Object.keys(presences).filter(date => date.startsWith(periode) && presences[date][r.id] === 'present').length;
-      if (!nbJours) return;
-      const montant = nbJours * cat.prixJour;
-      const facture = {
-        id: 'fact-' + genId(), periode, residentId: r.id, residentNom: `${r.prenom} ${r.nom}`,
-        organisme: aff.organisme, categorieId: cat.id, categorieLabel: cat.label,
-        nbJours, prixJour: cat.prixJour, montant,
-        statut: pick(statuts), createdAt: now.toISOString(), updatedAt: now.toISOString()
-      };
-      if (facture.statut === 'envoyee') facture.dateEnvoi = periodePrecedente === periode ? periode + '-28' : today;
-      if (facture.statut === 'payee') { facture.dateEnvoi = periode + '-05'; facture.datePaiement = periode + '-20'; }
-      factures.push(facture);
-    });
-  });
-  DB.set(DB.keys.factures, factures);
-
-  // ── PLAN DE FORMATION COLLECTIF ──
-  const formations = [];
-  const FORMATION_ITEMS = [
-    { titre: 'PSC1 — Prévention et secours civiques de niveau 1', organisme: 'Croix-Rouge française', domaine: "Sécurité & gestes d'urgence", mois: -8, duree: 7, cout: 600, statut: 'realisee' },
-    { titre: 'Gestes et postures — manutention des personnes', organisme: 'AFPA', domaine: 'Hygiène, santé & soins', mois: -6, duree: 14, cout: 1200, statut: 'realisee' },
-    { titre: 'Prévention et gestion des comportements-défis', organisme: 'IRTS', domaine: 'Accompagnement éducatif & pédagogique', mois: -4, duree: 21, cout: 2400, statut: 'realisee' },
-    { titre: 'Communication non violente', organisme: "Cabinet Form'Action", domaine: 'Communication & gestion des conflits', mois: -2, duree: 14, cout: 1600, statut: 'realisee' },
-    { titre: 'Mise à jour réglementation RGPD & secret professionnel', organisme: 'CNAPE', domaine: 'Réglementation & droit des usagers', mois: -1, duree: 7, cout: 450, statut: 'realisee' },
-    { titre: 'Prise en main du logiciel de gestion (FTR)', organisme: 'Formation interne', domaine: 'Numérique & outils professionnels', mois: 0, duree: 3.5, cout: 0, statut: 'realisee' },
-    { titre: 'Habilitation incendie — manipulation des extincteurs', organisme: 'SDIS', domaine: "Sécurité & gestes d'urgence", mois: 1, duree: 3.5, cout: 350, statut: 'planifiee' },
-    { titre: "Management d'équipe et conduite de réunion", organisme: 'IRTS', domaine: 'Management & encadrement', mois: 2, duree: 14, cout: 1800, statut: 'planifiee' },
-    { titre: 'Sensibilisation aux écrans et usages numériques des jeunes', organisme: 'Association e-Enfance', domaine: 'Accompagnement éducatif & pédagogique', mois: 3, duree: 7, cout: 700, statut: 'planifiee' },
-    { titre: 'Formation tuteur de stage (session annulée)', organisme: 'GRETA', domaine: 'Management & encadrement', mois: -3, duree: 14, cout: 0, statut: 'annulee' }
-  ];
-  FORMATION_ITEMS.forEach(item => {
-    const dd = new Date(now);
-    dd.setMonth(dd.getMonth() + item.mois);
-    const df = new Date(dd);
-    df.setDate(df.getDate() + Math.ceil(item.duree / 7));
-    const pool = [...employes];
-    const nbParticipants = pool.length ? rand(2, Math.min(5, pool.length)) : 0;
-    const participants = [];
-    for (let i = 0; i < nbParticipants; i++) {
-      const idx = rand(0, pool.length - 1);
-      participants.push(pool.splice(idx, 1)[0].id);
-    }
-    formations.push({
-      id: 'form-' + genId(),
-      titre: item.titre, organisme: item.organisme, domaine: item.domaine,
-      dateDebut: dd.toISOString().slice(0, 10), dateFin: df.toISOString().slice(0, 10),
-      dureeHeures: item.duree, cout: item.cout, statut: item.statut,
-      participants, notes: '',
-      createdAt: now.toISOString(), updatedAt: now.toISOString()
-    });
-  });
-  DB.set(DB.keys.formations, formations);
-
-  // ── CHAMBRES & ÉTATS DES LIEUX ──
-  const roomNames = [...new Set(resList.map(r => r.chambre).filter(Boolean))].sort();
-  const rooms = roomNames.map(nom => ({
-    id: 'demo-ch-' + nom,
-    nom,
-    unite: 'Unité ' + ['A','B','C','D'][Math.floor((parseInt(nom) - 100) / 10) % 4],
-    capacite: Math.random() < .2 ? 2 : 1,
-    notes: Math.random() < .12 ? pick(['Accès PMR','Proche sanitaires','Lit médicalisé','Vue jardin']) : ''
-  }));
-  DB.set(DB.keys.chambres, rooms);
-  const edls = [];
-  shuffle([...resList]).slice(0, Math.min(12, resList.length)).forEach(r => {
-    const room = rooms.find(c => c.nom === r.chambre);
-    if (!room) return;
-    edls.push({
-      id: 'demo-edl-' + r.id, chambreId: room.id, chambreNom: room.nom,
-      residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
-      type: 'entree', date: r.entree,
-      etat: { murs: pick(['Bon','Bon','Moyen']), sol: pick(['Bon','Bon','Moyen']), mobilier: pick(['Bon','Moyen']), literie: 'Bon', sanitaires: pick(['Bon','Bon','Moyen','Dégradé']) },
-      observations: Math.random() < .3 ? pick(['RAS','Trace d\'usure sur le bureau','Rideau à remplacer','Peinture défraîchie côté fenêtre']) : '',
-      author: pick(REFFERENTS), createdAt: new Date(r.entree + 'T10:00').toISOString()
-    });
-  });
-  DB.set(DB.keys.edl, edls);
-
-  // ── TROUSSEAU & EFFETS PERSONNELS ──
-  const TR_POOL = [
-    ['Vêtements','Jean'],['Vêtements','T-shirts'],['Vêtements','Pull'],['Vêtements','Blouson'],['Vêtements','Paire de baskets'],
-    ['Linge de maison','Parure de lit'],['Linge de maison','Serviettes de toilette'],
-    ['Hygiène','Trousse de toilette'],['Multimédia','Téléphone portable'],['Multimédia','Casque audio'],['Multimédia','Console de jeux'],
-    ['Papiers','Carte d\'identité'],['Papiers','Carte vitale'],['Objets de valeur','Montre'],['Objets de valeur','Bijou de famille'],
-    ['Mobilier personnel','Lampe de chevet'],['Autre','Vélo'],['Autre','Instrument de musique']
-  ];
-  resList.forEach(r => {
-    if (Math.random() < .7) {
-      const n = rand(3, 8);
-      const pool = shuffle([...TR_POOL]).slice(0, n);
-      r.trousseau = pool.map(([categorie, designation], k) => {
-        const restitue = r.statut === 'sorti' && Math.random() < .8;
-        const dAjout = Math.random() < .8 ? r.entree : new Date(new Date(r.entree).getTime() + rand(5, 120) * 86400000).toISOString().slice(0,10);
-        return {
-          id: 'demo-tr-' + r.id + '-' + k,
-          designation, categorie,
-          quantite: designation.endsWith('s') ? rand(2, 6) : 1,
-          etat: pick(['Neuf','Bon','Bon','Bon','Usé','Abîmé']),
-          dateAjout: dAjout,
-          notes: Math.random() < .2 ? pick(['Marque Nike','Couleur bleue','Étiquetée au nom du résident','Avec chargeur','N° série relevé']) : '',
-          restitue,
-          dateRestitution: restitue ? (r.dateSortie || today) : undefined
-        };
-      });
-    }
-  });
-
-  // ── RÉGIMES & REPAS DU JOUR ──
-  const regimePool = ['sansporc','sansporc','vegetarien','diabetique','hyposode','halal','hypocalorique'];
-  resList.forEach(r => {
-    if (Math.random() < .3) {
-      r.regime = {
-        type: pick(regimePool),
-        autreLabel: '',
-        texture: Math.random() < .12 ? pick(['hachee','mixee']) : 'normale',
-        allergiesAlim: r.allergies || '',
-        notes: Math.random() < .15 ? pick(['Petites portions','Aide à la découpe','Double ration de légumes','Mange lentement — prévoir du temps']) : ''
-      };
-    }
-  });
-  DB.set(DB.keys.residents, resList);
-  const repasDay = { midi: {}, soir: {} };
-  shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.midi[r.id] = 0; });
-  shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, rand(1, 4)).forEach(r => { repasDay.soir[r.id] = 0; });
-  DB.set(DB.keys.repas, { [today]: repasDay });
-
-  // ── DROITS DE VISITE & VISITES FAMILLE ──
-  const VIS_PERSONNES = [
-    ['Mme {N}','Mère'],['M. {N}','Père'],['M. et Mme {N}','Parents'],['Mme {N}','Grand-mère'],
-    ['M. {N}','Grand-père'],['Mme {N}','Tante'],['M. {N}','Oncle'],['Mme {N}','Sœur'],['M. {N}','Frère']
-  ];
-  const visites = [];
-  resList.forEach(r => {
-    if (Math.random() < .6) {
-      // Cadre : 1-2 personnes autorisées
-      const nb = Math.random() < .35 ? 2 : 1;
-      const picked = shuffle([...VIS_PERSONNES]).slice(0, nb);
-      r.droitsVisite = picked.map(([tpl, lien], k) => {
-        const type = pick(['libre','libre','libre','mediatisee','hebergement','telephone']);
-        return {
-          id: 'demo-dv-' + r.id + '-' + k,
-          personne: tpl.replace('{N}', r.nom),
-          lien, type,
-          modalites: type === 'hebergement' ? pick(['1 week-end sur 2','Vacances scolaires','1 week-end par mois']) : type === 'mediatisee' ? pick(['1 h en présence d\'un éducateur','2 h au point rencontre']) : pick(['Libre en journée','Mercredis et week-ends','']),
-          decision: Math.random() < .5 ? pick(['Ordonnance JE du ' + new Date(now.getTime() - rand(60, 400) * 86400000).toLocaleDateString('fr-FR'),'Accord ASE','Décision MDPH','Accord famille/établissement']) : ''
-        };
-      });
-      // Visites sur l'année : passées + à venir
-      const nbVis = rand(2, 8);
-      for (let k = 0; k < nbVis; k++) {
-        const d = r.droitsVisite[rand(0, r.droitsVisite.length - 1)];
-        const offset = rand(-300, 21);
-        const dateV = new Date(now.getTime() + offset * 86400000);
-        const past = offset < 0;
-        const type = d.type;
-        const dateStr = dateV.toISOString().slice(0,10);
-        visites.push({
-          id: 'demo-vis-' + r.id + '-' + k,
-          residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
-          type, personne: d.personne, lien: d.lien,
-          date: dateStr,
-          heure: pick(['10:00','14:00','14:30','15:00','16:00']),
-          dateRetour: type === 'hebergement' ? new Date(dateV.getTime() + rand(1, 2) * 86400000).toISOString().slice(0,10) : '',
-          heureRetour: type === 'hebergement' ? pick(['17:00','18:00','19:00']) : '',
-          lieu: type === 'mediatisee' ? 'Point rencontre' : type === 'hebergement' ? 'Domicile familial' : 'Établissement',
-          notes: past && Math.random() < .3 ? pick(['Visite qui s\'est bien déroulée','Moment chaleureux, le résident était ravi','Échanges tendus en début de visite puis apaisés','Le résident a présenté ses progrès']) : '',
-          statut: past ? pick(['realisee','realisee','realisee','realisee','annulee','absent']) : 'prevue',
-          createdBy: pick(REFFERENTS), createdAt: now.toISOString()
-        });
+      // Budget (résidents)
+      if (activeResidents.length && Math.random() < .25) {
+        const r = pick(activeResidents);
+        r.budget = r.budget || { operations: [] };
+        r.budget.operations.push({ id: 'usb-' + genId(), type: 'depense', montant: rand(8, 90), date: dateStr, categorie: pick(BUD_DEP_CAT), libelle: '', notes: '' });
+        budgetAdded++; count++;
       }
     }
-  });
-  DB.set(DB.keys.visites, visites);
-  DB.set(DB.keys.residents, resList); // persiste les droitsVisite ajoutés ci-dessus
-
-  // ── CAHIER DE NUIT ──
-  const VEILLEURS = ['Karim Benyahia', 'Sylvie Rocher', 'Marc Antoine'];
-  const NUIT_EVT_POOL = [
-    ['reveil', 'Réveillé vers {h}, a demandé un verre d\'eau puis s\'est rendormi.'],
-    ['reveil', 'Insomnie, a regardé la télé au salon une heure avant de remonter.'],
-    ['angoisse', 'Crise d\'angoisse, temps d\'écoute et de réassurance d\'une vingtaine de minutes.'],
-    ['soin', 'Maux de tête, paracétamol donné selon protocole, à surveiller.'],
-    ['conflit', 'Tension verbale entre deux résidents dans le couloir, retour au calme rapide.'],
-    ['retour', 'Retour tardif de soirée, dans le cadre de son autorisation.'],
-    ['fugue', 'Absence constatée à la ronde, retour de lui-même 40 min plus tard. Cadre informé.']
-  ];
-  const nuits = [];
-  for (let k = 1; k <= 45; k++) {
-    const dN = new Date(now.getTime() - k * 86400000).toISOString().slice(0,10);
-    const nbEvt = Math.random() < .5 ? 0 : rand(1, 3);
-    const evts = [];
-    for (let e = 0; e < nbEvt; e++) {
-      const [type, tpl] = pick(NUIT_EVT_POOL);
-      const heure = `${String(rand(0, 5)).padStart(2,'0')}:${pick(['00','15','30','45'])}`;
-      const rr = pick(resList.filter(x => x.statut !== 'sorti'));
-      evts.push({ id: 'demo-ne-' + k + '-' + e, type, heure, residentId: rr ? rr.id : null, residentName: rr ? `${rr.prenom} ${rr.nom}` : '', description: tpl.replace('{h}', heure) });
+    // Planning : réalisé (passé) ou prévisionnel (futur), des deux côtés
+    if (Math.random() < (isPast ? 0.35 : 0.45)) {
+      const ev = pick(PLANNING_EVENTS);
+      const r = activeResidents.length ? pick(activeResidents) : null;
+      planning.push({ id: 'usp-' + genId(), titre: r ? ev.titre + ' — ' + r.prenom + ' ' + r.nom : ev.titre, type: ev.type, color: ev.color, date: dateStr, time: ev.time, duree: ev.dur, residentId: r ? r.id : '', residentName: r ? (r.prenom+' '+r.nom) : '', desc: '', dateEnd: dateStr, timeEnd: '', createdAt: now.toISOString(), updatedAt: now.toISOString() });
+      planningAdded++; count++;
     }
-    const hasFugue = evts.some(e => e.type === 'fugue');
-    nuits.push({
-      id: 'demo-nuit-' + k, date: dN,
-      veilleur: pick(VEILLEURS), veilleurId: null,
-      ambiance: hasFugue ? 'tres_agitee' : nbEvt >= 2 ? 'agitee' : 'calme',
-      effectif: resList.filter(x => x.statut !== 'sorti').length - rand(0, 4),
-      rondes: ['22:30','00:30','02:30','04:30','06:00'].map((h, ri) => ({ id: 'demo-rd-' + k + '-' + ri, heure: h, ras: Math.random() < .85, note: Math.random() < .15 ? pick(['Lumière restée allumée ch. 112','Porte du local mal fermée','Bruit côté cuisine, RAS après vérification']) : '' })),
-      evenements: evts,
-      astreintes: hasFugue ? [{ id: 'demo-as-' + k, heure: pick(['01:10','02:40','03:20']), cadre: 'N. Petit (chef de service)', motif: 'Absence d\'un résident constatée à la ronde', decision: 'Surveillance renforcée, rappel à 30 min, signalement si non-retour à 1 h' }] : [],
-      transmission: nbEvt ? 'Nuit ' + (hasFugue ? 'marquée par une absence temporaire — voir événements.' : 'avec quelques réveils, voir le détail des événements.') : 'Nuit calme, rien à signaler.',
-      createdAt: new Date(dN + 'T22:00').toISOString()
-    });
+
+    dayBuckets.push({ offset: off, date: d, isPast, count });
   }
-  DB.set(DB.keys.nuits, nuits);
 
-  // ── ÉCHÉANCIER ADMINISTRATIF ──
-  const echTypes = ['mdph','jugement','identite','css','contrat','ppe','medical'];
-  const echLibelles = {
-    mdph: 'Renouvellement notification MDPH', jugement: 'Renouvellement mesure de protection',
-    identite: 'Renouvellement carte d\'identité', css: 'Renouvellement CSS',
-    contrat: 'Révision du contrat de séjour', ppe: 'Révision du projet personnalisé', medical: 'Visite médicale annuelle'
-  };
-  const echeances = [];
-  resList.filter(r => r.statut !== 'sorti').forEach(r => {
-    if (Math.random() < .55) {
-      const n = Math.random() < .25 ? 2 : 1;
-      for (let k = 0; k < n; k++) {
-        const type = pick(echTypes);
-        const offset = rand(-25, 320); // quelques retards, beaucoup à venir
-        echeances.push({
-          id: 'demo-ec-' + r.id + '-' + k, type,
-          libelle: echLibelles[type], date: new Date(now.getTime() + offset * 86400000).toISOString().slice(0,10),
-          residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
-          notes: '', done: offset < -10 && Math.random() < .5,
-          author: pick(REFFERENTS), createdAt: now.toISOString()
-        });
-      }
-    }
-  });
-  echeances.push({ id: 'demo-ec-etab-1', type: 'autre', libelle: 'Commission de sécurité incendie', date: new Date(now.getTime() + rand(40, 120) * 86400000).toISOString().slice(0,10), residentId: null, residentName: '', notes: 'Préparer les registres', done: false, author: 'Direction', createdAt: now.toISOString() });
-  DB.set(DB.keys.echeances, echeances);
+  DB.set(DB.keys.journal, journal);
+  DB.set(DB.keys.planning, planning);
+  DB.set(DB.keys.loginHistory, loginLog.slice(0, 3000));
+  DB.set(DB.keys.presences, presences);
+  DB.set(DB.keys.residents, residents);
 
-  // ── ACTIVITÉS ÉDUCATIVES ──
-  const ACT_CATALOGUE_DEMO = [
-    { nom: 'Atelier cuisine', categorie: 'autonomie', jour: 'Mercredi', heureDebut: '14:00', heureFin: '16:00', lieu: 'Cuisine pédagogique', animateur: 'Maîtresse de maison', placesMax: 6, description: "Préparation d'un repas en autonomie : courses, équilibre alimentaire, hygiène." },
-    { nom: 'Football / sport collectif', categorie: 'sportive', jour: 'Mardi', heureDebut: '17:00', heureFin: '18:30', lieu: 'Gymnase municipal', animateur: 'Éducateur sportif', placesMax: 10, description: 'Travail du collectif, respect des règles, dépense physique.' },
-    { nom: 'Atelier arts plastiques', categorie: 'creative', jour: 'Lundi', heureDebut: '16:30', heureFin: '18:00', lieu: "Salle d'activités", animateur: 'Éducatrice référente', placesMax: 8, description: 'Expression par le dessin, la peinture et le collage.' },
-    { nom: 'Soutien scolaire', categorie: 'scolaire', jour: 'Jeudi', heureDebut: '17:00', heureFin: '18:00', lieu: "Salle d'étude", animateur: 'Bénévole AFEV', placesMax: 4, description: 'Aide aux devoirs et révisions.' },
-    { nom: 'Sortie médiathèque', categorie: 'sortie', jour: 'Samedi', heureDebut: '10:00', heureFin: '12:00', lieu: 'Médiathèque municipale', animateur: 'Éducateur référent', placesMax: 5, description: 'Découverte de la lecture, emprunt de livres.' },
-    { nom: 'Conseil des jeunes', categorie: 'citoyennete', jour: 'Vendredi', heureDebut: '18:00', heureFin: '19:00', lieu: 'Salle commune', animateur: 'Chef de service', placesMax: 0, description: 'Expression collective, propositions sur la vie quotidienne.' },
-    { nom: 'Atelier musique', categorie: 'culturelle', jour: 'Mercredi', heureDebut: '16:00', heureFin: '17:00', lieu: 'Salle polyvalente', animateur: 'Intervenant musique', placesMax: 6, description: 'Initiation aux instruments et au chant.' },
-    { nom: 'Piscine', categorie: 'sportive', jour: 'Samedi', heureDebut: '14:00', heureFin: '16:00', lieu: 'Piscine municipale', animateur: 'Maître-nageur + éducateur', placesMax: 8, description: 'Activité aquatique, apprentissage de la natation.', actif: false }
-  ];
-  const activites = ACT_CATALOGUE_DEMO.map((a, k) => ({ id: 'demo-act-' + k, actif: true, ...a, createdAt: now.toISOString() }));
-  const ACT_BILAN_POOL = [
-    'Bonne participation, motivation en hausse.',
-    "S'est montré(e) en retrait au début puis intégré(e) au groupe.",
-    'Progrès notables dans la relation aux autres.',
-    'A pris des responsabilités dans le déroulement de la séance.',
-    'Quelques difficultés de concentration mais investissement réel.',
-    'Très bon comportement, à poursuivre sur cette dynamique.',
-    'Absent(e) sans justification, à recontacter.',
-    'A exprimé du plaisir à participer, demande à continuer.'
-  ];
-  const activitesActives = activites.filter(a => a.actif);
-  resList.filter(r => r.statut !== 'sorti').forEach(r => {
-    const chosen = shuffle([...activitesActives]).slice(0, rand(0, 3));
-    r.activites = chosen.map((a, k) => {
-      const terminee = Math.random() < .15;
-      const bilans = [];
-      const nbBilans = rand(0, 2);
-      for (let b = 0; b < nbBilans; b++) {
-        bilans.push({ id: 'demo-actb-' + r.id + '-' + k + '-' + b, date: new Date(now.getTime() - rand(1, 60) * 86400000).toISOString().slice(0,10), texte: pick(ACT_BILAN_POOL), auteur: pick(REFFERENTS) });
-      }
-      const inscr = {
-        id: 'demo-acti-' + r.id + '-' + k,
-        activiteId: a.id,
-        dateInscription: new Date(now.getTime() - rand(10, 200) * 86400000).toISOString().slice(0,10),
-        statut: terminee ? 'terminee' : 'active',
-        bilans
-      };
-      if (terminee) inscr.dateFin = new Date(now.getTime() - rand(1, 30) * 86400000).toISOString().slice(0,10);
-      return inscr;
-    });
-  });
-  DB.set(DB.keys.activites, activites);
-  DB.set(DB.keys.residents, resList);
-
-  // ── CONSEIL DE LA VIE SOCIALE (CVS) ──
-  const cvsResidentsMembres = shuffle(resList.filter(r => r.statut !== 'sorti')).slice(0, 2);
-  const cvsMembresDemo = [
-    ...cvsResidentsMembres.map((r, k) => ({ id: 'demo-cvsm-res-' + k, nom: `${r.prenom} ${r.nom}`, college: 'residents', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() })),
-    { id: 'demo-cvsm-fam-1', nom: 'Mme Diallo (représentante des familles)', college: 'familles', role: 'titulaire', contact: 'famille.diallo@email.fr', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
-    { id: 'demo-cvsm-fam-2', nom: 'M. Lefebvre (représentant des familles, suppléant)', college: 'familles', role: 'suppleant', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
-    { id: 'demo-cvsm-pers-1', nom: pick(REFFERENTS) + ' (éducateur référent)', college: 'personnel', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() + 165 * 86400000).toISOString().slice(0,10), statut: 'actif', createdAt: now.toISOString() },
-    { id: 'demo-cvsm-dir-1', nom: 'Directeur d\'établissement', college: 'direction', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 200 * 86400000).toISOString().slice(0,10), mandatFin: '', statut: 'actif', createdAt: now.toISOString() },
-    { id: 'demo-cvsm-anc-1', nom: 'Ancien représentant des résidents', college: 'residents', role: 'titulaire', contact: '', mandatDebut: new Date(now.getTime() - 560 * 86400000).toISOString().slice(0,10), mandatFin: new Date(now.getTime() - 210 * 86400000).toISOString().slice(0,10), statut: 'ancien', createdAt: now.toISOString() }
-  ];
-  const cvsSeancesDemo = [
-    {
-      id: 'demo-cvss-1',
-      date: new Date(now.getTime() - 95 * 86400000).toISOString().slice(0,10), heure: '17:00', lieu: 'Salle commune',
-      presents: cvsMembresDemo.filter(m => m.statut === 'actif').map(m => m.nom).join(', '),
-      excuses: 'M. Lefebvre (représentant des familles, suppléant)',
-      ordreDuJour: 'Bilan des activités du trimestre, projet de menus, organisation des sorties d\'été, point sur les travaux de la salle de bain commune.',
-      compteRendu: "Les résidents expriment leur satisfaction concernant les nouvelles activités proposées (atelier cuisine, sortie médiathèque). Une demande est faite pour diversifier les menus du week-end. La direction informe de l'avancement des travaux de rénovation de la salle de bain commune, prévus avant la fin de l'année. Discussion sur l'organisation d'une sortie collective pour l'été.",
-      resolutions: [
-        { id: 'demo-cvsr-1', texte: 'Proposer un menu végétarien une fois par semaine et recueillir les avis des résidents', responsable: 'Maîtresse de maison', echeance: new Date(now.getTime() - 30 * 86400000).toISOString().slice(0,10), statut: 'fait' },
-        { id: 'demo-cvsr-2', texte: "Planifier une sortie collective d'été et présenter 3 propositions de destination au prochain CVS", responsable: 'Chef de service', echeance: new Date(now.getTime() + 25 * 86400000).toISOString().slice(0,10), statut: 'en_cours' },
-        { id: 'demo-cvsr-3', texte: 'Communiquer le calendrier des travaux de la salle de bain commune aux résidents', responsable: 'Direction', echeance: new Date(now.getTime() - 10 * 86400000).toISOString().slice(0,10), statut: 'fait' }
-      ],
-      createdAt: now.toISOString()
-    },
-    {
-      id: 'demo-cvss-2',
-      date: new Date(now.getTime() - 5 * 86400000).toISOString().slice(0,10), heure: '17:30', lieu: 'Salle commune',
-      presents: cvsMembresDemo.filter(m => m.statut === 'actif').map(m => m.nom).join(', '),
-      excuses: '',
-      ordreDuJour: 'Retour sur la sortie d\'été, règlement de fonctionnement, point sur le registre des EIG, questions diverses des résidents.',
-      compteRendu: "Retour très positif sur la sortie organisée cet été. Les résidents souhaitent que ce type de sortie soit reconduit chaque trimestre. Présentation du registre des EIG et rappel du circuit de signalement. Plusieurs résidents demandent un accès plus large au wifi dans les chambres en soirée.",
-      resolutions: [
-        { id: 'demo-cvsr-4', texte: 'Étudier la possibilité d\'élargir les horaires d\'accès au wifi en soirée', responsable: 'Direction', echeance: new Date(now.getTime() + 40 * 86400000).toISOString().slice(0,10), statut: 'a_faire' },
-        { id: 'demo-cvsr-5', texte: 'Inscrire une sortie collective trimestrielle au planning d\'activités', responsable: 'Chef de service', echeance: new Date(now.getTime() + 20 * 86400000).toISOString().slice(0,10), statut: 'a_faire' }
-      ],
-      createdAt: now.toISOString()
-    },
-    {
-      id: 'demo-cvss-3',
-      date: new Date(now.getTime() + 55 * 86400000).toISOString().slice(0,10), heure: '17:00', lieu: 'Salle commune',
-      presents: '', excuses: '', ordreDuJour: 'Préparation du renouvellement du règlement de fonctionnement, bilan annuel.',
-      compteRendu: '', resolutions: [], createdAt: now.toISOString()
-    }
-  ];
-  DB.set(DB.keys.cvs, { membres: cvsMembresDemo, seances: cvsSeancesDemo });
-
-  // ── DISTRIBUTION DES MÉDICAMENTS ──
-  const MED_HEURES = { matin: '08:00', midi: '12:00', soir: '18:00', coucher: '21:00' };
-  const MED_OBS = {
-    refuse: ['Refus du résident, médicament non administré.', "Refus malgré la proposition à plusieurs reprises."],
-    absent: ['Résident absent au moment de la distribution.', 'Résident en sortie, prise non effectuée.'],
-    report: ['Prise reportée au moment suivant.', 'Reporté à la demande du résident, repas en cours.']
-  };
-  const medicamentsDemo = [];
-  resList.filter(r => isActive(r)).forEach(r => {
-    const traitsAvecMoments = (r.sante.traitements || []).filter(t => (t.moments || []).length);
-    if (!traitsAvecMoments.length) return;
-    for (let d = 6; d >= 0; d--) {
-      const date = new Date(now.getTime() - d * 86400000).toISOString().slice(0,10);
-      traitsAvecMoments.forEach(t => {
-        t.moments.forEach(moment => {
-          const roll = Math.random();
-          let statut = 'donne';
-          if (roll < 0.04) statut = 'refuse';
-          else if (roll < 0.07) statut = 'absent';
-          else if (roll < 0.10) statut = 'report';
-          medicamentsDemo.push({
-            id: 'demo-med-' + r.id + '-' + t.id + '-' + date + '-' + moment,
-            date, residentId: r.id, residentName: `${r.prenom} ${r.nom}`,
-            traitementId: t.id, medicament: t.nom, posologie: t.posologie, moment, statut,
-            heure: new Date(date + 'T' + MED_HEURES[moment] + ':00').toISOString(),
-            auteur: pick(REFFERENTS),
-            observation: statut !== 'donne' ? pick(MED_OBS[statut]) : ''
-          });
-        });
-      });
-    }
-  });
-  DB.set(DB.keys.medicaments, medicamentsDemo);
-
-  // ── ONBOARDING ──
-  localStorage.setItem('ftr_onboarded', 'true');
-
-  return {
-    chambres: rooms.length,
-    echeances: echeances.length,
-    visites: visites.length,
-    nuits: nuits.length,
-    activites: activites.length,
-    cvs: cvsSeancesDemo.length,
-    medicaments: medicamentsDemo.length,
-    residents: resList.length,
-    journal: journal.length,
-    planning: planning.length,
-    ppe: avenants.length,
-    incidents: incList.length,
-    interventions: intervsList.length,
-    messages: allMsgs.length,
-    contacts: contacts.length,
-    users: users.length,
-    employes: employes.length,
-    documents: Object.values(docs).flat().length,
-    presences: cfgPresJours,
-    loginHistory: loginHistory.length,
-    vehicules: vehList.length,
-    rdvMedicaux: resList.reduce((a,r) => a + ((r.sante&&r.sante.rdv)||[]).length, 0),
-    sorties: resList.reduce((a,r) => a + ((r.sorties)||[]).length, 0),
-    operationsBudget: resList.reduce((a,r) => a + ((r.budget&&r.budget.operations)||[]).length, 0),
-    evaluations: resList.reduce((a,r) => a + ((r.evaluations)||[]).length, 0),
-    auditLog: auditLog.length,
-    viatrajectoire: vts.length,
-    planning_equipe: pe.length,
-    conges: conges.length,
-    budgetEnveloppes: budgetEnveloppes.length,
-    budgetDemandes: budgetDemandes.length,
-    fichesPaie: fichesPaie.length,
-    entretiens: entretiens.length,
-    documentation: documentation.length,
-    admissions: admissions.length,
-    factures: factures.length,
-    formations: formations.length
-  };
+  return { dayBuckets, journalAdded, planningAdded, loginsAdded, presencesAdded, budgetAdded };
 }
 
-// ── GENERATE DEMO ──
-function generateDemo() {
-  const btn = $('genBtn');
-  btn.disabled = true;
-  btn.textContent = 'Génération en cours…';
-  $('status').innerHTML = '';
-
-  const originalEtabId = sessionStorage.getItem('ftr_current_etab');
+// ── BOUCLE MULTI-ÉTABLISSEMENT ──
+function generateUsage() {
   const etabs = getSelectedEtabs();
-  if (!etabs.length) { alert('Sélectionnez au moins un établissement.'); btn.disabled = false; btn.textContent = 'Générer les données'; return; }
+  if (!etabs.length) { log('⚠️ Sélectionnez au moins un établissement.'); return; }
+  const intensite = getCfg('Intensite');
+  $('genBtn').disabled = true;
+  $('status').innerHTML = '';
+  const originalEtab = sessionStorage.getItem('ftr_current_etab');
+  let lastResult = null;
 
-  let totals = { residents:0, journal:0, planning:0, ppe:0, incidents:0, interventions:0, messages:0, contacts:0, users:0, employes:0, documents:0, presences:0, loginHistory:0, vehicules:0, rdvMedicaux:0, sorties:0, operationsBudget:0, evaluations:0, auditLog:0, viatrajectoire:0, planning_equipe:0, conges:0, chambres:0, echeances:0, visites:0, nuits:0, activites:0, cvs:0, medicaments:0, budgetEnveloppes:0, budgetDemandes:0, fichesPaie:0, entretiens:0, documentation:0, admissions:0, factures:0, formations:0 };
-  try {
-    etabs.forEach((etab, ei) => {
-      sessionStorage.setItem('ftr_current_etab', etab.id);
-      log('<div style="margin:.5rem 0;font-weight:700;color:#0f2b4a">🏢 <strong>' + escHtml(etab.nom) + '</strong> <span style="font-weight:400;color:#64748b">' + escHtml(etab.ville||'') + '</span></div>');
-      const r = generateForCurrentEtab();
-      Object.keys(totals).forEach(k => totals[k] += r[k] || 0);
-      log('<span class="ok">✅ ' + r.residents + ' rés · ' + r.journal + ' journaux · ' + r.messages + ' msg · ' + r.contacts + ' contacts · ' + r.employes + ' emp · ' + r.planning + ' events · ' + r.incidents + ' inc · ' + r.interventions + ' int · ' + r.ppe + ' avenants · ' + r.documents + ' docs · ' + r.presences + 'j prés · ' + r.vehicules + ' véh · ' + r.loginHistory + ' connex · ' + r.auditLog + ' traces · ' + r.planning_equipe + ' plannings · ' + r.conges + ' congés · ' + r.budgetDemandes + ' demandes budget · ' + r.fichesPaie + ' fiches paie · ' + r.entretiens + ' entretiens · ' + r.documentation + ' docs établissement · ' + r.admissions + ' admissions · ' + r.factures + ' factures · ' + r.formations + ' formations</span>');
-    });
-  } catch (err) {
-    console.error(err);
-    log('<div class="sep"></div>');
-    log('<span style="color:#dc2626;font-weight:700">❌ Erreur pendant la génération : ' + escHtml(err && err.message ? err.message : String(err)) + '</span>');
-    log('<div style="margin-top:.5rem;font-size:.78rem;color:#475569">Astuce : si l\'erreur mentionne une variable non définie (ex. SP_NOMENCLATURE), faites un rechargement forcé (Ctrl+Maj+R) pour vider le cache du service worker.</div>');
-    if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
-    else sessionStorage.removeItem('ftr_current_etab');
-    btn.disabled = false;
-    btn.textContent = 'Générer les données';
-    return;
-  }
+  etabs.forEach(etab => {
+    sessionStorage.setItem('ftr_current_etab', etab.id);
+    log('— ' + etab.nom + ' —');
+    const res = generateUsageForCurrentEtab(intensite);
+    if (res) {
+      log(`<span class="ok">✓</span> ${res.loginsAdded} connexions · ${res.journalAdded} entrées de journal · ${res.planningAdded} évènements planning · ${res.presencesAdded} présences · ${res.budgetAdded} dépenses`);
+      lastResult = res;
+    }
+  });
 
-  if (originalEtabId) sessionStorage.setItem('ftr_current_etab', originalEtabId);
-  else sessionStorage.removeItem('ftr_current_etab');
+  sessionStorage.setItem('ftr_current_etab', originalEtab || '');
+  $('genBtn').disabled = false;
+  log('<br><strong class="ok">Génération terminée.</strong>');
 
-  log('<div class="sep"></div>');
-  log('<span style="color:#16a34a;font-weight:700;font-size:1rem">🎉 Données générées pour <strong>' + etabs.length + '</strong> établissement' + (etabs.length > 1 ? 's' : '') + '</span>');
-  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:.75rem;font-size:.8rem">' +
-    Object.entries(totals).map(([k,v]) => '<div><span style="color:#64748b">' + k + '</span> <strong>' + v + '</strong></div>').join('') +
-  '</div>');
-  log('<a href="index.html" style="display:inline-block;margin-top:.8rem;background:#0f2b4a;color:#fff;padding:.7rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem">→ Aller à la page de connexion</a>');
-  log('<div style="margin-top:.75rem;font-size:.78rem;color:#475569;background:#f0fdf4;border:1px solid #16a34a30;border-radius:8px;padding:.8rem 1rem">');
-  log('<div style="font-weight:700;color:#16a34a;margin-bottom:.4rem">🔑 Comptes de démonstration</div>');
-  log('<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 1rem;font-size:.75rem">');
-  log('<div><strong>Admin</strong> : admin / admin123</div>');
-  log('<div><strong>Éduc.spé.</strong> : smartin / educ123</div>');
-  log('<div><strong>Éduc.jeunesse</strong> : pdubois / educ123</div>');
-  log('<div><strong>Psychologue</strong> : clegrand / educ123</div>');
-  log('<div><strong>Moniteur</strong> : jfontaine / educ123</div>');
-  log('<div><strong>Infirmier</strong> : dmoreau / educ123</div>');
-  log('<div><strong>Chef service</strong> : npetit / educ123</div>');
-  log('<div><strong>Éduc.sportif</strong> : aleroy / educ123</div>');
-  log('</div></div>');
-  btn.disabled = false;
-  btn.textContent = 'Générer les données';
+  if (lastResult) renderUsageChart(lastResult.dayBuckets);
 }
 
-initDefaults();
-populateEtabSelector();
+// ── VISUEL 1 AN (par semaine) ──
+function renderUsageChart(dayBuckets) {
+  const weeks = [];
+  for (let i = 0; i < dayBuckets.length; i += 7) {
+    const slice = dayBuckets.slice(i, i + 7);
+    const total = slice.reduce((s, d) => s + d.count, 0);
+    const isPast = slice[0].isPast;
+    weeks.push({ total, isPast, date: slice[0].date });
+  }
+
+  const totalPast = dayBuckets.filter(d => d.isPast).reduce((s,d) => s + d.count, 0);
+  const totalFutur = dayBuckets.filter(d => !d.isPast).reduce((s,d) => s + d.count, 0);
+  const moyJour = Math.round((totalPast / 180) * 10) / 10;
+
+  $('usageStats').innerHTML = `
+    <div class="usage-stat"><div class="v">${totalPast}</div><div class="l">Évènements générés (6 mois passés)</div></div>
+    <div class="usage-stat"><div class="v">${totalFutur}</div><div class="l">Évènements prévisionnels (6 mois futurs)</div></div>
+    <div class="usage-stat"><div class="v">${moyJour}</div><div class="l">Moyenne / jour (passé)</div></div>`;
+
+  const W = Math.max(700, weeks.length * 13), H = 220, padL = 36, padB = 24, padT = 10;
+  const max = Math.max(1, ...weeks.map(w => w.total));
+  const bw = (W - padL - 10) / weeks.length;
+  const todayX = padL + weeks.findIndex(w => !w.isPast) * bw;
+
+  let bars = '';
+  weeks.forEach((w, i) => {
+    const h = (H - padT - padB) * (w.total / max);
+    const x = padL + i * bw;
+    const y = H - padB - h;
+    bars += `<rect x="${x + bw*0.12}" y="${y}" width="${bw*0.76}" height="${Math.max(h,1)}" fill="${w.isPast ? '#6366f1' : '#06b6d4'}" rx="2" opacity="${w.isPast?1:.85}"><title>${w.date.toLocaleDateString('fr-FR')} — ${w.total} évènements</title></rect>`;
+  });
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+    <line x1="${padL}" y1="${H-padB}" x2="${W}" y2="${H-padB}" stroke="#e2e8f0" stroke-width="1"/>
+    ${todayX > padL ? `<line x1="${todayX}" y1="${padT}" x2="${todayX}" y2="${H-padB}" stroke="#0f2b4a" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${todayX+4}" y="${padT+10}" font-size="10" fill="#0f2b4a" font-weight="700">Aujourd'hui</text>` : ''}
+    ${bars}
+  </svg>`;
+
+  $('usageChart').innerHTML = svg;
+  $('chartCard').style.display = '';
+  $('chartCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.addEventListener('DOMContentLoaded', populateEtabSelector);
 </script>
 </body>
 </html>

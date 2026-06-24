@@ -173,6 +173,109 @@
       .sdcard-body{padding:.75rem 1rem}
       .sdcard-head{padding:.75rem 1rem}
     }
+
+    /* ══════════════════════════════════════
+       ONGLET EMPLOYÉS — vue tableau style Contracts
+    ══════════════════════════════════════ */
+    .emp-title-bar{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 0 .6rem}
+    .emp-title{font-size:1.25rem;font-weight:800;color:#1a1a2e}
+    .emp-title-actions{display:flex;gap:.5rem}
+
+    /* ════ Cartes profil — Chrome doré ════ */
+    .emp-cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:1.25rem 0;align-items:start}
+    @media(max-width:1100px){.emp-cards-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:820px){.emp-cards-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.emp-cards-grid{grid-template-columns:1fr}}
+    .card-c{background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(15,23,42,.06);
+      position:relative;overflow:hidden;
+      transition:transform .2s ease,box-shadow .2s ease;cursor:pointer;display:flex;flex-direction:column}
+    .card-c:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(15,23,42,.12)}
+    .c-banner{background:linear-gradient(135deg,var(--avatar-b),var(--avatar-a));
+      padding:18px 18px 16px;position:relative;overflow:hidden}
+    .c-watermark{position:absolute;top:-8px;right:-4px;font-size:72px;font-weight:900;
+      color:rgba(255,255,255,.15);line-height:1;user-select:none;pointer-events:none}
+    .c-head{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+    .c-avatar{width:58px;height:58px;border-radius:50%;flex-shrink:0;overflow:hidden;
+      background:rgba(255,255,255,.25);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:800;font-size:18px;
+      border:2.5px solid rgba(255,255,255,.6);
+      box-shadow:0 4px 12px rgba(0,0,0,.18)}
+    .c-avatar img{width:100%;height:100%;object-fit:cover}
+    .c-name{font-size:14.5px;font-weight:800;color:#fff;margin:0;line-height:1.2;
+      text-shadow:0 1px 2px rgba(0,0,0,.15)}
+    .c-role-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:6px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;
+      background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.3)}
+    .c-body{padding:14px 18px 18px;display:flex;flex-direction:column;flex:1}
+    .c-status{display:inline-block;font-size:11px;font-weight:700;margin-bottom:10px;
+      color:#92400e;background-color:#fef3c7;padding:3px 10px;border-radius:6px}
+    .c-status.inactive{color:#64748b;background-color:#f1f5f9}
+    .c-status.admin{color:#fff;background:linear-gradient(135deg,#06b6d4,#6366f1)}
+    .c-status.conge{color:#92400e;background-color:#fef3c7}
+    .c-info{font-size:12.5px;color:#4b5563;flex:1}
+    .c-info .row-field{display:flex;align-items:center;gap:9px;padding:4px 0}
+    .c-info svg{stroke:var(--accent);flex-shrink:0}
+    .c-info span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .c-info .empty{color:#cbd5e1}
+    .c-btn{margin-top:14px;width:100%;padding:9px;border-radius:10px;
+      border:1.5px solid var(--accent);background:#fff;color:var(--accent-text);
+      font-weight:700;font-size:12.5px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      transition:background .15s ease}
+    .c-btn:hover{background:var(--accent-hover)}
+    .c-action-icon{transition:transform .15s ease,color .15s ease;border-radius:8px;padding:4px}
+    .c-action-icon:hover{transform:scale(1.22);color:var(--accent)!important;background:rgba(0,0,0,.05)}
+
+    .emp-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0 .75rem;border-bottom:1.5px solid #f0f0f4;margin-bottom:0}
+    .emp-toolbar-left,.emp-toolbar-right{display:flex;align-items:center;gap:.4rem}
+    .emp-tool-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .75rem;border:1.5px solid #e4e8ed;border-radius:8px;background:#fff;font-size:.78rem;font-weight:500;color:#444;cursor:pointer;transition:all .12s;white-space:nowrap}
+    .emp-tool-btn:hover{background:#f5f5fd;border-color:#b0aaf7;color:#5b5fc7}
+    .emp-tool-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
+
+    .emp-table-wrap{overflow-x:auto;background:#fff;border-radius:14px;border:1.5px solid #f0f0f4;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+    .emp-table{width:100%;border-collapse:collapse;font-size:.82rem}
+    .emp-table thead tr{border-bottom:1.5px solid #f0f0f4}
+    .emp-table th{padding:.7rem 1rem;text-align:left;font-size:.72rem;font-weight:600;color:#9a9aae;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;background:#fff}
+    .emp-table th:first-child{padding-left:1.2rem}
+    .emp-table td{padding:.75rem 1rem;border-bottom:1px solid #f7f7fa;color:#1a1a2e;vertical-align:middle}
+    .emp-table td:first-child{padding-left:1.2rem}
+    .emp-table tbody tr{transition:background .1s;cursor:pointer}
+    .emp-table tbody tr:hover{background:#f8f8fd}
+    .emp-table tbody tr:last-child td{border-bottom:none}
+
+    /* Colonne personne */
+    .emp-person{display:flex;align-items:center;gap:.7rem}
+    .emp-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;color:#fff;flex-shrink:0}
+    .emp-person-info{}
+    .emp-person-name{font-weight:600;font-size:.84rem;color:#1a1a2e}
+    .emp-person-phone{font-size:.72rem;color:#9a9aae;margin-top:1px}
+
+    /* Pills statut */
+    .emp-pill{display:inline-flex;align-items:center;padding:.22rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
+    .emp-pill-actif{background:#dcfce7;color:#15803d}
+    .emp-pill-inactif{background:#fee2e2;color:#dc2626}
+    .emp-pill-none{background:#f1f1f5;color:#888}
+
+    /* Popup profil */
+    .emp-popup{position:fixed;z-index:200;width:320px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid #ebebf0;overflow:hidden;pointer-events:auto}
+    .emp-popup-banner{height:88px;background:linear-gradient(135deg,#c4b5fd 0%,#818cf8 50%,#93c5fd 100%);position:relative}
+    .emp-popup-av{position:absolute;left:50%;transform:translateX(-50%);bottom:-30px;width:64px;height:64px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15rem;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    .emp-popup-action-row{display:flex;justify-content:flex-end;gap:.4rem;padding:.55rem .9rem .2rem;position:relative;z-index:1}
+    .emp-popup-action-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid #e4e8ed;background:#fff;color:#666;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
+    .emp-popup-action-btn:hover{border-color:#5b5fc7;color:#5b5fc7}
+    .emp-popup-action-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none}
+    .emp-popup-identity{text-align:center;padding:1.8rem 1rem .5rem}
+    .emp-popup-name{font-size:.95rem;font-weight:700;color:#1a1a2e}
+    .emp-popup-role{font-size:.75rem;color:#9a9aae;margin-top:2px}
+    .emp-popup-role a{color:#5b5fc7;font-weight:500;text-decoration:none}
+    .emp-popup-details{padding:.5rem 1rem 1rem}
+    .emp-popup-details-title{font-size:.7rem;font-weight:700;color:#9a9aae;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+    .emp-popup-row{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:.78rem;border-top:1px solid #f5f5f8}
+    .emp-popup-row:first-of-type{border-top:none}
+    .emp-popup-row-icon{width:28px;height:28px;border-radius:8px;background:#f5f5f8;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .emp-popup-row-icon svg{width:13px;height:13px;stroke:#666;stroke-width:1.8;fill:none}
+    .emp-popup-row-label{color:#9a9aae;min-width:70px;flex-shrink:0}
+    .emp-popup-row-val{color:#1a1a2e;font-weight:500;flex:1;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
   </style>
 </head>
 <body>
@@ -200,7 +303,7 @@
     <span id="etabBannerNom" style="font-weight:800;font-size:.95rem;color:var(--primary)">—</span>
     <span id="etabBannerType" class="badge" style="margin-left:.5rem;background:#0891b220;color:#0891b2;font-size:.68rem"></span>
   </div>
-  <a href="accueil.html" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">
+  <a href="accueil.html" target="_top" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
     Changer d'établissement
   </a>
@@ -267,6 +370,18 @@
     <div class="stat-circ-name">SERAFIN-PH</div>
     <div style="font-size:.7rem;color:var(--muted)" id="c5sub">résidents évalués</div>
     <span class="stat-circ-badge scb-violet" id="c5badge">—</span>
+  </div>
+  <div class="stat-circ-card">
+    <div class="circ-wrap">
+      <svg class="circ-svg" viewBox="0 0 88 88">
+        <circle class="circ-track" cx="44" cy="44" r="36"/>
+        <circle class="circ-bar" id="c6bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/>
+      </svg>
+      <div class="circ-label"><span id="c6pct">—</span><span style="font-size:.6rem" id="c6pctSign"></span></div>
+    </div>
+    <div class="stat-circ-name">Satisfaction</div>
+    <div style="font-size:.7rem;color:var(--muted)" id="c6sub">résidents</div>
+    <span class="stat-circ-badge scb-yellow" id="c6badge">—</span>
   </div>
 </div>
 
@@ -375,6 +490,11 @@
         <div class="stat-card-top"><span class="stat-label">Incidents ouverts</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
         <div class="stat-num" id="sIncidentsOuverts">—</div>
       </div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#f59e0b25,#fde68a15)">
+        <div class="stat-card-top"><span class="stat-label">Satisfaction résidents</span><div class="stat-icon" style="background:#f59e0b20;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div></div>
+        <div class="stat-num" id="sSatScore">—</div>
+        <div style="font-size:.72rem;margin-top:.15rem;font-weight:600" id="sSatNiv"></div>
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
@@ -397,6 +517,19 @@
       <div class="card">
         <div class="card-header"><span class="card-title">📁 Documents par catégorie</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="docTotal"></span></div>
         <div class="card-body" style="padding:.9rem 1.25rem"><div id="docBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
+      </div>
+    </div>
+
+    <!-- Satisfaction évolution -->
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-header">
+        <span class="card-title">⭐ Évolution de la satisfaction résidents</span>
+        <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="satEvolTotal"></span>
+        <a href="satisfaction.html" style="font-size:.75rem;color:var(--primary);text-decoration:none;font-weight:600;margin-left:1rem">Voir le détail →</a>
+      </div>
+      <div class="card-body" style="padding:.9rem 1.25rem">
+        <div id="satEvolChart" style="min-height:80px"></div>
+        <div id="satCatBars" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem .9rem;margin-top:1rem"></div>
       </div>
     </div>
   </div>
@@ -510,8 +643,32 @@
 
   <!-- ═══ EMPLOYÉS ═══ -->
   <div id="tab-employes" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Employés</div><div class="panel-sub">Gestion du personnel de l'établissement</div></div><button class="btn btn-violet btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button></div>
-    <div class="card"><div class="card-body" style="padding:1rem"><div id="employesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem"></div></div></div>
+    <!-- Titre + actions -->
+    <div class="emp-title-bar">
+      <div class="emp-title">Employés</div>
+      <div class="emp-title-actions">
+        <button class="btn btn-violet btn-sm" onclick="exportEmployesCsv()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporter
+        </button>
+        <button class="emp-tool-btn" style="padding:.38rem .6rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+    </div>
+    <!-- Barre d'outils -->
+    <div class="emp-toolbar">
+      <div class="emp-toolbar-left">
+        <input type="text" id="empSearch" class="form-input" placeholder="Rechercher…" style="width:200px;padding:.32rem .7rem;font-size:.82rem" oninput="renderEmployes()"/>
+      </div>
+      <div class="emp-toolbar-right">
+        <button class="btn btn-violet btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button>
+      </div>
+    </div>
+    <!-- Grille cartes -->
+    <div id="employesList" style="margin-top:.75rem"></div>
+    <!-- Popup profil (hover) -->
+    <div id="empPopup" class="emp-popup" style="display:none" onmouseenter="clearEmpPopupTimer()" onmouseleave="hideEmpPopup()"></div>
   </div>
 
   <!-- ═══ PERMISSIONS ═══ -->
@@ -664,6 +821,17 @@
   <div class="modal" style="max-width:480px"><div class="modal-header"><span class="modal-title" id="modalEmployeTitle">Nouvel employé</span><button class="modal-close" onclick="closeModal('modalEmploye')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
       <input type="hidden" id="empId"/>
+      <div class="form-group">
+        <label>Photo de profil</label>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:4px">
+          <div id="empPhotoPreview" onclick="document.getElementById('empPhoto').click()" title="Cliquer pour changer la photo"
+               style="width:68px;height:68px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border:2px dashed #cbd5e1;flex-shrink:0;transition:border-color .15s">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div style="font-size:.78rem;color:#64748b;line-height:1.6">Cliquez sur l'avatar pour ajouter une photo<br><span style="color:#94a3b8;font-size:.72rem">JPG, PNG — max 2 Mo</span></div>
+        </div>
+        <input type="file" id="empPhoto" accept="image/*" style="display:none" onchange="previewEmpPhoto(this)"/>
+      </div>
       <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom"/></div></div>
       <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option></select></div>
       <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div><div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div></div>
@@ -698,6 +866,7 @@
 <script src="js/app.js"></script>
 <script>Auth.requireAdmin();</script>
 <script src="js/admin.js"></script>
+<script src="js/rapport.js"></script>
 <script>
 /* ═══════════ NAVIGATION ═══════════ */
 const PANEL_NAMES = {
@@ -718,6 +887,7 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
+  if (name === 'educateurs') renderEducateurs();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
   const strip = document.getElementById('statsStrip');
@@ -731,12 +901,22 @@ function getEmployes() { return JSON.parse(localStorage.getItem(DB.keys.employes
 function saveEmployes(list) { localStorage.setItem(DB.keys.employes, JSON.stringify(list)); }
 function resetEmployeForm() {
   document.getElementById('empId').value = '';
-  ['empPrenom','empNom','empPoste','empTel','empEmail','empNotes'].forEach(id => document.getElementById(id).value = '');
+  ['empPrenom','empNom','empTel','empEmail','empNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('empDate').value = '';
+  // Peupler le select Poste avec les fonctions définies
+  const fonctions = DB.get(DB.keys.fonctionColors) || [];
+  const sel = document.getElementById('empPoste');
+  sel.innerHTML = '<option value="">— Sélectionner un poste —</option>'
+    + fonctions.map(f => `<option value="${escHtml(f.fonction)}">${escHtml(f.fonction)}</option>`).join('');
   document.getElementById('btnDeleteEmp').style.display = 'none';
   document.getElementById('modalEmployeTitle').textContent = 'Nouvel employé';
   document.getElementById('empCreatedAccount').style.display = 'none';
   document.getElementById('empCreatedAccount').textContent = '';
+  _empPhotoData = null;
+  document.getElementById('empPhoto').value = '';
+  const pp = document.getElementById('empPhotoPreview');
+  pp.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  pp.style.border = '2px dashed #cbd5e1';
 }
 function genPassword(len=8) { const c = 'abcdefghjkmnpqrstuvwxyz23456789'; return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join(''); }
 function createUserFromEmploye() {
@@ -766,10 +946,30 @@ function saveEmploye() {
   const dateEmbauche = document.getElementById('empDate').value;
   const notes = document.getElementById('empNotes').value.trim();
   if (!prenom || !nom) { toast('Prénom et nom requis', 'error'); return; }
-  let list = getEmployes();
-  if (id) { const idx = list.findIndex(e => e.id === id); if (idx >= 0) list[idx] = { ...list[idx], prenom, nom, poste, telephone, email, dateEmbauche, notes }; }
-  else { list.unshift({ id:genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo:'', notes, createdAt:new Date().toISOString() }); }
-  saveEmployes(list);
+
+  if (id) {
+    const users = DB.get(DB.keys.users) || [];
+    const uIdx = users.findIndex(u => String(u.id) === String(id));
+    if (uIdx >= 0) {
+      const photoUpdate = _empPhotoData ? { photo: _empPhotoData } : {};
+      users[uIdx] = { ...users[uIdx], prenom, nom, telephone, email, dateEmbauche, fonction: poste, ...photoUpdate };
+      DB.set(DB.keys.users, users);
+    }
+    let list = getEmployes();
+    const eIdx = list.findIndex(e => String(e.id) === String(id) || (e.prenom === prenom && e.nom === nom));
+    const photoUpdate = _empPhotoData ? { photo: _empPhotoData } : {};
+    if (eIdx >= 0) {
+      list[eIdx] = { ...list[eIdx], prenom, nom, poste, telephone, email, dateEmbauche, notes, ...photoUpdate };
+    } else {
+      list.push({ id, prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', notes, ...photoUpdate, createdAt: new Date().toISOString() });
+    }
+    saveEmployes(list);
+  } else {
+    let list = getEmployes();
+    list.unshift({ id: genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo: _empPhotoData||'', notes, createdAt: new Date().toISOString() });
+    saveEmployes(list);
+  }
+
   closeModal('modalEmploye');
   renderEmployes();
   toast(id ? 'Employé modifié' : 'Employé ajouté');
@@ -783,36 +983,276 @@ function deleteEmploye() {
   renderEmployes();
   toast('Employé supprimé');
 }
+
+function deleteEmployeCard(id, nom) {
+  if (!confirm(`Supprimer ${nom} ?`)) return;
+  saveEmployes(getEmployes().filter(e => e.id !== id));
+  renderEmployes();
+  toast('Employé supprimé');
+}
 function editEmploye(id) {
-  const list = getEmployes();
-  const e = list.find(x => x.id === id);
-  if (!e) return;
-  document.getElementById('empId').value = e.id;
-  document.getElementById('empPrenom').value = e.prenom || '';
-  document.getElementById('empNom').value = e.nom || '';
-  document.getElementById('empPoste').value = e.poste || '';
-  document.getElementById('empTel').value = e.telephone || '';
-  document.getElementById('empEmail').value = e.email || '';
-  document.getElementById('empDate').value = e.dateEmbauche || '';
-  document.getElementById('empNotes').value = e.notes || '';
-  document.getElementById('btnDeleteEmp').style.display = '';
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => String(x.id) === String(id));
+  const empStore = getEmployes();
+  const emp = empStore.find(x => String(x.id) === String(id)) || {};
+  if (!u) return;
+  // Peupler le select Poste avant d'ouvrir
+  const fonctions = DB.get(DB.keys.fonctionColors) || [];
+  const sel = document.getElementById('empPoste');
+  sel.innerHTML = '<option value="">— Sélectionner un poste —</option>'
+    + fonctions.map(f => `<option value="${escHtml(f.fonction)}">${escHtml(f.fonction)}</option>`).join('');
+  document.getElementById('empId').value = u.id;
+  document.getElementById('empPrenom').value = u.prenom || '';
+  document.getElementById('empNom').value = u.nom || '';
+  sel.value = emp.poste || u.fonction || '';
+  document.getElementById('empTel').value = emp.telephone || u.telephone || '';
+  document.getElementById('empEmail').value = emp.email || u.email || '';
+  document.getElementById('empDate').value = emp.dateEmbauche || '';
+  document.getElementById('empNotes').value = emp.notes || '';
+  document.getElementById('btnDeleteEmp').style.display = 'none';
   document.getElementById('modalEmployeTitle').textContent = 'Modifier employé';
   document.getElementById('empCreatedAccount').style.display = 'none';
+  _empPhotoData = null;
+  document.getElementById('empPhoto').value = '';
+  const pp = document.getElementById('empPhotoPreview');
+  const currentPhoto = emp.photo || u.photo || '';
+  if (currentPhoto) {
+    pp.innerHTML = `<img src="${currentPhoto}" style="width:100%;height:100%;object-fit:cover">`;
+    pp.style.border = 'none';
+  } else {
+    pp.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    pp.style.border = '2px dashed #cbd5e1';
+  }
   openModal('modalEmploye');
 }
+const EMP_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
+function empColor(e) { const s = (e.prenom||'') + (e.nom||''); let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) & 0xffff; return EMP_COLORS[h % EMP_COLORS.length]; }
+
+let _empPhotoData = null;
+function previewEmpPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Photo trop lourde (max 2 Mo)', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _empPhotoData = ev.target.result;
+    const p = document.getElementById('empPhotoPreview');
+    p.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    p.style.border = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function getPosteColor(poste) {
+  const fonctions = DB.get(DB.keys.fonctionColors) || [];
+  const f = fonctions.find(x => x.fonction === poste);
+  if (f && f.color) return f.color;
+  if (!poste) return '#6366f1';
+  let h = 0; for (const c of poste) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return EMP_COLORS[h % EMP_COLORS.length];
+}
+function getPosteCardVars(hex) {
+  const r = parseInt(hex.slice(1,3),16)||99, g = parseInt(hex.slice(3,5),16)||102, b = parseInt(hex.slice(5,7),16)||241;
+  return { vars:`--accent:${hex};--accent-text:${hex};--accent-hover:rgba(${r},${g},${b},.06);--watermark:rgba(${r},${g},${b},.08);--avatar-a:rgba(${r},${g},${b},.45);--avatar-b:${hex};--avatar-shadow:rgba(${r},${g},${b},.35)`, r, g, b, hex };
+}
+
+function patchUsersFromEmployes() {
+  const users = DB.get(DB.keys.users) || [];
+  const empStore = getEmployes();
+  let changed = false;
+  const patched = users.map(u => {
+    if (u.telephone && u.email && u.dateEmbauche) return u;
+    const emp = empStore.find(e =>
+      (String(e.id) === String(u.id)) ||
+      (e.prenom && e.nom && e.prenom === u.prenom && e.nom === u.nom)
+    );
+    if (!emp) return u;
+    const update = { ...u };
+    if (!u.telephone && emp.telephone) { update.telephone = emp.telephone; changed = true; }
+    if (!u.email && emp.email)         { update.email = emp.email;         changed = true; }
+    if (!u.dateEmbauche && emp.dateEmbauche) { update.dateEmbauche = emp.dateEmbauche; changed = true; }
+    if (!u.fonction && (emp.poste || emp.fonction)) { update.fonction = emp.poste || emp.fonction; changed = true; }
+    return update;
+  });
+  if (changed) DB.set(DB.keys.users, patched);
+  return patched;
+}
+
 function renderEmployes() {
   const el = document.getElementById('employesList');
   if (!el) return;
-  const list = getEmployes();
-  if (!list.length) { el.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2rem 0;font-size:.85rem">Aucun employé.</div>'; return; }
-  el.innerHTML = list.map(e => {
-    const initiales = ((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'');
-    return `<div class="employe-card" onclick="window.location='employe.html?id=${e.id}'" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:var(--r);border:1px solid var(--border);background:#fff;cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)'" onmouseout="this.style.boxShadow='none'">
-      <div style="width:42px;height:42px;border-radius:50%;background:var(--av-l);color:var(--av);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0">${escHtml(initiales)}</div>
-      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div><div style="font-size:.72rem;color:var(--muted)">${escHtml(e.poste||'')}${e.statut==='inactif'?' · <span style="color:var(--red)">Inactif</span>':''}</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editEmploye('${e.id}')" style="padding:4px 8px">✎</button>
+  const etabNom = (typeof getCurrentEtab === 'function' ? getCurrentEtab()?.nom : '') || (DB.get(DB.keys.settings) || {}).etablissement || '';
+  const users = patchUsersFromEmployes();
+  const empStore = getEmployes();
+  const q = (document.getElementById('empSearch')?.value || '').trim().toLowerCase();
+  let list = users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => {
+    const emp = empStore.find(e => String(e.id) === String(u.id) || (e.prenom === u.prenom && e.nom === u.nom)) || {};
+    return {
+      id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
+      poste: emp.poste||u.fonction||'', telephone: u.telephone||emp.telephone||'',
+      email: u.email||emp.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
+      dateEmbauche: u.dateEmbauche||emp.dateEmbauche||''
+    };
+  });
+  if (q) list = list.filter(e =>
+    (e.prenom+' '+e.nom).toLowerCase().includes(q) ||
+    (e.poste).toLowerCase().includes(q) ||
+    (e.email).toLowerCase().includes(q) ||
+    (e.telephone).includes(q)
+  );
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;color:#9a9aae;padding:3rem;font-size:.85rem">Aucun employé — cliquez sur "+ Ajouter"</div>`;
+    return;
+  }
+  const iconPhone = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const iconMail = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  const iconCal = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`;
+  const iconPencil = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`;
+  const field = (value, icon) => {
+    const isEmpty = !value || value === '—';
+    return `<div class="row-field">${icon}<span class="${isEmpty?'empty':''}">${isEmpty?'—':escHtml(value)}</span></div>`;
+  };
+  el.innerHTML = `<div class="emp-cards-grid">${
+    list.map(e => {
+      const initiales = (((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'')).toUpperCase();
+      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '';
+      const hex = getPosteColor(e.poste);
+      const { vars: cardVars, r, g, b } = getPosteCardVars(hex);
+      const statusClass = e.statut==='inactif' ? 'inactive' : e.statut==='admin' ? 'admin' : e.statut==='conge' ? 'conge' : '';
+      const statusLabel = e.statut==='inactif' ? 'Inactif' : e.statut==='admin' ? 'Admin' : e.statut==='conge' ? 'En congé' : 'Actif';
+      const empStore = getEmployes();
+      const emp = empStore.find(x => String(x.id) === String(e.id) || (x.prenom === e.prenom && x.nom === e.nom)) || {};
+      const users = DB.get(DB.keys.users) || [];
+      const u = users.find(x => String(x.id) === String(e.id)) || {};
+      const photo = emp.photo || u.photo || '';
+      const avatarInner = photo ? `<img src="${photo}" alt="">` : escHtml(initiales);
+      const badgeStyle = `background:rgba(${r},${g},${b},.13);color:${hex};border:1px solid rgba(${r},${g},${b},.28)`;
+      return `<div class="card-c" style="${cardVars}" onclick="window.location='employe.html?id=${e.id}'">
+        <div class="c-banner">
+          <div class="c-watermark">${escHtml(initiales)}</div>
+          <div class="c-head">
+            <div class="c-avatar">${avatarInner}</div>
+            <div>
+              <p class="c-name">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</p>
+              <span class="c-role-badge">${escHtml(e.poste||'—')}</span>
+              ${etabNom ? `<div style="font-size:10px;color:rgba(255,255,255,.8);margin-top:3px;line-height:1.3;white-space:normal">🏠 ${escHtml(etabNom)}</div>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="c-body">
+          <span class="c-status ${statusClass}">${statusLabel}</span>
+          <div class="c-info">
+            ${field(e.telephone, iconPhone)}
+            ${field(e.email, iconMail)}
+            ${field(dateEmb, iconCal)}
+          </div>
+          <div style="display:flex;gap:.6rem;justify-content:center;padding:.4rem 0">
+            ${e.email ? `<a href="mailto:${escHtml(e.email)}" title="Envoyer un email" onclick="event.stopPropagation()" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg></a>` : `<span style="color:#d1d5db;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg></span>`}
+            <a href="employe.html?id=${e.id}" title="Écrire un message" onclick="event.stopPropagation()" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+            <a href="employe.html?id=${e.id}" title="Voir la fiche" onclick="event.stopPropagation()" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+            <button onclick="event.stopPropagation();deleteEmployeCard('${e.id}','${escHtml((e.prenom+' '+e.nom).trim())}')" title="Supprimer" class="c-action-icon" style="color:var(--muted);background:none;border:none;cursor:pointer;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+          </div>
+          <button class="c-btn" onclick="event.stopPropagation();editEmploye('${e.id}')">${iconPencil} Modifier</button>
+        </div>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+
+let _empPopupTimer = null;
+function clearEmpPopupTimer() { clearTimeout(_empPopupTimer); }
+function scheduleHidePopup() { _empPopupTimer = setTimeout(hideEmpPopup, 220); }
+function hideEmpPopup() { const p = document.getElementById('empPopup'); if (p) p.style.display = 'none'; }
+
+function showEmpPopup(event, id) {
+  clearEmpPopupTimer();
+  const users = DB.get(DB.keys.users) || [];
+  const u = users.find(x => String(x.id) === String(id));
+  if (!u) return;
+  const empStore = getEmployes();
+  const emp = empStore.find(x => String(x.id) === String(id)) || {};
+  const e = {
+    id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
+    poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',
+    email: emp.email||u.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
+    dateEmbauche: emp.dateEmbauche||''
+  };
+  const popup = document.getElementById('empPopup');
+  if (!popup) return;
+  const color = empColor(e);
+  const initiales = ((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'');
+  const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+  const statusPill = e.statut === 'inactif'
+    ? '<span class="emp-pill emp-pill-inactif">Inactif</span>'
+    : '<span class="emp-pill emp-pill-actif">Actif</span>';
+
+  popup.innerHTML = `
+    <div class="emp-popup-banner" style="background:linear-gradient(135deg,#c4b5fd,#818cf8,#93c5fd)">
+      <div class="emp-popup-av" style="background:${color}">${escHtml(initiales)}</div>
+    </div>
+    <div class="emp-popup-action-row">
+      <button class="emp-popup-action-btn" title="Appeler" onclick="event.stopPropagation()">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.39 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.55a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </button>
+      <button class="emp-popup-action-btn" title="Message" onclick="event.stopPropagation()">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+    </div>
+    <div class="emp-popup-identity">
+      <div class="emp-popup-name">${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</div>
+      <div class="emp-popup-role">${escHtml(e.poste||'—')}</div>
+    </div>
+    <div class="emp-popup-details">
+      <div class="emp-popup-details-title">Détails</div>
+      <div class="emp-popup-row">
+        <div class="emp-popup-row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+        <span class="emp-popup-row-label">Poste</span>
+        <span class="emp-popup-row-val">${escHtml(e.poste||'—')}</span>
+      </div>
+      <div class="emp-popup-row">
+        <div class="emp-popup-row-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <span class="emp-popup-row-label">Email</span>
+        <span class="emp-popup-row-val">${escHtml(e.email||'—')}</span>
+      </div>
+      <div class="emp-popup-row">
+        <div class="emp-popup-row-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.39 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.55a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <span class="emp-popup-row-label">Téléphone</span>
+        <span class="emp-popup-row-val">${escHtml(e.telephone||'—')}</span>
+      </div>
+      <div class="emp-popup-row">
+        <div class="emp-popup-row-icon"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <span class="emp-popup-row-label">Statut</span>
+        <span class="emp-popup-row-val">${statusPill}</span>
+      </div>
+      <div class="emp-popup-row">
+        <div class="emp-popup-row-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <span class="emp-popup-row-label">Embauche</span>
+        <span class="emp-popup-row-val">${dateEmb}</span>
+      </div>
     </div>`;
-  }).join('');
+
+  popup.style.display = 'block';
+  // Positionnement : à gauche de la ligne si espace, sinon à droite
+  const rect = event.currentTarget.getBoundingClientRect();
+  const popW = 320, popH = 420;
+  let top = rect.top + window.scrollY - 20;
+  let left = rect.left - popW - 12;
+  if (left < 8) left = rect.right + 12;
+  if (top + popH > window.innerHeight + window.scrollY) top = window.innerHeight + window.scrollY - popH - 8;
+  popup.style.top = top + 'px';
+  popup.style.left = left + 'px';
+}
+
+function exportEmployesCsv() {
+  const list = getEmployes();
+  if (!list.length) { toast('Aucun employé à exporter', 'error'); return; }
+  const rows = [['Prénom','Nom','Poste','Email','Téléphone','Statut','Date embauche']];
+  list.forEach(e => rows.push([e.prenom||'',e.nom||'',e.poste||'',e.email||'',e.telephone||'',e.statut||'actif',e.dateEmbauche||'']));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'employes.csv';
+  a.click();
+  toast('Export CSV téléchargé');
 }
 
 /* ═══════════ CIRCULAR PROGRESS ═══════════ */
@@ -957,337 +1397,87 @@ function renderKeyStats(residents, presences, incidents) {
     el('sIncidentsOuverts').textContent = open;
     el('sIncidentsOuverts').style.color = open > 0 ? 'var(--red)' : 'inherit';
   }
+
+  // Satisfaction globale
+  const satAll = DB.get(DB.keys.satisfaction) || [];
+  if (satAll.length) {
+    const allVals = satAll.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const avg = allVals.length ? allVals.reduce((a, b) => a + b, 0) / allVals.length : null;
+    const pct = avg !== null ? Math.round(avg * 25) : null;
+    const col = avg === null ? '' : avg >= 3.5 ? '#0d9488' : avg >= 2.5 ? '#16a34a' : avg >= 1.5 ? '#d97706' : '#dc2626';
+    const niv = avg === null ? '' : avg >= 3.5 ? 'Très satisfaisant' : avg >= 2.5 ? 'Satisfaisant' : avg >= 1.5 ? 'À améliorer' : 'Insuffisant';
+    if (el('sSatScore')) { el('sSatScore').textContent = pct !== null ? pct + '%' : '—'; el('sSatScore').style.color = col; }
+    if (el('sSatNiv')) { el('sSatNiv').textContent = niv; el('sSatNiv').style.color = col; }
+  }
+  renderSatStats();
 }
 
-// ── RAPPORT D'ACTIVITÉ PDF ──
-function initRapportDefaults() {
+function renderSatStats() {
+  const chartEl = document.getElementById('satEvolChart');
+  const catsEl = document.getElementById('satCatBars');
+  const totalEl = document.getElementById('satEvolTotal');
+  if (!chartEl) return;
+
+  const satAll = DB.get(DB.keys.satisfaction) || [];
+  if (!satAll.length) {
+    chartEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Aucun questionnaire de satisfaction enregistré.</div>';
+    if (catsEl) catsEl.innerHTML = '';
+    return;
+  }
+  if (totalEl) totalEl.textContent = satAll.length + ' questionnaire' + (satAll.length > 1 ? 's' : '');
+
+  // ── Évolution 12 derniers mois ──
   const now = new Date();
-  const mEl = document.getElementById('rapportMois');
-  const yEl = document.getElementById('rapportAnnee');
-  if (mEl && !mEl.value) mEl.value = now.toISOString().slice(0, 7);
-  if (yEl && !yEl.value) yEl.value = now.getFullYear();
-}
-
-function toggleRapportPeriode() {
-  const t = document.getElementById('rapportType').value;
-  document.getElementById('rapportMoisWrap').style.display = t === 'mois' ? '' : 'none';
-  document.getElementById('rapportAnneeWrap').style.display = t === 'annee' ? '' : 'none';
-}
-
-// ── GRAPHIQUES SVG (partagés : rapport PDF + page Statistiques) ──
-function svgHBar(obj, color, keepOrder, colorMap, labelW) {
-  let entries = Object.entries(obj).filter(([, v]) => v > 0);
-  if (!keepOrder) entries = entries.sort((a, b) => b[1] - a[1]);
-  if (!entries.length) return '<p class="empty-line" style="font-size:.82rem;color:#94a3b8;font-style:italic">Aucune donnée.</p>';
-  const max = Math.max(...entries.map(e => e[1]), 1);
-  labelW = labelW || 150;
-  const maxChars = Math.floor(labelW / 4.7);
-  const rowH = 26, barMax = 470, padL = 6, padT = 6, padB = 16;
-  const W = padL + labelW + barMax + 44, H = padT + entries.length * rowH + padB;
-  let grid = '';
-  for (let k = 0; k <= 4; k++) { const x = padL + labelW + barMax * k / 4; grid += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + entries.length * rowH}" stroke="#e8edf2" stroke-width="1"/><text x="${x}" y="${padT + entries.length * rowH + 12}" text-anchor="middle" font-size="7" fill="#94a3b8">${Math.round(max * k / 4)}</text>`; }
-  const bars = entries.map(([label, v], i) => {
-    const y = padT + i * rowH, bw = Math.max(2, Math.round(v / max * barMax));
-    const col = (colorMap && colorMap[label]) || color;
-    return `<text x="${padL + labelW - 6}" y="${y + rowH / 2 + 3}" text-anchor="end" font-size="9" fill="#334155">${escHtml(String(label)).slice(0, maxChars)}</text><rect x="${padL + labelW}" y="${y + 4}" width="${bw}" height="${rowH - 10}" rx="3" fill="${col}"/><text x="${padL + labelW + bw + 5}" y="${y + rowH / 2 + 3}" font-size="9" font-weight="700" fill="#0f2b4a">${v}</text>`;
-  }).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${grid}${bars}</svg>`;
-}
-function svgColumns(labels, series) {
-  const W = 720, H = 230, padL = 30, padR = 10, padT = 24, padB = 30;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  let max = Math.max(...series.flatMap(s => s.data), 1);
-  const step = Math.max(1, Math.ceil(max / 4)); max = step * 4;
-  const n = labels.length, groupW = plotW / n, barW = Math.max(4, Math.min(16, groupW / (series.length + 1)));
-  let grid = '';
-  for (let k = 0; k <= 4; k++) { const y = padT + plotH - plotH * k / 4; grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e8edf2" stroke-width="1"/><text x="${padL - 4}" y="${y + 3}" text-anchor="end" font-size="7" fill="#94a3b8">${step * k}</text>`; }
-  let bars = '';
-  labels.forEach((lab, i) => {
-    const gx = padL + groupW * i + groupW / 2;
-    series.forEach((s, si) => {
-      const v = s.data[i] || 0, bh = Math.round(v / max * plotH), x = gx - (series.length * barW) / 2 + si * barW;
-      bars += `<rect x="${x}" y="${padT + plotH - bh}" width="${barW - 1.5}" height="${bh}" rx="2" fill="${s.color}"/>`;
-      if (v > 0) bars += `<text x="${(x + (barW - 1.5) / 2).toFixed(1)}" y="${padT + plotH - bh - 2}" text-anchor="middle" font-size="6.5" fill="#475569">${v}</text>`;
-    });
-    bars += `<text x="${gx.toFixed(1)}" y="${H - padB + 12}" text-anchor="middle" font-size="7.5" fill="#475569">${escHtml(lab)}</text>`;
-  });
-  let legend = '';
-  series.forEach((s, si) => { const lx = padL + si * 150; legend += `<rect x="${lx}" y="4" width="10" height="10" rx="2" fill="${s.color}"/><text x="${lx + 14}" y="13" font-size="8" fill="#334155">${escHtml(s.name)}</text>`; });
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px"><line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#cbd5e1" stroke-width="1"/>${grid}${bars}${legend}</svg>`;
-}
-function svgDonut(segments, centerLabel) {
-  const total = segments.reduce((a, s) => a + s.value, 0);
-  if (!total) return '<p class="empty-line" style="font-size:.82rem;color:#94a3b8;font-style:italic">Aucune donnée.</p>';
-  const cx = 70, cy = 70, r = 50, sw = 22, circ = 2 * Math.PI * r;
-  let off = 0, arcs = '';
-  segments.forEach(s => { if (s.value <= 0) return; const dash = s.value / total * circ; arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${(circ - dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`; off += dash; });
-  const center = `<text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="20" font-weight="800" fill="#0f2b4a">${total}</text><text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="7.5" fill="#94a3b8">${centerLabel || ''}</text>`;
-  const legend = segments.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:.78rem;margin-bottom:4px"><span style="width:11px;height:11px;border-radius:2px;background:${s.color};display:inline-block;flex-shrink:0"></span>${escHtml(s.label)} : <strong>${s.value}</strong> (${Math.round(s.value / total * 100)}%)</div>`).join('');
-  return `<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="120" height="120" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
-}
-
-function genererRapportPDF() {
-  const type = document.getElementById('rapportType').value;
-  let startStr, endStr, label;
-  if (type === 'mois') {
-    const m = document.getElementById('rapportMois').value;
-    if (!m) { toast('Choisissez un mois', 'error'); return; }
-    const [yy, mm] = m.split('-').map(Number);
-    startStr = `${m}-01`;
-    endStr = `${m}-${String(new Date(yy, mm, 0).getDate()).padStart(2, '0')}`;
-    label = new Date(yy, mm - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-  } else {
-    const y = document.getElementById('rapportAnnee').value;
-    if (!y) { toast('Choisissez une année', 'error'); return; }
-    startStr = `${y}-01-01`; endStr = `${y}-12-31`;
-    label = `Année ${y}`;
+  const evolPoints = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0');
+    const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+    const mSat = satAll.filter(s => s.date && s.date.startsWith(`${y}-${m}`));
+    if (!mSat.length) continue;
+    const vals = mSat.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    if (avg !== null) evolPoints.push({ label, value: Math.round(avg * 25) });
   }
-  const inRange = d => { if (!d) return false; const s = String(d).slice(0, 10); return s >= startStr && s <= endStr; };
-  const fmtD = d => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR');
-  const _start = new Date(startStr + 'T00:00:00'), _end = new Date(endStr + 'T00:00:00');
-  const _days = Math.round((_end - _start) / 86400000) + 1;
 
-  const settings = DB.get(DB.keys.settings) || {};
-  const session = Auth.getSession();
-  const residents = DB.get(DB.keys.residents) || [];
-  const activeRes = residents.filter(r => r.statut !== 'sorti');
-  const journal = DB.get(DB.keys.journal) || [];
-  const incidents = DB.get(DB.keys.incidents) || [];
-  const ppe = DB.get(DB.keys.ppe) || [];
-  const presences = DB.get(DB.keys.presences) || {};
-  const cats = DB.get(DB.keys.categories) || [];
+  if (evolPoints.length >= 2) {
+    chartEl.innerHTML = svgLine(evolPoints, '#f59e0b', 100, '%');
+  } else if (evolPoints.length === 1) {
+    chartEl.innerHTML = `<div style="display:flex;align-items:center;gap:.5rem;padding:1rem 0;color:var(--muted);font-size:.82rem">Score ce mois : <strong style="font-size:1.4rem;color:#f59e0b">${evolPoints[0].value}%</strong> <span style="font-size:.72rem">(données insuffisantes pour tracer une courbe)</span></div>`;
+  } else {
+    chartEl.innerHTML = '<div style="padding:.75rem 0;color:var(--muted);font-size:.82rem">Aucune donnée pour les 12 derniers mois.</div>';
+  }
 
-  // Journal
-  const jPeriod = journal.filter(e => inRange(e.date));
-  const jByCat = {};
-  jPeriod.forEach(e => { const c = cats.find(x => String(x.id) === String(e.categorie)); const name = c ? c.name : 'Sans catégorie'; jByCat[name] = (jByCat[name] || 0) + 1; });
-
-  // Incidents
-  const iPeriod = incidents.filter(i => inRange(i.date));
-  const gravLabels = { grave: 'Grave', modere: 'Modéré', leger: 'Léger' };
-  const iByGravite = { grave: 0, modere: 0, leger: 0 };
-  iPeriod.forEach(i => { const g = i.gravite || 'leger'; iByGravite[g] = (iByGravite[g] || 0) + 1; });
-  const iTraites = iPeriod.filter(i => i.statut === 'valide' || i.statut === 'classe').length;
-  const typeLabels = { chute: 'Chute', agression: 'Agression', fugue: 'Fugue', violence: 'Violence', medical: 'Médical', materiel: 'Matériel', accident: 'Accident', autre: 'Autre' };
-  const iByType = {};
-  iPeriod.forEach(i => { const t = typeLabels[i.type] || i.type || 'Autre'; iByType[t] = (iByType[t] || 0) + 1; });
-
-  // Avenants
-  const avCrees = ppe.filter(p => inRange(p.dateRedaction)).length;
-  const avActifs = ppe.filter(p => p.statut === 'actif').length;
-
-  // Présences — taux moyen sur la période
-  let rateSum = 0, rateDays = 0;
-  Object.entries(presences).forEach(([d, day]) => {
-    if (d < startStr || d > endStr) return;
-    const vals = Object.values(day);
-    const present = vals.filter(s => s === 'present').length;
-    const counted = vals.filter(s => s === 'present' || s === 'absent').length;
-    if (counted) { rateSum += present / counted * 100; rateDays++; }
-  });
-  const tauxPresence = rateDays ? Math.round(rateSum / rateDays) : null;
-
-  // Entrées, sorties (permissions), évaluations, objectifs
-  const entrees = residents.filter(r => inRange(r.entree)).length;
-  let nbSorties = 0, nbEvals = 0, nbObjAtteints = 0;
-  residents.forEach(r => {
-    (r.sorties || []).forEach(s => { if (inRange(s.date)) nbSorties++; });
-    (r.evaluations || []).forEach(ev => { if (inRange(ev.date)) nbEvals++; });
-    const sv = r.objectifsSuivi || {};
-    Object.values(sv).forEach(o => { if (o.statut === 'atteint' && inRange(o.dateMaj)) nbObjAtteints++; });
-  });
-
-  // ── INDICATEURS RÉGLEMENTAIRES ──
-  // Taux d'occupation : journées réalisées / (capacité × jours avec données)
-  const capacite = parseInt(settings.capacite) || 0;
-  let joursReal = 0, joursData = 0;
-  Object.entries(presences).forEach(([d, day]) => {
-    if (d < startStr || d > endStr) return;
-    joursReal += Object.values(day).filter(s => s === 'present' || s === 'absent').length;
-    joursData++;
-  });
-  const tauxOccup = (capacite && joursData) ? Math.round(joursReal / (capacite * joursData) * 100) : null;
-  // File active & mouvements
-  const enFileActive = residents.filter(r => (r.entree || '0000') <= endStr && (!r.dateSortie || r.dateSortie >= startStr));
-  const fileActive = enFileActive.length;
-  const sortiesCount = residents.filter(r => r.dateSortie && inRange(r.dateSortie)).length;
-  const dureesMois = enFileActive.filter(r => r.entree).map(r => {
-    const fin = (r.dateSortie && r.dateSortie < endStr) ? new Date(r.dateSortie + 'T00:00:00') : _end;
-    return (fin - new Date(r.entree + 'T00:00:00')) / (86400000 * 30.44);
-  }).filter(x => x >= 0);
-  const dureeMoyMois = dureesMois.length ? Math.round(dureesMois.reduce((a, b) => a + b, 0) / dureesMois.length) : null;
-  // Taux de PPE actifs
-  const residWithActivePpe = new Set(ppe.filter(p => p.statut === 'actif').map(p => String(p.residentId)));
-  const tauxPpe = activeRes.length ? Math.round(activeRes.filter(r => residWithActivePpe.has(String(r.id))).length / activeRes.length * 100) : 0;
-  // Profil du public
-  const profilSexe = { Hommes: 0, Femmes: 0, Autre: 0 };
-  activeRes.forEach(r => { profilSexe[r.genre === 'M' ? 'Hommes' : r.genre === 'F' ? 'Femmes' : 'Autre']++; });
-  const ageTranches = { '< 18 ans': 0, '18-25 ans': 0, '26-40 ans': 0, '41-60 ans': 0, '60 ans et +': 0 };
-  activeRes.forEach(r => { if (!r.dob) return; const a = Math.floor((Date.now() - new Date(r.dob)) / 31557600000); if (a < 18) ageTranches['< 18 ans']++; else if (a <= 25) ageTranches['18-25 ans']++; else if (a <= 40) ageTranches['26-40 ans']++; else if (a <= 60) ageTranches['41-60 ans']++; else ageTranches['60 ans et +']++; });
-  const protLabels = { tutelle: 'Tutelle', curatelle: 'Curatelle', sauvegarde: 'Sauvegarde de justice', habilitation: 'Habilitation familiale', masp: 'MASP', accompagnement: 'Accompagnement', aucune: 'Aucune mesure', autre: 'Autre' };
-  const protDist = {};
-  activeRes.forEach(r => { const p = protLabels[r.protection] || r.protection || 'Non renseigné'; protDist[p] = (protDist[p] || 0) + 1; });
-
-  // ── SERAFIN-PH ──
-  const withSp = activeRes.filter(r => (r.serafinph?.selected||[]).length > 0);
-  const allScores = withSp.map(r => {
-    const sp = r.serafinph || {};
-    const selected = sp.selected || [];
-    const prestations = {};
-    selected.forEach(code => { prestations[code] = (sp.prestations?.[code]?.niveau) || 0; });
-    return { total: Object.values(prestations).reduce((a, n) => a + n, 0), prestations, selected };
-  });
-  const gmps = allScores.length ? (allScores.reduce((a, s) => a + (s.selected.length ? s.total / s.selected.length : 0), 0) / allScores.length).toFixed(1) : null;
-  const spNivRepart = [0, 0, 0, 0, 0];
-  allScores.forEach(s => Object.values(s.prestations).forEach(n => spNivRepart[n]++));
-  const spByPrest = {};
-  SP_NOMENCLATURE.forEach(p => {
-    const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);
-    if (niveaux.length) {
-      const moy = niveaux.reduce((a, n) => a + n, 0) / niveaux.length;
-      spByPrest[p.label] = Math.round(moy * 10) / 10;
-    }
-  });
-
-  // Tables HTML
-  const barTable = (obj, color) => {
-    const entries = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-    if (!entries.length) return '<p class="empty-line">Aucune donnée sur la période.</p>';
-    const max = Math.max(...entries.map(e => e[1]), 1);
-    return `<table class="bars">${entries.map(([k, v]) => `<tr><td class="bl">${escHtml(k)}</td><td class="bb"><div class="bar" style="width:${Math.round(v / max * 100)}%;background:${color}"></div></td><td class="bv">${v}</td></tr>`).join('')}</table>`;
+  // ── Scores par catégorie ──
+  if (!catsEl) return;
+  const SAT_CATS = {
+    'Accueil & intégration': ['accueil'],
+    'Hébergement': ['chambre', 'parties_com'],
+    'Restauration': ['repas_qualite', 'repas_quantite'],
+    'Activités': ['activites'],
+    'Équipe & accompagnement': ['respect', 'disponibilite', 'soins'],
+    'Sécurité': ['securite'],
+    'Communication': ['communication'],
+    'Satisfaction globale': ['global']
   };
-
-  const kpi = (num, lbl) => `<div class="kpi"><div class="kpi-num">${num}</div><div class="kpi-lbl">${lbl}</div></div>`;
-
-  // ── Découpage temporel (semaines si ≤ 45j, sinon mois) ──
-  const MOIS_ABBR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
-  const buckets = [];
-  if (_days <= 45) {
-    let cur = new Date(_start);
-    while (cur <= _end) {
-      const bs = new Date(cur), be = new Date(cur); be.setDate(be.getDate() + 6);
-      buckets.push({ label: bs.getDate() + '/' + (bs.getMonth() + 1), start: bs.toISOString().slice(0, 10), end: be.toISOString().slice(0, 10) });
-      cur.setDate(cur.getDate() + 7);
-    }
-  } else {
-    let cur = new Date(_start.getFullYear(), _start.getMonth(), 1);
-    while (cur <= _end) {
-      const y = cur.getFullYear(), m = cur.getMonth();
-      buckets.push({ label: MOIS_ABBR[m], start: new Date(y, m, 1).toISOString().slice(0, 10), end: new Date(y, m + 1, 0).toISOString().slice(0, 10) });
-      cur.setMonth(cur.getMonth() + 1);
-    }
-  }
-  const _inB = (d, b) => { const s = String(d || '').slice(0, 10); return s >= b.start && s <= b.end; };
-  const jSeries = buckets.map(b => jPeriod.filter(e => _inB(e.date, b)).length);
-  const iSeries = buckets.map(b => iPeriod.filter(i => _inB(i.date, b)).length);
-
-  const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Rapport d'activité — ${escHtml(label)}</title>
-<style>
-  @page{margin:1.8cm 1.5cm}
-  body{font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:9.5pt;line-height:1.55;color:#334155;max-width:820px;margin:0 auto}
-  .top-stripe{height:6px;background:#0f2b4a;border-radius:0 0 4px 4px;margin-bottom:.5cm}
-  .doc-header{margin-bottom:.6cm}
-  .doc-header .etab{font-size:11pt;font-weight:300;color:#0f2b4a}
-  .doc-header .etab strong{font-weight:700}
-  .doc-header .doc-title{font-size:16pt;font-weight:800;color:#0f2b4a;margin-top:.05cm}
-  .doc-header .doc-meta{font-size:7.5pt;color:#64748b;margin-top:.1cm}
-  h2{font-size:11pt;color:#0f2b4a;border-bottom:2px solid #0f2b4a;padding-bottom:2px;margin:.6cm 0 .25cm}
-  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.3cm;margin-bottom:.3cm}
-  .kpi{border:1px solid #e2e8f0;border-radius:7px;padding:.3cm;text-align:center;page-break-inside:avoid}
-  .kpi-num{font-size:15pt;font-weight:800;color:#0f2b4a;line-height:1.1}
-  .kpi-lbl{font-size:7pt;color:#64748b;margin-top:2px}
-  table.bars{width:100%;border-collapse:collapse}
-  table.bars td{padding:2px 4px;vertical-align:middle}
-  table.bars .bl{font-size:8pt;color:#334155;width:38%}
-  table.bars .bb{width:52%}
-  table.bars .bar{height:9px;border-radius:5px;min-width:2px}
-  table.bars .bv{font-size:8pt;font-weight:700;color:#0f2b4a;text-align:right;width:10%}
-  .grav-row{display:flex;gap:.3cm;margin-bottom:.2cm}
-  .grav{flex:1;border-radius:6px;padding:.25cm;text-align:center;color:#fff;font-size:8pt;font-weight:600}
-  .empty-line{font-size:8pt;color:#94a3b8;font-style:italic}
-  .note{font-size:8pt;color:#475569;margin:.2cm 0}
-  svg{page-break-inside:avoid;max-width:100%}
-  h2{page-break-after:avoid}
-  .chart-title{font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.12cm}
-  .footer{margin-top:.8cm;padding-top:.3cm;border-top:1px solid #e2e8f0;text-align:center;font-size:7pt;color:#94a3b8}
-  .actions{text-align:center;margin:.4cm 0}
-  .actions button{padding:.35rem 1.1rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:9pt;margin:.2rem}
-  @media print{.actions{display:none}}
-</style></head><body>
-<div class="top-stripe"></div>
-<div class="doc-header">
-  <div class="etab"><strong>${escHtml(settings.etablissement || 'Foyer d\'Hébergement')}</strong>${settings.ville ? ' — ' + escHtml(settings.ville) : ''}</div>
-  <div class="doc-title">Rapport d'activité — ${escHtml(label)}</div>
-  <div class="doc-meta">Période du ${fmtD(startStr)} au ${fmtD(endStr)} · Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${session ? ' · par ' + escHtml([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : ''}</div>
-</div>
-<div class="actions">
-  <button onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
-  <button onclick="window.close()">Fermer</button>
-</div>
-
-<h2>Synthèse</h2>
-<div class="kpi-grid">
-  ${kpi(tauxOccup != null ? tauxOccup + '%' : '—', "Taux d'occupation")}
-  ${kpi(fileActive, 'File active')}
-  ${kpi(activeRes.length, 'Résidents présents')}
-  ${kpi(tauxPresence != null ? tauxPresence + '%' : '—', 'Taux de présence moyen')}
-  ${kpi(entrees, 'Entrées (admissions)')}
-  ${kpi(sortiesCount, 'Sorties')}
-  ${kpi(dureeMoyMois != null ? dureeMoyMois + ' mois' : '—', 'Durée moy. de séjour')}
-  ${kpi(tauxPpe + '%', 'Résidents avec PPE actif')}
-  ${kpi(jPeriod.length, 'Entrées au journal')}
-  ${kpi(iPeriod.length, 'Incidents déclarés')}
-  ${kpi(avCrees, 'Avenants rédigés')}
-  ${kpi(nbObjAtteints, 'Objectifs atteints')}
-  ${kpi(gmps != null ? gmps : '—', 'GMPS moyen')}
-  ${kpi(withSp.length + '/' + activeRes.length, 'Résidents évalués SERAFIN-PH')}
-</div>
-${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accueil » dans Administration → Établissement pour calculer le taux d\'occupation.</p>'}
-
-<h2>Public accompagné & mouvements</h2>
-<p class="note">File active : <strong>${fileActive}</strong> personne${fileActive > 1 ? 's' : ''} accompagnée${fileActive > 1 ? 's' : ''} sur la période · Entrées : <strong>${entrees}</strong> · Sorties : <strong>${sortiesCount}</strong> · Durée moyenne de séjour : <strong>${dureeMoyMois != null ? dureeMoyMois + ' mois' : '—'}</strong>${capacite ? ` · Capacité autorisée : <strong>${capacite}</strong> places · Taux d'occupation : <strong>${tauxOccup != null ? tauxOccup + '%' : '—'}</strong>` : ''}.</p>
-<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
-  <div style="flex:0 0 auto"><div class="chart-title">Répartition par sexe</div>${svgDonut([{ label: 'Hommes', value: profilSexe.Hommes, color: '#3b82f6' }, { label: 'Femmes', value: profilSexe.Femmes, color: '#ec4899' }, { label: 'Autre', value: profilSexe.Autre, color: '#94a3b8' }], 'résidents')}</div>
-  <div style="flex:1;min-width:300px"><div class="chart-title">Par tranche d'âge</div>${svgHBar(ageTranches, '#0d9488', true)}</div>
-</div>
-<div style="margin-top:.35cm"><div class="chart-title">Mesures de protection juridique</div>${svgHBar(protDist, '#8b5cf6')}</div>
-
-<h2>Évolution de l'activité</h2>
-<p class="note">Transmissions au journal et incidents déclarés par ${_days <= 45 ? 'semaine' : 'mois'} sur la période.</p>
-${svgColumns(buckets.map(b => b.label), [{ name: 'Transmissions journal', color: '#e85d04', data: jSeries }, { name: 'Incidents', color: '#dc2626', data: iSeries }])}
-
-<h2>Activité du journal de bord</h2>
-<p class="note">${jPeriod.length} entrée${jPeriod.length > 1 ? 's' : ''} sur la période, réparties par catégorie :</p>
-${svgHBar(jByCat, '#e85d04')}
-
-<h2>Incidents</h2>
-<p class="note">${iPeriod.length} incident${iPeriod.length > 1 ? 's' : ''} déclaré${iPeriod.length > 1 ? 's' : ''}, dont <strong>${iTraites}</strong> traité${iTraites > 1 ? 's' : ''} (validés ou classés).</p>
-<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
-  <div style="flex:0 0 auto"><div class="chart-title">Par gravité</div>${svgDonut([{ label: 'Graves', value: iByGravite.grave, color: '#dc2626' }, { label: 'Modérés', value: iByGravite.modere, color: '#f59e0b' }, { label: 'Légers', value: iByGravite.leger, color: '#10b981' }], 'incidents')}</div>
-  <div style="flex:1;min-width:300px"><div style="font-size:8pt;font-weight:700;color:#0f2b4a;margin-bottom:.15cm">Par type</div>${svgHBar(iByType, '#dc2626')}</div>
-</div>
-
-<h2>Projets personnalisés (PPE)</h2>
-<p class="note"><strong>${avCrees}</strong> avenant${avCrees > 1 ? 's' : ''} rédigé${avCrees > 1 ? 's' : ''} sur la période · <strong>${avActifs}</strong> avenant${avActifs > 1 ? 's' : ''} actuellement actif${avActifs > 1 ? 's' : ''} dans l'établissement.</p>
-
-<h2>Accompagnement</h2>
-<p class="note"><strong>${nbEvals}</strong> évaluation${nbEvals > 1 ? 's' : ''} d'autonomie réalisée${nbEvals > 1 ? 's' : ''} · <strong>${nbObjAtteints}</strong> objectif${nbObjAtteints > 1 ? 's' : ''} marqué${nbObjAtteints > 1 ? 's' : ''} comme atteint${nbObjAtteints > 1 ? 's' : ''} · <strong>${nbSorties}</strong> sortie${nbSorties > 1 ? 's' : ''} / permission${nbSorties > 1 ? 's' : ''} enregistrée${nbSorties > 1 ? 's' : ''}.</p>
-
-<h2>Profil SERAFIN-PH</h2>
-<p class="note"><strong>${withSp.length}</strong> résident${withSp.length > 1 ? 's' : ''} évalué${withSp.length > 1 ? 's' : ''} sur <strong>${activeRes.length}</strong> résident${activeRes.length > 1 ? 's' : ''} présents · GMPS moyen : <strong>${gmps != null ? gmps : '—'}</strong> · Score total cumulé : <strong>${allScores.reduce((a, s) => a + s.total, 0)}</strong>.</p>
-${withSp.length ? `<div style="display:flex;gap:.4cm;flex-wrap:wrap;margin-bottom:.3cm">
-  <div style="flex:1;min-width:260px"><div class="chart-title">Moyenne par prestation</div>${svgHBar(spByPrest, '#8b5cf6', true, null, 330)}</div>
-  <div style="flex:0 0 auto"><div class="chart-title">Répartition des niveaux</div>${svgDonut([{ label: 'Niveau 0 (Nul)', value: spNivRepart[0], color: '#d1d5db' }, { label: 'Niveau 1 (Faible)', value: spNivRepart[1], color: '#22c55e' }, { label: 'Niveau 2 (Modéré)', value: spNivRepart[2], color: '#eab308' }, { label: 'Niveau 3 (Important)', value: spNivRepart[3], color: '#f97316' }, { label: 'Niveau 4 (Très important)', value: spNivRepart[4], color: '#ef4444' }], 'niveaux')}</div>
-</div>
-<p class="note">Les niveaux SERAFIN-PH vont de 0 (aucun besoin) à 4 (besoin très important). Les prestations directes concernent la relation avec la personne accompagnée, les prestations indirectes le fonctionnement de l'établissement.</p>` : '<p class="empty-line">Aucune évaluation SERAFIN-PH renseignée pour la période.</p>'}
-
-<div class="footer">${escHtml(settings.etablissement || 'Établissement')} · Rapport d'activité ${escHtml(label)} · Document interne</div>
-</body></html>`);
-  w.document.close();
-  if (typeof auditLog === 'function') auditLog('export', `Rapport d'activité — ${label}`);
+  catsEl.innerHTML = Object.entries(SAT_CATS).map(([cat, qIds]) => {
+    const vals = satAll.flatMap(s => qIds.map(q => s.reponses?.[q]).filter(v => v != null));
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    const pct = avg !== null ? Math.round(avg * 25) : null;
+    const col = avg === null ? '#94a3b8' : avg >= 3.5 ? '#0d9488' : avg >= 2.5 ? '#16a34a' : avg >= 1.5 ? '#d97706' : '#dc2626';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
+        <span style="font-size:.76rem;color:var(--text);font-weight:500">${cat}</span>
+        <span style="font-size:.76rem;font-weight:700;color:${col}">${pct !== null ? pct + '%' : '—'}</span>
+      </div>
+      <div style="height:6px;border-radius:999px;background:var(--g100);overflow:hidden">
+        <div style="height:100%;border-radius:999px;background:${col};width:${pct ?? 0}%;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
+
+// ── RAPPORT D'ACTIVITÉ PDF ── (extrait dans js/rapport.js, partagé avec rapport.html)
 
 // ── SCAN DES DOUBLONS ──
 function scanDuplicates() {
@@ -1434,6 +1624,33 @@ function renderSerafinphStats() {
   if (pct >= 80) { c5b.textContent = 'Optimal'; c5b.className = 'stat-circ-badge scb-violet'; }
   else if (pct >= 40) { c5b.textContent = 'Partiel'; c5b.className = 'stat-circ-badge scb-yellow'; }
   else { c5b.textContent = 'À évaluer'; c5b.className = 'stat-circ-badge scb-red'; }
+
+  // ── Satisfaction (c6) ──
+  const satAllC6 = DB.get(DB.keys.satisfaction) || [];
+  const c6b = document.getElementById('c6badge');
+  if (satAllC6.length) {
+    const satVals = satAllC6.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
+    const satAvg = satVals.length ? satVals.reduce((a, b) => a + b, 0) / satVals.length : null;
+    const satPct = satAvg !== null ? Math.round(satAvg * 25) : null;
+    const satStroke = satAvg === null ? '#94a3b8' : satAvg >= 3.5 ? '#0d9488' : satAvg >= 2.5 ? '#16a34a' : satAvg >= 1.5 ? '#d97706' : '#dc2626';
+    document.getElementById('c6pct').textContent = satPct !== null ? satPct : '—';
+    document.getElementById('c6pctSign').textContent = satPct !== null ? '%' : '';
+    document.getElementById('c6sub').textContent = satAllC6.length + ' questionnaire' + (satAllC6.length > 1 ? 's' : '');
+    document.getElementById('c6bar').setAttribute('stroke', satStroke);
+    setCirc('c6bar', satPct ?? 0);
+    if (c6b) {
+      if (satAvg >= 3.5) { c6b.textContent = 'Très satisf.'; c6b.className = 'stat-circ-badge scb-green'; }
+      else if (satAvg >= 2.5) { c6b.textContent = 'Satisfaisant'; c6b.className = 'stat-circ-badge scb-green'; }
+      else if (satAvg >= 1.5) { c6b.textContent = 'À améliorer'; c6b.className = 'stat-circ-badge scb-yellow'; }
+      else { c6b.textContent = 'Insuffisant'; c6b.className = 'stat-circ-badge scb-red'; }
+    }
+  } else {
+    document.getElementById('c6pct').textContent = '—';
+    document.getElementById('c6pctSign').textContent = '';
+    document.getElementById('c6sub').textContent = 'aucun questionnaire';
+    if (c6b) { c6b.textContent = 'Sans données'; c6b.className = 'stat-circ-badge scb-yellow'; }
+  }
+
   const spByPrest = {};
   SP_NOMENCLATURE.forEach(p => {
     const niveaux = allScores.filter(s => s.selected.includes(p.code)).map(s => s.prestations[p.code]);
@@ -1762,6 +1979,7 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
+  if (name === 'educateurs') renderEducateurs();
   if (name === 'segur') renderSegurDashboard();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;

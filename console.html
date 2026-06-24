@@ -48,6 +48,7 @@
         <div class="header-date">Supervision multi-établissements</div>
       </div>
       <div class="header-right">
+        <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
         <a href="accueil.html" class="btn btn-ghost btn-sm">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Accueil
@@ -425,20 +426,21 @@
 
   function renderRoles() {
     const roles = cslAllRoles();
-    document.getElementById('rolesGrid').innerHTML = roles.map(f => {
+    document.getElementById('rolesGrid').innerHTML = roles.map((f, i) => {
       const chips = (f.permissions || []).length
         ? f.permissions.map(p => `<span class="role-perm">${escHtml((typeof PERMISSION_LABELS !== 'undefined' && PERMISSION_LABELS[p]) || p)}</span>`).join('')
         : '<span class="role-noperm">Aucun droit</span>';
       return `<div class="role-card">
-        <div class="role-card-top" style="background:${f.color || '#0f2b4a'}"><span class="role-name">${escHtml(f.fonction)}</span><button class="role-edit" onclick="cslOpenRole('${escHtml(f.fonction).replace(/'/g, '')}')">✎</button></div>
+        <div class="role-card-top" style="background:${f.color || '#0f2b4a'}"><span class="role-name">${escHtml(f.fonction)}</span><button class="role-edit" onclick="cslOpenRole(${i})">✎</button></div>
         <div class="role-card-body"><div class="role-count">${(f.permissions || []).length} droit${(f.permissions || []).length > 1 ? 's' : ''}</div><div class="role-perms">${chips}</div></div>
       </div>`;
     }).join('') || '<div class="soon" style="grid-column:1/-1">Aucun rôle</div>';
   }
 
-  function cslOpenRole(fonction) {
-    const role = cslAllRoles().find(r => r.fonction === fonction);
+  function cslOpenRole(idx) {
+    const role = cslAllRoles()[idx];
     if (!role) return;
+    const fonction = role.fonction;
     document.getElementById('roleModalTitle').textContent = 'Droits — ' + fonction;
     document.getElementById('roleName').value = fonction;
     const sel = role.permissions || [];

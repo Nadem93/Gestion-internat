@@ -32,6 +32,8 @@ function openAdmissionModal(id) {
     document.getElementById('admFormDateDemande').value = a.dateDemande || '';
     document.getElementById('admFormOrigine').value = a.origine || 'MDPH';
     document.getElementById('admFormStatut').value = a.statut || 'en_attente';
+    document.getElementById('admFormDateEntree').value = a.dateEntree || '';
+    document.getElementById('admFormDossier').value = a.dossier || '';
     document.getElementById('admFormContactNom').value = a.contactNom || '';
     document.getElementById('admFormContactTel').value = a.contactTel || '';
     document.getElementById('admFormNotes').value = a.notes || '';
@@ -42,6 +44,8 @@ function openAdmissionModal(id) {
     document.getElementById('admFormDateDemande').value = today();
     document.getElementById('admFormOrigine').value = 'MDPH';
     document.getElementById('admFormStatut').value = 'en_attente';
+    document.getElementById('admFormDateEntree').value = '';
+    document.getElementById('admFormDossier').value = '';
     document.getElementById('admFormContactNom').value = '';
     document.getElementById('admFormContactTel').value = '';
     document.getElementById('admFormNotes').value = '';
@@ -58,6 +62,8 @@ function saveAdmission() {
     prenom, nom,
     dateNaissance: document.getElementById('admFormDateNaissance').value,
     dateDemande: document.getElementById('admFormDateDemande').value,
+    dateEntree: document.getElementById('admFormDateEntree').value,
+    dossier: document.getElementById('admFormDossier').value.trim(),
     origine: document.getElementById('admFormOrigine').value,
     statut: document.getElementById('admFormStatut').value,
     contactNom: document.getElementById('admFormContactNom').value.trim(),
@@ -109,7 +115,8 @@ function admettreCandidat(id) {
   const resident = {
     id: genId(),
     nom: a.nom, prenom: a.prenom, photo: null,
-    dob: a.dateNaissance || '', genre: '', entree: today(),
+    dob: a.dateNaissance || '', dateNaissance: a.dateNaissance || '',
+    genre: '', entree: a.dateEntree || today(), dateEntree: a.dateEntree || today(),
     statut: 'permanent', chambre: '', referent: '',
     color: colors[residents.length % colors.length],
     notes: a.notes || '', contacts: a.contactNom ? `${a.contactNom}${a.contactTel ? ' — ' + a.contactTel : ''}` : '',
@@ -142,6 +149,8 @@ function admissionItemHtml(a, isAdmin) {
       </div>
       <div style="font-size:.74rem;color:var(--muted);margin-top:.2rem">
         ${a.dateNaissance ? 'Né(e) le ' + formatDate(a.dateNaissance) + ' · ' : ''}Orientation : ${escHtml(a.origine || '—')}${a.dateDemande ? ' · Demande du ' + formatDate(a.dateDemande) : ''}
+        ${a.dateEntree ? ' · <span style="color:#16a34a;font-weight:600">Entrée prévue : ' + formatDate(a.dateEntree) + '</span>' : ''}
+        ${a.dossier ? ' · Dossier : ' + escHtml(a.dossier) : ''}
         ${a.contactNom ? ' · Contact : ' + escHtml(a.contactNom) + (a.contactTel ? ' (' + escHtml(a.contactTel) + ')' : '') : ''}
       </div>
       ${a.notes ? `<div style="font-size:.74rem;color:var(--muted);margin-top:.2rem">${escHtml(a.notes)}</div>` : ''}

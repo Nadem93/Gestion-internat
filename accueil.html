@@ -28,6 +28,7 @@
 </head>
 <body>
 <script src="js/app.js"></script>
+<script src="js/alertes.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
@@ -63,17 +64,21 @@ document.querySelectorAll('[data-perm]').forEach(el => {
   <main class="accueil-home-main">
     <div class="accueil-home-grid">
       <a href="dashboard.html" class="accueil-home-card" data-perm="view_dashboard" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="accueil-home-label">Tableau de bord</span></a>
-      <a href="residents.html" class="accueil-home-card" data-perm="view_residents" style="--c:#0891b2;background:linear-gradient(135deg,#0891b218,#22d3ee12),#fff"><span class="accueil-home-icon" style="background:#0891b220;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Résidents</span></a>
+      <a href="residents.html" class="accueil-home-card" data-module="residents" data-perm="view_residents" style="--c:#0891b2;background:linear-gradient(135deg,#0891b218,#22d3ee12),#fff"><span class="accueil-home-icon" style="background:#0891b220;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Résidents</span><span class="notif-badge hidden">0</span></a>
+      <a href="transmissions.html" class="accueil-home-card" data-perm="access_journal" style="--c:#3b82f6;background:linear-gradient(135deg,#3b82f618,#93c5fd12),#fff"><span class="accueil-home-icon" style="background:#3b82f620;color:#3b82f6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v4l4-4"/></svg></span><span class="accueil-home-label">Transmissions</span><span class="notif-badge tr-badge hidden"></span></a>
+      <a href="alertes.html" class="accueil-home-card" style="--c:#ef4444;background:linear-gradient(135deg,#ef444418,#fca5a512),#fff"><span class="accueil-home-icon" style="background:#ef444420;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><span class="accueil-home-label">Alertes</span><span class="notif-badge al-badge hidden"></span></a>
       <a href="journal.html" class="accueil-home-card" data-module="journal" data-perm="access_journal" style="--c:#059669;background:linear-gradient(135deg,#05966918,#34d39912),#fff"><span class="accueil-home-icon" style="background:#05966920;color:#059669"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="accueil-home-label">Journal de bord</span><span class="notif-badge hidden">0</span></a>
-      <a href="planning.html" class="accueil-home-card" data-perm="access_presences" style="--c:#d97706;background:linear-gradient(135deg,#d9770618,#fbbf2412),#fff"><span class="accueil-home-icon" style="background:#d9770620;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="accueil-home-label">Agenda</span></a>
+      <a href="planning.html" class="accueil-home-card" data-module="planning" data-perm="access_presences" style="--c:#d97706;background:linear-gradient(135deg,#d9770618,#fbbf2412),#fff"><span class="accueil-home-icon" style="background:#d9770620;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="accueil-home-label">Agenda</span><span class="notif-badge hidden">0</span></a>
       <a href="vie-quotidienne.html" class="accueil-home-card" data-perm="access_presences,view_residents,access_journal,access_activites,access_medicaments" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#5eead412),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Vie quotidienne</span></a>
+      <a href="cvs.html" class="accueil-home-card" data-module="ppe" data-perm="access_cvs" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#86efac12),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Vie Sociale (CVS)</span></a>
       <a href="dossiers.html" class="accueil-home-card" data-module="ppe" data-perm="access_ppe,view_residents,access_documents,access_viatrajectoire,access_repertoire,view_incidents,access_cvs,access_admissions" style="--c:#b45309;background:linear-gradient(135deg,#b4530918,#fcd34d12),#fff"><span class="accueil-home-icon" style="background:#b4530920;color:#b45309"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span class="accueil-home-label">Dossiers & suivi</span><span class="notif-badge hidden">0</span></a>
-      <a href="pilotage.html" class="accueil-home-card" data-perm="access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Portail</span></a>
-      <a href="#" onclick="openSearch();return false" class="accueil-home-card" style="--c:#0ea5e9;background:linear-gradient(135deg,#0ea5e918,#7dd3fc12),#fff"><span class="accueil-home-icon" style="background:#0ea5e920;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="accueil-home-label">Recherche</span></a>
-      <a href="interventions.html" class="accueil-home-card" data-perm="access_interventions" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
+      <a href="pilotage.html" class="accueil-home-card" data-module="portail" data-perm="access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Portail</span><span class="notif-badge hidden">0</span></a>
+<a href="#" onclick="openSearch();return false" class="accueil-home-card" style="--c:#0ea5e9;background:linear-gradient(135deg,#0ea5e918,#7dd3fc12),#fff"><span class="accueil-home-icon" style="background:#0ea5e920;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="accueil-home-label">Recherche</span></a>
+<a href="interventions.html" class="accueil-home-card" data-perm="access_interventions" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
+      <a href="rh.html" class="accueil-home-card admin-only" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">RH</span></a>
+      <a href="finance.html" class="accueil-home-card admin-only" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="accueil-home-label">Finance</span></a>
       <a href="admin-modules.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
       <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
-      <a href="console.html" class="accueil-home-card superadmin-only" style="--c:#a16207;background:linear-gradient(135deg,#a1620718,#eab30812),#fff"><span class="accueil-home-icon" style="background:#a1620720;color:#a16207"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg></span><span class="accueil-home-label">Console groupe</span></a>
     </div>
   </main>
 </div><!-- /mainAccueilView -->
@@ -93,6 +98,10 @@ document.querySelectorAll('[data-perm]').forEach(el => {
 
   <a href="vehicules.html" class="accueil-fab" title="Gérer les véhicules" style="background:#6366f1;text-decoration:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg>
+  </a>
+
+  <a href="console.html" class="accueil-fab superadmin-only" title="Console groupe" style="background:#a16207;text-decoration:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg>
   </a>
 </div>
 
@@ -392,7 +401,38 @@ function updateNotifs() {
   const interventions = DB.get(DB.keys.interventions) || [];
   const newInt = lastInt === null ? 0 : interventions.filter(e => e.statut === 'ouverte' && new Date(e.date).getTime() > Number(lastInt)).length;
 
-  const counts = { messages: unreadMsgs, journal: unreadJournal, ppe: newPpe, incidents: newIncidents, interventions: newInt };
+  // Résidents — nouveaux dans les 7 derniers jours
+  const residents = DB.get(DB.keys.residents) || [];
+  const il7j = Date.now() - 7 * 86400000;
+  const newResidents = residents.filter(r => r.createdAt && new Date(r.createdAt).getTime() > il7j).length;
+
+  // Planning/Agenda — événements aujourd'hui
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const planningItems = DB.get(DB.keys.planning) || [];
+  const eventsToday = planningItems.filter(e => e.date === todayStr).length;
+
+  // Planning équipe — créneaux aujourd'hui pour cet utilisateur
+  const empFullName = [session.prenom, session.nom].filter(Boolean).join(' ');
+  const shiftsEquipe = DB.get(DB.keys.planningEquipe) || [];
+  const myShiftsToday = empFullName ? shiftsEquipe.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
+
+  // Formations — planifiées dans les 7 prochains jours
+  const in7dStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const formationsList = DB.get(DB.keys.formations) || [];
+  const upcomingFormations = formationsList.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
+
+  // Portail — total des actions en attente (messages non lus + congés en attente)
+  const congesAll = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
+  const pendingConges = congesAll.filter(c => c.statut === 'en_attente').length;
+  const portailTotal = unreadMsgs + pendingConges;
+
+  const counts = {
+    messages: unreadMsgs, journal: unreadJournal, ppe: newPpe,
+    incidents: newIncidents, interventions: newInt,
+    residents: newResidents, planning: eventsToday,
+    'planning-equipe': myShiftsToday, formations: upcomingFormations,
+    portail: portailTotal,
+  };
 
   document.querySelectorAll('[data-module]').forEach(el => {
     const mod = el.dataset.module;
@@ -417,7 +457,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) upda
 window.addEventListener('focus', updateNotifs);
 window.addEventListener('pageshow', updateNotifs);
 window.addEventListener('storage', e => {
-  if (e.key === DB.keys.messages || e.key === DB.keys.journal || e.key === DB.keys.ppe || e.key === DB.keys.incidents || e.key === DB.keys.interventions) updateNotifs();
+  if (e.key && (e.key.startsWith('ftr_messages') || e.key.startsWith('ftr_journal') || e.key.startsWith('ftr_ppe') || e.key.startsWith('ftr_incidents') || e.key.startsWith('ftr_interventions') || e.key.startsWith('ftr_residents') || e.key.startsWith('ftr_planning') || e.key.startsWith('ftr_formations') || e.key === 'ftr_conges')) updateNotifs();
 });
 setInterval(updateNotifs, 10000);
 
