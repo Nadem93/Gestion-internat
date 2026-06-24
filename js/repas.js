@@ -61,6 +61,20 @@ function setMenuChoice(date, rid, meal, choice) {
   renderRepas();
 }
 
+// Contenu réel des deux menus proposés par le foyer (texte libre par jour/repas)
+function getMenuTexte(date, meal, choice) {
+  return ((getRepas()[date] || {})['menus'] || {})[meal]?.[choice] || '';
+}
+function setMenuTexte(date, meal, choice, texte) {
+  const all = getRepas();
+  if (!all[date]) all[date] = {};
+  if (!all[date]['menus']) all[date]['menus'] = {};
+  if (!all[date]['menus'][meal]) all[date]['menus'][meal] = {};
+  all[date]['menus'][meal][choice] = texte;
+  saveRepas(all);
+  renderRepas();
+}
+
 function repasResidents() {
   return (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''} ${a.prenom || ''}`.localeCompare(`${b.nom || ''} ${b.prenom || ''}`, 'fr'));
@@ -124,13 +138,13 @@ function rpResidentCard(r, day, canEdit) {
   const mealBtns = MEALS.map(m => {
     const on = m.key === 'matin' ? matin : m.key === 'midi' ? midi : soir;
     const menuChoice = m.key === 'midi' ? menuMidi : m.key === 'soir' ? menuSoir : null;
-    const menuBtns = (m.hasMenu && on && canEdit) ? `
+    const menuBtns = m.hasMenu ? `
       <div style="display:flex;gap:3px;margin-top:4px">
-        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','1')"
-          style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='1'?'background:#16a34a;color:#fff;border-color:#16a34a':'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0'}">M1</button>
-        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','2')"
-          style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='2'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#2563eb;border-color:#bfdbfe'}">M2</button>
-      </div>` : menuChoice ? `<div style="font-size:.58rem;font-weight:700;margin-top:3px;color:${menuChoice==='1'?'#16a34a':'#2563eb'}">Menu ${menuChoice}</div>` : '';
+        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','1')" title="${escHtml(getMenuTexte(repasDate, m.key, '1')) || 'Menu 1'}"
+          style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='1'?'background:#16a34a;color:#fff;border-color:#16a34a':'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0'}">Menu1</button>
+        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','2')" title="${escHtml(getMenuTexte(repasDate, m.key, '2')) || 'Menu 2'}"
+          style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='2'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#2563eb;border-color:#bfdbfe'}">Menu2</button>
+      </div>` : '';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:center">
       <button onclick="toggleRepas('${r.id}','${m.key}',${!on})" style="width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:.5rem .25rem;border-radius:10px;border:1.5px solid;cursor:pointer;transition:all .15s;font-family:inherit;${on ? m.active : m.inactive}">
         <span style="font-size:.9rem;line-height:1">${m.icon}</span>
@@ -162,6 +176,7 @@ function renderRepas() {
 
   const dEl = document.getElementById('rpDate');
   if (dEl && dEl.value !== repasDate) dEl.value = repasDate;
+  renderDateStrip();
   const lbl = document.getElementById('rpDateLabel');
   if (lbl) lbl.textContent = new Date(repasDate + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -177,6 +192,29 @@ function renderRepas() {
     <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Régimes particuliers</span><div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div></div><div class="stat-num">${regimesPart}</div></div>
     <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Allergies alim.</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div></div><div class="stat-num">${allergies}</div></div>`;
 
+  // Menus du jour proposés par le foyer (texte libre, 2 choix par repas)
+  const menusEl = document.getElementById('rpMenusDuJour');
+  if (menusEl) {
+    const menuField = (meal, choice, color) => `
+      <div style="flex:1;min-width:160px">
+        <label style="font-size:.68rem;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:.25rem">Menu ${choice}</label>
+        <input type="text" value="${escHtml(getMenuTexte(repasDate, meal, choice))}" placeholder="Ex : Poulet rôti, pommes vapeur…"
+          onchange="setMenuTexte('${repasDate}','${meal}','${choice}',this.value)" class="form-input" style="font-size:.82rem"/>
+      </div>`;
+    menusEl.innerHTML = `
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:.78rem;font-weight:700;margin-bottom:.5rem">☀️ Midi</div>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap">${menuField('midi', '1', '#16a34a')}${menuField('midi', '2', '#2563eb')}</div>
+        </div>
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:.78rem;font-weight:700;margin-bottom:.5rem">🌙 Soir</div>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap">${menuField('soir', '1', '#16a34a')}${menuField('soir', '2', '#2563eb')}</div>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.65rem">Renseignez les deux menus proposés par la cuisine pour ce jour — les résidents/équipes choisissent ensuite via les boutons Menu1/Menu2 sur chaque fiche.</p>`;
+  }
+
   // Synthèse cuisine par régime (sur les inscrits du jour)
   const cuisine = { matin: {}, midi: {}, soir: {} };
   residents.forEach(r => {
@@ -186,8 +224,8 @@ function renderRepas() {
   });
   const cuisineRow = m => Object.entries(cuisine[m]).sort((a, b) => b[1] - a[1]).map(([k, n]) => {
     const t = REGIME_TYPES[k] || REGIME_TYPES.autre;
-    return `<span class="badge" style="background:${t.color}1a;color:${t.color};border:1px solid ${t.color}44">${t.label} × ${n}</span>`;
-  }).join(' ') || '<span style="color:var(--g400);font-size:.78rem">aucun inscrit</span>';
+    return `<span style="font-size:.78rem;color:${t.color};font-weight:600">${t.label} × ${n}</span>`;
+  }).join(' · ') || '<span style="color:var(--g400);font-size:.78rem">aucun inscrit</span>';
 
   // Compteurs de choix de menus par repas
   const choixMenu = (day['choixMenu'] || {});
@@ -205,9 +243,11 @@ function renderRepas() {
     const t = menuCount[m];
     const total = t['1'] + t['2'] + t.none;
     if (!total) return '';
-    return `<span class="badge" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">M1 × ${t['1']}</span>
-            <span class="badge" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">M2 × ${t['2']}</span>
-            ${t.none ? `<span class="badge badge-gray">sans choix × ${t.none}</span>` : ''}`;
+    const txt1 = getMenuTexte(repasDate, m, '1');
+    const txt2 = getMenuTexte(repasDate, m, '2');
+    return `<span style="font-size:.78rem;color:#16a34a;font-weight:600" title="${escHtml(txt1)}">Menu1${txt1 ? ' — ' + escHtml(txt1) : ''} × ${t['1']}</span>
+            <span style="font-size:.78rem;color:#2563eb;font-weight:600" title="${escHtml(txt2)}"> · Menu2${txt2 ? ' — ' + escHtml(txt2) : ''} × ${t['2']}</span>
+            ${t.none ? `<span style="font-size:.78rem;color:var(--muted)"> · sans choix × ${t.none}</span>` : ''}`;
   };
 
   document.getElementById('rpCuisine').innerHTML = `
@@ -294,6 +334,53 @@ function rpShiftDate(days) {
   renderRepas();
 }
 
+// Saut direct (ignore le pas hebdomadaire de la vue Semaine) — utilisé par les raccourcis et la frise de dates
+function rpJumpDays(days) {
+  const d = new Date(repasDate + 'T12:00');
+  d.setDate(d.getDate() + days);
+  repasDate = d.toISOString().slice(0, 10);
+  renderRepas();
+}
+
+function rpJumpTo(dateStr) {
+  repasDate = dateStr;
+  renderRepas();
+}
+
+function rpGoToday() {
+  repasDate = today();
+  renderRepas();
+}
+
+// Frise de dates sur 1 mois (commande des repas à l'avance)
+function renderDateStrip() {
+  const el = document.getElementById('rpDateStrip');
+  if (!el) return;
+  const todayS = today();
+  const DOW = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const MOIS = ['jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc'];
+  const repasAll = getRepas();
+  let html = '';
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(todayS + 'T12:00');
+    d.setDate(d.getDate() + i);
+    const ds = d.toISOString().slice(0, 10);
+    const isToday = ds === todayS;
+    const isSelected = ds === repasDate;
+    const dayData = repasAll[ds];
+    const hasMenu = !!(dayData && dayData.menus && Object.values(dayData.menus).some(m => m && (m['1'] || m['2'])));
+    html += `<button class="rp-date-chip${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" onclick="rpJumpTo('${ds}')" title="${escHtml(d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))}">
+      ${hasMenu ? '<span class="ddot"></span>' : ''}
+      <span class="dow">${DOW[d.getDay()]}</span>
+      <span class="dnum">${d.getDate()}</span>
+      <span class="dmonth">${MOIS[d.getMonth()]}</span>
+    </button>`;
+  }
+  el.innerHTML = html;
+  const sel = el.querySelector('.rp-date-chip.selected');
+  if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
 function renderSemaineView(residents, canEdit) {
   const days   = rpWeekDays(repasDate);
   const all    = getRepas();
@@ -350,18 +437,17 @@ function renderSemaineView(residents, canEdit) {
       const menuM = ((day['choixMenu'] || {})[r.id] || {})['midi'];
       const menuS = ((day['choixMenu'] || {})[r.id] || {})['soir'];
 
-      const dot = (meal, on, mealColor, icon) => canEdit
-        ? `<button title="${icon}" onclick="toggleRepas('${r.id}','${meal}',${!on},'${ds}')"
-             style="width:22px;height:22px;border-radius:50%;border:2px solid ${on ? mealColor : '#e2e8f0'};background:${on ? mealColor : 'transparent'};cursor:pointer;font-size:.6rem;line-height:1;transition:.12s;color:${on ? '#fff' : '#cbd5e1'};flex-shrink:0">${icon}</button>`
-        : `<div style="width:22px;height:22px;border-radius:50%;border:2px solid ${on ? mealColor : '#e2e8f0'};background:${on ? mealColor : 'transparent'};font-size:.6rem;display:flex;align-items:center;justify-content:center;color:${on ? '#fff' : '#cbd5e1'}">${icon}</div>`;
+      const dot = (meal, on, mealColor, icon) =>
+        `<button title="${icon}" onclick="toggleRepas('${r.id}','${meal}',${!on},'${ds}')"
+             style="width:22px;height:22px;border-radius:50%;border:2px solid ${on ? mealColor : '#e2e8f0'};background:${on ? mealColor : 'transparent'};cursor:pointer;font-size:.6rem;line-height:1;transition:.12s;color:${on ? '#fff' : '#cbd5e1'};flex-shrink:0">${icon}</button>`;
 
-      const menuBtns = (canEdit && (midi || soir)) ? `
+      const menuBtns = (midi || soir) ? `
         <div style="display:flex;gap:2px;margin-top:3px;justify-content:center">
           ${midi ? `<button onclick="setMenuChoice('${ds}','${r.id}','midi','1')"
-            style="font-size:.52rem;font-weight:700;padding:1px 4px;border-radius:4px;border:1.5px solid;cursor:pointer;font-family:inherit;${menuM==='1'?'background:#16a34a;color:#fff;border-color:#16a34a':'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0'}">M1</button>` : ''}
+            style="font-size:.52rem;font-weight:700;padding:1px 4px;border-radius:4px;border:1.5px solid;cursor:pointer;font-family:inherit;${menuM==='1'?'background:#16a34a;color:#fff;border-color:#16a34a':'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0'}">Menu1</button>` : ''}
           ${midi ? `<button onclick="setMenuChoice('${ds}','${r.id}','midi','2')"
-            style="font-size:.52rem;font-weight:700;padding:1px 4px;border-radius:4px;border:1.5px solid;cursor:pointer;font-family:inherit;${menuM==='2'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#2563eb;border-color:#bfdbfe'}">M2</button>` : ''}
-        </div>` : (menuM || menuS) ? `<div style="font-size:.52rem;font-weight:600;color:${(menuM||menuS)==='1'?'#16a34a':'#2563eb'};margin-top:2px;text-align:center">M${menuM||menuS}</div>` : '';
+            style="font-size:.52rem;font-weight:700;padding:1px 4px;border-radius:4px;border:1.5px solid;cursor:pointer;font-family:inherit;${menuM==='2'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#2563eb;border-color:#bfdbfe'}">Menu2</button>` : ''}
+        </div>` : (menuM || menuS) ? `<div style="font-size:.52rem;font-weight:600;color:${(menuM||menuS)==='1'?'#16a34a':'#2563eb'};margin-top:2px;text-align:center">Menu${menuM||menuS}</div>` : '';
 
       return `<td style="text-align:center;padding:.4rem .25rem;background:${isTod ? '#eff6ff' : 'transparent'};${isPast ? 'opacity:.6' : ''}">
         <div style="display:flex;gap:3px;justify-content:center">

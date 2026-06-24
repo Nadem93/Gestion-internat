@@ -28,7 +28,9 @@ const DB = {
     evaluations:'ftr_evaluations', astreintes:'ftr_astreintes',
     satisfaction:'ftr_satisfaction', inventaire:'ftr_inventaire',
     satQuestions:'ftr_sat_questions',
-    contrats:'ftr_contrats', absencesAT:'ftr_absences_at', pointages:'ftr_pointages', candidats:'ftr_candidats'
+    contrats:'ftr_contrats', absencesAT:'ftr_absences_at', pointages:'ftr_pointages', candidats:'ftr_candidats',
+    rapportContributions:'ftr_rapport_contributions',
+    contactsExternes:'ftr_contacts_externes'
   }
 };
 
@@ -682,6 +684,9 @@ function renderUserInfo() {
 function initMenuPopup() {
   const header = document.querySelector('.header') || document.querySelector('.admin-topbar');
   if (!header) return;
+  // Page chargée dans l'iframe du portail RH (rh.html) : son propre header ferait doublon
+  // avec le header pleine largeur du portail — on le masque entièrement.
+  if (window.self !== window.top) { header.style.display = 'none'; return; }
   const isAdmin = header.classList.contains('admin-topbar');
 
   // Get reference to the title wrapper before inserting the button
@@ -691,12 +696,21 @@ function initMenuPopup() {
   // Skip the 9-dots button on the accueil page (modules already displayed)
   const isAccueil = location.pathname.endsWith('accueil.html');
   if (!isAccueil && !document.getElementById('menuDotsBtn')) {
-    // Home button (redirects to accueil)
+    // Home button (redirects to accueil). On force la navigation du document de
+    // plus haut niveau pour casser hors de l'iframe quand la page est affichée
+    // dans un panneau (ex: portail RH) — target="_top" seul n'est pas fiable partout.
     const homeBtn = document.createElement('a');
     homeBtn.id = 'homeBtn';
     homeBtn.className = 'menu-dots-btn';
     homeBtn.href = 'accueil.html';
+    homeBtn.target = '_top';
     homeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg>';
+    homeBtn.addEventListener('click', e => {
+      if (window.top !== window.self) {
+        e.preventDefault();
+        window.top.location.href = 'accueil.html';
+      }
+    });
     header.insertBefore(homeBtn, header.firstChild);
 
     // 9-dots button next to home

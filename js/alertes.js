@@ -9,7 +9,8 @@ const AL_TYPES = {
   admission:      { icon:'🏠', color:'#10b981', label:'Admission' },
   eig:            { icon:'⚡', color:'#dc2626', label:'EIG' },
   plan_soins:     { icon:'🩺', color:'#0891b2', label:'Soin planifié' },
-  satisfaction:   { icon:'⭐', color:'#6366f1', label:'Satisfaction' }
+  satisfaction:   { icon:'⭐', color:'#6366f1', label:'Satisfaction' },
+  budget_remboursement: { icon:'💶', color:'#b45309', label:'Remboursement budget' }
 };
 
 const AL_PRIOS = {
@@ -146,6 +147,28 @@ function generateAlertes() {
       alerts.push({ id, type:'satisfaction', prio, residentId:null, resName:'', titre:'Score de satisfaction faible', msg:`Score global : ${pct}% sur ${satAll.length} questionnaire${satAll.length>1?'s':''}`, date:todayStr, link:'satisfaction.html', diffJ:0 });
     }
   }
+
+  // ── 8. Budget — partage 50/50 en attente (remboursement et/ou ticket manquant depuis ≥7j) ──
+  const budgetDemandes = DB.get(DB.keys.budgetDemandes) || [];
+  budgetDemandes.forEach(d => {
+    if (d.statut !== 'accepte' || !d.partage50) return;
+    const remboursements = d.remboursements || [];
+    const tousRembourses = remboursements.length > 0 && remboursements.every(r => r.paye);
+    const hasJustif = (d.justificatifs || []).length > 0;
+    if (tousRembourses && hasJustif) return;
+    const refDateStr = d.dateTraitement || d.dateDemande;
+    if (!refDateStr) return;
+    const refDate = new Date(refDateStr);
+    if (isNaN(refDate)) return;
+    const ageJ = Math.floor((Date.now() - refDate.getTime()) / 86400000);
+    if (ageJ < 7) return;
+    const manque = [];
+    if (!tousRembourses) manque.push('remboursement résident(s)');
+    if (!hasJustif) manque.push('ticket/justificatif');
+    const id = _alId('budget_remboursement', d.id);
+    const prio = ageJ >= 21 ? 'critique' : 'urgent';
+    alerts.push({ id, type:'budget_remboursement', prio, residentId:null, resName:d.employeNom||'', titre:`Demande de budget — ${d.employeNom||'Employé'}`, msg:`En attente depuis ${ageJ}j : ${manque.join(' et ')}`, date:refDateStr, link:'budget.html', diffJ:0 });
+  });
 
   // Trier : critique → urgent → info, puis par diffJ croissant
   const ORDER = { critique:0, urgent:1, info:2 };

@@ -89,9 +89,77 @@ function ctCard(c) {
       ${c.avenants?.length?`<div style="font-size:.71rem;color:var(--muted);margin-top:.1rem">${c.avenants.length} avenant${c.avenants.length>1?'s':''}</div>`:''}
     </div>
     ${ctIsCanEdit()?`<div style="display:flex;gap:.3rem;justify-content:flex-end;border-top:1px solid var(--border);padding:.5rem .75rem;background:var(--g50)">
-      <button class="btn btn-ghost btn-sm" onclick="openContratModal('${c.id}')">✎ Détail</button>
+      <button class="btn btn-ghost btn-sm" onclick="openContratDetail('${c.id}')">📑 Détail</button>
     </div>`:''}
   </div>`;
+}
+
+// ── DÉTAIL — CARTE ANIMÉE ──
+function openContratDetail(id) {
+  const c = getContrats().find(x => x.id === id);
+  if (!c) return;
+  const t = CT_TYPES[c.type] || CT_TYPES.cdi;
+  const emp = ctEmployes().find(x => String(x.id) === String(c.employeId));
+  const nomComplet = ctEmployeNom(c.employeId);
+  const init = emp ? (initials(emp.prenom||'', emp.nom||'') || '?') : '?';
+  const joursRestants = c.fin ? ctJoursRestants(c.fin) : null;
+  const urgent = joursRestants !== null && joursRestants <= 30 && joursRestants >= 0;
+  const essaiJours = c.essai ? ctJoursRestants(c.essai) : null;
+  const essaiUrgent = essaiJours !== null && essaiJours <= 15 && essaiJours >= 0;
+  const statutTermine = (c.statut||'actif') === 'termine';
+
+  const statsHtml = `
+    <div class="ctcard-grid">
+      <div class="ctcard-stat"><div class="v">${formatDate(c.debut).slice(0,6)}</div><div class="l">Début</div></div>
+      <div class="ctcard-stat"><div class="v">${c.heures||'—'}h</div><div class="l">${c.temps==='partiel'?'Temps partiel':'Temps plein'}</div></div>
+      <div class="ctcard-stat"><div class="v" style="color:${urgent?'#dc2626':'var(--primary)'}">${c.fin ? formatDate(c.fin).slice(0,6) : '∞'}</div><div class="l">${c.fin?'Échéance':'Durée'}</div></div>
+    </div>`;
+
+  const alertHtml = urgent && !statutTermine
+    ? `<div class="ctcard-section" style="background:#fef2f2;border-color:#fecaca"><h4 style="color:#dc2626"><span class="ctcard-pulse"></span>Échéance proche</h4><p>Ce contrat se termine le <strong>${formatDate(c.fin)}</strong> — J-${joursRestants}.</p></div>`
+    : '';
+
+  const essaiHtml = c.essai
+    ? `<div class="ctcard-section" style="${essaiUrgent?'background:#f5f3ff;border-color:#ddd6fe':''}"><h4>🧪 Période d'essai</h4><p>Jusqu'au <strong>${formatDate(c.essai)}</strong>${essaiUrgent?` — J-${essaiJours}`:''}</p></div>`
+    : '';
+
+  const posteHtml = c.poste
+    ? `<div class="ctcard-section"><h4>💼 Poste</h4><p>${escHtml(c.poste)}</p></div>` : '';
+
+  const notesHtml = c.notes
+    ? `<div class="ctcard-section"><h4>📝 Notes</h4><p>${escHtml(c.notes)}</p></div>` : '';
+
+  const avenantsHtml = (c.avenants||[]).length ? `
+    <div class="ctcard-section">
+      <h4>🔄 Avenants</h4>
+      <div class="ctcard-timeline">
+        ${c.avenants.map(a => `<div class="ctcard-tl-item"><strong>${formatDate(a.date)}</strong> — ${escHtml(a.texte)}</div>`).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('ctDocBody').innerHTML = `
+    <div class="ctcard-hero" style="background:linear-gradient(135deg,${t.color},${t.color}cc)">
+      <div style="display:flex;align-items:center;gap:.9rem;position:relative;z-index:1">
+        <div class="ctcard-avatar">${escHtml(init)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:1.05rem">${escHtml(nomComplet)}</div>
+          <div style="display:flex;gap:.4rem;margin-top:.3rem">
+            <span class="ctcard-badge">${t.label}</span>
+            ${statutTermine?'<span class="ctcard-badge">Terminé</span>':''}
+          </div>
+        </div>
+      </div>
+    </div>
+    ${statsHtml}
+    ${alertHtml}
+    ${essaiHtml}
+    ${posteHtml}
+    ${avenantsHtml}
+    ${notesHtml}
+  `;
+
+  document.getElementById('ctDocEditBtn').onclick = () => { closeModal('modalContratDoc'); openContratModal(c.id); };
+  openModal('modalContratDoc');
 }
 
 // ── MODAL ──

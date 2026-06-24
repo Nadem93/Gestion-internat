@@ -93,6 +93,7 @@ function activiteCardGrille(a) {
         <div style="display:flex;align-items:center;gap:.4rem">
           <span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600;background:${plein?'#fee2e2':c.color+'1a'};color:${plein?'#dc2626':c.color};border:1px solid ${plein?'#fecaca':c.color+'33'}">${inscrits}${a.placesMax>0?' / '+a.placesMax:''} inscrit${inscrits>1?'s':''}${plein?' · complet':''}</span>
           <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openParticipantsModal('${a.id}')">👥 Participants</button>
+          <button class="btn btn-ghost btn-sm" onclick="openBilanAnnuelModal('${a.id}')" title="Bilan annuel">📝${(a.bilansAnnuels||{})[new Date().getFullYear()]?' ✓':''}</button>
         </div>
       </div>
     </div>
@@ -151,6 +152,46 @@ function saveActivite() {
 
 function toggleActiviteActif(id) {
   saveActivites(getActivites().map(x => x.id === id ? { ...x, actif: x.actif === false } : x));
+  renderActivites();
+}
+
+// ── BILAN ANNUEL (rédigé par l'éducateur, repris dans le rapport d'activité) ──
+let baActiviteId = null;
+
+function openBilanAnnuelModal(activiteId) {
+  baActiviteId = activiteId;
+  const annee = document.getElementById('baAnnee');
+  const nowY = new Date().getFullYear();
+  annee.innerHTML = Array.from({ length: 6 }, (_, i) => nowY - 4 + i).map(y => `<option value="${y}">${y}</option>`).join('');
+  annee.value = nowY;
+  const a = getActivites().find(x => x.id === activiteId);
+  document.getElementById('baTitle').textContent = '📝 Bilan annuel — ' + (a?.nom || 'Activité');
+  renderBilanAnnuelForm();
+  openModal('modalBilanAnnuel');
+}
+
+function renderBilanAnnuelForm() {
+  const a = getActivites().find(x => x.id === baActiviteId);
+  const annee = document.getElementById('baAnnee').value;
+  const bilan = (a?.bilansAnnuels || {})[annee];
+  document.getElementById('baTexte').value = bilan?.texte || '';
+  document.getElementById('baMeta').textContent = bilan ? `Dernière mise à jour par ${bilan.auteur || '?'} le ${formatDate(bilan.date)}` : 'Aucun bilan rédigé pour cette année.';
+}
+
+function saveBilanAnnuel() {
+  const annee = document.getElementById('baAnnee').value;
+  const texte = document.getElementById('baTexte').value.trim();
+  if (!texte) { toast('Le bilan est vide', 'error'); return; }
+  const session = Auth.getSession();
+  const auteur = session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : 'Anonyme';
+  const list = getActivites().map(a => {
+    if (a.id !== baActiviteId) return a;
+    return { ...a, bilansAnnuels: { ...(a.bilansAnnuels || {}), [annee]: { texte, auteur, authorId: session?.userId, date: today() } } };
+  });
+  saveActivites(list);
+  if (typeof auditLog === 'function') auditLog('activite_bilan_annuel', `Bilan annuel ${annee} — ${list.find(a => a.id === baActiviteId)?.nom || ''}`);
+  toast('Bilan annuel enregistré ✓', 'success');
+  closeModal('modalBilanAnnuel');
   renderActivites();
 }
 

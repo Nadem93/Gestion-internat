@@ -18,6 +18,16 @@
     @media(max-width:900px){.rp-card-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:560px){.rp-card-grid{grid-template-columns:1fr}}
     .rp-meal-cb{width:17px;height:17px;border-radius:4px;accent-color:#2563eb;cursor:pointer;flex-shrink:0}
+    .rp-quick-btn{padding:.3rem .75rem;border-radius:99px;border:1px solid var(--border);background:#fff;font-size:.76rem;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;transition:all .15s}
+    .rp-quick-btn:hover{border-color:var(--primary);color:var(--primary)}
+    .rp-date-chip{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:54px;height:60px;border-radius:12px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:inherit;transition:all .15s;position:relative}
+    .rp-date-chip:hover{border-color:var(--primary)}
+    .rp-date-chip.today{border-color:#0891b2;color:#0891b2}
+    .rp-date-chip.selected{background:var(--primary);border-color:var(--primary);color:#fff}
+    .rp-date-chip .dow{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;opacity:.75}
+    .rp-date-chip .dnum{font-size:1.05rem;font-weight:800;line-height:1.1}
+    .rp-date-chip .dmonth{font-size:.58rem;font-weight:600;opacity:.7}
+    .rp-date-chip .ddot{position:absolute;top:5px;right:7px;width:6px;height:6px;border-radius:50%;background:#16a34a}
   </style>
 </head>
 <body>
@@ -37,7 +47,7 @@
 
     <main class="content" style="max-width:1080px">
       <!-- Navigation de date -->
-      <div class="toolbar" style="margin-bottom:1.25rem;align-items:center">
+      <div class="toolbar" style="margin-bottom:.75rem;align-items:center">
         <button class="btn btn-ghost btn-icon" onclick="rpShiftDate(-1)" title="Jour précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg></button>
         <input type="date" id="rpDate" style="width:auto"/>
         <button class="btn btn-ghost btn-icon" onclick="rpShiftDate(1)" title="Jour suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -58,12 +68,23 @@
         </div>
       </div>
 
+      <!-- Raccourcis rapides -->
+      <div class="no-print" style="display:flex;gap:.4rem;margin-bottom:.6rem;flex-wrap:wrap">
+        <button class="rp-quick-btn" onclick="rpGoToday()">Aujourd'hui</button>
+        <button class="rp-quick-btn" onclick="rpJumpDays(7)">+1 semaine</button>
+        <button class="rp-quick-btn" onclick="rpJumpDays(30)">+1 mois</button>
+      </div>
+
+      <!-- Frise de dates (commande des repas jusqu'à 1 mois à l'avance) -->
+      <div id="rpDateStrip" class="no-print" style="display:flex;gap:.4rem;overflow-x:auto;padding:.3rem .1rem .9rem;margin-bottom:.25rem;scroll-behavior:smooth"></div>
+
       <div id="rpStats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:.85rem;margin-bottom:1.25rem"></div>
 
-      <!-- Synthèse cuisine -->
+      <!-- Menus du jour & effectifs cuisine -->
       <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-header"><span class="card-title">👨‍🍳 Effectifs cuisine par régime</span></div>
-        <div class="card-body" id="rpCuisine" style="padding:1rem 1.25rem"></div>
+        <div class="card-header"><span class="card-title">🍽 Menus du jour & effectifs cuisine</span></div>
+        <div class="card-body" id="rpMenusDuJour" style="padding:1rem 1.25rem"></div>
+        <div class="card-body" id="rpCuisine" style="padding:0 1.25rem 1rem;border-top:1px solid var(--border);padding-top:1rem"></div>
       </div>
 
       <!-- Filtre résidents -->

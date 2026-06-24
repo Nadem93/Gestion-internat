@@ -4,7 +4,33 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Contrats — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Georgia&display=swap" rel="stylesheet"/>
+  <style>
+    @keyframes ctPop{0%{opacity:0;transform:scale(.85) translateY(18px)}60%{opacity:1;transform:scale(1.02) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes ctShine{0%{background-position:-150% 0}100%{background-position:250% 0}}
+    @keyframes ctFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    @keyframes ctRing{0%{stroke-dashoffset:283}100%{stroke-dashoffset:var(--ring-offset,283)}}
+    .ctcard{padding:1.5rem;animation:ctPop .45s cubic-bezier(.22,1,.36,1) both}
+    .ctcard-hero{border-radius:18px;padding:1.4rem 1.5rem;margin-bottom:1.1rem;position:relative;overflow:hidden;color:#fff;box-shadow:0 10px 28px -8px rgba(0,0,0,.28)}
+    .ctcard-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);background-size:200% 100%;animation:ctShine 2.8s ease-in-out infinite}
+    .ctcard-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15rem;flex-shrink:0;animation:ctFloat 3.2s ease-in-out infinite}
+    .ctcard-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.25rem .65rem;border-radius:99px;background:rgba(255,255,255,.22);backdrop-filter:blur(2px)}
+    .ctcard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem}
+    .ctcard-stat{border-radius:12px;padding:.7rem .6rem;text-align:center;background:var(--g50);border:1px solid var(--border);animation:ctPop .5s cubic-bezier(.22,1,.36,1) both}
+    .ctcard-stat:nth-child(2){animation-delay:.06s}
+    .ctcard-stat:nth-child(3){animation-delay:.12s}
+    .ctcard-stat .v{font-size:1.05rem;font-weight:800;color:var(--primary)}
+    .ctcard-stat .l{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+    .ctcard-section{border-radius:12px;border:1px solid var(--border);padding:.85rem 1rem;margin-bottom:.7rem;animation:ctPop .5s cubic-bezier(.22,1,.36,1) both;animation-delay:.15s}
+    .ctcard-section h4{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;display:flex;align-items:center;gap:.35rem}
+    .ctcard-section p{font-size:.84rem;margin:0;color:var(--text)}
+    .ctcard-timeline{position:relative;padding-left:1.1rem}
+    .ctcard-timeline::before{content:'';position:absolute;left:3px;top:4px;bottom:4px;width:2px;background:linear-gradient(to bottom,var(--g300),transparent)}
+    .ctcard-tl-item{position:relative;padding-bottom:.6rem;font-size:.8rem}
+    .ctcard-tl-item::before{content:'';position:absolute;left:-1.1rem;top:4px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--g50)}
+    .ctcard-pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc2626;margin-right:4px;animation:ctPulse 1.4s ease-in-out infinite}
+    @keyframes ctPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -98,6 +124,23 @@
       <button class="btn btn-ghost" style="color:#dc2626;margin-right:auto" id="ctDeleteBtn" onclick="deleteContrat()">Supprimer</button>
       <button class="btn btn-ghost" onclick="closeModal('modalContrat')">Annuler</button>
       <button class="btn btn-primary" onclick="saveContrat()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL — CARTE ANIMÉE -->
+<div class="modal-overlay" id="modalContratDoc">
+  <div class="modal" style="max-width:520px;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div class="modal-header" style="border-bottom:1px solid var(--border)">
+      <span class="modal-title">📑 Détail du contrat</span>
+      <button class="modal-close" onclick="closeModal('modalContratDoc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="overflow-y:auto;flex:1;background:var(--g50)">
+      <div class="ctcard" id="ctDocBody"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalContratDoc')">Fermer</button>
+      <button class="btn btn-primary" id="ctDocEditBtn" onclick="">✎ Modifier</button>
     </div>
   </div>
 </div>

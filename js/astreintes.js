@@ -97,32 +97,32 @@ function renderAstreintes() {
   if (!gridEl) return;
 
   gridEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:110px repeat(7,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff">
+    <div style="display:grid;grid-template-columns:170px repeat(7,minmax(120px,1fr));gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;min-width:1010px">
 
       <!-- Header jours -->
-      <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:.5rem .4rem;font-size:.7rem;font-weight:700;color:var(--muted);text-align:center">Type</div>
+      <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:.65rem .5rem;font-size:.72rem;font-weight:700;color:var(--muted);text-align:center">Type</div>
       ${days.map((d,i) => {
         const isT = _isToday(d);
         const dayNum = new Date(d).toLocaleDateString('fr-FR',{day:'numeric'});
-        return `<div style="background:${isT?'#3b82f615':'#f8fafc'};border-bottom:1px solid var(--border);border-left:1px solid var(--border);padding:.5rem .4rem;text-align:center">
-          <div style="font-size:.7rem;font-weight:700;color:${isT?'#3b82f6':'var(--muted)'}">${JOURS[i]}</div>
-          <div style="font-size:.88rem;font-weight:800;color:${isT?'#3b82f6':'var(--text)'}">${dayNum}</div>
+        return `<div style="background:${isT?'#3b82f615':'#f8fafc'};border-bottom:1px solid var(--border);border-left:1px solid var(--border);padding:.65rem .5rem;text-align:center">
+          <div style="font-size:.74rem;font-weight:700;color:${isT?'#3b82f6':'var(--muted)'}">${JOURS[i]}</div>
+          <div style="font-size:.95rem;font-weight:800;color:${isT?'#3b82f6':'var(--text)'}">${dayNum}</div>
         </div>`;
       }).join('')}
 
       <!-- Lignes par type -->
       ${AST_TYPES.map(type => `
-        <div style="padding:.5rem .6rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:.3rem;background:#fafafa">
-          <span style="font-size:.9rem">${type.icon}</span>
-          <span style="font-size:.68rem;font-weight:600;color:${type.color};line-height:1.2">${type.label}</span>
+        <div style="padding:.65rem .85rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:.45rem;background:#fafafa">
+          <span style="font-size:1.05rem">${type.icon}</span>
+          <span style="font-size:.74rem;font-weight:600;color:${type.color};line-height:1.25">${type.label}</span>
         </div>
         ${days.map(d => {
           const gardes = list.filter(a => a.date === d && a.type === type.id);
           const isT    = _isToday(d);
-          return `<div style="padding:.35rem .3rem;border-top:1px solid var(--border);border-left:1px solid var(--border);background:${isT?'#3b82f608':'#fff'};min-height:52px;position:relative">
-            ${gardes.map(a => `<div style="background:${type.color}18;border:1px solid ${type.color}44;border-radius:5px;padding:.2rem .35rem;margin-bottom:.2rem;cursor:pointer" onclick="openAstModal('${a.id}')">
-              <div style="font-size:.68rem;font-weight:700;color:${type.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.nom||'—')}</div>
-              ${a.tel ? `<div style="font-size:.62rem;color:var(--muted)">📞 ${escHtml(a.tel)}</div>` : ''}
+          return `<div style="padding:.5rem .45rem;border-top:1px solid var(--border);border-left:1px solid var(--border);background:${isT?'#3b82f608':'#fff'};min-height:72px;position:relative">
+            ${gardes.map(a => `<div style="background:${type.color}18;border:1px solid ${type.color}44;border-radius:6px;padding:.3rem .5rem;margin-bottom:.25rem;cursor:pointer" onclick="openAstModal('${a.id}')">
+              <div style="font-size:.74rem;font-weight:700;color:${type.color};white-space:normal;word-break:break-word">${escHtml(a.nom||'—')}</div>
+              ${a.tel ? `<div style="font-size:.68rem;color:var(--muted)">📞 ${escHtml(a.tel)}</div>` : ''}
             </div>`).join('')}
             <button onclick="openAstModal('','${type.id}','${d}')" style="position:absolute;bottom:2px;right:2px;background:none;border:none;color:${type.color}88;cursor:pointer;font-size:.9rem;padding:1px 3px;line-height:1;border-radius:4px;opacity:.6" title="Ajouter" onmouseenter="this.style.opacity=1;this.style.background='${type.color}15'" onmouseleave="this.style.opacity=.6;this.style.background='none'">+</button>
           </div>`;
