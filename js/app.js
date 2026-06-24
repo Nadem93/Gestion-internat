@@ -685,8 +685,8 @@ function initMenuPopup() {
   const header = document.querySelector('.header') || document.querySelector('.admin-topbar');
   if (!header) return;
   // Page chargée dans l'iframe du portail RH (rh.html) : son propre header ferait doublon
-  // avec le header pleine largeur du portail — on le masque entièrement.
-  if (window.self !== window.top) { header.style.display = 'none'; return; }
+  // avec le header pleine largeur du portail — on le retire complètement du DOM.
+  if (window.self !== window.top) { header.remove(); return; }
   const isAdmin = header.classList.contains('admin-topbar');
 
   // Get reference to the title wrapper before inserting the button
@@ -1050,7 +1050,7 @@ const PERMISSION_LABELS = {
   access_budget: 'Budget & dépenses',
   access_paie: 'Fiches de paie',
   access_entretiens: 'Entretiens professionnels',
-  access_annuaire: 'Annuaire du personnel', access_documentation: 'Documentation de l\'établissement', access_admissions: 'Admissions / liste d\'attente', access_facturation: 'Facturation / tarification', access_formations: 'Plan de formation collectif',
+  access_annuaire: 'Contacts extérieurs', access_documentation: 'Documentation de l\'établissement', access_admissions: 'Admissions / liste d\'attente', access_facturation: 'Facturation / tarification', access_formations: 'Plan de formation collectif',
   access_activites: 'Activités éducatives',
   access_cvs: 'Conseil de la Vie Sociale (CVS)',
   access_medicaments: 'Distribution des médicaments',

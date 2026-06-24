@@ -67,6 +67,14 @@
 .kb-empty-col .ei{font-size:1.7rem}
 .kb-empty-col span{font-size:.78rem;color:var(--muted)}
 .kb-sep{height:1px;background:var(--border);margin:0 .25rem}
+.kb-replies{margin-top:.55rem;padding-top:.55rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.4rem}
+.kb-reply{background:var(--g50);border-radius:8px;padding:.4rem .6rem;font-size:.78rem;line-height:1.5}
+.kb-reply-author{font-weight:700;color:var(--text)}
+.kb-reply-time{font-size:.66rem;color:var(--muted);margin-left:.4rem}
+.kb-reply-form{display:flex;gap:.4rem;margin-top:.45rem}
+.kb-reply-form textarea{flex:1;font-size:.78rem;padding:.4rem .6rem;border:1px solid var(--border);border-radius:8px;resize:vertical;min-height:2.3rem;font-family:inherit}
+.kb-reply-form button{font-size:.74rem;padding:0 .8rem;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;flex-shrink:0}
+.kb-reply-toggle{color:var(--primary)!important;border-color:var(--primary)!important}
 
 @media(max-width:900px){.kb-board{grid-template-columns:1fr 1fr}.kb-stat-pill{display:none}}
 @media(max-width:520px){.kb-board{grid-template-columns:1fr}}

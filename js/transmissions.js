@@ -31,6 +31,7 @@ let _trFilterShift = '';
 let _trFilterResident = '';
 let _trFilterCat = '';
 let _trShowUnread = false;
+let _trOpenReplyId = null;
 
 function getTr() { return DB.get(TR_KEY) || []; }
 function saveTr(list) { DB.set(TR_KEY, list); }
@@ -287,11 +288,19 @@ function _trCard(t, residents, userId) {
         ${t.residentId ? (t.journalEntryId
           ? `<button class="btn-journal btn-on" onclick="annulerJournal('${t.id}')" title="Ajouté au journal — cliquer pour retirer">✓ Journal</button>`
           : `<button class="btn-journal" onclick="trVersJournal('${t.id}')" title="Ajouter au journal de bord">📔 Journal</button>`) : ''}
+        <button class="${_trOpenReplyId === t.id ? 'kb-reply-toggle' : ''}" onclick="toggleTrReply('${t.id}')" title="Répondre">💬${(t.replies||[]).length ? ' ' + t.replies.length : ''}</button>
         ${canEdit ? `<button onclick="editTr('${t.id}')">✏</button>` : ''}
         ${canDelete ? `<button class="btn-del" onclick="deleteTr('${t.id}')">✕</button>` : ''}
       </div>
     </div>
     <div class="kb-card-author">Par <strong>${escHtml(t.authorName || '?')}</strong>${t.readBy?.length > 1 ? ` · lu par ${t.readBy.length}` : ''}</div>
+    ${(t.replies||[]).length ? `<div class="kb-replies">${t.replies.map(rp => `
+      <div class="kb-reply"><span class="kb-reply-author">${escHtml(rp.author || '?')}</span><span class="kb-reply-time">${rp.createdAt ? new Date(rp.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : ''}</span><div>${escHtml(rp.content || '')}</div></div>
+    `).join('')}</div>` : ''}
+    ${_trOpenReplyId === t.id ? `<div class="kb-reply-form" onclick="event.stopPropagation()">
+      <textarea id="trReplyInput_${t.id}" placeholder="Écrire une réponse…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addTrReply('${t.id}')}"></textarea>
+      <button onclick="addTrReply('${t.id}')">Envoyer</button>
+    </div>` : ''}
   </div>`;
 }
 
@@ -363,6 +372,28 @@ function markTrRead(id) {
   saveTr(list);
   _renderTransmissions();
   _updateTrUnreadBadge();
+}
+
+function toggleTrReply(id) {
+  _trOpenReplyId = _trOpenReplyId === id ? null : id;
+  _renderTransmissions();
+  if (_trOpenReplyId === id) document.getElementById('trReplyInput_' + id)?.focus();
+}
+
+function addTrReply(id) {
+  const input = document.getElementById('trReplyInput_' + id);
+  const content = input?.value.trim();
+  if (!content) return;
+  const list = getTr();
+  const t = list.find(x => x.id === id);
+  if (!t) return;
+  if (!Array.isArray(t.replies)) t.replies = [];
+  const s = _trSession();
+  t.replies.push({ id: genId(), author: s.name, authorId: s.id, content, createdAt: new Date().toISOString() });
+  saveTr(list);
+  toast('Réponse envoyée', 'success');
+  _renderTransmissions();
+  document.getElementById('trReplyInput_' + id)?.focus();
 }
 
 function markAllTrRead() {
