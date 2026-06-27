@@ -1,8 +1,10 @@
 let editingContactId = null;
 const CONTACT_COLORS = ['#0891b2','#059669','#d97706','#dc2626','#7c3aed','#0284c7','#16a34a','#e11d48','#6366f1','#0ea5e9','#84cc16','#ec4899','#14b8a6','#f97316','#8b5cf6'];
 
-function getContacts() { return DB.get(DB.keys.repertoire) || []; }
-function setContacts(c) { DB.set(DB.keys.repertoire, c); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _repCache = [];
+function getContacts() { return _repCache; }
+async function loadRepertoireCache() { _repCache = await sbGetRepertoire(); }
 
 function contactColor(org) {
   let h = 0;
@@ -83,7 +85,7 @@ function openEditContact(id) {
   openModal('modalContact');
 }
 
-function saveContact() {
+async function saveContact() {
   const organisme = document.getElementById('cOrganisme').value.trim();
   const nom = document.getElementById('cNom').value.trim();
   if (!organisme || !nom) { toast('Organisme et nom du contact requis', 'error'); return; }
@@ -95,36 +97,36 @@ function saveContact() {
     email: document.getElementById('cEmail').value.trim(),
     fonction: document.getElementById('cFonction').value.trim(),
     adresse: document.getElementById('cAdresse').value.trim(),
-    notes: document.getElementById('cNotes').value.trim(),
-    updatedAt: new Date().toISOString()
+    notes: document.getElementById('cNotes').value.trim()
   };
 
-  const contacts = getContacts();
-  if (editingContactId) {
-    const idx = contacts.findIndex(x => x.id === editingContactId);
-    if (idx !== -1) { contacts[idx] = { ...contacts[idx], ...data }; }
-    toast('Contact modifié', 'success');
-  } else {
-    data.id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-    contacts.push(data);
-    toast('Contact ajouté', 'success');
-  }
-  setContacts(contacts);
+  try {
+    if (editingContactId) {
+      const old = _repCache.find(x => x.id === editingContactId) || {};
+      const saved = await sbSaveRepertoire({ ...old, ...data, id: editingContactId });
+      _repCache = _repCache.map(x => x.id === editingContactId ? saved : x);
+      toast('Contact modifié', 'success');
+    } else {
+      const saved = await sbSaveRepertoire(data);
+      _repCache.push(saved);
+      toast('Contact ajouté', 'success');
+    }
+  } catch (e) { console.error('[saveContact]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeAllModals();
   renderContacts();
 }
 
 function deleteContact() {
   if (!editingContactId || !confirm('Supprimer ce contact ?')) return;
-  let contacts = getContacts();
-  contacts = contacts.filter(x => x.id !== editingContactId);
-  setContacts(contacts);
-  closeAllModals();
-  toast('Contact supprimé', 'success');
-  renderContacts();
+  const id = editingContactId;
+  (async () => {
+    try { await sbDeleteRepertoire(id); _repCache = _repCache.filter(x => x.id !== id); }
+    catch (e) { console.error('[deleteContact]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    closeAllModals();
+    toast('Contact supprimé', 'success');
+    renderContacts();
+  })();
 }
 
-
-
-document.addEventListener('DOMContentLoaded', () => { if (requireModule('access_repertoire')) renderContacts(); });
-if (typeof registerPageInit === 'function') registerPageInit('repertoire', renderContacts);
+document.addEventListener('DOMContentLoaded', async () => { if (requireModule('access_repertoire')) { await loadRepertoireCache(); renderContacts(); } });
+if (typeof registerPageInit === 'function') registerPageInit('repertoire', async () => { await loadRepertoireCache(); renderContacts(); });

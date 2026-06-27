@@ -1,9 +1,13 @@
 // ── POINTAGE / TEMPS DE TRAVAIL RÉEL ──
 let _ptWeekOffset = 0;
+let _ptCache = [];
+let _ptEmployesCache = [];
+let _ptContratsCache = [];
+let _ptAbsencesCache = [];
+let _ptPlanningCache = [];
 
-function getPointages()      { return DB.get(DB.keys.pointages) || []; }
-function savePointages(list) { DB.set(DB.keys.pointages, list); }
-function ptEmployes()        { return DB.get(DB.keys.employes) || []; }
+function getPointages()      { return _ptCache; }
+function ptEmployes()        { return _ptEmployesCache.filter(e => e.statut !== 'inactif'); }
 function ptIsCanEdit()       { return Auth.isAdmin() || (typeof canEditResidents === 'function' && canEditResidents(Auth.getSession()?.userId)); }
 
 function _ptLocalStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -16,33 +20,26 @@ function ptWeekDates() {
 }
 
 function ptContractHeures(employeId) {
-  const contrats = (DB.get(DB.keys.contrats) || []).filter(c => String(c.employeId) === String(employeId) && (c.statut||'actif') === 'actif');
+  const contrats = _ptContratsCache.filter(c => String(c.employeId) === String(employeId) && (c.statut||'actif') === 'actif');
   const c = contrats.sort((a,b) => (b.debut||'').localeCompare(a.debut||''))[0];
   return c?.heures || 35;
 }
 
-// ── Absences & AT (synchro avec absences.html) ──
+// ── Absences & AT (table Supabase absences_at) ──
 function ptIsAbsent(employeId, date) {
-  return (DB.get(DB.keys.absencesAT) || []).some(a =>
+  return _ptAbsencesCache.some(a =>
     String(a.employeId) === String(employeId) && date >= a.debut && (!a.fin || date <= a.fin)
   );
 }
 
-// ── Synchronisation avec le planning équipe ──
-// Le planning équipe identifie le personnel par l'ID du compte utilisateur (DB.keys.users),
-// alors que les autres modules RH (contrats, absences…) utilisent l'ID de la fiche employé
-// (DB.keys.employes). On résout la correspondance par prénom+nom, comme dans planning-equipe.js.
+// ── Planning équipe : désormais identifié par l'ID de fiche employé (identité) ──
 function ptResolveUserId(employe) {
-  const users = DB.get(DB.keys.users) || [];
-  const u = users.find(x => String(x.id) === String(employe.id))
-        || users.find(x => x.prenom === employe.prenom && x.nom === employe.nom);
-  return u ? String(u.id) : null;
+  return employe ? String(employe.id) : null;
 }
 
-function ptPlannedShift(userId, date) {
-  if (!userId) return null;
-  const shifts = (DB.get(DB.keys.planningEquipe) || []).filter(s => String(s.employeId) === String(userId) && s.date === date);
-  return shifts[0] || null;
+function ptPlannedShift(employeId, date) {
+  if (!employeId) return null;
+  return _ptPlanningCache.find(s => String(s.employeId) === String(employeId) && s.date === date) || null;
 }
 
 function ptPlannedHeures(userId, date) {
@@ -64,36 +61,45 @@ function ptGetEntry(employeId, date) {
   return getPointages().find(p => String(p.employeId) === String(employeId) && p.date === date);
 }
 
-function ptSetField(employeId, date, field, value) {
-  const list = getPointages();
-  let entry = list.find(p => String(p.employeId) === String(employeId) && p.date === date);
-  if (!entry) { entry = { id: genId(), employeId, date, arrivee:'', depart:'', pauseMin:0, valide:false }; list.push(entry); }
+function _ptEnsureEntry(employeId, date) {
+  let entry = _ptCache.find(p => String(p.employeId) === String(employeId) && p.date === date);
+  if (!entry) { entry = { employeId, date, arrivee:'', depart:'', pauseMin:0, valide:false }; _ptCache.push(entry); }
+  return entry;
+}
+
+async function _ptPersist(entry) {
+  try {
+    const saved = await sbUpsertPointage(entry);
+    Object.assign(entry, saved);
+  } catch (e) {
+    toast('Erreur : ' + (e?.message || e), 'error');
+    console.error('[pointage]', e);
+  }
+  renderPointage();
+}
+
+async function ptSetField(employeId, date, field, value) {
+  const entry = _ptEnsureEntry(employeId, date);
   entry[field] = field === 'pauseMin' ? (Number(value)||0) : value;
   entry.valide = false; // toute modification repasse le pointage en attente de validation
-  savePointages(list);
-  renderPointage();
+  await _ptPersist(entry);
 }
 
-function ptToggleValidation(employeId, date) {
-  const list = getPointages();
-  const entry = list.find(p => String(p.employeId) === String(employeId) && p.date === date);
+async function ptToggleValidation(employeId, date) {
+  const entry = _ptCache.find(p => String(p.employeId) === String(employeId) && p.date === date);
   if (!entry || !entry.arrivee || !entry.depart) { toast('Saisissez les horaires avant de valider', 'error'); return; }
   entry.valide = !entry.valide;
-  savePointages(list);
-  renderPointage();
+  await _ptPersist(entry);
 }
 
-function ptCopyFromPlanning(employeId, date, peUserId) {
+async function ptCopyFromPlanning(employeId, date, peUserId) {
   const shift = ptPlannedShift(peUserId, date);
   if (!shift) { toast('Aucun créneau planifié ce jour', 'error'); return; }
-  const list = getPointages();
-  let entry = list.find(p => String(p.employeId) === String(employeId) && p.date === date);
-  if (!entry) { entry = { id: genId(), employeId, date, arrivee:'', depart:'', pauseMin:0, valide:false }; list.push(entry); }
+  const entry = _ptEnsureEntry(employeId, date);
   entry.arrivee = shift.debut;
   entry.depart  = shift.fin;
   entry.valide  = false;
-  savePointages(list);
-  renderPointage();
+  await _ptPersist(entry);
 }
 
 function ptPopulatePosteFilter(employes) {
@@ -138,11 +144,11 @@ function renderPointage() {
   });
 
   document.getElementById('ptStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #6366f1"><div class="stat-card-top"><span class="stat-label">Employés</span></div><div class="stat-num">${employes.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Heures travaillées (semaine)</span></div><div class="stat-num">${totalHeures.toFixed(1)}h</div></div>
-    <div class="stat-card" style="border-left:3px solid #0891b2"><div class="stat-card-top"><span class="stat-label">Heures prévues (planning équipe)</span></div><div class="stat-num">${totalPrevu.toFixed(1)}h</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">Heures sup (vs contrat)</span></div><div class="stat-num">${totalSup.toFixed(1)}h</div></div>
-    <div class="stat-card" style="border-left:3px solid ${nonPointes?'#dc2626':'#8b5cf6'}"><div class="stat-card-top"><span class="stat-label">Créneaux non pointés</span></div><div class="stat-num">${nonPointes}</div></div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Employés</span></div><div class="chx-stat-num">${employes.length}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Heures travaillées (semaine)</span></div><div class="chx-stat-num">${totalHeures.toFixed(1)}h</div></div>
+    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Heures prévues (planning équipe)</span></div><div class="chx-stat-num">${totalPrevu.toFixed(1)}h</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Heures sup (vs contrat)</span></div><div class="chx-stat-num">${totalSup.toFixed(1)}h</div></div>
+    <div class="chx-stat" style="--c:${nonPointes?'#dc2626':'#7c3aed'}"><div class="chx-stat-top"><span class="chx-stat-lbl">Créneaux non pointés</span></div><div class="chx-stat-num">${nonPointes}</div></div>`;
 
   const wrap = document.getElementById('ptTableWrap');
   if (!employes.length) {
@@ -199,9 +205,21 @@ function ptShiftWeek(n) { _ptWeekOffset += n; renderPointage(); }
 function ptGoToday()    { _ptWeekOffset = 0; renderPointage(); }
 
 // ── INIT ──
-function initPointage() {
+async function initPointage() {
   const s = Auth.requireAuth();
   if (!s) return;
+  try {
+    [_ptCache, _ptEmployesCache, _ptContratsCache, _ptAbsencesCache, _ptPlanningCache] = await Promise.all([
+      sbGetPointages(),
+      sbGetEmployes(),
+      sbGetContrats().catch(() => []),
+      sbGetAbsences().catch(() => []),
+      sbGetPeShifts().catch(() => [])
+    ]);
+  } catch (e) {
+    console.error('[initPointage]', e);
+    toast('Erreur de chargement', 'error');
+  }
   renderPointage();
 }
 document.addEventListener('DOMContentLoaded', initPointage);

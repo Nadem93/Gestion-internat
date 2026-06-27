@@ -1,3 +1,6 @@
+// ── Page ouverte dans un hub (iframe ?embed=1) : on masque son titre (doublon avec le hub) ──
+try { if (location.search.indexOf('embed') !== -1) document.documentElement.classList.add('is-embedded'); } catch (_) {}
+
 // ── STORAGE HELPERS ──
 const DB_GLOBAL_KEYS = new Set(['ftr_etablissements','ftr_session']);
 
@@ -276,19 +279,20 @@ const DEFAULTS = {
   users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
-    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_medicaments'] },
-    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_medicaments'] },
-    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_sante','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites'] },
-    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
-    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_sante','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
-    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
-    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_medicaments'] },
-    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions','access_activites','access_cvs','access_medicaments','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_medicaments','access_admin','access_employes','manage_users'] }
+    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules'] },
+    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules'] },
+    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_ppe','access_repertoire','access_documents','access_sante','view_incidents','access_activites'] },
+    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents','access_medicaments'] },
+    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_sante','access_medicaments','view_incidents'] },
+    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_vehicules'] },
+    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','view_incidents','access_medicaments'] },
+    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','access_presences','access_vehicules'] },
+    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','access_vehicules'] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules','access_sante','validate_incidents','edit_planning_equipe','access_interventions','access_viatrajectoire','access_serafinph','access_entretiens','access_admissions','access_budget','access_cvs','access_facturation'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules','access_sante','validate_incidents','edit_planning_equipe','access_interventions','access_entretiens','access_admissions','access_budget','access_cvs','access_facturation'] },
+    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_presences','access_repertoire','access_documents','access_admissions','access_facturation'] },
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_sante','access_medicaments','access_repertoire','access_documents','access_vehicules','access_interventions','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_admin','access_employes','manage_users'] },
+    { id: 14, fonction: 'Comptable', color: '#0d9488', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_paie','access_budget','access_facturation'] }
   ],
   aiPrompts: {
     ppe: {
@@ -340,7 +344,8 @@ function initDefaults() {
   // Migration unique : applique les permissions par défaut aux rôles standard
   if (localStorage.getItem(DB._k('ftr_perm_v')) !== '1') { applyDefaultFonctionPerms(); localStorage.setItem(DB._k('ftr_perm_v'), '1'); }
   if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
-  setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
+  // Clé Mistral retirée (IA désactivée). Purge l'éventuelle clé restée en localStorage.
+  try { DB.set(DB.keys.aiKey, ''); localStorage.removeItem(DB._k(DB.keys.aiKey)); } catch (_) {}
 }
 function migrateFonctionColors() {
   const existing = DB.get(DB.keys.fonctionColors) || [];
@@ -388,7 +393,7 @@ function auditLog(action, details) {
       id: genId(),
       date: new Date().toISOString(),
       userId: session.userId,
-      user: [session.prenom, session.nom].filter(Boolean).join(' ') || session.username,
+      user: [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username,
       role: session.role,
       action,
       details: details || ''
@@ -457,6 +462,7 @@ const Auth = {
     if (s) logConnexion('logout', s);
     DB.remove(DB.keys.session);
     sessionStorage.removeItem('ftr_current_etab');
+    if (typeof supabaseClient !== 'undefined') supabaseClient.auth.signOut();
     window.location.href = 'index.html';
   },
   requireAuth() {
@@ -485,13 +491,19 @@ const Auth = {
   requireAdmin() {
     const s = this.requireAuth();
     if (!s) return null;
-    if (s.role !== 'admin' && s.role !== 'superadmin' && !canAccessAdmin(s.userId) && !canAccessModule('admin')) { window.location.href = 'dashboard.html'; return null; }
+    if (s.role !== 'admin' && s.role !== 'superadmin' && !canAccessAdmin(s.userId)) { window.location.href = 'dashboard.html'; return null; }
     return s;
   },
   isAdmin() {
     const s = this.getSession();
     if (!s) return false;
     return s.role === 'admin' || s.role === 'superadmin' || canAccessAdmin(s.userId);
+  },
+  // Accès RH : admins + comptes au rôle "rh" (encadrement / RH)
+  isRH() {
+    const s = this.getSession();
+    if (!s) return false;
+    return s.role === 'rh' || this.isAdmin();
   },
   isSuperAdmin() {
     const s = this.getSession();
@@ -675,7 +687,7 @@ function renderUserInfo() {
   const settings = DB.get(DB.keys.settings) || {};
   const nameEl = document.getElementById('headerUserName');
   const avEl = document.getElementById('headerUserAvatar');
-  const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
+  const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   if (nameEl) nameEl.textContent = name;
   if (avEl) avEl.textContent = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
 }
@@ -685,8 +697,9 @@ function initMenuPopup() {
   const header = document.querySelector('.header') || document.querySelector('.admin-topbar');
   if (!header) return;
   // Page chargée dans l'iframe du portail RH (rh.html) : son propre header ferait doublon
-  // avec le header pleine largeur du portail — on le retire complètement du DOM.
-  if (window.self !== window.top) { header.remove(); return; }
+  // avec le header pleine largeur du portail — on le masque (sans le retirer du DOM,
+  // certaines pages ciblent des éléments internes au header comme #pageTitle).
+  if (window.self !== window.top) { header.style.display = 'none'; return; }
   const isAdmin = header.classList.contains('admin-topbar');
 
   // Get reference to the title wrapper before inserting the button
@@ -695,7 +708,7 @@ function initMenuPopup() {
   // Add 9-dots button as first element in header (stays on left)
   // Skip the 9-dots button on the accueil page (modules already displayed)
   const isAccueil = location.pathname.endsWith('accueil.html');
-  if (!isAccueil && !document.getElementById('menuDotsBtn')) {
+  if (!isAccueil && !document.getElementById('homeBtn')) {
     // Home button (redirects to accueil). On force la navigation du document de
     // plus haut niveau pour casser hors de l'iframe quand la page est affichée
     // dans un panneau (ex: portail RH) — target="_top" seul n'est pas fiable partout.
@@ -712,13 +725,7 @@ function initMenuPopup() {
       }
     });
     header.insertBefore(homeBtn, header.firstChild);
-
-    // 9-dots button next to home
-    const dotsBtn = document.createElement('button');
-    dotsBtn.id = 'menuDotsBtn';
-    dotsBtn.className = 'menu-dots-btn';
-    dotsBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/></svg>';
-    header.insertBefore(dotsBtn, homeBtn.nextSibling);
+    // Bouton « 9 points » retiré à la demande.
   }
 
   // French clock display (all pages)
@@ -749,7 +756,7 @@ function initMenuPopup() {
   const hr = isAdmin ? header.querySelector('.atb-right') : header.querySelector('.header-right');
   if (hr && !document.getElementById('headerUserBox')) {
     const session = Auth.getSession();
-    const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
+    const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';
     const initial = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
     const userBox = document.createElement('div');
     userBox.id = 'headerUserBox';
@@ -798,8 +805,8 @@ function initMenuPopup() {
     hr.appendChild(userBox);
   }
 
-  // ── Badge messages non lus dans le header ──
-  if (!isAccueil && !document.getElementById('headerMsgBadge')) {
+  // ── Badge messages non lus dans le header ── (icône enveloppe retirée à la demande)
+  if (false && !isAccueil && !document.getElementById('headerMsgBadge')) {
     const session = Auth.getSession();
     const hr2 = isAdmin ? header.querySelector('.atb-right') : header.querySelector('.header-right');
     if (hr2 && session) {
@@ -836,8 +843,8 @@ function initMenuPopup() {
     }
   }
 
-  // Create popup if not exists (skip on accueil page)
-  if (!isAccueil && !document.getElementById('menuPopup')) {
+  // Menu « 9 points » retiré : popup désactivé.
+  if (false && !isAccueil && !document.getElementById('menuPopup')) {
     const popup = document.createElement('div');
     popup.id = 'menuPopup';
     popup.className = 'menu-popup';
@@ -915,7 +922,8 @@ function initModals() {
 
 // ── STATS FOR DASHBOARD ──
 function getStats() {
-  const residents = DB.get(DB.keys.residents) || [];
+  // Résidents : cache Supabase si chargé (pages migrées), sinon repli localStorage.
+  const residents = (typeof sbResidents === 'function' && sbResidentsLoaded()) ? sbResidents() : (DB.get(DB.keys.residents) || []);
   const journal = DB.get(DB.keys.journal) || [];
   const planning = DB.get(DB.keys.planning) || [];
   const todayStr = today();
@@ -939,6 +947,10 @@ function escHtml(s) {
   d.textContent = s;
   return d.innerHTML;
 }
+
+// ── Nom de famille toujours en MAJUSCULES (convention « Prénom NOM ») ──
+function nomMaj(n) { return (n == null ? '' : String(n)).toUpperCase(); }
+function nomComplet(prenom, nom) { return [prenom, nomMaj(nom)].filter(Boolean).join(' ').trim(); }
 
 // ── DÉTECTION DE DOUBLONS (local, par similarité de texte) ──
 function _normTxt(s) {
@@ -1102,75 +1114,23 @@ function canManageUsers(userId) {
   return hasPermission(userId, 'manage_users');
 }
 
-// ── MODULE PERMISSIONS (par fonction) ──
-function canAccessModule(moduleKey) {
-  const s = Auth.getSession();
-  if (!s) return false;
-  if (s.role === 'admin') return true;
-  const perms = JSON.parse(localStorage.getItem('ftr_permissions') || '{}');
-  const allowedRole = perms[moduleKey] || 'admin';
-  return allowedRole === 'educ' && s.role === 'educ';
-}
+// Accès aux modules : une seule source = permissions par rôle (voir hasPermission).
 
-// ── AI ──
-function getAiKey() { return DB.get(DB.keys.aiKey) || ''; }
-function setAiKey(key) { DB.set(DB.keys.aiKey, key); }
+// ── AI (système DÉSACTIVÉ — retiré à la demande, clé Mistral supprimée) ──
+// Toutes les fonctionnalités IA sont conditionnées à getAiKey() : en renvoyant
+// toujours '' , les boutons IA (journal, PPE, messages…) sont masqués partout.
+// Pour réactiver plus tard : passer par une Edge Function Supabase (clé côté
+// serveur uniquement), et faire pointer callMistral() vers ce proxy.
+function getAiKey() { return ''; }
+function setAiKey() { /* no-op : IA désactivée */ }
 
 function getAiPrompt(module, action) {
   const prompts = DB.get(DB.keys.aiPrompts) || {};
   return prompts[module]?.[action]?.system || DEFAULTS.aiPrompts[module]?.[action]?.system || '';
 }
+function setAiPrompt() { /* no-op : IA désactivée */ }
 
-function setAiPrompt(module, action, system) {
-  const prompts = DB.get(DB.keys.aiPrompts) || {};
-  if (!prompts[module]) prompts[module] = {};
-  if (!prompts[module][action]) prompts[module][action] = {};
-  prompts[module][action].system = system;
-  DB.set(DB.keys.aiPrompts, prompts);
-}
-
-async function callMistral(prompt, system) {
-  const key = getAiKey();
-  if (!key) return null;
-  system = system || 'Tu es un rédacteur de bilans socio-éducatifs en ESMS. Réponds en français, de manière professionnelle et institutionnelle.';
-
-  // Essai 1 : appel direct à l'API Mistral (fonctionne si CORS accepté)
-  try {
-    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'mistral-small-latest',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content?.trim() || null;
-    }
-  } catch (_) { /* direct call failed, try proxy */ }
-
-  // Essai 2 : proxy local (backend requis sur http://localhost:3001)
-  try {
-    const base = API_URL || 'http://localhost:3001';
-    const res = await fetch(base + '/api/ai/mistral', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, system, apiKey: key })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.result || null;
-    }
-  } catch (_) { /* proxy failed */ }
-
-  return null;
-}
+async function callMistral() { return null; }
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {

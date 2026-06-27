@@ -110,12 +110,12 @@
 <div class="lc-wrap">
   <div class="lc-brand"><div class="lc-brand-name">INTERNALIS</div><div class="lc-brand-sub">Gestion médico-sociale</div></div>
 
-  <div class="lc-card">
+  <div class="lc-card" id="loginCard">
     <div class="lc-title">Connexion</div>
     <form id="loginForm">
       <div class="lc-field">
-        <label for="login">Identifiant</label>
-        <input type="text" id="login" placeholder="ex: admin" autocomplete="username"/>
+        <label for="login">Email</label>
+        <input type="email" id="login" placeholder="vous@exemple.fr" autocomplete="username"/>
       </div>
       <div class="lc-field">
         <label for="pw">Mot de passe</label>
@@ -127,10 +127,35 @@
     </form>
   </div>
 
+  <div class="lc-card" id="pwChangeCard" style="display:none">
+    <div class="lc-title">Choisissez votre mot de passe</div>
+    <form id="pwChangeForm">
+      <div class="lc-field">
+        <label for="newPw">Nouveau mot de passe</label>
+        <input type="password" id="newPw" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <div class="lc-field">
+        <label for="newPw2">Confirmer</label>
+        <input type="password" id="newPw2" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <ul id="pwRules" style="list-style:none;font-size:.78rem;color:#94a3b8;margin:-.4rem 0 1.1rem;padding:0;display:flex;flex-direction:column;gap:.3rem">
+        <li data-rule="len">○ Au moins 8 caractères</li>
+        <li data-rule="upper">○ Une majuscule</li>
+        <li data-rule="digit">○ Un chiffre</li>
+        <li data-rule="special">○ Un caractère spécial (! ? @ # …)</li>
+      </ul>
+      <button type="submit" class="lc-btn">Valider et continuer</button>
+      <div id="pwChangeError" class="lc-error"></div>
+    </form>
+  </div>
+
   <div class="lc-footer">© INTERNALIS</div>
 </div>
 
 <script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/config-supabase.js"></script>
 <script>
   sessionStorage.removeItem('ftr_current_etab');
   initDefaults();
@@ -140,13 +165,42 @@
     sessionStorage.removeItem('ftr_lock_reason');
   }
 
+  let _pending = null; // { user, profile, email } en attente de changement de mot de passe
+
+  async function finishLogin(user, profile, email) {
+    DB.set(DB.keys.session, {
+      userId: user.id, username: email, role: profile.role || 'employe',
+      super: profile.role === 'admin', prenom: profile.prenom || '', nom: profile.nom || '',
+      fonction: profile.fonction || '', mustChangePassword: false
+    });
+    logConnexion('login', { username: email, prenom: profile.prenom, nom: profile.nom, role: profile.role });
+    // Récupère la config partagée (permissions, majoration paie) depuis Supabase → localStorage
+    if (typeof hydrateConfigFromCloud === 'function') await hydrateConfigFromCloud();
+    window.location.href = 'accueil.html';
+  }
+
   document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const username = document.getElementById('login').value;
+    const email = document.getElementById('login').value.trim();
     const password = document.getElementById('pw').value;
-    if (await Auth.login(username, password)) {
-      window.location.href = 'accueil.html';
-    } else {
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const { data: profile, error: profileErr } = await supabaseClient
+        .from('profiles').select('*').eq('id', data.user.id).single();
+      if (profileErr) throw profileErr;
+      // Première connexion : mot de passe à changer obligatoirement
+      if (data.user.user_metadata?.must_change_password) {
+        _pending = { user: data.user, profile, email };
+        document.getElementById('loginCard').style.display = 'none';
+        document.getElementById('pwChangeCard').style.display = '';
+        document.getElementById('newPw').focus();
+        return;
+      }
+      finishLogin(data.user, profile, email);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('loginError').textContent = 'Email ou mot de passe incorrect.';
       document.getElementById('loginError').style.display = 'block';
       document.getElementById('pw').value = '';
       document.getElementById('pw').focus();
@@ -157,6 +211,51 @@
     document.getElementById(id).addEventListener('input', () => {
       document.getElementById('loginError').style.display = 'none';
     });
+  });
+
+  // ── Changement de mot de passe obligatoire ──
+  function pwChecks(pw) {
+    return {
+      len: pw.length >= 8,
+      upper: /[A-Z]/.test(pw),
+      digit: /[0-9]/.test(pw),
+      special: /[^A-Za-z0-9]/.test(pw)
+    };
+  }
+
+  document.getElementById('newPw').addEventListener('input', () => {
+    const checks = pwChecks(document.getElementById('newPw').value);
+    document.querySelectorAll('#pwRules li').forEach(li => {
+      const ok = checks[li.dataset.rule];
+      li.style.color = ok ? '#16a34a' : '#94a3b8';
+      li.textContent = (ok ? '● ' : '○ ') + li.textContent.replace(/^[○●]\s/, '');
+    });
+  });
+
+  document.getElementById('pwChangeForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const errEl = document.getElementById('pwChangeError');
+    errEl.style.display = 'none';
+    const pw = document.getElementById('newPw').value;
+    const pw2 = document.getElementById('newPw2').value;
+    const c = pwChecks(pw);
+    if (!c.len || !c.upper || !c.digit || !c.special) {
+      errEl.textContent = 'Le mot de passe doit respecter les 4 règles ci-dessus.';
+      errEl.style.display = 'block'; return;
+    }
+    if (pw !== pw2) {
+      errEl.textContent = 'Les deux mots de passe ne correspondent pas.';
+      errEl.style.display = 'block'; return;
+    }
+    try {
+      const { error } = await supabaseClient.auth.updateUser({ password: pw, data: { must_change_password: false } });
+      if (error) throw error;
+      finishLogin(_pending.user, _pending.profile, _pending.email);
+    } catch (err) {
+      console.error(err);
+      errEl.textContent = 'Erreur : ' + (err?.message || 'réessayez.');
+      errEl.style.display = 'block';
+    }
   });
 </script>
 </body>

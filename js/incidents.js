@@ -1,25 +1,39 @@
-const INCIDENTS_KEY = 'ftr_incidents';
 const INCIDENT_TYPES = {
   chute:'Chute', agression:'Agression', fugue:'Fugue / Absence inquiétante',
   violence:'Violence', medical:'Médical / Soins', materiel:'Dégât matériel',
   accident:'Accident', autre:'Autre'
 };
-const GRAVITE_LABELS = { leger:'Léger', moyen:'Modéré', grave:'Grave', critique:'Critique' };
-const STATUT_LABELS = { declare:'Déclaré', cours:'En cours', valide:'Validé', classe:'Classé' };
+const GRAVITE_LABELS  = { leger:'Léger', moyen:'Modéré', grave:'Grave', critique:'Critique' };
+const STATUT_LABELS   = { declare:'Déclaré', cours:'En cours', valide:'Validé', classe:'Classé' };
 const GRAVITE_CLASSES = { leger:'leger', moyen:'moyen', grave:'grave', critique:'dangere' };
-const STATUT_CLASSES = { declare:'declare', cours:'cours', valide:'valide', classe:'classe' };
-const INCIDENT_ICONS = {
+const STATUT_CLASSES  = { declare:'declare', cours:'cours', valide:'valide', classe:'classe' };
+const INCIDENT_ICONS  = {
   chute:'🦶', agression:'👊', fugue:'🚪', violence:'⚡',
   medical:'💊', materiel:'🔧', accident:'⚠️', autre:'📋'
 };
 
-function getIncidents() { return DB.get(DB.keys.incidents) || []; }
-function saveIncidents(list) { DB.set(DB.keys.incidents, list); }
+let _incCache          = [];
+let _incResidentsCache = [];
+let _currentIncidentId = null;
 
-function initIncidents() {
+function getIncidents() { return _incCache; }
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+async function initIncidents() {
   const session = Auth.requireAuth();
   if (!session) return;
   if (!requireModule('view_incidents')) return;
+
+  try {
+    [_incCache, _incResidentsCache] = await Promise.all([
+      sbGetIncidents(),
+      sbGetResidents()
+    ]);
+  } catch(e) {
+    console.error(e);
+    toast('Erreur de chargement', 'error');
+  }
+
   populateResidentSelect();
   setDefaults();
   renderIncidents();
@@ -28,8 +42,7 @@ function initIncidents() {
 function populateResidentSelect() {
   const sel = document.getElementById('fResident');
   if (!sel) return;
-  const residents = DB.get(DB.keys.residents) || [];
-  sel.innerHTML = '<option value="">— Aucun —</option>' + residents.map(r =>
+  sel.innerHTML = '<option value="">— Aucun —</option>' + _incResidentsCache.map(r =>
     `<option value="${r.id}">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</option>`
   ).join('');
 }
@@ -41,55 +54,53 @@ function setDefaults() {
   if (h && !h.value) h.value = new Date().toTimeString().slice(0,5);
 }
 
-function saveIncident() {
-  const titre = document.getElementById('fTitre').value.trim();
-  const type = document.getElementById('fType').value;
-  const gravite = document.getElementById('fGravite').value;
-  const date = document.getElementById('fDate').value;
-  const heure = document.getElementById('fHeure').value;
-  const residentId = document.getElementById('fResident').value;
-  const lieu = document.getElementById('fLieu').value.trim();
-  const description = document.getElementById('fDescription').value.trim();
-  if (!titre || !description) { toast('Veuillez remplir le titre et la description', 'error'); return; }
+// ─── Sauvegarde ───────────────────────────────────────────────────────────────
+async function saveIncident() {
+  try {
+    const titre       = document.getElementById('fTitre').value.trim();
+    const type        = document.getElementById('fType').value;
+    const gravite     = document.getElementById('fGravite').value;
+    const date        = document.getElementById('fDate').value;
+    const heure       = document.getElementById('fHeure').value;
+    const residentId  = document.getElementById('fResident').value;
+    const lieu        = document.getElementById('fLieu').value.trim();
+    const description = document.getElementById('fDescription').value.trim();
+    if (!titre || !description) { toast('Veuillez remplir le titre et la description', 'error'); return; }
 
-  const residents = DB.get(DB.keys.residents) || [];
-  const resident = residents.find(r => r.id === residentId);
-  const session = Auth.getSession();
-  const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
+    const resident = _incResidentsCache.find(r => r.id === residentId);
+    const session  = Auth.getSession();
+    const etab     = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
 
-  const incident = {
-    id: genId(),
-    titre, type, gravite, date, heure,
-    residentId: residentId || null,
-    residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
-    etabId: etab ? etab.id : null,
-    etabNom: etab ? etab.nom : '',
-    lieu, description,
-    statut: 'declare',
-    declaredBy: session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
-    declaredById: session ? session.userId : null,
-    declaredAt: new Date().toISOString(),
-    validatedBy: null,
-    validatedById: null,
-    validatedAt: null,
-    notes: '',
-    createdAt: new Date().toISOString()
-  };
+    const incident = {
+      titre, type, gravite, date: date || null, heure: heure || null,
+      residentId:   residentId || null,
+      residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
+      etabNom:      etab ? etab.nom : '',
+      lieu, description,
+      statut:       'declare',
+      declaredBy:   session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
+      declaredById: session ? session.userId : null,
+      declaredAt:   new Date().toISOString(),
+      notes:        ''
+    };
 
-  const list = getIncidents();
-  // Détection de doublon : même résident, même type, même jour, heures proches, texte similaire
-  const dup = findIncidentDuplicate(incident, list);
-  if (dup) {
-    const i = dup.incident;
-    if (!confirm(`⚠️ Doublon possible avec un incident déjà déclaré :\n\n« ${i.titre} »\n${i.date ? formatDate(i.date) : ''}${i.heure ? ' à ' + i.heure : ''} · déclaré par ${i.declaredBy || '?'}\n\nDéclarer quand même ce nouvel incident ?`)) return;
+    const dup = findIncidentDuplicate(incident, _incCache);
+    if (dup) {
+      if (!confirm(`⚠️ Doublon possible avec un incident déjà déclaré :\n\n« ${escHtml(dup.titre||'')} »\n${dup.date ? formatDate(dup.date) : ''}${dup.heure ? ' à ' + dup.heure : ''} · déclaré par ${dup.declaredBy || '?'}\n\nDéclarer quand même ce nouvel incident ?`)) return;
+    }
+
+    const saved = await sbSaveIncident(incident);
+    _incCache.unshift(saved);
+    if (typeof auditLog === 'function') auditLog('incident_create', `${saved.titre} (${GRAVITE_LABELS[saved.gravite]||saved.gravite})`);
+    closeModal('modalIncident');
+    toast('Incident déclaré');
+    renderIncidents();
+    resetForm();
+  } catch(e) {
+    const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[saveIncident]', e);
   }
-  list.unshift(incident);
-  saveIncidents(list);
-  if (typeof auditLog === 'function') auditLog('incident_create', `${incident.titre} (${GRAVITE_LABELS[incident.gravite]||incident.gravite})`);
-  closeModal('modalIncident');
-  toast('Incident déclaré');
-  renderIncidents();
-  resetForm();
 }
 
 function resetForm() {
@@ -98,27 +109,29 @@ function resetForm() {
     if (el) el.value = '';
   });
   document.getElementById('fGravite').value = 'leger';
-  document.getElementById('fType').value = 'chute';
+  document.getElementById('fType').value    = 'chute';
   document.getElementById('fResident').value = '';
   setDefaults();
 }
 
+// ─── Rendu liste ──────────────────────────────────────────────────────────────
 function renderIncidents() {
   const container = document.getElementById('incidentsList');
-  const countEl = document.getElementById('incidentCount');
+  const countEl   = document.getElementById('incidentCount');
   if (!container) return;
-  let list = getIncidents();
-  const search = (document.getElementById('searchIncident')?.value || '').toLowerCase();
-  const filterType = document.getElementById('filterType')?.value || '';
-  const filterGravite = document.getElementById('filterGravite')?.value || '';
+
+  let list = [..._incCache];
+  const search       = (document.getElementById('searchIncident')?.value || '').toLowerCase();
+  const filterType   = document.getElementById('filterType')?.value   || '';
+  const filterGravite= document.getElementById('filterGravite')?.value|| '';
   const filterStatut = document.getElementById('filterStatut')?.value || '';
-  const session = Auth.getSession();
-  const isAdmin = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
+  const session      = Auth.getSession();
+  const isAdmin      = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
 
   list = list.filter(i => {
-    if (filterType && i.type !== filterType) return false;
+    if (filterType    && i.type    !== filterType)    return false;
     if (filterGravite && i.gravite !== filterGravite) return false;
-    if (filterStatut && i.statut !== filterStatut) return false;
+    if (filterStatut  && i.statut  !== filterStatut)  return false;
     if (!isAdmin && i.declaredById !== session?.userId) return false;
     if (search) {
       const txt = `${i.titre} ${i.residentName||''} ${i.description||''} ${i.lieu||''} ${i.declaredBy||''}`.toLowerCase();
@@ -127,8 +140,7 @@ function renderIncidents() {
     return true;
   });
 
-  list.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-
+  list.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   if (countEl) countEl.textContent = `${list.length} incident${list.length > 1 ? 's' : ''}`;
 
   if (!list.length) {
@@ -139,10 +151,10 @@ function renderIncidents() {
   container.innerHTML = list.map(i => {
     const typeLabel = INCIDENT_TYPES[i.type] || i.type;
     const gravLabel = GRAVITE_LABELS[i.gravite] || i.gravite;
-    const statLabel = STATUT_LABELS[i.statut] || i.statut;
-    const icon = INCIDENT_ICONS[i.type] || '📋';
-    const dateStr = i.date ? formatDate(i.date) : '—';
-    const timeStr = i.heure ? i.heure.slice(0,5) : '';
+    const statLabel = STATUT_LABELS[i.statut]  || i.statut;
+    const icon      = INCIDENT_ICONS[i.type]   || '📋';
+    const dateStr   = i.date  ? formatDate(i.date) : '—';
+    const timeStr   = i.heure ? i.heure.slice(0,5) : '';
     const canValidate = session && (session.role === 'admin' || session.role === 'moderator' || canValidateIncidents(session.userId)) && (i.statut === 'declare' || i.statut === 'cours');
 
     return `<div class="incident-card">
@@ -153,9 +165,9 @@ function renderIncidents() {
           <div class="meta">
             <span>📅 ${dateStr}${timeStr ? ' · '+timeStr : ''}</span>
             ${i.residentName ? `<span>👤 ${escHtml(i.residentName)}</span>` : ''}
-            ${i.lieu ? `<span>📍 ${escHtml(i.lieu)}</span>` : ''}
+            ${i.lieu         ? `<span>📍 ${escHtml(i.lieu)}</span>`         : ''}
             <span>✍️ ${escHtml(i.declaredBy)}</span>
-            ${i.etabNom ? `<span>🏢 ${escHtml(i.etabNom)}</span>` : ''}
+            ${i.etabNom      ? `<span>🏢 ${escHtml(i.etabNom)}</span>`      : ''}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0">
@@ -165,7 +177,7 @@ function renderIncidents() {
         </div>
       </div>
       ${i.description ? `<div class="desc">${escHtml(i.description)}</div>` : ''}
-      ${i.notes ? `<div class="validation-tag">📎 Notes : ${escHtml(i.notes)}</div>` : ''}
+      ${i.notes       ? `<div class="validation-tag">📎 Notes : ${escHtml(i.notes)}</div>` : ''}
       <div class="incident-actions">
         <button class="btn btn-ghost btn-sm" onclick="viewIncident('${i.id}')">Détails</button>
         ${canValidate ? `<button class="btn btn-outline btn-sm" onclick="openValidation('${i.id}')">Traiter</button>` : ''}
@@ -178,28 +190,78 @@ function graviteColor(g) {
   return { leger:'#16a34a', moyen:'#ca8a04', grave:'#ea580c', critique:'#dc2626' }[g] || '#6b7280';
 }
 
-let _currentIncidentId = null;
+// ─── Détail ───────────────────────────────────────────────────────────────────
+function viewIncident(id) {
+  _currentIncidentId = id;
+  const btnPrint = document.getElementById('btnPrintIncident');
+  if (btnPrint) btnPrint.style.display = '';
+  const i = _incCache.find(x => x.id === id);
+  if (!i) return;
+  const session     = Auth.getSession();
+  const isAdmin     = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
+  const typeLabel   = INCIDENT_TYPES[i.type]  || i.type;
+  const gravLabel   = GRAVITE_LABELS[i.gravite]|| i.gravite;
+  const statLabel   = STATUT_LABELS[i.statut]  || i.statut;
+  const canValidate = isAdmin && (i.statut === 'declare' || i.statut === 'cours');
+
+  document.getElementById('detailTitle').textContent = i.titre;
+  document.getElementById('detailBody').innerHTML = `
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <span class="badge-incident ${GRAVITE_CLASSES[i.gravite]||''}">${gravLabel}</span>
+      <span class="badge-status ${STATUT_CLASSES[i.statut]||''}">${statLabel}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;background:var(--bg-alt,#f9fafb);padding:.75rem;border-radius:var(--r)">
+      <div><strong>Type</strong><br>${typeLabel}</div>
+      <div><strong>Gravité</strong><br>${gravLabel}</div>
+      <div><strong>Date</strong><br>${i.date ? formatDate(i.date) : '—'}</div>
+      <div><strong>Heure</strong><br>${i.heure ? i.heure.slice(0,5) : '—'}</div>
+      ${i.residentName ? `<div><strong>Résident</strong><br>${escHtml(i.residentName)}</div>` : ''}
+      ${i.lieu         ? `<div><strong>Lieu</strong><br>${escHtml(i.lieu)}</div>` : ''}
+      ${i.etabNom      ? `<div><strong>Établissement</strong><br>🏢 ${escHtml(i.etabNom)}</div>` : ''}
+      <div><strong>Déclaré par</strong><br>${escHtml(i.declaredBy)}</div>
+      <div><strong>Déclaré le</strong><br>${i.declaredAt ? formatDateTime(i.declaredAt) : '—'}</div>
+    </div>
+    <div><strong>Description</strong><br>${escHtml(i.description) || '—'}</div>
+    ${i.validatedBy ? `<div><strong>Validé par</strong><br>${escHtml(i.validatedBy)}${i.validatedAt ? ' le '+formatDateTime(i.validatedAt) : ''}</div>` : ''}
+    ${i.notes       ? `<div><strong>Notes de validation</strong><br>${escHtml(i.notes)}</div>` : ''}
+    <div style="border-top:1px solid var(--border);padding-top:.6rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+      <strong>🚨 Événement indésirable grave (ARS)</strong>
+      ${i.eig?.declarable ? `<span class="badge-incident dangere">${i.eig.cloture ? 'Clôturé' : i.eig.declareARS ? 'Déclaré' : 'À déclarer'}</span>` : '<span class="badge badge-gray">Non déclarable</span>'}
+      ${(typeof canValidateIncidents === 'function' && canValidateIncidents(session?.userId)) || isAdmin ? `
+        <button class="btn btn-ghost btn-sm" onclick="toggleEigDeclarable('${i.id}')">${i.eig?.declarable ? 'Retirer du registre EIG' : 'Marquer comme EIG'}</button>
+        ${i.eig?.declarable ? `<a class="btn btn-ghost btn-sm" href="eig.html">Gérer la déclaration →</a>` : ''}
+      ` : ''}
+    </div>
+  `;
+
+  const footer = document.getElementById('detailFooter');
+  footer.innerHTML = canValidate
+    ? `<button class="btn btn-ghost" onclick="closeModal('modalDetail')">Fermer</button>
+       <button class="btn btn-outline" onclick="closeModal('modalDetail');openValidation('${i.id}')">Traiter</button>`
+    : `<button class="btn btn-ghost" onclick="closeModal('modalDetail')">Fermer</button>`;
+
+  openModal('modalDetail');
+}
 
 function printSingleIncident() {
   if (!_currentIncidentId) return;
-  const list = getIncidents();
-  const i = list.find(x => x.id === _currentIncidentId);
+  const i = _incCache.find(x => x.id === _currentIncidentId);
   if (!i) return;
   _printIncidentWindow([i], `Incident — ${i.titre}`);
 }
 
 function exportIncidentsPDF() {
-  let list = getIncidents();
-  const search = (document.getElementById('searchIncident')?.value || '').toLowerCase();
-  const filterType = document.getElementById('filterType')?.value || '';
+  let list = [..._incCache];
+  const search        = (document.getElementById('searchIncident')?.value || '').toLowerCase();
+  const filterType    = document.getElementById('filterType')?.value    || '';
   const filterGravite = document.getElementById('filterGravite')?.value || '';
-  const filterStatut = document.getElementById('filterStatut')?.value || '';
+  const filterStatut  = document.getElementById('filterStatut')?.value  || '';
   const session = Auth.getSession();
   const isAdmin = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
   list = list.filter(i => {
-    if (filterType && i.type !== filterType) return false;
+    if (filterType    && i.type    !== filterType)    return false;
     if (filterGravite && i.gravite !== filterGravite) return false;
-    if (filterStatut && i.statut !== filterStatut) return false;
+    if (filterStatut  && i.statut  !== filterStatut)  return false;
     if (!isAdmin && i.declaredById !== session?.userId) return false;
     if (search) {
       const txt = `${i.titre} ${i.residentName||''} ${i.description||''} ${i.lieu||''} ${i.declaredBy||''}`.toLowerCase();
@@ -207,15 +269,15 @@ function exportIncidentsPDF() {
     }
     return true;
   });
-  list.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  list.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   if (!list.length) { toast('Aucun incident à exporter', 'error'); return; }
   _printIncidentWindow(list, `Rapport d'incidents — ${new Date().toLocaleDateString('fr-FR')}`);
 }
 
 function _printIncidentWindow(list, title) {
-  const settings = DB.get(DB.keys.settings) || {};
+  const settings   = DB.get(DB.keys.settings) || {};
   const gravColors = { leger:'#16a34a', moyen:'#ca8a04', grave:'#ea580c', critique:'#dc2626' };
-  const gravBg    = { leger:'#f0fdf4', moyen:'#fefce8', grave:'#ffedd5', critique:'#fef2f2' };
+  const gravBg     = { leger:'#f0fdf4', moyen:'#fefce8', grave:'#ffedd5', critique:'#fef2f2' };
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escHtml(title)}</title>
 <style>
@@ -253,8 +315,8 @@ function _printIncidentWindow(list, title) {
   <button onclick="window.close()">Fermer</button>
 </div>
 ${list.map(i => {
-  const gc = gravColors[i.gravite]||'#6b7280';
-  const gb = gravBg[i.gravite]||'#f3f4f6';
+  const gc   = gravColors[i.gravite]||'#6b7280';
+  const gb   = gravBg[i.gravite]||'#f3f4f6';
   const icon = INCIDENT_ICONS[i.type]||'📋';
   return `<div class="incident">
     <div class="inc-top">
@@ -287,84 +349,23 @@ ${list.map(i => {
   setTimeout(() => w.print(), 500);
 }
 
-function viewIncident(id) {
-  _currentIncidentId = id;
-  const btnPrint = document.getElementById('btnPrintIncident');
-  if (btnPrint) btnPrint.style.display = '';
-  const list = getIncidents();
-  const i = list.find(x => x.id === id);
-  if (!i) return;
-  const session = Auth.getSession();
-  const isAdmin = session && (session.role === 'admin' || session.role === 'moderator' || canViewAllIncidents(session.userId));
-  const typeLabel = INCIDENT_TYPES[i.type] || i.type;
-  const gravLabel = GRAVITE_LABELS[i.gravite] || i.gravite;
-  const statLabel = STATUT_LABELS[i.statut] || i.statut;
-  const canValidate = isAdmin && (i.statut === 'declare' || i.statut === 'cours');
-
-  document.getElementById('detailTitle').textContent = i.titre;
-
-  document.getElementById('detailBody').innerHTML = `
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-      <span class="badge-incident ${GRAVITE_CLASSES[i.gravite]||''}">${gravLabel}</span>
-      <span class="badge-status ${STATUT_CLASSES[i.statut]||''}">${statLabel}</span>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;background:var(--bg-alt,#f9fafb);padding:.75rem;border-radius:var(--r)">
-      <div><strong>Type</strong><br>${typeLabel}</div>
-      <div><strong>Gravité</strong><br>${gravLabel}</div>
-      <div><strong>Date</strong><br>${i.date ? formatDate(i.date) : '—'}</div>
-      <div><strong>Heure</strong><br>${i.heure ? i.heure.slice(0,5) : '—'}</div>
-      ${i.residentName ? `<div><strong>Résident</strong><br>${escHtml(i.residentName)}</div>` : ''}
-      ${i.lieu ? `<div><strong>Lieu</strong><br>${escHtml(i.lieu)}</div>` : ''}
-      ${i.etabNom ? `<div><strong>Établissement</strong><br>🏢 ${escHtml(i.etabNom)}</div>` : ''}
-      <div><strong>Déclaré par</strong><br>${escHtml(i.declaredBy)}</div>
-      <div><strong>Déclaré le</strong><br>${i.declaredAt ? formatDateTime(i.declaredAt) : '—'}</div>
-    </div>
-    <div><strong>Description</strong><br>${escHtml(i.description) || '—'}</div>
-    ${i.validatedBy ? `<div><strong>Validé par</strong><br>${escHtml(i.validatedBy)}${i.validatedAt ? ' le '+formatDateTime(i.validatedAt) : ''}</div>` : ''}
-    ${i.notes ? `<div><strong>Notes de validation</strong><br>${escHtml(i.notes)}</div>` : ''}
-    <div style="border-top:1px solid var(--border);padding-top:.6rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
-      <strong>🚨 Événement indésirable grave (ARS)</strong>
-      ${i.eig?.declarable ? `<span class="badge-incident dangere">${i.eig.cloture ? 'Clôturé' : i.eig.declareARS ? 'Déclaré' : 'À déclarer'}</span>` : '<span class="badge badge-gray">Non déclarable</span>'}
-      ${(typeof canValidateIncidents === 'function' && canValidateIncidents(session?.userId)) || isAdmin ? `
-        <button class="btn btn-ghost btn-sm" onclick="toggleEigDeclarable('${i.id}')">${i.eig?.declarable ? 'Retirer du registre EIG' : 'Marquer comme EIG'}</button>
-        ${i.eig?.declarable ? `<a class="btn btn-ghost btn-sm" href="eig.html">Gérer la déclaration →</a>` : ''}
-      ` : ''}
-    </div>
-  `;
-
-  const footer = document.getElementById('detailFooter');
-  if (canValidate) {
-    footer.innerHTML = `
-      <button class="btn btn-ghost" onclick="closeModal('modalDetail')">Fermer</button>
-      <button class="btn btn-outline" onclick="closeModal('modalDetail');openValidation('${i.id}')">Traiter</button>
-    `;
-  } else {
-    footer.innerHTML = `<button class="btn btn-ghost" onclick="closeModal('modalDetail')">Fermer</button>`;
-  }
-
-  openModal('modalDetail');
-}
-
+// ─── Validation ───────────────────────────────────────────────────────────────
 function openValidation(id) {
   const btnPrint = document.getElementById('btnPrintIncident');
   if (btnPrint) btnPrint.style.display = 'none';
   closeModal('modalDetail');
-  const list = getIncidents();
-  const i = list.find(x => x.id === id);
+  const i = _incCache.find(x => x.id === id);
   if (!i) return;
 
-  const body = document.getElementById('detailBody');
-  const footer = document.getElementById('detailFooter');
   document.getElementById('detailTitle').textContent = `Traiter : ${i.titre}`;
-
-  body.innerHTML = `
+  document.getElementById('detailBody').innerHTML = `
     <p style="font-size:.875rem;color:var(--muted)">Changer le statut de cet incident :</p>
     <div class="form-group">
       <label>Nouveau statut</label>
       <select id="vStatut">
-        <option value="cours" ${i.statut === 'cours' ? 'selected' : ''}>En cours</option>
-        <option value="valide" ${i.statut === 'valide' ? 'selected' : ''}>Validé</option>
-        <option value="classe" ${i.statut === 'classe' ? 'selected' : ''}>Classé</option>
+        <option value="cours"  ${i.statut==='cours'  ?'selected':''}>En cours</option>
+        <option value="valide" ${i.statut==='valide' ?'selected':''}>Validé</option>
+        <option value="classe" ${i.statut==='classe' ?'selected':''}>Classé</option>
       </select>
     </div>
     <div class="form-group">
@@ -372,47 +373,84 @@ function openValidation(id) {
       <textarea id="vNotes" rows="3" placeholder="Commentaire sur le traitement…">${escHtml(i.notes||'')}</textarea>
     </div>
   `;
-
-  footer.innerHTML = `
+  document.getElementById('detailFooter').innerHTML = `
     <button class="btn btn-ghost" onclick="viewIncident('${id}')">Annuler</button>
     <button class="btn btn-primary" onclick="validateIncident('${id}')">Enregistrer</button>
   `;
-
   openModal('modalDetail');
 }
 
-function validateIncident(id) {
-  const list = getIncidents();
-  const i = list.find(x => x.id === id);
+async function validateIncident(id) {
+  const i = _incCache.find(x => x.id === id);
   if (!i) return;
   const session = Auth.getSession();
-  const statut = document.getElementById('vStatut').value;
-  const notes = document.getElementById('vNotes').value.trim();
-
-  i.statut = statut;
-  i.notes = notes || '';
-  i.validatedBy = session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu';
-  i.validatedById = session ? session.userId : null;
-  i.validatedAt = new Date().toISOString();
-
-  saveIncidents(list);
-  if (typeof auditLog === 'function') auditLog('incident_update', `${i.titre} → ${STATUT_LABELS[statut]||statut}`);
-  closeModal('modalDetail');
-  toast(`Incident ${STATUT_LABELS[statut]?.toLowerCase() || statut}`);
-  renderIncidents();
+  const statut  = document.getElementById('vStatut').value;
+  const notes   = document.getElementById('vNotes').value.trim();
+  const fields  = {
+    statut,
+    notes:           notes || '',
+    validated_by:    session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
+    validated_by_id: session ? String(session.userId) : null,
+    validated_at:    new Date().toISOString()
+  };
+  try {
+    const updated = await sbUpdateIncidentField(id, fields);
+    const idx = _incCache.findIndex(x => x.id === id);
+    if (idx !== -1) _incCache[idx] = updated;
+    if (typeof auditLog === 'function') auditLog('incident_update', `${i.titre} → ${STATUT_LABELS[statut]||statut}`);
+    closeModal('modalDetail');
+    toast(`Incident ${STATUT_LABELS[statut]?.toLowerCase() || statut}`);
+    renderIncidents();
+  } catch(e) {
+    toast('Erreur lors de la mise à jour', 'error');
+    console.error(e);
+  }
 }
 
-function toggleEigDeclarable(id) {
-  const list = getIncidents();
-  const i = list.find(x => x.id === id);
+// ─── EIG ──────────────────────────────────────────────────────────────────────
+async function toggleEigDeclarable(id) {
+  const i    = _incCache.find(x => x.id === id);
   if (!i) return;
   const next = !(i.eig && i.eig.declarable);
-  i.eig = next ? { declarable: true, declareARS: false, dateDeclarationARS: '', numeroSignalement: '', destinataires: ['ars'], mesuresImmediates: '', mesuresCorrectives: '', cloture: false, dateCloture: '', suites: '' } : { ...(i.eig || {}), declarable: false };
-  saveIncidents(list);
-  if (typeof auditLog === 'function') auditLog('eig_toggle', `${i.titre} → ${next ? 'ajouté au registre EIG' : 'retiré du registre EIG'}`);
-  toast(next ? 'Ajouté au registre des EIG' : 'Retiré du registre des EIG');
-  viewIncident(id);
-  renderIncidents();
+  const newEig = next
+    ? { declarable:true, declareARS:false, dateDeclarationARS:'', numeroSignalement:'', destinataires:['ars'], mesuresImmediates:'', mesuresCorrectives:'', cloture:false, dateCloture:'', suites:'' }
+    : { ...(i.eig||{}), declarable:false };
+  try {
+    const updated = await sbUpdateIncidentField(id, { eig: newEig });
+    const idx = _incCache.findIndex(x => x.id === id);
+    if (idx !== -1) _incCache[idx] = updated;
+    if (typeof auditLog === 'function') auditLog('eig_toggle', `${i.titre} → ${next ? 'ajouté au registre EIG' : 'retiré du registre EIG'}`);
+    toast(next ? 'Ajouté au registre des EIG' : 'Retiré du registre des EIG');
+    viewIncident(id);
+    renderIncidents();
+  } catch(e) {
+    toast('Erreur', 'error');
+    console.error(e);
+  }
+}
+
+// ─── Doublon ──────────────────────────────────────────────────────────────────
+function findIncidentDuplicate(newInc, list) {
+  if (!list || !list.length) return null;
+  return list.find(i => {
+    if (i.type !== newInc.type) return false;
+    if (i.residentId && newInc.residentId && i.residentId !== newInc.residentId) return false;
+    if (i.date !== newInc.date) return false;
+    return strSimilarity(i.titre || '', newInc.titre || '') > 0.6;
+  }) || null;
+}
+
+function strSimilarity(a, b) {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  if (a === b) return 1;
+  const longer = a.length > b.length ? a : b;
+  const shorter = a.length > b.length ? b : a;
+  if (!longer.length) return 1;
+  let matches = 0;
+  for (let i = 0; i < shorter.length; i++) {
+    if (longer.includes(shorter[i])) matches++;
+  }
+  return matches / longer.length;
 }
 
 function escHtml(s) {
@@ -432,10 +470,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 if (typeof registerPageInit === 'function') registerPageInit('incidents', initIncidents);
-
-// Re-render when modal closes
-const _origCloseInc = closeModal;
-closeModal = function(id) {
-  _origCloseInc(id);
-  if (id === 'modalIncident') renderIncidents();
-};

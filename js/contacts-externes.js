@@ -7,8 +7,10 @@ const CE_TYPES = {
   autre: 'Autre'
 };
 
-function getContactsExternes() { return DB.get(DB.keys.contactsExternes) || []; }
-function saveContactsExternes(list) { DB.set(DB.keys.contactsExternes, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _ceCache = [];
+function getContactsExternes() { return _ceCache; }
+async function loadContactsExternesCache() { _ceCache = await sbGetContactsExternes(); }
 
 function ceColor(type) {
   let h = 0; const s = type || 'autre';
@@ -95,7 +97,7 @@ function openCeModal(id) {
   openModal('modalContactExterne');
 }
 
-function saveContactExterne() {
+async function saveContactExterne() {
   const prenom = document.getElementById('cePrenom').value.trim();
   const nom = document.getElementById('ceNom').value.trim();
   if (!prenom || !nom) { toast('Prénom et nom requis', 'error'); return; }
@@ -107,15 +109,18 @@ function saveContactExterne() {
     email: document.getElementById('ceEmail').value.trim(),
     notes: document.getElementById('ceNotes').value.trim()
   };
-  let list = getContactsExternes();
-  if (ceEditId) {
-    list = list.map(c => c.id === ceEditId ? { ...c, ...data } : c);
-    toast('Contact mis à jour', 'success');
-  } else {
-    list.push({ id: genId(), ...data, createdAt: new Date().toISOString() });
-    toast('Contact ajouté ✓', 'success');
-  }
-  saveContactsExternes(list);
+  try {
+    if (ceEditId) {
+      const old = _ceCache.find(c => c.id === ceEditId) || {};
+      const saved = await sbSaveContactExterne({ ...old, ...data, id: ceEditId });
+      _ceCache = _ceCache.map(c => c.id === ceEditId ? saved : c);
+      toast('Contact mis à jour', 'success');
+    } else {
+      const saved = await sbSaveContactExterne(data);
+      _ceCache.push(saved);
+      toast('Contact ajouté ✓', 'success');
+    }
+  } catch (e) { console.error('[saveContactExterne]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function') auditLog('contact_externe_save', `${prenom} ${nom}`);
   closeModal('modalContactExterne');
   renderContactsExternes();
@@ -130,9 +135,12 @@ function deleteContactExterne() {
 
 function deleteContactExterneCard(id, nom) {
   if (!confirm(`Supprimer ${nom || 'ce contact'} ?`)) return;
-  saveContactsExternes(getContactsExternes().filter(c => c.id !== id));
-  toast('Contact supprimé', 'info');
-  renderContactsExternes();
+  (async () => {
+    try { await sbDeleteContactExterne(id); _ceCache = _ceCache.filter(c => c.id !== id); }
+    catch (e) { console.error('[deleteContactExterneCard]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Contact supprimé', 'info');
+    renderContactsExternes();
+  })();
 }
 
 function seedDemoContactsExternes() {
@@ -148,12 +156,10 @@ function seedDemoContactsExternes() {
     { prenom:'Laura', nom:'Petit', type:'autre', fonction:'Médiatrice familiale', telephone:'06 90 12 34 56', email:'laura.petit@example.fr', notes:'' },
     { prenom:'Yann', nom:'Le Goff', type:'vacataire', fonction:'Atelier théâtre', telephone:'06 01 23 45 67', email:'yann.legoff@example.fr', notes:'Intervient une fois par mois' }
   ];
-  const list = getContactsExternes();
-  demo.forEach(d => list.push({ id: genId(), ...d, createdAt: new Date().toISOString() }));
-  saveContactsExternes(list);
-  toast('10 contacts de démo ajoutés ✓', 'success');
-  renderContactsExternes();
+  // Données de démo désactivées : la base de prod doit rester sans données fictives.
+  void demo;
+  toast('Ajout de contacts de démo désactivé (base de production)', 'info');
 }
 
-document.addEventListener('DOMContentLoaded', renderContactsExternes);
-if (typeof registerPageInit === 'function') registerPageInit('contacts-externes', renderContactsExternes);
+document.addEventListener('DOMContentLoaded', async () => { await loadContactsExternesCache(); renderContactsExternes(); });
+if (typeof registerPageInit === 'function') registerPageInit('contacts-externes', async () => { await loadContactsExternesCache(); renderContactsExternes(); });

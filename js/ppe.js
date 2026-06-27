@@ -23,17 +23,37 @@ const DOMAINES = [
   { id:'orientation', label:'Orientation', icon:'🧭' }
 ];
 
-function getPpe() { return DB.get(DB.keys.ppe) || []; }
-function savePpe(list) { DB.set(DB.keys.ppe, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _ppeCache = [];
+function getPpe() { return _ppeCache; }
+async function loadPpeCache() { _ppeCache = await sbGetPpe(); }
+// Persiste un avenant précis (remonte une erreur via toast)
+function persistPpe(p) {
+  if (!p || !p.id) return;
+  sbSavePpe(p).catch(e => { console.error('[ppe]', e); toast('Erreur sauvegarde avenant', 'error'); });
+}
+
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+async function persistResident(r) {
+  const saved = await sbSaveResident(r);
+  const i = _residentsCache.findIndex(x => String(x.id) === String(saved.id));
+  if (i >= 0) _residentsCache[i] = saved; else _residentsCache.push(saved);
+  return saved;
+}
 
 function emptySection() {
   return { bilan:'', objectifs:[{ objectif:'', moyens:'', echeance:'', evaluation:'' }], expression:'' };
 }
 
-function initPpe() {
+async function initPpe() {
   const session = Auth.requireAuth();
   if (!session) return;
   if (!requireModule('access_ppe')) return;
+  await loadResidentsCache();
+  await loadPpeCache();
   populateAvenantSelects();
   renderAvenant();
   const params = new URLSearchParams(window.location.search);
@@ -46,7 +66,7 @@ function initPpe() {
 }
 
 function populateAvenantSelects() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   const opts = r => r.map(x => `<option value="${x.id}">${escHtml(x.prenom||'')} ${escHtml(x.nom||'')}</option>`).join('');
   ['fAvResident','filterResidentAvenant'].forEach(id => {
     const el = document.getElementById(id);
@@ -57,14 +77,13 @@ function populateAvenantSelects() {
   });
 }
 
-function saveAvenant() {
+async function saveAvenant() {
   const editId = document.getElementById('avenantEditId').value;
   const residentId = document.getElementById('fAvResident').value;
   if (!residentId) { toast('Veuillez choisir un résident', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   const r = residents.find(x => x.id === residentId);
   const list = getPpe();
-  const now = new Date().toISOString();
   const data = {
     residentId,
     residentName: r ? `${r.prenom||''} ${r.nom||''}`.trim() : '?',
@@ -77,29 +96,27 @@ function saveAvenant() {
     entreeEsat: document.getElementById('fAvEntreeEsat').value
   };
 
-  if (editId) {
-    const idx = list.findIndex(p => p.id === editId);
-    if (idx >= 0) { Object.assign(list[idx], data); }
-    savePpe(list);
-    closeModal('modalAvenant');
-    toast('Avenant mis à jour');
-  } else {
-    const sections = {};
-    DOMAINES.forEach(d => { sections[d.id] = emptySection(); });
-    const avenant = {
-      id: genId(), ...data,
-      statut: 'brouillon',
-      sections,
-      conclusion: '',
-      signatures: { resident:null, referent:null, direction:null, date:null },
-      createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })(),
-      createdAt: now
-    };
-    list.unshift(avenant);
-    savePpe(list);
-    closeModal('modalAvenant');
-    toast('Avenant créé');
-  }
+  try {
+    if (editId) {
+      const idx = list.findIndex(p => p.id === editId);
+      if (idx >= 0) { Object.assign(list[idx], data); list[idx] = await sbSavePpe(list[idx]); }
+      toast('Avenant mis à jour');
+    } else {
+      const sections = {};
+      DOMAINES.forEach(d => { sections[d.id] = emptySection(); });
+      const saved = await sbSavePpe({
+        ...data,
+        statut: 'brouillon',
+        sections,
+        conclusion: '',
+        signatures: { resident:null, referent:null, direction:null, date:null },
+        createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })()
+      });
+      list.unshift(saved);
+      toast('Avenant créé');
+    }
+  } catch (e) { console.error('[saveAvenant]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  closeModal('modalAvenant');
   renderAvenant();
 }
 
@@ -234,7 +251,7 @@ function updateSectionField(ppeId, domId, field, value) {
   if (!p) return;
   if (!p.sections[domId]) p.sections[domId] = emptySection();
   p.sections[domId][field] = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 async function aiAssist(ppeId, domId, field, action) {
@@ -267,7 +284,7 @@ async function aiAssist(ppeId, domId, field, action) {
     const result = await callMistral(prompt, system);
     if (result) {
       p.sections[domId][field] = result;
-      savePpe(list);
+      persistPpe(p);
       renderAvenantFull(p);
       const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
       if (bodyEl) bodyEl.style.display = '';
@@ -321,7 +338,7 @@ async function aiAssist(ppeId, domId, field, action) {
 
   if (result) {
     p.sections[domId][field] = result;
-    savePpe(list);
+    persistPpe(p);
     renderAvenantFull(p);
     const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
     if (bodyEl) bodyEl.style.display = '';
@@ -348,7 +365,7 @@ function addSectionObj(ppeId, domId) {
   if (!p.sections[domId]) p.sections[domId] = emptySection();
   if (!p.sections[domId].objectifs) p.sections[domId].objectifs = [];
   p.sections[domId].objectifs.push({ objectif:'', moyens:'', echeance:'', evaluation:'' });
-  savePpe(list);
+  persistPpe(p);
   renderAvenantFull(p);
   const bodyEl = document.getElementById('sectionBody_'+ppeId+'_'+domId);
   if (bodyEl) bodyEl.style.display = '';
@@ -360,7 +377,7 @@ function updateSectionObjField(ppeId, domId, idx, field, value) {
   if (!p || !p.sections[domId]) return;
   if (!p.sections[domId].objectifs[idx]) p.sections[domId].objectifs[idx] = { objectif:'', moyens:'', echeance:'', evaluation:'' };
   p.sections[domId].objectifs[idx][field] = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 function removeSectionObj(ppeId, domId, idx) {
@@ -369,7 +386,7 @@ function removeSectionObj(ppeId, domId, idx) {
   const p = list.find(x => x.id === ppeId);
   if (!p || !p.sections[domId]) return;
   p.sections[domId].objectifs.splice(idx, 1);
-  savePpe(list);
+  persistPpe(p);
   renderAvenantFull(p);
 }
 
@@ -378,7 +395,7 @@ function updateConclusion(ppeId, value) {
   const p = list.find(x => x.id === ppeId);
   if (!p) return;
   p.conclusion = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 function updateSignature(ppeId, field, value) {
@@ -387,7 +404,7 @@ function updateSignature(ppeId, field, value) {
   if (!p) return;
   if (!p.signatures) p.signatures = { resident:'', referent:'', direction:'', date:'' };
   p.signatures[field] = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 function printAvenant(id) {
@@ -513,7 +530,7 @@ function renderAvenant() {
     return;
   }
 
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   function _avInitials(name) {
     return (name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
   }
@@ -585,7 +602,7 @@ function changeAvenantStatut(id) {
   if (p.statut === 'brouillon') p.statut = 'actif';
   else if (p.statut === 'actif') p.statut = 'termine';
   else return;
-  savePpe(list);
+  persistPpe(p);
   toast(`Avenant ${p.statut === 'actif' ? 'activé' : 'terminé'}`);
   const full = document.getElementById('avenantFullView');
   if (full) renderAvenantFull(p);
@@ -594,12 +611,14 @@ function changeAvenantStatut(id) {
 
 function deleteAvenant(id) {
   if (!confirm('Supprimer cet avenant ?')) return;
-  const list = getPpe();
-  savePpe(list.filter(p => p.id !== id));
-  toast('Avenant supprimé');
-  const full = document.getElementById('avenantFullView');
-  if (full) backToList();
-  renderAvenant();
+  (async () => {
+    try { await sbDeletePpe(id); _ppeCache = _ppeCache.filter(p => p.id !== id); }
+    catch (e) { console.error('[deleteAvenant]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Avenant supprimé');
+    const full = document.getElementById('avenantFullView');
+    if (full) backToList();
+    renderAvenant();
+  })();
 }
 
 function resetAvenantModal() {
@@ -622,12 +641,12 @@ async function genererAvenantFromJournal(existingId) {
     const p = list.find(x => x.id === existingId);
     if (!p) { toast('Avenant introuvable', 'error'); return; }
     residentId = p.residentId;
-    const residents = DB.get(DB.keys.residents) || [];
+    const residents = residentsList();
     resident = residents.find(r => String(r.id) === String(residentId));
   } else {
     residentId = document.getElementById('fAvResident').value;
     if (!residentId) { toast('Veuillez d\'abord choisir un résident', 'error'); return; }
-    const residents = DB.get(DB.keys.residents) || [];
+    const residents = residentsList();
     resident = residents.find(r => String(r.id) === String(residentId));
   }
   if (!resident) { toast('Résident introuvable', 'error'); return; }
@@ -647,7 +666,7 @@ async function genererAvenantFromJournal(existingId) {
     p.sections = result.sections || {};
     p.conclusion = result.conclusion || '';
     ensureSectionsComplete(p.sections);
-    savePpe(list);
+    persistPpe(p);
     toast('✅ Avenant régénéré depuis le journal', 'success');
     renderAvenantFull(p);
   } else {
@@ -655,23 +674,23 @@ async function genererAvenantFromJournal(existingId) {
     const list = getPpe();
     const now = new Date().toISOString();
     const avenant = {
-      id: genId(), residentId, residentName: residentInfo,
+      residentId, residentName: residentInfo,
       dateRedaction: now.slice(0, 10), dateRevision: '', referent: '',
       protection: '', employeur: '', atelier: '', entreeEsat: '',
       statut: 'brouillon',
       sections: result.sections || {},
       conclusion: result.conclusion || '',
       signatures: { resident: null, referent: null, direction: null, date: null },
-      createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })(),
-      createdAt: now
+      createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })()
     };
     ensureSectionsComplete(avenant.sections);
-    list.unshift(avenant);
-    savePpe(list);
+    let saved;
+    try { saved = await sbSavePpe(avenant); } catch (e) { console.error(e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    list.unshift(saved);
     closeModal('modalAvenant');
     toast('✅ Avenant généré depuis le journal', 'success');
     renderAvenant();
-    setTimeout(() => openAvenant(avenant.id), 400);
+    setTimeout(() => openAvenant(saved.id), 400);
   }
 }
 
@@ -945,28 +964,24 @@ function saveSerafinItem(ppeId, code, field, value) {
   if (!p.serafin) p.serafin = { prestations: {} };
   if (!p.serafin.prestations[code]) p.serafin.prestations[code] = { active: false, niveau: 0 };
   p.serafin.prestations[code][field] = value;
-  savePpe(list);
+  persistPpe(p);
   const full = document.getElementById('avenantFullView');
   if (full) renderAvenantFull(p);
 }
 
-function syncSerafinToResident(ppeId) {
+async function syncSerafinToResident(ppeId) {
   const list = getPpe();
   const p = list.find(x => x.id === ppeId);
   if (!p) { toast('Avenant introuvable', 'error'); return; }
   const spData = p.serafin && p.serafin.prestations ? p.serafin.prestations : {};
   const selected = Object.entries(spData).filter(([,v]) => v.active).map(([k]) => k);
   if (!selected.length) { toast('Aucune prestation sélectionnée', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
-  const rIdx = residents.findIndex(x => x.id === p.residentId);
-  if (rIdx < 0) { toast('Résident introuvable', 'error'); return; }
+  const r = residentsList().find(x => String(x.id) === String(p.residentId));
+  if (!r) { toast('Résident introuvable', 'error'); return; }
   const prestations = {};
   selected.forEach(code => { prestations[code] = { niveau: spData[code].niveau || 0 }; });
-  if (!residents[rIdx].serafinph) residents[rIdx].serafinph = {};
-  residents[rIdx].serafinph.selected = selected;
-  residents[rIdx].serafinph.prestations = prestations;
-  residents[rIdx].serafinph.dateEvaluation = new Date().toISOString().slice(0,10);
-  DB.set(DB.keys.residents, residents);
+  const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: new Date().toISOString().slice(0,10) };
+  await persistResident({ ...r, serafinph });
   toast(`✅ SERAFIN synchronisé pour ${p.residentName} — ${selected.length} prestation${selected.length>1?'s':''}`, 'success');
 }
 

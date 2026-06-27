@@ -29,10 +29,19 @@
 <body>
 <script src="js/app.js"></script>
 <script src="js/alertes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/astreintes-supabase.js"></script>
+<script src="js/planning-equipe-supabase.js"></script>
+<script src="js/formations-supabase.js"></script>
+<script src="js/conges-supabase.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
 if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+if (!Auth.isRH()) document.querySelectorAll('.rh-only').forEach(el => el.style.display = 'none');
 if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
 document.querySelectorAll('[data-perm]').forEach(el => {
   const _s = Auth.getSession();
@@ -71,11 +80,11 @@ document.querySelectorAll('[data-perm]').forEach(el => {
       <a href="planning.html" class="accueil-home-card" data-module="planning" data-perm="access_presences" style="--c:#d97706;background:linear-gradient(135deg,#d9770618,#fbbf2412),#fff"><span class="accueil-home-icon" style="background:#d9770620;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="accueil-home-label">Agenda</span><span class="notif-badge hidden">0</span></a>
       <a href="vie-quotidienne.html" class="accueil-home-card" data-perm="access_presences,view_residents,access_journal,access_activites,access_medicaments" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#5eead412),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Vie quotidienne</span></a>
       <a href="cvs.html" class="accueil-home-card" data-module="ppe" data-perm="access_cvs" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#86efac12),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Vie Sociale (CVS)</span></a>
-      <a href="dossiers.html" class="accueil-home-card" data-module="ppe" data-perm="access_ppe,view_residents,access_documents,access_viatrajectoire,access_repertoire,view_incidents,access_cvs,access_admissions" style="--c:#b45309;background:linear-gradient(135deg,#b4530918,#fcd34d12),#fff"><span class="accueil-home-icon" style="background:#b4530920;color:#b45309"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span class="accueil-home-label">Dossiers & suivi</span><span class="notif-badge hidden">0</span></a>
+      <a href="dossiers.html" class="accueil-home-card" data-module="ppe" data-perm="access_ppe,view_residents,access_documents,access_repertoire,view_incidents,access_cvs,access_admissions" style="--c:#b45309;background:linear-gradient(135deg,#b4530918,#fcd34d12),#fff"><span class="accueil-home-icon" style="background:#b4530920;color:#b45309"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span class="accueil-home-label">Dossiers & suivi</span><span class="notif-badge hidden">0</span></a>
       <a href="pilotage.html" class="accueil-home-card" data-module="portail" data-perm="access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Portail</span><span class="notif-badge hidden">0</span></a>
 <a href="#" onclick="openSearch();return false" class="accueil-home-card" style="--c:#0ea5e9;background:linear-gradient(135deg,#0ea5e918,#7dd3fc12),#fff"><span class="accueil-home-icon" style="background:#0ea5e920;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="accueil-home-label">Recherche</span></a>
 <a href="interventions.html" class="accueil-home-card" data-perm="access_interventions" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
-      <a href="rh.html" class="accueil-home-card admin-only" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">RH</span></a>
+      <a href="rh.html" class="accueil-home-card rh-only" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">RH</span></a>
       <a href="finance.html" class="accueil-home-card admin-only" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="accueil-home-label">Finance</span></a>
       <a href="admin-modules.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
       <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
@@ -324,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (fh) fh.value = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
 });
 
-function saveIncidentAccueil() {
+async function saveIncidentAccueil() {
   const titre = document.getElementById('fTitre').value.trim();
   const type = document.getElementById('fType').value;
   const gravite = document.getElementById('fGravite').value;
@@ -334,34 +343,33 @@ function saveIncidentAccueil() {
   const lieu = document.getElementById('fLieu').value.trim();
   const description = document.getElementById('fDescription').value.trim();
   if (!titre || !description) { alert('Veuillez remplir le titre et la description.'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
-  const resident = residents.find(r => r.id === residentId);
   const session = Auth.getSession();
   const etab = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null;
-  const list = DB.get(DB.keys.incidents) || [];
-  list.unshift({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    titre, type, gravite, date, heure,
-    residentId: residentId || null,
-    residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
-    etabId: etab ? etab.id : null,
-    etabNom: etab ? etab.nom : '',
-    lieu, description,
-    statut: 'declare',
-    declaredBy: session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
-    declaredById: session ? session.userId : null,
-    declaredAt: new Date().toISOString(),
-    validatedBy: null, validatedById: null, validatedAt: null,
-    notes: '',
-    createdAt: new Date().toISOString()
-  });
-  DB.set(DB.keys.incidents, list);
-  closeModal('modalIncident');
-  document.getElementById('fTitre').value = '';
-  document.getElementById('fDescription').value = '';
-  document.getElementById('fLieu').value = '';
-  document.getElementById('fResident').value = '';
-  alert('Incident déclaré ✓');
+  const residents = DB.get(DB.keys.residents) || [];
+  const resident = residents.find(r => r.id === residentId);
+  try {
+    await sbSaveIncident({
+      titre, type, gravite, date, heure,
+      residentId: residentId || null,
+      residentName: resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '',
+      etabNom: etab ? etab.nom : '',
+      lieu, description,
+      statut: 'declare',
+      declaredBy: session ? `${session.prenom||''} ${session.nom||''}`.trim() || session.username : 'Inconnu',
+      declaredById: session ? session.userId : null,
+      declaredAt: new Date().toISOString(),
+      notes: ''
+    });
+    closeModal('modalIncident');
+    document.getElementById('fTitre').value = '';
+    document.getElementById('fDescription').value = '';
+    document.getElementById('fLieu').value = '';
+    document.getElementById('fResident').value = '';
+    alert('Incident déclaré ✓');
+  } catch(e) {
+    console.error(e);
+    alert('Erreur lors de la déclaration de l\'incident.');
+  }
 }
 
 function updateNotifs() {
@@ -392,10 +400,8 @@ function updateNotifs() {
   const ppe = DB.get(DB.keys.ppe) || [];
   const newPpe = ppe.filter(e => e.createdBy !== userName && (!lastPpe || new Date(e.createdAt).getTime() > Number(lastPpe))).length;
 
-  // Incidents — nouveaux depuis la dernière visite ET non classés
-  const lastInc = localStorage.getItem('ftr_last_visit_incidents_' + session.userId);
-  const incidents = DB.get(DB.keys.incidents) || [];
-  const newIncidents = lastInc === null ? 0 : incidents.filter(e => e.statut !== 'classe' && new Date(e.createdAt).getTime() > Number(lastInc)).length;
+  // Incidents — nouveaux depuis la dernière visite ET non classés (Supabase)
+  const newIncidents = window._accIncidentCount || 0;
 
   const lastInt = localStorage.getItem('ftr_last_visit_interventions_' + session.userId);
   const interventions = DB.get(DB.keys.interventions) || [];
@@ -411,19 +417,14 @@ function updateNotifs() {
   const planningItems = DB.get(DB.keys.planning) || [];
   const eventsToday = planningItems.filter(e => e.date === todayStr).length;
 
-  // Planning équipe — créneaux aujourd'hui pour cet utilisateur
-  const empFullName = [session.prenom, session.nom].filter(Boolean).join(' ');
-  const shiftsEquipe = DB.get(DB.keys.planningEquipe) || [];
-  const myShiftsToday = empFullName ? shiftsEquipe.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
+  // Planning équipe — créneaux aujourd'hui pour cet utilisateur (Supabase, voir _loadAccRhCounts)
+  const myShiftsToday = window._accShiftsToday || 0;
 
-  // Formations — planifiées dans les 7 prochains jours
-  const in7dStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-  const formationsList = DB.get(DB.keys.formations) || [];
-  const upcomingFormations = formationsList.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
+  // Formations — planifiées dans les 7 prochains jours (Supabase, voir _loadAccRhCounts)
+  const upcomingFormations = window._accFormations || 0;
 
-  // Portail — total des actions en attente (messages non lus + congés en attente)
-  const congesAll = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
-  const pendingConges = congesAll.filter(c => c.statut === 'en_attente').length;
+  // Portail — total des actions en attente (messages non lus + congés en attente, Supabase)
+  const pendingConges = window._accPendingConges || 0;
   const portailTotal = unreadMsgs + pendingConges;
 
   const counts = {
@@ -452,6 +453,35 @@ function updateNotifs() {
   });
 }
 
+async function _loadAccIncidentCount() {
+  const session = Auth.getSession();
+  if (!session) return;
+  try {
+    const list = await sbGetIncidents();
+    const lastInc = localStorage.getItem('ftr_last_visit_incidents_' + session.userId);
+    window._accIncidentCount = lastInc === null ? 0
+      : list.filter(e => e.statut !== 'classe' && new Date(e.createdAt).getTime() > Number(lastInc)).length;
+    updateNotifs();
+  } catch(e) { console.error('incident count', e); }
+}
+
+// Compteurs RH désormais dans Supabase : créneaux équipe du jour, formations à venir, congés en attente
+async function _loadAccRhCounts() {
+  const session = Auth.getSession();
+  if (!session) return;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const in7dStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const empFullName = [session.prenom, session.nom].filter(Boolean).join(' ');
+  try {
+    const [shifts, formations, conges] = await Promise.all([
+      sbGetPeShifts(), sbGetFormations(), sbGetConges()
+    ]);
+    window._accShiftsToday   = empFullName ? shifts.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
+    window._accFormations    = formations.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
+    window._accPendingConges = conges.filter(c => c.statut === 'en_attente').length;
+    updateNotifs();
+  } catch (e) { console.error('[_loadAccRhCounts]', e); }
+}
 document.addEventListener('DOMContentLoaded', updateNotifs);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) updateNotifs(); });
 window.addEventListener('focus', updateNotifs);
@@ -572,6 +602,182 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
   } else {
     showEtabSelection();
   }
+})();
+</script>
+
+<!-- ── CARTE ASTREINTES DU SOIR (visible dès 18h) ── -->
+<style>
+#astSoirCard{
+  position:fixed;right:1rem;z-index:300;
+  background:linear-gradient(135deg,#1e3a5f,#0f2b4a);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:.55rem .7rem .55rem 1.7rem;
+  box-shadow:0 6px 20px rgba(15,43,74,.4);
+  width:200px;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+#astSoirRibbon{display:none}
+#astSoirCard.ast-collapsed{
+  width:38px;padding:0;border:none;cursor:pointer;
+  background:linear-gradient(168deg,#1e3a5f 0%,#0f2b4a 100%);
+  border-radius:11px 11px 0 0;
+  box-shadow:none;
+  filter:drop-shadow(-3px 5px 10px rgba(15,43,74,.45));
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 0 calc(100% - 12px));
+}
+#astSoirToggle{
+  position:absolute;left:5px;top:50%;transform:translateY(-50%);
+  width:20px;height:36px;background:none;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;
+  color:rgba(255,255,255,.6);
+}
+#astSoirToggle:hover{color:#fff}
+#astSoirCard.ast-collapsed #astSoirToggle{display:none}
+#astSoirContent{transition:opacity .15s}
+#astSoirCard.ast-collapsed #astSoirContent{display:none}
+#astSoirCard.ast-collapsed #astSoirRibbon{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;
+  height:100%;box-sizing:border-box;padding:.55rem 0 1rem;
+}
+.ast-rib-bell{width:15px;height:15px;flex-shrink:0}
+.ast-rib-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:.62rem;font-weight:700;letter-spacing:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.12)}
+.ast-rib-chevron{width:10px;height:10px;opacity:.8}
+</style>
+
+<div id="astSoirCard" style="display:none">
+  <button id="astSoirToggle" onclick="toggleAstSoir()" title="Réduire">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  <div id="astSoirRibbon" onclick="toggleAstSoir()" title="Voir l'astreinte">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" class="ast-rib-bell"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span class="ast-rib-label">Astreinte</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2.5" class="ast-rib-chevron"><path d="M15 18l-6-6 6-6"/></svg>
+  </div>
+  <div id="astSoirContent">
+    <div id="astSoirHeader" style="display:flex;align-items:center;gap:.3rem;margin-bottom:.4rem">
+      <span style="font-size:.78rem">🔔</span>
+      <span style="font-size:.65rem;font-weight:700;color:#fff;letter-spacing:.04em">Astreinte</span>
+      <svg id="astSoirArrow" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" style="display:none;width:10px;height:10px;margin-left:auto;flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    <div id="astSoirList"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const AST_TYPES_MAP = {
+    medecin:  { label:'Médecin de garde',          icon:'👨‍⚕️', color:'#dc2626' },
+    infirmier:{ label:'Infirmier(e) d\'astreinte', icon:'🩺',   color:'#8b5cf6' },
+    cadre:    { label:'Cadre de permanence',        icon:'👤',   color:'#0891b2' },
+    technique:{ label:'Astreinte technique',        icon:'🔧',   color:'#d97706' },
+    direction:{ label:'Direction',                 icon:'🏛️',  color:'#0f2b4a' }
+  };
+
+  // Retourne true si la carte doit être affichée maintenant
+  function shouldShowCard() {
+    const now  = new Date();
+    const hour = now.getHours();
+    const day  = now.getDay(); // 0=dim, 6=sam
+    if (day === 0 || day === 6) return true;       // week-end : toute la journée
+    return hour >= 18 || hour < 9;                 // semaine  : 18h → 9h
+  }
+
+  // Clé unique par période d'affichage (change à chaque nouvelle période)
+  function getPeriodKey() {
+    const now  = new Date();
+    const day  = now.getDay();
+    const hour = now.getHours();
+    const d    = new Date(now);
+    if (day === 0 || day === 6) {
+      // Week-end : clé sur le samedi de la semaine
+      if (day === 0) d.setDate(d.getDate() - 1);
+      return 'ast_collapsed_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_wknd';
+    }
+    // Nuit de semaine : clé sur le jour de début (si avant 9h → nuit précédente)
+    if (hour < 9) d.setDate(d.getDate() - 1);
+    return 'ast_collapsed_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_night';
+  }
+
+  function positionAstSoirCard() {
+    const aide = document.querySelector('.accueil-fab-stack .accueil-fab');
+    const card = document.getElementById('astSoirCard');
+    if (!aide || !card || card.style.display === 'none') return;
+    const rect = aide.getBoundingClientRect();
+    card.style.top    = '';
+    card.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+  }
+
+  // Hauteur du ruban réduit = exactement celle du panneau déployé (mini pour rester lisible)
+  let _astExpandedH = 0;
+  const AST_MIN_H = 118;
+  function astApplyHeight(collapsed) {
+    const card = document.getElementById('astSoirCard');
+    if (!card) return;
+    card.style.height = collapsed ? Math.max(_astExpandedH || AST_MIN_H, AST_MIN_H) + 'px' : '';
+  }
+
+  window.toggleAstSoir = function() {
+    const card      = document.getElementById('astSoirCard');
+    const btn       = document.getElementById('astSoirToggle');
+    if (!card.classList.contains('ast-collapsed')) { card.style.height = ''; _astExpandedH = card.offsetHeight; }
+    const collapsed = card.classList.toggle('ast-collapsed');
+    astApplyHeight(collapsed);
+    btn.title = collapsed ? 'Agrandir' : 'Réduire';
+    if (collapsed) localStorage.setItem(getPeriodKey(), '1');
+    else           localStorage.removeItem(getPeriodKey());
+  };
+
+  async function loadAstreintesSoir() {
+    if (!shouldShowCard()) return;
+    const card = document.getElementById('astSoirCard');
+    const list = document.getElementById('astSoirList');
+    if (!card || !list) return;
+    try {
+      const d = new Date();
+      const todayStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      const all    = await sbGetAstreintes();
+      const gardes = all.filter(a => a.date === todayStr);
+      list.innerHTML = gardes.length
+        ? gardes.map(a => {
+            const t = AST_TYPES_MAP[a.type] || { label:a.type, icon:'📞', color:'#64748b' };
+            return `<div style="display:flex;align-items:center;gap:.4rem;padding:.3rem .4rem;border-radius:8px;background:rgba(255,255,255,.12);margin-bottom:.18rem;border-left:3px solid rgba(255,255,255,.5)">
+              <span style="font-size:.9rem;line-height:1;flex-shrink:0">${t.icon}</span>
+              <div style="min-width:0;flex:1">
+                <div style="font-size:.62rem;font-weight:600;color:rgba(255,255,255,.65);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.label}</div>
+                <div style="font-size:.75rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.nom||'—')}</div>
+                ${a.tel ? `<div style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.9)">📞 ${escHtml(a.tel)}</div>` : ''}
+              </div>
+            </div>`;
+          }).join('')
+        : '<div style="font-size:.7rem;color:rgba(255,255,255,.45);font-style:italic;text-align:center;padding:.2rem 0">Aucune astreinte saisie</div>';
+
+      card.style.display = 'block';
+      card.style.height = '';
+      _astExpandedH = card.offsetHeight; // hauteur déployée de référence
+
+      // Lien vers astreintes.html uniquement pour les admins
+      const header = document.getElementById('astSoirHeader');
+      if (header && Auth.isAdmin()) {
+        header.style.cursor = 'pointer';
+        header.onclick = () => { location.href = 'astreintes.html'; };
+        const arrow = document.getElementById('astSoirArrow');
+        if (arrow) arrow.style.display = 'block';
+      }
+
+      // Restaurer l'état réduit si l'utilisateur avait réduit cette période
+      if (localStorage.getItem(getPeriodKey())) {
+        card.classList.add('ast-collapsed');
+        document.getElementById('astSoirToggle').title = 'Agrandir';
+        astApplyHeight(true);
+      }
+      positionAstSoirCard();
+    } catch(e) { console.error('Astreintes soir:', e); }
+  }
+
+  window.addEventListener('resize', positionAstSoirCard);
+  document.addEventListener('DOMContentLoaded', loadAstreintesSoir);
+  document.addEventListener('DOMContentLoaded', _loadAccIncidentCount);
+  document.addEventListener('DOMContentLoaded', _loadAccRhCounts);
 })();
 </script>
 </body>

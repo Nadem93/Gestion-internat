@@ -5,55 +5,68 @@ let peMonthCursor = (() => { const d = new Date(); d.setDate(1); d.setHours(0,0,
 let peMetierFilter = ''; // '' = tous les métiers, sinon valeur de e.poste
 let _peLastDays = [];
 
+// Caches Supabase
+let _peShiftsCache = [];
+let _peEmployesCache = [];
+let _peAbsencesCache = [];
+let _peCongesCache = [];
+let _pePointagesCache = [];
+
 // ── Statut de pointage (synchro avec pointage.html) ──
 // Le planning équipe identifie le personnel par l'ID du compte utilisateur, alors que les
 // pointages sont stockés par ID de fiche employé (DB.keys.employes). On résout la correspondance
 // par prénom+nom, comme dans pointage.js (ptResolveUserId), mais en sens inverse.
+// Les fiches employé sont désormais la source unique : l'id du créneau = l'id de la fiche.
 function peResolveEmployeFicheId(emp) {
-  const empStore = DB.get(DB.keys.employes) || [];
-  const fiche = empStore.find(x => String(x.id) === String(emp.id))
-             || empStore.find(x => x.prenom === emp.prenom && x.nom === emp.nom);
-  return fiche ? fiche.id : null;
+  return emp ? emp.id : null;
 }
 
 function pePointageStatus(ficheId, dateStr) {
   if (!ficheId) return null;
-  const entry = (DB.get(DB.keys.pointages) || []).find(p => String(p.employeId) === String(ficheId) && p.date === dateStr);
+  const entry = _pePointagesCache.find(p => String(p.employeId) === String(ficheId) && p.date === dateStr);
   if (!entry || !entry.arrivee || !entry.depart) return null;
   return entry.valide ? 'valide' : 'attente';
 }
 
-// ── Absences & AT (synchro avec absences.html) ──
+// ── Absences & AT (table Supabase absences_at) ──
 function peIsAbsent(ficheId, dateStr) {
   if (!ficheId) return false;
-  return (DB.get(DB.keys.absencesAT) || []).some(a =>
+  return _peAbsencesCache.some(a =>
     String(a.employeId) === String(ficheId) && dateStr >= a.debut && (!a.fin || dateStr <= a.fin)
   );
 }
 
 function getPeEmployes() {
-  const users = DB.get(DB.keys.users) || [];
-  const empStore = DB.get(DB.keys.employes) || [];
-  return users
-    .filter(u => !u.super && u.role !== 'superadmin')
-    .map(u => {
-      const emp = empStore.find(e => String(e.id) === String(u.id) || (e.prenom === u.prenom && e.nom === u.nom)) || {};
-      return {
-        id: String(u.id),
-        prenom: u.prenom || '',
-        nom: u.nom || '',
-        poste: emp.poste || u.fonction || '',
-        statut: emp.statut || (u.role === 'admin' ? 'admin' : 'actif')
-      };
-    })
-    .filter(e => e.statut !== 'inactif');
+  return _peEmployesCache
+    .filter(e => e.statut !== 'inactif')
+    .map(e => ({
+      id: String(e.id),
+      prenom: e.prenom || '',
+      nom: e.nom || '',
+      poste: e.poste || '',
+      statut: e.statut || 'actif',
+      heuresContrat: e.heuresContrat ?? 35,
+      profileId: e.profileId || null
+    }));
 }
 
-function initPlanningEquipe() {
+async function initPlanningEquipe() {
   const _s = Auth.requireAuth();
   if (!_s) return;
   if (!requireModule('access_planning_equipe')) return;
   peWeekStart = peGetMonday(new Date());
+  try {
+    [_peShiftsCache, _peEmployesCache, _peAbsencesCache, _peCongesCache, _pePointagesCache] = await Promise.all([
+      sbGetPeShifts(),
+      sbGetEmployes(),
+      sbGetAbsences().catch(() => []),
+      sbGetConges().catch(() => []),
+      sbGetPointages().catch(() => [])
+    ]);
+  } catch (e) {
+    console.error('[initPlanningEquipe]', e);
+    toast('Erreur de chargement', 'error');
+  }
   renderPlanningEquipe();
 }
 
@@ -110,9 +123,13 @@ function peShiftType(debut, fin) {
   const [h1,m1] = debut.split(':').map(Number);
   const [h2,m2] = fin.split(':').map(Number);
   const startMin = h1*60+m1, endMin = h2*60+m2;
-  if (endMin <= startMin || h1 >= 19) return 'nuit';
-  if (peDuration(debut,fin) >= 420 && h1 < 14) return 'journee';
-  if (h1 < 13) return 'matin';
+  // Nuit : commence à 21h30+ ou passe minuit (≈ 21h30-22h → 7h30)
+  if (endMin <= startMin || startMin >= 21*60+30) return 'nuit';
+  // Journée : 10h ou plus
+  if (peDuration(debut, fin) >= 600) return 'journee';
+  // Matin : commence avant 13h30 (≈ 7h-14h)
+  if (startMin < 13*60+30) return 'matin';
+  // Après-midi : ≈ 13h30/14h-22h
   return 'apresmidi';
 }
 
@@ -195,7 +212,7 @@ function peExportCsv() {
 }
 
 // ── COPIER LA SEMAINE PRÉCÉDENTE ──
-function peCopyPreviousWeek() {
+async function peCopyPreviousWeek() {
   if (!peCanEditPlanning()) return;
   const prevDays = [], curDays = [];
   for (let i = 0; i < 7; i++) {
@@ -210,25 +227,26 @@ function peCopyPreviousWeek() {
   const curShifts = shifts.filter(s => curDays.includes(s.date));
   if (curShifts.length && !confirm(`La semaine actuelle contient déjà ${curShifts.length} créneau(x). Ajouter les ${prevShifts.length} créneau(x) de la semaine précédente quand même ?`)) return;
   const copies = prevShifts.map(s => ({
-    id: 'pe-' + genId(),
     employeId: s.employeId,
     employeNom: s.employeNom,
     date: curDays[prevDays.indexOf(s.date)],
     debut: s.debut, fin: s.fin
   }));
-  setPeShifts(shifts.concat(copies));
-  auditLog('modification', `Planning équipe — copie de ${copies.length} créneau(x) depuis la semaine précédente`);
-  toast(`${copies.length} créneau(x) copié(s) ✓`, 'success');
-  renderPlanningEquipe();
+  try {
+    const saved = await sbBulkInsertPeShifts(copies);
+    _peShiftsCache = _peShiftsCache.concat(saved);
+    if (typeof auditLog === 'function') auditLog('modification', `Planning équipe — copie de ${saved.length} créneau(x) depuis la semaine précédente`);
+    toast(`${saved.length} créneau(x) copié(s) ✓`, 'success');
+    renderPlanningEquipe();
+  } catch (e) {
+    toast('Erreur : ' + (e?.message || e), 'error');
+    console.error('[peCopyPreviousWeek]', e);
+  }
 }
 
 // ── DONNÉES ──
 function getPeShifts() {
-  return DB.get(DB.keys.planningEquipe) || [];
-}
-
-function setPeShifts(shifts) {
-  DB.set(DB.keys.planningEquipe, shifts);
+  return _peShiftsCache;
 }
 
 function peCanEditPlanning() {
@@ -271,7 +289,7 @@ function handlePeImport(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     const text = ev.target.result;
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) { toast('Fichier vide ou invalide', 'error'); return; }
@@ -294,19 +312,23 @@ function handlePeImport(e) {
       if (!nom || !date || !debut || !fin) continue;
       const emp = employes.find(e => (e.prenom+' '+e.nom).toLowerCase() === nom.toLowerCase() || e.nom.toLowerCase() === nom.toLowerCase());
       imported.push({
-        id: 'pe-' + genId(),
         employeId: emp ? emp.id : null,
         employeNom: emp ? emp.prenom+' '+emp.nom : nom,
         date, debut, fin
       });
     }
     if (!imported.length) { toast('Aucune ligne valide trouvée', 'error'); return; }
-    const shifts = getPeShifts().concat(imported);
-    setPeShifts(shifts);
-    if (typeof auditLog === 'function') auditLog('import', 'Planning équipe — ' + imported.length + ' lignes depuis ' + file.name);
-    closeModal('modalImportPe');
-    toast('Planning importé : ' + imported.length + ' lignes ✓', 'success');
-    renderPlanningEquipe();
+    try {
+      const saved = await sbBulkInsertPeShifts(imported);
+      _peShiftsCache = _peShiftsCache.concat(saved);
+      if (typeof auditLog === 'function') auditLog('import', 'Planning équipe — ' + saved.length + ' lignes depuis ' + file.name);
+      closeModal('modalImportPe');
+      toast('Planning importé : ' + saved.length + ' lignes ✓', 'success');
+      renderPlanningEquipe();
+    } catch (e) {
+      toast('Erreur import : ' + (e?.message || e), 'error');
+      console.error('[peImport]', e);
+    }
   };
   reader.readAsText(file);
 }
@@ -339,33 +361,46 @@ function openPeShiftModal(employeId, date, shiftId) {
   openModal('modalPeShift');
 }
 
-function savePeShift() {
+async function savePeShift() {
   const debut = document.getElementById('psDebut').value;
   const fin = document.getElementById('psFin').value;
   if (!debut || !fin) { toast('Veuillez renseigner les heures de début et de fin', 'error'); return; }
-  const shifts = getPeShifts();
-  if (_peCtx.shiftId) {
-    const s = shifts.find(x => x.id === _peCtx.shiftId);
-    if (s) { s.debut = debut; s.fin = fin; }
-  } else {
-    shifts.push({ id: 'pe-'+genId(), employeId: _peCtx.employeId, employeNom: _peCtx.employeNom, date: _peCtx.date, debut, fin });
+  try {
+    if (_peCtx.shiftId) {
+      const saved = await sbSavePeShift({ id: _peCtx.shiftId, employeId: _peCtx.employeId, employeNom: _peCtx.employeNom, date: _peCtx.date, debut, fin });
+      const idx = _peShiftsCache.findIndex(x => x.id === _peCtx.shiftId);
+      if (idx >= 0) _peShiftsCache[idx] = saved;
+    } else {
+      const saved = await sbSavePeShift({ employeId: _peCtx.employeId, employeNom: _peCtx.employeNom, date: _peCtx.date, debut, fin });
+      _peShiftsCache.push(saved);
+    }
+    if (typeof auditLog === 'function') auditLog('modification', `Planning équipe — créneau ${_peCtx.employeNom} le ${_peCtx.date} (${debut}-${fin})`);
+    closeModal('modalPeShift');
+    toast('Créneau enregistré ✓');
+    renderPlanningEquipe();
+  } catch (e) {
+    const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[savePeShift]', e);
   }
-  setPeShifts(shifts);
-  auditLog('modification', `Planning équipe — créneau ${_peCtx.employeNom} le ${_peCtx.date} (${debut}-${fin})`);
-  closeModal('modalPeShift');
-  toast('Créneau enregistré ✓');
-  renderPlanningEquipe();
 }
 
 function deletePeShift() {
   if (!_peCtx || !_peCtx.shiftId) return;
-  if (!confirm('Supprimer ce créneau ?')) return;
-  const shifts = getPeShifts().filter(s => s.id !== _peCtx.shiftId);
-  setPeShifts(shifts);
-  auditLog('suppression', `Planning équipe — créneau ${_peCtx.employeNom} le ${_peCtx.date} supprimé`);
-  closeModal('modalPeShift');
-  toast('Créneau supprimé', 'success');
-  renderPlanningEquipe();
+  const ctx = _peCtx;
+  confirmDialog('Supprimer ce créneau ?', async () => {
+    try {
+      await sbDeletePeShift(ctx.shiftId);
+      _peShiftsCache = _peShiftsCache.filter(s => s.id !== ctx.shiftId);
+      if (typeof auditLog === 'function') auditLog('suppression', `Planning équipe — créneau ${ctx.employeNom} le ${ctx.date} supprimé`);
+      closeModal('modalPeShift');
+      toast('Créneau supprimé', 'success');
+      renderPlanningEquipe();
+    } catch (e) {
+      toast('Erreur : ' + (e?.message || e), 'error');
+      console.error('[deletePeShift]', e);
+    }
+  });
 }
 
 // ── RENDU GRILLE ──
@@ -443,8 +478,8 @@ function renderPlanningGrid(days, isWeek) {
   });
 
   // ── CONGÉS VALIDÉS ──
-  const congesAcceptes = (JSON.parse(localStorage.getItem('ftr_conges') || '[]')).filter(c => c.statut === 'accepte');
-  const peIsOnConge = (employeId, dateStr) => congesAcceptes.some(c => c.employeId === employeId && dateStr >= c.debut && dateStr <= c.fin);
+  const congesAcceptes = _peCongesCache.filter(c => c.statut === 'accepte');
+  const peIsOnConge = (employeId, dateStr) => congesAcceptes.some(c => String(c.employeId) === String(employeId) && dateStr >= c.debut && dateStr <= c.fin);
 
   const el = document.getElementById('peGrid');
   const body = el.querySelector('.card-body');
@@ -516,23 +551,34 @@ function renderPlanningGrid(days, isWeek) {
       const onConge = peIsOnConge(emp.id, dateStr);
       const onAbsence = peIsAbsent(ficheId, dateStr);
       const pStatut = pePointageStatus(ficheId, dateStr);
+      const ptEntry = _pePointagesCache.find(p => String(p.employeId) === String(ficheId) && p.date === dateStr);
+      const pointed = !!(ptEntry && ptEntry.arrivee && ptEntry.depart);
       const blocks = dayShifts.map((s,idx) => {
-        let tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
-        if (pStatut === 'attente') tc = '#d97706';
-        else if (pStatut === 'valide') tc = '#16a34a';
-        if (onAbsence) tc = '#dc2626';
+        // Couleur du créneau = type (matin / après-midi / journée / nuit)
+        const tc = PE_TYPES[peShiftType(s.debut,s.fin)].color;
+        // Écart = horaires pointés différents du créneau planifié (retard, départ anticipé…)
+        const ecart = pointed && (ptEntry.arrivee !== s.debut || ptEntry.depart !== s.fin);
+        // Statut de pointage = accent (bordure gauche) : rouge=absence · violet=écart · vert=validé · orange=à valider
+        let sc = null;
+        if (onAbsence) sc = '#dc2626';
+        else if (ecart) sc = '#9333ea';
+        else if (pStatut === 'valide') sc = '#16a34a';
+        else if (pStatut === 'attente') sc = '#d97706';
         const conflict = dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2)) || onConge || onAbsence;
-        const border = conflict ? '2px solid var(--red)' : `1px solid ${tc}55`;
+        const baseBorder = conflict ? '2px solid var(--red)' : `1px solid ${tc}55`;
+        const leftAccent = (!conflict && sc) ? `border-left:5px solid ${sc};` : '';
         const titleParts = [];
         if (dayShifts.some((s2,idx2) => idx !== idx2 && peOverlaps(s,s2))) titleParts.push('⚠ Chevauchement avec un autre créneau ce jour');
         if (onConge) titleParts.push('🏖 Cet employé est en congé ce jour');
         if (onAbsence) titleParts.push('🤒 Cet employé est absent (arrêt/AT) ce jour');
+        if (ecart) titleParts.push(`⏱ Horaires différents du planning (pointé ${ptEntry.arrivee}–${ptEntry.depart})`);
         if (pStatut === 'attente') titleParts.push('⏳ Pointage en attente de validation');
         if (pStatut === 'valide') titleParts.push('✓ Pointage validé');
         const title = titleParts.length ? ` title="${titleParts.join(' / ')}"` : '';
-        const statutBadge = onAbsence ? ' 🤒' : pStatut === 'attente' ? ' ⏳' : pStatut === 'valide' ? ' ✓' : '';
-        return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')"${title} style="cursor:pointer;background:${tc}20;border:${border};border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
+        const statutBadge = onAbsence ? ' 🤒' : ecart ? ' ⏱' : pStatut === 'valide' ? ' ✓' : pStatut === 'attente' ? ' ⏳' : '';
+        return `<div onclick="event.stopPropagation();openPeShiftModal('${emp.id}','${dateStr}','${s.id}')"${title} style="cursor:pointer;background:${tc}20;border:${baseBorder};${leftAccent}border-radius:6px;padding:.3rem .4rem;margin-bottom:2px">
           <div style="font-size:.7rem;font-weight:700;color:${tc}">${s.debut} - ${s.fin}${conflict ? ' ⚠️' : ''}${statutBadge}</div>
+          ${ecart ? `<div style="font-size:.6rem;font-weight:600;color:#9333ea">pointé : ${ptEntry.arrivee}–${ptEntry.depart}</div>` : ''}
           <div style="font-size:.62rem;font-weight:500;color:${tc};opacity:.85">${peFormatDuration(peDuration(s.debut,s.fin))}</div>
         </div>`;
       }).join('');

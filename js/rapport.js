@@ -25,23 +25,25 @@ const RC_CATEGORIES = {
   perspective: { icon: '🎯', label: 'Perspective / projet à venir', color: '#7c3aed' }
 };
 
-function getRapportContributions() { return DB.get(DB.keys.rapportContributions) || []; }
-function setRapportContributions(list) { DB.set(DB.keys.rapportContributions, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _rcCache = [];
+function getRapportContributions() { return _rcCache; }
+async function loadRapportCache() { _rcCache = await sbGetRapportContributions(); }
 
-function ajouterContributionRapport() {
+async function ajouterContributionRapport() {
   const categorie = document.getElementById('rcCategorie').value;
   const mois = document.getElementById('rcMois').value || new Date().toISOString().slice(0, 7);
   const texte = document.getElementById('rcTexte').value.trim();
   if (!texte) { toast('Décrivez votre contribution', 'error'); return; }
   const session = Auth.getSession();
-  const list = getRapportContributions();
-  list.push({
-    id: genId(), categorie, mois, texte,
-    auteur: session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : 'Anonyme',
-    authorId: session?.userId,
-    createdAt: new Date().toISOString()
-  });
-  setRapportContributions(list);
+  try {
+    const saved = await sbSaveRapportContribution({
+      categorie, mois, texte,
+      auteur: session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : 'Anonyme',
+      authorId: session?.userId
+    });
+    _rcCache.unshift(saved);
+  } catch (e) { console.error('[ajouterContributionRapport]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   document.getElementById('rcTexte').value = '';
   toast('Contribution ajoutée ✓', 'success');
   renderContributionsRapport();
@@ -49,13 +51,15 @@ function ajouterContributionRapport() {
 
 function supprimerContributionRapport(id) {
   const session = Auth.getSession();
-  const list = getRapportContributions();
-  const item = list.find(c => c.id === id);
+  const item = _rcCache.find(c => c.id === id);
   if (!item) return;
   const isAdmin = typeof Auth.isAdmin === 'function' && Auth.isAdmin();
   if (!isAdmin && String(item.authorId) !== String(session?.userId)) { toast('Vous ne pouvez supprimer que vos propres contributions', 'error'); return; }
-  setRapportContributions(list.filter(c => c.id !== id));
-  renderContributionsRapport();
+  (async () => {
+    try { await sbDeleteRapportContribution(id); _rcCache = _rcCache.filter(c => c.id !== id); }
+    catch (e) { console.error('[supprimerContributionRapport]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderContributionsRapport();
+  })();
 }
 
 function renderContributionsRapport() {
@@ -195,7 +199,7 @@ function genererRapportPDF() {
 
   const settings = DB.get(DB.keys.settings) || {};
   const session = Auth.getSession();
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const activeRes = residents.filter(r => r.statut !== 'sorti');
   const journal = DB.get(DB.keys.journal) || [];
   const incidents = DB.get(DB.keys.incidents) || [];
@@ -603,10 +607,11 @@ ${contribHtml}
   if (typeof auditLog === 'function') auditLog('export', `Rapport d'activité — ${label}`);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await sbLoadResidentsCache();
   if (document.getElementById('rapportType')) {
     initRapportDefaults();
     toggleRapportPeriode();
   }
-  if (document.getElementById('rcList')) renderContributionsRapport();
+  if (document.getElementById('rcList')) { await loadRapportCache(); renderContributionsRapport(); }
 });

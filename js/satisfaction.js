@@ -18,11 +18,13 @@ const SAT_QUESTIONS = [
 const SAT_LABELS = ['Très insatisfait', 'Insatisfait', 'Neutre', 'Satisfait', 'Très satisfait'];
 const SAT_COLORS = ['#dc2626','#ea580c','#d97706','#16a34a','#0d9488'];
 
-function getSat()      { return DB.get(SAT_KEY) || []; }
-function saveSat(list) { DB.set(SAT_KEY, list); }
-
-function getCustomQuestions()      { return DB.get(DB.keys.satQuestions) || []; }
-function saveCustomQuestions(list) { DB.set(DB.keys.satQuestions, list); }
+// Source = Supabase. Caches mémoire chargés au démarrage.
+let _satCache = [];
+let _satqCache = [];
+function getSat()      { return _satCache; }
+async function loadSatCache() { _satCache = await sbGetSatisfaction(); }
+function getCustomQuestions()      { return _satqCache; }
+async function loadSatQuestionsCache() { _satqCache = await sbGetSatQuestions(); }
 
 function getAllQuestions() {
   return [...SAT_QUESTIONS, ...getCustomQuestions()];
@@ -31,8 +33,10 @@ function getAllQuestions() {
 let _satEditId  = '';
 let _satViewMode = 'resultats'; // 'resultats' | 'formulaires' | 'questions'
 
-function initSatisfaction() {
+async function initSatisfaction() {
   Auth.requireAuth();
+  await sbLoadResidentsCache();
+  await Promise.all([loadSatCache(), loadSatQuestionsCache()]);
   document.getElementById('satTabResultats')?.addEventListener('click',   () => { _satViewMode = 'resultats';   renderSat(); _setTab('resultats'); });
   document.getElementById('satTabFormulaires')?.addEventListener('click', () => { _satViewMode = 'formulaires'; renderSat(); _setTab('formulaires'); });
   document.getElementById('satTabQuestions')?.addEventListener('click',   () => { _satViewMode = 'questions';   renderSat(); _setTab('questions'); });
@@ -164,7 +168,7 @@ function renderSatFormulaires() {
         <div style="font-size:.74rem;color:var(--muted)">${dateStr}${(() => {
           let sub = '';
           if (s.residentId) {
-            const r = (DB.get(DB.keys.residents)||[]).find(x => x.id === s.residentId);
+            const r = sbResidents().find(x => x.id === s.residentId);
             if (r) sub += ' · ' + escHtml(((r.nom||'')+' '+(r.prenom||'')).trim());
           } else if (s.lienResident) {
             sub += ' · ' + escHtml(s.lienResident);
@@ -254,18 +258,24 @@ function addCustomQuestion() {
   const catCustom = document.getElementById('satNewQCatCustom')?.value.trim();
   const cat = catSelect === '__new' ? (catCustom || 'Autre') : catSelect;
 
-  const custom = getCustomQuestions();
-  custom.push({ id: 'custom_' + genId(), label, cat, createdAt: new Date().toISOString() });
-  saveCustomQuestions(custom);
-  toast('Question ajoutée ✓', 'success');
-  renderSatQuestions();
+  (async () => {
+    try {
+      const saved = await sbSaveSatQuestion({ label, cat });
+      _satqCache.push(saved);
+    } catch (e) { console.error('[addCustomQuestion]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    toast('Question ajoutée ✓', 'success');
+    renderSatQuestions();
+  })();
 }
 
 function deleteCustomQuestion(id) {
   if (!confirm('Supprimer cette question ? Les réponses existantes ne seront plus affichées.')) return;
-  saveCustomQuestions(getCustomQuestions().filter(q => q.id !== id));
-  toast('Question supprimée', 'info');
-  renderSatQuestions();
+  (async () => {
+    try { await sbDeleteSatQuestion(id); _satqCache = _satqCache.filter(q => q.id !== id); }
+    catch (e) { console.error('[deleteCustomQuestion]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Question supprimée', 'info');
+    renderSatQuestions();
+  })();
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
@@ -284,7 +294,7 @@ function openSatModal(id) {
   // Peupler le sélecteur de résident
   const resSelect = document.getElementById('satModalResidentId');
   if (resSelect) {
-    const residents = (DB.get(DB.keys.residents) || [])
+    const residents = sbResidents()
       .filter(r => !r.dateSortie || r.dateSortie >= new Date().toISOString().slice(0,10))
       .sort((a,b) => (a.nom||'').localeCompare(b.nom||'', 'fr'));
     resSelect.innerHTML = '<option value="">— Non spécifié —</option>'
@@ -319,7 +329,7 @@ function openSatModal(id) {
   openModal('modalSat');
 }
 
-function saveSatisfaction() {
+async function saveSatisfaction() {
   const repondant = document.getElementById('satModalRepondant').value.trim();
   const date = document.getElementById('satModalDate').value;
   if (!date) { toast('La date est obligatoire', 'error'); return; }
@@ -330,8 +340,6 @@ function saveSatisfaction() {
     if (checked) reponses[q.id] = Number(checked.value);
   });
 
-  const list = getSat();
-  const now = new Date().toISOString();
   const residentId = document.getElementById('satModalResidentId')?.value || '';
   const data = {
     repondant: repondant || 'Anonyme',
@@ -343,17 +351,20 @@ function saveSatisfaction() {
   };
 
   let eigWarn = false;
-  if (_satEditId) {
-    const idx = list.findIndex(x => x.id === _satEditId);
-    if (idx >= 0) Object.assign(list[idx], data, { updatedAt: now });
-    toast('Questionnaire modifié');
-  } else {
-    list.unshift({ id: genId(), ...data, createdAt: now });
-    toast('Questionnaire enregistré', 'success');
-    const vals = Object.values(reponses).filter(v => v != null);
-    if (vals.length && vals.reduce((a,b)=>a+b,0)/vals.length < 1.5) eigWarn = true;
-  }
-  saveSat(list);
+  try {
+    if (_satEditId) {
+      const old = _satCache.find(x => x.id === _satEditId) || {};
+      const saved = await sbSaveSatisfaction({ ...old, ...data, id: _satEditId });
+      _satCache = _satCache.map(x => x.id === _satEditId ? saved : x);
+      toast('Questionnaire modifié');
+    } else {
+      const saved = await sbSaveSatisfaction(data);
+      _satCache.unshift(saved);
+      toast('Questionnaire enregistré', 'success');
+      const vals = Object.values(reponses).filter(v => v != null);
+      if (vals.length && vals.reduce((a,b)=>a+b,0)/vals.length < 1.5) eigWarn = true;
+    }
+  } catch (e) { console.error('[saveSatisfaction]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalSat');
   renderSat();
   if (eigWarn) {
@@ -368,9 +379,12 @@ function saveSatisfaction() {
 
 function deleteSat(id) {
   if (!confirm('Supprimer ce questionnaire ?')) return;
-  saveSat(getSat().filter(x => x.id !== id));
-  renderSat();
-  toast('Supprimé');
+  (async () => {
+    try { await sbDeleteSatisfaction(id); _satCache = _satCache.filter(x => x.id !== id); }
+    catch (e) { console.error('[deleteSat]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderSat();
+    toast('Supprimé');
+  })();
 }
 
 document.addEventListener('DOMContentLoaded', initSatisfaction);

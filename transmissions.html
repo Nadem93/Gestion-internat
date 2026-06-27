@@ -180,16 +180,9 @@
       <div class="modal-body" style="gap:.85rem">
         <!-- Étape 1 -->
         <div id="trFormStep1">
-          <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669;margin-bottom:.6rem">Étape 1 — Vacation &amp; Catégorie</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-            <div class="form-group">
-              <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Vacation *</label>
-              <select id="trShift">
-                <option value="matin">🌅 Matin</option>
-                <option value="aprem">☀️ Après-midi</option>
-                <option value="nuit">🌙 Nuit</option>
-              </select>
-            </div>
+          <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669;margin-bottom:.6rem">Étape 1 — Catégorie</div>
+          <input type="hidden" id="trShift" value="matin"/>
+          <div style="display:grid;grid-template-columns:1fr;gap:.75rem">
             <div class="form-group">
               <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Catégorie *</label>
               <select id="trCat">
@@ -248,6 +241,12 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
 <script src="js/transmissions.js"></script>
 </body>
 </html>

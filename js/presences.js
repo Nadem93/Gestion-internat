@@ -1,42 +1,54 @@
+let _presResidentsCache = [];
+let _presCache = {};
+
 function getDateStr() { return document.getElementById('presenceDate').value || today(); }
 
+async function loadPresenceData() {
+  _presResidentsCache = await sbGetResidents();
+  _presCache = await sbGetPresencesForDate(getDateStr());
+}
+
 function getPresencesForDate(date) {
-  const all = DB.get(DB.keys.presences) || {};
-  return all[date] || {};
+  return _presCache;
 }
 
-function setPresence(residentId, status) {
+async function setPresence(residentId, status) {
   const date = getDateStr();
-  const all = DB.get(DB.keys.presences) || {};
-  if (!all[date]) all[date] = {};
-  all[date][residentId] = status;
-  DB.set(DB.keys.presences, all);
-  renderStats();
-  renderPresenceTable();
+  try {
+    await sbSetPresence(residentId, date, status);
+    _presCache[residentId] = status;
+    renderStats();
+    renderPresenceTable();
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+  }
 }
 
-function markAllPresent() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+async function markAllPresent() {
+  const residents = _presResidentsCache.filter(r => r.statut !== 'sorti');
   const date = getDateStr();
-  const all = DB.get(DB.keys.presences) || {};
-  if (!all[date]) all[date] = {};
-  residents.forEach(r => { all[date][r.id] = 'present'; });
-  DB.set(DB.keys.presences, all);
-  renderStats();
-  renderPresenceTable();
-  toast('Tous les résidents marqués présents');
+  try {
+    await sbSetPresencesBulk(residents.map(r => r.id), date, 'present');
+    residents.forEach(r => { _presCache[r.id] = 'present'; });
+    renderStats();
+    renderPresenceTable();
+    toast('Tous les résidents marqués présents');
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+  }
 }
 
-function cycleStatus(residentId) {
-  const date = getDateStr();
-  const presences = getPresencesForDate(date);
+async function cycleStatus(residentId) {
+  const presences = getPresencesForDate(getDateStr());
   const current = presences[residentId] || 'unknown';
   const next = { unknown:'present', present:'absent', absent:'sortie', sortie:'unknown' };
-  setPresence(residentId, next[current] || 'present');
+  await setPresence(residentId, next[current] || 'present');
 }
 
 function renderStats() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _presResidentsCache.filter(r => r.statut !== 'sorti');
   const presences = getPresencesForDate(getDateStr());
   let present=0, absent=0, sortie=0, unknown=0;
   const dateStr = getDateStr();
@@ -64,7 +76,7 @@ function getPlanningAbsenceJour(r, date) {
 }
 
 function renderPresenceTable() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _presResidentsCache.filter(r => r.statut !== 'sorti');
   const presences = getPresencesForDate(getDateStr());
   const el = document.getElementById('presenceTable');
 
@@ -95,9 +107,10 @@ function renderPresenceTable() {
       ? `<div style="font-size:.65rem;color:#0369a1;background:#e0f2fe;border-radius:5px;padding:1px 5px;margin-top:2px;display:inline-block">📅 ${escHtml(planningJour.label||'Absence planifiée')}${planningJour.debut ? ' · '+planningJour.debut : ''}</div>`
       : '';
 
+    const isFuture = dateStr > today();
     const btns = BTNS.map(b => {
       const isActive = s === b.key;
-      return `<button onclick="setPresence('${r.id}','${b.key}')" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:.55rem .25rem;border-radius:10px;border:1.5px solid;cursor:pointer;transition:all .15s;font-family:inherit;${isActive ? b.active : b.inactive}">
+      return `<button ${isFuture ? 'disabled' : `onclick="setPresence('${r.id}','${b.key}')"`} style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:.55rem .25rem;border-radius:10px;border:1.5px solid;cursor:${isFuture?'not-allowed':'pointer'};transition:all .15s;font-family:inherit;opacity:${isFuture?'.5':'1'};${isActive ? b.active : b.inactive}">
         <span style="font-size:.9rem;font-weight:800;line-height:1">${b.letter}</span>
         <span style="font-size:.6rem;font-weight:500;line-height:1;opacity:${isActive?'1':'.7'}">${b.label}</span>
       </button>`;
@@ -132,14 +145,14 @@ function openExportModal() {
   openModal('modalExportAbs');
 }
 
-function exportPresencesPDF() {
+async function exportPresencesPDF() {
   try {
     const start = document.getElementById('exportStart').value;
     const end   = document.getElementById('exportEnd').value;
     if (!start || !end) { toast('Sélectionnez une période', 'error'); return; }
 
-    const allPresences = DB.get(DB.keys.presences) || {};
-    const residents    = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+    const allPresences = await sbGetPresencesRange(start, end);
+    const residents    = (await sbGetResidents()).filter(r => r.statut !== 'sorti');
     const settings     = DB.get(DB.keys.settings)  || {};
     const brand        = DB.get(DB.keys.branding)  || {};
     const pc = brand.primaryColor || '#0f2b4a';
@@ -255,26 +268,37 @@ function exportPresencesPDF() {
   } catch(e) { toast('Erreur : '+e.message, 'error'); console.error(e); }
 }
 
-function initPresences() {
-  if (!requireModule('access_presences')) return;
-  document.getElementById('presenceDate').value = today();
+async function refreshPresenceDay() {
+  await loadPresenceData();
   updateDateLabel();
   renderStats();
   renderPresenceTable();
-  document.getElementById('presenceDate').addEventListener('change', () => { updateDateLabel(); renderStats(); renderPresenceTable(); });
+}
+
+async function initPresences() {
+  if (!requireModule('access_presences')) return;
+  const dateInput = document.getElementById('presenceDate');
+  dateInput.max = today();
+  dateInput.value = today();
+  dateInput.addEventListener('change', () => {
+    if (dateInput.value > today()) dateInput.value = today();
+    refreshPresenceDay();
+  });
+  await refreshPresenceDay();
   document.getElementById('prevDay').addEventListener('click', () => {
     const d = new Date(getDateStr()); d.setDate(d.getDate()-1);
-    document.getElementById('presenceDate').value = d.toISOString().slice(0,10);
-    updateDateLabel(); renderStats(); renderPresenceTable();
+    dateInput.value = d.toISOString().slice(0,10);
+    refreshPresenceDay();
   });
   document.getElementById('nextDay').addEventListener('click', () => {
+    if (getDateStr() >= today()) return;
     const d = new Date(getDateStr()); d.setDate(d.getDate()+1);
-    document.getElementById('presenceDate').value = d.toISOString().slice(0,10);
-    updateDateLabel(); renderStats(); renderPresenceTable();
+    dateInput.value = d.toISOString().slice(0,10);
+    refreshPresenceDay();
   });
   document.getElementById('todayBtn').addEventListener('click', () => {
     document.getElementById('presenceDate').value = today();
-    updateDateLabel(); renderStats(); renderPresenceTable();
+    refreshPresenceDay();
   });
 }
 document.addEventListener('DOMContentLoaded', initPresences);

@@ -41,8 +41,26 @@ const REGIME_TYPES = {
 };
 const TEXTURES = { normale: 'Normale', hachee: 'Hachée', mixee: 'Mixée' };
 
-function getRepas() { return DB.get(DB.keys.repas) || {}; }
-function saveRepas(data) { DB.set(DB.keys.repas, data); }
+// Source = Supabase. Cache mémoire (objet indexé par date) chargé au démarrage.
+let _repasCache = {};
+function getRepas() { return _repasCache; }
+async function loadRepasCache() { _repasCache = await sbGetRepasAll(); }
+// Persiste un jour précis dans Supabase (remonte une erreur via toast)
+function persistRepasJour(date) {
+  if (!date) return;
+  sbSaveRepasJour(date, _repasCache[date] || {}).catch(e => { console.error('[repas]', e); toast('Erreur sauvegarde repas', 'error'); });
+}
+
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+async function persistResident(r) {
+  const saved = await sbSaveResident(r);
+  const i = _residentsCache.findIndex(x => String(x.id) === String(saved.id));
+  if (i >= 0) _residentsCache[i] = saved; else _residentsCache.push(saved);
+  return saved;
+}
 
 function getMenuChoice(date, rid, meal) {
   return ((getRepas()[date] || {})['choixMenu'] || {})[rid]?.[meal] || null;
@@ -57,7 +75,7 @@ function setMenuChoice(date, rid, meal, choice) {
   } else {
     all[date]['choixMenu'][rid][meal] = choice;
   }
-  saveRepas(all);
+  persistRepasJour(date);
   renderRepas();
 }
 
@@ -71,12 +89,12 @@ function setMenuTexte(date, meal, choice, texte) {
   if (!all[date]['menus']) all[date]['menus'] = {};
   if (!all[date]['menus'][meal]) all[date]['menus'][meal] = {};
   all[date]['menus'][meal][choice] = texte;
-  saveRepas(all);
+  persistRepasJour(date);
   renderRepas();
 }
 
 function repasResidents() {
-  return (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+  return residentsList().filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''} ${a.prenom || ''}`.localeCompare(`${b.nom || ''} ${b.prenom || ''}`, 'fr'));
 }
 
@@ -186,11 +204,11 @@ function renderRepas() {
   const regimesPart = residents.filter(r => { const rg = rgOf(r); return (rg.type && rg.type !== 'normal') || (rg.texture && rg.texture !== 'normale'); }).length;
   const allergies = residents.filter(r => ((rgOf(r).allergiesAlim || r.allergies || '').trim())).length;
   document.getElementById('rpStats').innerHTML = `
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Matin</span><div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg></div></div><div class="stat-num">${matin}</div><div class="stat-change">couverts</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Midi</span><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></div></div><div class="stat-num">${midi}</div><div class="stat-change">couverts</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Soir</span><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div><div class="stat-num">${soir}</div><div class="stat-change">couverts</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Régimes particuliers</span><div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div></div><div class="stat-num">${regimesPart}</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Allergies alim.</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div></div><div class="stat-num">${allergies}</div></div>`;
+    <div class="chx-stat" style="--c:#06b6d4"><div class="chx-stat-top"><span class="chx-stat-lbl">Matin</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg></span></div><div class="chx-stat-num">${matin}</div><div class="chx-stat-sub">couverts</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Midi</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span></div><div class="chx-stat-num">${midi}</div><div class="chx-stat-sub">couverts</div></div>
+    <div class="chx-stat" style="--c:#8b5cf6"><div class="chx-stat-top"><span class="chx-stat-lbl">Soir</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></div><div class="chx-stat-num">${soir}</div><div class="chx-stat-sub">couverts</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Régimes particuliers</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></span></div><div class="chx-stat-num">${regimesPart}</div></div>
+    <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Allergies alim.</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></div><div class="chx-stat-num">${allergies}</div></div>`;
 
   // Menus du jour proposés par le foyer (texte libre, 2 choix par repas)
   const menusEl = document.getElementById('rpMenusDuJour');
@@ -303,7 +321,7 @@ function toggleRepas(rid, meal, checked, dateOverride) {
   if (!all[d]) all[d] = {};
   if (!all[d][meal]) all[d][meal] = {};
   all[d][meal][rid] = checked ? 1 : 0;
-  saveRepas(all);
+  persistRepasJour(d);
   renderRepas();
 }
 
@@ -320,7 +338,7 @@ function rpCopyWeek(fromStart, toStart) {
   fromDays.forEach((fd, i) => {
     if (all[fd]) all[toDays[i]] = JSON.parse(JSON.stringify(all[fd]));
   });
-  saveRepas(all);
+  toDays.forEach(persistRepasJour);
   repasDate = toStart;
   toast('Semaine copiée ✓', 'success');
   renderRepas();
@@ -500,7 +518,7 @@ function renderSemaineView(residents, canEdit) {
 
 // ── Régime (stocké sur la fiche résident) ──
 function openRegimeModal(rid) {
-  const r = (DB.get(DB.keys.residents) || []).find(x => String(x.id) === String(rid));
+  const r = residentsList().find(x => String(x.id) === String(rid));
   if (!r) return;
   regimeEditId = rid;
   const rg = rgOf(r);
@@ -518,8 +536,7 @@ function rgToggleAutre() {
   document.getElementById('rgAutreWrap').style.display = document.getElementById('rgType').value === 'autre' ? '' : 'none';
 }
 
-function saveRegime() {
-  const residents = DB.get(DB.keys.residents) || [];
+async function saveRegime() {
   const regime = {
     type: document.getElementById('rgType').value,
     autreLabel: document.getElementById('rgAutre').value.trim(),
@@ -527,17 +544,20 @@ function saveRegime() {
     allergiesAlim: document.getElementById('rgAllergies').value.trim(),
     notes: document.getElementById('rgNotes').value.trim()
   };
-  DB.set(DB.keys.residents, residents.map(r => String(r.id) === String(regimeEditId) ? { ...r, regime } : r));
-  if (typeof auditLog === 'function') auditLog('regime_save', `Régime — ${(residents.find(r => String(r.id) === String(regimeEditId)) || {}).nom || ''}`);
+  const r = residentsList().find(x => String(x.id) === String(regimeEditId));
+  if (r) await persistResident({ ...r, regime });
+  if (typeof auditLog === 'function') auditLog('regime_save', `Régime — ${(r || {}).nom || ''}`);
   toast('Régime enregistré ✓');
   closeModal('modalRegime');
   renderRepas();
 }
 
-function initRepas() {
+async function initRepas() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
+  await loadResidentsCache();
+  await loadRepasCache();
   repasDate = today();
   document.getElementById('rpDate')?.addEventListener('change', e => { if (e.target.value) { repasDate = e.target.value; renderRepas(); } });
   document.getElementById('rpSearch')?.addEventListener('input', renderRepas);

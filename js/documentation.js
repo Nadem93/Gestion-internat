@@ -7,8 +7,10 @@ const DOCU_CATEGORIE_ICONS = {
   'Autre': '📄'
 };
 
-function getDocumentation() { return DB.get(DB.keys.documentation) || []; }
-function setDocumentation(d) { DB.set(DB.keys.documentation, d); }
+// Source = Supabase. Cache mémoire chargé au démarrage. Fichiers dans le bucket justificatifs.
+let _docuCache = [];
+function getDocumentation() { return _docuCache; }
+async function loadDocumentationCache() { _docuCache = await sbGetDocumentation(); }
 
 function docuFmtSize(b) {
   if (!b) return '';
@@ -32,16 +34,16 @@ async function saveDocumentation() {
   if (!titre) { toast('Titre requis', 'error'); return; }
   if (!file) { toast('Fichier requis', 'error'); return; }
   if (file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); return; }
-  const data = await fileToBase64(file);
-  const list = getDocumentation();
   const session = Auth.getSession();
-  list.push({
-    id: genId(), titre, categorie,
-    fichier: { name: file.name, mimeType: file.type, size: file.size, data },
-    dateAjout: new Date().toISOString(),
-    ajoutePar: session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : ''
-  });
-  setDocumentation(list);
+  try {
+    const path = await sbUploadJustificatif(file, 'documentation');
+    const saved = await sbSaveDocumentation({
+      titre, categorie,
+      fichierNom: file.name, fichierMime: file.type, fichierTaille: file.size, fichierPath: path,
+      ajoutePar: session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : ''
+    });
+    _docuCache.unshift(saved);
+  } catch (e) { console.error('[saveDocumentation]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function') auditLog('documentation', titre + ' (' + categorie + ')');
   toast('Document ajouté', 'success');
   closeModal('modalDocumentation');
@@ -50,24 +52,23 @@ async function saveDocumentation() {
 
 function supprimerDocumentation(id) {
   if (!confirm('Supprimer ce document ?')) return;
-  let list = getDocumentation();
-  list = list.filter(d => d.id !== id);
-  setDocumentation(list);
-  toast('Document supprimé', 'info');
-  renderDocumentation();
+  const d = _docuCache.find(x => x.id === id);
+  (async () => {
+    try {
+      await sbDeleteDocumentation(id);
+      if (d?.fichierPath && typeof sbDeleteJustificatif === 'function') sbDeleteJustificatif(d.fichierPath).catch(() => {});
+      _docuCache = _docuCache.filter(x => x.id !== id);
+    } catch (e) { console.error('[supprimerDocumentation]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Document supprimé', 'info');
+    renderDocumentation();
+  })();
 }
 
-function voirDocumentation(id) {
-  const d = getDocumentation().find(x => x.id === id);
-  if (!d) return;
-  if ((d.fichier.mimeType || '').startsWith('image/') || d.fichier.mimeType === 'application/pdf') {
-    window.open(d.fichier.data, '_blank');
-  } else {
-    const a = document.createElement('a');
-    a.href = d.fichier.data;
-    a.download = d.fichier.name;
-    a.click();
-  }
+async function voirDocumentation(id) {
+  const d = _docuCache.find(x => x.id === id);
+  if (!d || !d.fichierPath) return;
+  const url = await sbJustificatifUrl(d.fichierPath);
+  if (url) window.open(url, '_blank'); else toast('Fichier introuvable', 'error');
 }
 
 function docuItemHtml(d, isAdmin) {
@@ -79,7 +80,7 @@ function docuItemHtml(d, isAdmin) {
         <span class="badge">${escHtml(d.categorie)}</span>
       </div>
       <div style="font-size:.74rem;color:var(--muted);margin-top:.2rem">
-        ${escHtml(d.fichier.name)} · ${docuFmtSize(d.fichier.size)} · Ajouté le ${new Date(d.dateAjout).toLocaleDateString('fr-FR')}${d.ajoutePar ? ' par ' + escHtml(d.ajoutePar) : ''}
+        ${escHtml(d.fichierNom)} · ${docuFmtSize(d.fichierTaille)} · Ajouté le ${new Date(d.dateAjout).toLocaleDateString('fr-FR')}${d.ajoutePar ? ' par ' + escHtml(d.ajoutePar) : ''}
       </div>
     </div>
     <div style="display:flex;gap:.25rem;flex-shrink:0">
@@ -120,5 +121,5 @@ function renderDocumentation() {
   }).join('');
 }
 
-document.addEventListener('DOMContentLoaded', () => { if (requireModule('access_documentation')) renderDocumentation(); });
-if (typeof registerPageInit === 'function') registerPageInit('documentation', renderDocumentation);
+document.addEventListener('DOMContentLoaded', async () => { if (requireModule('access_documentation')) { await loadDocumentationCache(); renderDocumentation(); } });
+if (typeof registerPageInit === 'function') registerPageInit('documentation', async () => { await loadDocumentationCache(); renderDocumentation(); });

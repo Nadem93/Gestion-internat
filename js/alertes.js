@@ -39,7 +39,7 @@ function generateAlertes() {
   const todayStr = today.toISOString().slice(0,10);
   const alerts = [];
 
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const resMap = {};
   residents.forEach(r => { resMap[r.id] = r; });
 
@@ -190,10 +190,10 @@ function renderAlertes(filterType) {
   const statEl = document.getElementById('alStats');
   if (statEl) {
     statEl.innerHTML = `
-      <div class="al-stat"><div class="al-stat-num" style="color:#ef4444">${list.filter(a=>a.prio==='critique').length}</div><div class="al-stat-lbl">Critiques</div></div>
-      <div class="al-stat"><div class="al-stat-num" style="color:#f97316">${list.filter(a=>a.prio==='urgent').length}</div><div class="al-stat-lbl">Urgentes</div></div>
-      <div class="al-stat"><div class="al-stat-num" style="color:#3b82f6">${list.filter(a=>a.prio==='info').length}</div><div class="al-stat-lbl">Informations</div></div>
-      <div class="al-stat"><div class="al-stat-num">${list.length}</div><div class="al-stat-lbl">Total</div></div>`;
+      <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Critiques</span></div><div class="chx-stat-num">${list.filter(a=>a.prio==='critique').length}</div></div>
+      <div class="chx-stat" style="--c:#f97316"><div class="chx-stat-top"><span class="chx-stat-lbl">Urgentes</span></div><div class="chx-stat-num">${list.filter(a=>a.prio==='urgent').length}</div></div>
+      <div class="chx-stat" style="--c:#3b82f6"><div class="chx-stat-top"><span class="chx-stat-lbl">Informations</span></div><div class="chx-stat-num">${list.filter(a=>a.prio==='info').length}</div></div>
+      <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Total</span></div><div class="chx-stat-num">${list.length}</div></div>`;
   }
 
   // Filtres
@@ -313,9 +313,10 @@ function getAlerteCount() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-function initAlertes() {
+async function initAlertes() {
   const s = Auth.requireAuth();
   if (!s) return;
+  await sbLoadResidentsCache();
   renderAlertes();
 }
 

@@ -1,6 +1,16 @@
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+
+// ⚠️ CAS PARTICULIER — données de démonstration.
+// Cette fonction générait des profils SERAFIN-PH ALÉATOIRES puis les écrivait dans
+// DB.set(DB.keys.residents). Contrainte projet : aucune donnée fictive ne doit être
+// écrite dans les tables prod. On ne persiste donc plus rien : le seeding reste
+// uniquement en mémoire (cache) pour conserver l'aperçu de démonstration locale.
+// Les vraies évaluations SERAFIN-PH arrivent via ppe.js → syncSerafinToResident().
 function seedSpExemples() {
-  const residents = DB.get(DB.keys.residents) || [];
-  let changed = false;
+  const residents = residentsList();
   residents.forEach(r => {
     if (r.serafinph && Array.isArray(r.serafinph.selected) && r.serafinph.selected.length > 0) return;
     const codes = SP_NOMENCLATURE.map(p => p.code);
@@ -17,9 +27,8 @@ function seedSpExemples() {
       dateEvaluation: new Date(Date.now() - Math.random() * 180 * 86400000).toISOString().slice(0,10),
       notes: Math.random() < 0.3 ? 'Profil établi en équipe pluridisciplinaire.' : ''
     };
-    changed = true;
   });
-  if (changed) { DB.set(DB.keys.residents, residents); }
+  // Volontairement AUCUNE persistance ici (ni DB.set, ni sbSaveResident) : données fictives.
 }
 
 function getSpJournalStats() {
@@ -29,16 +38,17 @@ function getSpJournalStats() {
   return { direct, indirect, total: direct + indirect };
 }
 
-function initSerafinph() {
+async function initSerafinph() {
   const _s = Auth.requireAuth();
   if (!_s) return;
   if (!requireModule('access_serafinph')) return;
+  await loadResidentsCache();
   seedSpExemples();
   renderSerafinph();
 }
 
 function renderSerafinph() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   const withSp = residents.filter(r => getSpData(r).selected.length > 0);
   const total = residents.length;
 

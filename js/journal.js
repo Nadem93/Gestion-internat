@@ -1,5 +1,11 @@
 let selectedEntryId = null;
 let filterUnread = false;
+let _journalCache = [];
+let _journalResidentsCache = [];
+
+async function loadJournalEntries() {
+  _journalCache = await sbGetJournalEntries();
+}
 
 function toggleUnreadFilter() {
   filterUnread = !filterUnread;
@@ -11,8 +17,7 @@ function toggleUnreadFilter() {
 function updateUnreadBadge() {
   const session = Auth.getSession();
   if (!session) return;
-  const entries = DB.get(DB.keys.journal) || [];
-  const count = entries.filter(e => !e.readBy || !e.readBy.includes(session.userId)).length;
+  const count = _journalCache.filter(e => !e.readBy || !e.readBy.includes(session.userId)).length;
   const el = document.getElementById('unreadCount');
   const dot = document.getElementById('unreadDot');
   if (el) { el.textContent = count; el.style.display = count > 0 ? '' : 'none'; }
@@ -33,7 +38,7 @@ function showNewEntryForm() {
 }
 
 function populateSelects() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _journalResidentsCache.filter(r => r.statut !== 'sorti');
   const cats = DB.get(DB.keys.categories) || [];
   const objs = DB.get(DB.keys.objectives) || [];
 
@@ -87,9 +92,9 @@ function _sectionCard(iconSvg, label, content) {
 const _ico = (d,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--muted);flex-shrink:0${extra?';'+extra:''}"><${d}/></svg>`;
 
 function renderEntryForm() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _journalResidentsCache.filter(r => r.statut !== 'sorti');
   const cats = DB.get(DB.keys.categories) || [];
-  const currentCat = document.getElementById('iCategorie')?.value || '';
+  const currentCat = (document.getElementById('iCategorie')?.value || '').split(',').filter(Boolean);
   const currentRes = (document.getElementById('iResident')?.value || '').split(',').filter(Boolean);
   const currentDate = document.getElementById('iDate')?.value || new Date().toISOString().slice(0,16);
   const currentContenu = document.getElementById('iContenu')?.value || '';
@@ -142,7 +147,7 @@ function renderEntryForm() {
 
   const html = `
     <div class="entry-form-design" style="display:grid;grid-template-columns:7fr 3fr;gap:1.5rem;align-items:start">
-      <input type="hidden" id="iCategorie" value="${currentCat}"/>
+      <input type="hidden" id="iCategorie" value="${currentCat.join(',')}"/>
       <input type="hidden" id="iResident" value="${currentRes.join(',')}"/>
       <input type="hidden" id="iObjectif" value="${currentObjectif}"/>
       <input type="hidden" id="iPeriode" value=""/>
@@ -158,7 +163,7 @@ function renderEntryForm() {
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:.5rem">
             ${cats.length ? cats.map(c => {
-              const isActive = currentCat === c.id;
+              const isActive = currentCat.includes(c.id);
               return `<div class="cat-pill${isActive?' active':''}" data-id="${c.id}" ${catPillStyle(isActive, c.color)} onclick="selectCatPill('${c.id}')">${escHtml(c.name)}</div>`;
             }).join('') : '<span style="font-size:.82rem;color:#94a3b8">Aucune catégorie — définissez-en dans Admin</span>'}
           </div>
@@ -283,12 +288,14 @@ function selectSpPill(val) {
 function selectCatPill(id) {
   const hid = document.getElementById('iCategorie');
   if (!hid) return;
-  hid.value = hid.value === id ? '' : id;
-  const activeId = hid.value;
+  let ids = hid.value ? hid.value.split(',').filter(Boolean) : [];
+  const idx = ids.indexOf(id);
+  if (idx >= 0) ids.splice(idx, 1); else ids.push(id);
+  hid.value = ids.join(',');
   const cats = DB.get(DB.keys.categories) || [];
   const BASE = 'height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;font-size:.78rem;transition:all .15s';
   document.querySelectorAll('.cat-pill').forEach(el => {
-    const on = String(el.dataset.id) === String(activeId);
+    const on = ids.includes(el.dataset.id);
     el.classList.toggle('active', on);
     const cat = cats.find(c => String(c.id) === String(el.dataset.id));
     const color = cat?.color || '#7C3AED';
@@ -321,7 +328,7 @@ function selectResidentDropdown(id) {
 function renderResidentChips(ids) {
   const container = document.getElementById('selectedResidentChips');
   if (!container) return;
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _journalResidentsCache.filter(r => r.statut !== 'sorti');
   container.innerHTML = ids.map(id => {
     const r = residents.find(x => x.id === id);
     if (!r) return '';
@@ -366,20 +373,19 @@ function selectVisPill(vis) {
   });
 }
 
-function saveInlineEntry() {
+async function saveInlineEntry() {
   const session = Auth.getSession();
   const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   const residentIds = document.getElementById('iResident').value ? document.getElementById('iResident').value.split(',').filter(Boolean) : [];
   const contenu = document.getElementById('iContenu').value.trim();
   if (!residentIds.length) { toast('Sélectionnez au moins un résident', 'error'); return; }
   if (!contenu) { toast('Le contenu est requis', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _journalResidentsCache;
   const visEl = document.querySelector('input[name="iVisibilite"]:checked');
-  const entries = DB.get(DB.keys.journal) || [];
   // Détection de doublon : même résident, < 3h, contenu très similaire
   const candDate = document.getElementById('iDate').value || new Date().toISOString();
   for (const residentId of residentIds) {
-    const dup = findJournalDuplicate({ residentId, contenu, date: candDate }, entries);
+    const dup = findJournalDuplicate({ residentId, contenu, date: candDate }, _journalCache);
     if (dup) {
       const e = dup.entry;
       const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
@@ -387,28 +393,35 @@ function saveInlineEntry() {
       break;
     }
   }
-  for (const residentId of residentIds) {
-    const res = residents.find(r => r.id === residentId);
-    entries.push({
-      id: genId(),
-      type: 'observation',
-      residentId,
-      resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
-      residentColor: res?.color || 'var(--blue)',
-      categorie: document.getElementById('iCategorie').value,
-      date: document.getElementById('iDate').value || new Date().toISOString(),
-      objectif: document.getElementById('iObjectif').value,
-      contenu, visibilite: visEl?.value || 'equipe',
-      serafinphType: document.getElementById('iSerafinph')?.value || '',
-      attachments: inlineAttachments.slice(),
-      author: userName, authorId: session?.userId,
-      replies: [], readBy: [session?.userId],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    });
+  const newNames = [];
+  try {
+    for (const residentId of residentIds) {
+      const res = residents.find(r => r.id === residentId);
+      const name = res ? `${res.prenom||''} ${res.nom||''}`.trim() : '';
+      newNames.push(name);
+      await sbSaveJournalEntry({
+        residentId,
+        resident: name,
+        residentColor: res?.color || 'var(--blue)',
+        categorie: document.getElementById('iCategorie').value,
+        date: document.getElementById('iDate').value || new Date().toISOString(),
+        objectif: document.getElementById('iObjectif').value,
+        contenu, visibilite: visEl?.value || 'equipe',
+        serafinphType: document.getElementById('iSerafinph')?.value || '',
+        attachments: inlineAttachments.slice(),
+        author: userName, authorId: session?.userId,
+        replies: [], readBy: [session?.userId],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      });
+    }
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
-  DB.set(DB.keys.journal, entries);
   inlineAttachments = [];
-  if (typeof auditLog === 'function') auditLog('journal_create', `${residentIds.length} entrée(s) pour ${entries.slice(-residentIds.length).map(e=>e.resident).join(', ')}`);
+  await loadJournalEntries();
+  if (typeof auditLog === 'function') auditLog('journal_create', `${residentIds.length} entrée(s) pour ${newNames.join(', ')}`);
   toast(residentIds.length + ' entrée' + (residentIds.length>1?'s':'') + ' ajoutée' + (residentIds.length>1?'s':'') + ' ✓');
   showJournalList();
   renderEntries();
@@ -419,7 +432,7 @@ async function aiAssistJournalInline(action) {
   if (!ta) return;
   const current = ta.value || '';
   const residentIds = (document.getElementById('iResident')?.value || '').split(',').filter(Boolean);
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _journalResidentsCache;
   const firstRes = residents.find(r => r.id === residentIds[0]);
   const residentName = firstRes ? `${firstRes.prenom||''} ${firstRes.nom||''}`.trim() : (residentIds.length > 1 ? 'plusieurs résidents' : '');
   const hasKey = !!getAiKey();
@@ -464,7 +477,7 @@ function getEntries() {
   const cat = document.getElementById('jFilterCat')?.value || '';
   const dateFrom = document.getElementById('jFilterDate')?.value || '';
   const dateTo = document.getElementById('jFilterDateEnd')?.value || '';
-  let list = (DB.get(DB.keys.journal) || []).slice().reverse();
+  let list = _journalCache.slice();
   // Filtrer selon la visibilité : confidentiel → uniquement admin ou auteur
   const isAdmin = session?.role === 'admin';
   list = list.filter(e => {
@@ -477,7 +490,7 @@ function getEntries() {
     (e.author   || '').toLowerCase().includes(q)
   );
   if (res) list = list.filter(e => e.residentId === res);
-  if (cat) list = list.filter(e => String(e.categorie) === String(cat));
+  if (cat) list = list.filter(e => (e.categorie || '').split(',').filter(Boolean).includes(cat));
   if (dateFrom) list = list.filter(e => e.date && e.date.slice(0,10) >= dateFrom);
   if (dateTo) list = list.filter(e => e.date && e.date.slice(0,10) <= dateTo);
   if (filterUnread && session) list = list.filter(e => !e.readBy || !e.readBy.includes(session.userId));
@@ -488,7 +501,7 @@ function renderEntries() {
   const list = getEntries();
   const el = document.getElementById('entriesList');
   const cats = DB.get(DB.keys.categories) || [];
-  const journalResidents = DB.get(DB.keys.residents) || [];
+  const journalResidents = _journalResidentsCache;
   if (!list.length) {
     el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Aucune entrée</h3><p>Commencez à documenter les événements.</p></div>`;
     return;
@@ -496,7 +509,7 @@ function renderEntries() {
   updateUnreadBadge();
   const session = Auth.getSession();
   el.innerHTML = list.map(e => {
-    const cat = cats.find(c => String(c.id) === String(e.categorie));
+    const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
     const jRes = journalResidents.find(r => r.id === e.residentId);
     const isSelected = e.id === selectedEntryId;
     const isUnread = session && (!e.readBy || !e.readBy.includes(session.userId));
@@ -522,7 +535,7 @@ function renderEntries() {
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
             ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;display:inline-block"></span>' : ''}
             <span style="font-weight:${isUnread ? '800' : '700'};font-size:.875rem">${escHtml(e.resident)||'—'}</span>
-            ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
+            ${entryCats.map(cat => `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>`).join('')}
             ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
             ${e.serafinphType === 'direct' ? '<span class="badge" style="background:#8b5cf622;color:#8b5cf6">📊 Direct</span>' : ''}
             ${e.serafinphType === 'indirect' ? '<span class="badge" style="background:#f9731622;color:#f97316">📊 Indirect</span>' : ''}
@@ -559,7 +572,7 @@ function renderReplies(e) {
 
 // ── Historique des modifications ──
 function showEditHistory(id) {
-  const e = (DB.get(DB.keys.journal) || []).find(x => x.id === id);
+  const e = _journalCache.find(x => x.id === id);
   if (!e || !e.editHistory) return;
   const lines = e.editHistory.slice().reverse().map(h =>
     `• ${formatDateTime(h.at)} — ${h.by || '?'}\n   Ancien contenu : « ${(h.contenu || '').slice(0, 200)}${(h.contenu || '').length > 200 ? '…' : ''} »`
@@ -612,22 +625,22 @@ function renderEntryAttachments(e) {
   </div>`;
 }
 
-function selectEntry(id) {
+async function selectEntry(id) {
   // Toggle: cliquer à nouveau ferme la carte
   if (selectedEntryId === id) { selectedEntryId = null; renderEntries(); return; }
   selectedEntryId = id;
 
   // Mark as read
   const session = Auth.getSession();
-  let entries = DB.get(DB.keys.journal) || [];
-  const eIdx = entries.findIndex(x => x.id === id);
-  if (eIdx === -1) return;
-  const e = entries[eIdx];
+  const e = _journalCache.find(x => x.id === id);
+  if (!e) return;
   if (session && (!e.readBy || !e.readBy.includes(session.userId))) {
-    if (!e.readBy) e.readBy = [];
-    e.readBy.push(session.userId);
-    entries[eIdx] = e;
-    DB.set(DB.keys.journal, entries);
+    const readBy = (e.readBy || []).concat([session.userId]);
+    try {
+      const updated = await sbSaveJournalEntry({ ...e, readBy });
+      const idx = _journalCache.findIndex(x => x.id === id);
+      if (idx !== -1) _journalCache[idx] = updated;
+    } catch (err) { console.error(err); }
   }
 
   renderEntries();
@@ -637,37 +650,37 @@ function selectEntry(id) {
   }, 50);
 }
 
-function addReply(entryId) {
+async function addReply(entryId) {
   const content = document.getElementById('replyContent_'+entryId)?.value?.trim();
   if (!content) { toast('Écrivez une réponse', 'error'); return; }
   const session = Auth.getSession();
   const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
-  let entries = DB.get(DB.keys.journal) || [];
-  entries = entries.map(e => {
-    if (e.id !== entryId) return e;
-    const replies = e.replies || [];
-    replies.push({
-      id: genId(),
-      content,
-      author: userName,
-      authorId: session?.userId,
-      createdAt: new Date().toISOString()
-    });
-    return { ...e, replies };
-  });
-  DB.set(DB.keys.journal, entries);
+  const e = _journalCache.find(x => x.id === entryId);
+  if (!e) return;
+  const replies = (e.replies || []).concat([{
+    id: genId(),
+    content,
+    author: userName,
+    authorId: session?.userId,
+    createdAt: new Date().toISOString()
+  }]);
+  try {
+    const updated = await sbSaveJournalEntry({ ...e, replies });
+    const idx = _journalCache.findIndex(x => x.id === entryId);
+    if (idx !== -1) _journalCache[idx] = updated;
+  } catch (err) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(err); return; }
   toast('Réponse ajoutée');
   selectEntry(entryId);
 }
 
 function editEntry(id) {
-  const entries = DB.get(DB.keys.journal) || [];
-  const e = entries.find(x => x.id === id);
+  const e = _journalCache.find(x => x.id === id);
   if (!e) return;
   document.getElementById('modalEntryTitle').textContent = 'Modifier l\'entrée';
   document.getElementById('entryId').value = id;
   document.getElementById('eResident').value = e.residentId || '';
-  document.getElementById('eCategorie').value = e.categorie || '';
+  const eCatIds = (e.categorie || '').split(',').filter(Boolean);
+  Array.from(document.getElementById('eCategorie').options).forEach(o => { o.selected = eCatIds.includes(o.value); });
   document.getElementById('eDate').value = e.date ? e.date.slice(0,16) : '';
   document.getElementById('eObjectif').value = e.objectif || '';
   document.getElementById('eContenu').value = e.contenu || '';
@@ -679,7 +692,7 @@ function editEntry(id) {
   openModal('modalEntry');
 }
 
-function saveEntry() {
+async function saveEntry() {
   const session = Auth.getSession();
   const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   const residentId = document.getElementById('eResident').value;
@@ -687,7 +700,7 @@ function saveEntry() {
   if (!residentId) { toast('Sélectionnez un résident', 'error'); return; }
   if (!contenu) { toast('Le contenu est requis', 'error'); return; }
 
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _journalResidentsCache;
   const res = residents.find(r => r.id === residentId);
   const visEl = document.querySelector('input[name="eVisibilite"]:checked');
 
@@ -695,44 +708,46 @@ function saveEntry() {
     residentId,
     resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
     residentColor: res?.color || 'var(--blue)',
-    categorie: document.getElementById('eCategorie').value,
+    categorie: Array.from(document.getElementById('eCategorie').selectedOptions).map(o => o.value).join(','),
     date: document.getElementById('eDate').value || new Date().toISOString(),
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
     serafinphType: document.getElementById('eSerafinph')?.value || '',
-    author: userName,
-    authorId: session?.userId,
     updatedAt: new Date().toISOString()
   };
 
-  let entries = DB.get(DB.keys.journal) || [];
   const id = document.getElementById('entryId').value;
-  if (id) {
-    entries = entries.map(e => {
-      if (e.id !== id) return e;
+  try {
+    if (id) {
+      const e = _journalCache.find(x => x.id === id);
+      if (!e) return;
       // Conserver l'auteur d'origine ; tracer la modification + historiser le contenu
-      const { author, authorId, ...editData } = data;
       const history = (e.editHistory || []).concat([{ at: new Date().toISOString(), by: userName, byId: session?.userId, contenu: e.contenu }]);
-      return { ...e, ...editData, editHistory: history, editedBy: userName, editedById: session?.userId, editedAt: new Date().toISOString() };
-    });
-    if (typeof auditLog === 'function') auditLog('journal_edit', `Entrée modifiée — ${data.resident}`);
-    toast('Entrée mise à jour');
-  } else {
-    const dup = findJournalDuplicate({ residentId, contenu, date: data.date }, entries);
-    if (dup) {
-      const e = dup.entry;
-      const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
-      if (!confirm(`⚠️ Doublon possible pour ${e.resident || 'ce résident'} :\n\n« ${extrait} »\n${formatDateTime(e.date)} · ${getJournalAuthor ? getJournalAuthor(e) : (e.author || '')}\n\nEnregistrer quand même cette transmission ?`)) return;
+      await sbSaveJournalEntry({ ...e, ...data, editHistory: history, editedBy: userName, editedById: session?.userId, editedAt: new Date().toISOString() });
+      if (typeof auditLog === 'function') auditLog('journal_edit', `Entrée modifiée — ${data.resident}`);
+      toast('Entrée mise à jour');
+    } else {
+      const dup = findJournalDuplicate({ residentId, contenu, date: data.date }, _journalCache);
+      if (dup) {
+        const e = dup.entry;
+        const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
+        if (!confirm(`⚠️ Doublon possible pour ${e.resident || 'ce résident'} :\n\n« ${extrait} »\n${formatDateTime(e.date)} · ${getJournalAuthor ? getJournalAuthor(e) : (e.author || '')}\n\nEnregistrer quand même cette transmission ?`)) return;
+      }
+      data.author = userName;
+      data.authorId = session?.userId;
+      data.replies = [];
+      data.readBy = [session?.userId];
+      data.createdAt = new Date().toISOString();
+      await sbSaveJournalEntry(data);
+      toast('Entrée ajoutée');
     }
-    data.id = genId();
-    data.replies = [];
-    data.readBy = [session?.userId];
-    data.createdAt = new Date().toISOString();
-    entries.push(data);
-    toast('Entrée ajoutée');
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
-  DB.set(DB.keys.journal, entries);
+  await loadJournalEntries();
   closeAllModals();
   resetEntryForm();
   showJournalList();
@@ -743,11 +758,16 @@ function saveEntry() {
 function deleteEntry() { deleteEntryById(document.getElementById('entryId').value); }
 
 function deleteEntryById(id) {
-  confirmDialog('Supprimer cette entrée ?', () => {
-    let entries = DB.get(DB.keys.journal) || [];
-    const removed = entries.find(e => e.id === id);
-    entries = entries.filter(e => e.id !== id);
-    DB.set(DB.keys.journal, entries);
+  confirmDialog('Supprimer cette entrée ?', async () => {
+    const removed = _journalCache.find(e => e.id === id);
+    try {
+      await sbDeleteJournalEntry(id);
+    } catch (e) {
+      toast('Erreur lors de la suppression', 'error');
+      console.error(e);
+      return;
+    }
+    await loadJournalEntries();
     if (typeof auditLog === 'function') auditLog('journal_delete', `Entrée supprimée — ${removed?.resident || ''} (${formatDateTime(removed?.date)})`);
     closeAllModals();
     selectedEntryId = null;
@@ -761,7 +781,7 @@ function resetEntryForm() {
   document.getElementById('entryId').value = '';
   document.getElementById('modalEntryTitle').textContent = 'Nouvelle entrée';
   document.getElementById('eResident').value = '';
-  document.getElementById('eCategorie').value = '';
+  Array.from(document.getElementById('eCategorie').options).forEach(o => o.selected = false);
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   document.getElementById('eObjectif').value = '';
   document.getElementById('eContenu').value = '';
@@ -769,9 +789,11 @@ function resetEntryForm() {
   document.getElementById('btnDeleteEntry').style.display = 'none';
 }
 
-function initJournal() {
+async function initJournal() {
   if (!requireModule('access_journal')) return;
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
+  _journalResidentsCache = await sbGetResidents();
+  await loadJournalEntries();
   populateSelects();
   renderEntries();
   ['jSearch','jFilterResident','jFilterCat','jFilterDate','jFilterDateEnd'].forEach(id => {
@@ -788,7 +810,7 @@ async function aiAssistJournal(action) {
   if (!ta) return;
   const current = ta.value || '';
   const residentId = document.getElementById('eResident')?.value || '';
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _journalResidentsCache;
   const resident = residents.find(r => r.id === residentId);
   const residentName = resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '';
   const hasKey = !!getAiKey();
@@ -931,16 +953,16 @@ ${(() => {
     return `<div class="day-group">
       <div class="day-label">${escHtml(label)}</div>
       ${entries.map(e => {
-        const cat = cats.find(c => String(c.id) === String(e.categorie));
+        const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
         const timeStr = e.date && e.date.length > 10 ? new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
         return `<div class="entry">
           <div class="entry-top">
             <div>
               <div class="entry-resident">${escHtml(e.resident||'—')}</div>
-              <div class="entry-meta">${timeStr ? timeStr+' · ' : ''}${escHtml(e.author||'')}${cat?'':''}</div>
+              <div class="entry-meta">${timeStr ? timeStr+' · ' : ''}${escHtml(e.author||'')}</div>
             </div>
             <div style="display:flex;gap:.2cm;flex-shrink:0;align-items:center">
-              ${cat ? `<span class="entry-cat" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
+              ${entryCats.map(cat => `<span class="entry-cat" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>`).join('')}
               ${e.visibilite==='confidentiel' ? '<span class="badge-conf">Confidentiel</span>' : ''}
             </div>
           </div>

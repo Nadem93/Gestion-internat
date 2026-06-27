@@ -21,11 +21,13 @@ const MED_STATUTS = {
   report: { label: 'Reporté', icon: '⏭️', color: '#d97706' }
 };
 
-function getMedDistrib() { return DB.get(DB.keys.medicaments) || []; }
-function saveMedDistrib(list) { DB.set(DB.keys.medicaments, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _medCache = [];
+function getMedDistrib() { return _medCache; }
+async function loadMedCache() { _medCache = await sbGetMedDistrib(); }
 
 function medResidents() {
-  return (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+  return sbResidents().filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''}`.localeCompare(`${b.nom || ''}`, 'fr'));
 }
 
@@ -61,24 +63,10 @@ function renderMedicaments() {
   const nbAttente  = enriched.filter(e => !e.record?.statut).length;
 
   document.getElementById('medStats').innerHTML = `
-    <div class="med-stats-wrap">
-      <div class="med-stat-sep" style="text-align:center;padding:12px">
-        <div class="med-stat-num" style="color:#1e3a8a">${enriched.length}</div>
-        <div class="med-stat-lbl">Prises prévues</div>
-      </div>
-      <div class="med-stat-sep" style="text-align:center;padding:12px">
-        <div class="med-stat-num" style="color:#059669">${nbDonne}</div>
-        <div class="med-stat-lbl">Données</div>
-      </div>
-      <div class="med-stat-sep" style="text-align:center;padding:12px">
-        <div class="med-stat-num" style="color:#dc2626">${nbIncident}</div>
-        <div class="med-stat-lbl">Refus / absences / reports</div>
-      </div>
-      <div style="text-align:center;padding:12px">
-        <div class="med-stat-num" style="color:#d97706">${nbAttente}</div>
-        <div class="med-stat-lbl">En attente</div>
-      </div>
-    </div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Prises prévues</span></div><div class="chx-stat-num">${enriched.length}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Données</span></div><div class="chx-stat-num">${nbDonne}</div></div>
+    <div class="chx-stat" style="--c:#dc2626"><div class="chx-stat-top"><span class="chx-stat-lbl">Refus / absences / reports</span></div><div class="chx-stat-num">${nbIncident}</div></div>
+    <div class="chx-stat" style="--c:#d97706"><div class="chx-stat-top"><span class="chx-stat-lbl">En attente</span></div><div class="chx-stat-num">${nbAttente}</div></div>`;
 
   const el = document.getElementById('medList');
   if (!enriched.length) {
@@ -90,7 +78,7 @@ function renderMedicaments() {
     return;
   }
 
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const resMap = {};
   residents.forEach(r => { resMap[String(r.id)] = r; });
 
@@ -224,35 +212,39 @@ function medRow(date, e) {
   </div>`;
 }
 
-function setMedStatut(date, residentId, traitementId, moment, statut) {
+async function setMedStatut(date, residentId, traitementId, moment, statut) {
   const list = getMedDistrib();
   const session = Auth.getSession();
   const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
   const i = list.findIndex(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
   const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
-  if (i >= 0) {
-    if (list[i].statut === statut) {
-      list.splice(i, 1); // re-clic sur le même statut → réinitialise
-    } else {
-      list[i] = { ...list[i], statut, heure: new Date().toISOString(), auteur };
+  try {
+    if (i >= 0) {
+      if (list[i].statut === statut) {
+        const id = list[i].id;
+        list.splice(i, 1); // re-clic sur le même statut → réinitialise
+        await sbDeleteMedDistrib(id);
+      } else {
+        list[i] = await sbSaveMedDistrib({ ...list[i], statut, heure: new Date().toISOString(), auteur });
+      }
+    } else if (prevue) {
+      const saved = await sbSaveMedDistrib({ date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: new Date().toISOString(), auteur, observation: '' });
+      list.push(saved);
     }
-  } else if (prevue) {
-    list.push({ id: genId(), date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: new Date().toISOString(), auteur, observation: '' });
-  }
-  saveMedDistrib(list);
+  } catch (e) { console.error('[setMedStatut]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function' && prevue) auditLog('med_distrib', `${prevue.medicament} (${MED_MOMENTS[moment]?.label || moment}) — ${prevue.residentName} → ${MED_STATUTS[statut]?.label || statut}`);
   renderMedicaments();
 }
 
-function setMedStatutRefuse(date, residentId, traitementId, moment) {
+async function setMedStatutRefuse(date, residentId, traitementId, moment) {
   const list = getMedDistrib();
   const rec = list.find(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
   if (rec?.statut === 'refuse') {
     // re-clic → réinitialise sans ouvrir le modal
-    setMedStatut(date, residentId, traitementId, moment, 'refuse');
+    await setMedStatut(date, residentId, traitementId, moment, 'refuse');
     return;
   }
-  setMedStatut(date, residentId, traitementId, moment, 'refuse');
+  await setMedStatut(date, residentId, traitementId, moment, 'refuse');
   openMedNote(date, residentId, traitementId, moment);
 }
 
@@ -263,21 +255,23 @@ function openMedNote(date, residentId, traitementId, moment) {
   openModal('modalMedNote');
 }
 
-function saveMedNote() {
+async function saveMedNote() {
   const { date, residentId, traitementId, moment } = medNoteCtx;
   const observation = document.getElementById('mnTexte').value.trim();
   const list = getMedDistrib();
   const i = list.findIndex(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
-  if (i >= 0) {
-    list[i] = { ...list[i], observation };
-  } else {
-    const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
-    if (!prevue) return;
-    const session = Auth.getSession();
-    const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
-    list.push({ id: genId(), date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut: '', heure: '', auteur, observation });
-  }
-  saveMedDistrib(list);
+  try {
+    if (i >= 0) {
+      list[i] = await sbSaveMedDistrib({ ...list[i], observation });
+    } else {
+      const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
+      if (!prevue) return;
+      const session = Auth.getSession();
+      const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
+      const saved = await sbSaveMedDistrib({ date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut: '', heure: '', auteur, observation });
+      list.push(saved);
+    }
+  } catch (e) { console.error('[saveMedNote]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalMedNote');
   renderMedicaments();
 }
@@ -325,10 +319,12 @@ function printMedSheet() {
 }
 
 // ── INIT ──
-function initMedicaments() {
+async function initMedicaments() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_medicaments')) return;
+  await sbLoadResidentsCache();
+  await loadMedCache();
   medCanEdit = ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : false) || Auth.isAdmin();
   const dateInput = document.getElementById('medDate');
   dateInput.value = today();

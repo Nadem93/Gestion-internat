@@ -1,44 +1,19 @@
-function seedVTExemples() {
-  const list = getVT();
-  if (list.length) return;
-  const residents = DB.get(DB.keys.residents) || [];
-  if (!residents.length) return;
-  const exemples = [
-    { type: 'orientation', mdph: 'mape', statut: 'accepte', commentaire: 'Admission acceptée par la CDAPH — orientation vers IME' },
-    { type: 'orientation', mdph: 'mape', statut: 'en_cours', commentaire: 'Dossier en cours d\'instruction par la MDPH' },
-    { type: 'renouvellement', mdph: 'cdaph', statut: 'envoye', commentaire: 'Renouvellement de notification envoyé' },
-    { type: 'reorientation', mdph: 'mape', statut: 'info_requise', commentaire: 'Complément médical demandé par la MDPH' },
-    { type: 'orientation', mdph: 'mape', statut: 'refuse', commentaire: 'Orientation refusée — motif : établissement non adapté' },
-    { type: 'renouvellement', mdph: 'cdaph', statut: 'brouillon', commentaire: '' },
-    { type: 'orientation', mdph: 'mape', statut: 'cloture', commentaire: 'Dossier clôturé suite à la sortie du résident' },
-    { type: 'orientation', mdph: 'cdaph', statut: 'accepte', commentaire: 'Accepté avec orientation vers SESSAD' }
-  ];
-  const now = Date.now();
-  exemples.forEach((e, i) => {
-    const r = residents[i % residents.length];
-    list.push({
-      id: 'vt-ex-' + i,
-      residentId: r.id,
-      type: e.type,
-      mdph: e.mdph,
-      date: new Date(now - (exemples.length - i) * 15 * 86400000).toISOString(),
-      statut: e.statut,
-      commentaire: e.commentaire
-    });
-  });
-  setVT(list);
-}
+// Données de démo désactivées : la base de prod doit rester sans données fictives.
+function seedVTExemples() { /* no-op */ }
 
-function initViaTrajectoire() {
+async function initViaTrajectoire() {
   const _s = Auth.requireAuth();
   if (!_s) return;
-  if (!requireModule('access_viatrajectoire')) return;
-  seedVTExemples();
+  if (!Auth.isAdmin()) return;
+  await sbLoadResidentsCache();
+  await loadVTCache();
   renderVT();
 }
 
-function getVT() { return DB.get(DB.keys.viatrajectoire) || []; }
-function setVT(d) { DB.set(DB.keys.viatrajectoire, d); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _vtCache = [];
+function getVT() { return _vtCache; }
+async function loadVTCache() { _vtCache = await sbGetViaTrajectoire(); }
 
 const VT_STATUTS = {
   brouillon: { label: 'Brouillon', color: '#94a3b8' },
@@ -52,7 +27,7 @@ const VT_STATUTS = {
 
 function renderVT() {
   const list = getVT();
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
 
   const enCours = list.filter(d => ['envoye','en_cours','info_requise'].includes(d.statut)).length;
   const acceptees = list.filter(d => d.statut === 'accepte').length;
@@ -98,7 +73,7 @@ function renderVT() {
 
 function openVTDemande(data) {
   try {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const rOpts = residents.map(r => `<option value="${r.id}"${data && data.residentId === r.id ? ' selected' : ''}>${escHtml(r.prenom+' '+r.nom)}</option>`).join('');
 
   const statutOpts = Object.entries(VT_STATUTS).map(([k,v]) => `<option value="${k}"${data && data.statut === k ? ' selected' : ''}>${v.label}</option>`).join('');
@@ -165,29 +140,32 @@ function saveVTDemande(id) {
     toast('Veuillez remplir les champs obligatoires', 'error'); return;
   }
 
-  let list = getVT();
-  if (id) {
-    const idx = list.findIndex(d => d.id === id);
-    if (idx !== -1) {
-      list[idx] = { ...list[idx], residentId: resident, type, mdph, date, statut, commentaire };
-    }
-    toast('Demande mise à jour', 'success');
-  } else {
-    list.push({ id: genId(), residentId: resident, type, mdph, date, statut, commentaire });
-    toast('Demande ViaTrajectoire créée', 'success');
-  }
-  setVT(list);
-  closeModal('modalVTDemande');
-  renderVT();
+  (async () => {
+    try {
+      if (id) {
+        const old = _vtCache.find(d => d.id === id) || {};
+        const saved = await sbSaveViaTrajectoire({ ...old, residentId: resident, type, mdph, date, statut, commentaire, id });
+        _vtCache = _vtCache.map(d => d.id === id ? saved : d);
+        toast('Demande mise à jour', 'success');
+      } else {
+        const saved = await sbSaveViaTrajectoire({ residentId: resident, type, mdph, date, statut, commentaire });
+        _vtCache.push(saved);
+        toast('Demande ViaTrajectoire créée', 'success');
+      }
+    } catch (e) { console.error('[saveVTDemande]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    closeModal('modalVTDemande');
+    renderVT();
+  })();
 }
 
 function deleteVTDemande(id) {
   if (!confirm('Supprimer cette demande ViaTrajectoire ?')) return;
-  let list = getVT();
-  list = list.filter(d => d.id !== id);
-  setVT(list);
-  toast('Demande supprimée', 'info');
-  renderVT();
+  (async () => {
+    try { await sbDeleteViaTrajectoire(id); _vtCache = _vtCache.filter(d => d.id !== id); }
+    catch (e) { console.error('[deleteVTDemande]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Demande supprimée', 'info');
+    renderVT();
+  })();
 }
 
 document.addEventListener('DOMContentLoaded', initViaTrajectoire);

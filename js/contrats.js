@@ -9,14 +9,35 @@ const CT_TYPES = {
 
 let ctEditId = null;
 let ctAvenants = [];
+let _ctCache = [];
+let _ctEmployesCache = [];
 
-function getContrats()      { return DB.get(DB.keys.contrats) || []; }
-function saveContrats(list) { DB.set(DB.keys.contrats, list); }
-function ctEmployes()       { return DB.get(DB.keys.employes) || []; }
+function getContrats()      { return _ctCache; }
+function ctEmployes()       { return _ctEmployesCache; }
 function ctEmployeNom(id)   { const e = ctEmployes().find(x => String(x.id) === String(id)); return e ? `${e.prenom||''} ${e.nom||''}`.trim() : 'Inconnu'; }
 
 function ctIsCanEdit() {
   return Auth.isAdmin() || (typeof canEditResidents === 'function' && canEditResidents(Auth.getSession()?.userId));
+}
+
+// Remplit un <select> avec les postes de référence (fonctions définies en Admin),
+// en conservant le poste déjà saisi même s'il n'est pas dans la liste.
+function ctFillPosteSelect(selectEl, currentPoste) {
+  const fonctions = DB.get(DB.keys.fonctionColors) || [];
+  const noms = fonctions.map(f => f.fonction);
+  const poste = currentPoste || '';
+  if (poste && !noms.includes(poste)) noms.unshift(poste);
+  selectEl.innerHTML = '<option value="">— Sélectionner un poste —</option>'
+    + noms.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+  selectEl.value = poste;
+}
+
+// Ouvre le document joint au contrat (URL signée temporaire)
+async function ctOpenFichier(id) {
+  const c = _ctCache.find(x => x.id === id);
+  if (!c || !c.fichierPath) return;
+  const url = await sbJustificatifUrl(c.fichierPath);
+  if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
 }
 
 function ctJoursRestants(dateFin) {
@@ -42,10 +63,10 @@ function renderContrats() {
   const essaisEnCours  = actifs.filter(c => c.essai && ctJoursRestants(c.essai) !== null && ctJoursRestants(c.essai) <= 15 && ctJoursRestants(c.essai) >= 0);
 
   document.getElementById('ctStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Contrats actifs</span></div><div class="stat-num">${actifs.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">CDD actifs</span></div><div class="stat-num">${actifs.filter(c=>c.type==='cdd').length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #dc2626"><div class="stat-card-top"><span class="stat-label">Fins de CDD ≤30j</span></div><div class="stat-num">${cddBientotFini.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="stat-card-top"><span class="stat-label">Périodes d'essai ≤15j</span></div><div class="stat-num">${essaisEnCours.length}</div></div>`;
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Contrats actifs</span></div><div class="chx-stat-num">${actifs.length}</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">CDD actifs</span></div><div class="chx-stat-num">${actifs.filter(c=>c.type==='cdd').length}</div></div>
+    <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Fins de CDD ≤30j</span></div><div class="chx-stat-num">${cddBientotFini.length}</div></div>
+    <div class="chx-stat" style="--c:#8b5cf6"><div class="chx-stat-top"><span class="chx-stat-lbl">Périodes d'essai ≤15j</span></div><div class="chx-stat-num">${essaisEnCours.length}</div></div>`;
 
   // Alertes
   const alertsEl = document.getElementById('ctAlerts');
@@ -59,38 +80,71 @@ function renderContrats() {
 
   const el = document.getElementById('ctList');
   if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">📑</div><h3>Aucun contrat</h3><p>Créez le premier contrat d'un employé.</p></div>`;
+    const vide = (all.length === 0);
+    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">📑</div><h3>Aucun contrat${vide?'':' pour ce filtre'}</h3><p>${vide?"Créez le premier contrat d'un employé.":'Aucun contrat ne correspond aux filtres sélectionnés.'}</p>
+      ${ctIsCanEdit()&&vide?`<button class="btn btn-primary" style="margin-top:1rem" onclick="openContratModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;margin-right:.3rem"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouveau contrat</button>`:''}</div>`;
     return;
   }
 
-  el.innerHTML = `<div class="grid grid-3" style="gap:.85rem">${list.map(ctCard).join('')}</div>`;
+  el.innerHTML = `<div class="ctx-grid">${list.map(ctCard).join('')}</div>`;
 }
 
 function ctCard(c) {
   const t = CT_TYPES[c.type] || CT_TYPES.cdi;
-  const statutTermine = (c.statut || 'actif') === 'termine';
-  const joursRestants = c.fin ? ctJoursRestants(c.fin) : null;
-  const urgent = c.type === 'cdd' && joursRestants !== null && joursRestants <= 30 && joursRestants >= 0 && !statutTermine;
-  return `<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;${statutTermine?'opacity:.6':''}">
-    <div style="background:linear-gradient(135deg,${t.color}22,${t.color}08);border-bottom:1px solid ${t.color}22;padding:.9rem 1rem .75rem;display:flex;align-items:center;gap:.65rem">
-      <div style="width:38px;height:38px;border-radius:10px;background:${t.color}18;border:1.5px solid ${t.color}33;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:${t.color};flex-shrink:0">${t.label.slice(0,3)}</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ctEmployeNom(c.employeId))}</div>
-        <div style="font-size:.68rem;font-weight:600;color:${t.color};margin-top:1px">${t.label}${statutTermine?' · terminé':''}</div>
+  const termine = (c.statut || 'actif') === 'termine';
+  const jr = c.fin ? ctJoursRestants(c.fin) : null;
+  const urgent = c.type !== 'cdi' && jr !== null && jr <= 30 && jr >= 0 && !termine;
+  const emp = ctEmployes().find(x => String(x.id) === String(c.employeId));
+  const nom = ctEmployeNom(c.employeId);
+  const init = emp ? (initials(emp.prenom || '', emp.nom || '') || '?') : '?';
+  const canEdit = ctIsCanEdit();
+
+  let periodHtml;
+  if (c.fin) {
+    const start = new Date(c.debut + 'T00:00:00').getTime();
+    const end = new Date(c.fin + 'T00:00:00').getTime();
+    let pct = end > start ? Math.round(((Date.now() - start) / (end - start)) * 100) : 100;
+    pct = Math.max(0, Math.min(100, pct));
+    const lbl = termine ? 'Contrat terminé' : (jr >= 0 ? `${pct}% écoulé · J-${jr}` : 'Échéance dépassée');
+    periodHtml = `<div>
+      <div class="ctx-period-dates"><span>${formatDate(c.debut)}</span><span>${formatDate(c.fin)}</span></div>
+      <div class="ctx-bar"><div class="ctx-bar-fill" style="width:${termine ? 100 : pct}%"></div></div>
+      <div class="ctx-period-lbl">${lbl}</div>
+    </div>`;
+  } else {
+    periodHtml = `<div>
+      <div class="ctx-period-dates"><span>${formatDate(c.debut)}</span><span>∞</span></div>
+      <div class="ctx-bar cdi"></div>
+      <div class="ctx-period-lbl">Durée indéterminée</div>
+    </div>`;
+  }
+
+  const chips = [];
+  if (c.heures) chips.push(`<span class="ctx-chip">⏱ ${c.heures}h/sem · ${c.temps === 'partiel' ? 'partiel' : 'plein'}</span>`);
+  if (c.poste)  chips.push(`<span class="ctx-chip">💼 ${escHtml(c.poste)}</span>`);
+  if (urgent)   chips.push(`<span class="ctx-chip warn">⚠️ Fin dans ${jr}j</span>`);
+  if (c.essai && !termine) { const ej = ctJoursRestants(c.essai); if (ej !== null && ej >= 0) chips.push(`<span class="ctx-chip essai">🧪 Essai J-${ej}</span>`); }
+  if (c.avenants?.length) chips.push(`<span class="ctx-chip avenant">🔄 ${c.avenants.length} avenant${c.avenants.length > 1 ? 's' : ''}</span>`);
+
+  return `<div class="ctx-card ${termine ? 'termine' : ''}" style="--type:${t.color}">
+    <span class="ctx-wm">${escHtml(t.label.slice(0, 3).toUpperCase())}</span>
+    <div class="ctx-head">
+      <div class="ctx-avatar">${escHtml(init)}</div>
+      <div class="ctx-head-text">
+        <div class="ctx-name">${escHtml(nom)}</div>
+        <div class="ctx-type">${t.label}</div>
       </div>
+      <span class="ctx-status ${termine ? 'fini' : 'actif'}">${termine ? 'Terminé' : 'Actif'}</span>
     </div>
-    <div style="padding:.85rem 1rem;flex:1;display:flex;flex-direction:column;gap:.35rem">
-      <div style="font-size:.78rem;color:var(--text);display:flex;flex-direction:column;gap:.2rem">
-        <div style="display:flex;align-items:center;gap:.4rem">📅 <span>${formatDate(c.debut)}${c.fin?' → '+formatDate(c.fin):' · sans échéance'}</span></div>
-        ${c.poste?`<div style="display:flex;align-items:center;gap:.4rem">💼 <span>${escHtml(c.poste)}</span></div>`:''}
-        ${c.heures?`<div style="display:flex;align-items:center;gap:.4rem">⏱ <span>${c.heures}h/semaine (${c.temps==='partiel'?'temps partiel':'temps plein'})</span></div>`:''}
-      </div>
-      ${urgent?`<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;width:fit-content">Fin dans ${joursRestants}j</span>`:''}
-      ${c.avenants?.length?`<div style="font-size:.71rem;color:var(--muted);margin-top:.1rem">${c.avenants.length} avenant${c.avenants.length>1?'s':''}</div>`:''}
+    <div class="ctx-body">
+      ${periodHtml}
+      ${chips.length ? `<div class="ctx-chips">${chips.join('')}</div>` : ''}
     </div>
-    ${ctIsCanEdit()?`<div style="display:flex;gap:.3rem;justify-content:flex-end;border-top:1px solid var(--border);padding:.5rem .75rem;background:var(--g50)">
-      <button class="btn btn-ghost btn-sm" onclick="openContratDetail('${c.id}')">📑 Détail</button>
-    </div>`:''}
+    ${canEdit ? `<div class="ctx-foot">
+      ${c.fichierPath ? `<button class="ctx-btn" onclick="ctOpenFichier('${c.id}')" title="${escHtml(c.fichierNom || 'Document joint')}">📎 Contrat</button>` : ''}
+      <span class="sp"></span>
+      <button class="ctx-btn primary" onclick="openContratDetail('${c.id}')">📑 Détail</button>
+    </div>` : ''}
   </div>`;
 }
 
@@ -162,6 +216,23 @@ function openContratDetail(id) {
   openModal('modalContratDoc');
 }
 
+// Recolore l'en-tête du modal selon le type de contrat sélectionné (écho des cartes)
+function cmxSyncType() {
+  const modalEl = document.querySelector('#modalContrat .cmx-modal');
+  if (!modalEl) return;
+  const type = document.getElementById('ctType')?.value || 'cdi';
+  const t = CT_TYPES[type] || { label: type, color: '#64748b' };
+  modalEl.style.setProperty('--type', t.color);
+  const badge = document.getElementById('cmxBadge');
+  if (badge) badge.textContent = t.label.slice(0, 3).toUpperCase();
+  const sub = document.getElementById('cmxSub');
+  if (sub) {
+    const empSel = document.getElementById('ctEmploye');
+    const empNom = (empSel && empSel.value && empSel.selectedIndex >= 0) ? empSel.options[empSel.selectedIndex].text : '';
+    sub.textContent = empNom ? `${t.label} · ${empNom}` : t.label;
+  }
+}
+
 // ── MODAL ──
 function openContratModal(id) {
   ctEditId = id || null;
@@ -176,11 +247,15 @@ function openContratModal(id) {
   document.getElementById('ctTemps').value   = c?.temps || 'plein';
   document.getElementById('ctHeures').value  = c?.heures || 35;
   document.getElementById('ctEssai').value   = c?.essai || '';
-  document.getElementById('ctPoste').value   = c?.poste || '';
+  ctFillPosteSelect(document.getElementById('ctPoste'), c?.poste || '');
   document.getElementById('ctNotes').value   = c?.notes || '';
+  const cf = document.getElementById('ctFichier'); if (cf) cf.value = '';
+  const cfi = document.getElementById('ctFichierInfo');
+  if (cfi) cfi.innerHTML = c?.fichierPath ? `📎 ${escHtml(c.fichierNom || 'Document joint')} — <a href="#" onclick="ctOpenFichier('${c.id}');return false">voir</a>` : '';
   document.getElementById('ctDeleteBtn').style.display = c ? '' : 'none';
   document.getElementById('ctAvenantsSection').style.display = c ? '' : 'none';
   renderAvenantsList();
+  cmxSyncType();
   openModal('modalContrat');
 }
 
@@ -208,13 +283,19 @@ function removeAvenant(idx) {
   renderAvenantsList();
 }
 
-function saveContrat() {
+async function saveContrat() {
   const employeId = document.getElementById('ctEmploye').value;
   const debut = document.getElementById('ctDebut').value;
   if (!employeId || !debut) { toast('Employé et date de début obligatoires', 'error'); return; }
 
+  const existing = ctEditId ? getContrats().find(x => x.id === ctEditId) : null;
+  const file = document.getElementById('ctFichier')?.files[0];
+  if (file && file.size > 5 * 1024 * 1024) { toast('Fichier trop lourd (max 5 Mo)', 'error'); return; }
+
   const data = {
+    id: ctEditId || undefined,
     employeId,
+    employeNom: ctEmployeNom(employeId),
     type: document.getElementById('ctType').value,
     debut,
     fin: document.getElementById('ctFin').value,
@@ -223,38 +304,65 @@ function saveContrat() {
     essai: document.getElementById('ctEssai').value,
     poste: document.getElementById('ctPoste').value.trim(),
     notes: document.getElementById('ctNotes').value.trim(),
-    avenants: ctAvenants
+    avenants: ctAvenants,
+    fichierPath: existing?.fichierPath || '',
+    fichierNom: existing?.fichierNom || '',
+    statut: ctEditId ? (existing?.statut || 'actif') : 'actif'
   };
 
-  const list = getContrats();
-  if (ctEditId) {
-    const idx = list.findIndex(x => x.id === ctEditId);
-    if (idx >= 0) Object.assign(list[idx], data, { updatedAt: new Date().toISOString() });
-    toast('Contrat mis à jour');
-  } else {
-    list.push({ id: genId(), ...data, statut: 'actif', createdAt: new Date().toISOString() });
-    toast('Contrat créé ✓', 'success');
+  try {
+    if (file) {
+      const emp = ctEmployes().find(e => String(e.id) === String(employeId));
+      const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+      data.fichierPath = await sbUploadJustificatif(file, folder);
+      data.fichierNom = file.name;
+    }
+    const saved = await sbSaveContrat(data);
+    if (ctEditId) {
+      const idx = _ctCache.findIndex(x => x.id === ctEditId);
+      if (idx >= 0) _ctCache[idx] = saved;
+      toast('Contrat mis à jour');
+    } else {
+      _ctCache.unshift(saved);
+      toast('Contrat créé ✓', 'success');
+    }
+    if (typeof auditLog === 'function') auditLog('contrat_save', `Contrat — ${ctEmployeNom(employeId)}`);
+    closeModal('modalContrat');
+    renderContrats();
+  } catch (e) {
+    const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[saveContrat]', e);
   }
-  saveContrats(list);
-  if (typeof auditLog === 'function') auditLog('contrat_save', `Contrat — ${ctEmployeNom(employeId)}`);
-  closeModal('modalContrat');
-  renderContrats();
 }
 
 function deleteContrat() {
   if (!ctEditId) return;
-  confirmDialog('Supprimer ce contrat ?', () => {
-    saveContrats(getContrats().filter(x => x.id !== ctEditId));
-    closeModal('modalContrat');
-    renderContrats();
-    toast('Contrat supprimé', 'info');
+  const id = ctEditId;
+  confirmDialog('Supprimer ce contrat ?', async () => {
+    try {
+      await sbDeleteContrat(id);
+      _ctCache = _ctCache.filter(x => x.id !== id);
+      closeModal('modalContrat');
+      renderContrats();
+      toast('Contrat supprimé', 'info');
+    } catch (e) {
+      toast('Erreur : ' + (e?.message || e), 'error');
+      console.error('[deleteContrat]', e);
+    }
   });
 }
 
 // ── INIT ──
-function initContrats() {
+async function initContrats() {
   const s = Auth.requireAuth();
   if (!s) return;
+  try {
+    [_ctCache, _ctEmployesCache] = await Promise.all([sbGetContrats(), sbGetEmployes()]);
+  } catch (e) {
+    console.error('[initContrats]', e);
+    toast('Erreur de chargement', 'error');
+  }
   const employes = ctEmployes();
   const opts = employes.map(e => `<option value="${e.id}">${escHtml((e.prenom||'')+' '+(e.nom||''))}</option>`).join('');
   document.getElementById('ctFilterEmploye').innerHTML = '<option value="">Tous les employés</option>' + opts;

@@ -25,7 +25,7 @@ const CVS_THEM_STATUTS = {
 };
 
 function _cvsThemSatScore(catIds) {
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _cvsSatCache;
   if (!satAll.length || !catIds.length) return null;
   const qIds = catIds.flatMap(cid => (CVS_SAT_CATS.find(c => c.id === cid) || {}).qIds || []);
   if (!qIds.length) return null;
@@ -53,8 +53,24 @@ const CVS_RESOLUTION_STATUTS = {
   fait: { label: 'Réalisé', color: '#16a34a' }
 };
 
-function getCvs() { return DB.get(DB.keys.cvs) || { membres: [], seances: [] }; }
-function saveCvs(data) { DB.set(DB.keys.cvs, data); }
+// Source = Supabase. Caches mémoire chargés au démarrage.
+let _cvsCache = null;
+let _cvsSatCache = []; // questionnaires de satisfaction (pour les scores par thématique)
+function getCvs() {
+  if (!_cvsCache || typeof _cvsCache !== 'object') _cvsCache = { membres: [], seances: [] };
+  if (!_cvsCache.membres) _cvsCache.membres = [];
+  if (!_cvsCache.seances) _cvsCache.seances = [];
+  return _cvsCache;
+}
+function saveCvs(data) {
+  _cvsCache = data;
+  sbSaveCvs(data).catch(e => { console.error('[cvs]', e); toast('Erreur sauvegarde CVS', 'error'); });
+}
+async function loadCvsCache() {
+  const d = await sbGetCvs();
+  _cvsCache = (d && typeof d === 'object') ? d : { membres: [], seances: [] };
+  _cvsSatCache = await sbGetSatisfaction();
+}
 
 function cvsMembres() {
   const data = getCvs();
@@ -89,7 +105,7 @@ function renderCvs() {
   const ans = today().slice(0, 4);
   const seancesAnnee = cvsSeances().filter(s => (s.date || '').slice(0, 4) === ans);
 
-  const satAllCvs = DB.get(DB.keys.satisfaction) || [];
+  const satAllCvs = _cvsSatCache;
   let satScoreCvs = null;
   if (satAllCvs.length) {
     let st = 0, sc = 0;
@@ -100,13 +116,12 @@ function renderCvs() {
   const themAll = getCvs().thematiques || [];
   const themOuverts = themAll.filter(t => t.statut === 'ouvert' || t.statut === 'en_cours').length;
 
-  const _sc = 'background:#fff;border:1px solid var(--border);border-top:none;border-right:none;border-bottom:none';
   document.getElementById('cvsStats').innerHTML = `
-    <div class="stat-card" style="${_sc};border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Membres actifs</span></div><div class="stat-num">${membresActifs.length}</div></div>
-    <div class="stat-card" style="${_sc};border-left:3px solid #0369a1"><div class="stat-card-top"><span class="stat-label">Prochaine séance</span></div><div class="stat-num" style="font-size:1.1rem">${prochaine ? formatDate(prochaine.date) : '—'}</div></div>
-    <div class="stat-card" style="${_sc};border-left:3px solid ${enCours.length ? '#d97706' : '#16a34a'}"><div class="stat-card-top"><span class="stat-label">Résolutions en cours</span></div><div class="stat-num">${enCours.length}</div></div>
-    <div class="stat-card" style="${_sc};border-left:3px solid ${satColCvs}"><div class="stat-card-top"><span class="stat-label">⭐ Satisfaction</span></div><div class="stat-num" style="color:${satColCvs}">${satScoreCvs !== null ? satScoreCvs+'%' : '—'}</div></div>
-    <div class="stat-card" style="${_sc};border-left:3px solid #6366f1"><div class="stat-card-top"><span class="stat-label">🎯 Thématiques ouvertes</span></div><div class="stat-num">${themOuverts}</div></div>`;
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Membres actifs</span></div><div class="chx-stat-num">${membresActifs.length}</div></div>
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Prochaine séance</span></div><div class="chx-stat-num" style="font-size:1.1rem">${prochaine ? formatDate(prochaine.date) : '—'}</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Résolutions en cours</span></div><div class="chx-stat-num">${enCours.length}</div></div>
+    <div class="chx-stat" style="--c:${satColCvs}"><div class="chx-stat-top"><span class="chx-stat-lbl">⭐ Satisfaction</span></div><div class="chx-stat-num" style="color:${satColCvs}">${satScoreCvs !== null ? satScoreCvs+'%' : '—'}</div>${satScoreCvs !== null ? `<div class="chx-stat-bar"><i style="width:${satScoreCvs}%"></i></div>` : ''}</div>
+    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">🎯 Thématiques ouvertes</span></div><div class="chx-stat-num">${themOuverts}</div></div>`;
 
   // Compteur composition
   const countEl = document.getElementById('cvsMembresCount');
@@ -134,7 +149,7 @@ function renderCvsMembresGallery() {
   const membres = cvsMembres().filter(m => m.statut !== 'ancien');
   if (!membres.length) { el.innerHTML = ''; return; }
 
-  const allRes = DB.get(DB.keys.residents) || [];
+  const allRes = sbResidents();
   el.innerHTML = `
     <div style="background:#eef4f9;border:1px solid #cddaea;border-radius:12px;padding:.9rem 1rem;margin-bottom:1.25rem">
       <div style="margin-bottom:.75rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">
@@ -192,7 +207,7 @@ function renderCvsMembres() {
 function cvsMembreCard(m) {
   const c = CVS_COLLEGES[m.college] || CVS_COLLEGES.exterieur;
   const ancien = m.statut === 'ancien';
-  const allRes = DB.get(DB.keys.residents) || [];
+  const allRes = sbResidents();
   const r = m.residentId ? allRes.find(x => x.id === m.residentId) : null;
   const photoHtml = m.college === 'residents'
     ? (r?.photo
@@ -232,7 +247,7 @@ function cvsOnResidentSelect(residentId) {
   const preview = document.getElementById('cmResidentPreview');
   if (!preview) return;
   if (!residentId) { preview.innerHTML = ''; return; }
-  const r = (DB.get(DB.keys.residents) || []).find(x => x.id === residentId);
+  const r = sbResidents().find(x => x.id === residentId);
   if (!r) { preview.innerHTML = ''; return; }
   const nom = escHtml(((r.nom||'')+' '+(r.prenom||'')).trim());
   const photo = r.photo
@@ -256,7 +271,7 @@ function openMembreModal(id) {
 
   // Charger les résidents dans le sélecteur
   const resSelect = document.getElementById('cmResidentId');
-  const residents = (DB.get(DB.keys.residents) || [])
+  const residents = sbResidents()
     .filter(r => !r.dateSortie || r.dateSortie >= today())
     .sort((a,b) => (a.nom||'').localeCompare(b.nom||'','fr'));
   resSelect.innerHTML = '<option value="">— Sélectionner un résident —</option>'
@@ -270,37 +285,31 @@ function openMembreModal(id) {
   openModal('modalCvsMembre');
 }
 
-function _syncMandatEcheance(membreId, nom, mandatFin, residentId) {
-  let list = DB.get(DB.keys.echeances) || [];
-  const existing = list.find(e => e.sourceId === membreId && e.type === 'cvs_mandat');
-  if (!mandatFin) {
-    if (existing) {
-      DB.set(DB.keys.echeances, list.filter(e => e.id !== existing.id));
+async function _syncMandatEcheance(membreId, nom, mandatFin, residentId) {
+  try {
+    const all = await sbGetEcheances();
+    const existing = all.find(e => e.sourceId === membreId && e.type === 'cvs_mandat');
+    if (!mandatFin) {
+      if (existing) await sbDeleteEcheance(existing.id);
+      return;
     }
-    return;
-  }
-  const residentName = residentId
-    ? ((DB.get(DB.keys.residents) || []).find(r => String(r.id) === String(residentId)) || {})
-    : null;
-  const rName = residentName ? `${residentName.prenom || ''} ${residentName.nom || ''}`.trim() : '';
-  const ecData = {
-    type: 'cvs_mandat',
-    libelle: `Fin de mandat CVS — ${nom}`,
-    date: mandatFin,
-    residentId: residentId || null,
-    residentName: rName,
-    notes: '',
-    sourceId: membreId
-  };
-  if (existing) {
-    DB.set(DB.keys.echeances, list.map(e => e.id === existing.id ? { ...e, ...ecData } : e));
-  } else {
-    list.push({ id: genId(), ...ecData, done: false, author: 'CVS', createdAt: new Date().toISOString() });
-    DB.set(DB.keys.echeances, list);
-  }
+    const r = residentId ? (sbResidents().find(x => String(x.id) === String(residentId)) || {}) : {};
+    const rName = `${r.prenom || ''} ${r.nom || ''}`.trim();
+    const ecData = {
+      type: 'cvs_mandat',
+      libelle: `Fin de mandat CVS — ${nom}`,
+      date: mandatFin,
+      residentId: residentId || null,
+      residentName: rName,
+      notes: '',
+      sourceId: membreId
+    };
+    if (existing) await sbSaveEcheance({ ...existing, ...ecData });
+    else await sbSaveEcheance({ ...ecData, done: false, author: 'CVS' });
+  } catch (e) { console.error('[_syncMandatEcheance]', e); }
 }
 
-function saveMembre() {
+async function saveMembre() {
   const nom = document.getElementById('cmNom').value.trim();
   if (!nom) { toast('Le nom est requis', 'error'); return; }
   const college = document.getElementById('cmCollege').value;
@@ -326,7 +335,7 @@ function saveMembre() {
     toast('Membre ajouté ✓');
   }
   saveCvs({ ...cvs, membres });
-  _syncMandatEcheance(membreId, data.nom, data.mandatFin, data.residentId);
+  await _syncMandatEcheance(membreId, data.nom, data.mandatFin, data.residentId);
   if (typeof auditLog === 'function') auditLog('cvs_membre_save', `Membre CVS — ${nom}`);
   closeModal('modalCvsMembre');
   renderCvs();
@@ -343,8 +352,7 @@ function deleteMembre(id) {
   confirmDialog('Supprimer ce membre du CVS ?', () => {
     const cvs = getCvs();
     saveCvs({ ...cvs, membres: (cvs.membres || []).filter(x => x.id !== id) });
-    const echeances = DB.get(DB.keys.echeances) || [];
-    DB.set(DB.keys.echeances, echeances.filter(e => e.sourceId !== id));
+    if (typeof sbDeleteEcheancesBySource === 'function') sbDeleteEcheancesBySource(id).catch(() => {});
     renderCvs();
     toast('Membre supprimé', 'info');
   });
@@ -377,7 +385,7 @@ function cvsSeanceCard(s) {
       ${s.ordreDuJour ? `<div style="font-size:.78rem;color:var(--text)"><strong>Ordre du jour :</strong> ${escHtml(s.ordreDuJour)}</div>` : ''}
       ${s.compteRendu ? `<div style="font-size:.78rem;color:var(--muted)">${escHtml(s.compteRendu).slice(0, 220)}${s.compteRendu.length > 220 ? '…' : ''}</div>` : ''}
       ${futur ? (() => {
-        const satCvs = DB.get(DB.keys.satisfaction) || [];
+        const satCvs = _cvsSatCache;
         const recent = satCvs.filter(x => x.date >= (new Date(Date.now()-90*86400000).toISOString().slice(0,10)));
         if (!recent.length) return `<div style="font-size:.74rem;color:var(--muted);font-style:italic">⭐ Aucun questionnaire de satisfaction récent — <a href="satisfaction.html">en saisir un</a> avant la séance.</div>`;
         let st=0, sc=0;
@@ -663,7 +671,7 @@ function printCR(seanceId) {
     <table><thead><tr><th>Résolution</th><th>Responsable</th><th>Échéance</th><th>Statut</th></tr></thead>
     <tbody>${resolutions.map(r => `<tr><td>${escHtml(r.texte || '')}</td><td>${escHtml(r.responsable || '—')}</td><td>${r.echeance ? formatDate(r.echeance) : '—'}</td><td>${(CVS_RESOLUTION_STATUTS[r.statut] || CVS_RESOLUTION_STATUTS.a_faire).label}</td></tr>`).join('')}</tbody></table>` : ''}
     ${(() => {
-      const satAll = DB.get(DB.keys.satisfaction) || [];
+      const satAll = _cvsSatCache;
       if (!satAll.length) return '';
       const catScores = CVS_SAT_CATS.map(cat => {
         let tot=0,cnt=0;
@@ -682,7 +690,7 @@ function printCR(seanceId) {
 
 // ── PANNEAU ANALYSE SATISFACTION ──
 function renderSatAnalysisPanel() {
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _cvsSatCache;
   if (!satAll.length) {
     return `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
       <div style="font-size:.8rem;color:var(--muted)">Aucun questionnaire de satisfaction rempli pour le moment.</div>
@@ -804,7 +812,7 @@ function openThematiqueModal(id, preCatId) {
   }).join('');
 
   // Score sat live par catégorie dans le modal
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _cvsSatCache;
   const scoresHtml = satAll.length ? CVS_SAT_CATS.map(c => {
     let tot=0,cnt=0;
     satAll.forEach(s => c.qIds.forEach(q => { const v=s.reponses?.[q]; if(v!=null){tot+=Number(v);cnt++;} }));
@@ -878,10 +886,12 @@ function deleteThematique(id) {
 }
 
 // ── INIT ──
-function initCvs() {
+async function initCvs() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_cvs')) return;
+  await sbLoadResidentsCache();
+  await loadCvsCache();
   cvsCanEdit = ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : false) || Auth.isAdmin();
   document.getElementById('cmCollege').innerHTML = Object.entries(CVS_COLLEGES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');
   document.getElementById('cmRole').innerHTML = Object.entries(CVS_ROLES).map(([k, l]) => `<option value="${k}">${l}</option>`).join('');

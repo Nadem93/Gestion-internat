@@ -34,10 +34,10 @@ function renderEig() {
   const enRetard = aDeclarer.filter(i => i.date && i.date < td);
 
   document.getElementById('eStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid ${enRetard.length ? '#dc2626' : '#d97706'}"><div class="stat-card-top"><span class="stat-label">À déclarer</span></div><div class="stat-num">${aDeclarer.length}</div>${enRetard.length ? `<div style="font-size:.7rem;color:#dc2626;margin-top:.2rem">${enRetard.length} en retard</div>` : ''}</div>
-    <div class="stat-card" style="border-left:3px solid #2563eb"><div class="stat-card-top"><span class="stat-label">Déclarés, en cours</span></div><div class="stat-num">${enCours.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Clôturés (${ans})</span></div><div class="stat-num">${clotureesAnnee.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #6b7280"><div class="stat-card-top"><span class="stat-label">Total registre</span></div><div class="stat-num">${all.length}</div></div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">À déclarer</span></div><div class="chx-stat-num">${aDeclarer.length}</div>${enRetard.length ? `<div style="font-size:.7rem;color:#dc2626;margin-top:.2rem">${enRetard.length} en retard</div>` : ''}</div>
+    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Déclarés, en cours</span></div><div class="chx-stat-num">${enCours.length}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Clôturés (${ans})</span></div><div class="chx-stat-num">${clotureesAnnee.length}</div></div>
+    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Total registre</span></div><div class="chx-stat-num">${all.length}</div></div>`;
 
   aDeclarer.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   enCours.sort((a, b) => (b.eig.dateDeclarationARS || '').localeCompare(a.eig.dateDeclarationARS || ''));
@@ -227,11 +227,12 @@ function printRegistreEig() {
 }
 
 // ── INIT ──
-function initEig() {
+async function initEig() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_incidents')) return;
   eigCanEdit = ((typeof canValidateIncidents === 'function') ? canValidateIncidents(s.userId) : false) || Auth.isAdmin();
+  try { _incCache = await sbGetIncidents(); } catch (e) { console.error('[initEig]', e); }
   renderEig();
 }
 document.addEventListener('DOMContentLoaded', initEig);

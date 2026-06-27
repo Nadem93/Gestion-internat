@@ -1,6 +1,5 @@
-// ── DATA ──
-function getMessages() { return DB.get(DB.keys.messages) || []; }
-function setMessages(m) { DB.set(DB.keys.messages, m); }
+// ── DATA ── (source = Supabase, caches dans messages-supabase.js)
+function getMessages() { return _msgCache; }
 function getUsers() { return DB.get(DB.keys.users) || []; }
 
 let currentConvId = null;
@@ -14,17 +13,16 @@ function convId(userIds) {
 
 function getOrCreateConv(userIds) {
   const id = convId(userIds);
-  let convs = DB.get('ftr_conversations') || {};
-  if (!convs[id]) {
-    convs[id] = { id, userIds: [...new Set(userIds)], createdAt: new Date().toISOString() };
-    DB.set('ftr_conversations', convs);
+  if (!_convCache[id]) {
+    const conv = { id, userIds: [...new Set(userIds.map(String))], createdAt: new Date().toISOString() };
+    _convCache[id] = conv;
+    sbSaveConversation(conv).catch(e => { console.error('[conv]', e); toast('Erreur conversation', 'error'); });
   }
   return id;
 }
 
 function getConvParticipants(convId) {
-  const convs = DB.get('ftr_conversations') || {};
-  return convs[convId]?.userIds || [];
+  return _convCache[convId]?.userIds || [];
 }
 
 function getConvMessages(convId) {
@@ -36,7 +34,7 @@ function renderConvs() {
   const session = Auth.getSession();
   if (!session) return;
   const allMsgs = getMessages();
-  const convs = DB.get('ftr_conversations') || {};
+  const convs = _convCache;
   const q = (document.getElementById('convSearch')?.value || '').trim().toLowerCase();
   const users = getUsers();
   const myUserId = String(session.userId);
@@ -250,11 +248,11 @@ function toggleComposeUser(id) {
   renderComposeUsers();
 }
 
-function startComposeConv() {
+async function startComposeConv() {
   if (!composeSelected.length) return;
   const session = Auth.getSession();
   if (composeTargetConv) {
-    addUsersToConv(composeTargetConv, composeSelected);
+    await addUsersToConv(composeTargetConv, composeSelected);
     closeCompose();
     renderConvs();
     renderChat();
@@ -268,23 +266,23 @@ function startComposeConv() {
   document.getElementById('chatInput').focus();
 }
 
-function addUsersToConv(targetConvId, newUserIds) {
-  const convs = DB.get('ftr_conversations') || {};
-  const conv = convs[targetConvId];
+async function addUsersToConv(targetConvId, newUserIds) {
+  const conv = _convCache[targetConvId];
   if (!conv) return;
   const oldUserIds = conv.userIds.map(String);
   const allIds = [...new Set([...oldUserIds, ...newUserIds.map(String)])];
   const newConvId = convId(allIds);
   if (newConvId === targetConvId) return; // no change
-  // Create new conversation entry
-  convs[newConvId] = { id: newConvId, userIds: allIds, createdAt: conv.createdAt };
-  // Update all messages to new convId
-  const msgs = DB.get(DB.keys.messages) || [];
-  msgs.forEach(m => { if (m.convId === targetConvId) m.convId = newConvId; });
-  DB.set(DB.keys.messages, msgs);
-  // Remove old conversation
-  delete convs[targetConvId];
-  DB.set('ftr_conversations', convs);
+  try {
+    const newConv = { id: newConvId, userIds: allIds, createdAt: conv.createdAt };
+    _convCache[newConvId] = newConv;
+    await sbSaveConversation(newConv);
+    // Réaffecte les messages de l'ancienne conversation à la nouvelle
+    const toMove = _msgCache.filter(m => m.convId === targetConvId);
+    for (const m of toMove) { await sbUpdateMessageConv(m.id, newConvId); m.convId = newConvId; }
+    delete _convCache[targetConvId];
+    await sbDeleteConversation(targetConvId);
+  } catch (e) { console.error('[addUsersToConv]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   currentConvId = newConvId;
   toast('Participant ajouté');
 }
@@ -369,6 +367,7 @@ function renderChat() {
 
   let curDateGroup = '';
   let html = '';
+  const _newlyRead = [];
   for (const m of msgs) {
     const msgDate = new Date(m.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
     if (msgDate !== curDateGroup) {
@@ -406,9 +405,11 @@ function renderChat() {
     if (isUnread) {
       if (!m.readBy) m.readBy = [];
       m.readBy.push(session.userId);
+      _newlyRead.push(m);
     }
   }
-  setMessages(allMsgs);
+  // Persiste uniquement les messages qui viennent d'être lus (pas à chaque rendu)
+  _newlyRead.forEach(m => sbUpdateMessageReadBy(m.id, m.readBy).catch(() => {}));
   renderConvs();
   msgsEl.innerHTML = html;
   msgsEl.scrollTop = msgsEl.scrollHeight;
@@ -447,43 +448,38 @@ function updateChips() {
   }).join('');
 }
 
-function sendChatMsg() {
+async function sendChatMsg() {
   const session = Auth.getSession();
   if (!currentConvId || !session) return;
   const input = document.getElementById('chatInput');
   const body = input.value.trim();
   if (!body) return;
 
-  const msg = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    convId: currentConvId,
-    from: session.userId,
-    body,
-    date: new Date().toISOString(),
-    readBy: [session.userId]
-  };
-  const msgs = getMessages();
-  msgs.push(msg);
-  setMessages(msgs);
+  try {
+    const saved = await sbSaveMessage({
+      convId: currentConvId, from: session.userId, body,
+      date: new Date().toISOString(), readBy: [session.userId]
+    });
+    _msgCache.push(saved);
+  } catch (e) { console.error('[sendChatMsg]', e); toast('Erreur envoi : ' + (e?.message || e), 'error'); return; }
   input.value = '';
   renderChat();
   renderConvs();
 }
 
-function deleteConv(convId) {
+function deleteConv(cid) {
   if (!confirm('Supprimer cette conversation et tous ses messages ?')) return;
-  let convs = DB.get('ftr_conversations') || {};
-  delete convs[convId];
-  DB.set('ftr_conversations', convs);
-  let msgs = getMessages();
-  msgs = msgs.filter(m => m.convId !== convId);
-  setMessages(msgs);
-  if (currentConvId === convId) {
-    currentConvId = null;
-    renderChat();
-  }
-  renderConvs();
-  toast('Conversation supprimée', 'info');
+  (async () => {
+    try {
+      await sbDeleteMessagesByConv(cid);
+      await sbDeleteConversation(cid);
+      delete _convCache[cid];
+      _msgCache = _msgCache.filter(m => m.convId !== cid);
+    } catch (e) { console.error('[deleteConv]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    if (currentConvId === cid) { currentConvId = null; renderChat(); }
+    renderConvs();
+    toast('Conversation supprimée', 'info');
+  })();
 }
 
 function formatConvTime(date) {
@@ -561,21 +557,12 @@ function autoResizeTextarea(el) {
 }
 
 // ── INIT ──
-function initMessages() {
+async function initMessages() {
   const chatInput = document.getElementById('chatInput');
   if (chatInput) {
     chatInput.addEventListener('input', () => autoResizeTextarea(chatInput));
   }
-  const session = Auth.getSession();
-  let allMsgs = getMessages();
-  let changed = false;
-  allMsgs.forEach(m => {
-    if (!Array.isArray(m.readBy)) {
-      m.readBy = [];
-      changed = true;
-    }
-  });
-  if (changed) setMessages(allMsgs);
+  await loadMessagesData();
   renderConvs();
   renderChat();
 }

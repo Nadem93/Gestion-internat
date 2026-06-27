@@ -1,8 +1,9 @@
 let _flResidentId = '';
 let _flData = {};
 
-function initFicheLiaison() {
+async function initFicheLiaison() {
   Auth.requireAuth();
+  await sbLoadResidentsCache();
   const params = new URLSearchParams(window.location.search);
   _flResidentId = params.get('residentId') || params.get('id') || '';
 
@@ -16,7 +17,7 @@ function initFicheLiaison() {
 }
 
 function _populateFlResidents() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const el = document.getElementById('flResident');
   if (!el) return;
   el.innerHTML = '<option value="">— Choisir un résident —</option>' +
@@ -34,7 +35,7 @@ function loadFicheLiaison() {
     return;
   }
 
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const r = residents.find(x => x.id === _flResidentId);
   if (!r) { document.getElementById('flContent').innerHTML = '<p class="error">Résident introuvable.</p>'; return; }
 

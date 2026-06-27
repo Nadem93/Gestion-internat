@@ -57,10 +57,14 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/viatrajectoire-supabase.js"></script>
 <script src="js/viatrajectoire.js"></script>
 <script>
   Auth.requireAuth();
-  if (!requireModule('access_viatrajectoire')) {
+  if (!Auth.isAdmin()) {
     document.getElementById('vtContent').innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><div style="font-size:2rem;margin-bottom:.75rem">🔒</div><h3>Accès refusé</h3><p>Vous n\'avez pas la permission d\'accéder à ce module.</p><a href="accueil.html" class="btn btn-accent" style="margin-top:1rem">Retour à l\'accueil</a></div>';
   }
 </script>

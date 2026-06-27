@@ -22,8 +22,10 @@ const PS_CATS = [
   { id:'autre',        label:'Autre',                color:'#64748b', icon:'📋' }
 ];
 
-function getPs()       { return DB.get(PS_KEY) || []; }
-function savePs(list)  { DB.set(PS_KEY, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _psCache = [];
+function getPs()       { return _psCache; }
+async function loadPsCache() { _psCache = await sbGetPlanSoins(); }
 
 function _psCat(id)    { return PS_CATS.find(c => c.id === id) || PS_CATS[7]; }
 function _psFreq(id)   { return PS_FREQS.find(f => f.id === id) || PS_FREQS[0]; }
@@ -31,9 +33,11 @@ function _psFreq(id)   { return PS_FREQS.find(f => f.id === id) || PS_FREQS[0]; 
 let _psResidentId = '';
 let _psEditId     = '';
 
-function initPlanSoins() {
+async function initPlanSoins() {
   const s = Auth.requireAuth();
   if (!s) return;
+  await sbLoadResidentsCache();
+  await loadPsCache();
   _populatePsResidents();
   const params = new URLSearchParams(window.location.search);
   const rid = params.get('residentId') || params.get('id');
@@ -51,7 +55,7 @@ function initPlanSoins() {
 }
 
 function _populatePsResidents() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   ['psResident','psModalResident'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -67,7 +71,7 @@ function renderPlanSoins() {
   const container = document.getElementById('psList');
   if (!container) return;
   const filterCat = document.getElementById('psFilterCat')?.value || '';
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
 
   let list = getPs();
   if (_psResidentId) list = list.filter(p => p.residentId === _psResidentId);
@@ -169,7 +173,7 @@ function openPsModal(id, presetResidentId) {
   openModal('modalPlanSoins');
 }
 
-function savePlanSoins() {
+async function savePlanSoins() {
   const libelle = document.getElementById('psModalLibelle').value.trim();
   if (!libelle) { toast('Le libellé est obligatoire', 'error'); return; }
   const rid = document.getElementById('psModalResident').value;
@@ -185,34 +189,44 @@ function savePlanSoins() {
     note:         document.getElementById('psModalNote').value.trim(),
     actif:        true
   };
-  if (_psEditId) {
-    const idx = list.findIndex(x => x.id === _psEditId);
-    if (idx >= 0) { Object.assign(list[idx], data, { updatedAt: now }); }
-    toast('Soin modifié');
-  } else {
-    list.unshift({ id: genId(), ...data, createdAt: now });
-    toast('Soin ajouté', 'success');
-  }
-  savePs(list);
+  try {
+    if (_psEditId) {
+      const old = _psCache.find(x => x.id === _psEditId) || {};
+      const saved = await sbSavePlanSoins({ ...old, ...data, id: _psEditId });
+      _psCache = _psCache.map(x => x.id === _psEditId ? saved : x);
+      toast('Soin modifié');
+    } else {
+      const saved = await sbSavePlanSoins(data);
+      _psCache.unshift(saved);
+      toast('Soin ajouté', 'success');
+    }
+  } catch (e) { console.error('[savePlanSoins]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalPlanSoins');
   renderPlanSoins();
 }
 
-function togglePsActif(id) {
-  const list = getPs();
-  const s = list.find(x => x.id === id);
+async function togglePsActif(id) {
+  const s = _psCache.find(x => x.id === id);
   if (!s) return;
-  s.actif = s.actif === false ? true : false;
-  savePs(list);
+  const newActif = s.actif === false;
+  try {
+    const saved = await sbSavePlanSoins({ ...s, actif: newActif, id });
+    _psCache = _psCache.map(x => x.id === id ? saved : x);
+  } catch (e) { console.error('[togglePsActif]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   renderPlanSoins();
-  toast(s.actif ? 'Soin réactivé' : 'Soin suspendu');
+  toast(newActif ? 'Soin réactivé' : 'Soin suspendu');
 }
 
 function deletePs(id) {
   if (!confirm('Supprimer ce soin du plan ?')) return;
-  savePs(getPs().filter(x => x.id !== id));
-  renderPlanSoins();
-  toast('Soin supprimé');
+  (async () => {
+    try {
+      await sbDeletePlanSoins(id);
+      _psCache = _psCache.filter(x => x.id !== id);
+    } catch (e) { console.error('[deletePs]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderPlanSoins();
+    toast('Soin supprimé');
+  })();
 }
 
 document.addEventListener('DOMContentLoaded', initPlanSoins);

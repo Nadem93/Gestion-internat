@@ -1,5 +1,3 @@
-const AST_KEY = DB.keys.astreintes;
-
 const AST_TYPES = [
   { id:'medecin',    label:'Médecin de garde',      icon:'👨‍⚕️', color:'#dc2626' },
   { id:'infirmier',  label:'Infirmier(e) d\'astreinte', icon:'🩺', color:'#8b5cf6' },
@@ -8,20 +6,21 @@ const AST_TYPES = [
   { id:'direction',  label:'Direction',             icon:'🏛️', color:'#0f2b4a' }
 ];
 
-function getAst()       { return DB.get(AST_KEY) || []; }
-function saveAst(list)  { DB.set(AST_KEY, list); }
+let _astCache = [];
+function getAst()       { return _astCache; }
 function _astType(id)   { return AST_TYPES.find(t => t.id === id) || AST_TYPES[0]; }
 
 let _astWeekOffset = 0;
 let _astEditId = '';
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-function initAstreintes() {
+async function initAstreintes() {
   Auth.requireAuth();
   _populateAstEmployes();
   document.getElementById('astPrev')?.addEventListener('click', () => { _astWeekOffset--; renderAstreintes(); });
   document.getElementById('astNext')?.addEventListener('click', () => { _astWeekOffset++; renderAstreintes(); });
   document.getElementById('astToday')?.addEventListener('click', () => { _astWeekOffset = 0; renderAstreintes(); });
+  _astCache = await sbGetAstreintes();
   renderAstreintes();
 }
 
@@ -97,7 +96,7 @@ function renderAstreintes() {
   if (!gridEl) return;
 
   gridEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:170px repeat(7,minmax(120px,1fr));gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;min-width:1010px">
+    <div style="display:grid;grid-template-columns:100px repeat(7,minmax(90px,1fr));gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff">
 
       <!-- Header jours -->
       <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:.65rem .5rem;font-size:.72rem;font-weight:700;color:var(--muted);text-align:center">Type</div>
@@ -114,7 +113,7 @@ function renderAstreintes() {
       ${AST_TYPES.map(type => `
         <div style="padding:.65rem .85rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:.45rem;background:#fafafa">
           <span style="font-size:1.05rem">${type.icon}</span>
-          <span style="font-size:.74rem;font-weight:600;color:${type.color};line-height:1.25">${type.label}</span>
+          <span style="font-size:.62rem;font-weight:600;color:${type.color};line-height:1.2">${type.label}</span>
         </div>
         ${days.map(d => {
           const gardes = list.filter(a => a.date === d && a.type === type.id);
@@ -149,45 +148,50 @@ function openAstModal(id, presetType, presetDate) {
   openModal('modalAst');
 }
 
-function saveAstreinte() {
+async function saveAstreinte() {
   const date = document.getElementById('astModalDate').value;
   const nom  = document.getElementById('astModalNom').value.trim();
   const type = document.getElementById('astModalType').value;
   if (!date || !nom) { toast('Date et nom obligatoires', 'error'); return; }
 
-  const list = getAst();
-  const now  = new Date().toISOString();
   const data = {
     type, date, nom,
     tel:  document.getElementById('astModalTel').value.trim(),
     note: document.getElementById('astModalNote').value.trim()
   };
-  if (_astEditId) {
-    const idx = list.findIndex(x => x.id === _astEditId);
-    if (idx >= 0) Object.assign(list[idx], data, { updatedAt: now });
-    toast('Astreinte modifiée');
-  } else {
-    list.push({ id: genId(), ...data, createdAt: now });
-    toast('Astreinte enregistrée', 'success');
+  try {
+    if (_astEditId) {
+      const saved = await sbSaveAstreinte({ ...data, id: _astEditId });
+      const idx = _astCache.findIndex(x => x.id === _astEditId);
+      if (idx !== -1) _astCache[idx] = saved;
+      toast('Astreinte modifiée');
+    } else {
+      const saved = await sbSaveAstreinte(data);
+      _astCache.push(saved);
+      toast('Astreinte enregistrée', 'success');
+    }
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
-  saveAst(list);
   closeModal('modalAst');
   renderAstreintes();
 }
 
-function deleteAst(id) {
-  if (!id) {
-    const delId = _astEditId;
-    if (!delId) return;
-    if (!confirm('Supprimer cette astreinte ?')) return;
-    saveAst(getAst().filter(x => x.id !== delId));
-    closeModal('modalAst');
-    renderAstreintes();
-    toast('Astreinte supprimée');
+async function deleteAst(id) {
+  const delId = id || _astEditId;
+  if (!delId) return;
+  if (!confirm('Supprimer cette astreinte ?')) return;
+  try {
+    await sbDeleteAstreinte(delId);
+  } catch (e) {
+    toast('Erreur lors de la suppression', 'error');
+    console.error(e);
     return;
   }
-  if (!confirm('Supprimer cette astreinte ?')) return;
-  saveAst(getAst().filter(x => x.id !== id));
+  _astCache = _astCache.filter(x => x.id !== delId);
+  closeModal('modalAst');
   renderAstreintes();
   toast('Astreinte supprimée');
 }

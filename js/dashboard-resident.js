@@ -3,13 +3,14 @@ function getResidentFromUrl() {
   return p.get('id');
 }
 
-function loadResidentDashboard() {
+async function loadResidentDashboard() {
   const id = getResidentFromUrl();
   if (!id) {
     document.getElementById('drContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠</div><h3>Résident non spécifié</h3></div>';
     return;
   }
-  const r = (DB.get(DB.keys.residents)||[]).find(x => String(x.id) === String(id));
+  await sbLoadResidentsCache();
+  const r = sbResidents().find(x => String(x.id) === String(id));
   if (!r) {
     document.getElementById('drContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠</div><h3>Résident introuvable</h3></div>';
     return;
@@ -58,10 +59,10 @@ function loadResidentDashboard() {
 
   const html = `
     <div class="grid grid-4" style="margin-bottom:1.5rem">
-      <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Absences (mois)</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div></div><div class="stat-num">${monthAbsences}</div><div class="stat-change">${monthTotal ? Math.round(monthAbsences/monthTotal*100)+'%' : '—'}</div></div>
-      <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Événements à venir</span><div class="stat-icon" style="background:#fef3f2;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-num">${upcomingEvents.length}</div><div class="stat-change">Sur le planning</div></div>
-      <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Avenants actifs</span><div class="stat-icon" style="background:#f0fdf4;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div></div><div class="stat-num">${rPpe.length}</div><div class="stat-change">${rPpe.length ? (rPpe.filter(p=>p.statut==='actif').length)+' en cours' : 'Aucun'}</div></div>
-      <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Documents</span><div class="stat-icon" style="background:#eef2ff;color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-num">${docCount}</div><div class="stat-change">Fichiers attachés</div></div>
+      <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Absences (mois)</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span></div><div class="chx-stat-num">${monthAbsences}</div>${monthTotal ? `<div class="chx-stat-bar"><i style="width:${Math.round(monthAbsences/monthTotal*100)}%"></i></div>` : ''}<div class="chx-stat-sub">${monthTotal ? Math.round(monthAbsences/monthTotal*100)+'%' : '—'}</div></div>
+      <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Événements à venir</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div class="chx-stat-num">${upcomingEvents.length}</div><div class="chx-stat-sub">Sur le planning</div></div>
+      <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Avenants actifs</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></span></div><div class="chx-stat-num">${rPpe.length}</div><div class="chx-stat-sub">${rPpe.length ? (rPpe.filter(p=>p.statut==='actif').length)+' en cours' : 'Aucun'}</div></div>
+      <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Documents</span><span class="chx-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span></div><div class="chx-stat-num">${docCount}</div><div class="chx-stat-sub">Fichiers attachés</div></div>
     </div>
 
     <div class="grid grid-2" style="gap:1.5rem">

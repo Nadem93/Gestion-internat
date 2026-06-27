@@ -19,8 +19,10 @@ const INV_ETATS = {
   hors_usage: { label:'Hors d\'usage', color:'#64748b' }
 };
 
-function getInv()       { return DB.get(INV_KEY) || []; }
-function saveInv(list)  { DB.set(INV_KEY, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _invCache = [];
+function getInv()       { return _invCache; }
+async function loadInvCache() { _invCache = await sbGetInventaire(); }
 function _invCat(id)    { return INV_CATS.find(c => c.id === id) || INV_CATS[8]; }
 
 let _invEditId    = '';
@@ -28,8 +30,9 @@ let _invFilterCat = '';
 let _invFilterEtat = '';
 let _invSearch    = '';
 
-function initInventaire() {
+async function initInventaire() {
   Auth.requireAuth();
+  await loadInvCache();
   document.getElementById('invSearch')?.addEventListener('input', e => { _invSearch = e.target.value.toLowerCase(); renderInventaire(); });
   document.getElementById('invFilterCat')?.addEventListener('change', e => { _invFilterCat = e.target.value; renderInventaire(); });
   document.getElementById('invFilterEtat')?.addEventListener('change', e => { _invFilterEtat = e.target.value; renderInventaire(); });
@@ -123,11 +126,9 @@ function openInvModal(id, presetCat) {
   openModal('modalInv');
 }
 
-function saveInventaire() {
+async function saveInventaire() {
   const nom = document.getElementById('invModalNom').value.trim();
   if (!nom) { toast('Le nom est obligatoire', 'error'); return; }
-  const list = getInv();
-  const now  = new Date().toISOString();
   const data = {
     cat:             document.getElementById('invModalCat').value,
     nom,
@@ -139,24 +140,30 @@ function saveInventaire() {
     dateMaintenance: document.getElementById('invModalMaintenance').value,
     notes:           document.getElementById('invModalNotes').value.trim()
   };
-  if (_invEditId) {
-    const idx = list.findIndex(x => x.id === _invEditId);
-    if (idx >= 0) Object.assign(list[idx], data, { updatedAt: now });
-    toast('Équipement modifié');
-  } else {
-    list.push({ id: genId(), ...data, createdAt: now });
-    toast('Équipement ajouté', 'success');
-  }
-  saveInv(list);
+  try {
+    if (_invEditId) {
+      const old = _invCache.find(x => x.id === _invEditId) || {};
+      const saved = await sbSaveInventaire({ ...old, ...data, id: _invEditId });
+      _invCache = _invCache.map(x => x.id === _invEditId ? saved : x);
+      toast('Équipement modifié');
+    } else {
+      const saved = await sbSaveInventaire(data);
+      _invCache.push(saved);
+      toast('Équipement ajouté', 'success');
+    }
+  } catch (e) { console.error('[saveInventaire]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalInv');
   renderInventaire();
 }
 
 function deleteInv(id) {
   if (!confirm('Supprimer cet équipement ?')) return;
-  saveInv(getInv().filter(x => x.id !== id));
-  renderInventaire();
-  toast('Supprimé');
+  (async () => {
+    try { await sbDeleteInventaire(id); _invCache = _invCache.filter(x => x.id !== id); }
+    catch (e) { console.error('[deleteInv]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderInventaire();
+    toast('Supprimé');
+  })();
 }
 
 document.addEventListener('DOMContentLoaded', initInventaire);

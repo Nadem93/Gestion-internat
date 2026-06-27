@@ -15,10 +15,24 @@ const ACT_CATEGORIES = {
 const ACT_JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche', 'Ponctuel'];
 const ACT_JOUR_AUJOURDHUI = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][new Date().getDay()];
 
-function getActivites() { return DB.get(DB.keys.activites) || []; }
-function saveActivites(list) { DB.set(DB.keys.activites, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _actCache = [];
+function getActivites() { return _actCache; }
+async function loadActivitesCache() { _actCache = await sbGetActivites(); }
+
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+async function persistResident(r) {
+  const saved = await sbSaveResident(r);
+  const i = _residentsCache.findIndex(x => String(x.id) === String(saved.id));
+  if (i >= 0) _residentsCache[i] = saved; else _residentsCache.push(saved);
+  return saved;
+}
+
 function actResidents() {
-  return (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+  return residentsList().filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''}`.localeCompare(`${b.nom || ''}`, 'fr'));
 }
 
@@ -53,10 +67,10 @@ function renderActivites() {
   const totalInscrits = actResidents().reduce((n, r) => n + (r.activites || []).filter(i => i.statut === 'active').length, 0);
   const aujourdhui = actives.filter(a => a.jour === ACT_JOUR_AUJOURDHUI);
   document.getElementById('aStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #6366f1"><div class="stat-card-top"><span class="stat-label">Activités actives</span></div><div class="stat-num">${actives.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Aujourd'hui (${ACT_JOUR_AUJOURDHUI})</span></div><div class="stat-num">${aujourdhui.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #0d9488"><div class="stat-card-top"><span class="stat-label">Inscriptions actives</span></div><div class="stat-num">${totalInscrits}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">Bilans ce mois</span></div><div class="stat-num">${actBilansCeMois()}</div></div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Activités actives</span></div><div class="chx-stat-num">${actives.length}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Aujourd'hui (${ACT_JOUR_AUJOURDHUI})</span></div><div class="chx-stat-num">${aujourdhui.length}</div></div>
+    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Inscriptions actives</span></div><div class="chx-stat-num">${totalInscrits}</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Bilans ce mois</span></div><div class="chx-stat-num">${actBilansCeMois()}</div></div>`;
 
   const el = document.getElementById('aGrid');
   if (!list.length) {
@@ -122,7 +136,7 @@ function openActiviteModal(id) {
   openModal('modalActivite');
 }
 
-function saveActivite() {
+async function saveActivite() {
   const nom = document.getElementById('amNom').value.trim();
   if (!nom) { toast('Le nom est requis', 'error'); return; }
   const data = {
@@ -136,22 +150,30 @@ function saveActivite() {
     placesMax: parseInt(document.getElementById('amPlacesMax').value, 10) || 0,
     description: document.getElementById('amDescription').value.trim()
   };
-  let list = getActivites();
-  if (actEditId) {
-    list = list.map(x => x.id === actEditId ? { ...x, ...data } : x);
-    toast('Activité mise à jour');
-  } else {
-    list.push({ id: genId(), ...data, actif: true, createdAt: new Date().toISOString() });
-    toast('Activité créée ✓');
-  }
-  saveActivites(list);
+  try {
+    if (actEditId) {
+      const old = _actCache.find(x => x.id === actEditId) || {};
+      const saved = await sbSaveActivite({ ...old, ...data, id: actEditId });
+      _actCache = _actCache.map(x => x.id === actEditId ? saved : x);
+      toast('Activité mise à jour');
+    } else {
+      const saved = await sbSaveActivite({ ...data, actif: true });
+      _actCache.push(saved);
+      toast('Activité créée ✓');
+    }
+  } catch (e) { console.error('[saveActivite]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function') auditLog('activite_save', `Activité — ${nom}`);
   closeModal('modalActivite');
   renderActivites();
 }
 
-function toggleActiviteActif(id) {
-  saveActivites(getActivites().map(x => x.id === id ? { ...x, actif: x.actif === false } : x));
+async function toggleActiviteActif(id) {
+  const old = _actCache.find(x => x.id === id);
+  if (!old) return;
+  try {
+    const saved = await sbSaveActivite({ ...old, actif: old.actif === false, id });
+    _actCache = _actCache.map(x => x.id === id ? saved : x);
+  } catch (e) { console.error('[toggleActiviteActif]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   renderActivites();
 }
 
@@ -178,26 +200,31 @@ function renderBilanAnnuelForm() {
   document.getElementById('baMeta').textContent = bilan ? `Dernière mise à jour par ${bilan.auteur || '?'} le ${formatDate(bilan.date)}` : 'Aucun bilan rédigé pour cette année.';
 }
 
-function saveBilanAnnuel() {
+async function saveBilanAnnuel() {
   const annee = document.getElementById('baAnnee').value;
   const texte = document.getElementById('baTexte').value.trim();
   if (!texte) { toast('Le bilan est vide', 'error'); return; }
   const session = Auth.getSession();
   const auteur = session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : 'Anonyme';
-  const list = getActivites().map(a => {
-    if (a.id !== baActiviteId) return a;
-    return { ...a, bilansAnnuels: { ...(a.bilansAnnuels || {}), [annee]: { texte, auteur, authorId: session?.userId, date: today() } } };
-  });
-  saveActivites(list);
-  if (typeof auditLog === 'function') auditLog('activite_bilan_annuel', `Bilan annuel ${annee} — ${list.find(a => a.id === baActiviteId)?.nom || ''}`);
+  const old = _actCache.find(x => x.id === baActiviteId);
+  if (!old) return;
+  const bilansAnnuels = { ...(old.bilansAnnuels || {}), [annee]: { texte, auteur, authorId: session?.userId, date: today() } };
+  try {
+    const saved = await sbSaveActivite({ ...old, bilansAnnuels, id: baActiviteId });
+    _actCache = _actCache.map(x => x.id === baActiviteId ? saved : x);
+  } catch (e) { console.error('[saveBilanAnnuel]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  if (typeof auditLog === 'function') auditLog('activite_bilan_annuel', `Bilan annuel ${annee} — ${old.nom || ''}`);
   toast('Bilan annuel enregistré ✓', 'success');
   closeModal('modalBilanAnnuel');
   renderActivites();
 }
 
 function deleteActivite(id) {
-  confirmDialog('Supprimer cette activité du catalogue ? Les inscriptions existantes seront conservées sur les fiches résidents.', () => {
-    saveActivites(getActivites().filter(x => x.id !== id));
+  confirmDialog('Supprimer cette activité du catalogue ? Les inscriptions existantes seront conservées sur les fiches résidents.', async () => {
+    try {
+      await sbDeleteActivite(id);
+      _actCache = _actCache.filter(x => x.id !== id);
+    } catch (e) { console.error('[deleteActivite]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
     renderActivites();
     toast('Activité supprimée', 'info');
   });
@@ -275,15 +302,13 @@ function renderParticipantsList(inscrits, activite) {
   }).join('')}</div>`;
 }
 
-function inscrireResident() {
+async function inscrireResident() {
   const rid = document.getElementById('pmAddResident').value;
   if (!rid) { toast('Choisissez un résident', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
-  const r = residents.find(x => String(x.id) === String(rid));
+  const r = residentsList().find(x => String(x.id) === String(rid));
   if (!r) return;
   const inscription = { id: genId(), activiteId: actParticipantsId, dateInscription: today(), statut: 'active', bilans: [] };
-  r.activites = [...(r.activites || []), inscription];
-  DB.set(DB.keys.residents, residents.map(x => String(x.id) === String(rid) ? r : x));
+  await persistResident({ ...r, activites: [...(r.activites || []), inscription] });
   if (typeof auditLog === 'function') auditLog('activite_inscription', `Inscription — ${(r.prenom || '') + ' ' + (r.nom || '')} → ${(getActivites().find(a => a.id === actParticipantsId) || {}).nom || ''}`);
   toast('Résident inscrit ✓');
   openParticipantsModal(actParticipantsId);
@@ -291,12 +316,11 @@ function inscrireResident() {
 }
 
 function desinscrireResident(residentId, inscriptionId) {
-  confirmDialog("Mettre fin à l'inscription de ce résident à l'activité ?", () => {
-    const residents = DB.get(DB.keys.residents) || [];
-    const r = residents.find(x => String(x.id) === String(residentId));
+  confirmDialog("Mettre fin à l'inscription de ce résident à l'activité ?", async () => {
+    const r = residentsList().find(x => String(x.id) === String(residentId));
     if (!r) return;
-    r.activites = (r.activites || []).map(i => i.id === inscriptionId ? { ...i, statut: 'terminee', dateFin: today() } : i);
-    DB.set(DB.keys.residents, residents.map(x => String(x.id) === String(residentId) ? r : x));
+    const activites = (r.activites || []).map(i => i.id === inscriptionId ? { ...i, statut: 'terminee', dateFin: today() } : i);
+    await persistResident({ ...r, activites });
     toast('Inscription terminée', 'info');
     openParticipantsModal(actParticipantsId);
     renderActivites();
@@ -304,10 +328,12 @@ function desinscrireResident(residentId, inscriptionId) {
 }
 
 // ── INIT ──
-function initActivites() {
+async function initActivites() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_activites')) return;
+  await loadResidentsCache();
+  await loadActivitesCache();
   document.getElementById('aFilterCat').innerHTML = '<option value="">Toutes catégories</option>' + Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');
   document.getElementById('aFilterJour').innerHTML = '<option value="">Tous les jours</option>' + ACT_JOURS.map(j => `<option value="${j}">${j}</option>`).join('');
   document.getElementById('amCategorie').innerHTML = Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');

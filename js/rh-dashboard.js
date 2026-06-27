@@ -10,17 +10,20 @@ function rhRow(icon, title, sub, color, href) {
 }
 function rhEmpty(msg) { return `<div class="empty" style="padding:1.5rem;text-align:center"><p style="font-size:.82rem">${msg}</p></div>`; }
 
-function initRhDashboard() {
+async function initRhDashboard() {
   const s = Auth.requireAuth();
   if (!s) return;
 
-  const employes = DB.get(DB.keys.employes) || [];
-  const contrats = DB.get(DB.keys.contrats) || [];
-  const absences = DB.get(DB.keys.absencesAT) || [];
-  const conges   = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
-  const entretiens = DB.get(DB.keys.entretiens) || [];
-  const formations = DB.get(DB.keys.formations) || [];
-  const candidats  = DB.get(DB.keys.candidats) || [];
+  let employes = [], contrats = [], absences = [], conges = [], entretiens = [], formations = [], candidats = [];
+  try {
+    [employes, contrats, absences, conges, entretiens, formations, candidats] = await Promise.all([
+      sbGetEmployes(), sbGetContrats(), sbGetAbsences(), sbGetConges(),
+      sbGetEntretiens(), sbGetFormations(), sbGetCandidats()
+    ]);
+  } catch (e) {
+    console.error('[initRhDashboard]', e);
+    toast('Erreur chargement du tableau de bord RH', 'error');
+  }
   const todayStr = today();
   const in30 = (() => { const d = new Date(todayStr+'T00:00:00'); d.setDate(d.getDate()+30); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
@@ -33,10 +36,10 @@ function initRhDashboard() {
   const candidatsActifs = candidats.filter(c => !['accepte','refuse'].includes(c.statut));
 
   document.getElementById('rhStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #6366f1"><div class="stat-card-top"><span class="stat-label">Effectif</span></div><div class="stat-num">${employes.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #dc2626"><div class="stat-card-top"><span class="stat-label">Absences en cours</span></div><div class="stat-num">${absencesEnCours.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">CDD ≤30j</span></div><div class="stat-num">${cddEcheance.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Congés en attente</span></div><div class="stat-num">${congesEnAttente.length}</div></div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Effectif</span></div><div class="chx-stat-num">${employes.length}</div></div>
+    <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Absences en cours</span></div><div class="chx-stat-num">${absencesEnCours.length}</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">CDD ≤30j</span></div><div class="chx-stat-num">${cddEcheance.length}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Congés en attente</span></div><div class="chx-stat-num">${congesEnAttente.length}</div></div>`;
 
   // Contrats
   document.getElementById('rhContrats').innerHTML = cddEcheance.length
@@ -60,9 +63,11 @@ function initRhDashboard() {
 
   // Congés
   document.getElementById('rhConges').innerHTML = congesEnAttente.length
-    ? congesEnAttente.sort((a,b)=>(a.debut||'').localeCompare(b.debut||'')).map(c =>
-        rhRow('🗓', escHtml(c.employeNom||'Inconnu'), `${formatDate(c.debut)} → ${formatDate(c.fin)}`, '#16a34a', 'conges.html')
-      ).join('')
+    ? congesEnAttente.sort((a,b)=>(a.debut||'').localeCompare(b.debut||'')).map(c => {
+        const e = employes.find(x => String(x.id) === String(c.employeId));
+        const nom = e ? `${e.prenom||''} ${e.nom||''}`.trim() : (c.employeNom||'Inconnu');
+        return rhRow('🗓', escHtml(nom), `${formatDate(c.debut)} → ${formatDate(c.fin)}`, '#16a34a', 'conges.html');
+      }).join('')
     : rhEmpty('Aucune demande en attente.');
 
   // Entretiens
@@ -75,7 +80,7 @@ function initRhDashboard() {
   // Formations
   document.getElementById('rhFormations').innerHTML = formationsAVenir.length
     ? formationsAVenir.slice(0,8).map(f =>
-        rhRow('🎓', escHtml(f.nom||'Formation'), `Le ${formatDate(f.dateDebut)}`, '#7c3aed', 'formations.html')
+        rhRow('🎓', escHtml(f.titre||'Formation'), `Le ${formatDate(f.dateDebut)}`, '#7c3aed', 'formations.html')
       ).join('')
     : rhEmpty('Aucune formation planifiée.');
 

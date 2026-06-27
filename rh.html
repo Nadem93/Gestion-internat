@@ -53,49 +53,13 @@
     .rh-sidebar.collapsed .rh-user-text{display:none}
     .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
     #rhFrame{flex:1;width:100%;border:none}
-    .rh-avatar-rail{width:64px;flex-shrink:0;background:#f7f8fa;border-left:1px solid #e5e7eb;height:100%;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:.85rem;padding:1rem .5rem}
-    .rh-rail-item{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .rh-avatar-rail img,.rh-avatar-rail .rh-rail-initials{width:42px;height:42px;border-radius:50%;cursor:pointer;transition:transform .15s,filter .15s;filter:grayscale(.55);object-fit:cover;flex-shrink:0}
-    .rh-avatar-rail .rh-rail-initials{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.78rem}
-    .rh-rail-item:hover img,.rh-rail-item:hover .rh-rail-initials{transform:scale(1.08);filter:grayscale(0)}
-    .rh-rail-tooltip{display:none}
-    .rh-float-tooltip{position:fixed;background:#6366f1;color:#fff;font-size:.78rem;font-weight:600;padding:.4rem .8rem;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;box-shadow:0 4px 12px rgba(99,102,241,.4);z-index:200}
-    .rh-float-tooltip::after{content:'';position:absolute;left:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-left-color:#6366f1}
-    .rh-float-tooltip.show{opacity:1}
-    .rh-qc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.25);opacity:0;pointer-events:none;transition:opacity .2s;z-index:90}
-    .rh-qc-overlay.open{opacity:1;pointer-events:auto}
-    .rh-qc-panel{position:fixed;top:1.25rem;right:1.25rem;height:560px;width:380px;max-width:92vw;max-height:calc(100vh - 2.5rem);background:#fff;border-radius:18px;box-shadow:0 20px 50px rgba(15,23,42,.25);display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 1.25rem));transition:transform .25s ease;z-index:91}
-    .rh-qc-panel.open{transform:translateX(0)}
-    .rh-qc-header{display:flex;align-items:center;gap:.65rem;padding:.85rem 1rem;border-bottom:1px solid #e5e7eb;flex-shrink:0}
-    .rh-qc-header-info{display:flex;align-items:center;gap:.6rem;flex:1;min-width:0}
-    .rh-qc-avatar{width:38px;height:38px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;object-fit:cover}
-    .rh-qc-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
-    .rh-qc-name{font-weight:700;font-size:.88rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rh-qc-sub{font-size:.72rem;color:#94a3b8}
-    .rh-qc-close{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem}
-    .rh-qc-close:hover{background:#f1f5f9;color:#475569}
-    .rh-qc-body{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.55rem;background:#fafbfc}
-    .rh-qc-row{display:flex;flex-direction:column;max-width:78%}
-    .rh-qc-row.mine{align-self:flex-end;align-items:flex-end}
-    .rh-qc-row.theirs{align-self:flex-start;align-items:flex-start}
-    .rh-qc-bubble{padding:.55rem .85rem;border-radius:14px;font-size:.85rem;line-height:1.4;white-space:pre-wrap;word-break:break-word}
-    .rh-qc-row.mine .rh-qc-bubble{background:#6366f1;color:#fff;border-radius:14px 14px 4px 14px}
-    .rh-qc-row.theirs .rh-qc-bubble{background:#fff;color:#1e293b;border:1px solid #e5e7eb;border-radius:14px 14px 14px 4px}
-    .rh-qc-time{font-size:.66rem;color:#94a3b8;margin-top:.2rem}
-    .rh-qc-footer{display:flex;gap:.5rem;align-items:center;padding:.75rem 1rem;border-top:1px solid #e5e7eb;flex-shrink:0;background:#fff}
-    .rh-qc-input{flex:1;border:1px solid #e5e7eb;border-radius:999px;padding:.55rem 1rem;font-size:.85rem;font-family:inherit;outline:none}
-    .rh-qc-input:focus{border-color:#6366f1}
-    .rh-qc-send{background:#6366f1;color:#fff;border:none;border-radius:999px;padding:.55rem 1.1rem;font-size:.82rem;font-weight:700;cursor:pointer;flex-shrink:0}
-    .rh-qc-send:hover{background:#4f46e5}
-    .rh-qc-empty{font-size:.8rem;color:#94a3b8;text-align:center;margin:auto}
-    @media(max-width:900px){.rh-avatar-rail{display:none}}
     @media(max-width:700px){.rh-sidebar{position:fixed;left:0;top:0;z-index:50;transform:translateX(-100%);transition:transform .2s}.rh-sidebar.open{transform:translateX(0)}}
   </style>
 </head>
 <body>
 <header class="header">
   <div class="header-info"><div class="header-title">Ressources humaines</div></div>
-  <div class="header-right"><a href="accueil.html" class="btn btn-outline btn-sm">← Accueil</a></div>
+  <div class="header-right"></div>
 </header>
 <div class="rh-layout">
 
@@ -115,7 +79,8 @@
 
     <div class="rh-nav-label">Vue d'ensemble</div>
     <button class="rh-nav-link" data-page="rh-dashboard.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#6366f1,#818cf8);--ic2:#818cf888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Tableau de bord RH</span></button>
-    <button class="rh-nav-link" data-page="admin.html?tab=employes"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);--ic2:#a78bfa88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span><span>Employés</span></button>
+    <button class="rh-nav-link" data-page="admin.html?tab=employes"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);--ic2:#a78bfa88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span><span>Utilisateurs</span></button>
+    <button class="rh-nav-link" data-page="contacts-externes.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#e11d48,#fb7185);--ic2:#fb718588"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2"/><path d="M8 16a4 4 0 0 1 8 0"/></svg></span><span>Contacts extérieurs</span></button>
 
     <div class="rh-nav-label">Contrats & absences</div>
     <button class="rh-nav-link" data-page="contrats.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0891b2,#22d3ee);--ic2:#22d3ee88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span><span>Contrats</span></button>
@@ -130,17 +95,14 @@
     <div class="rh-nav-label">Carrière & paie</div>
     <button class="rh-nav-link" data-page="entretiens.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#db2777,#f472b6);--ic2:#f472b688"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span><span>Entretien pro</span></button>
     <button class="rh-nav-link" data-page="formations.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#16a34a,#4ade80);--ic2:#4ade8088"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span><span>Formation</span></button>
-    <button class="rh-nav-link" data-page="paie.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#ea580c,#fb923c);--ic2:#fb923c88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span>Fiches de paie</span></button>
+    <button class="rh-nav-link" data-page="paie.html" data-perm="access_paie"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#ea580c,#fb923c);--ic2:#fb923c88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span>Fiches de paie</span></button>
 
     <div class="rh-nav-label">Recrutement & outils</div>
     <button class="rh-nav-link" data-page="recrutement.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0284c7,#38bdf8);--ic2:#38bdf888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span><span>Recrutement</span></button>
     <button class="rh-nav-link" data-page="diagnostic-droits.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#475569,#94a3b8);--ic2:#94a3b888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>Diagnostic des droits</span></button>
-    <button class="rh-nav-link" data-page="contacts-externes.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#e11d48,#fb7185);--ic2:#fb718588"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2"/><path d="M8 16a4 4 0 0 1 8 0"/></svg></span><span>Contacts extérieurs</span></button>
+    <button class="rh-nav-link" id="rhNavVia" data-page="viatrajectoire.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0d9488,#2dd4bf);--ic2:#2dd4bf88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span><span>ViaTrajectoire</span></button>
 
     <div class="rh-sidebar-bottom">
-      <button class="rh-sidebar-gear" title="Paramètres" onclick="window.top.location.href='admin.html?tab=etablissement'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
       <div class="rh-sidebar-user" id="rhSidebarUser"></div>
     </div>
   </nav>
@@ -150,36 +112,13 @@
     <iframe id="rhFrame" src="rh-dashboard.html"></iframe>
   </div>
 
-  <div class="rh-avatar-rail" id="rhAvatarRail"></div>
-
-</div>
-
-<div class="rh-float-tooltip" id="rhFloatTooltip"></div>
-
-<div class="rh-qc-overlay" id="rhQcOverlay" onclick="closeQuickChat()"></div>
-<div class="rh-qc-panel" id="rhQcPanel">
-  <div class="rh-qc-header">
-    <div class="rh-qc-header-info">
-      <div class="rh-qc-avatar" id="rhQcAvatar"></div>
-      <div style="min-width:0">
-        <div class="rh-qc-name" id="rhQcName"></div>
-        <div class="rh-qc-sub">Synchronisé avec Messages</div>
-      </div>
-    </div>
-    <button class="rh-qc-close" onclick="closeQuickChat()">✕</button>
-  </div>
-  <div class="rh-qc-body" id="rhQcBody"></div>
-  <div class="rh-qc-footer">
-    <input type="text" class="rh-qc-input" id="rhQcInput" placeholder="Écrire un message…"/>
-    <button class="rh-qc-send" onclick="sendQuickChatMsg()">Envoyer</button>
-  </div>
 </div>
 
 <script src="js/app.js"></script>
 <script>
   Auth.requireAuth();
-  if (!Auth.isAdmin()) {
-    document.body.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé aux administrateurs.</p><a href="accueil.html" class="btn btn-accent">← Accueil</a></div>';
+  if (!Auth.isRH()) {
+    document.body.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé à l\'encadrement / RH.</p><a href="accueil.html" class="btn btn-accent">← Accueil</a></div>';
   } else {
     const frame = document.getElementById('rhFrame');
     const title = document.getElementById('rhTopTitle');
@@ -195,6 +134,19 @@
       links.forEach(l => l.classList.toggle('active', l.dataset.page === page));
       sessionStorage.setItem('rh_last_page', page);
     }
+
+    // Masquer les liens dont l'utilisateur n'a pas la permission (ex. Fiches de paie → access_paie)
+    (function gateLinks() {
+      const sess = Auth.getSession();
+      links.forEach(l => {
+        const perm = l.dataset.perm;
+        if (!perm) return;
+        const ok = sess && (Auth.isAdmin() || perm.split(',').some(p => hasPermission(sess.userId, p)));
+        if (!ok) l.style.display = 'none';
+      });
+      // ViaTrajectoire : réservé à l'administrateur
+      if (!Auth.isAdmin()) { const v = document.getElementById('rhNavVia'); if (v) v.style.display = 'none'; }
+    })();
 
     links.forEach(l => {
       l.addEventListener('click', () => loadPage(l.dataset.page, labelOf(l)));
@@ -234,116 +186,6 @@
       userEl.innerHTML = `<div class="rh-user-avatar">${initials(session.prenom || '', session.nom || session.username || '')}</div><span class="rh-user-text">${escHtml(nom)}</span>`;
     }
 
-    // Colonne d'avatars du personnel à droite — clic = ouvre le Quick Chat
-    const railEl = document.getElementById('rhAvatarRail');
-    const employes = (DB.get(DB.keys.employes) || []).filter(e => e.statut !== 'inactif');
-    railEl.innerHTML = employes.map(e => {
-      const nom = `${e.prenom || ''} ${e.nom || ''}`.trim();
-      const animatedAvatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(e.id || nom)}&backgroundType=gradientLinear`;
-      const avatar = `<img src="${escHtml(e.photo || animatedAvatarUrl)}" alt="${escHtml(nom)}" onclick="openQuickChat('${e.id}')"/>`;
-      return `<div class="rh-rail-item" data-name="${escHtml(nom)}">${avatar}</div>`;
-    }).join('');
-
-    // Bulle de nom flottante (position:fixed, échappe au défilement de la colonne)
-    const floatTip = document.getElementById('rhFloatTooltip');
-    railEl.querySelectorAll('.rh-rail-item').forEach(item => {
-      item.addEventListener('mouseenter', () => {
-        const rect = item.getBoundingClientRect();
-        floatTip.textContent = item.dataset.name;
-        floatTip.style.top = (rect.top + rect.height / 2) + 'px';
-        floatTip.style.left = (rect.left - 11) + 'px';
-        floatTip.style.transform = 'translate(-100%,-50%)';
-        floatTip.classList.add('show');
-      });
-      item.addEventListener('mouseleave', () => floatTip.classList.remove('show'));
-    });
-
-    // ── QUICK CHAT — même stockage que la page Messages (DB.keys.messages + ftr_conversations) ──
-    let qcConvId = null;
-    let qcTargetEmploye = null;
-
-    function qcConvKey(userIds) { return [...userIds].sort().join('_'); }
-    function qcGetOrCreateConv(userIds) {
-      const id = qcConvKey(userIds);
-      const convs = DB.get('ftr_conversations') || {};
-      if (!convs[id]) {
-        convs[id] = { id, userIds: [...new Set(userIds)], createdAt: new Date().toISOString() };
-        DB.set('ftr_conversations', convs);
-      }
-      return id;
-    }
-    function qcConvMessages(convId) {
-      return (DB.get(DB.keys.messages) || []).filter(m => m.convId === convId).sort((a, b) => new Date(a.date) - new Date(b.date));
-    }
-    // Le planning/messages identifient le personnel par compte utilisateur (DB.keys.users),
-    // les fiches employé par DB.keys.employes — on résout par id puis par prénom+nom.
-    function qcResolveUserId(employe) {
-      const users = DB.get(DB.keys.users) || [];
-      const u = users.find(x => String(x.id) === String(employe.id)) || users.find(x => x.prenom === employe.prenom && x.nom === employe.nom);
-      return u ? String(u.id) : null;
-    }
-
-    function openQuickChat(employeId) {
-      const employe = employes.find(e => String(e.id) === String(employeId));
-      if (!employe) return;
-      const targetUserId = qcResolveUserId(employe);
-      if (!targetUserId) { toast("Aucun compte utilisateur lié à cet employé", 'error'); return; }
-      if (!session) return;
-      qcTargetEmploye = employe;
-      qcConvId = qcGetOrCreateConv([session.userId, targetUserId]);
-      const nom = `${employe.prenom || ''} ${employe.nom || ''}`.trim();
-      document.getElementById('rhQcName').textContent = nom;
-      document.getElementById('rhQcAvatar').innerHTML = employe.photo
-        ? `<img src="${escHtml(employe.photo)}" alt="${escHtml(nom)}"/>`
-        : initials(employe.prenom || '', employe.nom || '');
-      renderQuickChat();
-      document.getElementById('rhQcOverlay').classList.add('open');
-      document.getElementById('rhQcPanel').classList.add('open');
-      document.getElementById('rhQcInput').focus();
-    }
-
-    function closeQuickChat() {
-      document.getElementById('rhQcOverlay').classList.remove('open');
-      document.getElementById('rhQcPanel').classList.remove('open');
-    }
-
-    function renderQuickChat() {
-      const body = document.getElementById('rhQcBody');
-      if (!qcConvId) return;
-      const msgs = qcConvMessages(qcConvId);
-      if (!msgs.length) {
-        body.innerHTML = '<div class="rh-qc-empty">Aucun message — démarrez la conversation.</div>';
-        return;
-      }
-      body.innerHTML = msgs.map(m => {
-        const mine = String(m.from) === String(session.userId);
-        const time = new Date(m.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        return `<div class="rh-qc-row ${mine ? 'mine' : 'theirs'}">
-          <div class="rh-qc-bubble">${escHtml(m.body)}</div>
-          <div class="rh-qc-time">${time}</div>
-        </div>`;
-      }).join('');
-      body.scrollTop = body.scrollHeight;
-    }
-
-    function sendQuickChatMsg() {
-      const input = document.getElementById('rhQcInput');
-      const body = input.value.trim();
-      if (!body || !qcConvId || !session) return;
-      const msgs = DB.get(DB.keys.messages) || [];
-      msgs.push({
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        convId: qcConvId, from: session.userId, body,
-        date: new Date().toISOString(), readBy: [session.userId]
-      });
-      DB.set(DB.keys.messages, msgs);
-      input.value = '';
-      renderQuickChat();
-    }
-
-    document.getElementById('rhQcInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') sendQuickChatMsg();
-    });
   }
 </script>
 </body></html>

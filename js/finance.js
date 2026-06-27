@@ -126,15 +126,15 @@ function renderFinance() {
   const masseSalariale = paiePeriode.reduce((s,f) => s + (Number(f.net)||0), 0);
 
   // ── Stats ──
-  const residentsActifs = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residentsActifs = sbResidents().filter(r => r.statut !== 'sorti');
   const coutParResident = residentsActifs.length ? budgetTotal / residentsActifs.length : 0;
 
   document.getElementById('finStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #16a34a;background:linear-gradient(135deg,#16a34a18,#fff 60%)"><div class="stat-card-top"><span class="stat-label">Budget alloué (total)</span></div><div class="stat-num">${finFmt(budgetTotal)}</div></div>
-    <div class="stat-card" style="border-left:3px solid #dc2626;background:linear-gradient(135deg,#dc262618,#fff 60%)"><div class="stat-card-top"><span class="stat-label">Dépenses validées (période)</span></div><div class="stat-num">${finFmt(depensesPeriode)}</div></div>
-    <div class="stat-card" style="border-left:3px solid #6366f1;background:linear-gradient(135deg,#6366f118,#fff 60%)"><div class="stat-card-top"><span class="stat-label">Masse salariale (période)</span></div><div class="stat-num">${finFmt(masseSalariale)}</div></div>
-    <div class="stat-card" style="border-left:3px solid ${solde<0?'#dc2626':'#0891b2'};background:linear-gradient(135deg,${solde<0?'#dc262618':'#0891b218'},#fff 60%)"><div class="stat-card-top"><span class="stat-label">Solde budget disponible</span></div><div class="stat-num">${finFmt(solde)}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706;background:linear-gradient(135deg,#d9770618,#fff 60%)"><div class="stat-card-top"><span class="stat-label">Coût moyen / résident</span></div><div class="stat-num">${finFmt(coutParResident)}</div></div>`;
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Budget alloué (total)</span></div><div class="chx-stat-num">${finFmt(budgetTotal)}</div></div>
+    <div class="chx-stat" style="--c:#dc2626"><div class="chx-stat-top"><span class="chx-stat-lbl">Dépenses validées (période)</span></div><div class="chx-stat-num">${finFmt(depensesPeriode)}</div></div>
+    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Masse salariale (période)</span></div><div class="chx-stat-num">${finFmt(masseSalariale)}</div></div>
+    <div class="chx-stat" style="--c:${solde<0?'#dc2626':'#0d9488'}"><div class="chx-stat-top"><span class="chx-stat-lbl">Solde budget disponible</span></div><div class="chx-stat-num">${finFmt(solde)}</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Coût moyen / résident</span></div><div class="chx-stat-num">${finFmt(coutParResident)}</div></div>`;
 
   // ── Demandes en attente de validation ──
   const enAttente = demandes.filter(d => d.statut === 'en_attente');
@@ -334,13 +334,14 @@ function finExportCsv() {
   a.click();
 }
 
-function initFinance() {
+async function initFinance() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!Auth.isAdmin()) {
     document.querySelector('.content').innerHTML = `<div class="empty" style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé aux administrateurs.</p><a href="accueil.html" class="btn btn-accent">← Accueil</a></div>`;
     return;
   }
+  await sbLoadResidentsCache();
   finPopulatePeriode();
   document.getElementById('finPeriode').addEventListener('change', renderFinance);
   renderFinance();

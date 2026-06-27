@@ -14,8 +14,10 @@ const EC_TYPES = {
   autre: { label: 'Autre', icon: '📌' }
 };
 
-function getEcheances() { return DB.get(DB.keys.echeances) || []; }
-function saveEcheances(list) { DB.set(DB.keys.echeances, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _ecCache = [];
+function getEcheances() { return _ecCache; }
+async function loadEcheancesCache() { _ecCache = await sbGetEcheances(); }
 
 // Urgence d'une échéance : retard / 30 j / 90 j / ok
 function ecUrgency(e) {
@@ -60,9 +62,9 @@ function renderEcheances() {
   active.forEach(e => { counts[ecUrgency(e)] = (counts[ecUrgency(e)] || 0) + 1; });
   const st = document.getElementById('ecStats');
   if (st) st.innerHTML = ['late', 'soon', 'watch', 'ok'].map(k => `
-    <div class="stat-card" style="border-left:3px solid ${EC_URG[k].color}">
-      <div class="stat-card-top"><span class="stat-label">${EC_URG[k].label}</span></div>
-      <div class="stat-num" style="color:${EC_URG[k].color}">${counts[k]}</div>
+    <div class="chx-stat" style="--c:${EC_URG[k].color}">
+      <div class="chx-stat-top"><span class="chx-stat-lbl">${EC_URG[k].label}</span></div>
+      <div class="chx-stat-num">${counts[k]}</div>
     </div>`).join('');
 
   // Tri : retard d'abord puis par date croissante ; faits à la fin
@@ -116,11 +118,11 @@ function openEcheanceModal(id) {
   openModal('modalEcheance');
 }
 
-function saveEcheance() {
+async function saveEcheance() {
   const date = document.getElementById('ecDate').value;
   if (!date) { toast("La date d'échéance est requise", 'error'); return; }
   const rid = document.getElementById('ecResident').value;
-  const r = (DB.get(DB.keys.residents) || []).find(x => String(x.id) === String(rid));
+  const r = sbResidents().find(x => String(x.id) === String(rid));
   const s = Auth.getSession();
   const data = {
     type: document.getElementById('ecType').value,
@@ -130,29 +132,37 @@ function saveEcheance() {
     residentName: r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : '',
     notes: document.getElementById('ecNotes').value.trim()
   };
-  let list = getEcheances();
-  if (ecEditId) {
-    list = list.map(x => x.id === ecEditId ? { ...x, ...data } : x);
-    toast('Échéance mise à jour');
-  } else {
-    list.push({ id: genId(), ...data, done: false, author: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username : '?', createdAt: new Date().toISOString() });
-    toast('Échéance ajoutée');
-  }
-  saveEcheances(list);
+  try {
+    if (ecEditId) {
+      const old = _ecCache.find(x => x.id === ecEditId) || {};
+      const saved = await sbSaveEcheance({ ...old, ...data, id: ecEditId });
+      _ecCache = _ecCache.map(x => x.id === ecEditId ? saved : x);
+      toast('Échéance mise à jour');
+    } else {
+      const saved = await sbSaveEcheance({ ...data, done: false, author: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username : '?' });
+      _ecCache.push(saved);
+      toast('Échéance ajoutée');
+    }
+  } catch (e) { console.error('[saveEcheance]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function') auditLog('echeance_save', `${EC_TYPES[data.type]?.label || data.type} — ${data.residentName || data.libelle}`);
   closeModal('modalEcheance');
   renderEcheances();
 }
 
-function toggleEcheanceDone(id) {
-  const list = getEcheances().map(x => x.id === id ? { ...x, done: !x.done, doneAt: !x.done ? new Date().toISOString() : null } : x);
-  saveEcheances(list);
+async function toggleEcheanceDone(id) {
+  const cur = _ecCache.find(x => x.id === id);
+  if (!cur) return;
+  try {
+    const saved = await sbUpdateEcheanceField(id, { done: !cur.done, done_at: !cur.done ? new Date().toISOString() : null });
+    _ecCache = _ecCache.map(x => x.id === id ? saved : x);
+  } catch (e) { console.error('[toggleEcheanceDone]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   renderEcheances();
 }
 
 function deleteEcheance(id) {
-  confirmDialog('Supprimer cette échéance ?', () => {
-    saveEcheances(getEcheances().filter(x => x.id !== id));
+  confirmDialog('Supprimer cette échéance ?', async () => {
+    try { await sbDeleteEcheance(id); _ecCache = _ecCache.filter(x => x.id !== id); }
+    catch (e) { console.error('[deleteEcheance]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
     renderEcheances();
     toast('Échéance supprimée', 'info');
   });
@@ -163,12 +173,14 @@ function ecAlertCount() {
   return getEcheances().filter(e => !e.done && ['late', 'soon'].includes(ecUrgency(e))).length;
 }
 
-function initEcheances() {
+async function initEcheances() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
+  await sbLoadResidentsCache();
+  await loadEcheancesCache();
   // Remplir les sélecteurs résident
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = sbResidents().filter(r => r.statut !== 'sorti');
   const opts = residents.map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   const fSel = document.getElementById('ecFilterResident');
   if (fSel) fSel.innerHTML = '<option value="">Tous les résidents</option>' + opts;

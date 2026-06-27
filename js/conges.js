@@ -1,18 +1,32 @@
-function initConges() {
+let _cgCache = [];
+let _cgEmployesCache = [];
+
+async function initConges() {
   const _s = Auth.requireAuth();
   if (!_s) return;
   if (!requireModule('access_conges')) return;
-  const employes = DB.get(DB.keys.employes) || [];
+  try {
+    [_cgCache, _cgEmployesCache] = await Promise.all([sbGetConges(), sbGetEmployes()]);
+  } catch (e) {
+    console.error('[initConges]', e);
+    toast('Erreur de chargement', 'error');
+  }
   const sel = document.getElementById('cgFiltreEmploye');
-  sel.innerHTML = '<option value="">Tous les employés</option>' + employes.map(e => `<option value="${e.id}">${escHtml(e.prenom+' '+e.nom)}</option>`).join('');
+  sel.innerHTML = '<option value="">Tous les employés</option>' + _cgEmployesCache.map(e => `<option value="${e.id}">${escHtml(e.prenom+' '+e.nom)}</option>`).join('');
   renderConges();
 }
 
-function getConges() { return JSON.parse(localStorage.getItem('ftr_conges') || '[]'); }
-function setConges(d) { localStorage.setItem('ftr_conges', JSON.stringify(d)); }
+function getConges() { return _cgCache; }
+
+// Renvoie une copie de la demande avec le nom du salarié résolu depuis le cache
+// (nom de famille déjà en MAJUSCULES via le mapper employés).
+function cgWithNom(d) {
+  const e = _cgEmployesCache.find(x => String(x.id) === String(d.employeId));
+  return e ? { ...d, employeNom: `${e.prenom || ''} ${e.nom || ''}`.trim() } : d;
+}
 
 function openDemandeConge(data) {
-  const employes = DB.get(DB.keys.employes) || [];
+  const employes = _cgEmployesCache;
   const eOpts = employes.map(e => `<option value="${e.id}"${data && data.employeId === e.id ? ' selected' : ''}>${escHtml(e.prenom+' '+e.nom)}</option>`).join('');
   const types = [
     { v:'cp', l:'Congés payés' }, { v:'rtt', l:'RTT' }, { v:'maladie', l:'Arrêt maladie' },
@@ -20,16 +34,29 @@ function openDemandeConge(data) {
   ];
   const tOpts = types.map(t => `<option value="${t.v}"${data && data.type === t.v ? ' selected' : ''}>${t.l}</option>`).join('');
   const html = `<div class="modal-overlay" id="modalConge" style="display:flex" onclick="closeModal('modalConge')">
-    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">${data ? '✎ Modifier la demande' : '🗓 Nouvelle demande de congés'}</span><button class="modal-close" onclick="closeModal('modalConge')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="form-group"><label>Employé *</label><select id="cgEmploye" class="form-input">${eOpts}</select></div>
-        <div class="form-group"><label>Type *</label><select id="cgType" class="form-input">${tOpts}</select></div>
-        <div class="form-row">
-          <div class="form-group"><label>Date début *</label><input type="date" id="cgDebut" class="form-input" value="${data ? data.debut : ''}"/></div>
-          <div class="form-group"><label>Date fin *</label><input type="date" id="cgFin" class="form-input" value="${data ? data.fin : ''}"/></div>
+    <div class="modal" style="max-width:480px;--mc:#0891b2" onclick="event.stopPropagation()">
+      <div class="mdx-hero">
+        <button class="mdx-close" onclick="closeModal('modalConge')" aria-label="Fermer">✕</button>
+        <div class="mdx-badge">🗓</div>
+        <div class="mdx-hero-txt">
+          <div class="mdx-title">${data ? 'Modifier la demande' : 'Nouvelle demande de congés'}</div>
+          <div class="mdx-sub">Congés · RTT · absences</div>
         </div>
-        <div class="form-group"><label>Motif</label><textarea id="cgMotif" class="form-input" rows="2" placeholder="Raison de la demande…">${escHtml(data ? data.motif||'' : '')}</textarea></div>
+      </div>
+      <div class="modal-body mdx-body">
+        <div class="mdx-section">
+          <div class="mdx-sec-head"><span>📋</span> Demande</div>
+          <div class="form-group"><label>Employé *</label><select id="cgEmploye" class="form-input" onchange="cgModalSync()">${eOpts}</select></div>
+          <div class="form-group"><label>Type *</label><select id="cgType" class="form-input" onchange="cgModalSync()">${tOpts}</select></div>
+        </div>
+        <div class="mdx-section">
+          <div class="mdx-sec-head"><span>📅</span> Période &amp; motif</div>
+          <div class="form-row">
+            <div class="form-group"><label>Date début *</label><input type="date" id="cgDebut" class="form-input" value="${data ? data.debut : ''}"/></div>
+            <div class="form-group"><label>Date fin *</label><input type="date" id="cgFin" class="form-input" value="${data ? data.fin : ''}"/></div>
+          </div>
+          <div class="form-group"><label>Motif</label><textarea id="cgMotif" class="form-input" rows="2" placeholder="Raison de la demande…">${escHtml(data ? data.motif||'' : '')}</textarea></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('modalConge')">Annuler</button>
@@ -42,10 +69,30 @@ function openDemandeConge(data) {
   const div = document.createElement('div');
   div.innerHTML = html;
   document.body.appendChild(div);
+  // Un non-admin ne peut déclarer que pour lui-même
+  if (!Auth.isAdmin()) {
+    const own = _cgEmployesCache.find(e => String(e.profileId) === String(Auth.getSession()?.userId));
+    const sel = document.getElementById('cgEmploye');
+    if (own && sel) { sel.value = own.id; sel.disabled = true; }
+  }
+  cgModalSync();
   requestAnimationFrame(() => document.getElementById('modalConge')?.classList.add('open'));
 }
 
-function saveConge(id) {
+// En-tête interactif du modal congés : recolore selon le type + sous-titre « Type · Employé »
+function cgModalSync() {
+  const modalEl = document.querySelector('#modalConge .modal');
+  const sub = document.querySelector('#modalConge .mdx-sub');
+  if (!modalEl || !sub) return;
+  const type = document.getElementById('cgType')?.value || 'cp';
+  const meta = (typeof CONGE_TYPE_META !== 'undefined' && CONGE_TYPE_META[type]) ? CONGE_TYPE_META[type] : { label: type, color: '#0891b2' };
+  modalEl.style.setProperty('--mc', meta.color);
+  const empSel = document.getElementById('cgEmploye');
+  const empNom = (empSel && empSel.value && empSel.selectedIndex >= 0) ? empSel.options[empSel.selectedIndex].text : '';
+  sub.textContent = empNom ? `${meta.label} · ${empNom}` : meta.label;
+}
+
+async function saveConge(id) {
   const employeId = document.getElementById('cgEmploye').value;
   const type = document.getElementById('cgType').value;
   const debut = document.getElementById('cgDebut').value;
@@ -53,84 +100,70 @@ function saveConge(id) {
   const motif = document.getElementById('cgMotif').value.trim();
   if (!employeId || !debut || !fin) { toast('Champs obligatoires manquants', 'error'); return; }
   if (debut > fin) { toast('La date de fin doit être après la date de début', 'error'); return; }
-  const employes = DB.get(DB.keys.employes) || [];
-  const emp = employes.find(e => e.id === employeId);
-  let list = getConges();
-  if (id) {
-    const idx = list.findIndex(d => d.id === id);
-    if (idx !== -1) list[idx] = { ...list[idx], employeId, type, debut, fin, motif, updatedAt: new Date().toISOString() };
-    toast('Demande mise à jour', 'success');
-  } else {
-    list.push({
-      id: genId(), employeId, employeNom: emp ? emp.prenom+' '+emp.nom : '', type, debut, fin, motif,
-      statut: 'en_attente', dateDemande: new Date().toISOString()
-    });
-    toast('Demande de congés envoyée ✓', 'success');
+  const emp = _cgEmployesCache.find(e => String(e.id) === String(employeId));
+  try {
+    if (id) {
+      const existing = _cgCache.find(d => d.id === id) || {};
+      const saved = await sbSaveConge({ ...existing, id, employeId, employeNom: emp ? emp.prenom+' '+emp.nom : existing.employeNom, type, debut, fin, motif });
+      const idx = _cgCache.findIndex(d => d.id === id);
+      if (idx !== -1) _cgCache[idx] = saved;
+      toast('Demande mise à jour', 'success');
+    } else {
+      const saved = await sbSaveConge({ employeId, employeNom: emp ? emp.prenom+' '+emp.nom : '', type, debut, fin, motif, statut: 'en_attente' });
+      _cgCache.unshift(saved);
+      if (typeof auditLog === 'function') auditLog('conge', 'Nouvelle demande — '+(emp?.prenom||'')+' '+(emp?.nom||''));
+      toast('Demande de congés envoyée ✓', 'success');
+    }
+    closeModal('modalConge');
+    renderConges();
+  } catch (e) {
+    const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[saveConge]', e);
   }
-  setConges(list);
-  if (!id && typeof auditLog === 'function') auditLog('conge', 'Nouvelle demande — '+emp?.prenom+' '+emp?.nom);
-  closeModal('modalConge');
-  renderConges();
 }
 
-function repondreConge(id, statut) {
-  const list = getConges();
-  const item = list.find(d => d.id === id);
+async function repondreConge(id, statut) {
+  const item = _cgCache.find(d => d.id === id);
   if (!item) return;
+  let reponseMotif = '';
   if (statut === 'refuse') {
     const motif = prompt('Motif du refus :');
     if (motif === null) return;
-    item.reponseMotif = motif.trim() || '';
-  } else {
-    item.reponseMotif = '';
+    reponseMotif = motif.trim() || '';
   }
-  item.statut = statut;
-  item.traitePar = (() => { const s = Auth.getSession(); return s ? [s.prenom,s.nom].filter(Boolean).join(' ') || s.username : ''; })();
-  item.dateTraitement = new Date().toISOString();
-  setConges(list);
-  toast('Demande ' + (statut === 'accepte' ? 'acceptée' : 'refusée'), 'success');
-  if (typeof auditLog === 'function') auditLog('conge_' + statut, item.employeNom + ' — ' + item.type);
-  renderConges();
+  const s = Auth.getSession();
+  try {
+    const saved = await sbUpdateConge(id, {
+      statut,
+      reponse_motif: reponseMotif,
+      approuve_par: s ? [s.prenom,s.nom].filter(Boolean).join(' ') || s.username : '',
+      approuve_par_id: s ? String(s.userId) : null,
+      approuve_at: new Date().toISOString()
+    });
+    const idx = _cgCache.findIndex(d => d.id === id);
+    if (idx !== -1) _cgCache[idx] = saved;
+    toast('Demande ' + (statut === 'accepte' ? 'acceptée' : 'refusée'), 'success');
+    if (typeof auditLog === 'function') auditLog('conge_' + statut, item.employeNom + ' — ' + item.type);
+    renderConges();
+  } catch (e) {
+    toast('Erreur : ' + (e?.message || e), 'error');
+    console.error('[repondreConge]', e);
+  }
 }
 
 function supprimerConge(id) {
-  if (!confirm('Supprimer cette demande ?')) return;
-  let list = getConges();
-  list = list.filter(d => d.id !== id);
-  setConges(list);
-  toast('Demande supprimée', 'info');
-  renderConges();
-}
-
-const CONGE_TYPE_LABELS = { cp:'Congés payés', rtt:'RTT', maladie:'Arrêt maladie', enfant_malade:'Enfant malade', formation:'Formation', autre:'Autre' };
-const CONGE_STATUT_STYLES = { en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' }, accepte: { bg:'#16a34a18', c:'#16a34a', l:'Accepté' }, refuse: { bg:'#ef444418', c:'#ef4444', l:'Refusé' } };
-
-function congeItemHtml(d, isAdmin) {
-  const st = CONGE_STATUT_STYLES[d.statut] || CONGE_STATUT_STYLES.en_attente;
-  const jours = Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1;
-  const canRepondre = isAdmin && d.statut === 'en_attente';
-  return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:6px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)">
-    <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${d.type === 'maladie' ? '🤒' : d.type === 'enfant_malade' ? '👶' : d.type === 'formation' ? '📚' : '🗓'}</span>
-    <div style="flex:1;min-width:0">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-weight:600;font-size:.85rem">${escHtml(d.employeNom)}</span>
-        <span style="padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
-        <span style="font-size:.7rem;color:var(--g400)">${CONGE_TYPE_LABELS[d.type]||d.type}</span>
-      </div>
-      <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">
-        ${formatDate(d.debut)} → ${formatDate(d.fin)} · ${jours} jour${jours>1?'s':''}
-        · Demandé le ${new Date(d.dateDemande).toLocaleDateString('fr-FR')}
-      </div>
-      ${d.motif ? `<div style="font-size:.75rem;color:var(--g600);margin-top:.25rem">${escHtml(d.motif)}</div>` : ''}
-      ${d.statut === 'refuse' && d.reponseMotif ? `<div style="font-size:.73rem;color:var(--red);margin-top:.15rem">Motif du refus : ${escHtml(d.reponseMotif)}</div>` : ''}
-      ${d.traitePar ? `<div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Traité par ${escHtml(d.traitePar)}</div>` : ''}
-    </div>
-    <div style="display:flex;gap:.25rem;flex-shrink:0">
-      ${canRepondre ? `<button class="btn btn-ghost btn-sm" style="color:#16a34a;font-size:.72rem;padding:2px 10px" onclick="repondreConge('${d.id}','accepte')">✅ Accepter</button>
-      <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:.72rem;padding:2px 10px" onclick="repondreConge('${d.id}','refuse')">❌ Refuser</button>` : ''}
-      ${isAdmin ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="supprimerConge('${d.id}')">✕</button>` : ''}
-    </div>
-  </div>`;
+  confirmDialog('Supprimer cette demande ?', async () => {
+    try {
+      await sbDeleteConge(id);
+      _cgCache = _cgCache.filter(d => d.id !== id);
+      toast('Demande supprimée', 'info');
+      renderConges();
+    } catch (e) {
+      toast('Erreur : ' + (e?.message || e), 'error');
+      console.error('[supprimerConge]', e);
+    }
+  });
 }
 
 function renderConges() {
@@ -156,21 +189,29 @@ function renderConges() {
   if (pendingCard) {
     if (isAdmin && enAttente.length) {
       pendingCard.style.display = '';
-      document.getElementById('cgPendingList').innerHTML = enAttente
+      document.getElementById('cgPendingList').innerHTML = `<div class="cgx-grid">` + enAttente
         .sort((a,b) => (a.dateDemande||'').localeCompare(b.dateDemande||''))
-        .map(d => congeItemHtml(d, isAdmin)).join('');
+        .map(d => congeCardHtml(cgWithNom(d), 'rh', isAdmin)).join('') + `</div>`;
     } else {
       pendingCard.style.display = 'none';
     }
   }
 
+  // Les demandes en attente sont déjà dans la carte « à traiter » → on les retire de la liste principale (admin)
+  const showPending = isAdmin && enAttente.length;
+  const mainList = (showPending && filtreStatut !== 'en_attente')
+    ? filtered.filter(d => d.statut !== 'en_attente')
+    : filtered;
+
   const el = document.getElementById('cgList');
-  if (!filtered.length) {
-    el.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucune demande trouvée.</p></div>';
+  if (!mainList.length) {
+    el.innerHTML = showPending
+      ? '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune demande traitée — voir « à traiter » ci-dessus.</p></div>'
+      : '<div class="empty" style="padding:3rem;text-align:center"><p>Aucune demande trouvée.</p></div>';
     return;
   }
 
-  el.innerHTML = filtered.sort((a,b) => (b.dateDemande||'').localeCompare(a.dateDemande||'')).map(d => congeItemHtml(d, isAdmin)).join('');
+  el.innerHTML = `<div class="cgx-grid">` + mainList.sort((a,b) => (b.dateDemande||'').localeCompare(a.dateDemande||'')).map(d => congeCardHtml(cgWithNom(d), 'rh', isAdmin)).join('') + `</div>`;
 }
 
 document.addEventListener('DOMContentLoaded', initConges);
