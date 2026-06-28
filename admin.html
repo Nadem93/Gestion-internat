@@ -276,9 +276,75 @@
     .emp-popup-row-icon svg{width:13px;height:13px;stroke:#666;stroke-width:1.8;fill:none}
     .emp-popup-row-label{color:#9a9aae;min-width:70px;flex-shrink:0}
     .emp-popup-row-val{color:#1a1a2e;font-weight:500;flex:1;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+    /* ── Menu latéral admin (style RH) ── */
+    .admin-shell{display:flex;height:100vh;overflow:hidden}
+    .admin-main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+    .rh-sidebar{width:max-content;max-width:240px;flex-shrink:0;background:#f1f5f9;border-right:1px solid #e2e8f0;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:stretch;padding:1rem .5rem}
+    .rh-sidebar.collapsed{width:74px;align-items:center}
+    .rh-sidebar-top{display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem;width:100%}
+    .rh-sidebar-logo{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;overflow:hidden}
+    .rh-logo-badge{width:38px;height:38px;border-radius:11px;background:#475569;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(71,85,105,.35)}
+    .rh-logo-badge svg{width:19px;height:19px}
+    .rh-logo-text{white-space:nowrap;min-width:0}
+    .rh-logo-text h1{font-size:.85rem;font-weight:800;letter-spacing:-.2px;white-space:nowrap;color:#1e293b;margin:0}
+    .rh-logo-text p{font-size:.62rem;color:#94a3b8;margin:.1rem 0 0;white-space:nowrap}
+    .rh-collapse-btn{width:30px;height:30px;border-radius:9px;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+    .rh-collapse-btn:hover{background:#e2e8f0;color:#334155}
+    .rh-collapse-btn svg{width:15px;height:15px}
+    .rh-sidebar.collapsed .rh-collapse-btn svg{transform:scaleX(-1)}
+    .rh-nav-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;padding:.6rem .6rem .3rem;white-space:nowrap;overflow:hidden}
+    .rh-nav-link{display:flex;align-items:center;gap:.65rem;padding:.5rem .6rem;color:#475569;font-size:.82rem;font-weight:500;transition:all .12s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-radius:9px;margin-bottom:2px;white-space:nowrap;overflow:hidden}
+    .rh-nav-link:hover{background:#e2e8f0;color:#1e293b}
+    .rh-nav-link.active{background:#fff;color:#1e293b;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.1)}
+    .rh-nav-icon{width:30px;height:30px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 3px 8px rgba(99,102,241,.35),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.15);transition:transform .3s}
+    .rh-nav-icon svg{width:16px;height:16px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+    .rh-nav-link:hover .rh-nav-icon{transform:scale(1.12) translateY(-1px)}
+    .rh-sidebar.collapsed .rh-nav-label{display:none}
+    .rh-sidebar.collapsed .rh-nav-link span:not(.rh-nav-icon),.rh-sidebar.collapsed .rh-logo-text{display:none}
+    .rh-sidebar.collapsed .rh-nav-link{justify-content:center;padding:.8rem .3rem;margin-bottom:.4rem}
+    .rh-sidebar.collapsed .rh-sidebar-top{justify-content:center}
+    .rh-sidebar.collapsed .rh-sidebar-logo{display:none}
+    @media(max-width:760px){
+      .admin-shell{flex-direction:column;height:auto;overflow:visible}
+      .admin-main{overflow:visible}
+      .rh-sidebar{width:100%;max-width:none;height:auto;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;align-items:center;border-right:none;border-bottom:1px solid #e2e8f0;padding:.5rem}
+      .rh-sidebar .rh-sidebar-top,.rh-sidebar .rh-nav-label{display:none}
+      .rh-nav-link{width:auto;margin-bottom:0}
+      .rh-nav-link span:not(.rh-nav-icon){display:none}
+    }
   </style>
 </head>
 <body>
+
+<div class="admin-shell">
+<nav class="rh-sidebar" id="adminSidebar">
+  <div class="rh-sidebar-top">
+    <div class="rh-sidebar-logo">
+      <div class="rh-logo-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <div class="rh-logo-text"><h1>Administration</h1><p>Réglages &amp; gestion</p></div>
+    </div>
+    <button class="rh-collapse-btn" onclick="document.getElementById('adminSidebar').classList.toggle('collapsed')" title="Réduire / agrandir le menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4 H5 a2 2 0 0 0 -2 2 V18 a2 2 0 0 0 2 2 H9 Z" fill="currentColor" stroke="none"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+    </button>
+  </div>
+
+  <div class="rh-nav-label">Tableau de bord</div>
+  <button class="rh-nav-link" data-tab="stats" onclick="activateTab('stats')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#7c6fcd,#a78bfa)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span>Statistiques</span></button>
+
+  <div class="rh-nav-label">Configuration</div>
+  <button class="rh-nav-link" data-tab="etablissement" onclick="activateTab('etablissement')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0891b2,#22d3ee)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg></span><span>Établissement</span></button>
+  <button class="rh-nav-link" data-tab="fonctions" onclick="activateTab('fonctions')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#e85d04,#fb923c)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span><span>Catégories &amp; objectifs</span></button>
+
+  <div class="rh-nav-label">Comptes &amp; accès</div>
+  <button class="rh-nav-link" data-tab="employes" onclick="activateTab('employes')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Utilisateurs</span></button>
+  <button class="rh-nav-link" data-tab="permissions" onclick="activateTab('permissions')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#16a34a,#4ade80)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span>Permissions</span></button>
+  <button class="rh-nav-link" data-tab="compte" onclick="activateTab('compte')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0d9488,#2dd4bf)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span><span>Mon compte</span></button>
+
+  <div class="rh-nav-label">Système</div>
+  <button class="rh-nav-link" data-tab="segur" onclick="activateTab('segur')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#2563eb,#60a5fa)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><span>Ségur / Conformité</span></button>
+  <button class="rh-nav-link" data-tab="donnees" onclick="activateTab('donnees')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#64748b,#94a3b8)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span><span>Données</span></button>
+</nav>
+<div class="admin-main">
 
 <!-- ══════════ TOPBAR ══════════ -->
 <header class="admin-topbar">
@@ -875,15 +941,28 @@
   </div>
 </div>
 
+</div><!-- /admin-main -->
+</div><!-- /admin-shell -->
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAdmin();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/interventions-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/contrats-supabase.js"></script>
 <script src="js/config-supabase.js"></script>
+<!-- Tableau de bord Stats : sources de données migrées -->
+<script src="js/journal-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/messages-supabase.js"></script>
+<script src="js/documents-resident-supabase.js"></script>
+<script src="js/satisfaction-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/rapport.js"></script>
 <script>
@@ -1387,19 +1466,28 @@ function setCirc(barId, pct) {
 }
 
 /* ═══════════ STATS ENGINE ═══════════ */
-function refreshAllStats() {
-  const residents = DB.get(DB.keys.residents) || [];
+// Données du tableau de bord Stats — chargées depuis Supabase, partagées entre tous les render*.
+// (users / settings / categories / loginHistory ne sont pas migrés → restent en localStorage)
+let _statsData = { residents:[], journal:[], planning:[], incidents:[], ppe:[], messages:[], convs:{}, docs:[], satisfaction:[], presences:{} };
+
+async function refreshAllStats() {
+  const todayStr = today();
+  const monthStart = todayStr.slice(0, 7) + '-01';
+  const d7 = new Date(); d7.setDate(d7.getDate() - 7);
+  const weekStart = d7.toISOString().slice(0, 10);
+  const presStart = weekStart < monthStart ? weekStart : monthStart;
+  try {
+    const [residents, journal, planning, incidents, ppe, messages, convs, docs, satisfaction, presences] = await Promise.all([
+      sbGetResidents(), sbGetJournalEntries(), sbGetPlanningEvents(), sbGetIncidents(),
+      sbGetPpe(), sbGetMessages(), sbGetConversations(), sbGetDocumentsResident(),
+      sbGetSatisfaction(), sbGetPresencesRange(presStart, todayStr)
+    ]);
+    _statsData = { residents, journal, planning, incidents, ppe, messages, convs, docs, satisfaction, presences };
+  } catch (e) { console.error('[refreshAllStats]', e); }
+  const { residents, journal, planning, incidents, ppe, messages, convs, docs, presences } = _statsData;
   const actifs = residents.filter(r => r.statut !== 'sorti');
-  const journal = DB.get(DB.keys.journal) || [];
-  const planning = DB.get(DB.keys.planning) || [];
-  const incidents = DB.get(DB.keys.incidents) || [];
-  const ppe = DB.get(DB.keys.ppe) || [];
   const users = DB.get(DB.keys.users) || [];
   const settings = DB.get(DB.keys.settings) || {};
-  const messages = DB.get(DB.keys.messages) || [];
-  const docs = DB.get(DB.keys.documents) || {};
-  const todayStr = today();
-  const presences = DB.get(DB.keys.presences) || {};
   const todayP = presences[todayStr] || {};
   const presentCount = Object.values(todayP).filter(v => v === 'present').length;
 
@@ -1466,11 +1554,9 @@ function refreshAllStats() {
   const vehi = planning.filter(e => e.type === 'vehicule' && e.date >= todayStr).length;
   const session = Auth.getSession();
   const uid = String(session?.userId || '');
-  const convs = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
   const myConvIds = Object.values(convs).filter(c => c.userIds?.map(String).includes(uid)).map(c => c.id);
   const unread = messages.filter(m => Array.isArray(m.readBy) && myConvIds.includes(m.convId) && !m.readBy.map(String).includes(uid) && String(m.from) !== uid).length;
-  let docTotal = 0;
-  Object.values(docs).forEach(arr => { if (Array.isArray(arr)) docTotal += arr.length; });
+  const docTotal = docs.length;
   document.getElementById('qResidents').textContent = actifs.length;
   document.getElementById('qUsers').textContent = users.length;
   document.getElementById('qVehi').textContent = vehi > 0 ? `${vehi} à venir` : '—';
@@ -1510,7 +1596,7 @@ function renderKeyStats(residents, presences, incidents) {
   if (el('sTauxPresence')) el('sTauxPresence').textContent = totalDays > 0 ? Math.round(totalPresent/totalDays*100)+'%' : '—';
 
   // Avenants actifs
-  const ppe = DB.get(DB.keys.ppe) || [];
+  const ppe = _statsData.ppe;
   if (el('sAvenantsActifs')) el('sAvenantsActifs').textContent = ppe.filter(p => p.statut === 'actif').length;
 
   // Incidents ouverts
@@ -1521,7 +1607,7 @@ function renderKeyStats(residents, presences, incidents) {
   }
 
   // Satisfaction globale
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _statsData.satisfaction;
   if (satAll.length) {
     const allVals = satAll.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
     const avg = allVals.length ? allVals.reduce((a, b) => a + b, 0) / allVals.length : null;
@@ -1540,7 +1626,7 @@ function renderSatStats() {
   const totalEl = document.getElementById('satEvolTotal');
   if (!chartEl) return;
 
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _statsData.satisfaction;
   if (!satAll.length) {
     chartEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Aucun questionnaire de satisfaction enregistré.</div>';
     if (catsEl) catsEl.innerHTML = '';
@@ -1602,14 +1688,13 @@ function renderSatStats() {
 // ── RAPPORT D'ACTIVITÉ PDF ── (extrait dans js/rapport.js, partagé avec rapport.html)
 
 // ── SCAN DES DOUBLONS ──
-function scanDuplicates() {
+async function scanDuplicates() {
   const el = document.getElementById('dupResults');
   el.innerHTML = '<div style="font-size:.82rem;color:var(--muted)">Analyse en cours…</div>';
-  setTimeout(() => {
-    const journal = DB.get(DB.keys.journal) || [];
-    const incidents = DB.get(DB.keys.incidents) || [];
-    renderDupResults(findJournalDupPairs(journal), findIncidentDupPairs(incidents));
-  }, 30);
+  let journal = [], incidents = [];
+  try { [journal, incidents] = await Promise.all([sbGetJournalEntries(), sbGetIncidents()]); }
+  catch (e) { console.error('[scanDuplicates]', e); el.innerHTML = '<div style="font-size:.82rem;color:var(--red)">Erreur de chargement.</div>'; return; }
+  renderDupResults(findJournalDupPairs(journal), findIncidentDupPairs(incidents));
 }
 
 function findJournalDupPairs(entries) {
@@ -1675,12 +1760,11 @@ function renderDupResults(jPairs, iPairs) {
 }
 
 function deleteDupItem(kind, id) {
-  confirmDialog('Supprimer définitivement cet élément ?', () => {
-    if (kind === 'journal') {
-      DB.set(DB.keys.journal, (DB.get(DB.keys.journal) || []).filter(e => e.id !== id));
-    } else {
-      DB.set(DB.keys.incidents, (DB.get(DB.keys.incidents) || []).filter(i => i.id !== id));
-    }
+  confirmDialog('Supprimer définitivement cet élément ?', async () => {
+    try {
+      if (kind === 'journal') await sbDeleteJournalEntry(id);
+      else await sbDeleteIncident(id);
+    } catch (e) { console.error('[deleteDupItem]', e); toast('Erreur lors de la suppression', 'error'); return; }
     if (typeof auditLog === 'function') auditLog('delete', `Doublon supprimé (${kind === 'journal' ? 'journal' : 'incident'})`);
     toast('Élément supprimé', 'success');
     scanDuplicates();
@@ -1691,7 +1775,7 @@ function renderPpeBars() {
   const el = document.getElementById('ppeBars');
   const totalEl = document.getElementById('ppeTotal');
   if (!el) return;
-  const ppe = DB.get(DB.keys.ppe) || [];
+  const ppe = _statsData.ppe;
   const total = ppe.length;
   if (totalEl) totalEl.textContent = total + ' avenant' + (total > 1 ? 's' : '');
   const counts = {};
@@ -1707,15 +1791,12 @@ function renderDocBars() {
   const el = document.getElementById('docBars');
   const totalEl = document.getElementById('docTotal');
   if (!el) return;
-  const docs = DB.get(DB.keys.documents) || {};
+  const docs = _statsData.docs;
   const catLabels = { administratif:'Administratif', medical:'Médical', scolaire:'Scolaire', judiciaire:'Judiciaire', contrat:'Contrat', ressource:'Ressource', autre:'Autre' };
   const catColors = { administratif:'#3b82f6', medical:'#ef4444', scolaire:'#10b981', judiciaire:'#8b5cf6', contrat:'#f59e0b', ressource:'#06b6d4', autre:'#94a3b8' };
   const counts = {};
   let total = 0;
-  Object.values(docs).forEach(arr => {
-    if (!Array.isArray(arr)) return;
-    arr.forEach(d => { const c = d.category || 'autre'; counts[c] = (counts[c]||0)+1; total++; });
-  });
+  docs.forEach(d => { const c = d.category || 'autre'; counts[c] = (counts[c]||0)+1; total++; });
   if (totalEl) totalEl.textContent = total + ' document' + (total>1?'s':'');
   const data = {}, colorMap = {};
   Object.entries(counts).forEach(([cat, c]) => { const lbl = catLabels[cat] || cat; data[lbl] = c; colorMap[lbl] = catColors[cat] || '#94a3b8'; });
@@ -1723,7 +1804,7 @@ function renderDocBars() {
 }
 
 function renderSerafinphStats() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _statsData.residents;
   const actifs = residents.filter(r => r.statut !== 'sorti');
   const withSp = actifs.filter(r => (r.serafinph?.selected||[]).length > 0);
   const allScores = withSp.map(r => {
@@ -1748,7 +1829,7 @@ function renderSerafinphStats() {
   else { c5b.textContent = 'À évaluer'; c5b.className = 'stat-circ-badge scb-red'; }
 
   // ── Satisfaction (c6) ──
-  const satAllC6 = DB.get(DB.keys.satisfaction) || [];
+  const satAllC6 = _statsData.satisfaction;
   const c6b = document.getElementById('c6badge');
   if (satAllC6.length) {
     const satVals = satAllC6.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
@@ -1895,12 +1976,13 @@ function renderIncidentTypeBars(incidents) {
   el.innerHTML = svgHBar(data, '#dc2626', false, colorMap);
 }
 
-function renderInterventions() {
+async function renderInterventions() {
   const total = document.getElementById('intTotal');
   const elO = document.getElementById('intOuvertes');
   const elH = document.getElementById('intHistorique');
   if (!elO || !elH) return;
-  const list = DB.get(DB.keys.interventions) || [];
+  try { await loadInterventionsCache(); } catch (e) { console.error('[renderInterventions]', e); }
+  const list = getInterventionsCache();
   const ouvertes = list.filter(i => i.statut === 'ouverte').reverse();
   const traitees = list.filter(i => i.statut === 'traitee').reverse().slice(0,20);
   if (total) total.textContent = ouvertes.length > 0 ? ouvertes.length + ' en attente' : 'Aucune';
@@ -1912,17 +1994,16 @@ function renderInterventions() {
     const icones = { basse:'⬇️', normale:'➡️', haute:'⚠️', critique:'🚨' };
     const c = couleurs[i.urgence] || '#94a3b8';
     const ic = icones[i.urgence] || '➡️';
-    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' + '<span style="font-size:.85rem">' + ic + '</span>' + '<div style="flex:1;min-width:0">' + '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' + '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' + '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span></div>' + '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' + '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div></div>' + (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(' + i.id + ')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') + '</div>';
+    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' + '<span style="font-size:.85rem">' + ic + '</span>' + '<div style="flex:1;min-width:0">' + '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' + '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' + '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span></div>' + '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' + '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div></div>' + (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(\'' + i.id + '\')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') + '</div>';
   }
   elO.innerHTML = ouvertes.length ? ouvertes.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Tout est traité ✓</div>';
   elH.innerHTML = traitees.length ? traitees.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Aucun historique</div>';
 }
-function cloreIntervention(id) {
-  const list = DB.get(DB.keys.interventions) || [];
-  const idx = list.findIndex(i => i.id === id);
-  if (idx === -1) return;
-  list[idx].statut = 'traitee';
-  DB.set(DB.keys.interventions, list);
+async function cloreIntervention(id) {
+  const item = getInterventionsCache().find(i => i.id === id);
+  if (!item) return;
+  item.statut = 'traitee';
+  try { await sbSaveIntervention(item); } catch (e) { console.error('[cloreIntervention]', e); toast('Erreur enregistrement', 'error'); return; }
   renderInterventions();
 }
 
@@ -1963,21 +2044,9 @@ function adminCreateEtab() {
 }
 function adminDeleteEtab(id) { confirmDialog('Supprimer cet établissement et toutes ses données ?', () => { deleteEtab(id); renderEtabAdminList(); toast('Établissement supprimé', 'info'); }); }
 
-function seedSegurExemples() {
-  const residents = DB.get(DB.keys.residents) || [];
-  let changed = false;
-  residents.forEach(r => {
-    if (!r.ins && Math.random() < 0.6) { r.ins = '9' + String(Math.floor(Math.random() * 9e13 + 1e13)); changed = true; }
-    if (!r.nss && Math.random() < 0.7) { r.nss = '1' + String(Math.floor(Math.random() * 9e12 + 1e12)); changed = true; }
-    if (!r.dmp) { r.dmp = ['actif','en_attente','non_ouvert'][Math.floor(Math.random() * 3)]; changed = true; }
-    if (!r.consent) { r.consent = ['oui','non','en_attente'][Math.floor(Math.random() * 3)]; changed = true; }
-  });
-  if (changed) DB.set(DB.keys.residents, residents);
-}
-
-function renderSegurDashboard() {
-  seedSegurExemples();
-  const residents = DB.get(DB.keys.residents) || [];
+async function renderSegurDashboard() {
+  // Données réelles depuis Supabase ; aucun identifiant fictif (INS/NIR/DMP) n'est généré (conformité prod).
+  const residents = await sbGetResidents();
   const rAvecINS = residents.filter(r => r.ins && r.ins.trim());
   const rAvecDMP = residents.filter(r => r.dmp === 'actif');
   const rAvecConsent = residents.filter(r => r.consent === 'oui');
@@ -2094,6 +2163,7 @@ function saveSegurConfig() {
 function activateTab(name) {
   if (!ALL_TABS.includes(name)) name = 'stats';
   document.querySelectorAll('.admin-nav-card').forEach(i => i.classList.toggle('active', i.dataset.tab === name));
+  document.querySelectorAll('#adminSidebar .rh-nav-link').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   ALL_TABS.forEach(n => {
     const el = document.getElementById('tab-' + n);
     if (!el) return;
@@ -2133,11 +2203,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.btn-freq').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const freq = btn.dataset.freq;
-      const residents = DB.get(DB.keys.residents) || [];
-      const presences = DB.get(DB.keys.presences) || {};
-      renderPresenceChart(residents, presences, freq);
-      const journal = DB.get(DB.keys.journal) || [];
-      renderJournalCatBars(journal, freq);
+      renderPresenceChart(_statsData.residents, _statsData.presences, freq);
+      renderJournalCatBars(_statsData.journal, freq);
     });
   });
   if (tabParam === 'stats') setTimeout(refreshAllStats, 120);

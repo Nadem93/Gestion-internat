@@ -18,7 +18,6 @@ const DB = {
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
     loginHistory:'ftr_login_history', auditLog:'ftr_audit_log', fonctionColors:'ftr_fonction_colors',
-    aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
     chambres:'ftr_chambres', edl:'ftr_edl', echeances:'ftr_echeances', releves:'ftr_releves',
     repas:'ftr_repas', visites:'ftr_visites', nuits:'ftr_nuits', activites:'ftr_activites', cvs:'ftr_cvs', medicaments:'ftr_medicaments',
@@ -79,7 +78,6 @@ function createEtab(nom, type, color) {
   initKey(DB.keys.incidents, []);
   initKey(DB.keys.ppe, []);
   initKey(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
-  initKey(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
   initKey(DB.keys.viatrajectoire, []);
   return etab;
 }
@@ -216,8 +214,6 @@ function applyTerminology() {
   }
 }
 
-const API_URL = 'http://localhost:3001';
-
 // ── SERAFIN-PH — nomenclature officielle (sous-domaines, validée le 27/04/2018) ──
 const SP_NOMENCLATURE = [
   // Prestations directes (PD) — soins et accompagnements
@@ -294,24 +290,6 @@ const DEFAULTS = {
     { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_sante','access_medicaments','access_repertoire','access_documents','access_vehicules','access_interventions','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_admin','access_employes','manage_users'] },
     { id: 14, fonction: 'Comptable', color: '#0d9488', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_paie','access_budget','access_facturation'] }
   ],
-  aiPrompts: {
-    ppe: {
-      redaction: { system: 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.' },
-      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
-      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.' },
-      avenant: { system: 'Tu es un rédacteur de PPE en ESMS. Tu reçois des observations du journal de bord pour un bénéficiaire. Pour chaque observation, identifie le domaine du PPE concerné (autonomie, sante, viePro, logement, vieSociale, vieAffective, budget, transport, orientation). Synthétise les informations dans le ou les domaines correspondants, sans rien inventer, sans ajouter d\'analyse. Conserve les faits, dates et éléments concrets. Pour chaque domaine, propose 1 à 3 objectifs concrets avec leurs moyens, échéances et critères d\'évaluation. Restitue UNIQUEMENT un objet JSON valide (sans balises, sans texte autour) : {"sections":{"autonomie":{"bilan":"...","objectifs":[{"objectif":"...","moyens":"...","echeance":"2026-12","evaluation":"..."}],"expression":"..."},"sante":{"bilan":"...","objectifs":[],"expression":"..."},"viePro":{"bilan":"...","objectifs":[],"expression":"..."},"logement":{"bilan":"...","objectifs":[],"expression":"..."},"vieSociale":{"bilan":"...","objectifs":[],"expression":"..."},"vieAffective":{"bilan":"...","objectifs":[],"expression":"..."},"budget":{"bilan":"...","objectifs":[],"expression":"..."},"transport":{"bilan":"...","objectifs":[],"expression":"..."},"orientation":{"bilan":"...","objectifs":[],"expression":"..."}},"conclusion":"..."}. Pour chaque domaine : le bilan est une synthèse factuelle des observations pertinentes (2-3 phrases) ; l\'expression retranscrit le point de vue du bénéficiaire s\'il est rapporté ; les objectifs sont concrets et réalistes. Si aucun élément ne concerne un domaine, écrire "Aucune observation dans ce domaine."' }
-    },
-    journal: {
-      redaction: { system: 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.' },
-      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
-      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.' }
-    },
-    messages: {
-      redaction: { system: 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.' },
-      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.' },
-      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.' }
-    }
-  }
 };
 
 function initDefaults() {
@@ -343,9 +321,6 @@ function initDefaults() {
   else migrateFonctionColors();
   // Migration unique : applique les permissions par défaut aux rôles standard
   if (localStorage.getItem(DB._k('ftr_perm_v')) !== '1') { applyDefaultFonctionPerms(); localStorage.setItem(DB._k('ftr_perm_v'), '1'); }
-  if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
-  // Clé Mistral retirée (IA désactivée). Purge l'éventuelle clé restée en localStorage.
-  try { DB.set(DB.keys.aiKey, ''); localStorage.removeItem(DB._k(DB.keys.aiKey)); } catch (_) {}
 }
 function migrateFonctionColors() {
   const existing = DB.get(DB.keys.fonctionColors) || [];
@@ -1116,21 +1091,6 @@ function canManageUsers(userId) {
 
 // Accès aux modules : une seule source = permissions par rôle (voir hasPermission).
 
-// ── AI (système DÉSACTIVÉ — retiré à la demande, clé Mistral supprimée) ──
-// Toutes les fonctionnalités IA sont conditionnées à getAiKey() : en renvoyant
-// toujours '' , les boutons IA (journal, PPE, messages…) sont masqués partout.
-// Pour réactiver plus tard : passer par une Edge Function Supabase (clé côté
-// serveur uniquement), et faire pointer callMistral() vers ce proxy.
-function getAiKey() { return ''; }
-function setAiKey() { /* no-op : IA désactivée */ }
-
-function getAiPrompt(module, action) {
-  const prompts = DB.get(DB.keys.aiPrompts) || {};
-  return prompts[module]?.[action]?.system || DEFAULTS.aiPrompts[module]?.[action]?.system || '';
-}
-function setAiPrompt() { /* no-op : IA désactivée */ }
-
-async function callMistral() { return null; }
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {

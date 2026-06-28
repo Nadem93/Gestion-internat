@@ -229,11 +229,6 @@
           <!-- Barre de saisie -->
           <div class="chat-input" id="chatInputBar">
             <div class="chat-input-wrap">
-              <div class="chat-input-tools">
-                <button onclick="aiAssistMessage('redaction')">✍ Rédiger</button>
-                <button onclick="aiAssistMessage('correction')">✓ Corriger</button>
-                <button onclick="aiAssistMessage('reformulation')">↺ Reformuler</button>
-              </div>
               <textarea id="chatInput" rows="1" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}" disabled style="width:100%;box-sizing:border-box"></textarea>
             </div>
             <button class="chat-send-btn" onclick="sendChatMsg()" id="sendBtn" disabled>

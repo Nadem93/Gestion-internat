@@ -176,11 +176,6 @@ function renderEntryForm() {
             <span style="${HDR_LABEL}">Observation / Contenu</span>
           </div>
           <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="margin-bottom:1rem"/>
-          <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('redaction')">✍ Rédiger</button>
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('correction')">✓ Corriger</button>
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('reformulation')">✨ Reformuler</button>
-          </div>
           <textarea id="iContenu" class="form-control" placeholder="Décrivez l'événement, l'observation ou l'intervention…" style="height:220px;resize:vertical">${escHtml(currentContenu)}</textarea>
         </div>
       </div>
@@ -427,48 +422,6 @@ async function saveInlineEntry() {
   renderEntries();
 }
 
-async function aiAssistJournalInline(action) {
-  const ta = document.getElementById('iContenu');
-  if (!ta) return;
-  const current = ta.value || '';
-  const residentIds = (document.getElementById('iResident')?.value || '').split(',').filter(Boolean);
-  const residents = _journalResidentsCache;
-  const firstRes = residents.find(r => r.id === residentIds[0]);
-  const residentName = firstRes ? `${firstRes.prenom||''} ${firstRes.nom||''}`.trim() : (residentIds.length > 1 ? 'plusieurs résidents' : '');
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-  if (hasKey) {
-    const customSystem = getAiPrompt('journal', action);
-    let system = '', prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un éducateur rédigeant une observation. Écris en français, professionnel et factuel.';
-      prompt = `Rédige une courte observation${residentName ? ' pour ' + residentName : ''}.` + (current ? '\n\nTexte à compléter :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Corrige les fautes sans changer le style.';
-      prompt = 'Corrige :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Reformule de manière professionnelle.';
-      prompt = 'Reformule :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) { ta.value = result; toast('✓ ' + labels[action], 'success'); return; }
-    toast('API indisponible, mode local', 'warning');
-  }
-  let result = '';
-  if (action === 'redaction') {
-    const tpl = ['Observation : le résident a participé activement.','Suivi : bonne intégration et interactions positives.','Point d\'étape : autonomie croissante.'];
-    result = current ? current + '\n\n' + tpl[Math.floor(Math.random()*tpl.length)] : tpl[Math.floor(Math.random()*tpl.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bils on\b/g,'ils ont').replace(/\bil a étais\b/g,'il a été');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bgère\b/g,'assure la gestion de').replace(/\bveut\b/g,'souhaite');
-  }
-  if (result) { ta.value = result; toast('✓ ' + labels[action] + ' (local)', 'success'); }
-}
 
 function getEntries() {
   const session = Auth.getSession();
@@ -805,77 +758,6 @@ document.addEventListener('DOMContentLoaded', initJournal);
 if (typeof registerPageInit === 'function') registerPageInit('journal', initJournal);
 
 // ── AI Assist Journal ──
-async function aiAssistJournal(action) {
-  const ta = document.getElementById('eContenu');
-  if (!ta) return;
-  const current = ta.value || '';
-  const residentId = document.getElementById('eResident')?.value || '';
-  const residents = _journalResidentsCache;
-  const resident = residents.find(r => r.id === residentId);
-  const residentName = resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '';
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-
-  if (hasKey) {
-    const customSystem = getAiPrompt('journal', action);
-    let system = '';
-    let prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.';
-      prompt = `Rédige une courte observation de journal de bord${residentName ? ' pour le résident ' + residentName : ''}. Décris une journée type, une intervention éducative ou un fait notable.` + (current ? '\n\nTexte existant à compléter :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
-      prompt = 'Corrige ce texte de journal de bord :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.';
-      prompt = 'Reformule ce texte de manière professionnelle et institutionnelle :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) {
-      ta.value = result;
-      ta.dispatchEvent(new Event('input'));
-      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
-      return;
-    }
-    toast('API Mistral indisponible, mode local', 'warning');
-  }
-
-  // Fallback local
-  let result = '';
-  if (action === 'redaction') {
-    const templates = [
-      `Observation éducative du jour : le résident a participé aux activités proposées avec un intérêt marqué pour les ateliers créatifs.`,
-      `Suivi quotidien : bonne intégration au sein du groupe, interactions sociales positives avec les pairs.`,
-      `Point d'étape : le résident fait preuve d'autonomie dans les gestes du quotidien, à encourager dans la continuité.`
-    ];
-    result = current ? current + '\n\n' + templates[Math.floor(Math.random() * templates.length)] : templates[Math.floor(Math.random() * templates.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current
-      .replace(/\bils on\b/g, 'ils ont')
-      .replace(/\belle on\b/g, 'elle a')
-      .replace(/\bje suis allé\b/g, 'je me suis rendu')
-      .replace(/\bil a étais\b/g, 'il a été')
-      .replace(/\bau jour d'aujourd'hui\b/g, 'actuellement');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current
-      .replace(/\bgère\b/g, 'assure la gestion de')
-      .replace(/\ba besoin de\b/g, 'nécessite')
-      .replace(/\bveut\b/g, 'souhaite')
-      .replace(/\bpeut\b/g, 'est en mesure de')
-      .replace(/\bfait\b/g, 'réalise')
-      .replace(/\bva\b/g, 'envisage de');
-  }
-
-  if (result) {
-    ta.value = result;
-    ta.dispatchEvent(new Event('input'));
-    toast('✓ ' + labels[action] + ' (mode local)', 'success');
-  }
-}
 
 // ── EXPORT PDF ──
 function exportJournalPDF() {

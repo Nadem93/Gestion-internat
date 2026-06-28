@@ -238,7 +238,7 @@
 <div class="modal-overlay" id="bilanModal">
   <div class="modal lg">
     <div class="modal-header">
-      <span class="modal-title" id="bilanModalTitle">🤖 Bilan de synthèse</span>
+      <span class="modal-title" id="bilanModalTitle">📋 Bilan de synthèse</span>
       <button class="modal-close" onclick="closeModal('bilanModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body" id="bilanModalBody"></div>
@@ -1951,7 +1951,7 @@ function fvFilter(type, btn) {
 
 function filDeVieCard(r) {
   const ev = buildFilDeVie(r);
-  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>🤖</span> Générer le bilan</button></div>`;
+  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>📋</span> Générer le bilan</button></div>`;
   if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
   const types = [...new Set(ev.map(e => e.type))];
   const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
@@ -2046,106 +2046,17 @@ function radarSignauxCard(r) {
 let _lastBilanText = '';
 
 // Construit un résumé structuré du quotidien à envoyer à l'IA
-function buildBilanContext(r) {
-  const name = `${r.prenom||''} ${r.nom||''}`.trim();
-  const L = [];
-  L.push(`Résident : ${name}`);
-  if (r.dob) L.push(`Âge : ${age(r.dob)} ans`);
-  if (r.genre) L.push(`Genre : ${r.genre==='M'?'masculin':r.genre==='F'?'féminin':'autre'}`);
-  if (r.entree) L.push(`Entré le : ${formatDate(r.entree)}`);
-  L.push(`Statut : ${r.statut||'—'}`);
-  if (r.referent) L.push(`Référent : ${r.referent}`);
-  if (r.protection) L.push(`Mesure de protection : ${(typeof PROTECTION_LABELS!=='undefined'?(PROTECTION_LABELS[r.protection]||r.protection):r.protection)}${r.protectionNom?(' ('+r.protectionNom+')'):''}`);
-
-  // Objectifs assignés
-  const objs = DB.get(DB.keys.objectives) || [];
-  const resObjs = (r.objectifs||[]).map(id => objs.find(o => String(o.id)===String(id))?.name).filter(Boolean);
-  if (resObjs.length) L.push(`\nObjectifs du projet personnalisé : ${resObjs.join(', ')}`);
-
-  // Évaluations (évolution autonomie)
-  const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  if (evals.length) {
-    const first = evals[0], last = evals[evals.length-1];
-    L.push(`\nÉvaluations d'autonomie : ${evals.length} grille(s).`);
-    L.push(`Score global : ${evalScorePct(first.scores)}% (${formatDate(first.date)}) → ${evalScorePct(last.scores)}% (${formatDate(last.date)}).`);
-    if (typeof GRILLE_EVAL !== 'undefined') {
-      GRILLE_EVAL.forEach(d => {
-        const a = evalDomaineScore(first.scores, d), b = evalDomaineScore(last.scores, d);
-        L.push(`  - ${d.domaine} : ${a}% → ${b}%`);
-      });
-    }
-  }
-
-  // Statistiques du quotidien
-  const _sess = Auth.getSession();
-  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
-  const jrn = _residentJournalAll.filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e));
-  const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
-  const sorties = getSorties(r);
-  const ops = getBudgetOps(r);
-  const solde = ops.reduce((a,o)=>a+(o.type==='recette'?(+o.montant||0):-(+o.montant||0)),0);
-  const s = getSante(r);
-  const rdvFaits = s.rdv.filter(v=>v.fait).length, rdvManq = s.rdv.filter(v=>!v.fait && v.date && v.date<today()).length;
-  L.push(`\nActivité enregistrée : ${jrn.length} observations au journal, ${inc.length} incident(s), ${sorties.length} sortie(s)/permission(s), ${ops.length} opération(s) budgétaires (solde ${fmtMoney(solde)}).`);
-  L.push(`Suivi médical : ${rdvFaits} RDV honorés, ${rdvManq} non honorés, ${s.traitements.length} traitement(s), ${s.vaccins.length} vaccination(s).`);
-  if (inc.length) {
-    const types = {}; inc.forEach(e => { types[e.type||'autre'] = (types[e.type||'autre']||0)+1; });
-    L.push(`Types d'incidents : ${Object.entries(types).map(([k,v])=>k+' ('+v+')').join(', ')}.`);
-  }
-
-  // Signaux de vigilance
-  const sig = computeSignals(r);
-  if (sig.length) L.push(`\nSignaux de vigilance détectés : ${sig.map(x=>x.label+' — '+x.detail).join(' ; ')}.`);
-
-  // Observations clés (journal, max 30, anti-débordement)
-  const recent = jrn.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,30);
-  const cats = DB.get(DB.keys.categories)||[];
-  if (recent.length) {
-    L.push(`\nObservations du journal (de la plus récente à la plus ancienne) :`);
-    recent.forEach(e => {
-      const cat = cats.find(c=>String(c.id)===String(e.categorie));
-      L.push(`[${(e.date||'').slice(0,10)}] (${cat?cat.name:'général'}) ${(e.contenu||'').slice(0,300)}`);
-    });
-  }
-  return L.join('\n');
-}
 
 async function genererBilanIA() {
   const r = getResident();
   if (!r) return;
   const name = `${r.prenom||''} ${r.nom||''}`.trim();
-  document.getElementById('bilanModalTitle').textContent = `🤖 Bilan de synthèse — ${name}`;
+  document.getElementById('bilanModalTitle').textContent = `📋 Bilan de synthèse — ${name}`;
   document.getElementById('bilanModalFooter').style.display = 'none';
-  document.getElementById('bilanModalBody').innerHTML = `<div style="padding:2.5rem 1rem;text-align:center;color:var(--muted)"><div style="font-size:1.8rem;margin-bottom:.6rem">🤖</div><div style="font-weight:600">Analyse du quotidien en cours…</div><div style="font-size:.8rem;margin-top:.35rem">Lecture du journal, des évaluations et des indicateurs.</div></div>`;
+  document.getElementById('bilanModalBody').innerHTML = `<div style="padding:2.5rem 1rem;text-align:center;color:var(--muted)"><div style="font-size:1.8rem;margin-bottom:.6rem">📋</div><div style="font-weight:600">Génération du bilan en cours…</div><div style="font-size:.8rem;margin-top:.35rem">Lecture du journal, des évaluations et des indicateurs.</div></div>`;
   openModal('bilanModal');
 
-  const context = buildBilanContext(r);
-  let text = null;
-  const key = getAiKey();
-  if (key) {
-    const system = "Tu es un éducateur spécialisé en établissement médico-social (ESMS). À partir des données du quotidien d'un résident, rédige un BILAN DE SYNTHÈSE professionnel et institutionnel, en français, prêt à être présenté en réunion de projet personnalisé. "
-      + "Structure ta réponse en markdown avec EXACTEMENT ces sections (titres en '## ') : "
-      + "## 1. Contexte et parcours, ## 2. Évolution par domaine, ## 3. Santé et bien-être, ## 4. Vie sociale, autonomie et quotidien, ## 5. Points de vigilance, ## 6. Préconisations et objectifs à venir. "
-      + "Appuie-toi UNIQUEMENT sur les données fournies, reste factuel, bienveillant et nuancé. N'invente aucun fait.";
-    try {
-      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({
-          model: 'mistral-small-latest',
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: `Rédige le bilan de synthèse à partir de ces données :\n\n${context}` }
-          ],
-          temperature: 0.6,
-          max_tokens: 3500
-        })
-      });
-      if (res.ok) { const data = await res.json(); text = data.choices?.[0]?.message?.content?.trim() || null; }
-    } catch (_) {}
-  }
-
-  if (!text) text = bilanOfflineTemplate(r);
+  const text = bilanOfflineTemplate(r);
 
   _lastBilanText = text;
   const banner = `<div style="font-size:.74rem;color:#a16207;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">ℹ Bilan généré localement à partir des données du dossier. <strong>À relire et valider</strong> avant toute utilisation officielle.</div>`;

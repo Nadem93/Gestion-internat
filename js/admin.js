@@ -127,7 +127,7 @@ function saveSettings() {
     adresse: document.getElementById('setAdresse').value.trim(),
     capacite: parseInt(document.getElementById('setCapacite').value) || 0
   };
-  DB.set(DB.keys.settings, data);
+  persistSettings(data);
   updatePreview();
   renderUserInfo();
   toast('Paramètres enregistrés');
@@ -176,7 +176,7 @@ function saveCat() {
     cats.push({ id: newId, name, color });
     toast('Catégorie ajoutée');
   }
-  DB.set(DB.keys.categories, cats);
+  persistCategories(cats);
   closeAllModals();
   resetCatForm();
   renderCats();
@@ -187,7 +187,7 @@ function deleteCat() {
   confirmDialog('Supprimer cette catégorie ?', () => {
     let cats = DB.get(DB.keys.categories) || [];
     cats = cats.filter(c => String(c.id) !== String(id));
-    DB.set(DB.keys.categories, cats);
+    persistCategories(cats);
     closeAllModals();
     resetCatForm();
     renderCats();

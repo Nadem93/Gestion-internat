@@ -117,14 +117,6 @@
       <!-- #6 PARAMÉTRAGE GLOBAL -->
       <div class="csl-panel" id="panel-params">
         <div class="card" style="margin-bottom:1.25rem">
-          <div class="card-header"><span class="card-title">🤖 Clé API IA partagée (Mistral)</span></div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-            <div style="font-size:.8rem;color:var(--muted)">Appliquée à <strong>tous les établissements</strong> du groupe.</div>
-            <div style="display:flex;gap:.5rem"><input type="password" id="globalAiKey" placeholder="Clé API Mistral" style="flex:1"/><button class="btn btn-ghost btn-sm" onclick="const e=document.getElementById('globalAiKey');e.type=e.type==='password'?'text':'password'">👁</button></div>
-            <div style="text-align:right"><button class="btn btn-primary" onclick="cslSaveAiKey()">Appliquer à tous</button></div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:1.25rem">
           <div class="card-header"><span class="card-title">🎨 Charte graphique du groupe</span></div>
           <div class="card-body" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
             <div class="form-group" style="margin:0"><label>Couleur principale</label><input type="color" id="globalPrimary" value="#0f2b4a" style="width:52px;height:38px;padding:.2rem"/></div>
@@ -520,18 +512,10 @@
     const etabs = getEtabs();
     const first = etabs[0];
     if (first) {
-      const key = getEtabData(first.id, DB.keys.aiKey);
-      if (key) document.getElementById('globalAiKey').value = key;
       const b = getEtabData(first.id, DB.keys.branding) || {};
       if (b.primaryColor) document.getElementById('globalPrimary').value = b.primaryColor;
       if (b.accentColor) document.getElementById('globalAccent').value = b.accentColor;
     }
-  }
-  function cslSaveAiKey() {
-    const key = document.getElementById('globalAiKey').value.trim();
-    getEtabs().forEach(e => localStorage.setItem(`${DB.keys.aiKey}__${e.id}`, JSON.stringify(key)));
-    if (typeof auditLog === 'function') auditLog('params_update', 'Clé API IA partagée (tous établissements)');
-    toast('Clé API appliquée à tous les établissements', 'success');
   }
   function cslSaveBranding() {
     const primaryColor = document.getElementById('globalPrimary').value;

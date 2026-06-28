@@ -35,6 +35,7 @@
 <script src="js/entretiens-supabase.js"></script>
 <script src="js/fiches-paie-supabase.js"></script>
 <script src="js/documents-employe-supabase.js"></script>
+<script src="js/messages-supabase.js"></script>
 <script>
 const EMP_DOCS_KEY = 'ftr_employes_docs';
 let _empCache = [];
@@ -51,6 +52,7 @@ function _empEntretiensFor(id) { return _empEntretiensCache.filter(e => String(e
 let _empFichesPaieCache = []; // fiches de paie (table Supabase fiches_paie)
 function _empFichesPaieFor(id) { return _empFichesPaieCache.filter(p => String(p.employeId) === String(id)); }
 let _empDocsCache = []; // documents de la fiche (table Supabase documents_employe)
+let _empMsgCache = []; // messages internes (table Supabase messages)
 const DOC_CAT_LABELS = {
   contrat:'Contrat', fiche:'Fiche de poste', administratif:'Administratif',
   formation:'Formation', sanction:'Sanction', autre:'Autre'
@@ -717,7 +719,7 @@ function empMessagesHtml(e) {
   const empId = String(currentEmployeId);
   if (myId === empId) return '';
   const convKey = [myId, empId].sort().join('_');
-  const allMsgs = (DB.get(DB.keys.messages)||[]).filter(m => m.convId === convKey).sort((a,b) => new Date(a.date)-new Date(b.date));
+  const allMsgs = _empMsgCache.filter(m => m.convId === convKey).sort((a,b) => new Date(a.date)-new Date(b.date));
   const recent = allMsgs.slice(-6);
   const users = DB.get(DB.keys.users)||[];
   const rows = recent.map(m => {
@@ -746,7 +748,7 @@ function empMessagesHtml(e) {
   </div>`;
 }
 
-function empSendMessage() {
+async function empSendMessage() {
   const body = (document.getElementById('empMsgBody')?.value||'').trim();
   if (!body) { toast('Écrivez un message', 'warning'); return; }
   const session = Auth.getSession();
@@ -754,18 +756,15 @@ function empSendMessage() {
   const myId = String(session.userId);
   const empId = String(currentEmployeId);
   const convKey = [myId, empId].sort().join('_');
-  let convs = DB.get('ftr_conversations') || {};
-  if (!convs[convKey]) {
-    convs[convKey] = { id: convKey, userIds: [myId, empId], createdAt: new Date().toISOString() };
-    DB.set('ftr_conversations', convs);
-  }
-  const msgs = DB.get(DB.keys.messages) || [];
-  msgs.push({ id: genId(), convId: convKey, from: myId, body, date: new Date().toISOString(), readBy: [myId] });
-  DB.set(DB.keys.messages, msgs);
+  try {
+    await sbSaveConversation({ id: convKey, userIds: [myId, empId] });
+    const saved = await sbSaveMessage({ convId: convKey, from: myId, body, date: new Date().toISOString(), readBy: [myId] });
+    _empMsgCache.push(saved);
+  } catch (e) { console.error('[empSendMessage]', e); toast('Erreur envoi : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function') { const e2 = (DB.get(DB.keys.users)||[]).find(u=>String(u.id)===empId); auditLog('message_interne', (e2?`${e2.prenom||''} ${e2.nom||''}`.trim():'')+''); }
   toast('Message envoyé', 'success');
   const el = document.getElementById('section-messages');
-  const emp = (DB.get(DB.keys.users)||[]).find(u => String(u.id) === String(currentEmployeId));
+  const emp = getEmploye();
   if (el && emp) el.innerHTML = empMessagesHtml(emp);
 }
 
@@ -1847,7 +1846,7 @@ function initPageTabs() {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const _id = new URLSearchParams(window.location.search).get('id');
-    [_empCache, _empArretsCache, _empCongesCache, _empPlanningCache, _empFormationsCache, _empEntretiensCache, _empFichesPaieCache, _empDocsCache] = await Promise.all([sbGetEmployes(), sbGetAbsences().catch(() => []), sbGetConges().catch(() => []), sbGetPeShifts().catch(() => []), sbGetFormations().catch(() => []), sbGetEntretiens().catch(() => []), sbGetFichesPaie().catch(() => []), _id ? sbGetDocsEmploye(_id).catch(() => []) : []]);
+    [_empCache, _empArretsCache, _empCongesCache, _empPlanningCache, _empFormationsCache, _empEntretiensCache, _empFichesPaieCache, _empDocsCache, _empMsgCache] = await Promise.all([sbGetEmployes(), sbGetAbsences().catch(() => []), sbGetConges().catch(() => []), sbGetPeShifts().catch(() => []), sbGetFormations().catch(() => []), sbGetEntretiens().catch(() => []), sbGetFichesPaie().catch(() => []), _id ? sbGetDocsEmploye(_id).catch(() => []) : [], sbGetMessages().catch(() => [])]);
     loadEmploye();
   } catch (err) {
     console.error('Erreur loadEmploye:', err);

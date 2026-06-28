@@ -20,6 +20,27 @@
     .accueil-home-card:hover::before{opacity:1}
     .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
     .notif-badge{z-index:10}
+    /* Cloche de notifications */
+    .acc-bell{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid rgba(15,23,42,.12);background:transparent;color:#334155;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+    .acc-bell:hover{background:rgba(255,255,255,.45);color:#0f172a}
+    .acc-bell svg{width:21px;height:21px}
+    .acc-bell-count{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+    .acc-bell-count.hidden{display:none}
+    .acc-notif-panel{position:absolute;top:54px;right:0;width:330px;max-width:92vw;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 12px 34px rgba(15,23,42,.16);overflow:hidden;z-index:60;display:none}
+    .acc-notif-panel.open{display:block}
+    .acc-notif-head{padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+    .acc-notif-head strong{font-size:.9rem;color:#0f172a}
+    .acc-notif-head span{font-size:.75rem;color:#94a3b8}
+    .acc-notif-row{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;cursor:pointer;text-decoration:none;color:inherit;transition:background .12s}
+    .acc-notif-row:hover{background:#f8fafc}
+    .acc-notif-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .acc-notif-ic svg{width:18px;height:18px}
+    .acc-notif-row .l1{font-size:.84rem;font-weight:600;color:#0f172a}
+    .acc-notif-row .l2{font-size:.72rem;color:#64748b}
+    .acc-notif-empty{padding:1.6rem .9rem;text-align:center;color:#94a3b8;font-size:.82rem}
+    .acc-notif-foot{padding:.6rem;text-align:center;border-top:1px solid #f1f5f9}
+    .acc-notif-foot button{background:none;border:none;color:#4f46e5;font-size:.78rem;font-weight:600;cursor:pointer;padding:.3rem .6rem;border-radius:7px}
+    .acc-notif-foot button:hover{background:#eef2ff}
     /* Recherche globale */
     .srch-grp{margin-bottom:.75rem}
     .srch-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.2rem .2rem .35rem}
@@ -37,6 +58,12 @@
 <script src="js/planning-equipe-supabase.js"></script>
 <script src="js/formations-supabase.js"></script>
 <script src="js/conges-supabase.js"></script>
+<script src="js/messages-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
+<script src="js/interventions-supabase.js"></script>
+<script src="js/echeances-supabase.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
@@ -68,7 +95,17 @@ document.querySelectorAll('[data-perm]').forEach(el => {
 <div class="accueil-home" id="mainAccueilView" style="display:none">
   <header class="header" style="background:transparent;border:none;position:absolute;width:100%">
     <div style="visibility:hidden;pointer-events:none"><div class="header-title"></div></div>
-    <div class="header-right"></div>
+    <div class="header-right" style="position:relative;z-index:40">
+      <button class="acc-bell" id="accBell" onclick="toggleNotifPanel(event)" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="acc-bell-count hidden" id="accBellCount">0</span>
+      </button>
+      <div class="acc-notif-panel" id="accNotifPanel">
+        <div class="acc-notif-head"><strong>Notifications</strong><span id="accNotifHeadCount"></span></div>
+        <div id="accNotifList"></div>
+        <div class="acc-notif-foot" id="accNotifFoot" style="display:none"><button onclick="markAllNotifsRead()">Tout marquer comme lu</button></div>
+      </div>
+    </div>
   </header>
   <main class="accueil-home-main">
     <div class="accueil-home-grid">
@@ -304,14 +341,14 @@ function loadChambres() {
   const dl = document.getElementById('chambresList');
   if (dl) dl.innerHTML = chambres.map(c => `<option value="${c}">`).join('');
 }
-function saveIntervention() {
+async function saveIntervention() {
   const lieu = document.getElementById('intLieu').value.trim();
   const desc = document.getElementById('intDesc').value.trim();
   const urgence = document.getElementById('intUrgence').value;
   if (!lieu || !desc) { alert('Veuillez remplir le lieu et la description.'); return; }
-  const list = DB.get(DB.keys.interventions) || [];
-  list.push({ id: Date.now(), lieu, desc, urgence, date: new Date().toISOString(), statut: 'ouverte' });
-  DB.set(DB.keys.interventions, list);
+  try {
+    await sbSaveIntervention({ lieu, desc, urgence, statut: 'ouverte' });
+  } catch (e) { console.error('[saveIntervention]', e); alert('Erreur lors de l\'envoi de la demande.'); return; }
   closeModal('modalIntervention');
   document.getElementById('intLieu').value = '';
   document.getElementById('intDesc').value = '';
@@ -378,44 +415,22 @@ function updateNotifs() {
   const userName = [session.prenom, session.nom].filter(Boolean).join(' ') || session.username;
   const uid = String(session.userId);
 
-  // Migrate old messages to have readBy array
-  const messages = DB.get(DB.keys.messages) || [];
-  let changed = false;
-  messages.forEach(m => {
-    if (!Array.isArray(m.readBy)) { m.readBy = []; changed = true; }
-  });
-  if (changed) DB.set(DB.keys.messages, messages);
+  // Messages non lus — chargés depuis Supabase par _loadAccRhCounts
+  const unreadMsgs = window._accUnreadMsgs || 0;
 
-  // Messages — uniquement ceux des conversations où l'utilisateur participe
-  const convs = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
-  const myConvIds = Object.values(convs).filter(c => c.userIds.map(String).includes(uid)).map(c => c.id);
-  const unreadMsgs = messages.filter(m => Array.isArray(m.readBy) && myConvIds.includes(m.convId) && !m.readBy.map(String).includes(uid) && String(m.from) !== uid).length;
-
-  // Journal — non lus
-  const journal = DB.get(DB.keys.journal) || [];
-  const unreadJournal = journal.filter(e => Array.isArray(e.readBy) && !e.readBy.includes(session.userId)).length;
-
-  // Avenants — créés par d'autres après la dernière visite
-  const lastPpe = localStorage.getItem('ftr_last_visit_ppe_' + session.userId);
-  const ppe = DB.get(DB.keys.ppe) || [];
-  const newPpe = ppe.filter(e => e.createdBy !== userName && (!lastPpe || new Date(e.createdAt).getTime() > Number(lastPpe))).length;
+  // Journal (non lus) & Avenants (nouveaux) — comptés depuis Supabase par _loadAccRhCounts
+  const unreadJournal = window._accUnreadJournal || 0;
+  const newPpe = window._accNewPpe || 0;
 
   // Incidents — nouveaux depuis la dernière visite ET non classés (Supabase)
   const newIncidents = window._accIncidentCount || 0;
 
-  const lastInt = localStorage.getItem('ftr_last_visit_interventions_' + session.userId);
-  const interventions = DB.get(DB.keys.interventions) || [];
-  const newInt = lastInt === null ? 0 : interventions.filter(e => e.statut === 'ouverte' && new Date(e.date).getTime() > Number(lastInt)).length;
+  // Interventions — nouvelles demandes ouvertes depuis la dernière visite (Supabase, voir _loadAccRhCounts)
+  const newInt = window._accNewInt || 0;
 
-  // Résidents — nouveaux dans les 7 derniers jours
-  const residents = DB.get(DB.keys.residents) || [];
-  const il7j = Date.now() - 7 * 86400000;
-  const newResidents = residents.filter(r => r.createdAt && new Date(r.createdAt).getTime() > il7j).length;
-
-  // Planning/Agenda — événements aujourd'hui
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const planningItems = DB.get(DB.keys.planning) || [];
-  const eventsToday = planningItems.filter(e => e.date === todayStr).length;
+  // Résidents (nouveaux 7 j) & Agenda (événements du jour) — comptés depuis Supabase
+  const newResidents = window._accNewResidents || 0;
+  const eventsToday = window._accEventsToday || 0;
 
   // Planning équipe — créneaux aujourd'hui pour cet utilisateur (Supabase, voir _loadAccRhCounts)
   const myShiftsToday = window._accShiftsToday || 0;
@@ -435,22 +450,66 @@ function updateNotifs() {
     portail: portailTotal,
   };
 
-  document.querySelectorAll('[data-module]').forEach(el => {
-    const mod = el.dataset.module;
-    let badge = el.querySelector('.notif-badge');
-    const c = counts[mod] || 0;
-    if (c > 0) {
-      if (!badge) {
-        badge = document.createElement('span');
-        badge.className = 'notif-badge';
-        el.appendChild(badge);
-      }
-      badge.textContent = c > 99 ? '99+' : c;
-      badge.classList.remove('hidden');
-    } else {
-      if (badge) badge.remove();
-    }
-  });
+  // ── Cloche de notifications (remplace les pastilles des cartes) ──
+  const NOTIF_DEFS = [
+    { count: unreadMsgs,    l1:'Messages',        l2:'non lus',   c:'#3b82f6', svg:'<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/>', go:"location.href='messages.html'" },
+    { count: unreadJournal, l1:'Journal de bord', l2:'non lus',   c:'#059669', svg:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>', go:"location.href='journal.html'" },
+    { count: newPpe,        l1:'Avenants',        l2:'nouveaux',  c:'#7c3aed', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>', go:"location.href='ppe.html'" },
+    { count: newIncidents,  l1:'Incidents',       l2:'à traiter', c:'#e11d48', svg:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', go:"_goIncidents()" },
+    { count: newInt,        l1:'Interventions',   l2:'à traiter', c:'#0d9488', svg:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>', go:"location.href='interventions.html'" },
+    { count: (window._accEcheancesOverdue || 0), l1:'Échéances', l2:'dépassée(s)', c:'#d97706', svg:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 13.5"/>', go:"location.href='echeances.html'" },
+  ];
+  const active = NOTIF_DEFS.filter(d => d.count > 0);
+  const total = active.reduce((s, d) => s + d.count, 0);
+  const countEl = document.getElementById('accBellCount');
+  if (countEl) { countEl.textContent = total > 99 ? '99+' : total; countEl.classList.toggle('hidden', total === 0); }
+  const headEl = document.getElementById('accNotifHeadCount');
+  if (headEl) headEl.textContent = total > 0 ? (total + ' nouvelle' + (total > 1 ? 's' : '')) : '';
+  const listEl = document.getElementById('accNotifList');
+  if (listEl) {
+    listEl.innerHTML = active.length ? active.map(d =>
+      '<div class="acc-notif-row" onclick="closeNotifPanel();' + d.go + '">' +
+        '<span class="acc-notif-ic" style="background:' + d.c + '1a;color:' + d.c + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d.svg + '</svg></span>' +
+        '<div style="flex:1;min-width:0"><div class="l1">' + d.l1 + '</div><div class="l2">' + d.count + ' ' + d.l2 + '</div></div>' +
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</div>').join('') : '<div class="acc-notif-empty">Aucune notification</div>';
+  }
+  const footEl = document.getElementById('accNotifFoot');
+  if (footEl) footEl.style.display = total > 0 ? '' : 'none';
+  // Sécurité : s'assure qu'aucune pastille ne subsiste sur les cartes/FAB
+  document.querySelectorAll('.notif-badge').forEach(b => { b.classList.add('hidden'); });
+}
+
+function toggleNotifPanel(e) { if (e) e.stopPropagation(); document.getElementById('accNotifPanel')?.classList.toggle('open'); }
+function closeNotifPanel() { document.getElementById('accNotifPanel')?.classList.remove('open'); }
+document.addEventListener('click', e => {
+  const p = document.getElementById('accNotifPanel'), b = document.getElementById('accBell');
+  if (p && p.classList.contains('open') && !p.contains(e.target) && b && !b.contains(e.target)) p.classList.remove('open');
+});
+function _goIncidents() {
+  const s = Auth.getSession();
+  if (s) localStorage.setItem('ftr_last_visit_incidents_' + s.userId, Date.now());
+  if (s?.role === 'admin') { location.href = 'incidents.html'; } else { openModal('modalIncident'); }
+}
+async function markAllNotifsRead() {
+  const s = Auth.getSession(); if (!s) return;
+  const uid = String(s.userId), now = Date.now();
+  ['incidents', 'interventions', 'ppe'].forEach(k => localStorage.setItem('ftr_last_visit_' + k + '_' + uid, now));
+  try {
+    const [msgs, convs] = await Promise.all([sbGetMessages(), sbGetConversations()]);
+    const myConvIds = Object.values(convs).filter(c => (c.userIds || []).map(String).includes(uid)).map(c => c.id);
+    const unread = msgs.filter(m => myConvIds.includes(m.convId) && !(m.readBy || []).map(String).includes(uid) && String(m.from) !== uid);
+    await Promise.all(unread.map(m => sbUpdateMessageReadBy(m.id, [...(m.readBy || []), uid])));
+  } catch (e) { console.error('[markAllNotifsRead] messages', e); }
+  try {
+    const jrn = await sbGetJournalEntries();
+    const unreadJ = jrn.filter(en => Array.isArray(en.readBy) && !en.readBy.map(String).includes(uid));
+    for (const en of unreadJ) { en.readBy = [...(en.readBy || []), uid]; await sbSaveJournalEntry(en); }
+  } catch (e) { console.error('[markAllNotifsRead] journal', e); }
+  closeNotifPanel();
+  try { await _loadAccRhCounts(); } catch (_) {}
+  try { await _loadAccIncidentCount(); } catch (_) {}
+  if (typeof toast === 'function') toast('Notifications marquées comme lues', 'success');
 }
 
 async function _loadAccIncidentCount() {
@@ -473,12 +532,26 @@ async function _loadAccRhCounts() {
   const in7dStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
   const empFullName = [session.prenom, session.nom].filter(Boolean).join(' ');
   try {
-    const [shifts, formations, conges] = await Promise.all([
-      sbGetPeShifts(), sbGetFormations(), sbGetConges()
+    const [shifts, formations, conges, msgs, convs, journal, ppe, residents, planningEv, interventions, echeances] = await Promise.all([
+      sbGetPeShifts(), sbGetFormations(), sbGetConges(), sbGetMessages(), sbGetConversations(),
+      sbGetJournalEntries(), sbGetPpe(), sbGetResidents(), sbGetPlanningEvents(), sbGetInterventions(), sbGetEcheances()
     ]);
     window._accShiftsToday   = empFullName ? shifts.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
     window._accFormations    = formations.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
     window._accPendingConges = conges.filter(c => c.statut === 'en_attente').length;
+    const uid = String(session.userId);
+    const myConvIds = Object.values(convs).filter(c => (c.userIds || []).map(String).includes(uid)).map(c => c.id);
+    window._accUnreadMsgs = msgs.filter(m => myConvIds.includes(m.convId) && !(m.readBy || []).map(String).includes(uid) && String(m.from) !== uid).length;
+    // Journal non lus, avenants récents d'autres auteurs, résidents récents, agenda du jour
+    const lastPpe = localStorage.getItem('ftr_last_visit_ppe_' + session.userId);
+    const il7j = Date.now() - 7 * 86400000;
+    window._accUnreadJournal = journal.filter(e => Array.isArray(e.readBy) && !e.readBy.map(String).includes(uid)).length;
+    window._accNewPpe        = ppe.filter(e => e.createdBy !== empFullName && (!lastPpe || (e.createdAt && new Date(e.createdAt).getTime() > Number(lastPpe)))).length;
+    window._accNewResidents  = residents.filter(r => r.createdAt && new Date(r.createdAt).getTime() > il7j).length;
+    window._accEventsToday   = planningEv.filter(e => e.date === todayStr).length;
+    const lastInt = localStorage.getItem('ftr_last_visit_interventions_' + session.userId);
+    window._accNewInt        = lastInt === null ? 0 : interventions.filter(e => e.statut === 'ouverte' && new Date(e.date).getTime() > Number(lastInt)).length;
+    window._accEcheancesOverdue = echeances.filter(e => !e.done && e.date && e.date < todayStr).length;
     updateNotifs();
   } catch (e) { console.error('[_loadAccRhCounts]', e); }
 }
