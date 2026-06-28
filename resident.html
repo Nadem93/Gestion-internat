@@ -238,7 +238,7 @@
 <div class="modal-overlay" id="bilanModal">
   <div class="modal lg">
     <div class="modal-header">
-      <span class="modal-title" id="bilanModalTitle">🤖 Bilan de synthèse</span>
+      <span class="modal-title" id="bilanModalTitle">📋 Bilan de synthèse</span>
       <button class="modal-close" onclick="closeModal('bilanModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body" id="bilanModalBody"></div>
@@ -332,14 +332,25 @@
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/absences-supabase.js"></script>
+<script src="js/documents-resident-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 let currentResidentId = null;
 let pageEditMode = false;
+let _residentDetailCache = [];
+let _residentJournalAll = [];
+let _residentPresencesRange = {};
+let _residentPlanningCache = [];
 
 function getResident(id) {
-  const residents = DB.get(DB.keys.residents) || [];
-  return residents.find(x => x.id === (id || currentResidentId));
+  return _residentDetailCache.find(x => x.id === (id || currentResidentId));
 }
 
 function canEditResident() {
@@ -363,10 +374,13 @@ function exportResidentData() {
 function anonymizeResident() {
   const r = getResident();
   if (!r) return;
-  confirmDialog('Anonymiser définitivement ce résident ? Ses données personnelles (nom, prénom, photo, contacts, NIR, INS) seront effacées. Les données médicales et d\'activité seront conservées anonymement.', () => {
+  confirmDialog('Anonymiser définitivement ce résident ? Ses données personnelles (nom, prénom, photo, contacts, NIR, INS) seront effacées. Les données médicales et d\'activité seront conservées anonymement.', async () => {
     const data = { ...r, prenom: 'Résident', nom: 'Anonyme', photo: '', notes: '', contacts: '', medecin: '', medecinTel: '', allergies: '', nss: '', ins: '', dmp: '', tuteur: '', tuteurTel: '', ecole: '', classe: '', organisme: '', dossier: '', organismeA: '', dossierA: '', protectionNom: '', color: '#94a3b8', consent: 'non', updatedAt: new Date().toISOString() };
-    const residents = DB.get(DB.keys.residents) || [];
-    DB.set(DB.keys.residents, residents.map(x => x.id === currentResidentId ? data : x));
+    try {
+      const updated = await sbSaveResident(data);
+      const idx = _residentDetailCache.findIndex(x => x.id === currentResidentId);
+      if (idx !== -1) _residentDetailCache[idx] = updated;
+    } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
     if (typeof auditLog === 'function') auditLog('anonymize', 'Résident anonymisé — '+r.prenom+' '+r.nom);
     toast('Résident anonymisé', 'info');
     loadResident();
@@ -396,9 +410,9 @@ function loadResident() {
 
 function renderViewMode(r) {
   const type = getStructureType();
-  const docs = (DB.get(DB.keys.documents)||{})[currentResidentId]||[];
+  const docs = docResByResident(currentResidentId);
   const genderLabel = r.genre==='M'?'Masculin':r.genre==='F'?'Féminin':'Autre';
-  const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
+  const todayPresences = _residentPresencesRange[today()] || {};
   const presenceStatus = todayPresences[currentResidentId] || (r.statut === 'sorti' ? 'sorti' : r.statut);
 
   const photoEl = r.photo
@@ -503,9 +517,16 @@ function getSante(r) {
   return { groupeSanguin: s.groupeSanguin || '', notesMedicales: s.notesMedicales || '', traitements: s.traitements || [], rdv: s.rdv || [], vaccins: s.vaccins || [] };
 }
 
-function persistResident(data) {
-  const residents = DB.get(DB.keys.residents) || [];
-  DB.set(DB.keys.residents, residents.map(x => x.id === currentResidentId ? data : x));
+async function persistResident(data) {
+  try {
+    const updated = await sbSaveResident(data);
+    const idx = _residentDetailCache.findIndex(x => x.id === currentResidentId);
+    if (idx !== -1) _residentDetailCache[idx] = updated;
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    throw e;
+  }
   if (typeof auditLog === 'function') auditLog('resident_update', `Santé — ${data.prenom||''} ${data.nom||''}`);
 }
 
@@ -776,7 +797,7 @@ function openSerafinphModal() {
   requestAnimationFrame(() => document.getElementById('modalSerafinph')?.classList.add('open'));
 }
 
-function saveSerafinph() {
+async function saveSerafinph() {
   const r = getResident();
   if (!r) return;
   const selected = [];
@@ -799,7 +820,7 @@ function saveSerafinph() {
     },
     updatedAt: new Date().toISOString()
   };
-  persistResident(data);
+  await persistResident(data);
   closeModal('modalSerafinph');
   toast('Profil SERAFIN-PH enregistré', 'success');
   loadResident();
@@ -823,7 +844,7 @@ function openSanteModal(type, id) {
   openModal('santeModal');
 }
 
-function saveSanteItem() {
+async function saveSanteItem() {
   const r = getResident();
   if (!r) return;
   const s = getSante(r);
@@ -852,18 +873,17 @@ function saveSanteItem() {
     else { item.id = genId(); if (type === 'rdv') item.fait = false; finalItem = item; list.push(item); }
     // Synchronisation du RDV médical vers le planning
     if (type === 'rdv' && finalItem) {
-      finalItem.planningId = syncRdvToPlanning(r, finalItem);
+      finalItem.planningId = await syncRdvToPlanning(r, finalItem);
     }
     data = { ...r, sante: { ...s, [listKey]: list }, updatedAt: new Date().toISOString() };
   }
-  persistResident(data);
+  await persistResident(data);
   closeModal('santeModal');
   toast('Enregistré', 'success');
   loadResident();
 }
 
-function syncRdvToPlanning(r, rdv) {
-  const events = DB.get(DB.keys.planning) || [];
+async function syncRdvToPlanning(r, rdv) {
   const evt = {
     titre: rdv.type ? rdv.type : 'Rendez-vous médical',
     residentId: currentResidentId,
@@ -874,44 +894,40 @@ function syncRdvToPlanning(r, rdv) {
     heure: rdv.heure || '',
     color: '#ef4444',
     desc: [rdv.praticien ? 'Praticien : ' + rdv.praticien : '', rdv.lieu ? 'Lieu : ' + rdv.lieu : '', rdv.notes].filter(Boolean).join(' · '),
-    source: 'sante',
     santeRdvId: rdv.id
   };
-  if (rdv.planningId && events.some(e => e.id === rdv.planningId)) {
-    DB.set(DB.keys.planning, events.map(e => e.id === rdv.planningId ? { ...e, ...evt } : e));
-    return rdv.planningId;
-  }
-  evt.id = genId();
-  events.push(evt);
-  DB.set(DB.keys.planning, events);
-  return evt.id;
+  const existing = rdv.planningId ? _residentPlanningCache.find(e => e.id === rdv.planningId) : null;
+  const saved = await sbSavePlanningEvent(existing ? { ...existing, ...evt } : evt);
+  const idx = _residentPlanningCache.findIndex(e => e.id === saved.id);
+  if (idx !== -1) _residentPlanningCache[idx] = saved; else _residentPlanningCache.push(saved);
+  return saved.id;
 }
 
 function deleteSanteItem(listKey, id) {
-  confirmDialog('Supprimer cet élément ?', () => {
+  confirmDialog('Supprimer cet élément ?', async () => {
     const r = getResident();
     const s = getSante(r);
     // Retirer l'événement lié du planning si c'est un RDV
     if (listKey === 'rdv') {
       const rdv = (s.rdv || []).find(x => x.id === id);
       if (rdv && rdv.planningId) {
-        const events = (DB.get(DB.keys.planning) || []).filter(e => e.id !== rdv.planningId);
-        DB.set(DB.keys.planning, events);
+        try { await sbDeletePlanningEvent(rdv.planningId); } catch (e) { console.error(e); }
+        _residentPlanningCache = _residentPlanningCache.filter(e => e.id !== rdv.planningId);
       }
     }
     const data = { ...r, sante: { ...s, [listKey]: (s[listKey] || []).filter(x => x.id !== id) }, updatedAt: new Date().toISOString() };
-    persistResident(data);
+    await persistResident(data);
     toast('Supprimé', 'success');
     loadResident();
   });
 }
 
-function toggleRdvFait(id) {
+async function toggleRdvFait(id) {
   const r = getResident();
   const s = getSante(r);
   const rdv = (s.rdv || []).map(v => v.id === id ? { ...v, fait: !v.fait } : v);
   const data = { ...r, sante: { ...s, rdv }, updatedAt: new Date().toISOString() };
-  persistResident(data);
+  await persistResident(data);
   loadResident();
 }
 
@@ -994,7 +1010,7 @@ function openSortieModal(id) {
   openModal('sortieModal');
 }
 
-function saveSortie() {
+async function saveSortie() {
   const r = getResident();
   if (!r) return;
   const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -1009,25 +1025,25 @@ function saveSortie() {
   const list = [...getSorties(r)];
   if (sortieEditId) { const idx = list.findIndex(x => x.id === sortieEditId); if (idx >= 0) list[idx] = { ...list[idx], ...item }; }
   else { item.id = genId(); item.retourEffectif = null; list.push(item); }
-  persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
+  await persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
   closeModal('sortieModal');
   toast('Enregistré', 'success');
   loadResident();
 }
 
-function marquerRetour(id) {
+async function marquerRetour(id) {
   const r = getResident();
   const list = getSorties(r).map(s => s.id === id ? { ...s, retourEffectif: new Date().toISOString() } : s);
-  persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
+  await persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
   toast('Retour enregistré', 'success');
   loadResident();
 }
 
 function deleteSortie(id) {
-  confirmDialog('Supprimer cette sortie ?', () => {
+  confirmDialog('Supprimer cette sortie ?', async () => {
     const r = getResident();
     const list = getSorties(r).filter(s => s.id !== id);
-    persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
+    await persistResident({ ...r, sorties: list, updatedAt: new Date().toISOString() });
     toast('Supprimé', 'success');
     loadResident();
   });
@@ -1108,7 +1124,7 @@ function openTrousseauModal(id) {
   openModal('trousseauModal');
 }
 
-function saveTrousseauItem() {
+async function saveTrousseauItem() {
   const r = getResident();
   if (!r) return;
   const designation = document.getElementById('trDesignation').value.trim();
@@ -1129,7 +1145,7 @@ function saveTrousseauItem() {
     items = [...items, { id: genId(), ...data, restitue: false }];
     toast('Article ajouté au trousseau');
   }
-  persistResident({ ...r, trousseau: items });
+  await persistResident({ ...r, trousseau: items });
   closeModal('trousseauModal');
   loadResident();
 }
@@ -1137,8 +1153,8 @@ function saveTrousseauItem() {
 function restituerTrousseauItem(id) {
   const r = getResident();
   if (!r) return;
-  confirmDialog('Marquer cet article comme restitué au résident ?', () => {
-    persistResident({ ...r, trousseau: getTrousseau(r).map(x => x.id === id ? { ...x, restitue: true, dateRestitution: today() } : x) });
+  confirmDialog('Marquer cet article comme restitué au résident ?', async () => {
+    await persistResident({ ...r, trousseau: getTrousseau(r).map(x => x.id === id ? { ...x, restitue: true, dateRestitution: today() } : x) });
     toast('Article restitué ✓');
     loadResident();
   });
@@ -1147,8 +1163,8 @@ function restituerTrousseauItem(id) {
 function deleteTrousseauItem(id) {
   const r = getResident();
   if (!r) return;
-  confirmDialog('Supprimer cet article de l\'inventaire ?', () => {
-    persistResident({ ...r, trousseau: getTrousseau(r).filter(x => x.id !== id) });
+  confirmDialog('Supprimer cet article de l\'inventaire ?', async () => {
+    await persistResident({ ...r, trousseau: getTrousseau(r).filter(x => x.id !== id) });
     toast('Article supprimé', 'info');
     loadResident();
   });
@@ -1266,13 +1282,13 @@ function openActiviteInscrModal() {
   openModal('activiteInscrModal');
 }
 
-function saveActiviteInscr() {
+async function saveActiviteInscr() {
   const r = getResident();
   if (!r) return;
   const activiteId = document.getElementById('aiActivite').value;
   if (!activiteId) { toast('Choisissez une activité', 'error'); return; }
   const inscription = { id: genId(), activiteId, dateInscription: document.getElementById('aiDate').value || today(), statut: 'active', bilans: [] };
-  persistResident({ ...r, activites: [...getResidentActivites(r), inscription] });
+  await persistResident({ ...r, activites: [...getResidentActivites(r), inscription] });
   if (typeof auditLog === 'function') auditLog('activite_inscription', `Inscription — ${(r.prenom || '') + ' ' + (r.nom || '')}`);
   toast('Inscription enregistrée ✓');
   closeModal('activiteInscrModal');
@@ -1282,8 +1298,8 @@ function saveActiviteInscr() {
 function terminerActiviteInscr(inscriptionId) {
   const r = getResident();
   if (!r) return;
-  confirmDialog("Mettre fin à cette inscription ?", () => {
-    persistResident({ ...r, activites: getResidentActivites(r).map(i => i.id === inscriptionId ? { ...i, statut: 'terminee', dateFin: today() } : i) });
+  confirmDialog("Mettre fin à cette inscription ?", async () => {
+    await persistResident({ ...r, activites: getResidentActivites(r).map(i => i.id === inscriptionId ? { ...i, statut: 'terminee', dateFin: today() } : i) });
     toast('Inscription terminée', 'info');
     loadResident();
   });
@@ -1306,7 +1322,7 @@ function openActiviteBilanModal(inscriptionId) {
   openModal('activiteBilanModal');
 }
 
-function saveActiviteBilan() {
+async function saveActiviteBilan() {
   const texte = document.getElementById('abmTexte').value.trim();
   if (!texte) { toast('Le bilan est vide', 'error'); return; }
   const r = getResident();
@@ -1314,7 +1330,7 @@ function saveActiviteBilan() {
   const s = Auth.getSession();
   const auteur = s ? (`${s.prenom || ''} ${s.nom || ''}`.trim() || s.username) : '';
   const bilan = { id: genId(), date: document.getElementById('abmDate').value || today(), texte, auteur };
-  persistResident({ ...r, activites: getResidentActivites(r).map(i => i.id === activiteBilanInscrId ? { ...i, bilans: [...(i.bilans || []), bilan] } : i) });
+  await persistResident({ ...r, activites: getResidentActivites(r).map(i => i.id === activiteBilanInscrId ? { ...i, bilans: [...(i.bilans || []), bilan] } : i) });
   toast('Bilan ajouté ✓');
   loadResident();
   openActiviteBilanModal(activiteBilanInscrId);
@@ -1410,7 +1426,7 @@ function openBudgetModal(id) {
   openModal('budgetModal');
 }
 
-function saveBudgetOp() {
+async function saveBudgetOp() {
   const r = getResident();
   if (!r) return;
   const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -1425,17 +1441,17 @@ function saveBudgetOp() {
   const ops = [...getBudgetOps(r)];
   if (budgetEditId) { const idx = ops.findIndex(x => x.id === budgetEditId); if (idx >= 0) ops[idx] = { ...ops[idx], ...item }; }
   else { item.id = genId(); ops.push(item); }
-  persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
+  await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
   closeModal('budgetModal');
   toast('Enregistré', 'success');
   loadResident();
 }
 
 function deleteBudgetOp(id) {
-  confirmDialog('Supprimer cette opération ?', () => {
+  confirmDialog('Supprimer cette opération ?', async () => {
     const r = getResident();
     const ops = getBudgetOps(r).filter(o => o.id !== id);
-    persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
+    await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
     toast('Supprimé', 'success');
     loadResident();
   });
@@ -1504,14 +1520,14 @@ function openObjectifModal(objId) {
   openModal('objectifModal');
 }
 
-function saveObjectifSuivi() {
+async function saveObjectifSuivi() {
   const r = getResident();
   if (!r || !objectifEditId) return;
   const statut = document.getElementById('objStatut').value;
   const note = document.getElementById('objNote').value.trim();
   const suivi = { ...getObjSuivi(r) };
   suivi[objectifEditId] = { statut, note, dateMaj: new Date().toISOString() };
-  persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
+  await persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
   closeModal('objectifModal');
   toast('Suivi mis à jour', 'success');
   loadResident();
@@ -1657,7 +1673,7 @@ function openEvalModal(id) {
   openModal('evalModal');
 }
 
-function saveEvaluation() {
+async function saveEvaluation() {
   const r = getResident();
   if (!r) return;
   const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -1668,17 +1684,17 @@ function saveEvaluation() {
   const list = [...getEvaluations(r)];
   if (evalEditId) { const idx = list.findIndex(x => x.id === evalEditId); if (idx >= 0) list[idx] = { ...list[idx], ...item }; }
   else { item.id = genId(); list.push(item); }
-  persistResident({ ...r, evaluations: list, updatedAt: new Date().toISOString() });
+  await persistResident({ ...r, evaluations: list, updatedAt: new Date().toISOString() });
   closeModal('evalModal');
   toast('Évaluation enregistrée', 'success');
   loadResident();
 }
 
 function deleteEvaluation(id) {
-  confirmDialog('Supprimer cette évaluation ?', () => {
+  confirmDialog('Supprimer cette évaluation ?', async () => {
     const r = getResident();
     const list = getEvaluations(r).filter(e => e.id !== id);
-    persistResident({ ...r, evaluations: list, updatedAt: new Date().toISOString() });
+    await persistResident({ ...r, evaluations: list, updatedAt: new Date().toISOString() });
     toast('Supprimé', 'success');
     loadResident();
   });
@@ -1790,7 +1806,7 @@ function renderEditMode(r) {
     </div>`;
 }
 
-function savePageEdit() {
+async function savePageEdit() {
   const r = getResident();
   if (!r) return;
   const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -1811,8 +1827,15 @@ function savePageEdit() {
     notes: g('eNotes'), contacts: g('eContacts'),
     updatedAt: new Date().toISOString()
   };
-  const residents = DB.get(DB.keys.residents) || [];
-  DB.set(DB.keys.residents, residents.map(x => x.id === currentResidentId ? data : x));
+  try {
+    const updated = await sbSaveResident(data);
+    const idx = _residentDetailCache.findIndex(x => x.id === currentResidentId);
+    if (idx !== -1) _residentDetailCache[idx] = updated;
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
+  }
   toast('Résident mis à jour', 'success');
   pageEditMode = false;
   loadResident();
@@ -1851,7 +1874,7 @@ function buildFilDeVie(r) {
   if (r.entree) push(new Date(r.entree + 'T00:00'), 'admission', '🏠', '#0891b2', 'Admission', "Entrée dans l'établissement");
   if (r.dateSortie) push(new Date(r.dateSortie + 'T00:00'), 'sortie-def', '🚸', '#64748b', "Sortie de l'établissement", '');
   const cats = DB.get(DB.keys.categories) || [];
-  (DB.get(DB.keys.journal) || []).filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e)).forEach(e => {
+  _residentJournalAll.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e)).forEach(e => {
     const cat = cats.find(c => String(c.id) === String(e.categorie));
     push(new Date(e.date), 'journal', '📔', cat ? cat.color : '#059669', cat ? cat.name : 'Journal', e.contenu);
   });
@@ -1928,7 +1951,7 @@ function fvFilter(type, btn) {
 
 function filDeVieCard(r) {
   const ev = buildFilDeVie(r);
-  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>🤖</span> Générer le bilan</button></div>`;
+  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>📋</span> Générer le bilan</button></div>`;
   if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
   const types = [...new Set(ev.map(e => e.type))];
   const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
@@ -1953,7 +1976,7 @@ function computeSignals(r) {
   const td = today(), now = Date.now();
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
   // Absences récentes (14 j)
-  const presences = DB.get(DB.keys.presences) || {};
+  const presences = _residentPresencesRange;
   let abs = 0; const since14 = daysAgo(14);
   for (const [d, day] of Object.entries(presences)) { if (d < since14) continue; if (day[currentResidentId] === 'absent') abs++; }
   if (abs >= 5) out.push({ level:'alert', icon:'📉', label:'Absences fréquentes', detail:`${abs} absences sur les 14 derniers jours` });
@@ -1986,7 +2009,7 @@ function computeSignals(r) {
     const _sess = Auth.getSession();
     const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
     const name = `${r.prenom||''} ${r.nom||''}`;
-    const jrn = (DB.get(DB.keys.journal) || []).filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e));
+    const jrn = _residentJournalAll.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e));
     const last = jrn.reduce((m, e) => { const t = new Date(e.date).getTime(); return t > m ? t : m; }, 0);
     if (last === 0) out.push({ level:'info', icon:'🕐', label:'Aucune observation', detail:'Aucune entrée au journal pour ce résident' });
     else { const days = Math.floor((now - last) / 86400000); if (days >= 21) out.push({ level:'warn', icon:'🕐', label:'Journal silencieux', detail:`Dernière observation il y a ${days} jours` }); }
@@ -2023,112 +2046,20 @@ function radarSignauxCard(r) {
 let _lastBilanText = '';
 
 // Construit un résumé structuré du quotidien à envoyer à l'IA
-function buildBilanContext(r) {
-  const name = `${r.prenom||''} ${r.nom||''}`.trim();
-  const L = [];
-  L.push(`Résident : ${name}`);
-  if (r.dob) L.push(`Âge : ${age(r.dob)} ans`);
-  if (r.genre) L.push(`Genre : ${r.genre==='M'?'masculin':r.genre==='F'?'féminin':'autre'}`);
-  if (r.entree) L.push(`Entré le : ${formatDate(r.entree)}`);
-  L.push(`Statut : ${r.statut||'—'}`);
-  if (r.referent) L.push(`Référent : ${r.referent}`);
-  if (r.protection) L.push(`Mesure de protection : ${(typeof PROTECTION_LABELS!=='undefined'?(PROTECTION_LABELS[r.protection]||r.protection):r.protection)}${r.protectionNom?(' ('+r.protectionNom+')'):''}`);
-
-  // Objectifs assignés
-  const objs = DB.get(DB.keys.objectives) || [];
-  const resObjs = (r.objectifs||[]).map(id => objs.find(o => String(o.id)===String(id))?.name).filter(Boolean);
-  if (resObjs.length) L.push(`\nObjectifs du projet personnalisé : ${resObjs.join(', ')}`);
-
-  // Évaluations (évolution autonomie)
-  const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  if (evals.length) {
-    const first = evals[0], last = evals[evals.length-1];
-    L.push(`\nÉvaluations d'autonomie : ${evals.length} grille(s).`);
-    L.push(`Score global : ${evalScorePct(first.scores)}% (${formatDate(first.date)}) → ${evalScorePct(last.scores)}% (${formatDate(last.date)}).`);
-    if (typeof GRILLE_EVAL !== 'undefined') {
-      GRILLE_EVAL.forEach(d => {
-        const a = evalDomaineScore(first.scores, d), b = evalDomaineScore(last.scores, d);
-        L.push(`  - ${d.domaine} : ${a}% → ${b}%`);
-      });
-    }
-  }
-
-  // Statistiques du quotidien
-  const _sess = Auth.getSession();
-  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
-  const jrn = (DB.get(DB.keys.journal)||[]).filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e));
-  const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
-  const sorties = getSorties(r);
-  const ops = getBudgetOps(r);
-  const solde = ops.reduce((a,o)=>a+(o.type==='recette'?(+o.montant||0):-(+o.montant||0)),0);
-  const s = getSante(r);
-  const rdvFaits = s.rdv.filter(v=>v.fait).length, rdvManq = s.rdv.filter(v=>!v.fait && v.date && v.date<today()).length;
-  L.push(`\nActivité enregistrée : ${jrn.length} observations au journal, ${inc.length} incident(s), ${sorties.length} sortie(s)/permission(s), ${ops.length} opération(s) budgétaires (solde ${fmtMoney(solde)}).`);
-  L.push(`Suivi médical : ${rdvFaits} RDV honorés, ${rdvManq} non honorés, ${s.traitements.length} traitement(s), ${s.vaccins.length} vaccination(s).`);
-  if (inc.length) {
-    const types = {}; inc.forEach(e => { types[e.type||'autre'] = (types[e.type||'autre']||0)+1; });
-    L.push(`Types d'incidents : ${Object.entries(types).map(([k,v])=>k+' ('+v+')').join(', ')}.`);
-  }
-
-  // Signaux de vigilance
-  const sig = computeSignals(r);
-  if (sig.length) L.push(`\nSignaux de vigilance détectés : ${sig.map(x=>x.label+' — '+x.detail).join(' ; ')}.`);
-
-  // Observations clés (journal, max 30, anti-débordement)
-  const recent = jrn.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,30);
-  const cats = DB.get(DB.keys.categories)||[];
-  if (recent.length) {
-    L.push(`\nObservations du journal (de la plus récente à la plus ancienne) :`);
-    recent.forEach(e => {
-      const cat = cats.find(c=>String(c.id)===String(e.categorie));
-      L.push(`[${(e.date||'').slice(0,10)}] (${cat?cat.name:'général'}) ${(e.contenu||'').slice(0,300)}`);
-    });
-  }
-  return L.join('\n');
-}
 
 async function genererBilanIA() {
   const r = getResident();
   if (!r) return;
   const name = `${r.prenom||''} ${r.nom||''}`.trim();
-  document.getElementById('bilanModalTitle').textContent = `🤖 Bilan de synthèse — ${name}`;
+  document.getElementById('bilanModalTitle').textContent = `📋 Bilan de synthèse — ${name}`;
   document.getElementById('bilanModalFooter').style.display = 'none';
-  document.getElementById('bilanModalBody').innerHTML = `<div style="padding:2.5rem 1rem;text-align:center;color:var(--muted)"><div style="font-size:1.8rem;margin-bottom:.6rem">🤖</div><div style="font-weight:600">Analyse du quotidien en cours…</div><div style="font-size:.8rem;margin-top:.35rem">Lecture du journal, des évaluations et des indicateurs.</div></div>`;
+  document.getElementById('bilanModalBody').innerHTML = `<div style="padding:2.5rem 1rem;text-align:center;color:var(--muted)"><div style="font-size:1.8rem;margin-bottom:.6rem">📋</div><div style="font-weight:600">Génération du bilan en cours…</div><div style="font-size:.8rem;margin-top:.35rem">Lecture du journal, des évaluations et des indicateurs.</div></div>`;
   openModal('bilanModal');
 
-  const context = buildBilanContext(r);
-  let text = null;
-  const key = getAiKey();
-  if (key) {
-    const system = "Tu es un éducateur spécialisé en établissement médico-social (ESMS). À partir des données du quotidien d'un résident, rédige un BILAN DE SYNTHÈSE professionnel et institutionnel, en français, prêt à être présenté en réunion de projet personnalisé. "
-      + "Structure ta réponse en markdown avec EXACTEMENT ces sections (titres en '## ') : "
-      + "## 1. Contexte et parcours, ## 2. Évolution par domaine, ## 3. Santé et bien-être, ## 4. Vie sociale, autonomie et quotidien, ## 5. Points de vigilance, ## 6. Préconisations et objectifs à venir. "
-      + "Appuie-toi UNIQUEMENT sur les données fournies, reste factuel, bienveillant et nuancé. N'invente aucun fait.";
-    try {
-      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({
-          model: 'mistral-small-latest',
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: `Rédige le bilan de synthèse à partir de ces données :\n\n${context}` }
-          ],
-          temperature: 0.6,
-          max_tokens: 3500
-        })
-      });
-      if (res.ok) { const data = await res.json(); text = data.choices?.[0]?.message?.content?.trim() || null; }
-    } catch (_) {}
-  }
-
-  let viaIA = !!text;
-  if (!text) text = bilanOfflineTemplate(r);
+  const text = bilanOfflineTemplate(r);
 
   _lastBilanText = text;
-  const banner = viaIA
-    ? `<div style="font-size:.74rem;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">✓ Généré par IA à partir du quotidien. <strong>À relire et valider</strong> avant toute utilisation officielle.</div>`
-    : `<div style="font-size:.74rem;color:#a16207;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">ℹ Bilan généré localement (aucune clé IA configurée). Pour une rédaction enrichie, ajoutez une clé Mistral dans Administration → Établissement.</div>`;
+  const banner = `<div style="font-size:.74rem;color:#a16207;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r-sm);padding:.5rem .75rem;margin-bottom:1rem">ℹ Bilan généré localement à partir des données du dossier. <strong>À relire et valider</strong> avant toute utilisation officielle.</div>`;
   document.getElementById('bilanModalBody').innerHTML = banner + `<div id="bilanContent" style="font-size:.86rem;line-height:1.65">${mdToHtml(text)}</div>`;
   document.getElementById('bilanModalFooter').style.display = '';
 }
@@ -2138,7 +2069,7 @@ function bilanOfflineTemplate(r) {
   const name = `${r.prenom||''} ${r.nom||''}`.trim();
   const _sess = Auth.getSession();
   const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
-  const jrn = (DB.get(DB.keys.journal)||[]).filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e)).sort((a,b)=> new Date(b.date)-new Date(a.date));
+  const jrn = _residentJournalAll.filter(e => (String(e.residentId)===String(currentResidentId)||e.resident===name) && _canConf(e)).sort((a,b)=> new Date(b.date)-new Date(a.date));
   const inc = (DB.get(DB.keys.incidents)||[]).filter(e => String(e.residentId)===String(currentResidentId));
   const evals = [...getEvaluations(r)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const sig = computeSignals(r);
@@ -2207,8 +2138,8 @@ function imprimerBilan() {
 }
 
 function renderDataCards(r) {
-  const journal = DB.get(DB.keys.journal) || [];
-  const planning = DB.get(DB.keys.planning) || [];
+  const journal = _residentJournalAll;
+  const planning = _residentPlanningCache;
   const ppeList = DB.get(DB.keys.ppe) || [];
   const incidents = DB.get(DB.keys.incidents) || [];
   const categories = DB.get(DB.keys.categories) || [];
@@ -2231,9 +2162,9 @@ function renderDataCards(r) {
 }
 
 function renderStatCards(r) {
-  const presences = DB.get(DB.keys.presences) || {};
-  const journal = DB.get(DB.keys.journal) || [];
-  const planning = DB.get(DB.keys.planning) || [];
+  const presences = _residentPresencesRange;
+  const journal = _residentJournalAll;
+  const planning = _residentPlanningCache;
   const ppeList = DB.get(DB.keys.ppe) || [];
   const incidents = DB.get(DB.keys.incidents) || [];
   const categories = DB.get(DB.keys.categories) || [];
@@ -2251,7 +2182,7 @@ function renderStatCards(r) {
   const rJournal = journal.filter(e => String(e.residentId) === String(currentResidentId) || e.resident === `${r.prenom||''} ${r.nom||''}`).slice(-5).reverse();
   const rIncidents = incidents.filter(e => String(e.residentId) === String(currentResidentId)).slice(-5).reverse();
   const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
-  const docCount = ((DB.get(DB.keys.documents)||{})[currentResidentId]||[]).length;
+  const docCount = docResByResident(currentResidentId).length;
   return `
     <div class="grid grid-4" style="margin-bottom:1.5rem">
       <div class="stat-card" style="background:linear-gradient(135deg,#ef444425,#fca5a515)"><div class="stat-card-top"><span class="stat-label">Absences (mois)</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div></div><div class="stat-num">${monthAbsences}</div><div class="stat-change">${monthTotal ? Math.round(monthAbsences/monthTotal*100)+'%' : '—'}</div></div>
@@ -2369,23 +2300,13 @@ async function uploadDocFromPage() {
   const dueDate = document.getElementById('pageDocDueDate').value;
   const category = document.getElementById('pageDocCategory').value;
   try {
-    const base64 = await fileToBase64(pageDocFile);
-    const doc = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-      name,
-      fileName: pageDocFile.name,
-      size: pageDocFile.size,
-      mimeType: pageDocFile.type,
-      category,
-      docDate,
-      dueDate,
-      date: new Date().toISOString(),
-      data: base64
-    };
-    const allDocs = DB.get(DB.keys.documents) || {};
-    if (!allDocs[currentResidentId]) allDocs[currentResidentId] = [];
-    allDocs[currentResidentId].push(doc);
-    DB.set(DB.keys.documents, allDocs);
+    const path = await sbUploadJustificatif(pageDocFile, currentResidentId);
+    const saved = await sbSaveDocumentResident({
+      residentId: currentResidentId, name, fileName: pageDocFile.name,
+      size: pageDocFile.size, mimeType: pageDocFile.type,
+      category, docDate, dueDate, fichierPath: path, type: 'resident'
+    });
+    _docResCache.unshift(saved);
     toast('Document ajouté', 'success');
     pageDocFile = null;
     document.getElementById('pageDocName').value = '';
@@ -2406,13 +2327,16 @@ function cancelPageDoc() {
 
 function deleteDocFromPage(docId, resId) {
   if (!confirm('Supprimer ce document ?')) return;
-  const allDocs = DB.get(DB.keys.documents) || {};
-  if (!allDocs[resId]) return;
-  allDocs[resId] = allDocs[resId].filter(d => d.id !== docId);
-  if (!allDocs[resId].length) delete allDocs[resId];
-  DB.set(DB.keys.documents, allDocs);
-  toast('Document supprimé', 'success');
-  loadResident();
+  const doc = _docResCache.find(d => d.id === docId);
+  (async () => {
+    try {
+      await sbDeleteDocumentResident(docId);
+      if (doc?.fichierPath && typeof sbDeleteJustificatif === 'function') sbDeleteJustificatif(doc.fichierPath).catch(() => {});
+      _docResCache = _docResCache.filter(d => d.id !== docId);
+    } catch (e) { console.error('[deleteDocFromPage]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Document supprimé', 'success');
+    loadResident();
+  })();
 }
 
 // ── PLANNING RÉSIDENT (agenda + activités + événements manuels) ──
@@ -2436,7 +2360,7 @@ function planningResidentCard(r) {
   const endStr = days[6].str;
 
   // Événements agenda liés à ce résident dans la fenêtre
-  const allEvents = (DB.get(DB.keys.planning) || []).filter(e =>
+  const allEvents = _residentPlanningCache.filter(e =>
     String(e.residentId) === String(r.id) &&
     e.date >= todayStr && e.date <= endStr
   );
@@ -2560,7 +2484,7 @@ function praGetRecurDates(start, freq, until) {
   return dates;
 }
 
-function savePlanningResidentEvent() {
+async function savePlanningResidentEvent() {
   const r = getResident();
   if (!r) return;
   const titre = document.getElementById('praTitle').value.trim();
@@ -2578,23 +2502,29 @@ function savePlanningResidentEvent() {
     lieu:         document.getElementById('praLieu').value.trim(),
     desc:         document.getElementById('praNotes').value.trim(),
     residentId:   String(r.id),
-    residentName: `${r.prenom||''} ${r.nom||''}`.trim(),
-    createdAt:    new Date().toISOString()
+    residentName: `${r.prenom||''} ${r.nom||''}`.trim()
   };
 
   const recur      = document.getElementById('praRecur').value;
   const recurUntil = document.getElementById('praRecurUntil').value;
-  const allEvents  = DB.get(DB.keys.planning) || [];
 
-  if (recur && recurUntil && recurUntil >= date) {
-    const recurId  = genId();
-    const dates    = praGetRecurDates(date, recur, recurUntil);
-    const newEvs   = dates.map(d => ({ ...base, id: genId(), date: d, recurId, recurFreq: recur, recurUntil }));
-    DB.set(DB.keys.planning, [...allEvents, ...newEvs]);
-    toast(`${newEvs.length} occurrence${newEvs.length>1?'s':''} créée${newEvs.length>1?'s':''}`, 'success');
-  } else {
-    DB.set(DB.keys.planning, [...allEvents, { ...base, id: genId() }]);
-    toast('Événement ajouté', 'success');
+  try {
+    if (recur && recurUntil && recurUntil >= date) {
+      const recurId = genId();
+      const dates   = praGetRecurDates(date, recur, recurUntil);
+      const newEvs  = dates.map(d => ({ ...base, date: d, recurId, recurFreq: recur, recurUntil }));
+      const saved   = await sbSavePlanningEventsBulk(newEvs);
+      _residentPlanningCache.push(...saved);
+      toast(`${saved.length} occurrence${saved.length>1?'s':''} créée${saved.length>1?'s':''}`, 'success');
+    } else {
+      const saved = await sbSavePlanningEvent(base);
+      _residentPlanningCache.push(saved);
+      toast('Événement ajouté', 'success');
+    }
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
 
   closeModal('planningResidentAddModal');
@@ -2602,20 +2532,21 @@ function savePlanningResidentEvent() {
 }
 
 function deletePlanningResidentEvent(id, recurId) {
-  const allEvents = DB.get(DB.keys.planning) || [];
   if (recurId) {
-    const series = allEvents.filter(e => e.recurId === recurId);
+    const series = _residentPlanningCache.filter(e => e.recurId === recurId);
     const msg = series.length > 1
       ? `Supprimer les ${series.length} occurrences de cette série ?`
       : 'Supprimer cet événement ?';
-    confirmDialog(msg, () => {
-      DB.set(DB.keys.planning, allEvents.filter(e => e.recurId !== recurId));
+    confirmDialog(msg, async () => {
+      try { await sbDeletePlanningEventSeries(recurId); } catch (e) { toast('Erreur lors de la suppression', 'error'); console.error(e); return; }
+      _residentPlanningCache = _residentPlanningCache.filter(e => e.recurId !== recurId);
       toast('Série supprimée', 'success');
       loadResident();
     });
   } else {
-    confirmDialog('Supprimer cet événement ?', () => {
-      DB.set(DB.keys.planning, allEvents.filter(e => e.id !== id));
+    confirmDialog('Supprimer cet événement ?', async () => {
+      try { await sbDeletePlanningEvent(id); } catch (e) { toast('Erreur lors de la suppression', 'error'); console.error(e); return; }
+      _residentPlanningCache = _residentPlanningCache.filter(e => e.id !== id);
       toast('Événement supprimé', 'success');
       loadResident();
     });
@@ -2662,7 +2593,7 @@ function viewPlanningResidentEvent(eventId, actId) {
     if (!act) return;
     const color    = _PR_ACT_COLORS[act.categorie] || '#8b5cf6';
     const icon     = _PR_ACT_ICONS[act.categorie]  || '✨';
-    const inscrits = (DB.get(DB.keys.residents) || []).filter(r =>
+    const inscrits = _residentDetailCache.filter(r =>
       (r.activites || []).some(i => String(i.activiteId) === String(actId) && i.statut === 'active')
     ).length;
     content.innerHTML = `<div class="evm-header">
@@ -2686,7 +2617,7 @@ function viewPlanningResidentEvent(eventId, actId) {
   }
 
   // ── Événement agenda ──
-  const ev = (DB.get(DB.keys.planning) || []).find(e => e.id === eventId);
+  const ev = _residentPlanningCache.find(e => e.id === eventId);
   if (!ev) return;
   const color     = ev.color || PR_TYPE_COLORS[ev.type] || '#3b82f6';
   const typeLabel = _PR_TYPE_LABELS[ev.type] || ev.type || 'Événement';
@@ -2712,7 +2643,7 @@ function viewPlanningResidentEvent(eventId, actId) {
     delBtn.style.display = '';
     delBtn.onclick = () => { closeModal('prModalEventView'); deletePlanningResidentEvent(ev.id, ''); };
     if (ev.recurId) {
-      const cnt = (DB.get(DB.keys.planning) || []).filter(e => e.recurId === ev.recurId).length;
+      const cnt = _residentPlanningCache.filter(e => e.recurId === ev.recurId).length;
       seriesBtn.style.display = '';
       seriesBtn.textContent   = `↻ Série (${cnt})`;
       seriesBtn.onclick = () => { closeModal('prModalEventView'); deletePlanningResidentEvent(ev.id, ev.recurId); };
@@ -2729,8 +2660,17 @@ function viewPlanningResidentEvent(eventId, actId) {
   openModal('prModalEventView');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (!requireModule('view_residents')) return;
+  const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+  document.getElementById('residentContent').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
+  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache] = await Promise.all([
+    sbGetResidents(),
+    sbGetJournalEntries(),
+    sbGetPresencesRange(daysAgo(35), today()),
+    sbGetPlanningEvents()
+  ]);
+  await loadDocResCache();
   loadResident();
 });
 

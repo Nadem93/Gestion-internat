@@ -14,18 +14,12 @@ function fmtSize(b) {
 }
 
 function getAllDocuments() {
-  const all = (DB.get(DB.keys.documents) || {});
-  const residents = DB.get(DB.keys.residents) || [];
-  const list = [];
-  for (const [resId, docs] of Object.entries(all)) {
-    if (resId === '_resources') {
-      docs.forEach(d => list.push({ ...d, residentId: '_resources', residentName: '📁 Ressource', type: 'resource' }));
-    } else {
-      const r = residents.find(x => x.id === resId);
-      docs.forEach(d => list.push({ ...d, residentId: resId, residentName: r ? `${r.prenom||''} ${r.nom||''}` : 'Inconnu', type: 'resident' }));
-    }
-  }
-  return list.sort((a, b) => (b.docDate || b.date || '').localeCompare(a.docDate || a.date || ''));
+  const residents = sbResidents();
+  return docResAll().map(d => {
+    if (String(d.residentId) === '_resources') return { ...d, residentName: '📁 Ressource', type: 'resource' };
+    const r = residents.find(x => String(x.id) === String(d.residentId));
+    return { ...d, residentName: r ? `${r.prenom||''} ${r.nom||''}` : 'Inconnu', type: d.type || 'resident' };
+  }).sort((a, b) => (b.docDate || b.date || '').localeCompare(a.docDate || a.date || ''));
 }
 
 function initDocuments() {
@@ -39,7 +33,7 @@ function initDocuments() {
 function populateDocResidentSelect() {
   const sel = document.getElementById('docFilterResident');
   if (!sel) return;
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   sel.innerHTML = '<option value="">Tous les résidents</option>' + residents.map(r =>
     `<option value="${r.id}">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</option>`
   ).join('');
@@ -141,7 +135,7 @@ function openDocModal(residentId) {
   resetDocForm();
   const sel = document.getElementById('docFormResident');
   if (sel) {
-    const residents = DB.get(DB.keys.residents) || [];
+    const residents = sbResidents();
     sel.innerHTML = '<option value="">— Sélectionner —</option>' + residents.map(r =>
       `<option value="${r.id}">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</option>`
     ).join('');
@@ -161,8 +155,7 @@ function toggleDocType(type) {
 }
 
 function editDocModal(docId, resId) {
-  const allDocs = (DB.get(DB.keys.documents) || {});
-  const doc = (allDocs[resId]||[]).find(d => d.id === docId);
+  const doc = docResAll().find(d => d.id === docId);
   if (!doc) return;
   toggleDocType(doc.type === 'resource' ? 'resource' : 'resident');
   document.getElementById('docModalTitle').textContent = 'Modifier le document';
@@ -201,39 +194,26 @@ async function saveDocument() {
   if (!residentId) { toast('Veuillez sélectionner un résident', 'error'); return; }
   if (!name && !window._pendingDocFile) { toast('Veuillez entrer un nom ou sélectionner un fichier', 'error'); return; }
 
-  let allDocs = (DB.get(DB.keys.documents) || {});
-  if (!allDocs[residentId]) allDocs[residentId] = [];
+  try {
+    if (id) {
+      const old = docResAll().find(d => d.id === id);
+      if (!old) return;
+      const saved = await sbSaveDocumentResident({ ...old, name: name || old.name, docDate, dueDate, category, id });
+      _docResCache = _docResCache.map(d => d.id === id ? saved : d);
+    } else {
+      if (!window._pendingDocFile) { toast('Veuillez sélectionner un fichier', 'error'); return; }
+      const file = window._pendingDocFile;
+      const path = await sbUploadJustificatif(file, residentId);
+      const saved = await sbSaveDocumentResident({
+        residentId, name: name || file.name, fileName: file.name,
+        size: file.size, mimeType: file.type, category, docDate, dueDate,
+        fichierPath: path, type: docType
+      });
+      _docResCache.unshift(saved);
+      window._pendingDocFile = null;
+    }
+  } catch (e) { console.error('[saveDocument]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
 
-  if (id) {
-    const idx = allDocs[residentId].findIndex(d => d.id === id);
-    if (idx === -1) return;
-    allDocs[residentId][idx].name = name || allDocs[residentId][idx].name;
-    allDocs[residentId][idx].docDate = docDate;
-    allDocs[residentId][idx].dueDate = dueDate;
-    allDocs[residentId][idx].category = category;
-  } else {
-    if (!window._pendingDocFile) { toast('Veuillez sélectionner un fichier', 'error'); return; }
-    try {
-      const base64 = await fileToBase64(window._pendingDocFile);
-      const doc = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-        name: name || window._pendingDocFile.name,
-        fileName: window._pendingDocFile.name,
-        size: window._pendingDocFile.size,
-        mimeType: window._pendingDocFile.type,
-        category,
-        docDate,
-        dueDate,
-        date: new Date().toISOString(),
-        data: base64,
-        type: docType
-      };
-      allDocs[residentId].push(doc);
-    } catch { toast('Erreur lors de la lecture du fichier', 'error'); return; }
-    window._pendingDocFile = null;
-  }
-
-  DB.set(DB.keys.documents, allDocs);
   toast(id ? 'Document modifié' : 'Document ajouté', 'success');
   closeModal('docModal');
   renderDocuments();
@@ -258,17 +238,21 @@ function cancelDocFile() {
 
 function deleteDocument(docId, resId) {
   if (!confirm('Supprimer ce document ?')) return;
-  let allDocs = (DB.get(DB.keys.documents) || {});
-  const key = resId || '_resources';
-  if (!allDocs[key]) return;
-  allDocs[key] = allDocs[key].filter(d => d.id !== docId);
-  if (!allDocs[key].length) delete allDocs[key];
-  DB.set(DB.keys.documents, allDocs);
-  toast('Document supprimé', 'success');
-  renderDocuments();
+  const doc = docResAll().find(d => d.id === docId);
+  (async () => {
+    try {
+      await sbDeleteDocumentResident(docId);
+      if (doc?.fichierPath && typeof sbDeleteJustificatif === 'function') sbDeleteJustificatif(doc.fichierPath).catch(() => {});
+      _docResCache = _docResCache.filter(d => d.id !== docId);
+    } catch (e) { console.error('[deleteDocument]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Document supprimé', 'success');
+    renderDocuments();
+  })();
 }
 
-function initDocumentsPage() {
+async function initDocumentsPage() {
+  await sbLoadResidentsCache();
+  await loadDocResCache();
   initDocuments();
   document.getElementById('docSearchInput')?.addEventListener('input', renderDocuments);
   document.getElementById('docFilterResident')?.addEventListener('change', renderDocuments);

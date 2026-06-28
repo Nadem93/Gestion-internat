@@ -276,9 +276,75 @@
     .emp-popup-row-icon svg{width:13px;height:13px;stroke:#666;stroke-width:1.8;fill:none}
     .emp-popup-row-label{color:#9a9aae;min-width:70px;flex-shrink:0}
     .emp-popup-row-val{color:#1a1a2e;font-weight:500;flex:1;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+    /* ── Menu latéral admin (style RH) ── */
+    .admin-shell{display:flex;height:100vh;overflow:hidden}
+    .admin-main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+    .rh-sidebar{width:max-content;max-width:240px;flex-shrink:0;background:#f1f5f9;border-right:1px solid #e2e8f0;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:stretch;padding:1rem .5rem}
+    .rh-sidebar.collapsed{width:74px;align-items:center}
+    .rh-sidebar-top{display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem;width:100%}
+    .rh-sidebar-logo{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;overflow:hidden}
+    .rh-logo-badge{width:38px;height:38px;border-radius:11px;background:#475569;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(71,85,105,.35)}
+    .rh-logo-badge svg{width:19px;height:19px}
+    .rh-logo-text{white-space:nowrap;min-width:0}
+    .rh-logo-text h1{font-size:.85rem;font-weight:800;letter-spacing:-.2px;white-space:nowrap;color:#1e293b;margin:0}
+    .rh-logo-text p{font-size:.62rem;color:#94a3b8;margin:.1rem 0 0;white-space:nowrap}
+    .rh-collapse-btn{width:30px;height:30px;border-radius:9px;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+    .rh-collapse-btn:hover{background:#e2e8f0;color:#334155}
+    .rh-collapse-btn svg{width:15px;height:15px}
+    .rh-sidebar.collapsed .rh-collapse-btn svg{transform:scaleX(-1)}
+    .rh-nav-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;padding:.6rem .6rem .3rem;white-space:nowrap;overflow:hidden}
+    .rh-nav-link{display:flex;align-items:center;gap:.65rem;padding:.5rem .6rem;color:#475569;font-size:.82rem;font-weight:500;transition:all .12s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-radius:9px;margin-bottom:2px;white-space:nowrap;overflow:hidden}
+    .rh-nav-link:hover{background:#e2e8f0;color:#1e293b}
+    .rh-nav-link.active{background:#fff;color:#1e293b;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.1)}
+    .rh-nav-icon{width:30px;height:30px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 3px 8px rgba(99,102,241,.35),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.15);transition:transform .3s}
+    .rh-nav-icon svg{width:16px;height:16px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+    .rh-nav-link:hover .rh-nav-icon{transform:scale(1.12) translateY(-1px)}
+    .rh-sidebar.collapsed .rh-nav-label{display:none}
+    .rh-sidebar.collapsed .rh-nav-link span:not(.rh-nav-icon),.rh-sidebar.collapsed .rh-logo-text{display:none}
+    .rh-sidebar.collapsed .rh-nav-link{justify-content:center;padding:.8rem .3rem;margin-bottom:.4rem}
+    .rh-sidebar.collapsed .rh-sidebar-top{justify-content:center}
+    .rh-sidebar.collapsed .rh-sidebar-logo{display:none}
+    @media(max-width:760px){
+      .admin-shell{flex-direction:column;height:auto;overflow:visible}
+      .admin-main{overflow:visible}
+      .rh-sidebar{width:100%;max-width:none;height:auto;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;align-items:center;border-right:none;border-bottom:1px solid #e2e8f0;padding:.5rem}
+      .rh-sidebar .rh-sidebar-top,.rh-sidebar .rh-nav-label{display:none}
+      .rh-nav-link{width:auto;margin-bottom:0}
+      .rh-nav-link span:not(.rh-nav-icon){display:none}
+    }
   </style>
 </head>
 <body>
+
+<div class="admin-shell">
+<nav class="rh-sidebar" id="adminSidebar">
+  <div class="rh-sidebar-top">
+    <div class="rh-sidebar-logo">
+      <div class="rh-logo-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <div class="rh-logo-text"><h1>Administration</h1><p>Réglages &amp; gestion</p></div>
+    </div>
+    <button class="rh-collapse-btn" onclick="document.getElementById('adminSidebar').classList.toggle('collapsed')" title="Réduire / agrandir le menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4 H5 a2 2 0 0 0 -2 2 V18 a2 2 0 0 0 2 2 H9 Z" fill="currentColor" stroke="none"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+    </button>
+  </div>
+
+  <div class="rh-nav-label">Tableau de bord</div>
+  <button class="rh-nav-link" data-tab="stats" onclick="activateTab('stats')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#7c6fcd,#a78bfa)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span>Statistiques</span></button>
+
+  <div class="rh-nav-label">Configuration</div>
+  <button class="rh-nav-link" data-tab="etablissement" onclick="activateTab('etablissement')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0891b2,#22d3ee)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg></span><span>Établissement</span></button>
+  <button class="rh-nav-link" data-tab="fonctions" onclick="activateTab('fonctions')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#e85d04,#fb923c)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span><span>Catégories &amp; objectifs</span></button>
+
+  <div class="rh-nav-label">Comptes &amp; accès</div>
+  <button class="rh-nav-link" data-tab="employes" onclick="activateTab('employes')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Utilisateurs</span></button>
+  <button class="rh-nav-link" data-tab="permissions" onclick="activateTab('permissions')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#16a34a,#4ade80)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span>Permissions</span></button>
+  <button class="rh-nav-link" data-tab="compte" onclick="activateTab('compte')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0d9488,#2dd4bf)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span><span>Mon compte</span></button>
+
+  <div class="rh-nav-label">Système</div>
+  <button class="rh-nav-link" data-tab="segur" onclick="activateTab('segur')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#2563eb,#60a5fa)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span><span>Ségur / Conformité</span></button>
+  <button class="rh-nav-link" data-tab="donnees" onclick="activateTab('donnees')"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#64748b,#94a3b8)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span><span>Données</span></button>
+</nav>
+<div class="admin-main">
 
 <!-- ══════════ TOPBAR ══════════ -->
 <header class="admin-topbar">
@@ -584,21 +650,8 @@
       </div>
     </div>
     <div class="card" style="margin-top:1.25rem">
-      <div class="card-body" style="display:flex;flex-direction:column;gap:1rem;padding:1.25rem 1.5rem">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:end">
-          <div class="form-group" style="margin:0">
-            <label>Clé API Mistral (IA)</label>
-            <div style="display:flex;gap:.5rem"><input type="password" id="setAiKey" placeholder="Entrez votre clé API Mistral" style="flex:1"/><button class="btn btn-ghost btn-sm" onclick="const e=document.getElementById('setAiKey');e.type=e.type==='password'?'text':'password'">👁</button></div>
-            <span style="font-size:.72rem;color:var(--muted)">Optionnelle. Active l'assistant IA. <a href="https://console.mistral.ai" target="_blank" style="color:var(--av)">Obtenir une clé →</a></span>
-          </div>
-          <div style="text-align:right"><button class="btn btn-violet" onclick="saveSettings()">💾 Enregistrer les paramètres</button></div>
-        </div>
-        <details><summary style="cursor:pointer;font-weight:600;font-size:.85rem;padding:.2rem 0;color:var(--av)">⚙ Instructions IA personnalisées</summary>
-          <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:1rem">
-            <p style="font-size:.77rem;color:var(--muted)">Personnalisez les instructions système envoyées à l'IA pour chaque module.</p>
-            <div id="aiPromptsContainer"></div>
-          </div>
-        </details>
+      <div class="card-body" style="display:flex;justify-content:flex-end;padding:1.25rem 1.5rem">
+        <button class="btn btn-violet" onclick="saveSettings()">💾 Enregistrer les paramètres</button>
       </div>
     </div>
     <div class="card" style="margin-top:1.25rem">
@@ -632,20 +685,11 @@
     </div>
   </div>
 
-  <!-- ═══ UTILISATEURS ═══ -->
-  <div id="tab-educateurs" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Comptes utilisateurs</div><div class="panel-sub">Gérez les accès à la plateforme</div></div><button class="btn btn-violet btn-sm" onclick="resetEducateurForm();openModal('modalEdu')">+ Ajouter</button></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div class="card"><div class="card-body" style="padding:0"><div id="eduList"></div></div></div>
-      <div class="card"><div class="card-header"><span class="card-title">Droits d'accès</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.4rem"><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Tableau de bord</div><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Consultation des résidents</div><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Journal de bord</div><div class="rights-item"><span class="rights-dot" style="background:#16a34a"></span>Présences &amp; Planning</div><div class="rights-item"><span class="rights-dot" style="background:#dc2626"></span>Ajout / modification résidents</div><div class="rights-item"><span class="rights-dot" style="background:#dc2626"></span>Administration plateforme</div><div class="alert alert-info" style="margin-top:.75rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Admin par défaut : <strong>admin</strong> / <strong>admin123</strong></div></div></div>
-    </div>
-  </div>
-
-  <!-- ═══ EMPLOYÉS ═══ -->
+  <!-- ═══ UTILISATEURS (fiches + comptes — fusionné dans tab-employes) ═══ -->
   <div id="tab-employes" class="admin-panel" style="display:none">
     <!-- Titre + actions -->
     <div class="emp-title-bar">
-      <div class="emp-title">Employés</div>
+      <div class="emp-title">Utilisateurs</div>
       <div class="emp-title-actions">
         <button class="btn btn-violet btn-sm" onclick="exportEmployesCsv()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -673,8 +717,36 @@
 
   <!-- ═══ PERMISSIONS ═══ -->
   <div id="tab-permissions" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Fonctions &amp; permissions</div><div class="panel-sub">Une carte par rôle — cliquez sur ✎ pour ajuster les droits d'accès</div></div><button class="btn btn-violet btn-sm" onclick="resetFonctionForm();openModal('modalFonction')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouvelle fonction</button></div>
-    <div class="role-grid" id="fonctionList"></div>
+    <style>
+      .perm2-layout{display:grid;grid-template-columns:230px 1fr;gap:1rem;align-items:start}
+      .perm2-role{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;margin-bottom:.4rem;transition:background .12s}
+      .perm2-role:hover{background:#f8fafc}
+      .perm2-role.active{border-color:#7c3aed;background:#f5f3ff}
+      .perm2-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+      .perm2-role-name{flex:1;min-width:0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .perm2-role.active .perm2-role-name{font-weight:700;color:#6d28d9}
+      .perm2-role-count{font-size:.7rem;color:var(--muted);background:#f1f5f9;border-radius:999px;padding:1px 7px}
+      .perm2-detail{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden}
+      .perm2-head{display:flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-bottom:1px solid var(--border)}
+      .perm2-body{padding:.4rem .9rem .9rem}
+      .perm2-group{}
+      .perm2-group-label{display:flex;align-items:center;justify-content:space-between;margin:.85rem 0 .15rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+      .perm2-allbtn{cursor:pointer;font-weight:600;text-transform:none;letter-spacing:0;color:#7c3aed}
+      .perm2-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-top:1px solid #f1f5f9}
+      .perm2-row-label{flex:1;font-size:.82rem}
+      .perm2-sw{width:36px;height:21px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;border:none;padding:0}
+      .perm2-sw.on{background:#7c3aed}
+      .perm2-sw::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:left .15s}
+      .perm2-sw.on::after{left:17px}
+      .perm2-saved{margin-left:auto;font-size:.72rem;font-weight:600;color:#16a34a;opacity:0;transition:opacity .2s}
+      .perm2-saved.show{opacity:1}
+      @media(max-width:720px){.perm2-layout{grid-template-columns:1fr}}
+    </style>
+    <div class="panel-header"><div><div class="panel-title">Rôles &amp; accès</div><div class="panel-sub">Choisissez un rôle, activez ses accès. Enregistrement automatique.</div></div><div style="display:flex;gap:.4rem"><button class="btn btn-outline btn-sm" onclick="permApplyRecommendedAll()" title="Appliquer les droits recommandés à tous les rôles reconnus">↺ Droits recommandés</button><button class="btn btn-violet btn-sm" onclick="permAddRole()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouveau rôle</button></div></div>
+    <div class="perm2-layout">
+      <div id="permRolesList"></div>
+      <div class="perm2-detail" id="permDetail"></div>
+    </div>
   </div>
 
   <!-- ═══ SÉGUR / CONFORMITÉ ═══ -->
@@ -796,13 +868,6 @@
 </main>
 
 <!-- ══════════ MODALS ══════════ -->
-<div class="modal-overlay" id="modalFonction">
-  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalFonctionTitle">Nouvelle fonction</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body"><input type="hidden" id="fonctionId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="fonctionName" placeholder="Nom de la fonction"/></div><div class="form-group"><label>Couleur</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="fonctionColor" value="#3b82f6" style="width:48px;border-radius:8px"/></div></div><div class="form-group"><label>Permissions</label><div id="fonctionPermissions" style="display:flex;flex-direction:column;gap:.5rem"></div></div></div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteFonction" style="margin-right:auto;display:none" onclick="deleteFonction()">Supprimer</button><button class="btn btn-violet" onclick="saveFonction()">Enregistrer</button></div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modalCat">
   <div class="modal"><div class="modal-header"><span class="modal-title" id="modalCatTitle">Nouvelle catégorie</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="modal-body"><input type="hidden" id="catId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="catName" placeholder="Nom de la catégorie"/></div><div class="form-group"><label>Couleur</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="catColor" value="#3b82f6" style="width:48px;border-radius:8px"/></div></div></div>
@@ -818,63 +883,104 @@
 </div>
 
 <div class="modal-overlay" id="modalEmploye">
-  <div class="modal" style="max-width:480px"><div class="modal-header"><span class="modal-title" id="modalEmployeTitle">Nouvel employé</span><button class="modal-close" onclick="closeModal('modalEmploye')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+  <div class="modal umx-modal" style="max-width:560px">
+    <div class="umx-hero">
+      <button class="umx-close" onclick="closeModal('modalEmploye')" aria-label="Fermer">✕</button>
+      <div class="umx-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;height:22px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div class="umx-hero-txt">
+        <div class="umx-title" id="modalEmployeTitle">Nouvel employé</div>
+        <div class="umx-hero-name" id="empLiveName">Renseignez le profil ci-dessous</div>
+      </div>
+    </div>
+    <div class="modal-body umx-body">
       <input type="hidden" id="empId"/>
-      <div class="form-group">
-        <label>Photo de profil</label>
-        <div style="display:flex;align-items:center;gap:14px;margin-top:4px">
-          <div id="empPhotoPreview" onclick="document.getElementById('empPhoto').click()" title="Cliquer pour changer la photo"
-               style="width:68px;height:68px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border:2px dashed #cbd5e1;flex-shrink:0;transition:border-color .15s">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+
+      <div class="umx-section">
+        <div class="umx-sec-head"><span>👤</span> Identité</div>
+        <div style="display:flex;align-items:center;gap:.85rem">
+          <div id="empPhotoPreview" onclick="document.getElementById('empPhoto').click()" title="Cliquer pour ajouter une photo"
+               style="width:56px;height:56px;border-radius:50%;background:#f1f5f9;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:22px;height:22px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <div style="font-size:.78rem;color:#64748b;line-height:1.6">Cliquez sur l'avatar pour ajouter une photo<br><span style="color:#94a3b8;font-size:.72rem">JPG, PNG — max 2 Mo</span></div>
+          <div class="umx-photo-hint">Photo de profil <span style="color:#94a3b8">(optionnel)</span><br>Cliquez sur l'avatar — JPG/PNG, max 2 Mo</div>
         </div>
         <input type="file" id="empPhoto" accept="image/*" style="display:none" onchange="previewEmpPhoto(this)"/>
+        <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom" oninput="umxLiveName()"/></div><div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom" oninput="umxLiveName()"/></div></div>
+        <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option></select></div>
       </div>
-      <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom"/></div></div>
-      <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option></select></div>
-      <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div><div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div></div>
-      <div class="form-group"><label>Date d'embauche</label><input type="date" id="empDate"/></div>
+
+      <div class="umx-section">
+        <div class="umx-sec-head"><span>✉️</span> Coordonnées</div>
+        <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div><div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div></div>
+        <div class="form-group"><label>Date d'embauche</label><input type="date" id="empDate"/></div>
+      </div>
+
+      <div class="umx-section">
+        <div class="umx-sec-head"><span>💼</span> Contrat &amp; rémunération</div>
+        <div class="form-row"><div class="form-group"><label>Heures / semaine</label><input type="number" id="empHeuresContrat" min="0" step="0.5" placeholder="35" oninput="umxTauxHoraire()"/></div><div class="form-group"><label>Salaire brut de base (€)</label><input type="number" id="empSalaireBase" min="0" step="0.01" placeholder="0" oninput="umxTauxHoraire()"/></div></div>
+        <div id="empTauxHoraire" style="font-size:.72rem;color:var(--muted);margin-top:-.35rem"></div>
+        <div class="form-row"><div class="form-group"><label>Type de contrat</label><select id="empContratType"><option value="">— Aucun pour l'instant —</option><option value="cdi">CDI</option><option value="cdd">CDD</option><option value="vacation">Vacation</option><option value="stage">Stage</option><option value="alternance">Alternance</option></select></div><div class="form-group"><label>Fin période d'essai</label><input type="date" id="empContratEssai"/></div></div>
+        <div class="form-row"><div class="form-group"><label>Début du contrat</label><input type="date" id="empContratDebut"/></div><div class="form-group"><label>Fin (CDD / vacation)</label><input type="date" id="empContratFin"/></div></div>
+        <div style="font-size:.7rem;color:var(--muted)">Crée le contrat initial sur la page Contrats. Vacataire sans compte : laissez l'email vide, le contrat suffit.</div>
+      </div>
+
+      <div class="umx-section">
+        <div class="umx-sec-head"><span>🔑</span> Compte de connexion</div>
+        <div class="form-group"><label>Rôle du compte</label><select id="empRole"><option value="educateur">Éducateur — accès de base</option><option value="rh">Encadrement / RH — accès aux données RH</option><option value="admin">Administrateur — accès complet</option></select><div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">Utilisé seulement si vous cliquez sur « Créer un compte ».</div></div>
+      </div>
+
       <div class="form-group"><label>Notes</label><textarea id="empNotes" rows="2" placeholder="Observations…"></textarea></div>
     </div>
     <div class="modal-footer" style="flex-wrap:wrap;gap:.5rem">
-      <button class="btn btn-outline" onclick="closeModal('modalEmploye')">Annuler</button>
       <button class="btn btn-danger btn-sm" id="btnDeleteEmp" style="margin-right:auto;display:none" onclick="deleteEmploye()">Supprimer</button>
       <button class="btn btn-outline btn-sm" onclick="createUserFromEmploye()" style="border-color:var(--accent);color:var(--accent)">🔑 Créer un compte</button>
+      <button class="btn btn-outline btn-sm" onclick="resetUserPassword()">🔁 Réinit. mot de passe</button>
       <button class="btn btn-violet" onclick="saveEmploye()">Enregistrer</button>
       <div id="empCreatedAccount" style="width:100%;font-size:.75rem;color:var(--accent);display:none"></div>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalEdu">
-  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalEduTitle">Nouvel utilisateur</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
-      <input type="hidden" id="eduId"/>
-      <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="eduPrenom" placeholder="Prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="eduNom" placeholder="Nom"/></div></div>
-      <div class="form-group"><label>Fonction</label><input type="text" id="eduFonction" placeholder="Ex : Éducateur spécialisé…"/></div>
-      <div class="form-group"><label class="required">Identifiant</label><input type="text" id="eduUsername" placeholder="Ex : j.dupont" autocomplete="off"/></div>
-      <div class="form-group"><label class="required" id="eduPasswordLabel">Mot de passe</label><input type="password" id="eduPassword" placeholder="Mot de passe" autocomplete="new-password"/></div>
-      <div class="form-group" id="etabAssignGroup"><label>Établissement(s)</label><div id="etabAssignList" style="display:flex;flex-direction:column;gap:.4rem;margin-top:.25rem"></div></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteEdu" style="margin-right:auto;display:none" onclick="deleteEducateur()">Supprimer</button><button class="btn btn-violet" onclick="saveEducateur()">Enregistrer</button></div>
-  </div>
-</div>
+</div><!-- /admin-main -->
+</div><!-- /admin-shell -->
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAdmin();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/interventions-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
+<script src="js/contrats-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
+<!-- Tableau de bord Stats : sources de données migrées -->
+<script src="js/journal-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/messages-supabase.js"></script>
+<script src="js/documents-resident-supabase.js"></script>
+<script src="js/satisfaction-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/rapport.js"></script>
+<script>
+  // Multi-appareil : récupère les permissions partagées depuis Supabase puis rafraîchit la page Permissions
+  (async () => {
+    if (typeof hydrateConfigFromCloud !== 'function') return;
+    await hydrateConfigFromCloud();
+    if (typeof renderPermissionsPage === 'function' && document.getElementById('permRolesList')) renderPermissionsPage();
+  })();
+</script>
 <script>
 /* ═══════════ NAVIGATION ═══════════ */
 const PANEL_NAMES = {
   stats:'Statistiques', etablissement:'Établissement & personnalisation',
   fonctions:'Catégories & Objectifs',
-  employes:'Employés', educateurs:'Utilisateurs', permissions:'Permissions', segur:'Ségur / Conformité', compte:'Mon compte', donnees:'Données'
+  employes:'Utilisateurs', permissions:'Permissions', segur:'Ségur / Conformité', compte:'Mon compte', donnees:'Données'
 };
-const ALL_TABS = ['stats','etablissement','fonctions','employes','educateurs','permissions','segur','compte','donnees'];
+const ALL_TABS = ['stats','etablissement','fonctions','employes','permissions','segur','compte','donnees'];
 
 function adminNav(btn) { activateTab(btn.dataset.tab); }
 
@@ -887,7 +993,6 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
-  if (name === 'educateurs') renderEducateurs();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
   const strip = document.getElementById('statsStrip');
@@ -897,12 +1002,37 @@ function activateTab(name) {
   if (name === 'stats') refreshAllStats();
 }
 
-function getEmployes() { return JSON.parse(localStorage.getItem(DB.keys.employes) || '[]'); }
-function saveEmployes(list) { localStorage.setItem(DB.keys.employes, JSON.stringify(list)); }
+// Fiches employés autonomes — source unique = table Supabase "employes"
+let _empCache = [];
+function getEmployes() { return _empCache; }
+async function loadEmpCache() {
+  try { _empCache = await sbGetEmployes(); }
+  catch (e) { console.error('[loadEmpCache]', e); toast('Erreur chargement employés', 'error'); }
+  return _empCache;
+}
+function umxLiveName() {
+  const el = document.getElementById('empLiveName');
+  if (!el) return;
+  const p = (document.getElementById('empPrenom')?.value || '').trim();
+  const n = (document.getElementById('empNom')?.value || '').trim();
+  el.textContent = `${p} ${nomMaj(n)}`.trim() || 'Renseignez le profil ci-dessous';
+}
+// Affiche le taux horaire déduit (salaire de base ÷ heures mensuelles) — sert au calcul du 1er mai
+function umxTauxHoraire() {
+  const el = document.getElementById('empTauxHoraire');
+  if (!el) return;
+  const sal = parseFloat(document.getElementById('empSalaireBase')?.value) || 0;
+  const h   = parseFloat(document.getElementById('empHeuresContrat')?.value) || 0;
+  if (!sal || !h) { el.textContent = ''; return; }
+  const moisH = h * 52 / 12;
+  el.innerHTML = `Taux horaire ≈ <strong>${(sal / moisH).toFixed(2)} €</strong> <span style="opacity:.7">(salaire ÷ ${moisH.toFixed(2)} h/mois — sert au calcul du 1er mai)</span>`;
+}
 function resetEmployeForm() {
   document.getElementById('empId').value = '';
-  ['empPrenom','empNom','empTel','empEmail','empNotes'].forEach(id => document.getElementById(id).value = '');
+  ['empPrenom','empNom','empTel','empEmail','empNotes','empHeuresContrat','empSalaireBase','empContratDebut','empContratFin','empContratEssai'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const ctType = document.getElementById('empContratType'); if (ctType) ctType.value = '';
   document.getElementById('empDate').value = '';
+  const roleSel = document.getElementById('empRole'); if (roleSel) roleSel.value = 'educateur';
   // Peupler le select Poste avec les fonctions définies
   const fonctions = DB.get(DB.keys.fonctionColors) || [];
   const sel = document.getElementById('empPoste');
@@ -917,26 +1047,78 @@ function resetEmployeForm() {
   const pp = document.getElementById('empPhotoPreview');
   pp.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
   pp.style.border = '2px dashed #cbd5e1';
+  umxLiveName(); umxTauxHoraire();
 }
-function genPassword(len=8) { const c = 'abcdefghjkmnpqrstuvwxyz23456789'; return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join(''); }
-function createUserFromEmploye() {
+function genPassword(len=10) { const c = 'abcdefghjkmnpqrstuvwxyz23456789ABCDEFGHJKMNPQRSTUVWXYZ'; return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join(''); }
+// Crée un VRAI compte de connexion via l'Edge Function "create-user" (clé service_role côté serveur)
+async function createUserFromEmploye() {
+  const id     = document.getElementById('empId').value;
   const prenom = document.getElementById('empPrenom').value.trim();
-  const nom = document.getElementById('empNom').value.trim();
-  const poste = document.getElementById('empPoste').value;
+  const nom    = document.getElementById('empNom').value.trim();
+  const poste  = document.getElementById('empPoste').value;
+  const email  = document.getElementById('empEmail').value.trim();
+  const role   = document.getElementById('empRole')?.value || 'educateur';
   if (!prenom || !nom) { toast('Renseignez le prénom et le nom d\'abord', 'error'); return; }
-  const base = (prenom+nom[0]).toLowerCase().replace(/[^a-z0-9]/g,'');
-  let users = JSON.parse(localStorage.getItem('ftr_users') || '[]');
-  let username = base, suffix = 1;
-  while (users.some(u => u.username === username)) username = base + (suffix++);
-  const pw = genPassword();
-  users.push({ id: Math.max(0,...users.map(u=>u.id))+1, prenom, nom, fonction: poste, username, password: pw, role:'educateur', mustChangePassword: true });
-  localStorage.setItem('ftr_users', JSON.stringify(users));
+  if (!email) { toast('Un email est requis pour créer le compte de connexion', 'error'); return; }
   const info = document.getElementById('empCreatedAccount');
   info.style.display = '';
-  info.innerHTML = `✅ Compte créé — <strong>${username}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(noté, sera masqué à la fermeture)</span>`;
-  toast(`Compte créé : ${username} / ${pw}`);
+  info.innerHTML = '⏳ Création du compte…';
+  const pw = genPassword();
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('create-user', {
+      body: { email, password: pw, prenom, nom, fonction: poste, role }
+    });
+    if (error) throw error;
+    if (!data?.ok) throw new Error(data?.error || 'Échec de la création');
+    // Relier la fiche au compte si elle est déjà enregistrée
+    if (id) {
+      try {
+        const saved = await sbUpdateEmployeField(id, { profile_id: data.userId });
+        const idx = _empCache.findIndex(e => String(e.id) === String(id));
+        if (idx >= 0) _empCache[idx] = saved;
+      } catch (e) { console.warn('Lien profile_id', e); }
+    }
+    info.innerHTML = `✅ Compte créé — <strong>${escHtml(email)}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(notez-le, masqué à la fermeture)</span>`;
+    toast('Compte de connexion créé');
+  } catch (e) {
+    let msg = e?.message || e?.error || JSON.stringify(e) || 'Erreur inconnue';
+    if (/already been registered|already registered|already exists/i.test(msg)) {
+      msg = 'Cet email a déjà un compte. Utilisez une autre adresse email pour ce salarié.';
+    }
+    info.innerHTML = `<span style="color:#dc2626">❌ ${escHtml(msg)}</span>`;
+    toast('Erreur création compte : ' + msg, 'error');
+    console.error('[createUserFromEmploye]', e);
+  }
 }
-function saveEmploye() {
+// Réinitialise le mot de passe d'un compte lié, via l'Edge Function "reset-password"
+async function resetUserPassword() {
+  const id = document.getElementById('empId').value;
+  const fiche = (_empCache || []).find(e => String(e.id) === String(id));
+  if (!fiche || !fiche.profileId) {
+    toast('Ce salarié n\'a pas de compte de connexion lié. Utilisez « Créer un compte ».', 'error');
+    return;
+  }
+  if (!confirm('Générer un nouveau mot de passe pour ce compte ? L\'ancien ne fonctionnera plus.')) return;
+  const info = document.getElementById('empCreatedAccount');
+  info.style.display = '';
+  info.innerHTML = '⏳ Réinitialisation…';
+  const pw = genPassword();
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('reset-password', {
+      body: { userId: fiche.profileId, password: pw }
+    });
+    if (error) throw error;
+    if (!data?.ok) throw new Error(data?.error || 'Échec de la réinitialisation');
+    info.innerHTML = `✅ Nouveau mot de passe — <strong>${escHtml(fiche.email || '')}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(notez-le, masqué à la fermeture)</span>`;
+    toast('Mot de passe réinitialisé');
+  } catch (e) {
+    const msg = e?.message || e?.error || JSON.stringify(e) || 'Erreur inconnue';
+    info.innerHTML = `<span style="color:#dc2626">❌ ${escHtml(msg)}</span>`;
+    toast('Erreur réinitialisation : ' + msg, 'error');
+    console.error('[resetUserPassword]', e);
+  }
+}
+async function saveEmploye() {
   const id = document.getElementById('empId').value;
   const prenom = document.getElementById('empPrenom').value.trim();
   const nom = document.getElementById('empNom').value.trim();
@@ -945,77 +1127,113 @@ function saveEmploye() {
   const email = document.getElementById('empEmail').value.trim();
   const dateEmbauche = document.getElementById('empDate').value;
   const notes = document.getElementById('empNotes').value.trim();
+  const heuresContrat = parseFloat(document.getElementById('empHeuresContrat').value) || 35;
+  const salaireBase = parseFloat(document.getElementById('empSalaireBase').value) || 0;
   if (!prenom || !nom) { toast('Prénom et nom requis', 'error'); return; }
 
-  if (id) {
-    const users = DB.get(DB.keys.users) || [];
-    const uIdx = users.findIndex(u => String(u.id) === String(id));
-    if (uIdx >= 0) {
-      const photoUpdate = _empPhotoData ? { photo: _empPhotoData } : {};
-      users[uIdx] = { ...users[uIdx], prenom, nom, telephone, email, dateEmbauche, fonction: poste, ...photoUpdate };
-      DB.set(DB.keys.users, users);
-    }
-    let list = getEmployes();
-    const eIdx = list.findIndex(e => String(e.id) === String(id) || (e.prenom === prenom && e.nom === nom));
-    const photoUpdate = _empPhotoData ? { photo: _empPhotoData } : {};
-    if (eIdx >= 0) {
-      list[eIdx] = { ...list[eIdx], prenom, nom, poste, telephone, email, dateEmbauche, notes, ...photoUpdate };
+  try {
+    let savedFiche;
+    if (id) {
+      const existing = getEmployes().find(e => String(e.id) === String(id)) || {};
+      const fiche = { id, prenom, nom, poste, telephone, email, dateEmbauche, notes,
+        statut: existing.statut || 'actif', profileId: existing.profileId || null,
+        color: existing.color || '', heuresContrat, salaireBase,
+        photo: _empPhotoData || existing.photo || '' };
+      savedFiche = await sbSaveEmploye(fiche);
+      const idx = _empCache.findIndex(e => String(e.id) === String(id));
+      if (idx >= 0) _empCache[idx] = savedFiche; else _empCache.push(savedFiche);
     } else {
-      list.push({ id, prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', notes, ...photoUpdate, createdAt: new Date().toISOString() });
+      savedFiche = await sbSaveEmploye({ prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo: _empPhotoData||'', notes, heuresContrat, salaireBase });
+      _empCache.unshift(savedFiche);
     }
-    saveEmployes(list);
-  } else {
-    let list = getEmployes();
-    list.unshift({ id: genId(), prenom, nom, poste, telephone, email, dateEmbauche, statut:'actif', photo: _empPhotoData||'', notes, createdAt: new Date().toISOString() });
-    saveEmployes(list);
+    await maybeCreateContratForFiche(savedFiche, heuresContrat);
+    closeModal('modalEmploye');
+    renderEmployes();
+    toast(id ? 'Employé modifié' : 'Employé ajouté');
+  } catch (e) {
+    const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[saveEmploye]', e);
   }
-
-  closeModal('modalEmploye');
-  renderEmployes();
-  toast(id ? 'Employé modifié' : 'Employé ajouté');
 }
-function deleteEmploye() {
+
+// Si un type de contrat est renseigné dans le modal, crée le contrat initial sur la page Contrats.
+// Anti-doublon : si un contrat existe déjà pour cette fiche, on ne recrée pas (renouvellements/avenants = page Contrats).
+async function maybeCreateContratForFiche(fiche, heuresContrat) {
+  const typeContrat = document.getElementById('empContratType')?.value || '';
+  if (!typeContrat || !fiche) return;
+  try {
+    const existing = await sbGetContrats();
+    if (existing.some(c => String(c.employeId) === String(fiche.id))) {
+      toast('Un contrat existe déjà pour ce salarié — gérez-le sur la page Contrats', 'info');
+      return;
+    }
+    const debut  = document.getElementById('empContratDebut').value || fiche.dateEmbauche || today();
+    const fin    = document.getElementById('empContratFin').value || '';
+    const essai  = document.getElementById('empContratEssai').value || '';
+    const heures = parseFloat(heuresContrat) || 35;
+    await sbSaveContrat({
+      employeId: fiche.id,
+      employeNom: `${fiche.prenom || ''} ${fiche.nom || ''}`.trim(),
+      type: typeContrat, debut, fin,
+      temps: heures < 35 ? 'partiel' : 'plein',
+      heures, essai, poste: fiche.poste || '',
+      statut: 'actif', avenants: []
+    });
+    toast('Contrat créé — visible sur la page Contrats ✓', 'success');
+  } catch (e) {
+    console.error('[maybeCreateContratForFiche]', e);
+    toast('Fiche enregistrée, mais erreur création du contrat : ' + (e?.message || e), 'error');
+  }
+}
+async function deleteEmploye() {
   const id = document.getElementById('empId').value;
   if (!id || !confirm('Supprimer cet employé ?')) return;
-  let list = getEmployes();
-  saveEmployes(list.filter(e => e.id !== id));
-  closeModal('modalEmploye');
-  renderEmployes();
-  toast('Employé supprimé');
+  try {
+    await sbDeleteEmploye(id);
+    _empCache = _empCache.filter(e => String(e.id) !== String(id));
+    closeModal('modalEmploye');
+    renderEmployes();
+    toast('Employé supprimé');
+  } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[deleteEmploye]', e); }
 }
 
-function deleteEmployeCard(id, nom) {
+async function deleteEmployeCard(id, nom) {
   if (!confirm(`Supprimer ${nom} ?`)) return;
-  saveEmployes(getEmployes().filter(e => e.id !== id));
-  renderEmployes();
-  toast('Employé supprimé');
+  try {
+    await sbDeleteEmploye(id);
+    _empCache = _empCache.filter(e => String(e.id) !== String(id));
+    renderEmployes();
+    toast('Employé supprimé');
+  } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[deleteEmployeCard]', e); }
 }
 function editEmploye(id) {
-  const users = DB.get(DB.keys.users) || [];
-  const u = users.find(x => String(x.id) === String(id));
-  const empStore = getEmployes();
-  const emp = empStore.find(x => String(x.id) === String(id)) || {};
-  if (!u) return;
+  const emp = getEmployes().find(x => String(x.id) === String(id));
+  if (!emp) return;
   // Peupler le select Poste avant d'ouvrir
   const fonctions = DB.get(DB.keys.fonctionColors) || [];
   const sel = document.getElementById('empPoste');
   sel.innerHTML = '<option value="">— Sélectionner un poste —</option>'
     + fonctions.map(f => `<option value="${escHtml(f.fonction)}">${escHtml(f.fonction)}</option>`).join('');
-  document.getElementById('empId').value = u.id;
-  document.getElementById('empPrenom').value = u.prenom || '';
-  document.getElementById('empNom').value = u.nom || '';
-  sel.value = emp.poste || u.fonction || '';
-  document.getElementById('empTel').value = emp.telephone || u.telephone || '';
-  document.getElementById('empEmail').value = emp.email || u.email || '';
+  document.getElementById('empId').value = emp.id;
+  document.getElementById('empPrenom').value = emp.prenom || '';
+  document.getElementById('empNom').value = emp.nom || '';
+  sel.value = emp.poste || '';
+  document.getElementById('empTel').value = emp.telephone || '';
+  document.getElementById('empEmail').value = emp.email || '';
   document.getElementById('empDate').value = emp.dateEmbauche || '';
+  document.getElementById('empHeuresContrat').value = emp.heuresContrat ?? 35;
+  document.getElementById('empSalaireBase').value = emp.salaireBase ?? 0;
   document.getElementById('empNotes').value = emp.notes || '';
-  document.getElementById('btnDeleteEmp').style.display = 'none';
+  ['empContratDebut','empContratFin','empContratEssai'].forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
+  const ctTypeEl = document.getElementById('empContratType'); if (ctTypeEl) ctTypeEl.value = '';
+  document.getElementById('btnDeleteEmp').style.display = '';
   document.getElementById('modalEmployeTitle').textContent = 'Modifier employé';
   document.getElementById('empCreatedAccount').style.display = 'none';
   _empPhotoData = null;
   document.getElementById('empPhoto').value = '';
   const pp = document.getElementById('empPhotoPreview');
-  const currentPhoto = emp.photo || u.photo || '';
+  const currentPhoto = emp.photo || '';
   if (currentPhoto) {
     pp.innerHTML = `<img src="${currentPhoto}" style="width:100%;height:100%;object-fit:cover">`;
     pp.style.border = 'none';
@@ -1023,6 +1241,7 @@ function editEmploye(id) {
     pp.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
     pp.style.border = '2px dashed #cbd5e1';
   }
+  umxLiveName(); umxTauxHoraire();
   openModal('modalEmploye');
 }
 const EMP_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
@@ -1081,18 +1300,13 @@ function renderEmployes() {
   const el = document.getElementById('employesList');
   if (!el) return;
   const etabNom = (typeof getCurrentEtab === 'function' ? getCurrentEtab()?.nom : '') || (DB.get(DB.keys.settings) || {}).etablissement || '';
-  const users = patchUsersFromEmployes();
-  const empStore = getEmployes();
   const q = (document.getElementById('empSearch')?.value || '').trim().toLowerCase();
-  let list = users.filter(u => u.role !== 'admin' && u.role !== 'superadmin').map(u => {
-    const emp = empStore.find(e => String(e.id) === String(u.id) || (e.prenom === u.prenom && e.nom === u.nom)) || {};
-    return {
-      id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
-      poste: emp.poste||u.fonction||'', telephone: u.telephone||emp.telephone||'',
-      email: u.email||emp.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
-      dateEmbauche: u.dateEmbauche||emp.dateEmbauche||''
-    };
-  });
+  let list = getEmployes().filter(e => e.statut !== 'admin').map(e => ({
+    id: String(e.id), prenom: e.prenom||'', nom: e.nom||'',
+    poste: e.poste||'', telephone: e.telephone||'',
+    email: e.email||'', statut: e.statut||'actif',
+    dateEmbauche: e.dateEmbauche||'', photo: e.photo||''
+  }));
   if (q) list = list.filter(e =>
     (e.prenom+' '+e.nom).toLowerCase().includes(q) ||
     (e.poste).toLowerCase().includes(q) ||
@@ -1119,11 +1333,7 @@ function renderEmployes() {
       const { vars: cardVars, r, g, b } = getPosteCardVars(hex);
       const statusClass = e.statut==='inactif' ? 'inactive' : e.statut==='admin' ? 'admin' : e.statut==='conge' ? 'conge' : '';
       const statusLabel = e.statut==='inactif' ? 'Inactif' : e.statut==='admin' ? 'Admin' : e.statut==='conge' ? 'En congé' : 'Actif';
-      const empStore = getEmployes();
-      const emp = empStore.find(x => String(x.id) === String(e.id) || (x.prenom === e.prenom && x.nom === e.nom)) || {};
-      const users = DB.get(DB.keys.users) || [];
-      const u = users.find(x => String(x.id) === String(e.id)) || {};
-      const photo = emp.photo || u.photo || '';
+      const photo = e.photo || '';
       const avatarInner = photo ? `<img src="${photo}" alt="">` : escHtml(initiales);
       const badgeStyle = `background:rgba(${r},${g},${b},.13);color:${hex};border:1px solid rgba(${r},${g},${b},.28)`;
       return `<div class="card-c" style="${cardVars}" onclick="window.location='employe.html?id=${e.id}'">
@@ -1165,17 +1375,8 @@ function hideEmpPopup() { const p = document.getElementById('empPopup'); if (p) 
 
 function showEmpPopup(event, id) {
   clearEmpPopupTimer();
-  const users = DB.get(DB.keys.users) || [];
-  const u = users.find(x => String(x.id) === String(id));
-  if (!u) return;
-  const empStore = getEmployes();
-  const emp = empStore.find(x => String(x.id) === String(id)) || {};
-  const e = {
-    id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
-    poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',
-    email: emp.email||u.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
-    dateEmbauche: emp.dateEmbauche||''
-  };
+  const e = getEmployes().find(x => String(x.id) === String(id));
+  if (!e) return;
   const popup = document.getElementById('empPopup');
   if (!popup) return;
   const color = empColor(e);
@@ -1265,19 +1466,28 @@ function setCirc(barId, pct) {
 }
 
 /* ═══════════ STATS ENGINE ═══════════ */
-function refreshAllStats() {
-  const residents = DB.get(DB.keys.residents) || [];
+// Données du tableau de bord Stats — chargées depuis Supabase, partagées entre tous les render*.
+// (users / settings / categories / loginHistory ne sont pas migrés → restent en localStorage)
+let _statsData = { residents:[], journal:[], planning:[], incidents:[], ppe:[], messages:[], convs:{}, docs:[], satisfaction:[], presences:{} };
+
+async function refreshAllStats() {
+  const todayStr = today();
+  const monthStart = todayStr.slice(0, 7) + '-01';
+  const d7 = new Date(); d7.setDate(d7.getDate() - 7);
+  const weekStart = d7.toISOString().slice(0, 10);
+  const presStart = weekStart < monthStart ? weekStart : monthStart;
+  try {
+    const [residents, journal, planning, incidents, ppe, messages, convs, docs, satisfaction, presences] = await Promise.all([
+      sbGetResidents(), sbGetJournalEntries(), sbGetPlanningEvents(), sbGetIncidents(),
+      sbGetPpe(), sbGetMessages(), sbGetConversations(), sbGetDocumentsResident(),
+      sbGetSatisfaction(), sbGetPresencesRange(presStart, todayStr)
+    ]);
+    _statsData = { residents, journal, planning, incidents, ppe, messages, convs, docs, satisfaction, presences };
+  } catch (e) { console.error('[refreshAllStats]', e); }
+  const { residents, journal, planning, incidents, ppe, messages, convs, docs, presences } = _statsData;
   const actifs = residents.filter(r => r.statut !== 'sorti');
-  const journal = DB.get(DB.keys.journal) || [];
-  const planning = DB.get(DB.keys.planning) || [];
-  const incidents = DB.get(DB.keys.incidents) || [];
-  const ppe = DB.get(DB.keys.ppe) || [];
   const users = DB.get(DB.keys.users) || [];
   const settings = DB.get(DB.keys.settings) || {};
-  const messages = DB.get(DB.keys.messages) || [];
-  const docs = DB.get(DB.keys.documents) || {};
-  const todayStr = today();
-  const presences = DB.get(DB.keys.presences) || {};
   const todayP = presences[todayStr] || {};
   const presentCount = Object.values(todayP).filter(v => v === 'present').length;
 
@@ -1344,11 +1554,9 @@ function refreshAllStats() {
   const vehi = planning.filter(e => e.type === 'vehicule' && e.date >= todayStr).length;
   const session = Auth.getSession();
   const uid = String(session?.userId || '');
-  const convs = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
   const myConvIds = Object.values(convs).filter(c => c.userIds?.map(String).includes(uid)).map(c => c.id);
   const unread = messages.filter(m => Array.isArray(m.readBy) && myConvIds.includes(m.convId) && !m.readBy.map(String).includes(uid) && String(m.from) !== uid).length;
-  let docTotal = 0;
-  Object.values(docs).forEach(arr => { if (Array.isArray(arr)) docTotal += arr.length; });
+  const docTotal = docs.length;
   document.getElementById('qResidents').textContent = actifs.length;
   document.getElementById('qUsers').textContent = users.length;
   document.getElementById('qVehi').textContent = vehi > 0 ? `${vehi} à venir` : '—';
@@ -1388,7 +1596,7 @@ function renderKeyStats(residents, presences, incidents) {
   if (el('sTauxPresence')) el('sTauxPresence').textContent = totalDays > 0 ? Math.round(totalPresent/totalDays*100)+'%' : '—';
 
   // Avenants actifs
-  const ppe = DB.get(DB.keys.ppe) || [];
+  const ppe = _statsData.ppe;
   if (el('sAvenantsActifs')) el('sAvenantsActifs').textContent = ppe.filter(p => p.statut === 'actif').length;
 
   // Incidents ouverts
@@ -1399,7 +1607,7 @@ function renderKeyStats(residents, presences, incidents) {
   }
 
   // Satisfaction globale
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _statsData.satisfaction;
   if (satAll.length) {
     const allVals = satAll.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
     const avg = allVals.length ? allVals.reduce((a, b) => a + b, 0) / allVals.length : null;
@@ -1418,7 +1626,7 @@ function renderSatStats() {
   const totalEl = document.getElementById('satEvolTotal');
   if (!chartEl) return;
 
-  const satAll = DB.get(DB.keys.satisfaction) || [];
+  const satAll = _statsData.satisfaction;
   if (!satAll.length) {
     chartEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Aucun questionnaire de satisfaction enregistré.</div>';
     if (catsEl) catsEl.innerHTML = '';
@@ -1480,14 +1688,13 @@ function renderSatStats() {
 // ── RAPPORT D'ACTIVITÉ PDF ── (extrait dans js/rapport.js, partagé avec rapport.html)
 
 // ── SCAN DES DOUBLONS ──
-function scanDuplicates() {
+async function scanDuplicates() {
   const el = document.getElementById('dupResults');
   el.innerHTML = '<div style="font-size:.82rem;color:var(--muted)">Analyse en cours…</div>';
-  setTimeout(() => {
-    const journal = DB.get(DB.keys.journal) || [];
-    const incidents = DB.get(DB.keys.incidents) || [];
-    renderDupResults(findJournalDupPairs(journal), findIncidentDupPairs(incidents));
-  }, 30);
+  let journal = [], incidents = [];
+  try { [journal, incidents] = await Promise.all([sbGetJournalEntries(), sbGetIncidents()]); }
+  catch (e) { console.error('[scanDuplicates]', e); el.innerHTML = '<div style="font-size:.82rem;color:var(--red)">Erreur de chargement.</div>'; return; }
+  renderDupResults(findJournalDupPairs(journal), findIncidentDupPairs(incidents));
 }
 
 function findJournalDupPairs(entries) {
@@ -1553,12 +1760,11 @@ function renderDupResults(jPairs, iPairs) {
 }
 
 function deleteDupItem(kind, id) {
-  confirmDialog('Supprimer définitivement cet élément ?', () => {
-    if (kind === 'journal') {
-      DB.set(DB.keys.journal, (DB.get(DB.keys.journal) || []).filter(e => e.id !== id));
-    } else {
-      DB.set(DB.keys.incidents, (DB.get(DB.keys.incidents) || []).filter(i => i.id !== id));
-    }
+  confirmDialog('Supprimer définitivement cet élément ?', async () => {
+    try {
+      if (kind === 'journal') await sbDeleteJournalEntry(id);
+      else await sbDeleteIncident(id);
+    } catch (e) { console.error('[deleteDupItem]', e); toast('Erreur lors de la suppression', 'error'); return; }
     if (typeof auditLog === 'function') auditLog('delete', `Doublon supprimé (${kind === 'journal' ? 'journal' : 'incident'})`);
     toast('Élément supprimé', 'success');
     scanDuplicates();
@@ -1569,7 +1775,7 @@ function renderPpeBars() {
   const el = document.getElementById('ppeBars');
   const totalEl = document.getElementById('ppeTotal');
   if (!el) return;
-  const ppe = DB.get(DB.keys.ppe) || [];
+  const ppe = _statsData.ppe;
   const total = ppe.length;
   if (totalEl) totalEl.textContent = total + ' avenant' + (total > 1 ? 's' : '');
   const counts = {};
@@ -1585,15 +1791,12 @@ function renderDocBars() {
   const el = document.getElementById('docBars');
   const totalEl = document.getElementById('docTotal');
   if (!el) return;
-  const docs = DB.get(DB.keys.documents) || {};
+  const docs = _statsData.docs;
   const catLabels = { administratif:'Administratif', medical:'Médical', scolaire:'Scolaire', judiciaire:'Judiciaire', contrat:'Contrat', ressource:'Ressource', autre:'Autre' };
   const catColors = { administratif:'#3b82f6', medical:'#ef4444', scolaire:'#10b981', judiciaire:'#8b5cf6', contrat:'#f59e0b', ressource:'#06b6d4', autre:'#94a3b8' };
   const counts = {};
   let total = 0;
-  Object.values(docs).forEach(arr => {
-    if (!Array.isArray(arr)) return;
-    arr.forEach(d => { const c = d.category || 'autre'; counts[c] = (counts[c]||0)+1; total++; });
-  });
+  docs.forEach(d => { const c = d.category || 'autre'; counts[c] = (counts[c]||0)+1; total++; });
   if (totalEl) totalEl.textContent = total + ' document' + (total>1?'s':'');
   const data = {}, colorMap = {};
   Object.entries(counts).forEach(([cat, c]) => { const lbl = catLabels[cat] || cat; data[lbl] = c; colorMap[lbl] = catColors[cat] || '#94a3b8'; });
@@ -1601,7 +1804,7 @@ function renderDocBars() {
 }
 
 function renderSerafinphStats() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _statsData.residents;
   const actifs = residents.filter(r => r.statut !== 'sorti');
   const withSp = actifs.filter(r => (r.serafinph?.selected||[]).length > 0);
   const allScores = withSp.map(r => {
@@ -1626,7 +1829,7 @@ function renderSerafinphStats() {
   else { c5b.textContent = 'À évaluer'; c5b.className = 'stat-circ-badge scb-red'; }
 
   // ── Satisfaction (c6) ──
-  const satAllC6 = DB.get(DB.keys.satisfaction) || [];
+  const satAllC6 = _statsData.satisfaction;
   const c6b = document.getElementById('c6badge');
   if (satAllC6.length) {
     const satVals = satAllC6.flatMap(s => Object.values(s.reponses || {}).filter(v => v != null));
@@ -1773,12 +1976,13 @@ function renderIncidentTypeBars(incidents) {
   el.innerHTML = svgHBar(data, '#dc2626', false, colorMap);
 }
 
-function renderInterventions() {
+async function renderInterventions() {
   const total = document.getElementById('intTotal');
   const elO = document.getElementById('intOuvertes');
   const elH = document.getElementById('intHistorique');
   if (!elO || !elH) return;
-  const list = DB.get(DB.keys.interventions) || [];
+  try { await loadInterventionsCache(); } catch (e) { console.error('[renderInterventions]', e); }
+  const list = getInterventionsCache();
   const ouvertes = list.filter(i => i.statut === 'ouverte').reverse();
   const traitees = list.filter(i => i.statut === 'traitee').reverse().slice(0,20);
   if (total) total.textContent = ouvertes.length > 0 ? ouvertes.length + ' en attente' : 'Aucune';
@@ -1790,17 +1994,16 @@ function renderInterventions() {
     const icones = { basse:'⬇️', normale:'➡️', haute:'⚠️', critique:'🚨' };
     const c = couleurs[i.urgence] || '#94a3b8';
     const ic = icones[i.urgence] || '➡️';
-    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' + '<span style="font-size:.85rem">' + ic + '</span>' + '<div style="flex:1;min-width:0">' + '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' + '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' + '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span></div>' + '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' + '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div></div>' + (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(' + i.id + ')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') + '</div>';
+    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--g50)">' + '<span style="font-size:.85rem">' + ic + '</span>' + '<div style="flex:1;min-width:0">' + '<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' + '<span style="font-weight:600;font-size:.78rem">' + escHtml(i.lieu) + '</span>' + '<span style="font-size:.62rem;padding:1px 6px;border-radius:var(--r-full);background:' + c + '18;color:' + c + ';font-weight:600">' + i.urgence + '</span></div>' + '<div style="font-size:.72rem;color:var(--text);margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + escHtml(i.desc) + '</div>' + '<div style="font-size:.65rem;color:var(--muted);margin-top:1px">' + dateStr + ' à ' + timeStr + '</div></div>' + (i.statut === 'ouverte' ? '<button class="btn btn-ghost btn-sm" onclick="cloreIntervention(\'' + i.id + '\')" title="Marquer comme traitée" style="flex-shrink:0;padding:2px 6px;font-size:.75rem">✅</button>' : '<span style="font-size:.6rem;color:var(--muted);flex-shrink:0">✔ fait</span>') + '</div>';
   }
   elO.innerHTML = ouvertes.length ? ouvertes.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Tout est traité ✓</div>';
   elH.innerHTML = traitees.length ? traitees.map(itemHTML).join('') : '<div style="padding:1rem 0;text-align:center;color:var(--muted);font-size:.78rem">Aucun historique</div>';
 }
-function cloreIntervention(id) {
-  const list = DB.get(DB.keys.interventions) || [];
-  const idx = list.findIndex(i => i.id === id);
-  if (idx === -1) return;
-  list[idx].statut = 'traitee';
-  DB.set(DB.keys.interventions, list);
+async function cloreIntervention(id) {
+  const item = getInterventionsCache().find(i => i.id === id);
+  if (!item) return;
+  item.statut = 'traitee';
+  try { await sbSaveIntervention(item); } catch (e) { console.error('[cloreIntervention]', e); toast('Erreur enregistrement', 'error'); return; }
   renderInterventions();
 }
 
@@ -1841,21 +2044,9 @@ function adminCreateEtab() {
 }
 function adminDeleteEtab(id) { confirmDialog('Supprimer cet établissement et toutes ses données ?', () => { deleteEtab(id); renderEtabAdminList(); toast('Établissement supprimé', 'info'); }); }
 
-function seedSegurExemples() {
-  const residents = DB.get(DB.keys.residents) || [];
-  let changed = false;
-  residents.forEach(r => {
-    if (!r.ins && Math.random() < 0.6) { r.ins = '9' + String(Math.floor(Math.random() * 9e13 + 1e13)); changed = true; }
-    if (!r.nss && Math.random() < 0.7) { r.nss = '1' + String(Math.floor(Math.random() * 9e12 + 1e12)); changed = true; }
-    if (!r.dmp) { r.dmp = ['actif','en_attente','non_ouvert'][Math.floor(Math.random() * 3)]; changed = true; }
-    if (!r.consent) { r.consent = ['oui','non','en_attente'][Math.floor(Math.random() * 3)]; changed = true; }
-  });
-  if (changed) DB.set(DB.keys.residents, residents);
-}
-
-function renderSegurDashboard() {
-  seedSegurExemples();
-  const residents = DB.get(DB.keys.residents) || [];
+async function renderSegurDashboard() {
+  // Données réelles depuis Supabase ; aucun identifiant fictif (INS/NIR/DMP) n'est généré (conformité prod).
+  const residents = await sbGetResidents();
   const rAvecINS = residents.filter(r => r.ins && r.ins.trim());
   const rAvecDMP = residents.filter(r => r.dmp === 'actif');
   const rAvecConsent = residents.filter(r => r.consent === 'oui');
@@ -1972,6 +2163,7 @@ function saveSegurConfig() {
 function activateTab(name) {
   if (!ALL_TABS.includes(name)) name = 'stats';
   document.querySelectorAll('.admin-nav-card').forEach(i => i.classList.toggle('active', i.dataset.tab === name));
+  document.querySelectorAll('#adminSidebar .rh-nav-link').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   ALL_TABS.forEach(n => {
     const el = document.getElementById('tab-' + n);
     if (!el) return;
@@ -1979,7 +2171,6 @@ function activateTab(name) {
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
-  if (name === 'educateurs') renderEducateurs();
   if (name === 'segur') renderSegurDashboard();
   document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
   document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
@@ -1994,6 +2185,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const tabParam = params.get('tab') || 'stats';
   activateTab(tabParam);
+  loadEmpCache().then(() => { if (document.getElementById('tab-employes')?.classList.contains('active')) renderEmployes(); });
   initRapportDefaults();
   refreshSidebarUser();
   renderEtabAdminList();
@@ -2011,11 +2203,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.btn-freq').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const freq = btn.dataset.freq;
-      const residents = DB.get(DB.keys.residents) || [];
-      const presences = DB.get(DB.keys.presences) || {};
-      renderPresenceChart(residents, presences, freq);
-      const journal = DB.get(DB.keys.journal) || [];
-      renderJournalCatBars(journal, freq);
+      renderPresenceChart(_statsData.residents, _statsData.presences, freq);
+      renderJournalCatBars(_statsData.journal, freq);
     });
   });
   if (tabParam === 'stats') setTimeout(refreshAllStats, 120);

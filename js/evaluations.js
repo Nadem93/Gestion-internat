@@ -99,17 +99,21 @@ const EV_GRILLES = {
   }
 };
 
-function getEv()       { return DB.get(EV_KEY) || []; }
-function saveEv(list)  { DB.set(EV_KEY, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _evCache = [];
+function getEv()       { return _evCache; }
+async function loadEvCache() { _evCache = await sbGetEvaluations(); }
 
 let _evResidentId = '';
 let _evGrille     = 'mif';
 let _evEditId     = '';
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-function initEvaluations() {
+async function initEvaluations() {
   const s = Auth.requireAuth();
   if (!s) return;
+  await sbLoadResidentsCache();
+  await loadEvCache();
   const params = new URLSearchParams(window.location.search);
   _evResidentId = params.get('residentId') || params.get('id') || '';
 
@@ -133,7 +137,7 @@ function initEvaluations() {
 }
 
 function _populateEvResidents() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const el = document.getElementById('evResident');
   if (!el) return;
   el.innerHTML = '<option value="">Tous les résidents</option>' +
@@ -147,7 +151,7 @@ function renderEvList() {
   if (!container) return;
 
   const grilleFilter = document.getElementById('evGrille')?.value || '';
-  const residents    = DB.get(DB.keys.residents) || [];
+  const residents    = sbResidents();
   let list = getEv();
   if (_evResidentId) list = list.filter(e => e.residentId === _evResidentId);
   if (grilleFilter)  list = list.filter(e => e.grille === grilleFilter);
@@ -162,10 +166,10 @@ function renderEvList() {
   }, 0) / all.length) : 0;
 
   document.getElementById('evStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #6366f1"><div class="stat-card-top"><span class="stat-label">Évaluations</span></div><div class="stat-num">${all.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #8b5cf6"><div class="stat-card-top"><span class="stat-label">Résidents évalués</span></div><div class="stat-num">${new Set(all.map(e=>e.residentId).filter(Boolean)).size}</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Ce mois</span></div><div class="stat-num">${ceMois}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">Score moyen</span></div><div class="stat-num">${avgPct}%</div></div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Évaluations</span></div><div class="chx-stat-num">${all.length}</div></div>
+    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Résidents évalués</span></div><div class="chx-stat-num">${new Set(all.map(e=>e.residentId).filter(Boolean)).size}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Ce mois</span></div><div class="chx-stat-num">${ceMois}</div></div>
+    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Score moyen</span></div><div class="chx-stat-bar"><i style="width:${avgPct}%"></i></div><div class="chx-stat-num">${avgPct}%</div></div>`;
 
   if (!list.length) {
     container.innerHTML = `<div class="empty" style="padding:2.5rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div><h3>${_evResidentId?'Aucune évaluation pour ce résident':'Aucune évaluation'}</h3><p>Créez une évaluation MIF ou Barthel pour suivre l'autonomie des résidents.</p></div>`;
@@ -293,7 +297,7 @@ function openEvModal(id, presetRid) {
 }
 
 function _populateEvModalResidents(selected) {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const el = document.getElementById('evModalResidentSel');
   if (!el) return;
   el.innerHTML = '<option value="">— Choisir —</option>' +
@@ -362,7 +366,7 @@ function _updateEvLiveScore() {
   }
 }
 
-function saveEvaluation() {
+async function saveEvaluation() {
   const rid   = document.getElementById('evModalResidentSel').value;
   const grille = document.getElementById('evModalGrille').value;
   const date  = document.getElementById('evModalDate').value;
@@ -378,19 +382,20 @@ function saveEvaluation() {
     }
   });
 
-  const list = getEv();
-  const now  = new Date().toISOString();
   const data = { residentId: rid||null, grille, date, note, scores };
 
-  if (_evEditId) {
-    const idx = list.findIndex(x => x.id === _evEditId);
-    if (idx >= 0) Object.assign(list[idx], data, { updatedAt: now });
-    toast('Évaluation modifiée');
-  } else {
-    list.unshift({ id: genId(), ...data, createdAt: now });
-    toast('Évaluation enregistrée', 'success');
-  }
-  saveEv(list);
+  try {
+    if (_evEditId) {
+      const old = _evCache.find(x => x.id === _evEditId) || {};
+      const saved = await sbSaveEvaluation({ ...old, ...data, id: _evEditId });
+      _evCache = _evCache.map(x => x.id === _evEditId ? saved : x);
+      toast('Évaluation modifiée');
+    } else {
+      const saved = await sbSaveEvaluation(data);
+      _evCache.unshift(saved);
+      toast('Évaluation enregistrée', 'success');
+    }
+  } catch (e) { console.error('[saveEvaluation]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalEv');
   renderEvList();
 }
@@ -403,7 +408,7 @@ function openEvDetail(id) {
   if (!g) return;
   const score  = _evScore(ev);
   const niveau = _evNiveau(ev.grille, score);
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = sbResidents();
   const r = residents.find(x => x.id === ev.residentId);
   const nom = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Résident inconnu';
   const dateStr = new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -453,9 +458,12 @@ function openEvDetail(id) {
 // ─── Delete ───────────────────────────────────────────────────────────────────
 function deleteEv(id) {
   if (!confirm('Supprimer cette évaluation ?')) return;
-  saveEv(getEv().filter(x => x.id !== id));
-  renderEvList();
-  toast('Évaluation supprimée');
+  (async () => {
+    try { await sbDeleteEvaluation(id); _evCache = _evCache.filter(x => x.id !== id); }
+    catch (e) { console.error('[deleteEv]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderEvList();
+    toast('Évaluation supprimée');
+  })();
 }
 
 document.addEventListener('DOMContentLoaded', initEvaluations);

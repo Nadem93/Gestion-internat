@@ -5,10 +5,18 @@ const BUDGET_STATUT_STYLES = {
   refuse:     { bg:'#ef444418', c:'#ef4444', l:'Refusé' }
 };
 
-function getBudgetEnveloppes() { return DB.get(DB.keys.budgetEnveloppes) || []; }
-function setBudgetEnveloppes(d) { DB.set(DB.keys.budgetEnveloppes, d); }
-function getBudgetDemandes() { return DB.get(DB.keys.budgetDemandes) || []; }
-function setBudgetDemandes(d) { DB.set(DB.keys.budgetDemandes, d); }
+let _budgetEnveloppesCache = [];
+let _budgetDemandesCache = [];
+let _budgetResidentsCache = [];
+
+async function loadBudgetData() {
+  [_budgetEnveloppesCache, _budgetDemandesCache, _budgetResidentsCache] = await Promise.all([
+    sbGetBudgetEnveloppes(), sbGetBudgetDemandes(), sbGetResidents()
+  ]);
+}
+
+function getBudgetEnveloppes() { return _budgetEnveloppesCache; }
+function getBudgetDemandes() { return _budgetDemandesCache; }
 
 function budgetFmtMontant(n) {
   return (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -41,7 +49,7 @@ function budgetEnveloppeUtilise(enveloppeId) {
     .reduce((s, d) => s + (Number(d.montant) || 0), 0);
 }
 
-function initBudget() {
+async function initBudget() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_budget')) return;
@@ -49,6 +57,7 @@ function initBudget() {
     const empSel = document.getElementById('bgFiltreEmploye');
     if (empSel) empSel.style.display = '';
   }
+  await loadBudgetData();
   renderBudget();
 }
 
@@ -79,32 +88,43 @@ function openEnveloppeModal(id) {
   requestAnimationFrame(() => document.getElementById('modalBudgetEnv')?.classList.add('open'));
 }
 
-function saveEnveloppe(id) {
+async function saveEnveloppe(id) {
   const nom = document.getElementById('benvNom').value.trim();
   const montant = parseFloat(document.getElementById('benvMontant').value);
   const description = document.getElementById('benvDescription').value.trim();
   if (!nom) { toast('Le nom est requis', 'error'); return; }
   if (isNaN(montant) || montant < 0) { toast('Montant invalide', 'error'); return; }
-  let list = getBudgetEnveloppes();
-  if (id) {
-    list = list.map(e => e.id === id ? { ...e, nom, montant, description } : e);
-    toast('Enveloppe mise à jour');
-  } else {
-    list.push({ id: genId(), nom, montant, description, createdAt: new Date().toISOString() });
-    toast('Enveloppe créée');
+  try {
+    const saved = await sbSaveBudgetEnveloppe({ id: id || undefined, nom, montant, description });
+    if (id) {
+      const idx = _budgetEnveloppesCache.findIndex(e => e.id === id);
+      if (idx !== -1) _budgetEnveloppesCache[idx] = saved;
+      toast('Enveloppe mise à jour');
+    } else {
+      _budgetEnveloppesCache.push(saved);
+      toast('Enveloppe créée');
+    }
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
-  setBudgetEnveloppes(list);
   if (typeof auditLog === 'function') auditLog('budget_enveloppe', nom);
   closeModal('modalBudgetEnv');
   document.getElementById('modalBudgetEnv')?.remove();
   renderBudget();
 }
 
-function deleteEnveloppe(id) {
+async function deleteEnveloppe(id) {
   if (!confirm('Supprimer cette enveloppe ? Les demandes associées seront conservées.')) return;
-  let list = getBudgetEnveloppes();
-  list = list.filter(e => e.id !== id);
-  setBudgetEnveloppes(list);
+  try {
+    await sbDeleteBudgetEnveloppe(id);
+  } catch (e) {
+    toast('Erreur lors de la suppression', 'error');
+    console.error(e);
+    return;
+  }
+  _budgetEnveloppesCache = _budgetEnveloppesCache.filter(e => e.id !== id);
   closeModal('modalBudgetEnv');
   document.getElementById('modalBudgetEnv')?.remove();
   toast('Enveloppe supprimée', 'info');
@@ -186,7 +206,7 @@ function openNouvelleDemandeBudget() {
   const sel = document.getElementById('bgFormEnveloppe');
   const enveloppes = getBudgetEnveloppes();
   sel.innerHTML = '<option value="">Sélectionner une enveloppe</option>' + enveloppes.map(e => `<option value="${e.id}">${escHtml(e.nom)}</option>`).join('');
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+  const residents = _budgetResidentsCache.filter(r => r.statut !== 'sorti')
     .sort((a,b) => `${a.nom||''}`.localeCompare(`${b.nom||''}`,'fr'));
   const resBox = document.getElementById('bgFormResidents');
   if (resBox) resBox.innerHTML = residents.map(r => `
@@ -270,7 +290,7 @@ function updateBgPrixParPersonne() {
   }
 }
 
-function saveBudgetDemande() {
+async function saveBudgetDemande() {
   const enveloppeId = document.getElementById('bgFormEnveloppe').value;
   const env = getBudgetEnveloppes().find(e => e.id === enveloppeId);
   const montant = parseFloat(document.getElementById('bgFormMontant').value);
@@ -281,7 +301,7 @@ function saveBudgetDemande() {
   if (!dateDepense) { toast('Date de la dépense requise', 'error'); return; }
   if (!motif) { toast('Motif requis', 'error'); return; }
   const cu = budgetCurrentUser();
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _budgetResidentsCache;
   const checked = document.querySelectorAll('#bgFormResidents .bg-res-check:checked');
   const residentIds = Array.from(checked).map(c => c.value);
   const residentNoms = residentIds.map(id => { const r = residents.find(x => String(x.id) === String(id)); return r ? `${r.prenom||''} ${r.nom||''}`.trim() : ''; }).filter(Boolean);
@@ -292,19 +312,24 @@ function saveBudgetDemande() {
     remboursements = residentIds.map((id, i) => ({ residentId: id, residentNom: residentNoms[i] || '', montantDu: partParPersonne, paye: false, datePaiement: null }));
   }
   const projetDocuments = (window._pendingProjetFiles || []).map(f => ({ nom: f.nom, data: f.data }));
-  const list = getBudgetDemandes();
-  list.push({
-    id: genId(), employeId: cu.employeId, employeNom: cu.employeNom,
-    enveloppeId: env ? env.id : '', enveloppeNom: env ? env.nom : '',
-    montant, motif, dateDepense,
-    residentIds, residentNoms,
-    partage50, partFoyer: partage50 ? montant * 0.5 : 0, partResident: partage50 ? montant * 0.5 : 0,
-    remboursements,
-    projetDocuments,
-    justificatifs: [],
-    statut: 'en_attente', dateDemande: new Date().toISOString()
-  });
-  setBudgetDemandes(list);
+  try {
+    const saved = await sbSaveBudgetDemande({
+      employeId: cu.employeId, employeNom: cu.employeNom,
+      enveloppeId: env ? env.id : '', enveloppeNom: env ? env.nom : '',
+      montant, motif, dateDepense,
+      residentIds, residentNoms,
+      partage50, partFoyer: partage50 ? montant * 0.5 : 0, partResident: partage50 ? montant * 0.5 : 0,
+      remboursements,
+      projetDocuments,
+      justificatifs: [],
+      statut: 'en_attente', dateDemande: new Date().toISOString()
+    });
+    _budgetDemandesCache.unshift(saved);
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
+  }
   if (typeof auditLog === 'function') auditLog('budget_demande', `Nouvelle demande — ${cu.employeNom} — ${budgetFmtMontant(montant)}`);
   toast('Demande de remboursement envoyée ✓', 'success');
   window._pendingProjetFiles = [];
@@ -313,9 +338,8 @@ function saveBudgetDemande() {
 }
 
 // ── VALIDATION / REFUS ──
-function repondreBudgetDemande(id, statut) {
-  const list = getBudgetDemandes();
-  const item = list.find(d => d.id === id);
+async function repondreBudgetDemande(id, statut) {
+  const item = getBudgetDemandes().find(d => d.id === id);
   if (!item) return;
   if (statut === 'refuse') {
     const motif = prompt('Motif du refus :');
@@ -327,17 +351,22 @@ function repondreBudgetDemande(id, statut) {
   item.statut = statut;
   item.traitePar = (() => { const s = Auth.getSession(); return s ? [s.prenom, s.nom].filter(Boolean).join(' ') || s.username : ''; })();
   item.dateTraitement = new Date().toISOString();
-  setBudgetDemandes(list);
+  try {
+    const saved = await sbSaveBudgetDemande(item);
+    const idx = _budgetDemandesCache.findIndex(d => d.id === id);
+    if (idx !== -1) _budgetDemandesCache[idx] = saved;
+  } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
   toast('Demande ' + (statut === 'accepte' ? 'acceptée' : 'refusée'), 'success');
   if (typeof auditLog === 'function') auditLog('budget_' + statut, item.employeNom + ' — ' + budgetFmtMontant(item.montant));
   renderBudget();
 }
 
-function supprimerBudgetDemande(id) {
+async function supprimerBudgetDemande(id) {
   if (!confirm('Supprimer cette demande ?')) return;
-  let list = getBudgetDemandes();
-  list = list.filter(d => d.id !== id);
-  setBudgetDemandes(list);
+  try {
+    await sbDeleteBudgetDemande(id);
+  } catch (e) { toast('Erreur lors de la suppression', 'error'); console.error(e); return; }
+  _budgetDemandesCache = _budgetDemandesCache.filter(d => d.id !== id);
   toast('Demande supprimée', 'info');
   renderBudget();
 }
@@ -351,9 +380,8 @@ function budgetEstPretACloturer(d) {
   return hasJustif && tousRembourses;
 }
 
-function syncRemboursementResidentBudget(d, r) {
-  const residents = DB.get(DB.keys.residents) || [];
-  const resident = residents.find(x => String(x.id) === String(r.residentId));
+async function syncRemboursementResidentBudget(d, r) {
+  const resident = _budgetResidentsCache.find(x => String(x.id) === String(r.residentId));
   if (!resident) return;
   resident.budget = resident.budget || { operations: [] };
   resident.budget.operations = resident.budget.operations || [];
@@ -366,18 +394,21 @@ function syncRemboursementResidentBudget(d, r) {
       notes: d.motif || ''
     });
   }
-  DB.set(DB.keys.residents, residents);
+  const saved = await sbSaveResident(resident);
+  const idx = _budgetResidentsCache.findIndex(x => x.id === resident.id);
+  if (idx !== -1) _budgetResidentsCache[idx] = saved;
 }
 
-function marquerRemboursementResident(demandeId, residentId) {
-  const list = getBudgetDemandes();
-  const d = list.find(x => x.id === demandeId);
+async function marquerRemboursementResident(demandeId, residentId) {
+  const d = getBudgetDemandes().find(x => x.id === demandeId);
   if (!d || !Array.isArray(d.remboursements)) return;
   const r = d.remboursements.find(x => String(x.residentId) === String(residentId));
   if (!r) return;
   r.paye = !r.paye;
   r.datePaiement = r.paye ? today() : null;
-  syncRemboursementResidentBudget(d, r);
+  try {
+    await syncRemboursementResidentBudget(d, r);
+  } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
   if (budgetEstPretACloturer(d) && d.statut === 'accepte') {
     d.statut = 'justifie';
     d.dateJustifie = new Date().toISOString();
@@ -389,7 +420,11 @@ function marquerRemboursementResident(demandeId, residentId) {
   } else {
     toast(r.paye ? 'Remboursement enregistré' : 'Remboursement annulé', 'info');
   }
-  setBudgetDemandes(list);
+  try {
+    const saved = await sbSaveBudgetDemande(d);
+    const idx = _budgetDemandesCache.findIndex(x => x.id === demandeId);
+    if (idx !== -1) _budgetDemandesCache[idx] = saved;
+  } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
   renderBudget();
 }
 
@@ -404,8 +439,7 @@ function ajouterJustificatifDemande(demandeId) {
     if (file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); return; }
     let data;
     try { data = await fileToBase64(file); } catch { toast('Erreur de lecture du fichier', 'error'); return; }
-    const list = getBudgetDemandes();
-    const d = list.find(x => x.id === demandeId);
+    const d = getBudgetDemandes().find(x => x.id === demandeId);
     if (!d) return;
     d.justificatifs = [...(d.justificatifs || []), { id: genId(), name: file.name, mimeType: file.type, size: file.size, data }];
     if (budgetEstPretACloturer(d)) {
@@ -415,7 +449,11 @@ function ajouterJustificatifDemande(demandeId) {
     } else {
       toast('Justificatif ajouté — en attente du remboursement complet des résidents pour clôturer', 'info');
     }
-    setBudgetDemandes(list);
+    try {
+      const saved = await sbSaveBudgetDemande(d);
+      const idx = _budgetDemandesCache.findIndex(x => x.id === demandeId);
+      if (idx !== -1) _budgetDemandesCache[idx] = saved;
+    } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
     if (typeof auditLog === 'function') auditLog('budget_justificatif', `${d.employeNom} — ${budgetFmtMontant(d.montant)}`);
     renderBudget();
   };

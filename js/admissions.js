@@ -13,8 +13,10 @@ const ADM_STATUT_COLORS = {
   abandon: '#6b7280'
 };
 
-function getAdmissions() { return DB.get(DB.keys.admissions) || []; }
-function setAdmissions(d) { DB.set(DB.keys.admissions, d); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _admCache = [];
+function getAdmissions() { return _admCache; }
+async function loadAdmissionsCache() { _admCache = await sbGetAdmissions(); }
 
 function openAdmissionModal(id) {
   const isAdmin = Auth.isAdmin();
@@ -53,7 +55,7 @@ function openAdmissionModal(id) {
   openModal('modalAdmission');
 }
 
-function saveAdmission() {
+async function saveAdmission() {
   const prenom = document.getElementById('admFormPrenom').value.trim();
   const nom = document.getElementById('admFormNom').value.trim();
   if (!prenom && !nom) { toast('Le nom ou prénom est requis', 'error'); return; }
@@ -68,24 +70,24 @@ function saveAdmission() {
     statut: document.getElementById('admFormStatut').value,
     contactNom: document.getElementById('admFormContactNom').value.trim(),
     contactTel: document.getElementById('admFormContactTel').value.trim(),
-    notes: document.getElementById('admFormNotes').value.trim(),
-    updatedAt: new Date().toISOString()
+    notes: document.getElementById('admFormNotes').value.trim()
   };
 
-  let list = getAdmissions();
   const id = document.getElementById('modalAdmission').dataset.id;
-  if (id) {
-    list = list.map(a => a.id === id ? { ...a, ...data } : a);
-    toast('Demande mise à jour');
-    if (typeof auditLog === 'function') auditLog('admission_update', `${prenom} ${nom}`);
-  } else {
-    data.id = genId();
-    data.createdAt = new Date().toISOString();
-    list.push(data);
-    toast('Demande ajoutée');
-    if (typeof auditLog === 'function') auditLog('admission_create', `${prenom} ${nom}`);
-  }
-  setAdmissions(list);
+  try {
+    if (id) {
+      const old = _admCache.find(a => a.id === id) || {};
+      const saved = await sbSaveAdmission({ ...old, ...data, id });
+      _admCache = _admCache.map(a => a.id === id ? saved : a);
+      toast('Demande mise à jour');
+      if (typeof auditLog === 'function') auditLog('admission_update', `${prenom} ${nom}`);
+    } else {
+      const saved = await sbSaveAdmission(data);
+      _admCache.push(saved);
+      toast('Demande ajoutée');
+      if (typeof auditLog === 'function') auditLog('admission_create', `${prenom} ${nom}`);
+    }
+  } catch (e) { console.error('[saveAdmission]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalAdmission');
   renderAdmissions();
 }
@@ -94,29 +96,31 @@ function supprimerAdmission(id) {
   id = id || document.getElementById('admDeleteBtn').dataset.id;
   if (!id) return;
   if (!confirm('Supprimer cette demande ?')) return;
-  let list = getAdmissions();
-  const a = list.find(x => x.id === id);
-  list = list.filter(x => x.id !== id);
-  setAdmissions(list);
-  if (typeof auditLog === 'function' && a) auditLog('admission_delete', `${a.prenom} ${a.nom}`);
-  toast('Demande supprimée', 'info');
-  closeModal('modalAdmission');
-  renderAdmissions();
+  const a = _admCache.find(x => x.id === id);
+  (async () => {
+    try { await sbDeleteAdmission(id); _admCache = _admCache.filter(x => x.id !== id); }
+    catch (e) { console.error('[supprimerAdmission]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    if (typeof auditLog === 'function' && a) auditLog('admission_delete', `${a.prenom} ${a.nom}`);
+    toast('Demande supprimée', 'info');
+    closeModal('modalAdmission');
+    renderAdmissions();
+  })();
 }
 
-function admettreCandidat(id) {
+async function admettreCandidat(id) {
   const list = getAdmissions();
   const a = list.find(x => x.id === id);
   if (!a) return;
   if (!confirm(`Admettre ${a.prenom} ${a.nom} comme résident ?`)) return;
 
-  const residents = DB.get(DB.keys.residents) || [];
+  // Lecture depuis Supabase (uniquement pour choisir une couleur d'avatar)
+  const residents = await sbGetResidents();
   const colors = ['#3b82f6', '#16a34a', '#dc2626', '#d97706', '#7c3aed', '#0d9488', '#db2777'];
+  // Pas de champ id : Supabase génère l'identifiant (insert)
   const resident = {
-    id: genId(),
     nom: a.nom, prenom: a.prenom, photo: null,
-    dob: a.dateNaissance || '', dateNaissance: a.dateNaissance || '',
-    genre: '', entree: a.dateEntree || today(), dateEntree: a.dateEntree || today(),
+    dob: a.dateNaissance || '',
+    genre: '', entree: a.dateEntree || today(),
     statut: 'permanent', chambre: '', referent: '',
     color: colors[residents.length % colors.length],
     notes: a.notes || '', contacts: a.contactNom ? `${a.contactNom}${a.contactTel ? ' — ' + a.contactTel : ''}` : '',
@@ -124,14 +128,21 @@ function admettreCandidat(id) {
     dmp: '', dmpDate: '', consent: '', consentDate: '',
     tuteur: '', tuteurTel: '', ecole: '', classe: '',
     organisme: a.origine || '', dossier: '', situationPro: '', ressources: '',
-    organismeA: '', dossierA: '', situationAdmin: '', protection: '',
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    organismeA: '', dossierA: '', situationAdmin: '', protection: ''
   };
-  residents.push(resident);
-  DB.set(DB.keys.residents, residents);
+  let saved;
+  try {
+    saved = await sbSaveResident(resident);
+  } catch (e) {
+    console.error(e);
+    toast('Erreur lors de la création de la fiche résident', 'error');
+    return;
+  }
 
-  const updated = list.map(x => x.id === id ? { ...x, statut: 'admis', dateDecision: today(), residentId: resident.id, updatedAt: new Date().toISOString() } : x);
-  setAdmissions(updated);
+  try {
+    const saved2 = await sbSaveAdmission({ ...a, statut: 'admis', dateDecision: today(), residentId: saved.id });
+    _admCache = _admCache.map(x => x.id === id ? saved2 : x);
+  } catch (e) { console.error('[admettreCandidat]', e); toast('Fiche créée mais erreur de mise à jour de la demande', 'error'); }
 
   if (typeof auditLog === 'function') auditLog('admission_admis', `${a.prenom} ${a.nom}`);
   toast(`${a.prenom} ${a.nom} admis(e) — fiche résident créée`, 'success');
@@ -186,5 +197,5 @@ function renderAdmissions() {
     .map(a => admissionItemHtml(a, isAdmin)).join('');
 }
 
-document.addEventListener('DOMContentLoaded', () => { if (requireModule('access_admissions')) renderAdmissions(); });
-if (typeof registerPageInit === 'function') registerPageInit('admissions', renderAdmissions);
+document.addEventListener('DOMContentLoaded', async () => { if (requireModule('access_admissions')) { await loadAdmissionsCache(); renderAdmissions(); } });
+if (typeof registerPageInit === 'function') registerPageInit('admissions', async () => { await loadAdmissionsCache(); renderAdmissions(); });

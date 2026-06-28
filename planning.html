@@ -256,7 +256,7 @@
           <button class="btn btn-ghost btn-sm" id="viewMonth">Mois</button>
           <button class="btn btn-ghost btn-sm" id="viewList">Liste</button>
         </div>
-        <button class="btn btn-accent btn-add-resident" onclick="openModal('modalEvent')">
+        <button class="btn btn-accent btn-add-resident" onclick="quickAddEvent(dateStr(currentDate),'')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Nouvel événement</span>
         </button>
@@ -490,6 +490,10 @@
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
 <script src="js/planning.js"></script>
 <script>
 // ── Panneau gauche (aperçu) du modal « Nouvel évènement » ──
@@ -670,7 +674,7 @@ function selectMevColor(color) {
 
 // Patch saveEvent pour inclure serafin, lieu et résidents (multi)
 const _origSaveEvent = window.saveEvent;
-window.saveEvent = function() {
+window.saveEvent = async function() {
   const serafin     = document.getElementById('evSerafin')?.value || 'directe';
   const lieu        = document.getElementById('evLieu')?.value.trim() || '';
   const editId      = document.getElementById('eventId')?.value || '';
@@ -680,21 +684,21 @@ window.saveEvent = function() {
     const opt = sel ? Array.from(sel.options).find(o => o.value === id) : null;
     return opt ? opt.textContent : id;
   });
-  const beforeIds = new Set((DB.get(DB.keys.planning) || []).map(e => e.id));
-  if (typeof _origSaveEvent === 'function') _origSaveEvent();
-  const events = DB.get(DB.keys.planning) || [];
-  let changed = false;
-  events.forEach(ev => {
-    const isTarget = editId ? String(ev.id) === String(editId) : !beforeIds.has(ev.id);
-    if (isTarget) {
-      ev.serafin       = serafin;
-      ev.lieu          = lieu;
-      ev.residentIds   = residentIds;
-      ev.residentNames = residentNames;
-      changed = true;
-    }
-  });
-  if (changed) DB.set(DB.keys.planning, events);
+  const beforeIds = new Set(_planningEventsCache.map(e => e.id));
+  if (typeof _origSaveEvent === 'function') await _origSaveEvent();
+  const targets = _planningEventsCache.filter(ev => editId ? String(ev.id) === String(editId) : !beforeIds.has(ev.id));
+  for (const ev of targets) {
+    ev.serafin       = serafin;
+    ev.lieu          = lieu;
+    ev.residentIds   = residentIds;
+    ev.residentNames = residentNames;
+    try {
+      const saved = await sbSavePlanningEvent(ev);
+      const idx = _planningEventsCache.findIndex(e => e.id === ev.id);
+      if (idx !== -1) _planningEventsCache[idx] = saved;
+    } catch (e) { console.error(e); }
+  }
+  if (targets.length) render();
 };
 
 // Patch editEvent pour restaurer le champ serafin
@@ -702,8 +706,7 @@ const _origEditEvent = window.editEvent;
 window.editEvent = function(id) {
   if (typeof _origEditEvent === 'function') _origEditEvent(id);
   setTimeout(() => {
-    const events = DB.get(DB.keys.planning) || [];
-    const ev = events.find(e => String(e.id) === String(id));
+    const ev = _planningEventsCache.find(e => String(e.id) === String(id));
     if (ev) {
       selectMevSerafin(ev.serafin || 'directe');
       const lieu = document.getElementById('evLieu');
@@ -731,6 +734,19 @@ function resetModalEvent() {
   if (fields) fields.style.display = 'none';
   document.getElementById('mevResDropdown')?.classList.remove('open');
   document.getElementById('mevResBox')?.classList.remove('open');
+  // Réinitialise l'état laissé par une précédente édition (récurrence masquée, id conservé)
+  const eventId = document.getElementById('eventId');
+  if (eventId) eventId.value = '';
+  const recurRow = document.getElementById('evRecurRow');
+  if (recurRow) recurRow.style.display = '';
+  const evRecur = document.getElementById('evRecur');
+  if (evRecur) evRecur.value = '';
+  const recurUntilWrap = document.getElementById('evRecurUntilWrap');
+  if (recurUntilWrap) recurUntilWrap.style.display = 'none';
+  const btnDelete = document.getElementById('btnDeleteEvent');
+  if (btnDelete) btnDelete.style.display = 'none';
+  const modalTitle = document.getElementById('modalEventTitle');
+  if (modalTitle) modalTitle.textContent = 'Nouvel évènement';
 }
 
 const _origCloseModal = window.closeModal;
@@ -846,7 +862,7 @@ window.viewEvent = function(id) {
     if (!act) return;
     const color    = _ACT_CAT_COLORS[act.categorie]||'#3b82f6';
     const icon     = _ACT_CAT_ICONS[act.categorie]||'✨';
-    const inscrits = (DB.get(DB.keys.residents)||[]).filter(r=>(r.activites||[]).some(i=>String(i.activiteId)===String(actId)&&i.statut==='active')).length;
+    const inscrits = _planningResidentsCache.filter(r=>(r.activites||[]).some(i=>String(i.activiteId)===String(actId)&&i.statut==='active')).length;
     _evmRender({
       iconEmoji: icon, iconBg: color, titre: act.nom,
       badgeLabel: `Activité récurrente · ${act.jour}`, badgeColor: color,
@@ -864,7 +880,7 @@ window.viewEvent = function(id) {
   }
 
   // ── Événement normal ──
-  const ev = (DB.get(DB.keys.planning)||[]).find(e => e.id === id);
+  const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
   const color  = ev.color || (typeof TYPE_COLORS !== 'undefined' ? TYPE_COLORS[ev.type] : '') || '#3b82f6';
   const typeLabel = (typeof TYPE_LABELS !== 'undefined' ? TYPE_LABELS[ev.type] : '') || ev.type || 'Événement';
@@ -912,7 +928,7 @@ window.viewEvent = function(id) {
   if (delBtn)   delBtn.onclick   = () => { document.getElementById('eventId').value = id; deleteEvent(); };
   if (seriesBtn) {
     if (ev.recurId) {
-      const cnt = (DB.get(DB.keys.planning)||[]).filter(e => e.recurId === ev.recurId).length;
+      const cnt = _planningEventsCache.filter(e => e.recurId === ev.recurId).length;
       seriesBtn.style.display = '';
       seriesBtn.textContent = `↻ Série (${cnt})`;
       seriesBtn.onclick = () => deleteEventSeries(ev.recurId);

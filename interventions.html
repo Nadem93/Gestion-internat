@@ -51,6 +51,10 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/interventions-supabase.js"></script>
 <script>
   Auth.requireAuth();
 
@@ -74,7 +78,7 @@
         <a href="accueil.html" class="btn btn-accent" style="margin-top:1rem">Retour à l'accueil</a>
       </div>`;
   } else {
-    renderPage();
+    (async () => { await loadInterventionsCache(); renderPage(); })();
   }
 
   let pendingPhotoBase64 = null;
@@ -82,7 +86,7 @@
   const isTech = _s?.role !== 'admin';
 
   function renderPage() {
-    const list = (DB.get(DB.keys.interventions) || []).slice().reverse();
+    const list = getInterventionsCache().slice().reverse();
     const ouvertes = list.filter(i => i.statut === 'ouverte');
     const traitees = list.filter(i => i.statut === 'traitee');
 
@@ -119,11 +123,11 @@
               </div>` : ''}
             ${!done ? `
               <div style="display:flex;gap:.5rem;justify-content:flex-end;align-items:center">
-                <button class="btn btn-accent btn-sm" onclick="openPhotoModal(${i.id})">
+                <button class="btn btn-accent btn-sm" onclick="openPhotoModal('${i.id}')">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                   Joindre une photo
                 </button>
-                ${_s?.role === 'admin' ? `<button class="btn btn-ghost btn-sm" onclick="marquerFaitSansPhoto(${i.id})" style="box-shadow:0 0 0 2px #10b981;color:#10b981;font-weight:700">✅ Fait</button>` : ''}
+                ${_s?.role === 'admin' ? `<button class="btn btn-ghost btn-sm" onclick="marquerFaitSansPhoto('${i.id}')" style="box-shadow:0 0 0 2px #10b981;color:#10b981;font-weight:700">✅ Fait</button>` : ''}
               </div>` : ''}
           </div>
         </div>`;
@@ -173,19 +177,20 @@
     reader.readAsDataURL(file);
   }
 
-  function validerIntervention() {
+  async function validerIntervention() {
     if (!pendingInterventionId) return;
     const comment = document.getElementById('photoComment').value.trim();
     const userName = [_s.prenom, _s.nom].filter(Boolean).join(' ') || _s.username;
-    const list = DB.get(DB.keys.interventions) || [];
-    const idx = list.findIndex(i => i.id === pendingInterventionId);
-    if (idx === -1) return;
-    list[idx].statut = 'traitee';
-    list[idx].traitePar = userName;
-    list[idx].dateTraitement = new Date().toISOString();
-    if (pendingPhotoBase64) list[idx].photoTravaux = pendingPhotoBase64;
-    if (comment) list[idx].commentaireTravaux = comment;
-    DB.set(DB.keys.interventions, list);
+    const item = _intCache.find(i => i.id === pendingInterventionId);
+    if (!item) return;
+    item.statut = 'traitee';
+    item.traitePar = userName;
+    item.dateTraitement = new Date().toISOString();
+    if (pendingPhotoBase64) item.photoTravaux = pendingPhotoBase64;
+    if (comment) item.commentaireTravaux = comment;
+    try {
+      await sbSaveIntervention(item);
+    } catch (e) { console.error('[validerIntervention]', e); toast('Erreur enregistrement', 'error'); return; }
     closeModal('modalPhoto');
     toast('Intervention clôturée ✓', 'success');
     pendingInterventionId = null;
@@ -193,15 +198,16 @@
     renderPage();
   }
 
-  function marquerFaitSansPhoto(id) {
+  async function marquerFaitSansPhoto(id) {
     const userName = [_s.prenom, _s.nom].filter(Boolean).join(' ') || _s.username;
-    const list = DB.get(DB.keys.interventions) || [];
-    const idx = list.findIndex(i => i.id === id);
-    if (idx === -1) return;
-    list[idx].statut = 'traitee';
-    list[idx].traitePar = userName;
-    list[idx].dateTraitement = new Date().toISOString();
-    DB.set(DB.keys.interventions, list);
+    const item = _intCache.find(i => i.id === id);
+    if (!item) return;
+    item.statut = 'traitee';
+    item.traitePar = userName;
+    item.dateTraitement = new Date().toISOString();
+    try {
+      await sbSaveIntervention(item);
+    } catch (e) { console.error('[marquerFaitSansPhoto]', e); toast('Erreur enregistrement', 'error'); return; }
     toast('Intervention marquée comme faite ✓', 'success');
     renderPage();
   }

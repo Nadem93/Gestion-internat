@@ -211,18 +211,13 @@
         <input type="hidden" id="entryId"/>
         <div class="form-row">
           <div class="form-group"><label class="required">Résident concerné</label><select id="eResident"><option value="">— Sélectionner —</option></select></div>
-          <div class="form-group"><label class="required">Catégorie</label><select id="eCategorie"><option value="">— Sélectionner —</option></select></div>
+          <div class="form-group"><label class="required">Catégorie</label><select id="eCategorie" multiple size="3" style="height:auto"></select><div style="font-size:.65rem;color:var(--muted);margin-top:2px">Ctrl/Cmd+clic pour sélectionner plusieurs catégories</div></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Date et heure</label><input type="datetime-local" id="eDate"/></div>
           <div class="form-group"><label>Objectif lié</label><select id="eObjectif"><option value="">— Aucun —</option></select></div>
         </div>
         <div class="form-group"><label class="required">Contenu</label>
-          <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
-            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal('redaction')" title="Rédiger une entrée">✍ Rédiger</button>
-            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal('correction')" title="Corriger le texte">✓ Corriger</button>
-            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssistJournal('reformulation')" title="Reformulation institutionnelle">🏛 Reformuler</button>
-          </div>
           <textarea id="eContenu" rows="6" placeholder="Décrivez l'événement, l'observation ou l'intervention…"></textarea>
         </div>
         <div class="form-row">
@@ -266,6 +261,10 @@
     document.getElementById('btnExportJournal').style.display = '';
   }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
 <script src="js/journal.js"></script>
 </body>
 </html>

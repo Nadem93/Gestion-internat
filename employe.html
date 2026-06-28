@@ -24,8 +24,35 @@
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
+<script src="js/absences-supabase.js"></script>
+<script src="js/conges-supabase.js"></script>
+<script src="js/planning-equipe-supabase.js"></script>
+<script src="js/formations-supabase.js"></script>
+<script src="js/entretiens-supabase.js"></script>
+<script src="js/fiches-paie-supabase.js"></script>
+<script src="js/documents-employe-supabase.js"></script>
+<script src="js/messages-supabase.js"></script>
 <script>
 const EMP_DOCS_KEY = 'ftr_employes_docs';
+let _empCache = [];
+let _empArretsCache = [];  // arrêts/absences de l'établissement (table Supabase absences_at)
+function _empArretsFor(id) { return _empArretsCache.filter(a => String(a.employeId) === String(id)); }
+let _empCongesCache = [];  // demandes de congés (table Supabase conges)
+function _empCongesFor(id) { return _empCongesCache.filter(c => String(c.employeId) === String(id)); }
+let _empPlanningCache = []; // créneaux planning équipe (table Supabase planning_equipe)
+function _empPlanningFor(id) { return _empPlanningCache.filter(s => String(s.employeId) === String(id)); }
+let _empFormationsCache = []; // formations collectives (table Supabase formations)
+function _empFormationsAcquises(id) { return _empFormationsCache.filter(f => f.statut === 'realisee' && (f.participants || []).map(String).includes(String(id))); }
+let _empEntretiensCache = []; // entretiens professionnels (table Supabase entretiens)
+function _empEntretiensFor(id) { return _empEntretiensCache.filter(e => String(e.employeId) === String(id)); }
+let _empFichesPaieCache = []; // fiches de paie (table Supabase fiches_paie)
+function _empFichesPaieFor(id) { return _empFichesPaieCache.filter(p => String(p.employeId) === String(id)); }
+let _empDocsCache = []; // documents de la fiche (table Supabase documents_employe)
+let _empMsgCache = []; // messages internes (table Supabase messages)
 const DOC_CAT_LABELS = {
   contrat:'Contrat', fiche:'Fiche de poste', administratif:'Administratif',
   formation:'Formation', sanction:'Sanction', autre:'Autre'
@@ -101,20 +128,15 @@ function getPosteOptions() {
 
 function getEmploye(id) {
   const targetId = id || currentEmployeId;
-  const users = DB.get(DB.keys.users) || [];
-  const u = users.find(x => String(x.id) === String(targetId));
-  if (!u) return null;
-  const empStore = JSON.parse(localStorage.getItem(DB.keys.employes) || '[]');
-  const empById   = empStore.find(x => String(x.id) === String(targetId));
-  const empByName = empStore.find(x => x.prenom === u.prenom && x.nom === u.nom);
-  const emp = empById || empByName || {};
+  const emp = _empCache.find(x => String(x.id) === String(targetId));
+  if (!emp) return null;
   return {
-    id: String(u.id), prenom: u.prenom||'', nom: u.nom||'',
-    poste: emp.poste||u.fonction||'', telephone: emp.telephone||u.telephone||'',
-    email: emp.email||u.email||'', statut: emp.statut||(u.role==='admin'?'admin':'actif'),
+    id: String(emp.id), prenom: emp.prenom||'', nom: emp.nom||'',
+    poste: emp.poste||'', telephone: emp.telephone||'',
+    email: emp.email||'', statut: emp.statut||'actif',
     dateEmbauche: emp.dateEmbauche||'', notes: emp.notes||'',
-    color: emp.color||'', heuresContrat: emp.heuresContrat??35,
-    login: u.login||'', photo: emp.photo||u.photo||''
+    color: emp.color||'', heuresContrat: emp.heuresContrat??35, salaireBase: emp.salaireBase??0,
+    login: '', photo: emp.photo||'', profileId: emp.profileId||null
   };
 }
 
@@ -143,15 +165,14 @@ function loadEmploye() {
 }
 
 function renderViewMode(e) {
-  const docs = (JSON.parse(localStorage.getItem(EMP_DOCS_KEY) || '{}'))[currentEmployeId] || [];
-  const allPaie = JSON.parse(localStorage.getItem(PAIE_KEY) || '{}');
-  const paies = (allPaie[currentEmployeId] || []).slice().sort((a,b) => b.periode.localeCompare(a.periode));
-  const congesList = (JSON.parse(localStorage.getItem('ftr_conges') || '[]')).filter(d => d.employeId === currentEmployeId);
+  const docs = _empDocsCache;
+  const paies = _empFichesPaieFor(currentEmployeId).slice().sort((a,b) => (b.periode||'').localeCompare(a.periode||''));
+  const congesList = _empCongesFor(currentEmployeId);
   const curYear = new Date().getFullYear();
   const joursPris = congesList.filter(d => d.statut === 'accepte' && new Date(d.debut).getFullYear() === curYear)
     .reduce((sum,d) => sum + (Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1), 0);
   const congesEnAttente = congesList.filter(d => d.statut === 'en_attente').length;
-  const shifts = (DB.get(DB.keys.planningEquipe) || []).filter(s => s.employeId === currentEmployeId);
+  const shifts = _empPlanningFor(currentEmployeId);
   const today = new Date(); today.setHours(0,0,0,0);
   const upcomingShifts = shifts.filter(s => new Date(s.date+'T00:00:00') >= today).sort((a,b) => a.date.localeCompare(b.date) || a.debut.localeCompare(b.debut)).slice(0,3);
 
@@ -198,7 +219,7 @@ function renderViewMode(e) {
       const formExpSoon = formations.filter(f=>f.dateExpiration&&!( new Date(f.dateExpiration).getTime()<now2)&&(new Date(f.dateExpiration).getTime()-now2)<30*86400000).length;
       const formExp = formations.filter(f=>f.dateExpiration&&new Date(f.dateExpiration).getTime()<now2).length;
       const formBadge = formExp>0?`<span style="color:#ef4444"> ⚠</span>`:formExpSoon>0?`<span style="color:#f59e0b"> !</span>`:'';
-      const entretiens=(JSON.parse(localStorage.getItem(ENTRETIEN_KEY)||'{}'))[currentEmployeId]||[];
+      const entretiens=_empEntretiensFor(currentEmployeId);
       const lastEnt=entretiens.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
       const alertes=(JSON.parse(localStorage.getItem(ALERTES_KEY)||'{}'))[currentEmployeId]||[];
       const alertesActives=alertes.filter(a=>!a.done&&a.date&&(new Date(a.date).getTime()-now2)<30*86400000).length;
@@ -208,7 +229,7 @@ function renderViewMode(e) {
       const journalMonth=journalLog.filter(l=>{const d=new Date(l.date);return d.getFullYear()===new Date().getFullYear()&&d.getMonth()===new Date().getMonth();}).length;
       return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.85rem;margin-bottom:1.75rem">
         ${(() => { const refs=(DB.get(DB.keys.residents)||[]).filter(r=>r.referent===`${e.prenom||''} ${e.nom||''}`.trim()&&r.statut!=='sorti'); return miniWidget('🏠','Référents',refs.length.toString(),refs.length?refs.map(r=>`${r.prenom||''} ${r.nom||''}`.trim()).slice(0,2).join(', ')+(refs.length>2?'…':''):'Aucun résident','#0f766e','referents'); })()}
-        ${(() => { const arr=(JSON.parse(localStorage.getItem(ARRET_KEY)||'{}'))[currentEmployeId]||[]; const cy=new Date().getFullYear(); const jours=arr.filter(a=>(a.dateDebut||'').startsWith(cy)).reduce((s,a)=>{const d=Math.round((new Date(a.dateFin||a.dateDebut)-new Date(a.dateDebut))/86400000)+1;return s+d;},0); return miniWidget('🤒','Arrêts',arr.length.toString(),jours+'j cette année','#ef4444','arrets'); })()}
+        ${(() => { const arr=_empArretsFor(currentEmployeId); const cy=new Date().getFullYear(); const jours=arr.filter(a=>(a.debut||'').startsWith(cy)).reduce((s,a)=>{const d=Math.round((new Date(a.fin||a.debut)-new Date(a.debut))/86400000)+1;return s+d;},0); return miniWidget('🤒','Arrêts',arr.length.toString(),jours+'j cette année','#ef4444','arrets'); })()}
         ${miniWidget('🗓', 'Congés', joursPris + ' j', `${congesEnAttente} en attente`, '#d97706', 'conges')}
         ${miniWidget('📅', 'Planning', upcomingShifts.length ? upcomingShifts[0].date.slice(5).split('-').reverse().join('/') : '—', upcomingShifts.length ? upcomingShifts[0].debut+' – '+upcomingShifts[0].fin : 'Aucun créneau', '#3b82f6', 'planning')}
         ${miniWidget('📊', 'Créneaux', shifts.length.toString(), upcomingShifts.length+' à venir', '#0284c7', 'planning')}
@@ -253,13 +274,13 @@ function renderViewMode(e) {
 function empStatsHtml(e) {
   const fullName = `${e.prenom||''} ${e.nom||''}`.trim();
   const stats = [
-    { label:'Planning',         icon:'📅', color:'#3b82f6', count:(DB.get(DB.keys.planningEquipe)||[]).filter(s=>s.employeId===currentEmployeId).length },
+    { label:'Planning',         icon:'📅', color:'#3b82f6', count:_empPlanningFor(currentEmployeId).length },
     { label:'Journal',          icon:'🕘', color:'#6366f1', count:(DB.get(DB.keys.auditLog)||[]).filter(l=>l.user===fullName||(l.details&&l.details.includes(fullName))).length },
-    { label:'Congés',           icon:'🗓', color:'#f59e0b', count:(JSON.parse(localStorage.getItem('ftr_conges')||'[]')).filter(d=>d.employeId===currentEmployeId).length },
-    { label:'Formations',       icon:'📚', color:'#10b981', count:((JSON.parse(localStorage.getItem(FORM_KEY)||'{}'))[currentEmployeId]||[]).length },
-    { label:'Entretiens',       icon:'🗂', color:'#8b5cf6', count:((JSON.parse(localStorage.getItem(ENTRETIEN_KEY)||'{}'))[currentEmployeId]||[]).length },
-    { label:'Documents',        icon:'📎', color:'#14b8a6', count:((JSON.parse(localStorage.getItem(EMP_DOCS_KEY)||'{}'))[currentEmployeId]||[]).length },
-    { label:'Fiches de paie',   icon:'💰', color:'#0f2b4a', count:(DB.get(DB.keys.fichesPaie)||[]).filter(p=>String(p.employeId)===String(currentEmployeId)).length },
+    { label:'Congés',           icon:'🗓', color:'#f59e0b', count:_empCongesFor(currentEmployeId).length },
+    { label:'Formations',       icon:'📚', color:'#10b981', count:((JSON.parse(localStorage.getItem(FORM_KEY)||'{}'))[currentEmployeId]||[]).length + _empFormationsAcquises(currentEmployeId).length },
+    { label:'Entretiens',       icon:'🗂', color:'#8b5cf6', count:_empEntretiensFor(currentEmployeId).length },
+    { label:'Documents',        icon:'📎', color:'#14b8a6', count:_empDocsCache.length },
+    { label:'Fiches de paie',   icon:'💰', color:'#0f2b4a', count:_empFichesPaieFor(currentEmployeId).length },
     { label:'Alertes',          icon:'🔔', color:'#ef4444', count:((JSON.parse(localStorage.getItem(ALERTES_KEY)||'{}'))[currentEmployeId]||[]).length },
   ];
   const max = Math.max(...stats.map(s=>s.count), 1);
@@ -287,7 +308,7 @@ function scrollToSection(id) {
 }
 
 function empPlanningHtml() {
-  const shifts = (DB.get(DB.keys.planningEquipe) || []).filter(s => s.employeId === currentEmployeId);
+  const shifts = _empPlanningFor(currentEmployeId);
   const y = empPlanningMonth.getFullYear(), m = empPlanningMonth.getMonth();
   const prefix = `${y}-${String(m+1).padStart(2,'0')}`;
   const monthShifts = shifts.filter(s => s.date && s.date.startsWith(prefix)).sort((a,b) => a.date.localeCompare(b.date) || a.debut.localeCompare(b.debut));
@@ -349,7 +370,7 @@ function empPlanningShiftMonth(delta) {
 function empCongesHtml() {
   const TYPE_LABELS = { cp:'Congés payés', rtt:'RTT', maladie:'Arrêt maladie', enfant_malade:'Enfant malade', formation:'Formation', autre:'Autre' };
   const STATUT_STYLES = { en_attente: { bg:'#d9770618', c:'#d97706', l:'En attente' }, accepte: { bg:'#16a34a18', c:'#16a34a', l:'Accepté' }, refuse: { bg:'#ef444418', c:'#ef4444', l:'Refusé' } };
-  const list = (JSON.parse(localStorage.getItem('ftr_conges') || '[]')).filter(d => d.employeId === currentEmployeId);
+  const list = _empCongesFor(currentEmployeId);
   const curYear = new Date().getFullYear();
   const joursPris = list.filter(d => d.statut === 'accepte' && new Date(d.debut).getFullYear() === curYear)
     .reduce((sum,d) => sum + (Math.ceil((new Date(d.fin) - new Date(d.debut)) / 86400000) + 1), 0);
@@ -388,19 +409,26 @@ function empCongesHtml() {
   </div>`;
 }
 
-function empAccepterConge(id) {
-  const list = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
-  const idx = list.findIndex(x => x.id === id);
-  if (idx < 0) return;
-  list[idx].statut = 'accepte';
-  list[idx].reponseDate = new Date().toISOString();
-  list[idx].reponseMotif = '';
-  localStorage.setItem('ftr_conges', JSON.stringify(list));
-  const e = getEmploye();
-  auditLog('conge', `Congé accepté — ${e.prenom||''} ${e.nom||''} (${list[idx].debut} → ${list[idx].fin})`);
-  toast('Congé accepté ✓', 'success');
-  const tab = document.getElementById('tab-conges');
-  if (tab) tab.innerHTML = empCongesHtml();
+async function empAccepterConge(id) {
+  const s = Auth.getSession();
+  try {
+    const saved = await sbUpdateConge(id, {
+      statut: 'accepte', reponse_motif: '',
+      approuve_par: s ? [s.prenom,s.nom].filter(Boolean).join(' ') || s.username : '',
+      approuve_par_id: s ? String(s.userId) : null,
+      approuve_at: new Date().toISOString()
+    });
+    const idx = _empCongesCache.findIndex(x => x.id === id);
+    if (idx >= 0) _empCongesCache[idx] = saved;
+    const e = getEmploye();
+    if (typeof auditLog === 'function') auditLog('conge', `Congé accepté — ${e?.prenom||''} ${e?.nom||''} (${saved.debut} → ${saved.fin})`);
+    toast('Congé accepté ✓', 'success');
+    const tab = document.getElementById('tab-conges');
+    if (tab) tab.innerHTML = empCongesHtml();
+  } catch (err) {
+    toast('Erreur : ' + (err?.message || err), 'error');
+    console.error('[empAccepterConge]', err);
+  }
 }
 
 function empOuvrirRefus(id) {
@@ -426,21 +454,28 @@ function empOuvrirRefus(id) {
   requestAnimationFrame(() => document.getElementById('modalRefusConge')?.classList.add('open'));
 }
 
-function empConfirmerRefus(id) {
+async function empConfirmerRefus(id) {
   const motif = document.getElementById('refusMotifInput')?.value.trim() || '';
-  const list = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
-  const idx = list.findIndex(x => x.id === id);
-  if (idx < 0) return;
-  list[idx].statut = 'refuse';
-  list[idx].reponseDate = new Date().toISOString();
-  list[idx].reponseMotif = motif;
-  localStorage.setItem('ftr_conges', JSON.stringify(list));
-  const e = getEmploye();
-  auditLog('conge', `Congé refusé — ${e.prenom||''} ${e.nom||''} (${list[idx].debut} → ${list[idx].fin})`);
-  closeModal('modalRefusConge');
-  toast('Demande refusée', 'info');
-  const tab = document.getElementById('tab-conges');
-  if (tab) tab.innerHTML = empCongesHtml();
+  const s = Auth.getSession();
+  try {
+    const saved = await sbUpdateConge(id, {
+      statut: 'refuse', reponse_motif: motif,
+      approuve_par: s ? [s.prenom,s.nom].filter(Boolean).join(' ') || s.username : '',
+      approuve_par_id: s ? String(s.userId) : null,
+      approuve_at: new Date().toISOString()
+    });
+    const idx = _empCongesCache.findIndex(x => x.id === id);
+    if (idx >= 0) _empCongesCache[idx] = saved;
+    const e = getEmploye();
+    if (typeof auditLog === 'function') auditLog('conge', `Congé refusé — ${e?.prenom||''} ${e?.nom||''} (${saved.debut} → ${saved.fin})`);
+    closeModal('modalRefusConge');
+    toast('Demande refusée', 'info');
+    const tab = document.getElementById('tab-conges');
+    if (tab) tab.innerHTML = empCongesHtml();
+  } catch (err) {
+    toast('Erreur : ' + (err?.message || err), 'error');
+    console.error('[empConfirmerRefus]', err);
+  }
 }
 
 function empOpenDemandeConge() {
@@ -474,7 +509,7 @@ function empOpenDemandeConge() {
   requestAnimationFrame(() => document.getElementById('modalEmpConge')?.classList.add('open'));
 }
 
-function empSaveConge() {
+async function empSaveConge() {
   const type = document.getElementById('ecType').value;
   const debut = document.getElementById('ecDebut').value;
   const fin = document.getElementById('ecFin').value;
@@ -482,17 +517,21 @@ function empSaveConge() {
   if (!debut || !fin) { toast('Champs obligatoires manquants', 'error'); return; }
   if (debut > fin) { toast('La date de fin doit être après la date de début', 'error'); return; }
   const e = getEmploye();
-  const list = JSON.parse(localStorage.getItem('ftr_conges') || '[]');
-  list.push({
-    id: genId(), employeId: currentEmployeId, employeNom: `${e.prenom||''} ${e.nom||''}`.trim(),
-    type, debut, fin, motif, statut: 'en_attente', dateDemande: new Date().toISOString()
-  });
-  localStorage.setItem('ftr_conges', JSON.stringify(list));
-  auditLog('conge', `Nouvelle demande — ${e.prenom||''} ${e.nom||''}`.trim());
-  closeModal('modalEmpConge');
-  toast('Demande de congés envoyée ✓', 'success');
-  const tab = document.getElementById('tab-conges');
-  if (tab) tab.innerHTML = empCongesHtml();
+  try {
+    const saved = await sbSaveConge({
+      employeId: currentEmployeId, employeNom: `${e?.prenom||''} ${e?.nom||''}`.trim(),
+      type, debut, fin, motif, statut: 'en_attente'
+    });
+    _empCongesCache.unshift(saved);
+    if (typeof auditLog === 'function') auditLog('conge', `Nouvelle demande — ${e?.prenom||''} ${e?.nom||''}`.trim());
+    closeModal('modalEmpConge');
+    toast('Demande de congés envoyée ✓', 'success');
+    const tab = document.getElementById('tab-conges');
+    if (tab) tab.innerHTML = empCongesHtml();
+  } catch (err) {
+    toast('Erreur : ' + (err?.message || err), 'error');
+    console.error('[empSaveConge]', err);
+  }
 }
 
 function empJournalHtml(e) {
@@ -631,8 +670,8 @@ function empReferentsHtml(e) {
 function empHeuresHtml(e) {
   const now = new Date();
   const prefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const allShifts = (DB.get(DB.keys.planningEquipe)||[]).filter(s => String(s.employeId) === String(currentEmployeId) && s.date && s.date.startsWith(prefix));
-  const heuresPlanifiees = allShifts.reduce((sum,s) => sum + peDuration(s.debut, s.fin), 0) / 60;
+  const allShifts = _empPlanningFor(currentEmployeId).filter(s => s.date && s.date.startsWith(prefix));
+  const heuresPlanifiees = allShifts.reduce((sum,s) => sum + _peDurMins(s.debut, s.fin), 0) / 60;
   const heuresContrat = e.heuresContrat ?? 35;
   const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
   let weekdays = 0;
@@ -680,7 +719,7 @@ function empMessagesHtml(e) {
   const empId = String(currentEmployeId);
   if (myId === empId) return '';
   const convKey = [myId, empId].sort().join('_');
-  const allMsgs = (DB.get(DB.keys.messages)||[]).filter(m => m.convId === convKey).sort((a,b) => new Date(a.date)-new Date(b.date));
+  const allMsgs = _empMsgCache.filter(m => m.convId === convKey).sort((a,b) => new Date(a.date)-new Date(b.date));
   const recent = allMsgs.slice(-6);
   const users = DB.get(DB.keys.users)||[];
   const rows = recent.map(m => {
@@ -709,7 +748,7 @@ function empMessagesHtml(e) {
   </div>`;
 }
 
-function empSendMessage() {
+async function empSendMessage() {
   const body = (document.getElementById('empMsgBody')?.value||'').trim();
   if (!body) { toast('Écrivez un message', 'warning'); return; }
   const session = Auth.getSession();
@@ -717,35 +756,30 @@ function empSendMessage() {
   const myId = String(session.userId);
   const empId = String(currentEmployeId);
   const convKey = [myId, empId].sort().join('_');
-  let convs = DB.get('ftr_conversations') || {};
-  if (!convs[convKey]) {
-    convs[convKey] = { id: convKey, userIds: [myId, empId], createdAt: new Date().toISOString() };
-    DB.set('ftr_conversations', convs);
-  }
-  const msgs = DB.get(DB.keys.messages) || [];
-  msgs.push({ id: genId(), convId: convKey, from: myId, body, date: new Date().toISOString(), readBy: [myId] });
-  DB.set(DB.keys.messages, msgs);
+  try {
+    await sbSaveConversation({ id: convKey, userIds: [myId, empId] });
+    const saved = await sbSaveMessage({ convId: convKey, from: myId, body, date: new Date().toISOString(), readBy: [myId] });
+    _empMsgCache.push(saved);
+  } catch (e) { console.error('[empSendMessage]', e); toast('Erreur envoi : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function') { const e2 = (DB.get(DB.keys.users)||[]).find(u=>String(u.id)===empId); auditLog('message_interne', (e2?`${e2.prenom||''} ${e2.nom||''}`.trim():'')+''); }
   toast('Message envoyé', 'success');
   const el = document.getElementById('section-messages');
-  const emp = (DB.get(DB.keys.users)||[]).find(u => String(u.id) === String(currentEmployeId));
+  const emp = getEmploye();
   if (el && emp) el.innerHTML = empMessagesHtml(emp);
 }
 
 function empFichePaieHtml() {
-  const all = DB.get(DB.keys.fichesPaie) || [];
-  const list = all.filter(p => String(p.employeId) === String(currentEmployeId)).sort((a,b) => (b.dateAjout||'').localeCompare(a.dateAjout||''));
+  const list = _empFichesPaieFor(currentEmployeId).slice().sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   const rows = list.map(p => `
     <div style="display:flex;align-items:center;gap:.85rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
       <span style="font-size:1.4rem">📄</span>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.875rem">${escHtml(p.name||p.fichier?.name||'Document')}</div>
+        <div style="font-weight:600;font-size:.875rem">${escHtml(p.fichierNom || ('Fiche de paie ' + p.periode) || 'Document')}</div>
         <div style="font-size:.72rem;color:var(--muted);margin-top:2px">
-          Ajouté le ${new Date(p.dateAjout).toLocaleDateString('fr-FR')}
-          · ${fmtSize(p.fichier?.size||0)}
+          ${p.net ? p.net.toFixed(2) + ' € net · ' : ''}Ajouté le ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR') : '—'}
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="downloadPaie('${p.id}')" title="Télécharger">↓</button>
+      ${p.fichierPath ? `<button class="btn btn-ghost btn-sm" onclick="downloadPaie('${p.id}')" title="Télécharger">↓</button>` : ''}
       <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deletePaie('${p.id}')" title="Supprimer">✕</button>
     </div>`).join('');
 
@@ -816,40 +850,44 @@ async function uploadPaie() {
   const name = document.getElementById('paieNameInput')?.value.trim() || pagePayFile.name;
   const e = getEmploye();
   try {
-    const base64 = await fileToBase64(pagePayFile);
-    const entry = {
-      id: genId(),
+    const folder = (e && e.profileId) ? e.profileId : Auth.getSession().userId;
+    const fichierPath = await sbUploadJustificatif(pagePayFile, folder);
+    const saved = await sbSaveFichePaie({
       employeId: String(currentEmployeId),
       employeNom: e ? `${e.prenom||''} ${e.nom||''}`.trim() : '',
-      name,
-      fichier: { name: pagePayFile.name, mimeType: pagePayFile.type, size: pagePayFile.size, data: base64 },
-      dateAjout: new Date().toISOString()
-    };
-    const all = DB.get(DB.keys.fichesPaie) || [];
-    all.push(entry);
-    DB.set(DB.keys.fichesPaie, all);
+      periode: today().slice(0, 7),
+      fichierPath, fichierNom: name,
+      ajoutePar: (() => { const s = Auth.getSession(); return s ? [s.prenom,s.nom].filter(Boolean).join(' ') || s.username : ''; })()
+    });
+    _empFichesPaieCache.unshift(saved);
     closeModal('modalPaieName');
     pagePayFile = null;
     toast('Document ajouté ✓', 'success');
     const s = document.getElementById('section-paie');
     if (s) { s.innerHTML = empFichePaieHtml(); initPaieUpload(); }
-  } catch { toast('Erreur lors de l\'ajout', 'error'); }
+  } catch (err) { toast('Erreur : ' + (err?.message || err), 'error'); console.error('[uploadPaie]', err); }
 }
 
-function downloadPaie(id) {
-  const all = DB.get(DB.keys.fichesPaie) || [];
-  const p = all.find(x => x.id === id);
-  if (!p) return;
-  const a = document.createElement('a');
-  a.href = p.fichier.data; a.download = p.name || p.fichier.name; a.click();
+async function downloadPaie(id) {
+  const p = _empFichesPaieCache.find(x => x.id === id);
+  if (!p || !p.fichierPath) return;
+  const url = await sbJustificatifUrl(p.fichierPath);
+  if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
 }
 
 function deletePaie(id) {
   if (!confirm('Supprimer ce document ?')) return;
-  DB.set(DB.keys.fichesPaie, (DB.get(DB.keys.fichesPaie)||[]).filter(x => x.id !== id));
-  toast('Document supprimé', 'success');
-  const s = document.getElementById('section-paie');
-  if (s) { s.innerHTML = empFichePaieHtml(); initPaieUpload(); }
+  (async () => {
+    const p = _empFichesPaieCache.find(x => x.id === id);
+    try {
+      if (p?.fichierPath) await sbDeleteJustificatif(p.fichierPath);
+      await sbDeleteFichePaie(id);
+      _empFichesPaieCache = _empFichesPaieCache.filter(x => x.id !== id);
+      toast('Document supprimé', 'success');
+      const s = document.getElementById('section-paie');
+      if (s) { s.innerHTML = empFichePaieHtml(); initPaieUpload(); }
+    } catch (err) { toast('Erreur : ' + (err?.message || err), 'error'); console.error('[deletePaie]', err); }
+  })();
 }
 
 function docsHtml(docs) {
@@ -922,13 +960,38 @@ function empFormationsHtml() {
       <button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0" onclick="deleteFormation('${f.id}')">✕</button>
     </div>`;
   }).join('');
+
+  // Formations collectives réalisées où le salarié est inscrit (depuis le plan de formation)
+  const acquises = _empFormationsAcquises(currentEmployeId)
+    .sort((a,b) => (b.dateFin || b.dateDebut || '').localeCompare(a.dateFin || a.dateDebut || ''));
+  const rowsCollectives = acquises.map(f => {
+    const d = f.dateFin || f.dateDebut;
+    return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.8rem 1.1rem;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.3rem;margin-top:1px">🎓</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:.875rem">${escHtml(f.titre)}</span>
+          <span style="background:#16a34a18;color:#16a34a;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700">Réalisée</span>
+          <span style="background:#6366f118;color:#6366f1;padding:2px 8px;border-radius:99px;font-size:.66rem;font-weight:600">Plan de formation</span>
+        </div>
+        ${f.organisme?`<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(f.organisme)}</div>`:''}
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px;display:flex;gap:.75rem;flex-wrap:wrap">
+          ${d?`<span>Suivie : ${formatDate(d)}</span>`:''}
+          ${f.dureeHeures?`<span>${f.dureeHeures}h</span>`:''}
+          ${f.domaine?`<span>${escHtml(f.domaine)}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalCount = list.length + acquises.length;
   return `<div class="card">
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
       <span class="card-title">📚 Formations & Habilitations</span>
       <button class="btn btn-primary btn-sm" onclick="openFormationModal()">+ Ajouter</button>
     </div>
     <div class="card-body" style="padding:0">
-      ${list.length?rows:'<div class="empty" style="padding:2rem;text-align:center"><p>Aucune formation enregistrée.</p></div>'}
+      ${totalCount ? rows + rowsCollectives : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune formation enregistrée.</p></div>'}
     </div>
   </div>`;
 }
@@ -984,30 +1047,33 @@ function deleteFormation(id) {
   const s=document.getElementById('section-formations'); if(s)s.innerHTML=empFormationsHtml();
 }
 
-/* ── ENTRETIENS PROFESSIONNELS ── */
+/* ── ENTRETIENS PROFESSIONNELS (table Supabase entretiens — synchro avec le module RH) ── */
+const EMP_ENT_TYPE_L = { annuel:'Entretien annuel', professionnel:'Entretien professionnel', suivi:'Entretien de suivi' };
+const EMP_ENT_STATUT = { planifie:{ bg:'#d9770618', c:'#d97706', l:'Planifié' }, realise:{ bg:'#16a34a18', c:'#16a34a', l:'Réalisé' } };
 function empEntretiensHtml() {
-  const list=(JSON.parse(localStorage.getItem(ENTRETIEN_KEY)||'{}'))[currentEmployeId]||[];
-  const sorted=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const TYPE_L={annuel:'Entretien annuel',professionnel:'Entretien professionnel',bilan:'Bilan de compétences',essai:'Fin de période d\'essai',autre:'Autre'};
-  const rows=sorted.map(e=>{
+  const list = _empEntretiensFor(currentEmployeId).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const rows = list.map(e=>{
+    const st = EMP_ENT_STATUT[e.statut] || EMP_ENT_STATUT.planifie;
     return `<div style="padding:.9rem 1.1rem;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:.5rem">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
           <span style="font-size:1.1rem">🗂</span>
-          <span style="font-weight:700;font-size:.875rem">${TYPE_L[e.type]||e.type}</span>
+          <span style="font-weight:700;font-size:.875rem">${escHtml(EMP_ENT_TYPE_L[e.type]||e.type)}</span>
+          <span style="padding:1px 8px;border-radius:99px;font-size:.66rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
           <span style="font-size:.72rem;color:var(--muted)">${formatDate(e.date)}</span>
         </div>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntretien('${e.id}')">✕</button>
+        ${canEditEmploye()?`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntretien('${e.id}')">✕</button>`:''}
       </div>
-      ${e.bilan?`<div style="margin-top:.5rem;font-size:.8rem;color:var(--muted)"><strong>Bilan :</strong> ${escHtml(e.bilan)}</div>`:''}
+      ${e.evaluateur?`<div style="margin-top:.35rem;font-size:.75rem;color:var(--muted)">Évaluateur : ${escHtml(e.evaluateur)}</div>`:''}
+      ${e.bilan?`<div style="margin-top:.35rem;font-size:.8rem;color:var(--muted)"><strong>Bilan :</strong> ${escHtml(e.bilan)}</div>`:''}
       ${e.objectifs?`<div style="margin-top:.3rem;font-size:.8rem;color:var(--muted)"><strong>Objectifs :</strong> ${escHtml(e.objectifs)}</div>`:''}
-      ${e.dateProchain?`<div style="margin-top:.3rem;font-size:.75rem;color:#6366f1">Prochain : ${formatDate(e.dateProchain)}</div>`:''}
+      ${e.formations?`<div style="margin-top:.3rem;font-size:.8rem;color:var(--muted)"><strong>Formations :</strong> ${escHtml(e.formations)}</div>`:''}
     </div>`;
   }).join('');
   return `<div class="card">
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
       <span class="card-title">🗂 Entretiens professionnels</span>
-      <button class="btn btn-primary btn-sm" onclick="openEntretienModal()">+ Ajouter</button>
+      ${canEditEmploye()?`<button class="btn btn-primary btn-sm" onclick="openEntretienModal()">+ Ajouter</button>`:''}
     </div>
     <div class="card-body" style="padding:0">
       ${list.length?rows:'<div class="empty" style="padding:2rem;text-align:center"><p>Aucun entretien enregistré.</p></div>'}
@@ -1017,7 +1083,7 @@ function empEntretiensHtml() {
 
 function openEntretienModal() {
   const old=document.getElementById('modalEntretien'); if(old)old.remove();
-  const types=[['annuel','Entretien annuel'],['professionnel','Entretien professionnel'],['bilan','Bilan de compétences'],['essai','Fin de période d\'essai'],['autre','Autre']];
+  const types=[['annuel','Entretien annuel'],['professionnel','Entretien professionnel'],['suivi','Entretien de suivi']];
   const div=document.createElement('div');
   div.innerHTML=`<div class="modal-overlay" id="modalEntretien" style="display:flex" onclick="closeModal('modalEntretien')">
     <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
@@ -1027,13 +1093,17 @@ function openEntretienModal() {
           <div class="form-group"><label>Type *</label><select id="eType" class="form-input">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
           <div class="form-group"><label>Date *</label><input type="date" id="eDate" class="form-input"/></div>
         </div>
+        <div class="grid grid-2" style="gap:.75rem">
+          <div class="form-group"><label>Statut</label><select id="eStatut" class="form-input"><option value="planifie">Planifié</option><option value="realise">Réalisé</option></select></div>
+          <div class="form-group"><label>Évaluateur</label><input id="eEvaluateur" class="form-input" placeholder="Nom de l'évaluateur"/></div>
+        </div>
         <div class="form-group"><label>Bilan (période écoulée)</label><textarea id="eBilan" class="form-input" rows="2" placeholder="Points forts, points à améliorer…"></textarea></div>
         <div class="form-group"><label>Objectifs (période suivante)</label><textarea id="eObjectifs" class="form-input" rows="2" placeholder="Objectifs définis pour la prochaine période…"></textarea></div>
-        <div class="form-group"><label>Date du prochain entretien</label><input type="date" id="eProchain" class="form-input"/></div>
+        <div class="form-group"><label>Besoins en formation</label><textarea id="eFormations" class="form-input" rows="2" placeholder="Formations souhaitées / nécessaires…"></textarea></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('modalEntretien')">Annuler</button>
-        <button class="btn btn-primary" onclick="saveEntretien()">Enregistrer</button>
+        <button class="btn btn-primary" id="eSaveBtn" onclick="saveEntretien()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1041,29 +1111,45 @@ function openEntretienModal() {
   requestAnimationFrame(()=>document.getElementById('modalEntretien')?.classList.add('open'));
 }
 
-function saveEntretien() {
+async function saveEntretien() {
   const date=document.getElementById('eDate')?.value;
   if(!date){toast('Date obligatoire','error');return;}
-  const store=JSON.parse(localStorage.getItem(ENTRETIEN_KEY)||'{}');
-  if(!store[currentEmployeId])store[currentEmployeId]=[];
-  store[currentEmployeId].push({
-    id:genId(), type:document.getElementById('eType')?.value||'annuel', date,
-    bilan:document.getElementById('eBilan')?.value.trim()||'',
-    objectifs:document.getElementById('eObjectifs')?.value.trim()||'',
-    dateProchain:document.getElementById('eProchain')?.value||''
-  });
-  localStorage.setItem(ENTRETIEN_KEY,JSON.stringify(store));
-  closeModal('modalEntretien');
-  toast('Entretien enregistré ✓','success');
-  const s=document.getElementById('section-entretiens'); if(s)s.innerHTML=empEntretiensHtml();
+  const emp=getEmploye();
+  const btn=document.getElementById('eSaveBtn'); if(btn){btn.disabled=true;btn.textContent='⏳ Enregistrement…';}
+  try {
+    const saved = await sbSaveEntretien({
+      employeId: currentEmployeId,
+      employeNom: emp ? `${emp.prenom||''} ${emp.nom||''}`.trim() : '',
+      type: document.getElementById('eType')?.value||'annuel',
+      date,
+      statut: document.getElementById('eStatut')?.value||'planifie',
+      evaluateur: document.getElementById('eEvaluateur')?.value.trim()||'',
+      bilan: document.getElementById('eBilan')?.value.trim()||'',
+      objectifs: document.getElementById('eObjectifs')?.value.trim()||'',
+      formations: document.getElementById('eFormations')?.value.trim()||'',
+      grille: {}
+    });
+    _empEntretiensCache.unshift(saved);
+    closeModal('modalEntretien');
+    toast('Entretien enregistré ✓','success');
+    const s=document.getElementById('section-entretiens'); if(s)s.innerHTML=empEntretiensHtml();
+  } catch (e) {
+    toast('Erreur : ' + (e?.message || e), 'error');
+    console.error('[saveEntretien fiche]', e);
+  } finally { if(btn){btn.disabled=false;btn.textContent='Enregistrer';} }
 }
 
-function deleteEntretien(id) {
+async function deleteEntretien(id) {
   if(!confirm('Supprimer cet entretien ?'))return;
-  const store=JSON.parse(localStorage.getItem(ENTRETIEN_KEY)||'{}');
-  if(store[currentEmployeId])store[currentEmployeId]=store[currentEmployeId].filter(x=>x.id!==id);
-  localStorage.setItem(ENTRETIEN_KEY,JSON.stringify(store));
-  const s=document.getElementById('section-entretiens'); if(s)s.innerHTML=empEntretiensHtml();
+  try {
+    await sbDeleteEntretien(id);
+    _empEntretiensCache = _empEntretiensCache.filter(x=>x.id!==id);
+    const s=document.getElementById('section-entretiens'); if(s)s.innerHTML=empEntretiensHtml();
+    toast('Entretien supprimé','info');
+  } catch (e) {
+    toast('Erreur : ' + (e?.message || e), 'error');
+    console.error('[deleteEntretien fiche]', e);
+  }
 }
 
 /* ── HISTORIQUE DES POSTES ── */
@@ -1155,26 +1241,27 @@ function deleteHistorique(id) {
 }
 
 /* ── SANCTIONS / INCIDENTS RH ── */
+const ARRET_TYPE_L = { maladie:'Arrêt maladie', at:'Accident du travail', maladie_pro:'Maladie professionnelle', maternite:'Congé maternité/paternité', longue_maladie:'Longue maladie', autre:'Autre absence' };
+const ARRET_TYPE_C = { maladie:'#d97706', at:'#dc2626', maladie_pro:'#9333ea', maternite:'#8b5cf6', longue_maladie:'#b91c1c', autre:'#64748b' };
 function empArretsHtml() {
-  const list = (JSON.parse(localStorage.getItem(ARRET_KEY)||'{}'))[currentEmployeId] || [];
-  const sorted = list.slice().sort((a,b) => (b.dateDebut||'').localeCompare(a.dateDebut||''));
-  const TYPE_L = { maladie:'Arrêt maladie', accident:'Accident du travail', maternite:'Congé maternité/paternité', longue_maladie:'Longue maladie', autre:'Autre absence' };
-  const TYPE_C = { maladie:'#ef4444', accident:'#f97316', maternite:'#8b5cf6', longue_maladie:'#dc2626', autre:'#64748b' };
+  const list = _empArretsFor(currentEmployeId);
+  const sorted = list.slice().sort((a,b) => (b.debut||'').localeCompare(a.debut||''));
   function daysBetween(a,b) { if(!a||!b) return 0; return Math.round((new Date(b)-new Date(a))/(86400000))+1; }
   const curYear = new Date().getFullYear();
-  const joursAnnee = list.filter(a => (a.dateDebut||'').startsWith(curYear)).reduce((s,a) => s + daysBetween(a.dateDebut, a.dateFin||a.dateDebut), 0);
+  const joursAnnee = list.filter(a => (a.debut||'').startsWith(curYear)).reduce((s,a) => s + daysBetween(a.debut, a.fin||a.debut), 0);
   const rows = sorted.map(a => {
-    const jours = daysBetween(a.dateDebut, a.dateFin||a.dateDebut);
-    const color = TYPE_C[a.type] || '#64748b';
+    const jours = daysBetween(a.debut, a.fin||a.debut);
+    const color = ARRET_TYPE_C[a.type] || '#64748b';
     return `<div style="display:flex;align-items:flex-start;gap:.85rem;padding:.75rem 1rem;border-bottom:1px solid var(--border)">
       <div style="width:3px;border-radius:99px;background:${color};align-self:stretch;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:.85rem">${escHtml(TYPE_L[a.type]||a.type)}</span>
+          <span style="font-weight:600;font-size:.85rem">${escHtml(ARRET_TYPE_L[a.type]||a.type)}</span>
           <span style="font-size:.72rem;color:#fff;background:${color};padding:1px 8px;border-radius:99px">${jours}j</span>
         </div>
-        <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">${formatDate(a.dateDebut)}${a.dateFin&&a.dateFin!==a.dateDebut?' → '+formatDate(a.dateFin):''}</div>
-        ${a.motif ? `<div style="font-size:.78rem;color:var(--text);margin-top:.2rem;font-style:italic">${escHtml(a.motif)}</div>` : ''}
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">${formatDate(a.debut)}${a.fin&&a.fin!==a.debut?' → '+formatDate(a.fin):''}</div>
+        ${a.notes ? `<div style="font-size:.78rem;color:var(--text);margin-top:.2rem;font-style:italic">${escHtml(a.notes)}</div>` : ''}
+        ${a.justificatifPath ? `<button class="btn btn-ghost btn-sm" style="margin-top:.3rem;padding:.2rem .5rem" onclick="empOpenJustificatif('${a.id}')">📎 Justificatif</button>` : ''}
       </div>
       ${canEditEmploye() ? `<button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0" onclick="empDeleteArret('${a.id}')">✕</button>` : ''}
     </div>`;
@@ -1199,7 +1286,8 @@ function empOpenArret() {
       <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
         <div class="form-group"><label>Type *</label><select id="arretType" class="form-input">
           <option value="maladie">Arrêt maladie</option>
-          <option value="accident">Accident du travail</option>
+          <option value="at">Accident du travail</option>
+          <option value="maladie_pro">Maladie professionnelle</option>
           <option value="maternite">Congé maternité/paternité</option>
           <option value="longue_maladie">Longue maladie</option>
           <option value="autre">Autre absence</option>
@@ -1209,10 +1297,11 @@ function empOpenArret() {
           <div class="form-group"><label>Date fin</label><input type="date" id="arretDateFin" class="form-input"/></div>
         </div>
         <div class="form-group"><label>Motif / Note</label><input id="arretMotif" class="form-input" placeholder="Optionnel…"/></div>
+        <div class="form-group"><label>Justificatif (arrêt de travail…)</label><input type="file" id="arretFichier" class="form-input" accept="image/*,application/pdf"/><div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">PDF ou image, max 5 Mo.</div></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('modalArret')">Annuler</button>
-        <button class="btn btn-primary" onclick="empSaveArret()">Enregistrer</button>
+        <button class="btn btn-primary" id="arretSaveBtn" onclick="empSaveArret()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1220,31 +1309,62 @@ function empOpenArret() {
   requestAnimationFrame(() => document.getElementById('modalArret')?.classList.add('open'));
 }
 
-function empSaveArret() {
-  const dateDebut = document.getElementById('arretDateDebut').value;
-  const dateFin   = document.getElementById('arretDateFin').value;
-  const type      = document.getElementById('arretType').value;
-  const motif     = document.getElementById('arretMotif').value.trim();
-  if (!dateDebut) { toast('Date de début requise', 'error'); return; }
-  const store = JSON.parse(localStorage.getItem(ARRET_KEY)||'{}');
-  if (!store[currentEmployeId]) store[currentEmployeId] = [];
-  store[currentEmployeId].push({ id: genId(), dateDebut, dateFin: dateFin||dateDebut, type, motif, dateAjout: new Date().toISOString() });
-  localStorage.setItem(ARRET_KEY, JSON.stringify(store));
-  if (typeof auditLog === 'function') auditLog('arret_ajout', type+' — '+dateDebut);
-  toast('Absence enregistrée', 'success');
-  closeModal('modalArret');
-  const s = document.getElementById('section-arrets');
-  if (s) s.innerHTML = empArretsHtml();
+async function empSaveArret() {
+  const debut = document.getElementById('arretDateDebut').value;
+  const fin   = document.getElementById('arretDateFin').value;
+  const type  = document.getElementById('arretType').value;
+  const motif = document.getElementById('arretMotif').value.trim();
+  if (!debut) { toast('Date de début requise', 'error'); return; }
+  const file = document.getElementById('arretFichier')?.files[0];
+  if (file && file.size > 5 * 1024 * 1024) { toast('Fichier trop lourd (max 5 Mo)', 'error'); return; }
+  const emp = getEmploye();
+  const btn = document.getElementById('arretSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enregistrement…'; }
+  try {
+    let justificatifPath = '';
+    if (file) {
+      const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+      justificatifPath = await sbUploadJustificatif(file, folder);
+    }
+    const saved = await sbSaveAbsence({
+      employeId: currentEmployeId,
+      employeNom: emp ? `${emp.prenom||''} ${emp.nom||''}`.trim() : '',
+      type, debut, fin: fin || '', notes: motif, justificatifPath
+    });
+    _empArretsCache.unshift(saved);
+    if (typeof auditLog === 'function') auditLog('arret_ajout', type+' — '+debut);
+    toast('Absence enregistrée', 'success');
+    closeModal('modalArret');
+    const s = document.getElementById('section-arrets');
+    if (s) s.innerHTML = empArretsHtml();
+  } catch (e) {
+    const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[empSaveArret]', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+  }
 }
 
-function empDeleteArret(id) {
+async function empOpenJustificatif(id) {
+  const a = _empArretsCache.find(x => x.id === id);
+  if (!a || !a.justificatifPath) return;
+  const url = await sbJustificatifUrl(a.justificatifPath);
+  if (url) window.open(url, '_blank'); else toast('Justificatif introuvable', 'error');
+}
+
+async function empDeleteArret(id) {
   if (!confirm('Supprimer cet arrêt ?')) return;
-  const store = JSON.parse(localStorage.getItem(ARRET_KEY)||'{}');
-  if (store[currentEmployeId]) store[currentEmployeId] = store[currentEmployeId].filter(a => a.id !== id);
-  localStorage.setItem(ARRET_KEY, JSON.stringify(store));
-  toast('Supprimé', 'info');
-  const s = document.getElementById('section-arrets');
-  if (s) s.innerHTML = empArretsHtml();
+  try {
+    await sbDeleteAbsence(id);
+    _empArretsCache = _empArretsCache.filter(a => a.id !== id);
+    toast('Supprimé', 'info');
+    const s = document.getElementById('section-arrets');
+    if (s) s.innerHTML = empArretsHtml();
+  } catch (e) {
+    toast('Erreur : ' + (e?.message || e), 'error');
+    console.error('[empDeleteArret]', e);
+  }
 }
 
 function empDiplomesHtml() {
@@ -1592,6 +1712,7 @@ function renderEditMode(e) {
         </div>
         <div class="grid grid-2" style="gap:.75rem">
           ${inputField('eHeuresContrat','Heures contractuelles / semaine',e.heuresContrat ?? 35,'number')}
+          ${inputField('eSalaireBase','Salaire mensuel brut de base (€)',e.salaireBase ?? 0,'number')}
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6366f1;margin-bottom:.25rem">📝 Notes</div>
@@ -1604,27 +1725,33 @@ function renderEditMode(e) {
     </div>`;
 }
 
-function savePageEdit() {
+async function savePageEdit() {
   const e = getEmploye();
   if (!e) return;
   const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-  const data = {
+  const fiche = {
     id: currentEmployeId,
+    prenom: e.prenom, nom: e.nom, profileId: e.profileId,
     poste: g('ePoste'), telephone: g('eTel'), email: g('eEmail'),
     dateEmbauche: g('eDateEmbauche'), statut: g('eStatut'),
     color: g('eColor') || '#3b82f6',
     heuresContrat: parseFloat(g('eHeuresContrat')) || 35,
+    salaireBase: parseFloat(g('eSalaireBase')) || 0,
     notes: g('eNotes'),
-    updatedAt: new Date().toISOString()
+    photo: e.photo || ''
   };
-  let list = JSON.parse(localStorage.getItem(DB.keys.employes) || '[]');
-  const idx = list.findIndex(x => String(x.id) === String(currentEmployeId));
-  if (idx >= 0) list[idx] = { ...list[idx], ...data };
-  else list.push(data);
-  localStorage.setItem(DB.keys.employes, JSON.stringify(list));
-  toast('Employé mis à jour', 'success');
-  pageEditMode = false;
-  loadEmploye();
+  try {
+    const saved = await sbSaveEmploye(fiche);
+    const idx = _empCache.findIndex(x => String(x.id) === String(currentEmployeId));
+    if (idx >= 0) _empCache[idx] = saved; else _empCache.push(saved);
+    toast('Employé mis à jour', 'success');
+    pageEditMode = false;
+    loadEmploye();
+  } catch (err) {
+    const msg = err?.message || err?.details || JSON.stringify(err) || 'Erreur inconnue';
+    toast('Erreur : ' + msg, 'error');
+    console.error('[savePageEdit]', err);
+  }
 }
 
 function cancelPageEdit() {
@@ -1657,22 +1784,15 @@ async function uploadDocFromPage() {
   const docDate = document.getElementById('pageDocDate').value;
   const category = document.getElementById('pageDocCategory').value;
   try {
-    const base64 = await fileToBase64(pageDocFile);
-    const doc = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-      name,
-      fileName: pageDocFile.name,
-      size: pageDocFile.size,
-      mimeType: pageDocFile.type,
-      category,
-      docDate,
-      date: new Date().toISOString(),
-      data: base64
-    };
-    const allDocs = JSON.parse(localStorage.getItem(EMP_DOCS_KEY) || '{}');
-    if (!allDocs[currentEmployeId]) allDocs[currentEmployeId] = [];
-    allDocs[currentEmployeId].push(doc);
-    localStorage.setItem(EMP_DOCS_KEY, JSON.stringify(allDocs));
+    const emp = getEmploye();
+    const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+    const fichierPath = await sbUploadJustificatif(pageDocFile, folder);
+    const saved = await sbSaveDocEmploye({
+      employeId: currentEmployeId, name,
+      fileName: pageDocFile.name, size: pageDocFile.size, mimeType: pageDocFile.type,
+      category, docDate, fichierPath
+    });
+    _empDocsCache.unshift(saved);
     toast('Document ajouté', 'success');
     pageDocFile = null;
     document.getElementById('pageDocName').value = '';
@@ -1681,7 +1801,7 @@ async function uploadDocFromPage() {
     document.getElementById('pageDocFileInput').value = '';
     document.getElementById('pageDocPending').style.display = 'none';
     loadEmploye();
-  } catch { toast('Erreur lors de l\'ajout', 'error'); }
+  } catch (e) { console.error('[uploadDocFromPage]', e); toast('Erreur : ' + (e?.message || e), 'error'); }
 }
 
 function cancelPageDoc() {
@@ -1690,24 +1810,25 @@ function cancelPageDoc() {
   document.getElementById('pageDocPending').style.display = 'none';
 }
 
-function downloadEmpDoc(docId) {
-  const allDocs = JSON.parse(localStorage.getItem(EMP_DOCS_KEY) || '{}');
-  const docs = allDocs[currentEmployeId] || [];
-  const doc = docs.find(d => d.id === docId);
-  if (!doc) return;
-  const a = document.createElement('a');
-  a.href = doc.data; a.download = doc.name; a.click();
+async function downloadEmpDoc(docId) {
+  const doc = _empDocsCache.find(d => d.id === docId);
+  if (!doc || !doc.fichierPath) return;
+  const url = await sbJustificatifUrl(doc.fichierPath);
+  if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
 }
 
 function deleteEmpDoc(docId) {
   if (!confirm('Supprimer ce document ?')) return;
-  const allDocs = JSON.parse(localStorage.getItem(EMP_DOCS_KEY) || '{}');
-  if (!allDocs[currentEmployeId]) return;
-  allDocs[currentEmployeId] = allDocs[currentEmployeId].filter(d => d.id !== docId);
-  if (!allDocs[currentEmployeId].length) delete allDocs[currentEmployeId];
-  localStorage.setItem(EMP_DOCS_KEY, JSON.stringify(allDocs));
-  toast('Document supprimé', 'success');
-  loadEmploye();
+  const doc = _empDocsCache.find(d => d.id === docId);
+  (async () => {
+    try {
+      if (doc?.fichierPath) await sbDeleteJustificatif(doc.fichierPath);
+      await sbDeleteDocEmploye(docId);
+      _empDocsCache = _empDocsCache.filter(d => d.id !== docId);
+      toast('Document supprimé', 'success');
+      loadEmploye();
+    } catch (e) { console.error('[deleteEmpDoc]', e); toast('Erreur : ' + (e?.message || e), 'error'); }
+  })();
 }
 
 function initPageTabs() {
@@ -1722,8 +1843,16 @@ function initPageTabs() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadEmploye();
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const _id = new URLSearchParams(window.location.search).get('id');
+    [_empCache, _empArretsCache, _empCongesCache, _empPlanningCache, _empFormationsCache, _empEntretiensCache, _empFichesPaieCache, _empDocsCache, _empMsgCache] = await Promise.all([sbGetEmployes(), sbGetAbsences().catch(() => []), sbGetConges().catch(() => []), sbGetPeShifts().catch(() => []), sbGetFormations().catch(() => []), sbGetEntretiens().catch(() => []), sbGetFichesPaie().catch(() => []), _id ? sbGetDocsEmploye(_id).catch(() => []) : [], sbGetMessages().catch(() => [])]);
+    loadEmploye();
+  } catch (err) {
+    console.error('Erreur loadEmploye:', err);
+    const el = document.getElementById('employeContent');
+    if (el) el.innerHTML = `<div class="empty"><h3>Erreur d'affichage</h3><p style="font-family:monospace;font-size:.78rem;white-space:pre-wrap">${(err && err.message) || err}</p><a href="accueil.html" class="btn btn-accent">← Retour</a></div>`;
+  }
 });
 
 function generateAttestation() {

@@ -34,6 +34,19 @@
 
     <main class="content">
 
+      <!-- MON ESPACE (salarié connecté) -->
+      <div id="monEspaceCard" style="display:none;margin-bottom:1.5rem">
+        <div class="card" style="background:linear-gradient(135deg,#4f46e510,#7c3aed08),#fff">
+          <div class="card-header"><span class="card-title">👤 Mon espace</span><a href="mes-absences.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Mes absences →</a></div>
+          <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
+            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Congés pris (<span id="meYear"></span>)</div><div style="font-size:1.7rem;font-weight:800" id="meCongesPris">—</div><div style="font-size:.74rem;color:var(--muted)" id="meCongesAttente"></div></div>
+            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Heures de récup</div><div style="font-size:1.7rem;font-weight:800" id="meRecup">—</div><div style="font-size:.74rem;color:var(--muted)">écart cumulé planning</div></div>
+            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Formations suivies</div><div style="font-size:1.7rem;font-weight:800" id="meFormations">—</div><div style="font-size:.74rem;color:var(--muted)">réalisées</div></div>
+            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Entretiens</div><div style="font-size:1.7rem;font-weight:800" id="meEntretiens">—</div><div style="font-size:.74rem;color:var(--muted)">réalisés</div></div>
+          </div>
+        </div>
+      </div>
+
       <!-- MINI CARTES -->
       <div class="mini-cards" id="miniCards">
         <a href="planning.html" class="mini-card" id="miniEventCard" title="Voir le planning">
@@ -333,6 +346,54 @@
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
+<script src="js/conges-supabase.js"></script>
+<script src="js/planning-equipe-supabase.js"></script>
+<script src="js/formations-supabase.js"></script>
+<script src="js/entretiens-supabase.js"></script>
+<script>
+  // Carte « Mon espace » : congés + heures de récup du salarié connecté
+  (async function loadMonEspace() {
+    const s = Auth.getSession();
+    if (!s) return;
+    try {
+      const employes = await sbGetEmployes();
+      const fiche = employes.find(e => String(e.profileId) === String(s.userId));
+      if (!fiche) return; // pas de fiche liée → carte masquée
+      const [conges, shifts, formations, entretiens] = await Promise.all([
+        sbGetConges().catch(() => []),
+        sbGetPeShifts().catch(() => []),
+        sbGetFormations().catch(() => []),
+        sbGetEntretiens().catch(() => [])
+      ]);
+      const year = new Date().getFullYear();
+      const mesConges = conges.filter(c => String(c.employeId) === String(fiche.id));
+      const joursPris = mesConges
+        .filter(c => c.statut === 'accepte' && new Date(c.debut).getFullYear() === year)
+        .reduce((sum, c) => sum + (Math.ceil((new Date(c.fin) - new Date(c.debut)) / 86400000) + 1), 0);
+      const enAttente = mesConges.filter(c => c.statut === 'en_attente').length;
+      const recupMins = peRecupMinutesForEmploye(shifts, fiche.id, fiche.heuresContrat);
+
+      document.getElementById('meYear').textContent = year;
+      document.getElementById('meCongesPris').textContent = joursPris + ' j';
+      document.getElementById('meCongesAttente').textContent = enAttente ? (enAttente + ' demande' + (enAttente > 1 ? 's' : '') + ' en attente') : 'Aucune demande en attente';
+      const recupEl = document.getElementById('meRecup');
+      recupEl.textContent = peFormatRecup(recupMins);
+      recupEl.style.color = recupMins >= 0 ? '#16a34a' : '#dc2626';
+
+      // RÈGLE : on n'affiche que les formations / entretiens passés en « réalisé »
+      const formationsRealisees = formations.filter(f => f.statut === 'realisee' && (f.participants || []).map(String).includes(String(fiche.id))).length;
+      const entretiensRealises = entretiens.filter(e => e.statut === 'realise' && String(e.employeId) === String(fiche.id)).length;
+      document.getElementById('meFormations').textContent = formationsRealisees;
+      document.getElementById('meEntretiens').textContent = entretiensRealises;
+
+      document.getElementById('monEspaceCard').style.display = '';
+    } catch (e) { console.error('[monEspace]', e); }
+  })();
+</script>
 <script>
   document.getElementById('headerDate').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
@@ -418,7 +479,7 @@
     const planning = DB.get(DB.keys.planning) || [];
     const now = new Date();
     const todayStr = now.toISOString().slice(0,10);
-    const allResidents = (DB.get(DB.keys.residents)||[]).filter(r => r.statut !== 'sorti');
+    const allResidents = sbResidents().filter(r => r.statut !== 'sorti');
 
     // ── MINI CARTES ──
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -608,7 +669,7 @@
     }
     // ── Graphique présences 7 jours ──
     const presencesData = DB.get(DB.keys.presences) || {};
-    const allRes = (DB.get(DB.keys.residents)||[]).filter(r => r.statut !== 'sorti');
+    const allRes = sbResidents().filter(r => r.statut !== 'sorti');
     const total = allRes.length || 1;
     const days7 = [];
     for (let i = 6; i >= 0; i--) {
@@ -704,7 +765,7 @@
 
   // ── SUIVI DES RÉSIDENTS (agrège les données des fiches) ──
   function renderResidentTracking() {
-    const residents = (DB.get(DB.keys.residents) || []);
+    const residents = sbResidents();
     const todayStr = new Date().toISOString().slice(0,10);
     const nowMs = Date.now();
     const resName = r => `${r.prenom||''} ${r.nom||''}`.trim() || '—';
@@ -794,7 +855,11 @@
     else el.style.display = 'none';
   }
 
-  renderDashboard();
+  // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
+  (async () => {
+    try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
+    renderDashboard();
+  })();
 </script>
 </body>
 </html>
