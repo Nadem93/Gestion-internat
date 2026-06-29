@@ -64,6 +64,7 @@
 <script src="js/planning-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
@@ -88,6 +89,34 @@ document.querySelectorAll('[data-perm]').forEach(el => {
     <div id="etabCardsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem"></div>
     <div style="text-align:center">
       <button class="btn btn-ghost btn-sm" onclick="Auth.logout();location.href='index.html'">Se déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNewEtab" onclick="closeModal('modalNewEtab')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">🏠 Nouvel établissement</span>
+      <button class="modal-close" onclick="closeModal('modalNewEtab')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="nePvBox" style="background:linear-gradient(135deg,#f1f5f9,#eff6ff);border:1px solid #e2e8f0;border-radius:14px;padding:1.4rem;margin-bottom:1.1rem;display:flex;justify-content:center;transition:background .2s">
+        <div style="text-align:center">
+          <div id="neIcon" style="width:58px;height:58px;border-radius:16px;background:#0f2b4a;margin:0 auto .6rem;display:flex;align-items:center;justify-content:center;transition:background .2s">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:29px;height:29px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div id="nePvName" style="font-weight:800;font-size:1.05rem;color:#1e293b">Nom de l'établissement</div>
+          <div id="nePvType" style="font-size:.72rem;background:#0891b220;color:#0891b2;border-radius:99px;padding:2px 11px;display:inline-block;margin-top:.4rem">Foyer d'hébergement</div>
+          <div id="nePvTerme" style="font-size:.7rem;color:#64748b;margin-top:.55rem;font-weight:600"></div>
+        </div>
+      </div>
+      <div class="form-group"><label class="required">Nom de l'établissement</label><input type="text" id="neNom" class="form-control" placeholder="Ex : Foyer Les Trois Rivières" oninput="updateNedPreview()"/></div>
+      <div class="form-group"><label>Type</label><select id="neType" class="form-control" onchange="updateNedPreview()"><optgroup label="Hébergement"><option value="foyer_hebergement">Foyer d'hébergement</option><option value="foyer_vie">Foyer de vie</option><option value="foyer_jeunes">FJT</option><option value="mecs">MECS</option><option value="lhss">LHSS</option></optgroup><optgroup label="Médico-social enfants"><option value="ime">IME</option><option value="itep">ITEP</option><option value="sessad">SESSAD</option><option value="camsp">CAMSP</option></optgroup><optgroup label="Médico-social adultes"><option value="esat">ESAT</option><option value="mas">MAS</option><option value="fam">FAM</option><option value="savs">SAVS</option><option value="samsah">SAMSAH</option></optgroup></select></div>
+      <div class="form-group"><label>Couleur</label><input type="color" id="neColor" class="form-control" value="#0f2b4a" oninput="updateNedPreview()" style="width:64px;height:42px;padding:.2rem"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewEtab')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitNewEtab()">Créer l'établissement</button>
     </div>
   </div>
 </div>
@@ -123,7 +152,7 @@ document.querySelectorAll('[data-perm]').forEach(el => {
 <a href="interventions.html" class="accueil-home-card" data-perm="access_interventions" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
       <a href="rh.html" class="accueil-home-card rh-only" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">RH</span></a>
       <a href="finance.html" class="accueil-home-card admin-only" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="accueil-home-label">Finance</span></a>
-      <a href="admin-modules.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
+      <a href="admin.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
       <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
     </div>
   </main>
@@ -628,6 +657,53 @@ function renderEtabCards() {
       <div style="font-weight:800;font-size:.95rem;color:#1e293b;margin-bottom:.3rem">${escHtml(e.nom)}</div>
       <div style="font-size:.72rem;background:#0891b220;color:#0891b2;border-radius:99px;padding:2px 10px;display:inline-block">${etabTypeLabel(e.type)}</div>
     </div>`).join('');
+  if (typeof Auth !== 'undefined' && Auth.isAdmin()) {
+    el.innerHTML += `<div onclick="openNewEtabModal()" style="cursor:pointer;border:2px dashed #cbd5e1;border-radius:16px;padding:1.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#64748b;min-height:168px;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#6366f1'" onmouseout="this.style.borderColor='#cbd5e1';this.style.color='#64748b'"><div style="width:52px;height:52px;border-radius:14px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin-bottom:.75rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div style="font-weight:700;font-size:.9rem">Nouvel établissement</div></div>`;
+  }
+}
+
+function openNewEtabModal() {
+  document.getElementById('neNom').value = '';
+  document.getElementById('neType').value = 'foyer_hebergement';
+  document.getElementById('neColor').value = '#0f2b4a';
+  updateNedPreview();
+  openModal('modalNewEtab');
+  setTimeout(() => document.getElementById('neNom')?.focus(), 60);
+}
+function updateNedPreview() {
+  const nom = document.getElementById('neNom').value.trim();
+  const type = document.getElementById('neType').value;
+  const color = document.getElementById('neColor').value;
+  document.getElementById('neIcon').style.background = color;
+  document.getElementById('nePvName').textContent = nom || "Nom de l'établissement";
+  document.getElementById('nePvType').textContent = etabTypeLabel(type);
+  const terme = (typeof etabTerme === 'function') ? etabTerme(type) : 'resident';
+  const txt = { jeune:'👶 Vocabulaire : « jeunes »', usager:'🧑 Vocabulaire : « usagers »', resident:'🏠 Vocabulaire : « résidents »' }[terme];
+  const el = document.getElementById('nePvTerme');
+  if (el) el.textContent = txt;
+  // Teinte le cadre d'aperçu = le fond de l'appli qu'aura cet établissement
+  const box = document.getElementById('nePvBox');
+  if (box && typeof _softBgStops === 'function') {
+    const stops = _softBgStops(color);
+    if (stops) box.style.background = `linear-gradient(135deg,${stops[0]} 0%,${stops[1]} 55%,${stops[2]} 100%)`;
+  }
+}
+async function submitNewEtab() {
+  const nom = document.getElementById('neNom').value.trim();
+  if (!nom) { alert("Le nom de l'établissement est requis."); return; }
+  const type = document.getElementById('neType').value;
+  const color = document.getElementById('neColor').value;
+  const etab = createEtab(nom, type, color);
+  closeModal('modalNewEtab');
+  selectEtab(etab.id);
+  // Synchronise le nom dans Supabase (app_config) pour qu'il s'affiche partout / sur tous les appareils
+  try {
+    if (typeof persistSettings === 'function') {
+      const s = DB.get(DB.keys.settings) || {};
+      persistSettings({ ...s, etablissement: nom });
+    }
+  } catch (e) { console.error('[submitNewEtab] sync settings', e); }
+  if (typeof toast === 'function') toast('Établissement « ' + nom + ' » créé ✓', 'success');
 }
 
 function selectEtab(id) {
@@ -664,11 +740,19 @@ function bindGlowCards() {
 }
 document.addEventListener('DOMContentLoaded', bindGlowCards);
 
-// Init : si un seul étab ou déjà sélectionné → direct
+// Init : admin → page de sélection à la connexion ; première connexion sans établissement → modal de création
 (function() {
   const etabs = getEtabs();
   const currentId = sessionStorage.getItem('ftr_current_etab');
-  if (currentId && etabs.find(e => String(e.id) === currentId)) {
+  const freshLogin = sessionStorage.getItem('ftr_fresh_login');
+  if (freshLogin) sessionStorage.removeItem('ftr_fresh_login');
+  const isAdmin = (typeof Auth !== 'undefined' && Auth.isAdmin());
+  if (etabs.length === 0 && isAdmin) {
+    showEtabSelection();
+    setTimeout(openNewEtabModal, 350);
+  } else if (freshLogin && isAdmin) {
+    showEtabSelection();
+  } else if (currentId && etabs.find(e => String(e.id) === currentId)) {
     showMainAccueil();
   } else if (etabs.length === 1) {
     selectEtab(etabs[0].id);
