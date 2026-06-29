@@ -2,6 +2,12 @@ let currentView = 'grid';
 let editingId = null;
 let pendingPhoto = null;
 let pendingDocFile = null;
+let _residentsCache = [];
+
+async function loadAndRenderResidents() {
+  _residentsCache = await sbGetResidents();
+  renderResidents();
+}
 
 const DOC_CAT_LABELS = {
   mdph:'MDPH', cmu:'CMU/CSS', contrat:'Contrat de séjour', avenant:'Avenant',
@@ -100,23 +106,21 @@ async function uploadDocument() {
   const session = Auth.getSession();
   const uploader = session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : '—';
   try {
-    const data = await fileToBase64(pendingDocFile);
-    const docs = DB.get(DB.keys.documents) || {};
-    if (!docs[residentId]) docs[residentId] = [];
-    docs[residentId].push({
-      id: genId(), name: pendingDocFile.name, category,
+    const path = await sbUploadJustificatif(pendingDocFile, residentId);
+    const saved = await sbSaveDocumentResident({
+      residentId, name: pendingDocFile.name, category,
       size: pendingDocFile.size, mimeType: pendingDocFile.type,
-      data, uploadedBy: uploader, uploadedAt: new Date().toISOString()
+      fichierPath: path, uploadedBy: uploader, type: 'resident'
     });
-    DB.set(DB.keys.documents, docs);
+    _docResCache.unshift(saved);
     cancelPendingDoc();
     renderDocList(residentId);
     toast('Document joint');
-  } catch { toast('Erreur lors du chargement', 'error'); }
+  } catch (e) { console.error('[uploadDocument]', e); toast('Erreur lors du chargement', 'error'); }
 }
 
 function renderDocList(residentId) {
-  const docs = (DB.get(DB.keys.documents) || {})[residentId] || [];
+  const docs = docResByResident(residentId);
   const el = document.getElementById('docList');
   if (!el) return;
   const badge = document.getElementById('tabDocCount');
@@ -143,22 +147,23 @@ function renderDocList(residentId) {
     </div>`).join('');
 }
 
-function downloadDoc(docId, residentId) {
-  const doc = ((DB.get(DB.keys.documents)||{})[residentId]||[]).find(d => d.id === docId);
-  if (!doc) return;
-  const a = document.createElement('a');
-  a.href = doc.data; a.download = doc.name; a.click();
+async function downloadDoc(docId, residentId) {
+  const doc = _docResCache.find(d => d.id === docId);
+  if (!doc || !doc.fichierPath) return;
+  const url = await sbJustificatifUrl(doc.fichierPath);
+  if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
 }
 
 function deleteDoc(docId, residentId) {
-  confirmDialog('Supprimer ce document ?', () => {
-    const docs = DB.get(DB.keys.documents) || {};
-    if (docs[residentId]) {
-      docs[residentId] = docs[residentId].filter(d => d.id !== docId);
-      DB.set(DB.keys.documents, docs);
-      renderDocList(residentId);
-      toast('Document supprimé', 'info');
-    }
+  confirmDialog('Supprimer ce document ?', async () => {
+    const doc = _docResCache.find(d => d.id === docId);
+    try {
+      await sbDeleteDocumentResident(docId);
+      if (doc?.fichierPath && typeof sbDeleteJustificatif === 'function') sbDeleteJustificatif(doc.fichierPath).catch(() => {});
+      _docResCache = _docResCache.filter(d => d.id !== docId);
+    } catch (e) { console.error('[deleteDoc]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderDocList(residentId);
+    toast('Document supprimé', 'info');
   });
 }
 
@@ -191,7 +196,7 @@ function getResidents() {
   const q       = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const objectif = document.getElementById('filterObjectif')?.value || '';
   const sortBy  = document.getElementById('sortResidents')?.value || 'nom';
-  let list = DB.get(DB.keys.residents) || [];
+  let list = _residentsCache;
   if (q) list = list.filter(r => `${r.prenom} ${r.nom}`.toLowerCase().includes(q) || (r.chambre||'').toLowerCase().includes(q));
   if (objectif) list = list.filter(r => (r.objectifs || []).includes(String(objectif)));
 
@@ -283,8 +288,7 @@ function residentRow(r) {
 
 // ── DÉTAIL ──
 function showDetail(id) {
-  const residents = DB.get(DB.keys.residents) || [];
-  const r = residents.find(x => x.id === id);
+  const r = _residentsCache.find(x => x.id === id);
   if (!r) return;
   const objs = DB.get(DB.keys.objectives) || [];
   const resObjs = (r.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))).filter(Boolean);
@@ -352,16 +356,50 @@ function showDetail(id) {
       ${r.allergies ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">Allergies / CI</div><div style="font-weight:600;font-size:.875rem;color:var(--red)">${escHtml(r.allergies)}</div></div>` : ''}
       ${r.nss ? `<div><div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:2px">N° Sécurité sociale</div><div style="font-weight:600;font-size:.875rem;font-family:monospace">${escHtml(r.nss)}</div></div>` : ''}
     </div>` : ''}
-    ${(() => { const docs = (DB.get(DB.keys.documents)||{})[id]||[]; return docs.length ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Documents joints (${docs.length})</div><div style="display:flex;flex-direction:column;gap:.4rem">${docs.map(d=>`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><span style="font-size:1.1rem">${docTypeIcon(d.mimeType)}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(d.name)}</div><div style="font-size:.7rem;color:var(--muted)">${DOC_CAT_LABELS[d.category]||escHtml(d.category)} · ${fmtSize(d.size)}</div></div><button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${id}')">↓</button></div>`).join('')}</div>` : ''; })()}
+    ${(() => { const docs = docResByResident(id); return docs.length ? `<div class="divider"></div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Documents joints (${docs.length})</div><div style="display:flex;flex-direction:column;gap:.4rem">${docs.map(d=>`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)"><span style="font-size:1.1rem">${docTypeIcon(d.mimeType)}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(d.name)}</div><div style="font-size:.7rem;color:var(--muted)">${DOC_CAT_LABELS[d.category]||escHtml(d.category)} · ${fmtSize(d.size)}</div></div><button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${id}')">↓</button></div>`).join('')}</div>` : ''; })()}
   `;
   document.getElementById('detailEditBtn').onclick = () => { closeAllModals(); editResident(id); };
   openModal('modalDetail');
 }
 
+// ── Référent principal : liste déroulante des employés ÉDUCATIFS (poste contenant « éduc ») ──
+let _refEducNames = [];
+async function loadReferents() {
+  try {
+    const emps = await sbGetEmployes();
+    const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    _refEducNames = emps
+      .filter(e => norm(e.poste).includes('educ'))
+      .map(e => `${e.prenom || ''} ${(e.nom || '').toUpperCase()}`.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  } catch (e) { console.error('[loadReferents]', e); _refEducNames = []; }
+  fillReferentSelect('rReferent', '');
+  fillReferentSelect('rCoReferent', '');
+}
+function fillReferentSelect(selId, current) {
+  const sel = document.getElementById(selId);
+  if (!sel || sel.tagName !== 'SELECT') return;
+  let html = '<option value="">— Aucun —</option>';
+  _refEducNames.forEach(n => { html += `<option value="${escHtml(n)}">${escHtml(n)}</option>`; });
+  // Préserve un référent déjà saisi qui ne serait pas dans la liste (ancienne valeur libre)
+  if (current && !_refEducNames.includes(current)) html += `<option value="${escHtml(current)}">${escHtml(current)}</option>`;
+  sel.innerHTML = html;
+  sel.value = current || '';
+}
+
+// ── Ressources / revenus : cases à cocher multiples → stockées en texte « rsa, aah, … » ──
+function getRessources() {
+  return [...document.querySelectorAll('#rRessources .r-ress:checked')].map(c => c.value).join(', ');
+}
+function setRessources(val) {
+  const set = new Set(String(val || '').split(',').map(s => s.trim()).filter(Boolean));
+  document.querySelectorAll('#rRessources .r-ress').forEach(c => { c.checked = set.has(c.value); });
+}
+
 // ── EDIT ──
 function editResident(id) {
-  const residents = DB.get(DB.keys.residents) || [];
-  const r = residents.find(x => x.id === id);
+  const r = _residentsCache.find(x => x.id === id);
   if (!r) return;
   editingId = id;
   pendingPhoto = r.photo || null;
@@ -374,7 +412,8 @@ function editResident(id) {
   document.getElementById('rEntree').value = r.entree || '';
   document.getElementById('rStatut').value = r.statut || 'permanent';
   document.getElementById('rChambre').value = r.chambre || '';
-  document.getElementById('rReferent').value = r.referent || '';
+  fillReferentSelect('rReferent', r.referent || '');
+  fillReferentSelect('rCoReferent', r.coReferent || '');
   document.getElementById('rColor').value = r.color || '#3b82f6';
   document.getElementById('rNotes').value = r.notes || '';
   document.getElementById('rContacts').value = r.contacts || '';
@@ -384,7 +423,7 @@ function editResident(id) {
   setV('rAllergies', r.allergies); setV('rNSS', r.nss);
   setV('rTuteur', r.tuteur); setV('rTuteurTel', r.tuteurTel); setV('rEcole', r.ecole);
   setV('rClasse', r.classe); setV('rOrganisme', r.organisme); setV('rDossier', r.dossier);
-  setV('rSituationPro', r.situationPro); setV('rRessources', r.ressources);
+  setV('rSituationPro', r.situationPro); setRessources(r.ressources);
   setV('rOrganismeA', r.organismeA); setV('rDossierA', r.dossierA); setV('rSituationAdmin', r.situationAdmin); setV('rProtection', r.protection);
   document.getElementById('btnDelete').style.display = '';
   updatePhotoPreview(pendingPhoto);
@@ -395,16 +434,18 @@ function editResident(id) {
 }
 
 // ── SAVE ──
-function saveResident() {
+async function saveResident() {
   const nom = document.getElementById('rNom').value.trim();
   const prenom = document.getElementById('rPrenom').value.trim();
   if (!nom && !prenom) { toast('Le nom ou prénom est requis', 'error'); return; }
   const checked = [...document.querySelectorAll('input[name="objectif"]:checked')].map(el => el.value);
   const gV = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const id = document.getElementById('residentId').value;
   const data = {
+    id: id || undefined,
     nom, prenom, photo: pendingPhoto,
     dob: gV('rDob'), genre: gV('rGenre'), entree: gV('rEntree'),
-    statut: gV('rStatut'), chambre: gV('rChambre'), referent: gV('rReferent'),
+    statut: gV('rStatut'), chambre: gV('rChambre'), referent: gV('rReferent'), coReferent: gV('rCoReferent'),
     color: document.getElementById('rColor').value,
     notes: gV('rNotes'), contacts: gV('rContacts'), objectifs: checked,
     medecin: gV('rMedecin'), medecinTel: gV('rMedecinTel'),
@@ -413,37 +454,38 @@ function saveResident() {
     consent: gV('rConsent'), consentDate: gV('rConsentDate'),
     tuteur: gV('rTuteur'), tuteurTel: gV('rTuteurTel'), ecole: gV('rEcole'),
     classe: gV('rClasse'), organisme: gV('rOrganisme'), dossier: gV('rDossier'),
-    situationPro: gV('rSituationPro'), ressources: gV('rRessources'),
+    situationPro: gV('rSituationPro'), ressources: getRessources(),
     organismeA: gV('rOrganismeA'), dossierA: gV('rDossierA'), situationAdmin: gV('rSituationAdmin'),
-    protection: gV('rProtection'),
-    updatedAt: new Date().toISOString()
+    protection: gV('rProtection')
   };
-  let residents = DB.get(DB.keys.residents) || [];
-  const id = document.getElementById('residentId').value;
-  if (id) {
-    residents = residents.map(r => r.id === id ? { ...r, ...data } : r);
-    toast('Résident mis à jour');
-    if (typeof auditLog === 'function') auditLog('resident_update', `${data.prenom} ${data.nom}`);
-  } else {
-    data.id = genId(); data.createdAt = new Date().toISOString();
-    residents.push(data);
-    toast('Résident ajouté');
-    if (typeof auditLog === 'function') auditLog('resident_create', `${data.prenom} ${data.nom}`);
+  try {
+    await sbSaveResident(data);
+    toast(id ? 'Résident mis à jour' : 'Résident ajouté');
+    if (typeof auditLog === 'function') auditLog(id ? 'resident_update' : 'resident_create', `${data.prenom} ${data.nom}`);
+    closeAllModals(); resetForm();
+    await loadAndRenderResidents();
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
   }
-  DB.set(DB.keys.residents, residents);
-  closeAllModals(); resetForm(); renderResidents();
 }
 
 // ── DELETE ──
 function deleteResident() {
   const id = document.getElementById('residentId').value;
   if (!id) return;
-  confirmDialog('Supprimer ce résident définitivement ?', () => {
-    const r = (DB.get(DB.keys.residents)||[]).find(x => x.id === id);
-    DB.set(DB.keys.residents, (DB.get(DB.keys.residents)||[]).filter(r => r.id !== id));
-    if (typeof auditLog === 'function') auditLog('resident_delete', r ? `${r.prenom} ${r.nom}` : id);
-    closeAllModals(); resetForm(); renderResidents();
-    toast('Résident supprimé', 'info');
+  confirmDialog('Supprimer ce résident définitivement ?', async () => {
+    const r = _residentsCache.find(x => x.id === id);
+    try {
+      await sbDeleteResident(id);
+      if (typeof auditLog === 'function') auditLog('resident_delete', r ? `${r.prenom} ${r.nom}` : id);
+      closeAllModals(); resetForm();
+      await loadAndRenderResidents();
+      toast('Résident supprimé', 'info');
+    } catch (e) {
+      toast('Erreur lors de la suppression', 'error');
+      console.error(e);
+    }
   });
 }
 
@@ -452,7 +494,7 @@ function resetForm() {
   editingId = null; pendingPhoto = null;
   document.getElementById('residentId').value = '';
   document.getElementById('modalResidentTitle').textContent = 'Nouveau résident';
-  ['rNom','rPrenom','rDob','rChambre','rReferent','rNotes','rContacts',
+  ['rNom','rPrenom','rDob','rChambre','rReferent','rCoReferent','rNotes','rContacts',
    'rMedecin','rMedecinTel','rAllergies','rNSS',
    'rTuteur','rTuteurTel','rEcole','rClasse','rDossier','rDossierA'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
@@ -462,9 +504,10 @@ function resetForm() {
   if (docListEl) docListEl.innerHTML = '';
   const badge = document.getElementById('tabDocCount');
   if (badge) badge.style.display = 'none';
-  ['rGenre','rOrganisme','rOrganismeA','rSituationPro','rRessources','rSituationAdmin','rProtection'].forEach(id => {
+  ['rGenre','rOrganisme','rOrganismeA','rSituationPro','rSituationAdmin','rProtection'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  setRessources('');
   document.getElementById('rEntree').value = today();
   document.getElementById('rStatut').value = 'permanent';
   document.getElementById('rColor').value = '#3b82f6';
@@ -484,8 +527,9 @@ function activateTab(name) {
 }
 
 // ── INIT ──
-function initResidents() {
+async function initResidents() {
   if (!requireModule('view_residents')) return;
+  loadReferents();
   const entree = document.getElementById('rEntree');
   if (entree) entree.value = today();
   updateAdaptiveSections();
@@ -493,7 +537,8 @@ function initResidents() {
   renderObjectifsCheckboxes([]);
   initPhotoUpload();
   initDocUpload();
-  renderResidents();
+  await loadDocResCache();
+  await loadAndRenderResidents();
 
   const searchInput = document.getElementById('searchInput');
   if (searchInput) searchInput.addEventListener('input', renderResidents);
@@ -561,8 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function quickEditResident(id) {
   qePendingPhoto = null;
-  const list = DB.get(DB.keys.residents);
-  const r = list.find(x => String(x.id) === String(id));
+  const r = _residentsCache.find(x => String(x.id) === String(id));
   if (!r) return toast('Résident introuvable', 'error');
   document.getElementById('qeId').value = r.id;
   document.getElementById('qeNom').value = r.nom || '';
@@ -577,28 +621,30 @@ function quickEditResident(id) {
   openModal('modalQuickEdit');
 }
 
-function saveQuickEdit() {
+async function saveQuickEdit() {
   const id = document.getElementById('qeId').value;
   if (!id) return;
-  const list = DB.get(DB.keys.residents);
-  const idx = list.findIndex(x => String(x.id) === String(id));
-  if (idx === -1) return toast('Résident introuvable', 'error');
+  const r = _residentsCache.find(x => String(x.id) === String(id));
+  if (!r) return toast('Résident introuvable', 'error');
   const nom = document.getElementById('qeNom').value.trim();
   const prenom = document.getElementById('qePrenom').value.trim();
   if (!nom || !prenom) return toast('Nom et prénom sont requis', 'error');
-  list[idx].nom = nom;
-  list[idx].prenom = prenom;
-  list[idx].dob = document.getElementById('qeDob').value;
-  list[idx].statut = document.getElementById('qeStatut').value;
-  list[idx].entree = document.getElementById('qeEntree').value;
-  list[idx].chambre = document.getElementById('qeChambre').value;
-  list[idx].color = document.getElementById('qeColor').value;
-  if (qePendingPhoto !== null) {
-    list[idx].photo = qePendingPhoto;
-    qePendingPhoto = null;
+  const data = {
+    ...r, id, nom, prenom,
+    dob: document.getElementById('qeDob').value,
+    statut: document.getElementById('qeStatut').value,
+    entree: document.getElementById('qeEntree').value,
+    chambre: document.getElementById('qeChambre').value,
+    color: document.getElementById('qeColor').value
+  };
+  if (qePendingPhoto !== null) { data.photo = qePendingPhoto; qePendingPhoto = null; }
+  try {
+    await sbSaveResident(data);
+    closeModal('modalQuickEdit');
+    await loadAndRenderResidents();
+    toast('Carte mise à jour');
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
   }
-  DB.set(DB.keys.residents, list);
-  closeModal('modalQuickEdit');
-  renderResidents();
-  toast('Carte mise à jour');
 }

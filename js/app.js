@@ -1,3 +1,6 @@
+// ── Page ouverte dans un hub (iframe ?embed=1) : on masque son titre (doublon avec le hub) ──
+try { if (location.search.indexOf('embed') !== -1) document.documentElement.classList.add('is-embedded'); } catch (_) {}
+
 // ── STORAGE HELPERS ──
 const DB_GLOBAL_KEYS = new Set(['ftr_etablissements','ftr_session']);
 
@@ -15,7 +18,6 @@ const DB = {
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
     loginHistory:'ftr_login_history', auditLog:'ftr_audit_log', fonctionColors:'ftr_fonction_colors',
-    aiKey:'ftr_ai_key', aiPrompts:'ftr_ai_prompts',
     interventions:'ftr_interventions', employes:'ftr_employes',
     chambres:'ftr_chambres', edl:'ftr_edl', echeances:'ftr_echeances', releves:'ftr_releves',
     repas:'ftr_repas', visites:'ftr_visites', nuits:'ftr_nuits', activites:'ftr_activites', cvs:'ftr_cvs', medicaments:'ftr_medicaments',
@@ -23,7 +25,14 @@ const DB = {
     etablissements:'ftr_etablissements', viatrajectoire:'ftr_viatrajectoire',
     budgetEnveloppes:'ftr_budget_enveloppes', budgetDemandes:'ftr_budget_demandes',
     fichesPaie:'ftr_fiches_paie', entretiens:'ftr_entretiens', documentation:'ftr_documentation', admissions:'ftr_admissions',
-    tarifs:'ftr_tarifs', factures:'ftr_factures', formations:'ftr_formations'
+    tarifs:'ftr_tarifs', factures:'ftr_factures', formations:'ftr_formations',
+    transmissions:'ftr_transmissions', planSoins:'ftr_plan_soins',
+    evaluations:'ftr_evaluations', astreintes:'ftr_astreintes',
+    satisfaction:'ftr_satisfaction', inventaire:'ftr_inventaire',
+    satQuestions:'ftr_sat_questions',
+    contrats:'ftr_contrats', absencesAT:'ftr_absences_at', pointages:'ftr_pointages', candidats:'ftr_candidats',
+    rapportContributions:'ftr_rapport_contributions',
+    contactsExternes:'ftr_contacts_externes'
   }
 };
 
@@ -49,7 +58,7 @@ function initEtabs() {
 function createEtab(nom, type, color) {
   const etabs = getEtabs();
   const id = Date.now();
-  const etab = { id, nom, type: type || 'adultes', color: color || '#0f2b4a', createdAt: new Date().toISOString() };
+  const etab = { id, nom, type: type || 'adultes', color: color || '#0f2b4a', bgColor: color || '#0f2b4a', createdAt: new Date().toISOString() };
   etabs.push(etab);
   saveEtabs(etabs);
   // Initialiser les données par défaut pour ce nouvel établissement
@@ -69,7 +78,6 @@ function createEtab(nom, type, color) {
   initKey(DB.keys.incidents, []);
   initKey(DB.keys.ppe, []);
   initKey(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
-  initKey(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
   initKey(DB.keys.viatrajectoire, []);
   return etab;
 }
@@ -193,10 +201,28 @@ function etabTypeLabel(type) {
   return labels[type] || type || '—';
 }
 
+// Vocabulaire selon le type d'établissement :
+//  - 'jeune'    : structures enfants / adolescents
+//  - 'usager'   : adultes SANS internat (ambulatoire / services)
+//  - 'resident' : adultes AVEC internat (hébergement) — c'est le texte par défaut de l'app
+const ETAB_TYPES_JEUNES  = ['ime','itep','sessad','camsp','mecs','pead','aemo','cef','cea','enfants'];
+const ETAB_TYPES_USAGERS = ['esat','savs','samsah','saj','siao'];
+function etabTerme(type) {
+  if (ETAB_TYPES_JEUNES.includes(type))  return 'jeune';
+  if (ETAB_TYPES_USAGERS.includes(type)) return 'usager';
+  return 'resident';
+}
+function etabTermeLabel(type) {
+  return { jeune:'Jeunes', usager:'Usagers', resident:'Résidents' }[etabTerme(type)];
+}
+
 function applyTerminology() {
   const etab = getCurrentEtab();
-  if (!etab || etab.type !== 'enfants') return;
-  const replacements = [['Résidents','Jeunes'],['Résident','Jeune'],['résidents','jeunes'],['résident','jeune']];
+  if (!etab) return;
+  const terme = etabTerme(etab.type);
+  if (terme === 'resident') return; // texte par défaut déjà en « résident »
+  const cible = terme === 'jeune' ? ['Jeunes','Jeune','jeunes','jeune'] : ['Usagers','Usager','usagers','usager'];
+  const replacements = [['Résidents',cible[0]],['Résident',cible[1]],['résidents',cible[2]],['résident',cible[3]]];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.nodeName !== 'SCRIPT' && n.parentNode.nodeName !== 'STYLE' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
   let node;
   while ((node = walker.nextNode())) {
@@ -205,8 +231,6 @@ function applyTerminology() {
     if (v !== node.nodeValue) node.nodeValue = v;
   }
 }
-
-const API_URL = 'http://localhost:3001';
 
 // ── SERAFIN-PH — nomenclature officielle (sous-domaines, validée le 27/04/2018) ──
 const SP_NOMENCLATURE = [
@@ -269,38 +293,21 @@ const DEFAULTS = {
   users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
-    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_medicaments'] },
-    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_medicaments'] },
-    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_sante','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites'] },
-    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
-    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_sante','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
-    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','view_residents','access_journal','access_presences','view_incidents','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_medicaments'] },
-    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_presences','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_vehicules','access_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_sante','view_incidents','validate_incidents','access_interventions','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_medicaments'] },
-    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','view_incidents','access_interventions','access_activites','access_cvs','access_medicaments','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','view_residents','access_presences','access_repertoire','access_documents','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations'] },
-    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_repertoire','access_documents','access_vehicules','access_interventions','access_sante','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_medicaments','access_admin','access_employes','manage_users'] }
+    { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules'] },
+    { id: 2, fonction: 'Moniteur-éducateur', color: '#6366f1', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules'] },
+    { id: 3, fonction: 'Psychologue', color: '#8b5cf6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_ppe','access_repertoire','access_documents','access_sante','view_incidents','access_activites'] },
+    { id: 4, fonction: 'Infirmier', color: '#ef4444', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_repertoire','access_documents','access_sante','view_incidents','access_medicaments'] },
+    { id: 5, fonction: 'Aide-soignant', color: '#f43f5e', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_sante','access_medicaments','view_incidents'] },
+    { id: 6, fonction: 'Maître / Maîtresse de maison', color: '#ec4899', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','access_vehicules'] },
+    { id: 7, fonction: 'Veilleur de nuit', color: '#0ea5e9', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_journal','access_presences','view_incidents','access_medicaments'] },
+    { id: 8, fonction: 'Agent hôtelier', color: '#14b8a6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','access_presences','access_vehicules'] },
+    { id: 9, fonction: 'Agent d\'entretien', color: '#84cc16', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','access_vehicules'] },
+    { id: 10, fonction: 'Chef de service', color: '#f59e0b', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules','access_sante','validate_incidents','edit_planning_equipe','access_interventions','access_viatrajectoire','access_serafinph','access_entretiens','access_admissions','access_budget','access_cvs','access_facturation'] },
+    { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules','access_sante','validate_incidents','edit_planning_equipe','access_interventions','access_entretiens','access_admissions','access_budget','access_cvs','access_facturation'] },
+    { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_presences','access_repertoire','access_documents','access_admissions','access_facturation'] },
+    { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_sante','access_medicaments','access_repertoire','access_documents','access_vehicules','access_interventions','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_admin','access_employes','manage_users'] },
+    { id: 14, fonction: 'Comptable', color: '#0d9488', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_paie','access_budget','access_facturation'] }
   ],
-  aiPrompts: {
-    ppe: {
-      redaction: { system: 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.' },
-      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
-      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.' },
-      avenant: { system: 'Tu es un rédacteur de PPE en ESMS. Tu reçois des observations du journal de bord pour un bénéficiaire. Pour chaque observation, identifie le domaine du PPE concerné (autonomie, sante, viePro, logement, vieSociale, vieAffective, budget, transport, orientation). Synthétise les informations dans le ou les domaines correspondants, sans rien inventer, sans ajouter d\'analyse. Conserve les faits, dates et éléments concrets. Pour chaque domaine, propose 1 à 3 objectifs concrets avec leurs moyens, échéances et critères d\'évaluation. Restitue UNIQUEMENT un objet JSON valide (sans balises, sans texte autour) : {"sections":{"autonomie":{"bilan":"...","objectifs":[{"objectif":"...","moyens":"...","echeance":"2026-12","evaluation":"..."}],"expression":"..."},"sante":{"bilan":"...","objectifs":[],"expression":"..."},"viePro":{"bilan":"...","objectifs":[],"expression":"..."},"logement":{"bilan":"...","objectifs":[],"expression":"..."},"vieSociale":{"bilan":"...","objectifs":[],"expression":"..."},"vieAffective":{"bilan":"...","objectifs":[],"expression":"..."},"budget":{"bilan":"...","objectifs":[],"expression":"..."},"transport":{"bilan":"...","objectifs":[],"expression":"..."},"orientation":{"bilan":"...","objectifs":[],"expression":"..."}},"conclusion":"..."}. Pour chaque domaine : le bilan est une synthèse factuelle des observations pertinentes (2-3 phrases) ; l\'expression retranscrit le point de vue du bénéficiaire s\'il est rapporté ; les objectifs sont concrets et réalistes. Si aucun élément ne concerne un domaine, écrire "Aucune observation dans ce domaine."' }
-    },
-    journal: {
-      redaction: { system: 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.' },
-      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.' },
-      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.' }
-    },
-    messages: {
-      redaction: { system: 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.' },
-      correction: { system: 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.' },
-      reformulation: { system: 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.' }
-    }
-  }
 };
 
 function initDefaults() {
@@ -332,8 +339,6 @@ function initDefaults() {
   else migrateFonctionColors();
   // Migration unique : applique les permissions par défaut aux rôles standard
   if (localStorage.getItem(DB._k('ftr_perm_v')) !== '1') { applyDefaultFonctionPerms(); localStorage.setItem(DB._k('ftr_perm_v'), '1'); }
-  if (!DB.get(DB.keys.aiPrompts)) DB.set(DB.keys.aiPrompts, DEFAULTS.aiPrompts);
-  setAiKey('rY3EsdZ5eAuxJWlqpAP5G8AyFVB5X9SB');
 }
 function migrateFonctionColors() {
   const existing = DB.get(DB.keys.fonctionColors) || [];
@@ -381,7 +386,7 @@ function auditLog(action, details) {
       id: genId(),
       date: new Date().toISOString(),
       userId: session.userId,
-      user: [session.prenom, session.nom].filter(Boolean).join(' ') || session.username,
+      user: [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username,
       role: session.role,
       action,
       details: details || ''
@@ -450,6 +455,7 @@ const Auth = {
     if (s) logConnexion('logout', s);
     DB.remove(DB.keys.session);
     sessionStorage.removeItem('ftr_current_etab');
+    if (typeof supabaseClient !== 'undefined') supabaseClient.auth.signOut();
     window.location.href = 'index.html';
   },
   requireAuth() {
@@ -478,13 +484,19 @@ const Auth = {
   requireAdmin() {
     const s = this.requireAuth();
     if (!s) return null;
-    if (s.role !== 'admin' && s.role !== 'superadmin' && !canAccessAdmin(s.userId) && !canAccessModule('admin')) { window.location.href = 'dashboard.html'; return null; }
+    if (s.role !== 'admin' && s.role !== 'superadmin' && !canAccessAdmin(s.userId)) { window.location.href = 'dashboard.html'; return null; }
     return s;
   },
   isAdmin() {
     const s = this.getSession();
     if (!s) return false;
     return s.role === 'admin' || s.role === 'superadmin' || canAccessAdmin(s.userId);
+  },
+  // Accès RH : admins + comptes au rôle "rh" (encadrement / RH)
+  isRH() {
+    const s = this.getSession();
+    if (!s) return false;
+    return s.role === 'rh' || this.isAdmin();
   },
   isSuperAdmin() {
     const s = this.getSession();
@@ -628,7 +640,7 @@ function shortName(fullName) {
 }
 
 // ── DATE HELPERS ──
-function today() { return new Date().toISOString().slice(0,10); }
+function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function formatDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
@@ -668,7 +680,7 @@ function renderUserInfo() {
   const settings = DB.get(DB.keys.settings) || {};
   const nameEl = document.getElementById('headerUserName');
   const avEl = document.getElementById('headerUserAvatar');
-  const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
+  const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   if (nameEl) nameEl.textContent = name;
   if (avEl) avEl.textContent = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
 }
@@ -677,6 +689,10 @@ function renderUserInfo() {
 function initMenuPopup() {
   const header = document.querySelector('.header') || document.querySelector('.admin-topbar');
   if (!header) return;
+  // Page chargée dans l'iframe du portail RH (rh.html) : son propre header ferait doublon
+  // avec le header pleine largeur du portail — on le masque (sans le retirer du DOM,
+  // certaines pages ciblent des éléments internes au header comme #pageTitle).
+  if (window.self !== window.top) { header.style.display = 'none'; return; }
   const isAdmin = header.classList.contains('admin-topbar');
 
   // Get reference to the title wrapper before inserting the button
@@ -685,21 +701,24 @@ function initMenuPopup() {
   // Add 9-dots button as first element in header (stays on left)
   // Skip the 9-dots button on the accueil page (modules already displayed)
   const isAccueil = location.pathname.endsWith('accueil.html');
-  if (!isAccueil && !document.getElementById('menuDotsBtn')) {
-    // Home button (redirects to accueil)
+  if (!isAccueil && !document.getElementById('homeBtn')) {
+    // Home button (redirects to accueil). On force la navigation du document de
+    // plus haut niveau pour casser hors de l'iframe quand la page est affichée
+    // dans un panneau (ex: portail RH) — target="_top" seul n'est pas fiable partout.
     const homeBtn = document.createElement('a');
     homeBtn.id = 'homeBtn';
     homeBtn.className = 'menu-dots-btn';
     homeBtn.href = 'accueil.html';
+    homeBtn.target = '_top';
     homeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V10"/></svg>';
+    homeBtn.addEventListener('click', e => {
+      if (window.top !== window.self) {
+        e.preventDefault();
+        window.top.location.href = 'accueil.html';
+      }
+    });
     header.insertBefore(homeBtn, header.firstChild);
-
-    // 9-dots button next to home
-    const dotsBtn = document.createElement('button');
-    dotsBtn.id = 'menuDotsBtn';
-    dotsBtn.className = 'menu-dots-btn';
-    dotsBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/></svg>';
-    header.insertBefore(dotsBtn, homeBtn.nextSibling);
+    // Bouton « 9 points » retiré à la demande.
   }
 
   // French clock display (all pages)
@@ -730,7 +749,7 @@ function initMenuPopup() {
   const hr = isAdmin ? header.querySelector('.atb-right') : header.querySelector('.header-right');
   if (hr && !document.getElementById('headerUserBox')) {
     const session = Auth.getSession();
-    const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
+    const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';
     const initial = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
     const userBox = document.createElement('div');
     userBox.id = 'headerUserBox';
@@ -779,8 +798,8 @@ function initMenuPopup() {
     hr.appendChild(userBox);
   }
 
-  // ── Badge messages non lus dans le header ──
-  if (!isAccueil && !document.getElementById('headerMsgBadge')) {
+  // ── Badge messages non lus dans le header ── (icône enveloppe retirée à la demande)
+  if (false && !isAccueil && !document.getElementById('headerMsgBadge')) {
     const session = Auth.getSession();
     const hr2 = isAdmin ? header.querySelector('.atb-right') : header.querySelector('.header-right');
     if (hr2 && session) {
@@ -817,8 +836,8 @@ function initMenuPopup() {
     }
   }
 
-  // Create popup if not exists (skip on accueil page)
-  if (!isAccueil && !document.getElementById('menuPopup')) {
+  // Menu « 9 points » retiré : popup désactivé.
+  if (false && !isAccueil && !document.getElementById('menuPopup')) {
     const popup = document.createElement('div');
     popup.id = 'menuPopup';
     popup.className = 'menu-popup';
@@ -841,7 +860,7 @@ function initMenuPopup() {
       { page:'serafinph.html', color:'#8b5cf6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><path d="M6 4h12"/><path d="M6 20h12"/></svg>', label:'SERAFIN-PH' },
       { page:'pilotage.html', color:'#0f2b4a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Portail' },
       { page:'repertoire.html', color:'#7c3aed', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label:'Répertoire' },
-      { page:'admin-modules.html', color:'#78716c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Administration', admin:true }
+      { page:'admin.html', color:'#78716c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Administration', admin:true }
     ];
 
     const body = document.getElementById('menuPopupBody');
@@ -896,7 +915,8 @@ function initModals() {
 
 // ── STATS FOR DASHBOARD ──
 function getStats() {
-  const residents = DB.get(DB.keys.residents) || [];
+  // Résidents : cache Supabase si chargé (pages migrées), sinon repli localStorage.
+  const residents = (typeof sbResidents === 'function' && sbResidentsLoaded()) ? sbResidents() : (DB.get(DB.keys.residents) || []);
   const journal = DB.get(DB.keys.journal) || [];
   const planning = DB.get(DB.keys.planning) || [];
   const todayStr = today();
@@ -920,6 +940,10 @@ function escHtml(s) {
   d.textContent = s;
   return d.innerHTML;
 }
+
+// ── Nom de famille toujours en MAJUSCULES (convention « Prénom NOM ») ──
+function nomMaj(n) { return (n == null ? '' : String(n)).toUpperCase(); }
+function nomComplet(prenom, nom) { return [prenom, nomMaj(nom)].filter(Boolean).join(' ').trim(); }
 
 // ── DÉTECTION DE DOUBLONS (local, par similarité de texte) ──
 function _normTxt(s) {
@@ -1031,7 +1055,7 @@ const PERMISSION_LABELS = {
   access_budget: 'Budget & dépenses',
   access_paie: 'Fiches de paie',
   access_entretiens: 'Entretiens professionnels',
-  access_annuaire: 'Annuaire du personnel', access_documentation: 'Documentation de l\'établissement', access_admissions: 'Admissions / liste d\'attente', access_facturation: 'Facturation / tarification', access_formations: 'Plan de formation collectif',
+  access_annuaire: 'Contacts extérieurs', access_documentation: 'Documentation de l\'établissement', access_admissions: 'Admissions / liste d\'attente', access_facturation: 'Facturation / tarification', access_formations: 'Plan de formation collectif',
   access_activites: 'Activités éducatives',
   access_cvs: 'Conseil de la Vie Sociale (CVS)',
   access_medicaments: 'Distribution des médicaments',
@@ -1040,16 +1064,21 @@ const PERMISSION_LABELS = {
 
 function hasPermission(userId, perm) {
   const users = DB.get(DB.keys.users) || [];
-  const u = users.find(x => x.id === userId);
-  if (!u || !u.fonction) return false;
-  const f = u.fonction.toLowerCase();
+  // Comparaison souple de l'id (la session stocke parfois un nombre, la liste de l'établissement une chaîne, ou l'inverse)
+  const u = users.find(x => String(x.id) === String(userId));
+  // La fonction peut manquer dans la fiche scopée établissement : on retombe sur celle de la session
+  const sess = DB.get(DB.keys.session);
+  const fonctionRaw = (u && u.fonction) || (sess && String(sess.userId) === String(userId) ? sess.fonction : '') || '';
+  const f = fonctionRaw.toLowerCase().trim();
+  if (!f) return false;
   const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
-  for (const item of list) {
-    if (f.includes(item.fonction.toLowerCase())) {
-      return (item.permissions || []).includes(perm);
-    }
-  }
-  return false;
+  const norm = s => (s || '').toLowerCase().trim();
+  // 1) Correspondance exacte du nom de la fonction (prioritaire, évite qu'un nom court masque un nom long)
+  let item = list.find(it => norm(it.fonction) === f);
+  // 2) Sinon correspondance partielle dans les deux sens (tolère un renommage ou un suffixe)
+  if (!item) item = list.find(it => { const r = norm(it.fonction); return r && (f.includes(r) || r.includes(f)); });
+  if (!item) return false;
+  return (item.permissions || []).includes(perm);
 }
 
 function canEditResidents(userId) {
@@ -1078,75 +1107,8 @@ function canManageUsers(userId) {
   return hasPermission(userId, 'manage_users');
 }
 
-// ── MODULE PERMISSIONS (par fonction) ──
-function canAccessModule(moduleKey) {
-  const s = Auth.getSession();
-  if (!s) return false;
-  if (s.role === 'admin') return true;
-  const perms = JSON.parse(localStorage.getItem('ftr_permissions') || '{}');
-  const allowedRole = perms[moduleKey] || 'admin';
-  return allowedRole === 'educ' && s.role === 'educ';
-}
+// Accès aux modules : une seule source = permissions par rôle (voir hasPermission).
 
-// ── AI ──
-function getAiKey() { return DB.get(DB.keys.aiKey) || ''; }
-function setAiKey(key) { DB.set(DB.keys.aiKey, key); }
-
-function getAiPrompt(module, action) {
-  const prompts = DB.get(DB.keys.aiPrompts) || {};
-  return prompts[module]?.[action]?.system || DEFAULTS.aiPrompts[module]?.[action]?.system || '';
-}
-
-function setAiPrompt(module, action, system) {
-  const prompts = DB.get(DB.keys.aiPrompts) || {};
-  if (!prompts[module]) prompts[module] = {};
-  if (!prompts[module][action]) prompts[module][action] = {};
-  prompts[module][action].system = system;
-  DB.set(DB.keys.aiPrompts, prompts);
-}
-
-async function callMistral(prompt, system) {
-  const key = getAiKey();
-  if (!key) return null;
-  system = system || 'Tu es un rédacteur de bilans socio-éducatifs en ESMS. Réponds en français, de manière professionnelle et institutionnelle.';
-
-  // Essai 1 : appel direct à l'API Mistral (fonctionne si CORS accepté)
-  try {
-    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'mistral-small-latest',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content?.trim() || null;
-    }
-  } catch (_) { /* direct call failed, try proxy */ }
-
-  // Essai 2 : proxy local (backend requis sur http://localhost:3001)
-  try {
-    const base = API_URL || 'http://localhost:3001';
-    const res = await fetch(base + '/api/ai/mistral', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, system, apiKey: key })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.result || null;
-    }
-  } catch (_) { /* proxy failed */ }
-
-  return null;
-}
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {

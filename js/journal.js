@@ -1,5 +1,11 @@
 let selectedEntryId = null;
 let filterUnread = false;
+let _journalCache = [];
+let _journalResidentsCache = [];
+
+async function loadJournalEntries() {
+  _journalCache = await sbGetJournalEntries();
+}
 
 function toggleUnreadFilter() {
   filterUnread = !filterUnread;
@@ -11,8 +17,7 @@ function toggleUnreadFilter() {
 function updateUnreadBadge() {
   const session = Auth.getSession();
   if (!session) return;
-  const entries = DB.get(DB.keys.journal) || [];
-  const count = entries.filter(e => !e.readBy || !e.readBy.includes(session.userId)).length;
+  const count = _journalCache.filter(e => !e.readBy || !e.readBy.includes(session.userId)).length;
   const el = document.getElementById('unreadCount');
   const dot = document.getElementById('unreadDot');
   if (el) { el.textContent = count; el.style.display = count > 0 ? '' : 'none'; }
@@ -33,7 +38,7 @@ function showNewEntryForm() {
 }
 
 function populateSelects() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _journalResidentsCache.filter(r => r.statut !== 'sorti');
   const cats = DB.get(DB.keys.categories) || [];
   const objs = DB.get(DB.keys.objectives) || [];
 
@@ -54,181 +59,328 @@ function populateSelects() {
   objs.forEach(o => { const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.name; oSel.appendChild(opt); });
 }
 
+function jrGoStep(step, sectionId) {
+  for (let i = 1; i <= 6; i++) {
+    const nav = document.getElementById('jrStep' + i + 'Nav');
+    if (!nav) continue;
+    const circle = nav.querySelector('span');
+    if (i === step) {
+      nav.style.background = 'rgba(255,255,255,.18)';
+      nav.style.opacity = '1';
+      if (circle) { circle.style.background = '#fff'; circle.style.color = '#059669'; }
+    } else {
+      nav.style.background = 'transparent';
+      nav.style.opacity = '.6';
+      if (circle) { circle.style.background = 'rgba(255,255,255,.2)'; circle.style.color = '#fff'; }
+    }
+  }
+  if (sectionId) {
+    const el = document.getElementById(sectionId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function _sectionCard(iconSvg, label, content) {
+  return `<div style="background:var(--surface,var(--bg));border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem">
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+      ${iconSvg}
+      <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">${label}</span>
+    </div>
+    ${content}
+  </div>`;
+}
+const _ico = (d,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--muted);flex-shrink:0${extra?';'+extra:''}"><${d}/></svg>`;
+
 function renderEntryForm() {
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = _journalResidentsCache.filter(r => r.statut !== 'sorti');
   const cats = DB.get(DB.keys.categories) || [];
-  const currentCat = document.getElementById('iCategorie')?.value || '';
+  const currentCat = (document.getElementById('iCategorie')?.value || '').split(',').filter(Boolean);
   const currentRes = (document.getElementById('iResident')?.value || '').split(',').filter(Boolean);
   const currentDate = document.getElementById('iDate')?.value || new Date().toISOString().slice(0,16);
   const currentContenu = document.getElementById('iContenu')?.value || '';
   const currentObjectif = document.getElementById('iObjectif')?.value || '';
   const currentVis = document.querySelector('input[name="iVisibilite"]:checked')?.value || 'equipe';
 
-  function pillStyle(isActive, color) {
-    return isActive ? `style="--pill-bg:${color || 'var(--accent)'}22;--pill-color:${color || 'var(--accent)'};--pill-border:${color || 'var(--accent)'}"` : '';
+  const CARD = 'background:#fff;border-radius:20px;padding:1.75rem 2rem;box-shadow:0 2px 16px rgba(0,0,0,.05);border:1px solid #f1f5f9';
+  const HDR_ICON = 'width:16px;height:16px;color:#94a3b8;flex-shrink:0';
+  const HDR_LABEL = 'font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8';
+
+  function catPillStyle(isActive, color) {
+    if (isActive) {
+      const bg = color ? color + '22' : '#F3E8FF';
+      const fg = color || '#7C3AED';
+      return `style="height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;border:1.5px solid ${fg};background:${bg};color:${fg};font-size:.78rem;font-weight:600;transition:all .15s"`;
+    }
+    return `style="height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.78rem;font-weight:500;transition:all .15s"`;
   }
 
+  function visPillStyle(isActive) {
+    return isActive
+      ? `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #7C4DFF;background:#F3E8FF;color:#7C3AED;font-size:.8rem;font-weight:600;transition:all .15s"`
+      : `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.8rem;font-weight:500;transition:all .15s"`;
+  }
+
+  function spPillStyle(val, isActive) {
+    const palettes = { '': ['#64748b','#e2e8f0','#f8fafc'], direct: ['#8b5cf6','#ddd6fe','#f5f3ff'], indirect: ['#f97316','#fed7aa','#fff7ed'] };
+    const [fg, border, bg] = palettes[val] || palettes[''];
+    return isActive
+      ? `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid ${border};background:${bg};color:${fg};font-size:.8rem;font-weight:600;transition:all .15s"`
+      : `style="padding:.45rem 1rem;border-radius:10px;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:.8rem;font-weight:500;transition:all .15s"`;
+  }
+
+  const residentDropdownItems = residents.map(r => {
+    const name = `${r.prenom||''} ${r.nom||''}`.trim();
+    const on = currentRes.includes(r.id);
+    return `<div class="res-drop-item${on?' res-drop-sel':''}" data-id="${r.id}" data-name="${escHtml(name)}" onclick="selectResidentDropdown('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background .1s${on?';background:#faf5ff;color:#7C3AED':';color:#374151'}">
+      <span>${escHtml(name)}</span>
+      ${on ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;color:#7C4DFF;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+    </div>`;
+  }).join('');
+
+  const residentChips = currentRes.map(id => {
+    const r = residents.find(x => x.id === id);
+    if (!r) return '';
+    const name = `${r.prenom||''} ${r.nom||''}`.trim();
+    const color = r.color || '#7C4DFF';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1.5px solid ${color}44;border-radius:20px;font-size:.72rem;padding:3px 10px 3px 9px;font-weight:600">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.5;margin-left:2px;font-size:.9em">×</span></span>`;
+  }).join('');
+
   const html = `
-    <div class="entry-form-design">
-      <input type="hidden" id="iCategorie" value="${currentCat}"/>
+    <div class="entry-form-design" style="display:grid;grid-template-columns:7fr 3fr;gap:1.5rem;align-items:start">
+      <input type="hidden" id="iCategorie" value="${currentCat.join(',')}"/>
       <input type="hidden" id="iResident" value="${currentRes.join(',')}"/>
       <input type="hidden" id="iObjectif" value="${currentObjectif}"/>
       <input type="hidden" id="iPeriode" value=""/>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">1</span><span class="step-t">Catégorie</span></div>
-        <div class="step-b">
-          <div class="pill-group">
+
+      <!-- Colonne gauche -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Catégorie -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span style="${HDR_LABEL}">Catégorie</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem">
             ${cats.length ? cats.map(c => {
-              const isActive = currentCat === c.id;
-              return `<div class="pill cat-pill${isActive?' active':''}" data-id="${c.id}" ${pillStyle(isActive, c.color)} onclick="selectCatPill('${c.id}')">${escHtml(c.name)}</div>`;
-            }).join('') : '<span class="pill-empty">Aucune catégorie — définissez-en dans Admin</span>'}
+              const isActive = currentCat.includes(c.id);
+              return `<div class="cat-pill${isActive?' active':''}" data-id="${c.id}" ${catPillStyle(isActive, c.color)} onclick="selectCatPill('${c.id}')">${escHtml(c.name)}</div>`;
+            }).join('') : '<span style="font-size:.82rem;color:#94a3b8">Aucune catégorie — définissez-en dans Admin</span>'}
           </div>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">2</span><span class="step-t">Résident(s) concerné(s)</span></div>
-        <div class="step-b">
-          <div style="position:relative;margin-bottom:.5rem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="residentSearch" placeholder="Rechercher un résident…" oninput="filterResidentPills()" style="width:100%;padding:.45rem .45rem .45rem 32px;border:1.5px solid var(--border);border-radius:var(--r-full);font-size:.78rem;outline:none;background:var(--g50);color:var(--text);transition:border-color var(--t)"/>
+
+        <!-- Observation / Contenu -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span style="${HDR_LABEL}">Observation / Contenu</span>
           </div>
-          <div class="pill-group" style="flex-wrap:wrap;max-height:170px;overflow-y:auto" id="residentPillGroup">
-            ${residents.map(r => {
-              const name = `${r.prenom || ''} ${r.nom || ''}`.trim();
-              const isActive = currentRes.includes(r.id);
-              return `<div class="pill resident-pill${isActive?' active':''}" data-id="${r.id}" ${pillStyle(isActive, r.color)} onclick="selectResidentPill('${r.id}')">${escHtml(name)}</div>`;
-            }).join('')}
-          </div>
-          ${currentRes.length > 0 ? `<div style="font-size:.72rem;color:var(--muted);margin-top:.5rem">${currentRes.length} résident${currentRes.length>1?'s':''} sélectionné${currentRes.length>1?'s':''}</div>` : ''}
+          <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="margin-bottom:1rem"/>
+          <textarea id="iContenu" class="form-control" placeholder="Décrivez l'événement, l'observation ou l'intervention…" style="height:220px;resize:vertical">${escHtml(currentContenu)}</textarea>
         </div>
       </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">3</span><span class="step-t">Contenu</span></div>
-        <div class="step-b">
-          <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="max-width:280px;margin-bottom:.5rem"/>
-          <div class="ai-bar">
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('redaction')">✍ Rédiger</button>
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('correction')">✓ Corriger</button>
-            <button class="btn btn-ghost btn-sm" onclick="aiAssistJournalInline('reformulation')">🏛 Reformuler</button>
+
+      <!-- Colonne droite -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Résident(s) -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span style="${HDR_LABEL}">Résident(s) concerné(s)</span>
           </div>
-          <textarea id="iContenu" class="form-control" rows="5" placeholder="Décrivez l'événement, l'observation ou l'intervention…">${escHtml(currentContenu)}</textarea>
+          <div style="position:relative">
+            <div style="display:flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;overflow:hidden;height:44px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:#94a3b8;flex-shrink:0;margin-left:12px;pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="residentSearch" placeholder="Rechercher un résident…" oninput="filterResidentDropdown()" onfocus="showResidentDropdown()" autocomplete="off" style="flex:1;padding:0 .5rem;border:none;outline:none;background:transparent;font-size:.82rem;color:#111827"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleResidentDropdown()" style="width:15px;height:15px;color:#94a3b8;flex-shrink:0;margin-right:12px;cursor:pointer"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="residentDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:14px;max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.1)">
+              ${residentDropdownItems}
+            </div>
+          </div>
+          <div id="selectedResidentChips" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem">${residentChips}</div>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">4</span><span class="step-t">Visibilité</span></div>
-        <div class="step-b">
-          <div class="pill-group">
-            <div class="pill vis-pill${currentVis==='equipe'?' active':''}" data-vis="equipe" onclick="selectVisPill('equipe')">Équipe uniquement</div>
-            <div class="pill vis-pill${currentVis==='tous'?' active':''}" data-vis="tous" onclick="selectVisPill('tous')">Tous</div>
-            <div class="pill vis-pill${currentVis==='confidentiel'?' active':''}" data-vis="confidentiel" onclick="selectVisPill('confidentiel')">Confidentiel</div>
+
+        <!-- Visibilité -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span style="${HDR_LABEL}">Visibilité</span>
           </div>
-          <div class="vis-radios">
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <div class="vis-pill${currentVis==='equipe'?' active':''}" data-vis="equipe" onclick="selectVisPill('equipe')" ${visPillStyle(currentVis==='equipe')}>Équipe uniquement</div>
+            <div class="vis-pill${currentVis==='tous'?' active':''}" data-vis="tous" onclick="selectVisPill('tous')" ${visPillStyle(currentVis==='tous')}>Tous</div>
+            <div class="vis-pill${currentVis==='confidentiel'?' active':''}" data-vis="confidentiel" onclick="selectVisPill('confidentiel')" ${visPillStyle(currentVis==='confidentiel')}>Confidentiel</div>
+          </div>
+          <div class="vis-radios" style="display:none">
             <input type="radio" name="iVisibilite" value="equipe" ${currentVis==='equipe'?'checked':''}/>
             <input type="radio" name="iVisibilite" value="tous" ${currentVis==='tous'?'checked':''}/>
             <input type="radio" name="iVisibilite" value="confidentiel" ${currentVis==='confidentiel'?'checked':''}/>
           </div>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">5</span><span class="step-t">SERAFIN-PH <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
-        <div class="step-b">
-          <div class="pill-group">
-            <div class="pill sp-pill" data-sp="" onclick="selectSpPill('')" style="--pill-bg:#e2e8f022;--pill-color:#64748b;--pill-border:#cbd5e1">Aucun</div>
-            <div class="pill sp-pill" data-sp="direct" onclick="selectSpPill('direct')" style="--pill-bg:#8b5cf622;--pill-color:#8b5cf6;--pill-border:#8b5cf6">Prestation directe</div>
-            <div class="pill sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" style="--pill-bg:#f9731622;--pill-color:#f97316;--pill-border:#f97316">Prestation indirecte</div>
+
+        <!-- SERAFIN-PH -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style="${HDR_LABEL}">SERAFIN-PH <span style="font-weight:400;opacity:.6">(optionnel)</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <div class="sp-pill" data-sp="" onclick="selectSpPill('')" ${spPillStyle('', !document.getElementById('iSerafinph')?.value)}>Aucun</div>
+            <div class="sp-pill" data-sp="direct" onclick="selectSpPill('direct')" ${spPillStyle('direct', false)}>Direct</div>
+            <div class="sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" ${spPillStyle('indirect', false)}>Indirect</div>
           </div>
           <input type="hidden" id="iSerafinph" value=""/>
         </div>
-      </div>
-      <div class="form-step">
-        <div class="step-h"><span class="step-n">6</span><span class="step-t">Pièces jointes <span style="font-weight:400;color:var(--muted)">(optionnel)</span></span></div>
-        <div class="step-b">
-          <label class="btn btn-ghost btn-sm" style="cursor:pointer">📎 Ajouter un fichier
+
+        <!-- Pièces jointes -->
+        <div style="${CARD}">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            <span style="${HDR_LABEL}">Pièces jointes <span style="font-weight:400;opacity:.6">(optionnel)</span></span>
+          </div>
+          <label style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border:1.5px dashed #cbd5e1;border-radius:10px;cursor:pointer;font-size:.8rem;color:#64748b;background:#f8fafc">
+            📎 Ajouter un fichier
             <input type="file" accept="image/*,application/pdf" style="display:none" onchange="addInlineAttachment(this)"/>
           </label>
-          <div id="inlineAttachList" style="display:flex;flex-direction:column;gap:.35rem;margin-top:.5rem"></div>
+          <div id="inlineAttachList" style="display:flex;flex-direction:column;gap:.35rem;margin-top:.6rem"></div>
         </div>
+
+        <!-- Bouton -->
+        <button onclick="saveInlineEntry()" style="width:100%;height:48px;background:#7C4DFF;color:#fff;border:none;border-radius:12px;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s;letter-spacing:.01em" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+          Enregistrer l'entrée
+        </button>
       </div>
-      <button class="btn btn-primary" onclick="saveInlineEntry()" style="margin-top:1rem">Enregistrer l'entrée</button>
     </div>`;
+
   document.getElementById('entryFormContainer').innerHTML = html;
   renderInlineAttachList();
+  document.addEventListener('click', function _closeRes(e) {
+    if (!e.target.closest('#residentSearch') && !e.target.closest('#residentDropdown') && !e.target.closest('[onclick*="toggleResidentDropdown"]')) {
+      const dd = document.getElementById('residentDropdown');
+      if (dd) dd.style.display = 'none';
+      document.removeEventListener('click', _closeRes);
+    }
+  });
 }
 
 function selectSpPill(val) {
-  document.getElementById('iSerafinph').value = val;
+  const isp = document.getElementById('iSerafinph');
+  if (isp) isp.value = val;
+  const palettes = { '': ['#64748b','#e2e8f0','#f8fafc'], direct: ['#8b5cf6','#ddd6fe','#f5f3ff'], indirect: ['#f97316','#fed7aa','#fff7ed'] };
+  const BASE = 'padding:.45rem 1rem;border-radius:10px;cursor:pointer;font-size:.8rem;transition:all .15s';
   document.querySelectorAll('.sp-pill').forEach(el => {
-    el.classList.toggle('active', el.dataset.sp === val);
+    const on = el.dataset.sp === val;
+    el.classList.toggle('active', on);
+    const [fg, border, bg] = palettes[el.dataset.sp] || palettes[''];
+    el.style.cssText = on
+      ? `${BASE};border:1.5px solid ${border};background:${bg};color:${fg};font-weight:600`
+      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
   });
 }
 
 function selectCatPill(id) {
   const hid = document.getElementById('iCategorie');
-  hid.value = hid.value === id ? '' : id;
-  document.querySelectorAll('.cat-pill').forEach(el => {
-    const on = el.dataset.id === hid.value;
-    el.classList.toggle('active', on);
-    if (on) { const c = (DB.get(DB.keys.categories)||[]).find(x=>String(x.id)===String(hid.value)); if(c){el.style.setProperty('--pill-bg',c.color+'22');el.style.setProperty('--pill-color',c.color);el.style.setProperty('--pill-border',c.color)} }
-    else { el.style.removeProperty('--pill-bg');el.style.removeProperty('--pill-color');el.style.removeProperty('--pill-border') }
-  });
-}
-
-function selectResidentPill(id) {
-  const hid = document.getElementById('iResident');
+  if (!hid) return;
   let ids = hid.value ? hid.value.split(',').filter(Boolean) : [];
   const idx = ids.indexOf(id);
-  if (idx >= 0) ids.splice(idx, 1);
-  else ids.push(id);
+  if (idx >= 0) ids.splice(idx, 1); else ids.push(id);
   hid.value = ids.join(',');
-  document.querySelectorAll('.resident-pill').forEach(el => {
+  const cats = DB.get(DB.keys.categories) || [];
+  const BASE = 'height:30px;border-radius:8px;display:flex;align-items:center;padding:0 12px;cursor:pointer;font-size:.78rem;transition:all .15s';
+  document.querySelectorAll('.cat-pill').forEach(el => {
     const on = ids.includes(el.dataset.id);
     el.classList.toggle('active', on);
-    if (on) { const r = (DB.get(DB.keys.residents)||[]).find(x=>x.id===el.dataset.id); if(r){el.style.setProperty('--pill-bg',(r.color||'var(--blue)')+'22');el.style.setProperty('--pill-color',r.color||'var(--blue)');el.style.setProperty('--pill-border',r.color||'var(--blue)')} }
-    else { el.style.removeProperty('--pill-bg');el.style.removeProperty('--pill-color');el.style.removeProperty('--pill-border') }
+    const cat = cats.find(c => String(c.id) === String(el.dataset.id));
+    const color = cat?.color || '#7C3AED';
+    el.style.cssText = on
+      ? `${BASE};border:1.5px solid ${color};background:${color}22;color:${color};font-weight:600`
+      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
   });
-  updateResidentCount(ids.length);
 }
 
-function updateResidentCount(count) {
-  const step = document.querySelectorAll('.entry-form-design > .form-step')[1];
-  if (!step) return;
-  const body = step.querySelector('.step-b');
-  let el = body.querySelector('.resident-count');
-  if (count > 0) {
-    if (!el) { el = document.createElement('div'); el.className = 'resident-count'; el.style.cssText = 'font-size:.72rem;color:var(--muted);margin-top:.5rem'; body.appendChild(el); }
-    el.textContent = count + ' résident' + (count>1?'s':'') + ' sélectionné' + (count>1?'s':'');
-  } else {
-    if (el) el.remove();
-  }
+function selectResidentPill(id) { selectResidentDropdown(id); }
+
+function selectResidentDropdown(id) {
+  const hid = document.getElementById('iResident');
+  if (!hid) return;
+  let ids = hid.value ? hid.value.split(',').filter(Boolean) : [];
+  const idx = ids.indexOf(id);
+  if (idx >= 0) ids.splice(idx, 1); else ids.push(id);
+  hid.value = ids.join(',');
+  renderResidentChips(ids);
+  document.querySelectorAll('.res-drop-item').forEach(el => {
+    const on = ids.includes(el.dataset.id);
+    el.classList.toggle('res-drop-sel', on);
+    let chk = el.querySelector('svg');
+    if (on && !chk) {
+      el.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;color:var(--accent);flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`);
+    } else if (!on && chk) { chk.remove(); }
+  });
 }
 
-function filterResidentPills() {
+function renderResidentChips(ids) {
+  const container = document.getElementById('selectedResidentChips');
+  if (!container) return;
+  const residents = _journalResidentsCache.filter(r => r.statut !== 'sorti');
+  container.innerHTML = ids.map(id => {
+    const r = residents.find(x => x.id === id);
+    if (!r) return '';
+    const name = `${r.prenom||''} ${r.nom||''}`.trim();
+    const color = r.color || 'var(--accent)';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1px solid ${color};border-radius:20px;font-size:.72rem;padding:2px 8px 2px 7px;font-weight:500">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.55;margin-left:1px">×</span></span>`;
+  }).join('');
+}
+
+function showResidentDropdown() {
+  const dd = document.getElementById('residentDropdown');
+  if (dd) { dd.style.display = 'block'; filterResidentDropdown(); }
+}
+
+function toggleResidentDropdown() {
+  const dd = document.getElementById('residentDropdown');
+  if (!dd) return;
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function filterResidentDropdown() {
   const q = (document.getElementById('residentSearch')?.value || '').toLowerCase();
-  document.querySelectorAll('.resident-pill').forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  document.querySelectorAll('.res-drop-item').forEach(el => {
+    el.style.display = !q || (el.dataset.name || '').toLowerCase().includes(q) ? '' : 'none';
   });
 }
+
+function filterResidentPills() { filterResidentDropdown(); }
+
+function updateResidentCount() {}
 
 function selectVisPill(vis) {
   const radio = document.querySelector('input[name="iVisibilite"][value="'+vis+'"]');
   if (radio) radio.checked = true;
-  document.querySelectorAll('.vis-pill').forEach(el => el.classList.toggle('active', el.dataset.vis === vis));
+  const BASE = 'padding:.45rem 1rem;border-radius:10px;cursor:pointer;font-size:.8rem;transition:all .15s';
+  document.querySelectorAll('.vis-pill').forEach(el => {
+    const on = el.dataset.vis === vis;
+    el.classList.toggle('active', on);
+    el.style.cssText = on
+      ? `${BASE};border:1.5px solid #7C4DFF;background:#F3E8FF;color:#7C3AED;font-weight:600`
+      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
+  });
 }
 
-function saveInlineEntry() {
+async function saveInlineEntry() {
   const session = Auth.getSession();
   const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   const residentIds = document.getElementById('iResident').value ? document.getElementById('iResident').value.split(',').filter(Boolean) : [];
   const contenu = document.getElementById('iContenu').value.trim();
   if (!residentIds.length) { toast('Sélectionnez au moins un résident', 'error'); return; }
   if (!contenu) { toast('Le contenu est requis', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _journalResidentsCache;
   const visEl = document.querySelector('input[name="iVisibilite"]:checked');
-  const entries = DB.get(DB.keys.journal) || [];
   // Détection de doublon : même résident, < 3h, contenu très similaire
   const candDate = document.getElementById('iDate').value || new Date().toISOString();
   for (const residentId of residentIds) {
-    const dup = findJournalDuplicate({ residentId, contenu, date: candDate }, entries);
+    const dup = findJournalDuplicate({ residentId, contenu, date: candDate }, _journalCache);
     if (dup) {
       const e = dup.entry;
       const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
@@ -236,75 +388,40 @@ function saveInlineEntry() {
       break;
     }
   }
-  for (const residentId of residentIds) {
-    const res = residents.find(r => r.id === residentId);
-    entries.push({
-      id: genId(),
-      type: 'observation',
-      residentId,
-      resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
-      residentColor: res?.color || 'var(--blue)',
-      categorie: document.getElementById('iCategorie').value,
-      date: document.getElementById('iDate').value || new Date().toISOString(),
-      objectif: document.getElementById('iObjectif').value,
-      contenu, visibilite: visEl?.value || 'equipe',
-      serafinphType: document.getElementById('iSerafinph')?.value || '',
-      attachments: inlineAttachments.slice(),
-      author: userName, authorId: session?.userId,
-      replies: [], readBy: [session?.userId],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    });
+  const newNames = [];
+  try {
+    for (const residentId of residentIds) {
+      const res = residents.find(r => r.id === residentId);
+      const name = res ? `${res.prenom||''} ${res.nom||''}`.trim() : '';
+      newNames.push(name);
+      await sbSaveJournalEntry({
+        residentId,
+        resident: name,
+        residentColor: res?.color || 'var(--blue)',
+        categorie: document.getElementById('iCategorie').value,
+        date: document.getElementById('iDate').value || new Date().toISOString(),
+        objectif: document.getElementById('iObjectif').value,
+        contenu, visibilite: visEl?.value || 'equipe',
+        serafinphType: document.getElementById('iSerafinph')?.value || '',
+        attachments: inlineAttachments.slice(),
+        author: userName, authorId: session?.userId,
+        replies: [], readBy: [session?.userId],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      });
+    }
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
-  DB.set(DB.keys.journal, entries);
   inlineAttachments = [];
-  if (typeof auditLog === 'function') auditLog('journal_create', `${residentIds.length} entrée(s) pour ${entries.slice(-residentIds.length).map(e=>e.resident).join(', ')}`);
+  await loadJournalEntries();
+  if (typeof auditLog === 'function') auditLog('journal_create', `${residentIds.length} entrée(s) pour ${newNames.join(', ')}`);
   toast(residentIds.length + ' entrée' + (residentIds.length>1?'s':'') + ' ajoutée' + (residentIds.length>1?'s':'') + ' ✓');
   showJournalList();
   renderEntries();
 }
 
-async function aiAssistJournalInline(action) {
-  const ta = document.getElementById('iContenu');
-  if (!ta) return;
-  const current = ta.value || '';
-  const residentIds = (document.getElementById('iResident')?.value || '').split(',').filter(Boolean);
-  const residents = DB.get(DB.keys.residents) || [];
-  const firstRes = residents.find(r => r.id === residentIds[0]);
-  const residentName = firstRes ? `${firstRes.prenom||''} ${firstRes.nom||''}`.trim() : (residentIds.length > 1 ? 'plusieurs résidents' : '');
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-  if (hasKey) {
-    const customSystem = getAiPrompt('journal', action);
-    let system = '', prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un éducateur rédigeant une observation. Écris en français, professionnel et factuel.';
-      prompt = `Rédige une courte observation${residentName ? ' pour ' + residentName : ''}.` + (current ? '\n\nTexte à compléter :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Corrige les fautes sans changer le style.';
-      prompt = 'Corrige :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Reformule de manière professionnelle.';
-      prompt = 'Reformule :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) { ta.value = result; toast('✓ ' + labels[action], 'success'); return; }
-    toast('API indisponible, mode local', 'warning');
-  }
-  let result = '';
-  if (action === 'redaction') {
-    const tpl = ['Observation : le résident a participé activement.','Suivi : bonne intégration et interactions positives.','Point d\'étape : autonomie croissante.'];
-    result = current ? current + '\n\n' + tpl[Math.floor(Math.random()*tpl.length)] : tpl[Math.floor(Math.random()*tpl.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bils on\b/g,'ils ont').replace(/\bil a étais\b/g,'il a été');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bgère\b/g,'assure la gestion de').replace(/\bveut\b/g,'souhaite');
-  }
-  if (result) { ta.value = result; toast('✓ ' + labels[action] + ' (local)', 'success'); }
-}
 
 function getEntries() {
   const session = Auth.getSession();
@@ -313,7 +430,7 @@ function getEntries() {
   const cat = document.getElementById('jFilterCat')?.value || '';
   const dateFrom = document.getElementById('jFilterDate')?.value || '';
   const dateTo = document.getElementById('jFilterDateEnd')?.value || '';
-  let list = (DB.get(DB.keys.journal) || []).slice().reverse();
+  let list = _journalCache.slice();
   // Filtrer selon la visibilité : confidentiel → uniquement admin ou auteur
   const isAdmin = session?.role === 'admin';
   list = list.filter(e => {
@@ -326,7 +443,7 @@ function getEntries() {
     (e.author   || '').toLowerCase().includes(q)
   );
   if (res) list = list.filter(e => e.residentId === res);
-  if (cat) list = list.filter(e => String(e.categorie) === String(cat));
+  if (cat) list = list.filter(e => (e.categorie || '').split(',').filter(Boolean).includes(cat));
   if (dateFrom) list = list.filter(e => e.date && e.date.slice(0,10) >= dateFrom);
   if (dateTo) list = list.filter(e => e.date && e.date.slice(0,10) <= dateTo);
   if (filterUnread && session) list = list.filter(e => !e.readBy || !e.readBy.includes(session.userId));
@@ -337,7 +454,7 @@ function renderEntries() {
   const list = getEntries();
   const el = document.getElementById('entriesList');
   const cats = DB.get(DB.keys.categories) || [];
-  const journalResidents = DB.get(DB.keys.residents) || [];
+  const journalResidents = _journalResidentsCache;
   if (!list.length) {
     el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Aucune entrée</h3><p>Commencez à documenter les événements.</p></div>`;
     return;
@@ -345,7 +462,7 @@ function renderEntries() {
   updateUnreadBadge();
   const session = Auth.getSession();
   el.innerHTML = list.map(e => {
-    const cat = cats.find(c => String(c.id) === String(e.categorie));
+    const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
     const jRes = journalResidents.find(r => r.id === e.residentId);
     const isSelected = e.id === selectedEntryId;
     const isUnread = session && (!e.readBy || !e.readBy.includes(session.userId));
@@ -371,12 +488,12 @@ function renderEntries() {
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
             ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;display:inline-block"></span>' : ''}
             <span style="font-weight:${isUnread ? '800' : '700'};font-size:.875rem">${escHtml(e.resident)||'—'}</span>
-            ${cat ? `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
+            ${entryCats.map(cat => `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>`).join('')}
             ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
             ${e.serafinphType === 'direct' ? '<span class="badge" style="background:#8b5cf622;color:#8b5cf6">📊 Direct</span>' : ''}
             ${e.serafinphType === 'indirect' ? '<span class="badge" style="background:#f9731622;color:#f97316">📊 Indirect</span>' : ''}
           </div>
-          <div class="entry-meta">${formatDateTime(e.date)} · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span></div>
+          <div class="entry-meta">${formatDateTime(e.date)}${isUnread ? '' : ` · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span>`}</div>
         </div>
       </div>
       ${!isSelected && !isUnread ? `<div class="entry-preview">${escHtml(e.contenu)||''}</div>` : ''}
@@ -408,7 +525,7 @@ function renderReplies(e) {
 
 // ── Historique des modifications ──
 function showEditHistory(id) {
-  const e = (DB.get(DB.keys.journal) || []).find(x => x.id === id);
+  const e = _journalCache.find(x => x.id === id);
   if (!e || !e.editHistory) return;
   const lines = e.editHistory.slice().reverse().map(h =>
     `• ${formatDateTime(h.at)} — ${h.by || '?'}\n   Ancien contenu : « ${(h.contenu || '').slice(0, 200)}${(h.contenu || '').length > 200 ? '…' : ''} »`
@@ -461,22 +578,22 @@ function renderEntryAttachments(e) {
   </div>`;
 }
 
-function selectEntry(id) {
+async function selectEntry(id) {
   // Toggle: cliquer à nouveau ferme la carte
   if (selectedEntryId === id) { selectedEntryId = null; renderEntries(); return; }
   selectedEntryId = id;
 
   // Mark as read
   const session = Auth.getSession();
-  let entries = DB.get(DB.keys.journal) || [];
-  const eIdx = entries.findIndex(x => x.id === id);
-  if (eIdx === -1) return;
-  const e = entries[eIdx];
+  const e = _journalCache.find(x => x.id === id);
+  if (!e) return;
   if (session && (!e.readBy || !e.readBy.includes(session.userId))) {
-    if (!e.readBy) e.readBy = [];
-    e.readBy.push(session.userId);
-    entries[eIdx] = e;
-    DB.set(DB.keys.journal, entries);
+    const readBy = (e.readBy || []).concat([session.userId]);
+    try {
+      const updated = await sbSaveJournalEntry({ ...e, readBy });
+      const idx = _journalCache.findIndex(x => x.id === id);
+      if (idx !== -1) _journalCache[idx] = updated;
+    } catch (err) { console.error(err); }
   }
 
   renderEntries();
@@ -486,37 +603,37 @@ function selectEntry(id) {
   }, 50);
 }
 
-function addReply(entryId) {
+async function addReply(entryId) {
   const content = document.getElementById('replyContent_'+entryId)?.value?.trim();
   if (!content) { toast('Écrivez une réponse', 'error'); return; }
   const session = Auth.getSession();
   const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
-  let entries = DB.get(DB.keys.journal) || [];
-  entries = entries.map(e => {
-    if (e.id !== entryId) return e;
-    const replies = e.replies || [];
-    replies.push({
-      id: genId(),
-      content,
-      author: userName,
-      authorId: session?.userId,
-      createdAt: new Date().toISOString()
-    });
-    return { ...e, replies };
-  });
-  DB.set(DB.keys.journal, entries);
+  const e = _journalCache.find(x => x.id === entryId);
+  if (!e) return;
+  const replies = (e.replies || []).concat([{
+    id: genId(),
+    content,
+    author: userName,
+    authorId: session?.userId,
+    createdAt: new Date().toISOString()
+  }]);
+  try {
+    const updated = await sbSaveJournalEntry({ ...e, replies });
+    const idx = _journalCache.findIndex(x => x.id === entryId);
+    if (idx !== -1) _journalCache[idx] = updated;
+  } catch (err) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(err); return; }
   toast('Réponse ajoutée');
   selectEntry(entryId);
 }
 
 function editEntry(id) {
-  const entries = DB.get(DB.keys.journal) || [];
-  const e = entries.find(x => x.id === id);
+  const e = _journalCache.find(x => x.id === id);
   if (!e) return;
   document.getElementById('modalEntryTitle').textContent = 'Modifier l\'entrée';
   document.getElementById('entryId').value = id;
   document.getElementById('eResident').value = e.residentId || '';
-  document.getElementById('eCategorie').value = e.categorie || '';
+  const eCatIds = (e.categorie || '').split(',').filter(Boolean);
+  Array.from(document.getElementById('eCategorie').options).forEach(o => { o.selected = eCatIds.includes(o.value); });
   document.getElementById('eDate').value = e.date ? e.date.slice(0,16) : '';
   document.getElementById('eObjectif').value = e.objectif || '';
   document.getElementById('eContenu').value = e.contenu || '';
@@ -528,7 +645,7 @@ function editEntry(id) {
   openModal('modalEntry');
 }
 
-function saveEntry() {
+async function saveEntry() {
   const session = Auth.getSession();
   const userName = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   const residentId = document.getElementById('eResident').value;
@@ -536,7 +653,7 @@ function saveEntry() {
   if (!residentId) { toast('Sélectionnez un résident', 'error'); return; }
   if (!contenu) { toast('Le contenu est requis', 'error'); return; }
 
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _journalResidentsCache;
   const res = residents.find(r => r.id === residentId);
   const visEl = document.querySelector('input[name="eVisibilite"]:checked');
 
@@ -544,44 +661,46 @@ function saveEntry() {
     residentId,
     resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
     residentColor: res?.color || 'var(--blue)',
-    categorie: document.getElementById('eCategorie').value,
+    categorie: Array.from(document.getElementById('eCategorie').selectedOptions).map(o => o.value).join(','),
     date: document.getElementById('eDate').value || new Date().toISOString(),
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
     serafinphType: document.getElementById('eSerafinph')?.value || '',
-    author: userName,
-    authorId: session?.userId,
     updatedAt: new Date().toISOString()
   };
 
-  let entries = DB.get(DB.keys.journal) || [];
   const id = document.getElementById('entryId').value;
-  if (id) {
-    entries = entries.map(e => {
-      if (e.id !== id) return e;
+  try {
+    if (id) {
+      const e = _journalCache.find(x => x.id === id);
+      if (!e) return;
       // Conserver l'auteur d'origine ; tracer la modification + historiser le contenu
-      const { author, authorId, ...editData } = data;
       const history = (e.editHistory || []).concat([{ at: new Date().toISOString(), by: userName, byId: session?.userId, contenu: e.contenu }]);
-      return { ...e, ...editData, editHistory: history, editedBy: userName, editedById: session?.userId, editedAt: new Date().toISOString() };
-    });
-    if (typeof auditLog === 'function') auditLog('journal_edit', `Entrée modifiée — ${data.resident}`);
-    toast('Entrée mise à jour');
-  } else {
-    const dup = findJournalDuplicate({ residentId, contenu, date: data.date }, entries);
-    if (dup) {
-      const e = dup.entry;
-      const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
-      if (!confirm(`⚠️ Doublon possible pour ${e.resident || 'ce résident'} :\n\n« ${extrait} »\n${formatDateTime(e.date)} · ${getJournalAuthor ? getJournalAuthor(e) : (e.author || '')}\n\nEnregistrer quand même cette transmission ?`)) return;
+      await sbSaveJournalEntry({ ...e, ...data, editHistory: history, editedBy: userName, editedById: session?.userId, editedAt: new Date().toISOString() });
+      if (typeof auditLog === 'function') auditLog('journal_edit', `Entrée modifiée — ${data.resident}`);
+      toast('Entrée mise à jour');
+    } else {
+      const dup = findJournalDuplicate({ residentId, contenu, date: data.date }, _journalCache);
+      if (dup) {
+        const e = dup.entry;
+        const extrait = (e.contenu || '').slice(0, 140) + ((e.contenu || '').length > 140 ? '…' : '');
+        if (!confirm(`⚠️ Doublon possible pour ${e.resident || 'ce résident'} :\n\n« ${extrait} »\n${formatDateTime(e.date)} · ${getJournalAuthor ? getJournalAuthor(e) : (e.author || '')}\n\nEnregistrer quand même cette transmission ?`)) return;
+      }
+      data.author = userName;
+      data.authorId = session?.userId;
+      data.replies = [];
+      data.readBy = [session?.userId];
+      data.createdAt = new Date().toISOString();
+      await sbSaveJournalEntry(data);
+      toast('Entrée ajoutée');
     }
-    data.id = genId();
-    data.replies = [];
-    data.readBy = [session?.userId];
-    data.createdAt = new Date().toISOString();
-    entries.push(data);
-    toast('Entrée ajoutée');
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
-  DB.set(DB.keys.journal, entries);
+  await loadJournalEntries();
   closeAllModals();
   resetEntryForm();
   showJournalList();
@@ -592,11 +711,16 @@ function saveEntry() {
 function deleteEntry() { deleteEntryById(document.getElementById('entryId').value); }
 
 function deleteEntryById(id) {
-  confirmDialog('Supprimer cette entrée ?', () => {
-    let entries = DB.get(DB.keys.journal) || [];
-    const removed = entries.find(e => e.id === id);
-    entries = entries.filter(e => e.id !== id);
-    DB.set(DB.keys.journal, entries);
+  confirmDialog('Supprimer cette entrée ?', async () => {
+    const removed = _journalCache.find(e => e.id === id);
+    try {
+      await sbDeleteJournalEntry(id);
+    } catch (e) {
+      toast('Erreur lors de la suppression', 'error');
+      console.error(e);
+      return;
+    }
+    await loadJournalEntries();
     if (typeof auditLog === 'function') auditLog('journal_delete', `Entrée supprimée — ${removed?.resident || ''} (${formatDateTime(removed?.date)})`);
     closeAllModals();
     selectedEntryId = null;
@@ -610,7 +734,7 @@ function resetEntryForm() {
   document.getElementById('entryId').value = '';
   document.getElementById('modalEntryTitle').textContent = 'Nouvelle entrée';
   document.getElementById('eResident').value = '';
-  document.getElementById('eCategorie').value = '';
+  Array.from(document.getElementById('eCategorie').options).forEach(o => o.selected = false);
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   document.getElementById('eObjectif').value = '';
   document.getElementById('eContenu').value = '';
@@ -618,9 +742,11 @@ function resetEntryForm() {
   document.getElementById('btnDeleteEntry').style.display = 'none';
 }
 
-function initJournal() {
+async function initJournal() {
   if (!requireModule('access_journal')) return;
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
+  _journalResidentsCache = await sbGetResidents();
+  await loadJournalEntries();
   populateSelects();
   renderEntries();
   ['jSearch','jFilterResident','jFilterCat','jFilterDate','jFilterDateEnd'].forEach(id => {
@@ -632,77 +758,6 @@ document.addEventListener('DOMContentLoaded', initJournal);
 if (typeof registerPageInit === 'function') registerPageInit('journal', initJournal);
 
 // ── AI Assist Journal ──
-async function aiAssistJournal(action) {
-  const ta = document.getElementById('eContenu');
-  if (!ta) return;
-  const current = ta.value || '';
-  const residentId = document.getElementById('eResident')?.value || '';
-  const residents = DB.get(DB.keys.residents) || [];
-  const resident = residents.find(r => r.id === residentId);
-  const residentName = resident ? `${resident.prenom||''} ${resident.nom||''}`.trim() : '';
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-
-  if (hasKey) {
-    const customSystem = getAiPrompt('journal', action);
-    let system = '';
-    let prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un éducateur spécialisé rédigeant une observation pour le journal de bord d\'un établissement médico-social. Écris en français, de manière professionnelle et factuelle.';
-      prompt = `Rédige une courte observation de journal de bord${residentName ? ' pour le résident ' + residentName : ''}. Décris une journée type, une intervention éducative ou un fait notable.` + (current ? '\n\nTexte existant à compléter :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
-      prompt = 'Corrige ce texte de journal de bord :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte de manière professionnelle.';
-      prompt = 'Reformule ce texte de manière professionnelle et institutionnelle :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) {
-      ta.value = result;
-      ta.dispatchEvent(new Event('input'));
-      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
-      return;
-    }
-    toast('API Mistral indisponible, mode local', 'warning');
-  }
-
-  // Fallback local
-  let result = '';
-  if (action === 'redaction') {
-    const templates = [
-      `Observation éducative du jour : le résident a participé aux activités proposées avec un intérêt marqué pour les ateliers créatifs.`,
-      `Suivi quotidien : bonne intégration au sein du groupe, interactions sociales positives avec les pairs.`,
-      `Point d'étape : le résident fait preuve d'autonomie dans les gestes du quotidien, à encourager dans la continuité.`
-    ];
-    result = current ? current + '\n\n' + templates[Math.floor(Math.random() * templates.length)] : templates[Math.floor(Math.random() * templates.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current
-      .replace(/\bils on\b/g, 'ils ont')
-      .replace(/\belle on\b/g, 'elle a')
-      .replace(/\bje suis allé\b/g, 'je me suis rendu')
-      .replace(/\bil a étais\b/g, 'il a été')
-      .replace(/\bau jour d'aujourd'hui\b/g, 'actuellement');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current
-      .replace(/\bgère\b/g, 'assure la gestion de')
-      .replace(/\ba besoin de\b/g, 'nécessite')
-      .replace(/\bveut\b/g, 'souhaite')
-      .replace(/\bpeut\b/g, 'est en mesure de')
-      .replace(/\bfait\b/g, 'réalise')
-      .replace(/\bva\b/g, 'envisage de');
-  }
-
-  if (result) {
-    ta.value = result;
-    ta.dispatchEvent(new Event('input'));
-    toast('✓ ' + labels[action] + ' (mode local)', 'success');
-  }
-}
 
 // ── EXPORT PDF ──
 function exportJournalPDF() {
@@ -780,16 +835,16 @@ ${(() => {
     return `<div class="day-group">
       <div class="day-label">${escHtml(label)}</div>
       ${entries.map(e => {
-        const cat = cats.find(c => String(c.id) === String(e.categorie));
+        const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
         const timeStr = e.date && e.date.length > 10 ? new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
         return `<div class="entry">
           <div class="entry-top">
             <div>
               <div class="entry-resident">${escHtml(e.resident||'—')}</div>
-              <div class="entry-meta">${timeStr ? timeStr+' · ' : ''}${escHtml(e.author||'')}${cat?'':''}</div>
+              <div class="entry-meta">${timeStr ? timeStr+' · ' : ''}${escHtml(e.author||'')}</div>
             </div>
             <div style="display:flex;gap:.2cm;flex-shrink:0;align-items:center">
-              ${cat ? `<span class="entry-cat" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>` : ''}
+              ${entryCats.map(cat => `<span class="entry-cat" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>`).join('')}
               ${e.visibilite==='confidentiel' ? '<span class="badge-conf">Confidentiel</span>' : ''}
             </div>
           </div>

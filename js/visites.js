@@ -16,10 +16,24 @@ const VIS_STATUTS = {
 };
 const VIS_LIENS = ['Mère', 'Père', 'Parents', 'Grand-mère', 'Grand-père', 'Sœur', 'Frère', 'Tante', 'Oncle', 'Famille d\'accueil', 'Tiers digne de confiance', 'Autre'];
 
-function getVisites() { return DB.get(DB.keys.visites) || []; }
-function saveVisites(list) { DB.set(DB.keys.visites, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _visCache = [];
+function getVisites() { return _visCache; }
+async function loadVisitesCache() { _visCache = await sbGetVisites(); }
+
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+async function persistResident(r) {
+  const saved = await sbSaveResident(r);
+  const i = _residentsCache.findIndex(x => String(x.id) === String(saved.id));
+  if (i >= 0) _residentsCache[i] = saved; else _residentsCache.push(saved);
+  return saved;
+}
+
 function visResidents() {
-  return (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+  return residentsList().filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''}`.localeCompare(`${b.nom || ''}`, 'fr'));
 }
 
@@ -40,10 +54,10 @@ function renderVisites() {
   const semaine = all.filter(v => v.statut === 'prevue' && v.date > td && v.date <= in7);
   const mediatisees = all.filter(v => v.type === 'mediatisee' && v.statut === 'prevue' && v.date >= td);
   document.getElementById('vStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Aujourd'hui</span></div><div class="stat-num">${aujourdhui.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #0891b2"><div class="stat-card-top"><span class="stat-label">7 prochains jours</span></div><div class="stat-num">${semaine.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="stat-card-top"><span class="stat-label">Hébergements en cours</span></div><div class="stat-num">${enCours.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">Médiatisées à venir</span></div><div class="stat-num">${mediatisees.length}</div></div>`;
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Aujourd'hui</span></div><div class="chx-stat-num">${aujourdhui.length}</div></div>
+    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">7 prochains jours</span></div><div class="chx-stat-num">${semaine.length}</div></div>
+    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Hébergements en cours</span></div><div class="chx-stat-num">${enCours.length}</div></div>
+    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Médiatisées à venir</span></div><div class="chx-stat-num">${mediatisees.length}</div></div>`;
 
   // Groupes : en cours / aujourd'hui / à venir / historique
   const groups = { encours: [], today: [], avenir: [], histo: [] };
@@ -139,7 +153,7 @@ function vmTypeChanged() {
 function vmShowDroits() {
   const rid = document.getElementById('vmResident').value;
   const box = document.getElementById('vmDroitsInfo');
-  const r = (DB.get(DB.keys.residents) || []).find(x => String(x.id) === String(rid));
+  const r = residentsList().find(x => String(x.id) === String(rid));
   const droits = (r && r.droitsVisite) || [];
   if (!rid) { box.innerHTML = ''; return; }
   box.innerHTML = droits.length
@@ -155,14 +169,14 @@ function vmUseDroit(personne, lien, type) {
   vmTypeChanged();
 }
 
-function saveVisite() {
+async function saveVisite() {
   const rid = document.getElementById('vmResident').value;
   const personne = document.getElementById('vmPersonne').value.trim();
   const date = document.getElementById('vmDate').value;
   if (!rid) { toast('Choisissez un résident', 'error'); return; }
   if (!personne) { toast('Indiquez le visiteur / la famille', 'error'); return; }
   if (!date) { toast('La date est requise', 'error'); return; }
-  const r = (DB.get(DB.keys.residents) || []).find(x => String(x.id) === String(rid));
+  const r = residentsList().find(x => String(x.id) === String(rid));
   const type = document.getElementById('vmType').value;
   const s = Auth.getSession();
   const data = {
@@ -177,40 +191,53 @@ function saveVisite() {
     lieu: document.getElementById('vmLieu').value.trim(),
     notes: document.getElementById('vmNotes').value.trim()
   };
-  let list = getVisites();
-  if (visEditId) {
-    list = list.map(x => x.id === visEditId ? { ...x, ...data } : x);
-    toast('Visite mise à jour');
-  } else {
-    list.push({ id: genId(), ...data, statut: 'prevue', createdBy: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username : '?', createdAt: new Date().toISOString() });
-    toast('Visite planifiée ✓');
-    // Hébergement = absence du résident → proposer la sortie liée
-    if (type === 'hebergement' && r && confirm('Créer aussi la sortie correspondante sur la fiche du résident (retour suivi sur la fiche et la relève) ?')) {
-      const sorties = r.sorties || [];
-      sorties.push({
-        id: genId(), date, heure: data.heure || '',
-        destination: `Famille — ${personne}`, motif: 'Hébergement famille',
-        accompagnement: '', retourPrevuDate: data.dateRetour || date, retourPrevuHeure: data.heureRetour || '',
-        autorisePar: '', notes: 'Créée depuis le module Visites', retourEffectif: null
-      });
-      DB.set(DB.keys.residents, (DB.get(DB.keys.residents) || []).map(x => String(x.id) === String(rid) ? { ...x, sorties } : x));
-      toast('Sortie créée sur la fiche du résident');
+  try {
+    if (visEditId) {
+      const old = _visCache.find(x => x.id === visEditId) || {};
+      const saved = await sbSaveVisite({ ...old, ...data, id: visEditId });
+      _visCache = _visCache.map(x => x.id === visEditId ? saved : x);
+      toast('Visite mise à jour');
+    } else {
+      const saved = await sbSaveVisite({ ...data, statut: 'prevue', createdBy: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username : '?' });
+      _visCache.unshift(saved);
+      toast('Visite planifiée ✓');
+      // Hébergement = absence du résident → proposer la sortie liée
+      if (type === 'hebergement' && r && confirm('Créer aussi la sortie correspondante sur la fiche du résident (retour suivi sur la fiche et la relève) ?')) {
+        const sorties = r.sorties || [];
+        sorties.push({
+          id: genId(), date, heure: data.heure || '',
+          destination: `Famille — ${personne}`, motif: 'Hébergement famille',
+          accompagnement: '', retourPrevuDate: data.dateRetour || date, retourPrevuHeure: data.heureRetour || '',
+          autorisePar: '', notes: 'Créée depuis le module Visites', retourEffectif: null
+        });
+        await persistResident({ ...r, sorties });
+        toast('Sortie créée sur la fiche du résident');
+      }
     }
+  } catch (e) {
+    console.error('[saveVisite]', e);
+    toast('Erreur enregistrement : ' + (e?.message || e), 'error');
+    return;
   }
-  saveVisites(list);
   if (typeof auditLog === 'function') auditLog('visite_save', `${VIS_TYPES[type].label} — ${data.residentName}`);
   closeModal('modalVisite');
   renderVisites();
 }
 
-function setVisiteStatut(id, statut) {
-  saveVisites(getVisites().map(x => x.id === id ? { ...x, statut, statutAt: new Date().toISOString() } : x));
+async function setVisiteStatut(id, statut) {
+  try {
+    const saved = await sbUpdateVisiteField(id, { statut, statut_at: new Date().toISOString() });
+    _visCache = _visCache.map(x => x.id === id ? saved : x);
+  } catch (e) { console.error('[setVisiteStatut]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   renderVisites();
 }
 
 function deleteVisite(id) {
-  confirmDialog('Supprimer cette visite ?', () => {
-    saveVisites(getVisites().filter(x => x.id !== id));
+  confirmDialog('Supprimer cette visite ?', async () => {
+    try {
+      await sbDeleteVisite(id);
+      _visCache = _visCache.filter(x => x.id !== id);
+    } catch (e) { console.error('[deleteVisite]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
     renderVisites();
     toast('Visite supprimée', 'info');
   });
@@ -230,7 +257,7 @@ function renderDroitsList() {
   droitsResidentId = document.getElementById('drResident').value || null;
   const box = document.getElementById('drList');
   if (!droitsResidentId) { box.innerHTML = '<div style="font-size:.8rem;color:var(--g400);padding:.5rem 0">Sélectionnez un résident pour gérer son cadre de visites.</div>'; return; }
-  const r = (DB.get(DB.keys.residents) || []).find(x => String(x.id) === String(droitsResidentId));
+  const r = residentsList().find(x => String(x.id) === String(droitsResidentId));
   const droits = (r && r.droitsVisite) || [];
   box.innerHTML = (droits.length ? droits.map(d => {
     const t = VIS_TYPES[d.type] || VIS_TYPES.libre;
@@ -246,7 +273,7 @@ function renderDroitsList() {
   }).join('') : '<div style="font-size:.8rem;color:var(--g400);padding:.5rem 0">Aucun droit défini.</div>');
 }
 
-function addDroit() {
+async function addDroit() {
   if (!droitsResidentId) { toast('Sélectionnez un résident', 'error'); return; }
   const personne = document.getElementById('drPersonne').value.trim();
   if (!personne) { toast('Indiquez la personne autorisée', 'error'); return; }
@@ -257,7 +284,8 @@ function addDroit() {
     modalites: document.getElementById('drModalites').value.trim(),
     decision: document.getElementById('drDecision').value.trim()
   };
-  DB.set(DB.keys.residents, (DB.get(DB.keys.residents) || []).map(r => String(r.id) === String(droitsResidentId) ? { ...r, droitsVisite: [...(r.droitsVisite || []), droit] } : r));
+  const r = residentsList().find(x => String(x.id) === String(droitsResidentId));
+  if (r) await persistResident({ ...r, droitsVisite: [...(r.droitsVisite || []), droit] });
   if (typeof auditLog === 'function') auditLog('droit_visite_save', `Droit de visite — ${personne}`);
   ['drPersonne', 'drModalites', 'drDecision'].forEach(id => { document.getElementById(id).value = ''; });
   toast('Droit de visite ajouté ✓');
@@ -265,18 +293,21 @@ function addDroit() {
 }
 
 function deleteDroit(id) {
-  confirmDialog('Retirer ce droit de visite ?', () => {
-    DB.set(DB.keys.residents, (DB.get(DB.keys.residents) || []).map(r => String(r.id) === String(droitsResidentId) ? { ...r, droitsVisite: (r.droitsVisite || []).filter(d => d.id !== id) } : r));
+  confirmDialog('Retirer ce droit de visite ?', async () => {
+    const r = residentsList().find(x => String(x.id) === String(droitsResidentId));
+    if (r) await persistResident({ ...r, droitsVisite: (r.droitsVisite || []).filter(d => d.id !== id) });
     renderDroitsList();
     toast('Droit retiré', 'info');
   });
 }
 
 // ── INIT ──
-function initVisites() {
+async function initVisites() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
+  await loadResidentsCache();
+  await loadVisitesCache();
   const opts = visResidents().map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   document.getElementById('vFilterResident').innerHTML = '<option value="">Tous les résidents</option>' + opts;
   document.getElementById('vmResident').innerHTML = '<option value="">— Choisir —</option>' + opts;

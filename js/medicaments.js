@@ -1,6 +1,11 @@
 // ── TRAÇABILITÉ DE LA DISTRIBUTION DES MÉDICAMENTS ──
 let medCanEdit = false;
 let medNoteCtx = null;
+let medSearch = '';
+let medFilterPresent = false;
+
+function medSetSearch(v) { medSearch = v.toLowerCase().trim(); renderMedicaments(); }
+function medTogglePresent() { medFilterPresent = !medFilterPresent; renderMedicaments(); }
 
 const MED_MOMENTS = {
   matin: { label: 'Matin', icon: '🌅' },
@@ -9,17 +14,20 @@ const MED_MOMENTS = {
   coucher: { label: 'Coucher', icon: '🌙' }
 };
 const MED_STATUTS = {
-  donne: { label: 'Donné', icon: '✅', color: '#16a34a' },
-  refuse: { label: 'Refusé', icon: '🚫', color: '#dc2626' },
-  absent: { label: 'Absent', icon: '➖', color: '#6b7280' },
+  donne:  { label: 'Donné',   icon: '✅', color: '#16a34a' },
+  confie: { label: 'Confié',  icon: '🤝', color: '#2563eb' },
+  refuse: { label: 'Refusé',  icon: '🚫', color: '#dc2626' },
+  absent: { label: 'Absent',  icon: '➖', color: '#6b7280' },
   report: { label: 'Reporté', icon: '⏭️', color: '#d97706' }
 };
 
-function getMedDistrib() { return DB.get(DB.keys.medicaments) || []; }
-function saveMedDistrib(list) { DB.set(DB.keys.medicaments, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _medCache = [];
+function getMedDistrib() { return _medCache; }
+async function loadMedCache() { _medCache = await sbGetMedDistrib(); }
 
 function medResidents() {
-  return (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti')
+  return sbResidents().filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''}`.localeCompare(`${b.nom || ''}`, 'fr'));
 }
 
@@ -50,29 +58,138 @@ function renderMedicaments() {
   const records = getMedDistrib();
   const enriched = prevues.map(p => ({ ...p, record: records.find(x => x.date === date && String(x.residentId) === String(p.residentId) && x.traitementId === p.traitementId && x.moment === p.moment) }));
 
-  const donnees = enriched.filter(e => e.record?.statut === 'donne').length;
-  const incidents = enriched.filter(e => e.record && ['refuse', 'absent', 'report'].includes(e.record.statut)).length;
-  const attente = enriched.length - donnees - incidents;
+  const nbDonne    = enriched.filter(e => e.record?.statut === 'donne').length;
+  const nbIncident = enriched.filter(e => e.record?.statut && ['refuse','absent','report'].includes(e.record.statut)).length;
+  const nbAttente  = enriched.filter(e => !e.record?.statut).length;
 
   document.getElementById('medStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #0369a1"><div class="stat-card-top"><span class="stat-label">Prises prévues</span></div><div class="stat-num">${enriched.length}</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Données</span></div><div class="stat-num">${donnees}</div></div>
-    <div class="stat-card" style="border-left:3px solid ${incidents ? '#dc2626' : '#16a34a'}"><div class="stat-card-top"><span class="stat-label">Refus / absences / reports</span></div><div class="stat-num">${incidents}</div></div>
-    <div class="stat-card" style="border-left:3px solid ${attente ? '#d97706' : '#16a34a'}"><div class="stat-card-top"><span class="stat-label">En attente</span></div><div class="stat-num">${attente}</div></div>`;
+    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Prises prévues</span></div><div class="chx-stat-num">${enriched.length}</div></div>
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Données</span></div><div class="chx-stat-num">${nbDonne}</div></div>
+    <div class="chx-stat" style="--c:#dc2626"><div class="chx-stat-top"><span class="chx-stat-lbl">Refus / absences / reports</span></div><div class="chx-stat-num">${nbIncident}</div></div>
+    <div class="chx-stat" style="--c:#d97706"><div class="chx-stat-top"><span class="chx-stat-lbl">En attente</span></div><div class="chx-stat-num">${nbAttente}</div></div>`;
 
   const el = document.getElementById('medList');
   if (!enriched.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.5 20.5 21 10a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg></div><h3>Aucun traitement à distribuer</h3><p>Renseignez les moments de prise depuis l'onglet « Médical / traitements » de chaque résident pour qu'il apparaisse ici.</p></div>`;
+    el.innerHTML = `<div style="background:rgba(255,255,255,.9);border-radius:18px;padding:2.5rem;text-align:center">
+      <div style="font-size:2rem;margin-bottom:.75rem">💊</div>
+      <div style="font-weight:700;font-size:1rem;color:#1e293b;margin-bottom:.4rem">Aucun traitement à distribuer</div>
+      <div style="font-size:.83rem;color:#64748b">Renseignez les moments de prise depuis la fiche médicale de chaque résident.</div>
+    </div>`;
     return;
   }
-  const byResident = {};
-  enriched.forEach(e => { (byResident[e.residentId] = byResident[e.residentId] || { residentName: e.residentName, items: [] }).items.push(e); });
+
+  const residents = sbResidents();
+  const resMap = {};
+  residents.forEach(r => { resMap[String(r.id)] = r; });
+
+  const presencesAujourdhui = (DB.get(DB.keys.presences) || {})[date] || {};
+
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:7px 14px;border:1.5px solid #e2e8f0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="medSearchInput" type="text" placeholder="Rechercher un résident…" value="${escHtml(medSearch)}" oninput="medSetSearch(this.value)" style="border:none;outline:none;background:none;font-size:13px;color:#1e293b;width:100%;font-family:inherit"/>
+    </div>
+    <button onclick="medTogglePresent()" style="padding:7px 16px;border-radius:20px;border:1.5px solid ${medFilterPresent?'#16a34a':'#e2e8f0'};background:${medFilterPresent?'#f0fdf4':'#fff'};color:${medFilterPresent?'#16a34a':'#64748b'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${medFilterPresent?'#16a34a':'#cbd5e1'};display:inline-block"></span>
+      Présents seulement
+    </button>
+  </div>
+  <div id="medResidentList"></div>`;
+
+  const listEl = document.getElementById('medResidentList');
+
+  const MOMENT_STYLE = {
+    matin:   { bg:'#faeeda', color:'#633806' },
+    midi:    { bg:'#e6f1fb', color:'#0c447c' },
+    soir:    { bg:'#eeedfe', color:'#3c3489' },
+    coucher: { bg:'#f1efe8', color:'#444441' },
+  };
+
   const momentOrder = Object.keys(MED_MOMENTS);
-  el.innerHTML = Object.entries(byResident).map(([residentId, g]) => {
-    g.items.sort((a, b) => momentOrder.indexOf(a.moment) - momentOrder.indexOf(b.moment));
-    return `<div class="card" style="margin-bottom:.85rem">
-      <div class="card-header"><a href="resident.html?id=${residentId}" style="font-weight:700;font-size:.9rem;color:var(--text);text-decoration:none">👤 ${escHtml(g.residentName)}</a></div>
-      <div class="card-body" style="padding:0">${g.items.map(e => medRow(date, e)).join('')}</div>
+  const byResident = {};
+  enriched.forEach(e => {
+    if (!byResident[e.residentId]) byResident[e.residentId] = { name: e.residentName, items: [] };
+    byResident[e.residentId].items.push(e);
+  });
+
+  let entries = Object.entries(byResident);
+
+  if (medSearch) {
+    entries = entries.filter(([, g]) => g.name.toLowerCase().includes(medSearch));
+  }
+  const JOURS_MED = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const dowMed = new Date(date + 'T00:00:00').getDay();
+  const jourMed = JOURS_MED[dowMed];
+
+  function isResidentPresent(residentId) {
+    const manual = presencesAujourdhui[residentId];
+    if (manual) return manual === 'present';
+    const r = resMap[residentId];
+    if (r?.planningHebdo?.[jourMed]?.actif) return false;
+    return true;
+  }
+
+  if (medFilterPresent) {
+    entries = entries.filter(([residentId]) => isResidentPresent(residentId));
+  }
+
+  if (!entries.length) {
+    listEl.innerHTML = `<div style="background:rgba(255,255,255,.85);border-radius:16px;padding:2rem;text-align:center;font-size:13px;color:#64748b;font-style:italic">Aucun résident correspondant aux filtres.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = entries.map(([residentId, g]) => {
+    g.items.sort((a,b) => momentOrder.indexOf(a.moment) - momentOrder.indexOf(b.moment));
+    const r = resMap[String(residentId)];
+    const color = r?.color || '#2563eb';
+    const av = r?.photo
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${color}33" alt=""/>`
+      : `<div class="med-avatar" style="background:${color}15;color:${color}">${initials(r?.prenom||'',r?.nom||'')}</div>`;
+
+    const rows = g.items.map(e => {
+      const mom = MED_MOMENTS[e.moment] || {};
+      const rec = e.record;
+      const mc  = MOMENT_STYLE[e.moment] || { bg:'#f1efe8', color:'#444441' };
+
+      const btnDonne  = `<button class="med-btn med-btn-ok${rec?.statut==='donne'?' on':''}"  onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','donne')">✓ Donné</button>`;
+      const btnConfie = `<button class="med-btn${rec?.statut==='confie'?' on':''}" style="${rec?.statut==='confie'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe'};padding:7px 16px;border-radius:20px;border:1.5px solid;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','confie')">🤝 Confié</button>`;
+      const btnRefuse = `<button class="med-btn med-btn-ref${rec?.statut==='refuse'?' on':''}" onclick="setMedStatutRefuse('${date}','${residentId}','${e.traitementId}','${e.moment}')">✕ Refus</button>`;
+      const btnAbsent = `<button class="med-btn med-btn-abs${rec?.statut==='absent'?' on':''}" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','absent')">— Absent</button>`;
+      const btnReport = `<button class="med-btn med-btn-rep${rec?.statut==='report'?' on':''}" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','report')">⏭ Reporté</button>`;
+      const btnNote   = `<button class="med-note-btn" title="Observation" onclick="openMedNote('${date}','${residentId}','${e.traitementId}','${e.moment}')">📝</button>`;
+
+      const statusBadge = rec?.statut ? MED_STATUTS[rec.statut] : null;
+
+      return `<div class="med-med-row">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:${mc.bg};color:${mc.color}">${mom.icon||''} ${mom.label||e.moment}</span>
+            ${rec?.heure?`<span style="font-size:11px;color:#94a3b8">${rec.heure.slice(11,16)}</span>`:''}
+          </div>
+          <div class="med-med-name">${escHtml(e.medicament||'')}</div>
+          <div class="med-med-meta">${e.posologie?escHtml(e.posologie):''}${rec?.auteur?' · '+escHtml(rec.auteur):''}</div>
+        </div>
+        ${medCanEdit
+          ? `<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">${btnDonne}${btnConfie}${btnRefuse}${btnAbsent}${btnReport}${btnNote}</div>`
+          : statusBadge ? `<span style="font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:${statusBadge.color}15;color:${statusBadge.color};border:1.5px solid ${statusBadge.color}33">${statusBadge.icon} ${statusBadge.label}</span>` : '<span style="font-size:12px;color:#94a3b8">En attente</span>'}
+      </div>
+      ${rec?.observation?`<div class="med-alert">📝 ${escHtml(rec.observation)}</div>`:''}`;
+    }).join('');
+
+    const planningJourMed = r?.planningHebdo?.[jourMed];
+    const planningTag = planningJourMed?.actif
+      ? `<span style="font-size:11px;color:#0369a1;background:#e0f2fe;border-radius:5px;padding:2px 7px;font-weight:600">📅 ${escHtml(planningJourMed.label||'Absent')}${planningJourMed.debut?' · '+planningJourMed.debut:''}</span>`
+      : '';
+
+    return `<div class="med-patient-section">
+      <div class="med-patient-header">
+        ${av}
+        <div>
+          <a href="resident.html?id=${residentId}" style="text-decoration:none"><div class="med-patient-name">${escHtml(g.name)}</div></a>
+          ${planningTag}
+        </div>
+      </div>
+      ${rows}
     </div>`;
   }).join('');
 }
@@ -95,24 +212,40 @@ function medRow(date, e) {
   </div>`;
 }
 
-function setMedStatut(date, residentId, traitementId, moment, statut) {
+async function setMedStatut(date, residentId, traitementId, moment, statut) {
   const list = getMedDistrib();
   const session = Auth.getSession();
   const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
   const i = list.findIndex(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
   const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
-  if (i >= 0) {
-    if (list[i].statut === statut) {
-      list.splice(i, 1); // re-clic sur le même statut → réinitialise
-    } else {
-      list[i] = { ...list[i], statut, heure: new Date().toISOString(), auteur };
+  try {
+    if (i >= 0) {
+      if (list[i].statut === statut) {
+        const id = list[i].id;
+        list.splice(i, 1); // re-clic sur le même statut → réinitialise
+        await sbDeleteMedDistrib(id);
+      } else {
+        list[i] = await sbSaveMedDistrib({ ...list[i], statut, heure: new Date().toISOString(), auteur });
+      }
+    } else if (prevue) {
+      const saved = await sbSaveMedDistrib({ date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: new Date().toISOString(), auteur, observation: '' });
+      list.push(saved);
     }
-  } else if (prevue) {
-    list.push({ id: genId(), date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: new Date().toISOString(), auteur, observation: '' });
-  }
-  saveMedDistrib(list);
+  } catch (e) { console.error('[setMedStatut]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   if (typeof auditLog === 'function' && prevue) auditLog('med_distrib', `${prevue.medicament} (${MED_MOMENTS[moment]?.label || moment}) — ${prevue.residentName} → ${MED_STATUTS[statut]?.label || statut}`);
   renderMedicaments();
+}
+
+async function setMedStatutRefuse(date, residentId, traitementId, moment) {
+  const list = getMedDistrib();
+  const rec = list.find(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
+  if (rec?.statut === 'refuse') {
+    // re-clic → réinitialise sans ouvrir le modal
+    await setMedStatut(date, residentId, traitementId, moment, 'refuse');
+    return;
+  }
+  await setMedStatut(date, residentId, traitementId, moment, 'refuse');
+  openMedNote(date, residentId, traitementId, moment);
 }
 
 function openMedNote(date, residentId, traitementId, moment) {
@@ -122,21 +255,23 @@ function openMedNote(date, residentId, traitementId, moment) {
   openModal('modalMedNote');
 }
 
-function saveMedNote() {
+async function saveMedNote() {
   const { date, residentId, traitementId, moment } = medNoteCtx;
   const observation = document.getElementById('mnTexte').value.trim();
   const list = getMedDistrib();
   const i = list.findIndex(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
-  if (i >= 0) {
-    list[i] = { ...list[i], observation };
-  } else {
-    const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
-    if (!prevue) return;
-    const session = Auth.getSession();
-    const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
-    list.push({ id: genId(), date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut: '', heure: '', auteur, observation });
-  }
-  saveMedDistrib(list);
+  try {
+    if (i >= 0) {
+      list[i] = await sbSaveMedDistrib({ ...list[i], observation });
+    } else {
+      const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
+      if (!prevue) return;
+      const session = Auth.getSession();
+      const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
+      const saved = await sbSaveMedDistrib({ date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut: '', heure: '', auteur, observation });
+      list.push(saved);
+    }
+  } catch (e) { console.error('[saveMedNote]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   closeModal('modalMedNote');
   renderMedicaments();
 }
@@ -184,10 +319,12 @@ function printMedSheet() {
 }
 
 // ── INIT ──
-function initMedicaments() {
+async function initMedicaments() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_medicaments')) return;
+  await sbLoadResidentsCache();
+  await loadMedCache();
   medCanEdit = ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : false) || Auth.isAdmin();
   const dateInput = document.getElementById('medDate');
   dateInput.value = today();

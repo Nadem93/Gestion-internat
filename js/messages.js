@@ -1,6 +1,5 @@
-// ── DATA ──
-function getMessages() { return DB.get(DB.keys.messages) || []; }
-function setMessages(m) { DB.set(DB.keys.messages, m); }
+// ── DATA ── (source = Supabase, caches dans messages-supabase.js)
+function getMessages() { return _msgCache; }
 function getUsers() { return DB.get(DB.keys.users) || []; }
 
 let currentConvId = null;
@@ -14,17 +13,16 @@ function convId(userIds) {
 
 function getOrCreateConv(userIds) {
   const id = convId(userIds);
-  let convs = DB.get('ftr_conversations') || {};
-  if (!convs[id]) {
-    convs[id] = { id, userIds: [...new Set(userIds)], createdAt: new Date().toISOString() };
-    DB.set('ftr_conversations', convs);
+  if (!_convCache[id]) {
+    const conv = { id, userIds: [...new Set(userIds.map(String))], createdAt: new Date().toISOString() };
+    _convCache[id] = conv;
+    sbSaveConversation(conv).catch(e => { console.error('[conv]', e); toast('Erreur conversation', 'error'); });
   }
   return id;
 }
 
 function getConvParticipants(convId) {
-  const convs = DB.get('ftr_conversations') || {};
-  return convs[convId]?.userIds || [];
+  return _convCache[convId]?.userIds || [];
 }
 
 function getConvMessages(convId) {
@@ -36,7 +34,7 @@ function renderConvs() {
   const session = Auth.getSession();
   if (!session) return;
   const allMsgs = getMessages();
-  const convs = DB.get('ftr_conversations') || {};
+  const convs = _convCache;
   const q = (document.getElementById('convSearch')?.value || '').trim().toLowerCase();
   const users = getUsers();
   const myUserId = String(session.userId);
@@ -87,24 +85,29 @@ function renderConvs() {
     const time = lastMsg ? formatConvTime(new Date(lastMsg.date)) : '';
     const preview = lastMsg ? (lastMsg.body||'') : '';
 
-    return `<div class="chat-conv ${currentConvId===conv.id?'active':''}" onclick="selectConv('${conv.id}')">
-      <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
+    const isActive = currentConvId === conv.id;
+    const showOnline = otherIds.length === 1;
+    return `<div class="chat-conv${isActive?' active':''}" onclick="selectConv('${conv.id}')">
+      <div class="chat-conv-av-wrap">
+        <div class="chat-conv-avatar" style="background:${color}">${avatar}</div>
+        ${showOnline ? '<div class="chat-conv-online"></div>' : ''}
+      </div>
       <div class="chat-conv-info">
-        <div class="chat-conv-name">${escHtml(name)}${unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0"></span>' : ''}</div>
+        <div class="chat-conv-name">${escHtml(name)}</div>
         <div class="chat-conv-preview">${escHtml(preview)}</div>
       </div>
-      <div class="chat-conv-right">
+      <div class="chat-conv-meta">
         <div class="chat-conv-time">${time}</div>
-        ${unreadCount > 0 ? `<div class="chat-conv-badge">${unreadCount}</div>` : ''}
+        ${unreadCount > 0 ? `<div class="chat-conv-badge">${unreadCount}</div>` : `<div class="chat-conv-pin">📌</div>`}
       </div>
-      <button class="chat-conv-del" onclick="event.stopPropagation();deleteConv('${conv.id}')" title="Supprimer la conversation"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+      <button class="chat-conv-del" onclick="event.stopPropagation();deleteConv('${conv.id}')" title="Supprimer"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
     </div>`;
   }
 
-  let html = '';
+  let groupHtml = '';
+  groupConvs.map(convToHtml).filter(Boolean).forEach(h => groupHtml += h);
 
-  groupConvs.map(convToHtml).filter(Boolean).forEach(h => html += h);
-
+  let recentHtml = '';
   users.forEach(u => {
     const uid = String(u.id);
     if (uid === myUserId) return;
@@ -116,18 +119,24 @@ function renderConvs() {
 
     const conv = userConvMap[uid];
     if (conv) {
-      html += convToHtml(conv);
+      recentHtml += convToHtml(conv);
     } else {
-      html += `<div class="chat-conv" onclick="openUserChat('${uid}')">
-        <div class="chat-conv-avatar" style="background:#007aff">${initials}</div>
+      recentHtml += `<div class="chat-conv" onclick="openUserChat('${uid}')">
+        <div class="chat-conv-av-wrap">
+          <div class="chat-conv-avatar" style="background:#5b5fc7">${initials}</div>
+        </div>
         <div class="chat-conv-info">
           <div class="chat-conv-name">${escHtml(name)}</div>
-          <div class="chat-conv-preview" style="color:var(--muted);font-style:italic">Cliquez pour discuter</div>
+          <div class="chat-conv-preview">${escHtml(u.fonction || 'Cliquez pour discuter')}</div>
         </div>
-        <div class="chat-conv-right"></div>
+        <div class="chat-conv-meta"></div>
       </div>`;
     }
   });
+
+  let html = '';
+  if (groupHtml) html += `<div class="ml-section"><span class="ml-section-label">Épinglés</span><span class="ml-section-chevron">^</span></div>` + groupHtml;
+  if (recentHtml) html += `<div class="ml-section"><span class="ml-section-label">Récents</span><span class="ml-section-chevron">^</span></div>` + recentHtml;
 
   if (!html) {
     html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">
@@ -135,6 +144,11 @@ function renderConvs() {
     </div>`;
   }
   document.getElementById('chatConvs').innerHTML = html;
+  const mcEl = document.getElementById('memberCount');
+  if (mcEl) {
+    const total = getUsers().filter(u => String(u.id) !== String(session.userId)).length;
+    mcEl.textContent = `(${total})`;
+  }
 }
 
 function openUserChat(userId) {
@@ -234,11 +248,11 @@ function toggleComposeUser(id) {
   renderComposeUsers();
 }
 
-function startComposeConv() {
+async function startComposeConv() {
   if (!composeSelected.length) return;
   const session = Auth.getSession();
   if (composeTargetConv) {
-    addUsersToConv(composeTargetConv, composeSelected);
+    await addUsersToConv(composeTargetConv, composeSelected);
     closeCompose();
     renderConvs();
     renderChat();
@@ -252,23 +266,23 @@ function startComposeConv() {
   document.getElementById('chatInput').focus();
 }
 
-function addUsersToConv(targetConvId, newUserIds) {
-  const convs = DB.get('ftr_conversations') || {};
-  const conv = convs[targetConvId];
+async function addUsersToConv(targetConvId, newUserIds) {
+  const conv = _convCache[targetConvId];
   if (!conv) return;
   const oldUserIds = conv.userIds.map(String);
   const allIds = [...new Set([...oldUserIds, ...newUserIds.map(String)])];
   const newConvId = convId(allIds);
   if (newConvId === targetConvId) return; // no change
-  // Create new conversation entry
-  convs[newConvId] = { id: newConvId, userIds: allIds, createdAt: conv.createdAt };
-  // Update all messages to new convId
-  const msgs = DB.get(DB.keys.messages) || [];
-  msgs.forEach(m => { if (m.convId === targetConvId) m.convId = newConvId; });
-  DB.set(DB.keys.messages, msgs);
-  // Remove old conversation
-  delete convs[targetConvId];
-  DB.set('ftr_conversations', convs);
+  try {
+    const newConv = { id: newConvId, userIds: allIds, createdAt: conv.createdAt };
+    _convCache[newConvId] = newConv;
+    await sbSaveConversation(newConv);
+    // Réaffecte les messages de l'ancienne conversation à la nouvelle
+    const toMove = _msgCache.filter(m => m.convId === targetConvId);
+    for (const m of toMove) { await sbUpdateMessageConv(m.id, newConvId); m.convId = newConvId; }
+    delete _convCache[targetConvId];
+    await sbDeleteConversation(targetConvId);
+  } catch (e) { console.error('[addUsersToConv]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   currentConvId = newConvId;
   toast('Participant ajouté');
 }
@@ -294,6 +308,7 @@ function renderChat() {
       <p>Messages</p>
     </div>`;
     updateConvCount();
+    updateChips();
     return;
   }
 
@@ -341,54 +356,47 @@ function renderChat() {
   if (!msgs.length) {
     msgsEl.innerHTML = `<div class="chat-empty"><p style="color:var(--muted)">Aucun message</p></div>`;
     updateConvCount();
+    updateChips();
     return;
   }
 
-  let currentDate = '';
+  const todayStr = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const myUser = users.find(x => String(x.id) === String(session.userId));
+  const myInitials = ((myUser?.prenom||'')[0]||'') + ((myUser?.nom||'')[0]||'') || 'M';
+  const myName = myUser ? `${myUser.prenom||''} ${myUser.nom||''}`.trim() || myUser.username || 'Moi' : 'Moi';
+
+  let curDateGroup = '';
   let html = '';
+  const _newlyRead = [];
   for (const m of msgs) {
     const msgDate = new Date(m.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
-    if (msgDate !== currentDate) {
-      currentDate = msgDate;
-      html += `<div class="chat-date-sep">${currentDate}</div>`;
+    if (msgDate !== curDateGroup) {
+      curDateGroup = msgDate;
+      const dateLabel = msgDate === todayStr ? "Aujourd'hui" : msgDate;
+      html += `<div class="chat-date-sep"><span>${dateLabel}</span></div>`;
     }
     const isOwn = String(m.from) === String(session.userId);
     const author = users.find(u => String(u.id) === String(m.from));
     const authorName = author ? `${author.prenom||''} ${author.nom||''}`.trim() || author.username : 'Inconnu';
     const time = new Date(m.date).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
 
-    // Readers (excluding author)
-    const readers = (m.readBy || []).filter(rid => String(rid) !== String(m.from));
-    const readerAvatars = readers.length > 0 ? `<div style="display:flex;gap:2px;margin-top:4px;justify-content:${isOwn?'flex-end':'flex-start'}">
-      ${readers.map(rid => {
-        const ru = users.find(x => String(x.id) === String(rid));
-        const rInit = ((ru?.prenom||'')[0]||'') + ((ru?.nom||'')[0]||'') || '?';
-        let rColor = '#8e8e93';
-        if (ru?.fonction) {
-          const fc = DB.get(DB.keys.fonctionColors) || [];
-          const f = ru.fonction.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const match = fc.find(x => {
-            const key = x.fonction.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return f.includes(key) || key.split(' ').some(kw => kw.length > 3 && f.includes(kw)) || f.split(' ').some(fw => key.includes(fw));
-          });
-          if (match) rColor = match.color;
-        }
-        if (rColor === '#8e8e93') {
-          const pool = ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#6366f1','#dc2626','#14b8a6'];
-          rColor = pool[Math.abs(rid) % pool.length];
-        }
-        return `<div style="width:16px;height:16px;border-radius:50%;background:${rColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:.45rem;font-weight:700;border:1.5px solid ${isOwn?'#007aff':'#e5e5ea'}" title="${escHtml(ru?.['prenom']||'') + ' ' + escHtml(ru?.['nom']||'')}">${rInit}</div>`;
-      }).join('')}
-    </div>` : '';
+    const readerAvatars = '';
 
     const isUnread = !isOwn && !m.readBy?.includes(session.userId);
 
-    html += `<div class="chat-row ${isOwn ? 'own' : 'other'}">
-      <div class="chat-bubble" style="${isUnread ? 'background:#faecd0;border:2px solid #f5a623;font-weight:600' : ''}">${isUnread ? '<span style="font-size:.55rem;text-transform:uppercase;color:#f5a623;font-weight:800;letter-spacing:.04em;display:block;margin-bottom:2px">Nouveau</span>' : ''}
-        ${!isOwn && otherIds.length > 1 ? `<div class="chat-bubble-author">${escHtml(authorName)}</div>` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:6px">
-          <span>${escHtml(m.body)}</span>
-          <span class="chat-bubble-time">${time}</span>
+    const av = isOwn ? myInitials : (((author?.prenom||'')[0]||'') + ((author?.nom||'')[0]||'') || '?');
+    const avColor = isOwn ? '#6366f1' : '#5b5fc7';
+    const dispName = isOwn ? myName : authorName;
+    const timeLabel = new Date(m.date).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    html += `<div class="chat-row ${isOwn?'own':'other'}">
+      <div class="chat-msg-av" style="background:${avColor}">${av}</div>
+      <div class="chat-msg-content">
+        <div class="chat-msg-meta">
+          <span class="chat-msg-author">${escHtml(dispName)}</span>
+          <span class="chat-msg-time">${timeLabel}</span>
+        </div>
+        <div class="chat-bubble${isUnread?' unread-bubble':''}">
+          ${isUnread ? '<span class="act-new">Nouveau</span>' : ''}${escHtml(m.body)}
         </div>
         ${readerAvatars}
       </div>
@@ -397,12 +405,15 @@ function renderChat() {
     if (isUnread) {
       if (!m.readBy) m.readBy = [];
       m.readBy.push(session.userId);
+      _newlyRead.push(m);
     }
   }
-  setMessages(allMsgs);
+  // Persiste uniquement les messages qui viennent d'être lus (pas à chaque rendu)
+  _newlyRead.forEach(m => sbUpdateMessageReadBy(m.id, m.readBy).catch(() => {}));
   renderConvs();
   msgsEl.innerHTML = html;
   msgsEl.scrollTop = msgsEl.scrollHeight;
+  updateChips();
   // Store unread count for accueil
   const sessionId = session?.userId;
   const allM = getMessages();
@@ -417,45 +428,58 @@ function updateConvCount() {
   const unread = allMsgs.filter(m => m.from !== session.userId && !m.readBy?.includes(session.userId)).length;
   document.getElementById('convCount').textContent = unread ? `${unread} non lu${unread>1?'s':''}` : '';
   localStorage.setItem('ftr_notif_msg_unread_' + session.userId, unread);
+  // Mise à jour compteur onglet
+  const convMsgs = currentConvId ? getConvMessages(currentConvId) : [];
+  const ctEl = document.getElementById('tabAllCt');
+  if (ctEl) ctEl.textContent = convMsgs.length || 0;
 }
 
-function sendChatMsg() {
+function updateChips() {
+  const chipsEl = document.getElementById('actChips');
+  if (!chipsEl) return;
+  if (!currentConvId) { chipsEl.innerHTML = ''; return; }
+  const session = Auth.getSession();
+  const participants = getConvParticipants(currentConvId).filter(id => String(id) !== String(session.userId));
+  const users = getUsers();
+  chipsEl.innerHTML = participants.map(id => {
+    const u = users.find(x => String(x.id) === String(id));
+    const name = u ? `${u.prenom||''} ${u.nom||''}`.trim() || u.username : 'Inconnu';
+    return `<div class="act-chip">${escHtml(name)} <span class="act-chip-x">×</span></div>`;
+  }).join('');
+}
+
+async function sendChatMsg() {
   const session = Auth.getSession();
   if (!currentConvId || !session) return;
   const input = document.getElementById('chatInput');
   const body = input.value.trim();
   if (!body) return;
 
-  const msg = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    convId: currentConvId,
-    from: session.userId,
-    body,
-    date: new Date().toISOString(),
-    readBy: [session.userId]
-  };
-  const msgs = getMessages();
-  msgs.push(msg);
-  setMessages(msgs);
+  try {
+    const saved = await sbSaveMessage({
+      convId: currentConvId, from: session.userId, body,
+      date: new Date().toISOString(), readBy: [session.userId]
+    });
+    _msgCache.push(saved);
+  } catch (e) { console.error('[sendChatMsg]', e); toast('Erreur envoi : ' + (e?.message || e), 'error'); return; }
   input.value = '';
   renderChat();
   renderConvs();
 }
 
-function deleteConv(convId) {
+function deleteConv(cid) {
   if (!confirm('Supprimer cette conversation et tous ses messages ?')) return;
-  let convs = DB.get('ftr_conversations') || {};
-  delete convs[convId];
-  DB.set('ftr_conversations', convs);
-  let msgs = getMessages();
-  msgs = msgs.filter(m => m.convId !== convId);
-  setMessages(msgs);
-  if (currentConvId === convId) {
-    currentConvId = null;
-    renderChat();
-  }
-  renderConvs();
-  toast('Conversation supprimée', 'info');
+  (async () => {
+    try {
+      await sbDeleteMessagesByConv(cid);
+      await sbDeleteConversation(cid);
+      delete _convCache[cid];
+      _msgCache = _msgCache.filter(m => m.convId !== cid);
+    } catch (e) { console.error('[deleteConv]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    if (currentConvId === cid) { currentConvId = null; renderChat(); }
+    renderConvs();
+    toast('Conversation supprimée', 'info');
+  })();
 }
 
 function formatConvTime(date) {
@@ -470,62 +494,6 @@ function formatConvTime(date) {
 }
 
 // ── AI Assist Message ──
-async function aiAssistMessage(action) {
-  const input = document.getElementById('chatInput');
-  if (!input || input.disabled) return;
-  const current = input.value || '';
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-
-  if (hasKey) {
-    const customSystem = getAiPrompt('messages', action);
-    let system = '';
-    let prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un professionnel en ESMS qui rédige un message interne court et professionnel. Réponds en français.';
-      prompt = 'Rédige un message professionnel court pour communiquer avec un collègue en ESMS.' + (current ? '\n\nComplète ce message :\n' + current : '');
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes sans changer le style.';
-      prompt = 'Corrige ce message :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce message de manière professionnelle.';
-      prompt = 'Reformule ce message de manière professionnelle :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) {
-      input.value = result;
-      autoResizeTextarea(input);
-      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
-      return;
-    }
-    toast('API Mistral indisponible, mode local', 'warning');
-  }
-
-  // Fallback local
-  let result = '';
-  if (action === 'redaction') {
-    const templates = [
-      'Bonjour, je vous confirme le rendez-vous de demain après-midi.',
-      'Pour information, l\'atelier de jeudi est maintenu.',
-      'Suite à notre échange, voici les points à retenir pour la réunion de demain.'
-    ];
-    result = current ? current + '\n\n' + templates[Math.floor(Math.random() * templates.length)] : templates[Math.floor(Math.random() * templates.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bils on\b/g, 'ils ont').replace(/\belle on\b/g, 'elle a').replace(/\bau jour d\'aujourd\'hui\b/g, 'actuellement');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current.replace(/\bveut\b/g, 'souhaite').replace(/\bpeut\b/g, 'est en mesure de').replace(/\bva\b/g, 'envisage de');
-  }
-
-  if (result) {
-    input.value = result;
-    autoResizeTextarea(input);
-    toast('✓ ' + labels[action] + ' (mode local)', 'success');
-  }
-}
 
 function autoResizeTextarea(el) {
   el.style.height = 'auto';
@@ -533,21 +501,12 @@ function autoResizeTextarea(el) {
 }
 
 // ── INIT ──
-function initMessages() {
+async function initMessages() {
   const chatInput = document.getElementById('chatInput');
   if (chatInput) {
     chatInput.addEventListener('input', () => autoResizeTextarea(chatInput));
   }
-  const session = Auth.getSession();
-  let allMsgs = getMessages();
-  let changed = false;
-  allMsgs.forEach(m => {
-    if (!Array.isArray(m.readBy)) {
-      m.readBy = [];
-      changed = true;
-    }
-  });
-  if (changed) setMessages(allMsgs);
+  await loadMessagesData();
   renderConvs();
   renderChat();
 }

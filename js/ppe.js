@@ -1,4 +1,16 @@
 const PPE_KEY = DB.keys.ppe;
+const DOMAINE_SERAFIN_MAP = {
+  autonomie: ['2.2.1'],
+  sante:     ['2.1.1','2.1.2'],
+  viePro:    ['2.3.3'],
+  logement:  ['2.3.2'],
+  vieSociale:['2.3.4'],
+  vieAffective:['2.3.3','2.3.4'],
+  budget:    ['2.3.5'],
+  transport: ['3.2.4'],
+  orientation:['2.4.1']
+};
+
 const DOMAINES = [
   { id:'autonomie', label:'Autonomie', icon:'🧍' },
   { id:'sante', label:'Santé et bien-être', icon:'❤️' },
@@ -11,17 +23,37 @@ const DOMAINES = [
   { id:'orientation', label:'Orientation', icon:'🧭' }
 ];
 
-function getPpe() { return DB.get(DB.keys.ppe) || []; }
-function savePpe(list) { DB.set(DB.keys.ppe, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _ppeCache = [];
+function getPpe() { return _ppeCache; }
+async function loadPpeCache() { _ppeCache = await sbGetPpe(); }
+// Persiste un avenant précis (remonte une erreur via toast)
+function persistPpe(p) {
+  if (!p || !p.id) return;
+  sbSavePpe(p).catch(e => { console.error('[ppe]', e); toast('Erreur sauvegarde avenant', 'error'); });
+}
+
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+async function persistResident(r) {
+  const saved = await sbSaveResident(r);
+  const i = _residentsCache.findIndex(x => String(x.id) === String(saved.id));
+  if (i >= 0) _residentsCache[i] = saved; else _residentsCache.push(saved);
+  return saved;
+}
 
 function emptySection() {
   return { bilan:'', objectifs:[{ objectif:'', moyens:'', echeance:'', evaluation:'' }], expression:'' };
 }
 
-function initPpe() {
+async function initPpe() {
   const session = Auth.requireAuth();
   if (!session) return;
   if (!requireModule('access_ppe')) return;
+  await loadResidentsCache();
+  await loadPpeCache();
   populateAvenantSelects();
   renderAvenant();
   const params = new URLSearchParams(window.location.search);
@@ -34,7 +66,7 @@ function initPpe() {
 }
 
 function populateAvenantSelects() {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   const opts = r => r.map(x => `<option value="${x.id}">${escHtml(x.prenom||'')} ${escHtml(x.nom||'')}</option>`).join('');
   ['fAvResident','filterResidentAvenant'].forEach(id => {
     const el = document.getElementById(id);
@@ -45,14 +77,13 @@ function populateAvenantSelects() {
   });
 }
 
-function saveAvenant() {
+async function saveAvenant() {
   const editId = document.getElementById('avenantEditId').value;
   const residentId = document.getElementById('fAvResident').value;
   if (!residentId) { toast('Veuillez choisir un résident', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   const r = residents.find(x => x.id === residentId);
   const list = getPpe();
-  const now = new Date().toISOString();
   const data = {
     residentId,
     residentName: r ? `${r.prenom||''} ${r.nom||''}`.trim() : '?',
@@ -65,29 +96,27 @@ function saveAvenant() {
     entreeEsat: document.getElementById('fAvEntreeEsat').value
   };
 
-  if (editId) {
-    const idx = list.findIndex(p => p.id === editId);
-    if (idx >= 0) { Object.assign(list[idx], data); }
-    savePpe(list);
-    closeModal('modalAvenant');
-    toast('Avenant mis à jour');
-  } else {
-    const sections = {};
-    DOMAINES.forEach(d => { sections[d.id] = emptySection(); });
-    const avenant = {
-      id: genId(), ...data,
-      statut: 'brouillon',
-      sections,
-      conclusion: '',
-      signatures: { resident:null, referent:null, direction:null, date:null },
-      createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })(),
-      createdAt: now
-    };
-    list.unshift(avenant);
-    savePpe(list);
-    closeModal('modalAvenant');
-    toast('Avenant créé');
-  }
+  try {
+    if (editId) {
+      const idx = list.findIndex(p => p.id === editId);
+      if (idx >= 0) { Object.assign(list[idx], data); list[idx] = await sbSavePpe(list[idx]); }
+      toast('Avenant mis à jour');
+    } else {
+      const sections = {};
+      DOMAINES.forEach(d => { sections[d.id] = emptySection(); });
+      const saved = await sbSavePpe({
+        ...data,
+        statut: 'brouillon',
+        sections,
+        conclusion: '',
+        signatures: { resident:null, referent:null, direction:null, date:null },
+        createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })()
+      });
+      list.unshift(saved);
+      toast('Avenant créé');
+    }
+  } catch (e) { console.error('[saveAvenant]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  closeModal('modalAvenant');
   renderAvenant();
 }
 
@@ -142,6 +171,7 @@ function renderAvenantFull(p) {
       </div>
     </div>
     ${DOMAINES.map(d => renderSectionCard(p, d)).join('')}
+    ${renderSerafinSync(p)}
     <div class="section-card">
       <div class="section-header" style="cursor:default"><strong>Conclusion</strong></div>
       <div class="section-body">
@@ -169,17 +199,15 @@ function renderSectionCard(p, domaine) {
     <div class="section-header" onclick="toggleSection('${p.id}','${domaine.id}')">
       <span>${domaine.icon}</span>
       <span>${domaine.label}</span>
-      <span style="margin-left:auto;font-size:.7rem;color:var(--muted)">${s.objectifs.length} obj.</span>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem">
+        ${(DOMAINE_SERAFIN_MAP[domaine.id]||[]).map(c=>`<span style="font-size:.6rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:1px 6px;border-radius:999px;font-weight:600">${c}</span>`).join('')}
+        <span style="font-size:.7rem;color:#CECBF6;margin-left:.25rem">${s.objectifs.length} obj.</span>
+      </span>
     </div>
     <div class="section-body" id="sectionBody_${p.id}_${domaine.id}">
       <div style="display:flex;gap:.5rem;align-items:flex-start">
         <div style="flex:1">
           <label style="font-size:.7rem;color:var(--muted);font-weight:600">Bilan</label>
-          <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
-            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','redaction')" title="Rédiger un bilan">✍ Rédiger</button>
-            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','correction')" title="Corriger le texte">✓ Corriger</button>
-            <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','bilan','reformulation')" title="Reformulation institutionnelle">🏛 Reformuler</button>
-          </div>
           <textarea class="input" style="min-height:160px;width:100%;resize:vertical" onchange="updateSectionField('${p.id}','${domaine.id}','bilan',this.value)" placeholder="Bilan du domaine…">${escHtml(s.bilan||'')}</textarea>
         </div>
         <button class="btn btn-ghost btn-sm" style="margin-top:1.2rem" onclick="addSectionObj('${p.id}','${domaine.id}')">+ Objectif</button>
@@ -195,11 +223,6 @@ function renderSectionCard(p, domaine) {
       <button class="btn btn-ghost btn-sm" style="align-self:flex-start" onclick="addSectionObj('${p.id}','${domaine.id}')">+ Ajouter une ligne</button>
       <div style="margin-top:.25rem">
         <label style="font-size:.7rem;color:var(--muted);font-weight:600">Expression et souhaits du résident</label>
-        <div style="display:flex;gap:.3rem;margin-bottom:.25rem">
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','expression','redaction')" title="Rédiger">✍ Rédiger</button>
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','expression','correction')" title="Corriger">✓ Corriger</button>
-          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:1px 6px" onclick="aiAssist('${p.id}','${domaine.id}','expression','reformulation')" title="Reformulation">🏛 Reformuler</button>
-        </div>
         <textarea class="input" style="min-height:50px;width:100%" onchange="updateSectionField('${p.id}','${domaine.id}','expression',this.value)" placeholder="Expression et souhaits…">${escHtml(s.expression||'')}</textarea>
       </div>
     </div>
@@ -218,100 +241,9 @@ function updateSectionField(ppeId, domId, field, value) {
   if (!p) return;
   if (!p.sections[domId]) p.sections[domId] = emptySection();
   p.sections[domId][field] = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
-async function aiAssist(ppeId, domId, field, action) {
-  const list = getPpe();
-  const p = list.find(x => x.id === ppeId);
-  if (!p) return;
-  if (!p.sections[domId]) p.sections[domId] = emptySection();
-  const domaine = DOMAINES.find(d => d.id === domId);
-  const label = domaine ? domaine.label : domId;
-  const current = p.sections[domId][field] || '';
-  const hasKey = !!getAiKey();
-  const labels = { redaction: 'Rédaction', correction: 'Correction', reformulation: 'Reformulation' };
-
-  if (hasKey) {
-    const customSystem = getAiPrompt('ppe', action);
-    let system = '';
-    let prompt = '';
-    if (action === 'redaction') {
-      system = customSystem || 'Tu es un rédacteur de bilans socio-éducatifs pour ESMS. Rédige en français un texte professionnel et institutionnel.';
-      prompt = `Rédige un bilan concis pour le domaine "${label}" d'un résident en établissement médico-social.${current ? '\n\nTexte existant à compléter :\n' + current : ''}`;
-    } else if (action === 'correction') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un correcteur professionnel. Corrige les fautes d\'orthographe, de grammaire et de syntaxe sans changer le style.';
-      prompt = 'Corrige ce texte :\n\n' + current;
-    } else if (action === 'reformulation') {
-      if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-      system = customSystem || 'Tu es un rédacteur institutionnel. Reformule ce texte en langage professionnel et institutionnel.';
-      prompt = 'Reformule ce texte de manière institutionnelle :\n\n' + current;
-    }
-    const result = await callMistral(prompt, system);
-    if (result) {
-      p.sections[domId][field] = result;
-      savePpe(list);
-      renderAvenantFull(p);
-      const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
-      if (bodyEl) bodyEl.style.display = '';
-      toast('✓ ' + labels[action] + ' (Mistral AI)', 'success');
-      return;
-    }
-    toast('API Mistral indisponible, mode local', 'warning');
-  }
-
-  // Fallback local
-  let result = '';
-  if (action === 'redaction') {
-    const templates = {
-      bilan: [
-        `Concernant le domaine "${label}", la situation évolue de manière positive.`,
-        `Dans le cadre du suivi personnalisé, il convient de noter que ce domaine nécessite une attention particulière.`,
-        `L'évaluation dans le domaine "${label}" fait apparaître des progrès significatifs.`
-      ],
-      expression: [
-        `Le résident exprime une satisfaction quant aux accompagnements proposés.`,
-        `Il/elle souhaite être davantage impliqué(e) dans les décisions le/la concernant.`,
-        `Il/elle fait part de son désir de gagner en autonomie dans ce domaine.`
-      ]
-    };
-    const pool = templates[field] || templates.bilan;
-    result = current ? current + '\n\n' + pool[Math.floor(Math.random() * pool.length)] : pool[Math.floor(Math.random() * pool.length)];
-  } else if (action === 'correction') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current
-      .replace(/\bils on\b/g, 'ils ont')
-      .replace(/\belle on\b/g, 'elle a')
-      .replace(/\bje suis allé\b/g, 'je me suis rendu')
-      .replace(/\bil a étais\b/g, 'il a été')
-      .replace(/\bcomme même\b/g, 'quand même')
-      .replace(/\bau jour d'aujourd'hui\b/g, 'actuellement')
-      .replace(/\bpar contre\b/g, 'en revanche')
-      .replace(/\bpeut être\b/g, 'peut-être')
-      .replace(/\bentraine\b/g, 'entraîne')
-      .replace(/\bgràce\b/g, 'grâce');
-  } else if (action === 'reformulation') {
-    if (!current) { toast('Écrivez d\'abord un texte', 'error'); return; }
-    result = current
-      .replace(/\bgère\b/g, 'assure la gestion de')
-      .replace(/\ba besoin de\b/g, 'nécessite')
-      .replace(/\bveut\b/g, 'souhaite')
-      .replace(/\bpeut\b/g, 'est en mesure de')
-      .replace(/\bfait\b/g, 'réalise')
-      .replace(/\bva\b/g, 'envisage de')
-      .replace(/\bdoit\b/g, 'se doit de');
-  }
-
-  if (result) {
-    p.sections[domId][field] = result;
-    savePpe(list);
-    renderAvenantFull(p);
-    const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
-    if (bodyEl) bodyEl.style.display = '';
-    toast('✓ ' + labels[action] + ' (mode local)', 'success');
-  }
-}
 
 function objRowHtml(ppeId, domId, oi, o) {
   return `<div class="obj-row">
@@ -332,7 +264,7 @@ function addSectionObj(ppeId, domId) {
   if (!p.sections[domId]) p.sections[domId] = emptySection();
   if (!p.sections[domId].objectifs) p.sections[domId].objectifs = [];
   p.sections[domId].objectifs.push({ objectif:'', moyens:'', echeance:'', evaluation:'' });
-  savePpe(list);
+  persistPpe(p);
   renderAvenantFull(p);
   const bodyEl = document.getElementById('sectionBody_'+ppeId+'_'+domId);
   if (bodyEl) bodyEl.style.display = '';
@@ -344,7 +276,7 @@ function updateSectionObjField(ppeId, domId, idx, field, value) {
   if (!p || !p.sections[domId]) return;
   if (!p.sections[domId].objectifs[idx]) p.sections[domId].objectifs[idx] = { objectif:'', moyens:'', echeance:'', evaluation:'' };
   p.sections[domId].objectifs[idx][field] = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 function removeSectionObj(ppeId, domId, idx) {
@@ -353,7 +285,7 @@ function removeSectionObj(ppeId, domId, idx) {
   const p = list.find(x => x.id === ppeId);
   if (!p || !p.sections[domId]) return;
   p.sections[domId].objectifs.splice(idx, 1);
-  savePpe(list);
+  persistPpe(p);
   renderAvenantFull(p);
 }
 
@@ -362,7 +294,7 @@ function updateConclusion(ppeId, value) {
   const p = list.find(x => x.id === ppeId);
   if (!p) return;
   p.conclusion = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 function updateSignature(ppeId, field, value) {
@@ -371,7 +303,7 @@ function updateSignature(ppeId, field, value) {
   if (!p) return;
   if (!p.signatures) p.signatures = { resident:'', referent:'', direction:'', date:'' };
   p.signatures[field] = value;
-  savePpe(list);
+  persistPpe(p);
 }
 
 function printAvenant(id) {
@@ -497,26 +429,52 @@ function renderAvenant() {
     return;
   }
 
-  const residents = DB.get(DB.keys.residents) || [];
-  container.innerHTML = `<div class="table-wrap"><table class="table" style="width:100%;border-collapse:separate;border-spacing:0 6px">
-    <thead><tr>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Résident</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Date</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Statut</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Référent</th>
-      <th style="text-align:left;padding:.6rem .75rem;font-size:.78rem;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border)">Actions</th>
-    </tr></thead>
-    <tbody>${list.map((p, i) => {
+  const residents = residentsList();
+  function _avInitials(name) {
+    return (name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+  }
+  function _avStatutDot(s) {
+    return s==='actif'?'●':s==='brouillon'?'◐':'○';
+  }
+  function _avRow(icon, label, val) {
+    if (!val || val === '—') return '';
+    return `<div class="av-card-row"><span class="av-icon">${icon}</span><span class="av-label">${label}</span><span class="av-val">${escHtml(String(val))}</span></div>`;
+  }
+  function _hexToRgba(hex, a) {
+    const h = (hex||'#0f2b4a').replace('#','');
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  container.innerHTML = `<div class="av-grid">${list.map(p => {
     const r = residents.find(x => x.id === p.residentId);
-    const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
-    return `<tr style="cursor:pointer;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.04);background:${i%2===0?'#fff':'#f8fafc'};transition:background .15s,box-shadow .15s" onmouseenter="this.style.background='#eef2ff';this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseleave="this.style.background='${i%2===0?'#fff':'#f8fafc'}';this.style.boxShadow='0 2px 6px rgba(0,0,0,.04)'" onclick="openAvenant('${p.id}')">
-      <td style="padding:.7rem .75rem;border-radius:12px 0 0 12px"><div style="display:flex;align-items:center;gap:.6rem"><span style="font-weight:600;font-size:.85rem">${escHtml(p.residentName)}</span></div></td>
-      <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${formatDate(p.dateRedaction)}</td>
-      <td style="padding:.7rem .75rem"><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></td>
-      <td style="padding:.7rem .75rem;font-size:.82rem;color:var(--g700)">${p.referent ? escHtml(p.referent) : '—'}</td>
-      <td style="padding:.7rem .75rem;border-radius:0 12px 12px 0"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAvenant('${p.id}')">Voir</button></td>
-    </tr>`;
-  }).join('')}</tbody></table></div>`;
+    const col = r?.color || '#0f2b4a';
+    const totalObj = Object.values(p.sections||{}).reduce((a,s)=>a+(s.objectifs?.filter(o=>o.objectif?.trim()).length||0),0);
+    const domainesActifs = Object.values(p.sections||{}).filter(s=>(s.bilan||'').trim()).length;
+    const avatarHtml = r?.photo
+      ? `<img src="${r.photo}" class="av-card-avatar" style="object-fit:cover" alt="${escHtml(p.residentName)}"/>`
+      : `<div class="av-card-avatar" style="background:${_hexToRgba(col,.25)};border-color:${_hexToRgba(col,.5)}">${_avInitials(p.residentName)}</div>`;
+    return `<div class="av-card" style="border-color:${_hexToRgba(col,.25)}" onclick="openAvenant('${p.id}')">
+      <div class="av-card-head" style="background:${col}">
+        ${avatarHtml}
+        <div class="av-card-name">${escHtml(p.residentName||'—')}</div>
+        <div><span class="av-card-statut ${p.statut}">${_avStatutDot(p.statut)} ${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>
+      </div>
+      <div class="av-card-body">
+        ${_avRow('👤','Ouvert par', p.createdBy||'—')}
+        ${_avRow('📅','Rédaction', formatDate(p.dateRedaction))}
+        ${_avRow('🔄','Révision', formatDate(p.dateRevision))}
+        ${_avRow('🧑‍🏫','Référent', p.referent)}
+        ${_avRow('🏭','Atelier', p.atelier)}
+        ${_avRow('🛡️','Protection', p.protection)}
+        <div class="av-card-row"><span class="av-icon">🎯</span><span class="av-label">Objectifs</span><span class="av-val" style="font-weight:700;color:var(--accent)">${totalObj} objectif${totalObj>1?'s':''} · ${domainesActifs} domaine${domainesActifs>1?'s':''}</span></div>
+      </div>
+      <div class="av-card-footer" style="border-top-color:${_hexToRgba(col,.15)}">
+        <button class="btn btn-sm" style="flex:1;justify-content:center;background:${col};color:#fff;border:none" onclick="event.stopPropagation();openAvenant('${p.id}')">Ouvrir</button>
+        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;border-color:${_hexToRgba(col,.4)};color:${col}" onclick="event.stopPropagation();editAvenant('${p.id}')">Modifier</button>
+        <button class="btn btn-ghost btn-sm" style="color:#dc2626;flex:0" onclick="event.stopPropagation();deleteAvenant('${p.id}')" title="Supprimer">✕</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function editAvenant(id) {
@@ -543,7 +501,7 @@ function changeAvenantStatut(id) {
   if (p.statut === 'brouillon') p.statut = 'actif';
   else if (p.statut === 'actif') p.statut = 'termine';
   else return;
-  savePpe(list);
+  persistPpe(p);
   toast(`Avenant ${p.statut === 'actif' ? 'activé' : 'terminé'}`);
   const full = document.getElementById('avenantFullView');
   if (full) renderAvenantFull(p);
@@ -552,12 +510,14 @@ function changeAvenantStatut(id) {
 
 function deleteAvenant(id) {
   if (!confirm('Supprimer cet avenant ?')) return;
-  const list = getPpe();
-  savePpe(list.filter(p => p.id !== id));
-  toast('Avenant supprimé');
-  const full = document.getElementById('avenantFullView');
-  if (full) backToList();
-  renderAvenant();
+  (async () => {
+    try { await sbDeletePpe(id); _ppeCache = _ppeCache.filter(p => p.id !== id); }
+    catch (e) { console.error('[deleteAvenant]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Avenant supprimé');
+    const full = document.getElementById('avenantFullView');
+    if (full) backToList();
+    renderAvenant();
+  })();
 }
 
 function resetAvenantModal() {
@@ -580,12 +540,12 @@ async function genererAvenantFromJournal(existingId) {
     const p = list.find(x => x.id === existingId);
     if (!p) { toast('Avenant introuvable', 'error'); return; }
     residentId = p.residentId;
-    const residents = DB.get(DB.keys.residents) || [];
+    const residents = residentsList();
     resident = residents.find(r => String(r.id) === String(residentId));
   } else {
     residentId = document.getElementById('fAvResident').value;
     if (!residentId) { toast('Veuillez d\'abord choisir un résident', 'error'); return; }
-    const residents = DB.get(DB.keys.residents) || [];
+    const residents = residentsList();
     resident = residents.find(r => String(r.id) === String(residentId));
   }
   if (!resident) { toast('Résident introuvable', 'error'); return; }
@@ -605,7 +565,7 @@ async function genererAvenantFromJournal(existingId) {
     p.sections = result.sections || {};
     p.conclusion = result.conclusion || '';
     ensureSectionsComplete(p.sections);
-    savePpe(list);
+    persistPpe(p);
     toast('✅ Avenant régénéré depuis le journal', 'success');
     renderAvenantFull(p);
   } else {
@@ -613,23 +573,23 @@ async function genererAvenantFromJournal(existingId) {
     const list = getPpe();
     const now = new Date().toISOString();
     const avenant = {
-      id: genId(), residentId, residentName: residentInfo,
+      residentId, residentName: residentInfo,
       dateRedaction: now.slice(0, 10), dateRevision: '', referent: '',
       protection: '', employeur: '', atelier: '', entreeEsat: '',
       statut: 'brouillon',
       sections: result.sections || {},
       conclusion: result.conclusion || '',
       signatures: { resident: null, referent: null, direction: null, date: null },
-      createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })(),
-      createdAt: now
+      createdBy: (() => { const s = Auth.getSession(); return s ? `${s.prenom||''} ${s.nom||''}`.trim() || s.username : '?'; })()
     };
     ensureSectionsComplete(avenant.sections);
-    list.unshift(avenant);
-    savePpe(list);
+    let saved;
+    try { saved = await sbSavePpe(avenant); } catch (e) { console.error(e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    list.unshift(saved);
     closeModal('modalAvenant');
     toast('✅ Avenant généré depuis le journal', 'success');
     renderAvenant();
-    setTimeout(() => openAvenant(avenant.id), 400);
+    setTimeout(() => openAvenant(saved.id), 400);
   }
 }
 
@@ -684,46 +644,7 @@ function renderCompare(idA, idB) {
 }
 
 async function aiAvenantFromJournal(resident, entries) {
-  const residentInfo = `${resident.prenom || ''} ${resident.nom || ''}`.trim();
-  const journalText = entries.slice().reverse().map(e =>
-    `[${e.date || '?'} ${e.heure || ''}] (${e.categorie || 'général'}) ${e.contenu || ''}`
-  ).join('\n\n');
-
-  const key = getAiKey();
-  const baseSystem = getAiPrompt('ppe', 'avenant') || 'Tu es un rédacteur de PPE. Retourne UNIQUEMENT un objet JSON valide.';
-  const systemPrompt = baseSystem + `\n\nEXIGENCES DE QUALITÉ :
-- Appuie-toi UNIQUEMENT sur les observations du journal de bord fournies (n'utilise aucune autre source).
-- Exploite l'INTÉGRALITÉ de ces observations pour produire un avenant RICHE, DÉTAILLÉ et PERSONNALISÉ.
-- Pour CHAQUE domaine, rédige un bilan circonstancié (plusieurs phrases) appuyé sur des éléments concrets et l'évolution observée, puis propose des objectifs précis, mesurables, avec des moyens et des modalités d'évaluation adaptés.
-- Adopte un style professionnel, institutionnel, bienveillant et nuancé ; reste factuel et n'invente aucun fait.
-- CONFIDENTIALITÉ : si le journal évoque des incidents, tu peux indiquer qu'il y a eu des incidents et décrire l'accompagnement mis en place, mais NE DÉTAILLE JAMAIS leur nature, leur type ni les circonstances.`;
-
   let result = null;
-  if (key) {
-    try {
-      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({
-          model: 'mistral-small-latest',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Rédige l'avenant de PPE le plus complet et détaillé possible pour ${residentInfo}, en t'appuyant exclusivement sur les ${entries.length} observations du journal de bord ci-dessous. Couvre chaque domaine pertinent avec un bilan développé et des objectifs concrets.\n\n===== JOURNAL DE BORD (${entries.length} entrées) =====\n${journalText}` }
-          ],
-          temperature: 0.7,
-          max_tokens: 4000
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const raw = data.choices?.[0]?.message?.content?.trim() || null;
-        if (raw) {
-          try { result = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
-          catch (_) { result = null; }
-        }
-      }
-    } catch (_) {}
-  }
 
   if (!result) {
     const objTemplates = {
@@ -831,6 +752,97 @@ function ensureSectionsComplete(sections) {
 
 function regenerateAvenantFromJournal(id) {
   genererAvenantFromJournal(id);
+}
+
+// ═══════════════════════════════════════════
+//  SYNCHRONISATION SERAFIN-PH
+// ═══════════════════════════════════════════
+
+const SP_DESCRIPTIONS = {
+  '2.1.1': { desc: 'Soins médicaux, paramédicaux et psychologiques dispensés au résident.', ex: 'Suivi infirmier quotidien, consultation psychiatrique, distribution des médicaments.' },
+  '2.1.2': { desc: 'Maintien ou restauration des capacités motrices, cognitives ou sensorielles.', ex: 'Séances de kinésithérapie, ergothérapie, orthophonie.' },
+  '2.2.1': { desc: 'Soutien aux actes essentiels de la vie quotidienne : toilette, repas, hygiène, déplacements.', ex: 'Aide à la douche, accompagnement pour cuisiner, guidage dans les déplacements internes.' },
+  '2.3.1': { desc: 'Aide à la compréhension et à l\'exercice des droits civiques, administratifs et juridiques.', ex: 'Démarches pour la carte d\'invalidité, déclaration de revenus, accompagnement chez le tuteur.' },
+  '2.3.2': { desc: 'Soutien dans la gestion du cadre de vie et la préparation à un logement autonome.', ex: 'Apprentissage du rangement, entretien de la chambre, préparation à un appartement extérieur.' },
+  '2.3.3': { desc: 'Aide à l\'insertion professionnelle, scolaire ou en formation adaptée.', ex: 'Accompagnement à l\'ESAT, soutien en atelier, aide à la rédaction d\'un CV ou dossier de formation.' },
+  '2.3.4': { desc: 'Soutien à la participation aux activités culturelles, sportives, citoyennes et aux relations sociales.', ex: 'Sorties culturelles, clubs de sport, maintien du lien familial, participation à des associations.' },
+  '2.3.5': { desc: 'Aide à la gestion du budget, des ressources financières et des démarches administratives courantes.', ex: 'Suivi du budget mensuel, apprentissage du paiement de factures, gestion de l\'argent de poche.' },
+  '2.4.1': { desc: 'Coordination entre les intervenants pour garantir la cohérence du projet de vie du résident.', ex: 'Réunion de synthèse pluridisciplinaire, coordination MDPH, lien avec la famille et les partenaires externes.' }
+};
+
+function renderSerafinSync(p) {
+  const serafin = p.serafin || {};
+  const prestations = serafin.prestations || {};
+  const directes = (typeof SP_NOMENCLATURE !== 'undefined' ? SP_NOMENCLATURE : []).filter(s => s.cat === 'Directe');
+  const niveauLabels = ['0 — Nul', '1 — Faible', '2 — Modéré', '3 — Important', '4 — Très important'];
+  const niveauColors = ['#d1d5db', '#22c55e', '#eab308', '#f97316', '#ef4444'];
+  const activeCount = Object.values(prestations).filter(v => v.active).length;
+
+  return `<div class="section-card">
+    <div class="section-header" style="cursor:default">
+      <span>📊</span>
+      <span>Synchronisation SERAFIN-PH</span>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
+        ${activeCount ? `<span style="font-size:.68rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:2px 8px;border-radius:999px">${activeCount} prestation${activeCount>1?'s':''}</span>` : ''}
+        <button class="btn btn-sm" style="background:#7F77DD;color:#fff;border:none;font-size:.72rem;padding:3px 10px;border-radius:6px" onclick="syncSerafinToResident('${p.id}')">⟳ Synchroniser → résident</button>
+      </span>
+    </div>
+    <div class="section-body">
+      <p style="font-size:.78rem;margin:0 0 .85rem;color:#534AB7">Cochez les prestations SERAFIN-PH concernées par cet avenant et définissez le niveau de besoin. Cliquez sur <strong>Synchroniser</strong> pour mettre à jour la fiche SERAFIN-PH du résident.</p>
+      <div style="display:flex;flex-direction:column;gap:.45rem">
+        ${directes.map(sp => {
+          const item = prestations[sp.code] || { active: false, niveau: 0 };
+          const isActive = !!item.active;
+          const dotColor = niveauColors[item.niveau] || niveauColors[0];
+          const info = SP_DESCRIPTIONS[sp.code] || {};
+          return `<div style="padding:.65rem .85rem;background:${isActive?'#fff':'rgba(255,255,255,.45)'};border:0.5px solid ${isActive?'#7F77DD':'#CECBF6'};border-radius:8px" id="sp_row_${p.id}_${sp.code.replace(/\./g,'_')}">
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <input type="checkbox" ${isActive?'checked':''} onchange="saveSerafinItem('${p.id}','${sp.code}','active',this.checked)" style="width:15px;height:15px;accent-color:#534AB7;flex-shrink:0;cursor:pointer"/>
+              <span style="font-size:.8rem;flex:1;font-weight:600;color:${isActive?'#26215C':'#534AB7'}">${sp.icon} <span style="font-size:.72rem;color:#7F77DD;font-weight:700">${sp.code}</span> ${sp.label}</span>
+              ${isActive ? `<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
+                <span style="width:9px;height:9px;border-radius:50%;background:${dotColor};display:inline-block"></span>
+                <select onchange="saveSerafinItem('${p.id}','${sp.code}','niveau',parseInt(this.value))" style="font-size:.72rem;padding:2px 6px;border:0.5px solid #CECBF6;border-radius:6px;background:#fff;color:#26215C;cursor:pointer">
+                  ${niveauLabels.map((l,i)=>`<option value="${i}" ${item.niveau===i?'selected':''}>${l}</option>`).join('')}
+                </select>
+              </div>` : ''}
+            </div>
+            ${info.desc ? `<div style="margin-top:.4rem;padding-left:27px">
+              <div style="font-size:.73rem;color:#534AB7;line-height:1.45">${info.desc}</div>
+              <div style="font-size:.7rem;color:#7F77DD;margin-top:.2rem;font-style:italic">Ex : ${info.ex}</div>
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveSerafinItem(ppeId, code, field, value) {
+  const list = getPpe();
+  const p = list.find(x => x.id === ppeId);
+  if (!p) return;
+  if (!p.serafin) p.serafin = { prestations: {} };
+  if (!p.serafin.prestations[code]) p.serafin.prestations[code] = { active: false, niveau: 0 };
+  p.serafin.prestations[code][field] = value;
+  persistPpe(p);
+  const full = document.getElementById('avenantFullView');
+  if (full) renderAvenantFull(p);
+}
+
+async function syncSerafinToResident(ppeId) {
+  const list = getPpe();
+  const p = list.find(x => x.id === ppeId);
+  if (!p) { toast('Avenant introuvable', 'error'); return; }
+  const spData = p.serafin && p.serafin.prestations ? p.serafin.prestations : {};
+  const selected = Object.entries(spData).filter(([,v]) => v.active).map(([k]) => k);
+  if (!selected.length) { toast('Aucune prestation sélectionnée', 'error'); return; }
+  const r = residentsList().find(x => String(x.id) === String(p.residentId));
+  if (!r) { toast('Résident introuvable', 'error'); return; }
+  const prestations = {};
+  selected.forEach(code => { prestations[code] = { niveau: spData[code].niveau || 0 }; });
+  const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: new Date().toISOString().slice(0,10) };
+  await persistResident({ ...r, serafinph });
+  toast(`✅ SERAFIN synchronisé pour ${p.residentName} — ${selected.length} prestation${selected.length>1?'s':''}`, 'success');
 }
 
 function initPpePage() {

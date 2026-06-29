@@ -2,29 +2,40 @@
 let chEditId = null;
 let edlChambreId = null;
 
-function getChambres() { return DB.get(DB.keys.chambres) || []; }
-function saveChambres(list) { DB.set(DB.keys.chambres, list); }
-function getEdl() { return DB.get(DB.keys.edl) || []; }
-function saveEdl(list) { DB.set(DB.keys.edl, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage (lecture synchrone pour le rendu).
+let _chCache = [];
+let _edlCache = [];
+function getChambres() { return _chCache; }
+function getEdl() { return _edlCache; }
+async function loadChambresCache() { _chCache = await sbGetChambres(); }
+async function loadEdlCache() { _edlCache = await sbGetEdl(); }
+
+// ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
+let _residentsCache = [];
+function residentsList() { return _residentsCache; }
+async function loadResidentsCache() { _residentsCache = await sbGetResidents(); }
+async function persistResident(r) {
+  const saved = await sbSaveResident(r);
+  const i = _residentsCache.findIndex(x => String(x.id) === String(saved.id));
+  if (i >= 0) _residentsCache[i] = saved; else _residentsCache.push(saved);
+  return saved;
+}
 
 // Crée automatiquement les chambres présentes sur les fiches résidents
-function seedChambresFromResidents() {
-  const rooms = getChambres();
-  const known = new Set(rooms.map(c => (c.nom || '').toLowerCase()));
-  const residents = DB.get(DB.keys.residents) || [];
-  let added = 0;
-  [...new Set(residents.map(r => (r.chambre || '').trim()).filter(Boolean))].forEach(nom => {
-    if (!known.has(nom.toLowerCase())) {
-      rooms.push({ id: genId(), nom, unite: '', capacite: 1, notes: '' });
-      added++;
-    }
-  });
-  if (added) saveChambres(rooms);
-  return added;
+async function seedChambresFromResidents() {
+  const known = new Set(getChambres().map(c => (c.nom || '').toLowerCase()));
+  const residents = residentsList();
+  const manquantes = [...new Set(residents.map(r => (r.chambre || '').trim()).filter(Boolean))]
+    .filter(nom => !known.has(nom.toLowerCase()));
+  for (const nom of manquantes) {
+    const saved = await sbSaveChambre({ nom, unite: '', capacite: 1, notes: '' });
+    _chCache.push(saved);
+  }
+  return manquantes.length;
 }
 
 function chOccupants(room) {
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   return residents.filter(r => r.statut !== 'sorti' && (r.chambre || '').trim().toLowerCase() === (room.nom || '').trim().toLowerCase());
 }
 
@@ -36,11 +47,23 @@ function renderChambres() {
   rooms.forEach(c => { occupes += chOccupants(c).length; });
 
   const st = document.getElementById('chStats');
-  if (st) st.innerHTML = `
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Chambres</span><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div></div><div class="stat-num">${rooms.length}</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Lits</span><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg></div></div><div class="stat-num">${totalLits}</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Occupés</span><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div></div><div class="stat-num">${occupes}</div></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="stat-label">Libres</span><div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div><div class="stat-num">${Math.max(totalLits - occupes, 0)}</div></div>`;
+  if (st) {
+    const nbUnites = new Set(rooms.map(c => (c.unite || '').trim() || 'Sans unité')).size;
+    const libres = Math.max(totalLits - occupes, 0);
+    const occRate = totalLits ? Math.round(occupes / totalLits * 100) : 0;
+    const freeRate = totalLits ? Math.round(libres / totalLits * 100) : 0;
+    const ico = {
+      ch:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+      lit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>',
+      occ: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      lib: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
+    };
+    st.innerHTML = `
+      <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Chambres</span><span class="chx-stat-ico">${ico.ch}</span></div><div class="chx-stat-num">${rooms.length}</div><div class="chx-stat-sub">${nbUnites} unité${nbUnites > 1 ? 's' : ''}</div></div>
+      <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Lits</span><span class="chx-stat-ico">${ico.lit}</span></div><div class="chx-stat-num">${totalLits}</div><div class="chx-stat-sub">Capacité d'accueil</div></div>
+      <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Occupés</span><span class="chx-stat-ico">${ico.occ}</span></div><div class="chx-stat-num">${occupes}</div><div class="chx-stat-bar"><i style="width:${occRate}%"></i></div><div class="chx-stat-sub">${occRate}% d'occupation</div></div>
+      <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Libres</span><span class="chx-stat-ico">${ico.lib}</span></div><div class="chx-stat-num">${libres}</div><div class="chx-stat-bar"><i style="width:${freeRate}%"></i></div><div class="chx-stat-sub">${freeRate}% disponibles</div></div>`;
+  }
 
   const el = document.getElementById('chGrid');
   if (!rooms.length) {
@@ -105,7 +128,7 @@ function openChambreModal(id) {
   openModal('modalChambre');
 }
 
-function saveChambre() {
+async function saveChambre() {
   const nom = document.getElementById('chNom').value.trim();
   if (!nom) { toast('Le numéro / nom de la chambre est requis', 'error'); return; }
   const data = {
@@ -114,21 +137,27 @@ function saveChambre() {
     capacite: Math.max(parseInt(document.getElementById('chCapacite').value) || 1, 1),
     notes: document.getElementById('chNotes').value.trim()
   };
-  let rooms = getChambres();
-  if (chEditId) {
-    const old = rooms.find(x => x.id === chEditId);
-    // Si renommage : suivre les résidents affectés
-    if (old && old.nom !== data.nom) {
-      const residents = DB.get(DB.keys.residents) || [];
-      DB.set(DB.keys.residents, residents.map(r => (r.chambre || '').trim().toLowerCase() === old.nom.trim().toLowerCase() ? { ...r, chambre: data.nom } : r));
+  try {
+    if (chEditId) {
+      const old = getChambres().find(x => x.id === chEditId);
+      // Si renommage : suivre les résidents affectés
+      if (old && old.nom !== data.nom) {
+        const cible = residentsList().filter(r => (r.chambre || '').trim().toLowerCase() === old.nom.trim().toLowerCase());
+        for (const r of cible) await persistResident({ ...r, chambre: data.nom });
+      }
+      const saved = await sbSaveChambre({ id: chEditId, ...data });
+      _chCache = _chCache.map(x => x.id === chEditId ? saved : x);
+      toast('Chambre mise à jour');
+    } else {
+      const saved = await sbSaveChambre(data);
+      _chCache.push(saved);
+      toast('Chambre créée');
     }
-    rooms = rooms.map(x => x.id === chEditId ? { ...x, ...data } : x);
-    toast('Chambre mise à jour');
-  } else {
-    rooms.push({ id: genId(), ...data });
-    toast('Chambre créée');
+  } catch (e) {
+    console.error('[saveChambre]', e);
+    toast('Erreur enregistrement : ' + (e?.message || e), 'error');
+    return;
   }
-  saveChambres(rooms);
   if (typeof auditLog === 'function') auditLog('chambre_save', `Chambre ${data.nom}`);
   closeModal('modalChambre');
   renderChambres();
@@ -138,12 +167,21 @@ function deleteChambre(id) {
   const c = getChambres().find(x => x.id === id);
   if (!c) return;
   const occ = chOccupants(c);
-  confirmDialog(`Supprimer la chambre ${c.nom} ?${occ.length ? `\n${occ.length} résident(s) y sont affectés — leur champ chambre sera vidé.` : ''}`, () => {
-    if (occ.length) {
-      const residents = DB.get(DB.keys.residents) || [];
-      DB.set(DB.keys.residents, residents.map(r => occ.some(o => o.id === r.id) ? { ...r, chambre: '' } : r));
+  confirmDialog(`Supprimer la chambre ${c.nom} ?${occ.length ? `\n${occ.length} résident(s) y sont affectés — leur champ chambre sera vidé.` : ''}`, async () => {
+    try {
+      if (occ.length) {
+        for (const o of occ) {
+          const r = residentsList().find(x => String(x.id) === String(o.id));
+          if (r) await persistResident({ ...r, chambre: '' });
+        }
+      }
+      await sbDeleteChambre(id);
+      _chCache = _chCache.filter(x => x.id !== id);
+    } catch (e) {
+      console.error('[deleteChambre]', e);
+      toast('Erreur suppression : ' + (e?.message || e), 'error');
+      return;
     }
-    saveChambres(getChambres().filter(x => x.id !== id));
     if (typeof auditLog === 'function') auditLog('chambre_delete', `Chambre ${c.nom}`);
     renderChambres();
     toast('Chambre supprimée', 'info');
@@ -155,7 +193,7 @@ function openAssignModal(id) {
   const c = getChambres().find(x => x.id === id);
   if (!c) return;
   chEditId = id;
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = residentsList().filter(r => r.statut !== 'sorti');
   const occ = chOccupants(c).map(o => o.id);
   document.getElementById('asTitle').textContent = `Attribuer un lit — Chambre ${c.nom}`;
   document.getElementById('asResident').innerHTML = '<option value="">— Choisir un résident —</option>' +
@@ -173,21 +211,21 @@ function openAssignModal(id) {
   openModal('modalAssign');
 }
 
-function assignResident() {
+async function assignResident() {
   const rid = document.getElementById('asResident').value;
   const c = getChambres().find(x => x.id === chEditId);
   if (!rid || !c) { toast('Choisissez un résident', 'error'); return; }
-  const residents = DB.get(DB.keys.residents) || [];
-  DB.set(DB.keys.residents, residents.map(r => String(r.id) === String(rid) ? { ...r, chambre: c.nom } : r));
+  const r = residentsList().find(x => String(x.id) === String(rid));
+  if (r) await persistResident({ ...r, chambre: c.nom });
   if (typeof auditLog === 'function') auditLog('chambre_assign', `Attribution Ch. ${c.nom}`);
   toast('Lit attribué ✓');
   openAssignModal(chEditId);
   renderChambres();
 }
 
-function unassignResident(rid) {
-  const residents = DB.get(DB.keys.residents) || [];
-  DB.set(DB.keys.residents, residents.map(r => String(r.id) === String(rid) ? { ...r, chambre: '' } : r));
+async function unassignResident(rid) {
+  const r = residentsList().find(x => String(x.id) === String(rid));
+  if (r) await persistResident({ ...r, chambre: '' });
   toast('Résident retiré de la chambre', 'info');
   openAssignModal(chEditId);
   renderChambres();
@@ -202,7 +240,7 @@ function openEdlModal(id) {
   if (!c) return;
   edlChambreId = id;
   document.getElementById('edlTitle').textContent = `États des lieux — Chambre ${c.nom}`;
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = residentsList().filter(r => r.statut !== 'sorti');
   document.getElementById('edlResident').innerHTML = '<option value="">— Résident concerné —</option>' +
     residents.map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   document.getElementById('edlItems').innerHTML = EDL_ITEMS.map(([k, label]) => `
@@ -231,26 +269,30 @@ function renderEdlHistory(c) {
     </details>`).join('') : '<div style="font-size:.78rem;color:var(--g400)">Aucun état des lieux enregistré</div>';
 }
 
-function saveEdlEntry() {
+async function saveEdlEntry() {
   const c = getChambres().find(x => x.id === edlChambreId);
   if (!c) return;
   const rid = document.getElementById('edlResident').value;
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = residentsList();
   const r = residents.find(x => String(x.id) === String(rid));
   const s = Auth.getSession();
   const etat = {};
   EDL_ITEMS.forEach(([k]) => { etat[k] = document.getElementById('edl_' + k).value; });
-  const list = getEdl();
-  list.push({
-    id: genId(), chambreId: c.id, chambreNom: c.nom,
-    residentId: rid || null, residentName: r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : '',
-    type: document.getElementById('edlType').value,
-    date: document.getElementById('edlDate').value || today(),
-    etat, observations: document.getElementById('edlObs').value.trim(),
-    author: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username : '?',
-    createdAt: new Date().toISOString()
-  });
-  saveEdl(list);
+  try {
+    const saved = await sbSaveEdl({
+      chambreId: c.id, chambreNom: c.nom,
+      residentId: rid || null, residentName: r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : '',
+      type: document.getElementById('edlType').value,
+      date: document.getElementById('edlDate').value || today(),
+      etat, observations: document.getElementById('edlObs').value.trim(),
+      author: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username : '?'
+    });
+    _edlCache.unshift(saved);
+  } catch (e) {
+    console.error('[saveEdlEntry]', e);
+    toast('Erreur enregistrement EDL : ' + (e?.message || e), 'error');
+    return;
+  }
   if (typeof auditLog === 'function') auditLog('edl_save', `EDL Ch. ${c.nom}`);
   toast('État des lieux enregistré ✓');
   renderEdlHistory(c);
@@ -258,11 +300,13 @@ function saveEdlEntry() {
 }
 
 // ── INIT ──
-function initChambres() {
+async function initChambres() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  const added = seedChambresFromResidents();
+  await loadResidentsCache();
+  await Promise.all([loadChambresCache(), loadEdlCache()]);
+  const added = await seedChambresFromResidents();
   if (added) toast(`${added} chambre(s) importée(s) depuis les fiches résidents`, 'info');
   const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
   const addBtn = document.getElementById('btnAddChambre');

@@ -104,8 +104,6 @@ function loadSettings() {
   document.getElementById('setEmail').value = s.email || '';
   document.getElementById('setAdresse').value = s.adresse || '';
   document.getElementById('setCapacite').value = s.capacite || '';
-  document.getElementById('setAiKey').value = getAiKey();
-  renderAiPrompts();
   updatePreview();
 }
 
@@ -129,59 +127,10 @@ function saveSettings() {
     adresse: document.getElementById('setAdresse').value.trim(),
     capacite: parseInt(document.getElementById('setCapacite').value) || 0
   };
-  DB.set(DB.keys.settings, data);
-  const aiKey = document.getElementById('setAiKey').value.trim();
-  setAiKey(aiKey);
-  saveAiPrompts();
+  persistSettings(data);
   updatePreview();
   renderUserInfo();
   toast('Paramètres enregistrés');
-}
-
-// ── AI PROMPTS ──
-function renderAiPrompts() {
-  const container = document.getElementById('aiPromptsContainer');
-  if (!container) return;
-  const modules = [
-    { id:'ppe', label:'Avenants (PPE)' },
-    { id:'journal', label:'Journal de bord' },
-    { id:'messages', label:'Messages' }
-  ];
-  const actions = [
-    { id:'redaction', label:'Rédaction', icon:'✍' },
-    { id:'correction', label:'Correction', icon:'✓' },
-    { id:'reformulation', label:'Reformulation', icon:'🏛' }
-  ];
-  const prompts = DB.get(DB.keys.aiPrompts) || {};
-  let html = '';
-  for (const mod of modules) {
-    html += `<details style="margin-bottom:.5rem;border:1px solid var(--border);border-radius:var(--r-sm)">
-      <summary style="cursor:pointer;font-weight:600;font-size:.8rem;padding:.5rem .75rem;background:var(--b50)">${mod.label}</summary>
-      <div style="padding:.5rem .75rem;display:flex;flex-direction:column;gap:.6rem">`;
-    for (const act of actions) {
-      const val = prompts[mod.id]?.[act.id]?.system || '';
-      html += `<div>
-        <label style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:2px;display:block">${act.icon} ${act.label}</label>
-        <textarea class="input" style="min-height:40px;font-size:.78rem" data-module="${mod.id}" data-action="${act.id}" placeholder="Instruction système par défaut…">${escHtml(val)}</textarea>
-      </div>`;
-    }
-    html += `</div></details>`;
-  }
-  container.innerHTML = html;
-}
-
-function saveAiPrompts() {
-  const textareas = document.querySelectorAll('#aiPromptsContainer textarea[data-module]');
-  const prompts = DB.get(DB.keys.aiPrompts) || {};
-  textareas.forEach(ta => {
-    const mod = ta.dataset.module;
-    const act = ta.dataset.action;
-    const val = ta.value.trim();
-    if (!prompts[mod]) prompts[mod] = {};
-    if (!prompts[mod][act]) prompts[mod][act] = {};
-    prompts[mod][act].system = val || null; // null = use default
-  });
-  DB.set(DB.keys.aiPrompts, prompts);
 }
 
 // ── CATÉGORIES ──
@@ -227,7 +176,7 @@ function saveCat() {
     cats.push({ id: newId, name, color });
     toast('Catégorie ajoutée');
   }
-  DB.set(DB.keys.categories, cats);
+  persistCategories(cats);
   closeAllModals();
   resetCatForm();
   renderCats();
@@ -238,7 +187,7 @@ function deleteCat() {
   confirmDialog('Supprimer cette catégorie ?', () => {
     let cats = DB.get(DB.keys.categories) || [];
     cats = cats.filter(c => String(c.id) !== String(id));
-    DB.set(DB.keys.categories, cats);
+    persistCategories(cats);
     closeAllModals();
     resetCatForm();
     renderCats();
@@ -326,32 +275,6 @@ function resetObjForm() {
 }
 
 // ── FONCTIONS ──
-function renderFonctions() {
-  const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
-  const el = document.getElementById('fonctionList');
-  if (!el) return;
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2rem;grid-column:1/-1"><p>Aucune fonction définie</p></div>`;
-    return;
-  }
-  el.innerHTML = list.map(f => {
-    const perms = f.permissions || [];
-    const chips = perms.length
-      ? perms.map(p => `<span class="role-perm">${escHtml(PERMISSION_LABELS[p] || p)}</span>`).join('')
-      : '<span class="role-noperm">Aucun droit accordé</span>';
-    return `<div class="role-card">
-      <div class="role-card-top" style="background:${f.color}">
-        <span class="role-name">${escHtml(f.fonction)}</span>
-        <button class="role-edit" title="Modifier" onclick="editFonction(${f.id})">✎</button>
-      </div>
-      <div class="role-card-body">
-        <div class="role-count">${perms.length} droit${perms.length > 1 ? 's' : ''} d'accès</div>
-        <div class="role-perms">${chips}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 const PERM_GROUPS = [
   { label: 'Général', keys: ['view_dashboard'] },
   { label: 'Résidents & projet', keys: ['view_residents', 'edit_residents', 'access_ppe', 'access_sante', 'access_medicaments', 'access_admissions'] },
@@ -363,76 +286,221 @@ const PERM_GROUPS = [
   { label: 'Administration', keys: ['access_interventions', 'access_employes', 'access_admin', 'manage_users'] }
 ];
 
-function renderFonctionPermissions(selected) {
-  const el = document.getElementById('fonctionPermissions');
-  if (!el) return;
-  selected = selected || [];
-  const used = new Set();
-  const btn = k => `<button type="button" class="perm-btn ${selected.includes(k) ? 'active' : ''}" data-key="${k}" onclick="this.classList.toggle('active')">${escHtml(PERMISSION_LABELS[k] || k)}</button>`;
-  let html = PERM_GROUPS.map(g => {
-    const btns = g.keys.filter(k => PERMISSION_LABELS[k]).map(k => { used.add(k); return btn(k); }).join('');
-    return btns ? `<div class="perm-group"><div class="perm-group-label">${g.label}</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${btns}</div></div>` : '';
-  }).join('');
-  const others = Object.keys(PERMISSION_LABELS).filter(k => !used.has(k));
-  if (others.length) html += `<div class="perm-group"><div class="perm-group-label">Autres</div><div style="display:flex;flex-wrap:wrap;gap:.4rem">${others.map(btn).join('')}</div></div>`;
-  el.innerHTML = html;
+// ── PAGE RÔLES & ACCÈS (maître-détail, enregistrement automatique) ──
+let _permSel = null;
+let _permFilter = '';
+
+function getFonctions()  { return DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors; }
+function setFonctions(l) {
+  DB.set(DB.keys.fonctionColors, l);
+  // Partage multi-appareil : on pousse aussi la config sur Supabase
+  if (typeof sbSaveAppConfig === 'function') sbSaveAppConfig('fonction_colors', l).catch(e => console.warn('Sync permissions cloud', e));
 }
 
-function editFonction(id) {
-  const list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
-  const f = list.find(x => x.id === id);
+// Droits recommandés pour un rôle, d'après les valeurs métier par défaut (par nom de fonction).
+function permRecommendedFor(name) {
+  const n = (name || '').toLowerCase().trim();
+  const d = (DEFAULTS.fonctionColors || []).find(f => (f.fonction || '').toLowerCase().trim() === n);
+  return d ? d.permissions : null;
+}
+
+// Applique les droits recommandés au rôle sélectionné.
+function permApplyRecommended() {
+  const list = getFonctions();
+  const f = list.find(x => String(x.id) === String(_permSel));
   if (!f) return;
-  document.getElementById('modalFonctionTitle').textContent = 'Modifier la fonction';
-  document.getElementById('fonctionId').value = id;
-  document.getElementById('fonctionName').value = f.fonction;
-  document.getElementById('fonctionColor').value = f.color;
-  renderFonctionPermissions(f.permissions || []);
-  document.getElementById('btnDeleteFonction').style.display = '';
-  openModal('modalFonction');
+  const rec = permRecommendedFor(f.fonction);
+  if (!rec) { toast('Aucun modèle recommandé pour ce rôle', 'error'); return; }
+  f.permissions = [...rec];
+  setFonctions(list);
+  renderPermDetail();
+  renderPermLeft();
+  permFlashSaved();
 }
 
-function saveFonction() {
-  const name = document.getElementById('fonctionName').value.trim();
-  if (!name) { toast('Le nom est requis', 'error'); return; }
-  const color = document.getElementById('fonctionColor').value;
-  const permEls = document.querySelectorAll('#fonctionPermissions .perm-btn');
-  const permissions = Array.from(permEls).filter(btn => btn.classList.contains('active')).map(btn => btn.dataset.key);
-  let list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
-  const id = document.getElementById('fonctionId').value;
-  if (id) {
-    list = list.map(f => String(f.id) === String(id) ? { ...f, fonction: name, color, permissions } : f);
-    toast('Fonction mise à jour');
-  } else {
-    const newId = Math.max(0, ...list.map(f => f.id)) + 1;
-    list.push({ id: newId, fonction: name, color, permissions });
-    toast('Fonction ajoutée');
-  }
-  DB.set(DB.keys.fonctionColors, list);
-  closeAllModals();
-  resetFonctionForm();
-  renderFonctions();
-}
-
-function deleteFonction() {
-  const id = document.getElementById('fonctionId').value;
-  confirmDialog('Supprimer cette fonction ?', () => {
-    let list = DB.get(DB.keys.fonctionColors) || DEFAULTS.fonctionColors;
-    list = list.filter(f => String(f.id) !== String(id));
-    DB.set(DB.keys.fonctionColors, list);
-    closeAllModals();
-    resetFonctionForm();
-    renderFonctions();
-    toast('Fonction supprimée', 'info');
+// Applique les droits recommandés à tous les rôles reconnus.
+function permApplyRecommendedAll() {
+  confirmDialog('Appliquer les droits recommandés à tous les rôles reconnus ? Les personnalisations de ces rôles seront remplacées.', () => {
+    const list = getFonctions();
+    let n = 0;
+    list.forEach(f => { const rec = permRecommendedFor(f.fonction); if (rec) { f.permissions = [...rec]; n++; } });
+    setFonctions(list);
+    renderPermissionsPage();
+    toast(`${n} rôle(s) mis à jour`);
   });
 }
 
-function resetFonctionForm() {
-  document.getElementById('fonctionId').value = '';
-  document.getElementById('fonctionName').value = '';
-  document.getElementById('fonctionColor').value = '#3b82f6';
-  renderFonctionPermissions([]);
-  document.getElementById('modalFonctionTitle').textContent = 'Nouvelle fonction';
-  document.getElementById('btnDeleteFonction').style.display = 'none';
+// Crée le rôle "Comptable" s'il n'existe pas encore (modifiable ensuite dans cette page).
+function ensureComptableRole() {
+  const list = getFonctions();
+  if (list.some(f => (f.fonction || '').toLowerCase().trim() === 'comptable')) return;
+  const newId = Math.max(0, ...list.map(f => Number(f.id) || 0)) + 1;
+  setFonctions([...list, {
+    id: newId, fonction: 'Comptable', color: '#0d9488',
+    permissions: permRecommendedFor('Comptable') || ['view_dashboard', 'access_paie', 'access_budget', 'access_facturation']
+  }]);
+}
+
+function renderPermissionsPage() {
+  ensureComptableRole();
+  const list = getFonctions();
+  if (_permSel == null || !list.find(f => String(f.id) === String(_permSel))) _permSel = list[0]?.id ?? null;
+  renderPermLeft();
+  renderPermDetail();
+}
+
+function renderPermLeft() {
+  const el = document.getElementById('permRolesList');
+  if (!el) return;
+  const list = getFonctions();
+  el.innerHTML = list.map(f => `<div class="perm2-role ${String(f.id) === String(_permSel) ? 'active' : ''}" onclick="permSelect(${f.id})">
+    <span class="perm2-dot" style="background:${f.color || '#6366f1'}"></span>
+    <span class="perm2-role-name">${escHtml(f.fonction)}</span>
+    <span class="perm2-role-count">${(f.permissions || []).length}</span>
+  </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:1rem">Aucun rôle</div>';
+}
+
+function renderPermDetail() {
+  const el = document.getElementById('permDetail');
+  if (!el) return;
+  const f = getFonctions().find(x => String(x.id) === String(_permSel));
+  if (!f) { el.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted)">Cliquez sur « Nouveau rôle » pour commencer.</div>'; return; }
+  const perms = f.permissions || [];
+  const used = new Set();
+  const swRow = k => `<div class="perm2-row" data-label="${escHtml((PERMISSION_LABELS[k] || k).toLowerCase())}">
+      <span class="perm2-row-label">${escHtml(PERMISSION_LABELS[k] || k)}</span>
+      <button class="perm2-sw ${perms.includes(k) ? 'on' : ''}" data-key="${k}" aria-label="${escHtml(PERMISSION_LABELS[k] || k)}" onclick="permToggle('${k}')"></button>
+    </div>`;
+  let groupsHtml = PERM_GROUPS.map((g, gi) => {
+    const keys = g.keys.filter(k => PERMISSION_LABELS[k]);
+    keys.forEach(k => used.add(k));
+    if (!keys.length) return '';
+    const allOn = keys.every(k => perms.includes(k));
+    return `<div class="perm2-group">
+      <div class="perm2-group-label"><span>${escHtml(g.label)}</span><span class="perm2-allbtn" onclick="permToggleGroup(${gi},${!allOn})">${allOn ? 'Tout désactiver' : 'Tout activer'}</span></div>
+      ${keys.map(swRow).join('')}
+    </div>`;
+  }).join('');
+  const others = Object.keys(PERMISSION_LABELS).filter(k => !used.has(k));
+  if (others.length) groupsHtml += `<div class="perm2-group"><div class="perm2-group-label"><span>Autres</span></div>${others.map(swRow).join('')}</div>`;
+
+  el.innerHTML = `
+    <div class="perm2-head">
+      <input type="color" value="${f.color || '#6366f1'}" style="width:30px;height:30px;padding:0;border:none;background:none;cursor:pointer" onchange="permSetColor(this.value)" title="Couleur du rôle"/>
+      <input type="text" value="${escHtml(f.fonction)}" onchange="permRename(this.value)" style="flex:1;min-width:0;font-size:.92rem;font-weight:700;border:none;background:none;padding:.2rem 0;outline:none" aria-label="Nom du rôle"/>
+      <span class="perm2-saved" id="permSaved">✓ Enregistré</span>
+      ${permRecommendedFor(f.fonction) ? `<button class="btn btn-ghost btn-sm" onclick="permApplyRecommended()" title="Réappliquer les droits recommandés pour ce rôle">↺ Recommandés</button>` : ''}
+      <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="permDeleteRole()" title="Supprimer ce rôle">🗑</button>
+    </div>
+    <div class="perm2-body">
+      <input type="text" placeholder="Filtrer un accès…" value="${escHtml(_permFilter)}" oninput="permSetFilter(this.value)" style="width:100%;box-sizing:border-box;margin-bottom:.3rem"/>
+      ${groupsHtml}
+    </div>`;
+  applyPermFilter();
+}
+
+function permSelect(id) { _permSel = id; _permFilter = ''; renderPermissionsPage(); }
+
+function permFlashSaved() {
+  const s = document.getElementById('permSaved');
+  if (!s) return;
+  s.classList.add('show');
+  clearTimeout(permFlashSaved._t);
+  permFlashSaved._t = setTimeout(() => s.classList.remove('show'), 1300);
+}
+
+function permToggle(key) {
+  const list = getFonctions();
+  const f = list.find(x => String(x.id) === String(_permSel));
+  if (!f) return;
+  f.permissions = f.permissions || [];
+  const i = f.permissions.indexOf(key);
+  if (i >= 0) f.permissions.splice(i, 1); else f.permissions.push(key);
+  setFonctions(list);
+  const btn = document.querySelector(`#permDetail .perm2-sw[data-key="${key}"]`);
+  if (btn) btn.classList.toggle('on', f.permissions.includes(key));
+  renderPermLeft();
+  permFlashSaved();
+}
+
+function permToggleGroup(idx, turnOn) {
+  const g = PERM_GROUPS[idx];
+  if (!g) return;
+  const list = getFonctions();
+  const f = list.find(x => String(x.id) === String(_permSel));
+  if (!f) return;
+  f.permissions = f.permissions || [];
+  g.keys.filter(k => PERMISSION_LABELS[k]).forEach(k => {
+    const has = f.permissions.includes(k);
+    if (turnOn && !has) f.permissions.push(k);
+    if (!turnOn && has) f.permissions.splice(f.permissions.indexOf(k), 1);
+  });
+  setFonctions(list);
+  renderPermDetail();
+  renderPermLeft();
+  permFlashSaved();
+}
+
+function permSetColor(color) {
+  const list = getFonctions();
+  const f = list.find(x => String(x.id) === String(_permSel));
+  if (!f) return;
+  f.color = color;
+  setFonctions(list);
+  renderPermLeft();
+  permFlashSaved();
+}
+
+function permRename(name) {
+  name = (name || '').trim();
+  if (!name) { renderPermDetail(); return; }
+  const list = getFonctions();
+  const f = list.find(x => String(x.id) === String(_permSel));
+  if (!f) return;
+  f.fonction = name;
+  setFonctions(list);
+  renderPermLeft();
+  permFlashSaved();
+}
+
+function permAddRole() {
+  const list = getFonctions();
+  const newId = Math.max(0, ...list.map(f => Number(f.id) || 0)) + 1;
+  list.push({ id: newId, fonction: 'Nouveau rôle', color: '#6366f1', permissions: [] });
+  setFonctions(list);
+  _permSel = newId;
+  _permFilter = '';
+  renderPermissionsPage();
+  const nameInput = document.querySelector('#permDetail input[type="text"]');
+  if (nameInput) { nameInput.focus(); nameInput.select(); }
+}
+
+function permDeleteRole() {
+  const list = getFonctions();
+  const f = list.find(x => String(x.id) === String(_permSel));
+  if (!f) return;
+  confirmDialog(`Supprimer le rôle « ${f.fonction} » ?`, () => {
+    const next = list.filter(x => String(x.id) !== String(_permSel));
+    setFonctions(next);
+    _permSel = next[0]?.id ?? null;
+    renderPermissionsPage();
+    toast('Rôle supprimé', 'info');
+  });
+}
+
+function permSetFilter(v) { _permFilter = v; applyPermFilter(); }
+
+function applyPermFilter() {
+  const q = (_permFilter || '').toLowerCase().trim();
+  document.querySelectorAll('#permDetail .perm2-group').forEach(grp => {
+    let anyVisible = false;
+    grp.querySelectorAll('.perm2-row').forEach(r => {
+      const match = !q || (r.dataset.label || '').includes(q);
+      r.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+    });
+    grp.style.display = anyVisible ? '' : 'none';
+  });
 }
 
 // ── UTILISATEURS ──
@@ -458,7 +526,7 @@ function renderEtabCheckboxes(userEtabIds = []) {
 
 function renderEducateurs() {
   const users = DB.get(DB.keys.users) || [];
-  const educateurs = users.filter(u => u.role === 'educateur');
+  const educateurs = users.filter(u => !u.super);
   const etabs = getEtabs();
   const el = document.getElementById('eduList');
   if (!el) return;
@@ -803,9 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadBranding();
   renderCats();
   renderObjs();
-  renderFonctions();
-  resetFonctionForm();
-  renderEducateurs();
+  renderPermissionsPage();
   initLogoUpload();
   renderLoginHistory();
   renderAuditLog();
@@ -817,6 +883,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('modalCat').querySelector('.modal-close').addEventListener('click', resetCatForm);
   document.getElementById('modalObj').querySelector('.modal-close').addEventListener('click', resetObjForm);
-  document.getElementById('modalFonction')?.querySelector('.modal-close')?.addEventListener('click', resetFonctionForm);
-  document.getElementById('modalEdu').querySelector('.modal-close').addEventListener('click', resetEducateurForm);
 });

@@ -10,19 +10,27 @@ const FACT_STATUT_COLORS = { brouillon: '#6b7280', envoyee: '#0284c7', payee: '#
 
 function eur(n) { return (n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
 
-function getTarifs() {
-  let t = DB.get(DB.keys.tarifs);
-  if (!t || !Array.isArray(t.categories)) {
-    t = { categories: FACT_CATEGORIES_DEFAULT.map(c => ({ ...c })), affectations: {} };
-    DB.set(DB.keys.tarifs, t);
-  }
-  if (!t.affectations) t.affectations = {};
-  return t;
+// Source = Supabase. Caches mémoire chargés au démarrage.
+let _factTarifs = null;
+let _factCache = [];
+async function loadFactCaches() {
+  const t = await sbGetTarifs();
+  _factTarifs = (t && Array.isArray(t.categories)) ? t : null;
+  _factCache = await sbGetFactures();
 }
-function setTarifs(t) { DB.set(DB.keys.tarifs, t); }
+function getTarifs() {
+  if (!_factTarifs || !Array.isArray(_factTarifs.categories)) {
+    _factTarifs = { categories: FACT_CATEGORIES_DEFAULT.map(c => ({ ...c })), affectations: {} };
+  }
+  if (!_factTarifs.affectations) _factTarifs.affectations = {};
+  return _factTarifs;
+}
+function setTarifs(t) {
+  _factTarifs = t;
+  sbSaveTarifs(t).catch(e => { console.error('[tarifs]', e); toast('Erreur sauvegarde tarifs', 'error'); });
+}
 
-function getFactures() { return DB.get(DB.keys.factures) || []; }
-function setFactures(f) { DB.set(DB.keys.factures, f); }
+function getFactures() { return _factCache; }
 
 // ── TARIFS (catégories de prise en charge) ──
 function openTarifModal(id) {
@@ -102,7 +110,7 @@ function setAffectation(residentId, field, value) {
 function renderAffectations() {
   const isAdmin = Auth.isAdmin();
   const t = getTarifs();
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = sbResidents().filter(r => r.statut !== 'sorti');
   const el = document.getElementById('affectationsList');
   if (!residents.length) {
     el.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Aucun résident actif.</div>';
@@ -121,63 +129,67 @@ function renderAffectations() {
 }
 
 // ── GÉNÉRATION DES FACTURES ──
-function genererFactures() {
+async function genererFactures() {
   const periode = document.getElementById('factPeriode').value;
   if (!periode) { toast('Choisissez une période', 'error'); return; }
   const t = getTarifs();
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = sbResidents().filter(r => r.statut !== 'sorti');
   const presences = DB.get(DB.keys.presences) || {};
-  let factures = getFactures();
   let nb = 0;
 
-  residents.forEach(r => {
-    const aff = t.affectations[r.id];
-    if (!aff || !aff.categorieId) return;
-    const cat = t.categories.find(c => c.id === aff.categorieId);
-    if (!cat) return;
-    const nbJours = Object.keys(presences).filter(date => date.startsWith(periode) && presences[date][r.id] === 'present').length;
-    const montant = nbJours * cat.prixJour;
-    const data = {
-      periode, residentId: r.id, residentNom: `${r.prenom} ${r.nom}`,
-      organisme: aff.organisme || 'Non renseigné',
-      categorieId: cat.id, categorieLabel: cat.label,
-      nbJours, prixJour: cat.prixJour, montant,
-      updatedAt: new Date().toISOString()
-    };
-    const idx = factures.findIndex(f => f.periode === periode && f.residentId === r.id);
-    if (idx !== -1) {
-      factures[idx] = { ...factures[idx], ...data };
-    } else {
-      factures.push({ id: genId(), statut: 'brouillon', createdAt: new Date().toISOString(), ...data });
+  try {
+    for (const r of residents) {
+      const aff = t.affectations[r.id];
+      if (!aff || !aff.categorieId) continue;
+      const cat = t.categories.find(c => c.id === aff.categorieId);
+      if (!cat) continue;
+      const nbJours = Object.keys(presences).filter(date => date.startsWith(periode) && presences[date][r.id] === 'present').length;
+      const montant = nbJours * cat.prixJour;
+      const data = {
+        periode, residentId: r.id, residentNom: `${r.prenom} ${r.nom}`,
+        organisme: aff.organisme || 'Non renseigné',
+        categorieId: cat.id, categorieLabel: cat.label,
+        nbJours, prixJour: cat.prixJour, montant
+      };
+      const existing = _factCache.find(f => f.periode === periode && String(f.residentId) === String(r.id));
+      if (existing) {
+        const saved = await sbSaveFacture({ ...existing, ...data });
+        _factCache = _factCache.map(f => f.id === saved.id ? saved : f);
+      } else {
+        const saved = await sbSaveFacture({ statut: 'brouillon', ...data });
+        _factCache.push(saved);
+      }
+      nb++;
     }
-    nb++;
-  });
+  } catch (e) { console.error('[genererFactures]', e); toast('Erreur génération : ' + (e?.message || e), 'error'); return; }
 
-  setFactures(factures);
   if (typeof auditLog === 'function') auditLog('facturation_generation', `${nb} facture(s) pour ${periode}`);
   toast(`${nb} facture(s) générée(s) pour ${periode}`, 'success');
   renderFacturation();
 }
 
 function changerStatutFacture(id, statut) {
-  let factures = getFactures();
-  factures = factures.map(f => {
-    if (f.id !== id) return f;
-    const upd = { ...f, statut, updatedAt: new Date().toISOString() };
-    if (statut === 'envoyee') upd.dateEnvoi = today();
-    if (statut === 'payee') upd.datePaiement = today();
-    return upd;
-  });
-  setFactures(factures);
-  toast('Statut mis à jour');
-  renderFacturation();
+  const f = _factCache.find(x => x.id === id);
+  if (!f) return;
+  const upd = { ...f, statut };
+  if (statut === 'envoyee') upd.dateEnvoi = today();
+  if (statut === 'payee') upd.datePaiement = today();
+  (async () => {
+    try { const saved = await sbSaveFacture(upd); _factCache = _factCache.map(x => x.id === id ? saved : x); }
+    catch (e) { console.error('[changerStatutFacture]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    toast('Statut mis à jour');
+    renderFacturation();
+  })();
 }
 
 function supprimerFacture(id) {
   if (!confirm('Supprimer cette facture ?')) return;
-  setFactures(getFactures().filter(f => f.id !== id));
-  toast('Facture supprimée', 'info');
-  renderFacturation();
+  (async () => {
+    try { await sbDeleteFacture(id); _factCache = _factCache.filter(f => f.id !== id); }
+    catch (e) { console.error('[supprimerFacture]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    toast('Facture supprimée', 'info');
+    renderFacturation();
+  })();
 }
 
 // ── LISTE & STATS ──
@@ -253,8 +265,10 @@ function renderFacturation() {
   renderFactures();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (!requireModule('access_facturation')) return;
+  await sbLoadResidentsCache();
+  await loadFactCaches();
   const periodeInput = document.getElementById('factPeriode');
   if (periodeInput) periodeInput.value = new Date().toISOString().slice(0, 7);
   renderFacturation();

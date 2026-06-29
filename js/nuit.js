@@ -18,9 +18,16 @@ const NUIT_EVT_TYPES = {
   autre: { label: 'Autre', icon: '📌' }
 };
 
-function getNuits() { return DB.get(DB.keys.nuits) || []; }
-function saveNuits(list) { DB.set(DB.keys.nuits, list); }
+// Source = Supabase. Cache mémoire chargé au démarrage.
+let _nuitCache = [];
+function getNuits() { return _nuitCache; }
+async function loadNuitsCache() { _nuitCache = await sbGetNuits(); }
 function getNuit(date) { return getNuits().find(n => n.date === date) || null; }
+// Persiste une nuit précise (remonte une erreur via toast)
+function persistNuit(n) {
+  if (!n || !n.id) return;
+  sbSaveNuit(n).catch(e => { console.error('[nuit]', e); toast('Erreur sauvegarde cahier de nuit', 'error'); });
+}
 
 function nuitLabel(date) {
   const d1 = new Date(date + 'T12:00');
@@ -34,28 +41,28 @@ function updateNuit(patch) {
   const idx = list.findIndex(n => n.date === nuitDate);
   if (idx === -1) return;
   list[idx] = { ...list[idx], ...patch, updatedAt: new Date().toISOString() };
-  saveNuits(list);
+  persistNuit(list[idx]);
 }
 
 // ── OUVERTURE / NAVIGATION ──
-function ouvrirNuit() {
+async function ouvrirNuit() {
   const s = Auth.getSession();
-  const list = getNuits();
   if (!getNuit(nuitDate)) {
     // Effectif auto : présents pointés ce jour, sinon résidents actifs
     const pres = (DB.get(DB.keys.presences) || {})[nuitDate] || {};
-    const actifs = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+    const actifs = sbResidents().filter(r => r.statut !== 'sorti');
     const presents = actifs.filter(r => (pres[r.id] || 'present') === 'present').length;
-    list.push({
-      id: genId(), date: nuitDate,
-      veilleur: s ? [s.prenom, s.nom].filter(Boolean).join(' ') || s.username : '?',
-      veilleurId: s?.userId,
-      ambiance: 'calme', effectif: presents,
-      rondes: [], evenements: [], astreintes: [],
-      transmission: '',
-      createdAt: new Date().toISOString()
-    });
-    saveNuits(list);
+    try {
+      const saved = await sbSaveNuit({
+        date: nuitDate,
+        veilleur: s ? [s.prenom, s.nom].filter(Boolean).join(' ') || s.username : '?',
+        veilleurId: s?.userId,
+        ambiance: 'calme', effectif: presents,
+        rondes: [], evenements: [], astreintes: [],
+        transmission: ''
+      });
+      _nuitCache.push(saved);
+    } catch (e) { console.error('[ouvrirNuit]', e); toast('Erreur ouverture cahier : ' + (e?.message || e), 'error'); return; }
     if (typeof auditLog === 'function') auditLog('nuit_open', 'Cahier de nuit ' + nuitDate);
   }
   renderNuit();
@@ -228,7 +235,7 @@ function openNuitEvtModal(id) {
   nuitEvtEditId = id || null;
   const n = getNuit(nuitDate);
   const e = id ? (n.evenements || []).find(x => x.id === id) || {} : {};
-  const residents = (DB.get(DB.keys.residents) || []).filter(r => r.statut !== 'sorti');
+  const residents = sbResidents().filter(r => r.statut !== 'sorti');
   document.getElementById('neResident').innerHTML = '<option value="">— Aucun / collectif —</option>' +
     residents.map(r => `<option value="${r.id}"${String(e.residentId) === String(r.id) ? ' selected' : ''}>${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   document.getElementById('neType').value = e.type || 'reveil';
@@ -241,7 +248,7 @@ function saveNuitEvt() {
   const desc = document.getElementById('neDesc').value.trim();
   if (!desc) { toast('Décrivez l\'événement', 'error'); return; }
   const rid = document.getElementById('neResident').value;
-  const r = (DB.get(DB.keys.residents) || []).find(x => String(x.id) === String(rid));
+  const r = sbResidents().find(x => String(x.id) === String(rid));
   const data = {
     type: document.getElementById('neType').value,
     heure: document.getElementById('neHeure').value,
@@ -283,10 +290,12 @@ function renderNuitHisto() {
 }
 
 // ── INIT ──
-function initNuit() {
+async function initNuit() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_journal')) return;
+  await sbLoadResidentsCache();
+  await loadNuitsCache();
   // Avant 12 h, on est encore « sur » la nuit de la veille
   const now = new Date();
   if (now.getHours() < 12) now.setDate(now.getDate() - 1);

@@ -2,6 +2,14 @@ let currentView = 'week';
 let currentDate = new Date();
 // Mois affiché en premier dans les mini-calendriers (indépendant de la date sélectionnée)
 let sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+let _planningEventsCache = [];
+let _planningResidentsCache = [];
+
+async function loadPlanningData() {
+  [_planningEventsCache, _planningResidentsCache] = await Promise.all([
+    sbGetPlanningEvents(), sbGetResidents()
+  ]);
+}
 
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -34,15 +42,36 @@ function dateStr(d) {
   return `${y}-${m}-${day}`;
 }
 
+// Heure locale "AAAA-MM-JJTHH:MM" (toISOString() renvoie de l'UTC, ce qui décale les horaires)
+function toLocalDateTimeStr(d) {
+  const p = n => String(n).padStart(2,'0');
+  return `${dateStr(d)}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 // Types désactivés dans la légende (vide = tout afficher)
 let hiddenTypes = new Set();
 let searchQuery = '';
 
+// Détecte un conflit de réservation pour un véhicule sur un créneau donné
+// (dateAllerISO/dateRetourISO au format "AAAA-MM-JJTHH:MM"), partagé avec vehicules.js
+// puisque les deux pages écrivent dans la même table planning_events.
+function getVehiculeConflit(vehicule, dateAllerISO, dateRetourISO, excludeId) {
+  const newStart = new Date(dateAllerISO).getTime();
+  const newEnd = new Date(dateRetourISO).getTime();
+  return _planningEventsCache.find(e => {
+    if (e.type !== 'vehicule' || e.vehicule !== vehicule) return false;
+    if (excludeId && e.id === excludeId) return false;
+    const existStart = new Date(e.date + 'T' + (e.heure || e.time || '00:00')).getTime();
+    if (isNaN(existStart)) return false;
+    let existEnd = new Date((e.dateEnd || e.date) + 'T' + (e.timeEnd || '23:59')).getTime();
+    if (isNaN(existEnd) || !e.dateEnd) existEnd = existStart + (parseInt(e.duree) || 60) * 60000;
+    return newStart < existEnd && newEnd > existStart;
+  });
+}
+
 function getFilteredEvents() {
   const res = document.getElementById('filterEventResident')?.value || '';
-  let events = DB.get(DB.keys.planning) || [];
-  // Les réservations de véhicule (gérées dans le module Véhicules) ne s'affichent pas dans l'agenda
-  events = events.filter(e => e.type !== 'vehicule');
+  let events = _planningEventsCache;
   if (res) events = events.filter(e => e.residentId === res || !e.residentId);
   if (hiddenTypes.size) events = events.filter(e => !hiddenTypes.has(e.type || 'autre'));
   if (searchQuery) {
@@ -452,7 +481,7 @@ function resetVehiculeFields() {
 
 // Affiche les détails d'un événement en lecture seule (fenêtre flipYIn)
 function viewEvent(id) {
-  const ev = (DB.get(DB.keys.planning) || []).find(e => e.id === id);
+  const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
   const color = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
   const dureeLabels = { '30':'30 min', '60':'1h', '90':'1h30', '120':'2h', '180':'3h', 'journee':'Journée' };
@@ -478,7 +507,7 @@ function viewEvent(id) {
   const seriesBtn = document.getElementById('evViewDeleteSeries');
   if (seriesBtn) {
     if (ev.recurId) {
-      const cnt = (DB.get(DB.keys.planning) || []).filter(e => e.recurId === ev.recurId).length;
+      const cnt = _planningEventsCache.filter(e => e.recurId === ev.recurId).length;
       seriesBtn.style.display = '';
       seriesBtn.textContent = `↻ Série (${cnt})`;
       seriesBtn.onclick = () => deleteEventSeries(ev.recurId);
@@ -488,8 +517,7 @@ function viewEvent(id) {
 }
 
 function editEvent(id) {
-  const events = DB.get(DB.keys.planning) || [];
-  const ev = events.find(e => e.id === id);
+  const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
   document.getElementById('modalEventTitle').textContent = 'Modifier l\'événement';
   document.getElementById('eventId').value = id;
@@ -516,11 +544,11 @@ function editEvent(id) {
   openModal('modalEvent');
 }
 
-function saveEvent() {
+async function saveEvent() {
   const titre = document.getElementById('evTitre').value.trim();
   if (!titre) { toast('Le titre est requis', 'error'); return; }
   const residentId = document.getElementById('evResident').value;
-  const residents = DB.get(DB.keys.residents) || [];
+  const residents = _planningResidentsCache;
   const res = residents.find(r => r.id === residentId);
   const id = document.getElementById('eventId').value;
   const recur = document.getElementById('evRecur')?.value || '';
@@ -545,72 +573,103 @@ function saveEvent() {
       toast('Veuillez remplir le véhicule et la destination', 'error');
       return;
     }
+    const dateAllerISO = data.date + 'T' + (data.heure || '00:00');
+    let dateRetourISO;
+    if (data.duree === 'journee') {
+      dateRetourISO = data.date + 'T23:59';
+    } else {
+      const d = new Date(dateAllerISO);
+      d.setMinutes(d.getMinutes() + (parseInt(data.duree) || 60));
+      dateRetourISO = toLocalDateTimeStr(d);
+    }
+    const conflit = getVehiculeConflit(vehicule, dateAllerISO, dateRetourISO, id || undefined);
+    if (conflit) {
+      toast(`❌ Véhicule déjà réservé sur ce créneau horaire (du ${formatDateTime(conflit.date+'T'+(conflit.heure||conflit.time||'00:00'))} au ${formatDateTime((conflit.dateEnd||conflit.date)+'T'+(conflit.timeEnd||'23:59'))}${conflit.reservedBy ? ' par '+conflit.reservedBy : ''})`, 'error');
+      return;
+    }
+    const session = Auth.getSession();
     data.vehicule = vehicule;
     data.destination = destination;
     data.motif = document.getElementById('evMotif').value.trim();
+    data.type = 'vehicule'; // pour apparaître dans les réservations (page Véhicules)
+    data.dateEnd = dateRetourISO.slice(0,10);
+    data.timeEnd = dateRetourISO.slice(11,16);
+    data.reservedBy = session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : '';
+    data.reservedPrenom = session?.prenom || '';
   } else {
     delete data.vehicule;
     delete data.destination;
     delete data.motif;
   }
-  // Création d'une série récurrente
-  if (!id && recur && recurUntil && recurUntil >= data.date) {
-    const dates = getRecurDates(data.date, recur, recurUntil);
-    if (!dates.length) { toast('Plage de dates invalide', 'error'); return; }
-    const recurId = genId();
-    let evs = DB.get(DB.keys.planning) || [];
-    const newEvs = dates.map(date => ({ ...data, id: genId(), date, recurId, recurFreq: recur, recurUntil }));
-    DB.set(DB.keys.planning, evs.concat(newEvs));
-    newEvs.forEach(ev => syncEventToResidentRdv(ev));
-    toast(`${dates.length} événement${dates.length > 1 ? 's créés' : ' créé'}`);
-    closeAllModals(); render(); return;
-  }
+  try {
+    // Création d'une série récurrente
+    if (!id && recur && recurUntil && recurUntil >= data.date) {
+      const dates = getRecurDates(data.date, recur, recurUntil);
+      if (!dates.length) { toast('Plage de dates invalide', 'error'); return; }
+      const recurId = genId();
+      const newEvs = dates.map(date => ({ ...data, date, recurId, recurFreq: recur, recurUntil }));
+      const saved = await sbSavePlanningEventsBulk(newEvs);
+      _planningEventsCache.push(...saved);
+      for (const ev of saved) await syncEventToResidentRdv(ev);
+      toast(`${dates.length} événement${dates.length > 1 ? 's créés' : ' créé'}`);
+      closeAllModals(); render(); return;
+    }
 
-  let events = DB.get(DB.keys.planning) || [];
-  let finalEvent;
-  if (id) { events = events.map(e => { if (e.id === id) { finalEvent = {...e,...data}; return finalEvent; } return e; }); toast('Événement mis à jour'); }
-  else { data.id = genId(); finalEvent = data; events.push(data); toast('Événement ajouté'); }
-  DB.set(DB.keys.planning, events);
-  syncEventToResidentRdv(finalEvent);
-  if (finalEvent.residentId && finalEvent.date) {
-    const allEvs = DB.get(DB.keys.planning) || [];
-    const sameDayEvs = allEvs.filter(e => e.id !== finalEvent.id && e.residentId === finalEvent.residentId && e.date === finalEvent.date && e.type !== 'vehicule');
-    const fStart = evStartMin(finalEvent), fEnd = fStart + evDurMin(finalEvent);
-    const conflicts = sameDayEvs.filter(e => { const s = evStartMin(e), en = s + evDurMin(e); return fStart < en && fEnd > s; });
-    if (conflicts.length) toast('⚠️ Conflit détecté : ' + conflicts.map(c => c.titre).join(', '), 'error');
+    let finalEvent;
+    if (id) {
+      finalEvent = await sbSavePlanningEvent({ ...data, id });
+      const idx = _planningEventsCache.findIndex(e => e.id === id);
+      if (idx !== -1) _planningEventsCache[idx] = finalEvent;
+      toast('Événement mis à jour');
+    } else {
+      finalEvent = await sbSavePlanningEvent(data);
+      _planningEventsCache.push(finalEvent);
+      toast('Événement ajouté');
+    }
+    await syncEventToResidentRdv(finalEvent);
+    if (finalEvent.residentId && finalEvent.date) {
+      const sameDayEvs = _planningEventsCache.filter(e => e.id !== finalEvent.id && e.residentId === finalEvent.residentId && e.date === finalEvent.date && e.type !== 'vehicule');
+      const fStart = evStartMin(finalEvent), fEnd = fStart + evDurMin(finalEvent);
+      const conflicts = sameDayEvs.filter(e => { const s = evStartMin(e), en = s + evDurMin(e); return fStart < en && fEnd > s; });
+      if (conflicts.length) toast('⚠️ Conflit détecté : ' + conflicts.map(c => c.titre).join(', '), 'error');
+    }
+  } catch (e) {
+    toast('Erreur lors de l\'enregistrement', 'error');
+    console.error(e);
+    return;
   }
   closeAllModals();
   render();
 }
 
 // Synchronise un événement planning de type "rdv" vers la fiche du résident (sante.rdv)
-function syncEventToResidentRdv(event) {
+async function syncEventToResidentRdv(event) {
   if (!event) return;
-  const residents = DB.get(DB.keys.residents) || [];
-  const setEventLink = (santeRdvId) => {
-    const evs = (DB.get(DB.keys.planning) || []).map(e => {
-      if (e.id !== event.id) return e;
-      const c = { ...e };
-      if (santeRdvId) c.santeRdvId = santeRdvId; else delete c.santeRdvId;
-      return c;
-    });
-    DB.set(DB.keys.planning, evs);
+  const setEventLink = async (santeRdvId) => {
+    const ev = _planningEventsCache.find(e => e.id === event.id);
+    if (!ev) return;
+    if (santeRdvId) ev.santeRdvId = santeRdvId; else delete ev.santeRdvId;
+    const saved = await sbSavePlanningEvent(ev);
+    const idx = _planningEventsCache.findIndex(e => e.id === event.id);
+    if (idx !== -1) _planningEventsCache[idx] = saved;
   };
 
   // Pas (ou plus) un RDV → retirer le lien éventuel
   if (event.type !== 'rdv' || !event.residentId) {
     if (event.santeRdvId && event.residentId) {
-      const r = residents.find(x => String(x.id) === String(event.residentId));
+      const r = _planningResidentsCache.find(x => String(x.id) === String(event.residentId));
       if (r && r.sante && Array.isArray(r.sante.rdv)) {
         r.sante.rdv = r.sante.rdv.filter(x => x.id !== event.santeRdvId);
-        DB.set(DB.keys.residents, residents);
+        const saved = await sbSaveResident(r);
+        const idx = _planningResidentsCache.findIndex(x => x.id === r.id);
+        if (idx !== -1) _planningResidentsCache[idx] = saved;
       }
     }
-    if (event.santeRdvId) setEventLink(null);
+    if (event.santeRdvId) await setEventLink(null);
     return;
   }
 
-  const r = residents.find(x => String(x.id) === String(event.residentId));
+  const r = _planningResidentsCache.find(x => String(x.id) === String(event.residentId));
   if (!r) return;
   if (!r.sante) r.sante = {};
   if (!Array.isArray(r.sante.rdv)) r.sante.rdv = [];
@@ -633,23 +692,30 @@ function syncEventToResidentRdv(event) {
     santeRdvId = genId();
     r.sante.rdv.push({ id: santeRdvId, fait: false, ...rdvData });
   }
-  DB.set(DB.keys.residents, residents);
-  if (event.santeRdvId !== santeRdvId) setEventLink(santeRdvId);
+  const savedR = await sbSaveResident(r);
+  const rIdx = _planningResidentsCache.findIndex(x => x.id === r.id);
+  if (rIdx !== -1) _planningResidentsCache[rIdx] = savedR;
+  if (event.santeRdvId !== santeRdvId) await setEventLink(santeRdvId);
 }
 
 function deleteEventSeries(recurId) {
-  const events = DB.get(DB.keys.planning) || [];
-  const seriesEvs = events.filter(e => e.recurId === recurId);
-  confirmDialog(`Supprimer les ${seriesEvs.length} événements de cette série ?`, () => {
-    const residents = DB.get(DB.keys.residents) || [];
-    seriesEvs.forEach(ev => {
-      if (ev.santeRdvId && ev.residentId) {
-        const r = residents.find(x => String(x.id) === String(ev.residentId));
-        if (r?.sante?.rdv) r.sante.rdv = r.sante.rdv.filter(x => x.id !== ev.santeRdvId);
+  const seriesEvs = _planningEventsCache.filter(e => e.recurId === recurId);
+  confirmDialog(`Supprimer les ${seriesEvs.length} événements de cette série ?`, async () => {
+    try {
+      for (const ev of seriesEvs) {
+        if (ev.santeRdvId && ev.residentId) {
+          const r = _planningResidentsCache.find(x => String(x.id) === String(ev.residentId));
+          if (r?.sante?.rdv) {
+            r.sante.rdv = r.sante.rdv.filter(x => x.id !== ev.santeRdvId);
+            const saved = await sbSaveResident(r);
+            const idx = _planningResidentsCache.findIndex(x => x.id === r.id);
+            if (idx !== -1) _planningResidentsCache[idx] = saved;
+          }
+        }
       }
-    });
-    DB.set(DB.keys.residents, residents);
-    DB.set(DB.keys.planning, events.filter(e => e.recurId !== recurId));
+      await sbDeletePlanningEventSeries(recurId);
+    } catch (e) { toast('Erreur lors de la suppression', 'error'); console.error(e); return; }
+    _planningEventsCache = _planningEventsCache.filter(e => e.recurId !== recurId);
     closeAllModals(); render();
     toast(`${seriesEvs.length} événements supprimés`, 'info');
   });
@@ -657,20 +723,22 @@ function deleteEventSeries(recurId) {
 
 function deleteEvent() {
   const id = document.getElementById('eventId').value;
-  confirmDialog('Supprimer cet événement ?', () => {
-    let events = DB.get(DB.keys.planning) || [];
-    const ev = events.find(e => e.id === id);
-    events = events.filter(e => e.id !== id);
-    DB.set(DB.keys.planning, events);
-    // Retirer le RDV lié dans la fiche résident
-    if (ev && ev.santeRdvId && ev.residentId) {
-      const residents = DB.get(DB.keys.residents) || [];
-      const r = residents.find(x => String(x.id) === String(ev.residentId));
-      if (r && r.sante && Array.isArray(r.sante.rdv)) {
-        r.sante.rdv = r.sante.rdv.filter(x => x.id !== ev.santeRdvId);
-        DB.set(DB.keys.residents, residents);
+  confirmDialog('Supprimer cet événement ?', async () => {
+    const ev = _planningEventsCache.find(e => e.id === id);
+    try {
+      await sbDeletePlanningEvent(id);
+      // Retirer le RDV lié dans la fiche résident
+      if (ev && ev.santeRdvId && ev.residentId) {
+        const r = _planningResidentsCache.find(x => String(x.id) === String(ev.residentId));
+        if (r && r.sante && Array.isArray(r.sante.rdv)) {
+          r.sante.rdv = r.sante.rdv.filter(x => x.id !== ev.santeRdvId);
+          const saved = await sbSaveResident(r);
+          const idx = _planningResidentsCache.findIndex(x => x.id === r.id);
+          if (idx !== -1) _planningResidentsCache[idx] = saved;
+        }
       }
-    }
+    } catch (e) { toast('Erreur lors de la suppression', 'error'); console.error(e); return; }
+    _planningEventsCache = _planningEventsCache.filter(e => e.id !== id);
     closeAllModals();
     render();
     toast('Événement supprimé', 'info');
@@ -678,7 +746,7 @@ function deleteEvent() {
 }
 
 function populateResidentSelect() {
-  const residents = (DB.get(DB.keys.residents)||[]).filter(r=>r.statut!=='sorti');
+  const residents = _planningResidentsCache.filter(r=>r.statut!=='sorti');
   [document.getElementById('evResident'), document.getElementById('filterEventResident')].forEach(sel => {
     if (!sel) return;
     residents.forEach(r => { const o=document.createElement('option'); o.value=r.id; o.textContent=`${r.prenom||''} ${r.nom||''}`.trim(); sel.appendChild(o); });
@@ -692,9 +760,10 @@ function populateVehiculeList() {
   list.innerHTML = vehicules.map(v => `<option value="${escHtml(v)}"/>`).join('');
 }
 
-function initPlanning() {
+async function initPlanning() {
   if (!requireModule('access_presences')) return;
   document.getElementById('evDate').value = today();
+  await loadPlanningData();
   populateResidentSelect();
   populateVehiculeList();
   render();
