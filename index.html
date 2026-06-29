@@ -176,6 +176,7 @@
     logConnexion('login', { username: email, prenom: profile.prenom, nom: profile.nom, role: profile.role });
     // Récupère la config partagée (permissions, majoration paie) depuis Supabase → localStorage
     if (typeof hydrateConfigFromCloud === 'function') await hydrateConfigFromCloud();
+    sessionStorage.setItem('ftr_fresh_login', '1');
     window.location.href = 'accueil.html';
   }
 

@@ -468,11 +468,9 @@
   const _wa = document.getElementById('wAccent');
   if (_wp) _wp.addEventListener('input', () => { document.getElementById('wPrimaryPreview').style.background = _wp.value; });
   if (_wa) _wa.addEventListener('input', () => { document.getElementById('wAccentPreview').style.background = _wa.value; });
-  // Trigger wizard if admin & not onboarded
-  if (Auth.isAdmin() && !DB.get(DB.keys.onboarded)) {
-    document.getElementById('wizardOverlay').style.display = '';
-    wizardGoTo(0);
-  }
+  // Assistant d'onboarding DÉSACTIVÉ : la création / sélection d'établissement se fait
+  // désormais via la page d'accueil (page de sélection + modal « Nouvel établissement »).
+  // (Ancien comportement : wizard affiché si admin && !onboarded)
 
   function renderDashboard() {
     const s = getStats();

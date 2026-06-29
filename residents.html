@@ -29,7 +29,6 @@
     <header class="header">
       <div class="header-info"><div class="header-title">Résidents</div></div>
       <div class="header-right">
-        <button class="btn btn-outline btn-sm" onclick="history.back()">← Retour</button>
         <button class="btn btn-accent btn-sm admin-only btn-add-resident" onclick="openModal('modalResident')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Ajouter un résident</span>
@@ -119,7 +118,10 @@
         </div>
         <div class="form-row">
           <div class="form-group"><label>Numéro de chambre / unité</label><input type="text" id="rChambre" placeholder="Ex : 12"/></div>
-          <div class="form-group"><label>Référent principal</label><input type="text" id="rReferent" placeholder="Nom du référent"/></div>
+          <div class="form-group"><label>Référent principal</label><select id="rReferent"><option value="">— Aucun —</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Co-référent</label><select id="rCoReferent"><option value="">— Aucun —</option></select></div>
         </div>
 
         <!-- Section Enfant -->
@@ -150,14 +152,20 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label>Situation professionnelle</label><select id="rSituationPro"><option value="">—</option><option value="emploi">En emploi</option><option value="formation">En formation</option><option value="recherche">Recherche d'emploi</option><option value="inactif">Inactif</option></select></div>
-            <div class="form-group"><label>Ressources / Revenus</label><select id="rRessources"><option value="">—</option><option value="rsa">RSA</option><option value="aah">AAH</option><option value="salaire">Salaire</option><option value="apl">APL</option><option value="autre">Autre</option></select></div>
+            <div class="form-group"><label>Ressources / Revenus <span style="font-weight:400;color:var(--muted);font-size:.72rem">(plusieurs possibles)</span></label><div id="rRessources" style="display:flex;flex-wrap:wrap;gap:.4rem .9rem;padding:.5rem .2rem">
+              <label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="rsa" style="width:auto"/>RSA</label>
+              <label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="aah" style="width:auto"/>AAH</label>
+              <label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="salaire" style="width:auto"/>Salaire</label>
+              <label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="apl" style="width:auto"/>APL</label>
+              <label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="autre" style="width:auto"/>Autre</label>
+            </div></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Organisme prescripteur</label><select id="rOrganismeA"><option value="">—</option><option value="siao">SIAO</option><option value="mdph">MDPH</option><option value="ccas">CCAS</option><option value="prefecture">Préfecture</option><option value="autre">Autre</option></select></div>
             <div class="form-group"><label>Numéro de dossier</label><input type="text" id="rDossierA" placeholder="Référence dossier"/></div>
           </div>
           <div class="form-group"><label>Situation administrative</label><select id="rSituationAdmin"><option value="">—</option><option value="francais">Français</option><option value="ue">UE</option><option value="titre_sejour">Titre de séjour</option><option value="demandeur">Demandeur d'asile</option><option value="refugie">Réfugié reconnu</option></select></div>
-          <div class="form-group"><label>Mesure de protection</label><select id="rProtection"><option value="">—</option><option value="tutelle">Tutelle</option><option value="curatelle">Curatelle</option><option value="sauvegarde">Sauvegarde de justice</option><option value="habilitation">Habilitation familiale</option><option value="masp">MASP</option><option value="autre">Autre</option></select></div>
+          <div class="form-group"><label>Mesure de protection</label><select id="rProtection"><option value="">—</option><option value="tutelle">Tutelle</option><option value="curatelle">Curatelle</option><option value="curatelle_renforcee">Curatelle renforcée</option><option value="sauvegarde">Sauvegarde de justice</option><option value="habilitation">Habilitation familiale</option><option value="masp">MASP</option><option value="autre">Autre</option></select></div>
         </div>
 
         <!-- Section médicale -->
@@ -306,6 +314,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/absences-supabase.js"></script>
 <script src="js/documents-resident-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 // Suivi du curseur pour la lueur des cartes résidents (délégation : robuste au re-render)

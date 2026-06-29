@@ -362,6 +362,41 @@ function showDetail(id) {
   openModal('modalDetail');
 }
 
+// ── Référent principal : liste déroulante des employés ÉDUCATIFS (poste contenant « éduc ») ──
+let _refEducNames = [];
+async function loadReferents() {
+  try {
+    const emps = await sbGetEmployes();
+    const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    _refEducNames = emps
+      .filter(e => norm(e.poste).includes('educ'))
+      .map(e => `${e.prenom || ''} ${(e.nom || '').toUpperCase()}`.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  } catch (e) { console.error('[loadReferents]', e); _refEducNames = []; }
+  fillReferentSelect('rReferent', '');
+  fillReferentSelect('rCoReferent', '');
+}
+function fillReferentSelect(selId, current) {
+  const sel = document.getElementById(selId);
+  if (!sel || sel.tagName !== 'SELECT') return;
+  let html = '<option value="">— Aucun —</option>';
+  _refEducNames.forEach(n => { html += `<option value="${escHtml(n)}">${escHtml(n)}</option>`; });
+  // Préserve un référent déjà saisi qui ne serait pas dans la liste (ancienne valeur libre)
+  if (current && !_refEducNames.includes(current)) html += `<option value="${escHtml(current)}">${escHtml(current)}</option>`;
+  sel.innerHTML = html;
+  sel.value = current || '';
+}
+
+// ── Ressources / revenus : cases à cocher multiples → stockées en texte « rsa, aah, … » ──
+function getRessources() {
+  return [...document.querySelectorAll('#rRessources .r-ress:checked')].map(c => c.value).join(', ');
+}
+function setRessources(val) {
+  const set = new Set(String(val || '').split(',').map(s => s.trim()).filter(Boolean));
+  document.querySelectorAll('#rRessources .r-ress').forEach(c => { c.checked = set.has(c.value); });
+}
+
 // ── EDIT ──
 function editResident(id) {
   const r = _residentsCache.find(x => x.id === id);
@@ -377,7 +412,8 @@ function editResident(id) {
   document.getElementById('rEntree').value = r.entree || '';
   document.getElementById('rStatut').value = r.statut || 'permanent';
   document.getElementById('rChambre').value = r.chambre || '';
-  document.getElementById('rReferent').value = r.referent || '';
+  fillReferentSelect('rReferent', r.referent || '');
+  fillReferentSelect('rCoReferent', r.coReferent || '');
   document.getElementById('rColor').value = r.color || '#3b82f6';
   document.getElementById('rNotes').value = r.notes || '';
   document.getElementById('rContacts').value = r.contacts || '';
@@ -387,7 +423,7 @@ function editResident(id) {
   setV('rAllergies', r.allergies); setV('rNSS', r.nss);
   setV('rTuteur', r.tuteur); setV('rTuteurTel', r.tuteurTel); setV('rEcole', r.ecole);
   setV('rClasse', r.classe); setV('rOrganisme', r.organisme); setV('rDossier', r.dossier);
-  setV('rSituationPro', r.situationPro); setV('rRessources', r.ressources);
+  setV('rSituationPro', r.situationPro); setRessources(r.ressources);
   setV('rOrganismeA', r.organismeA); setV('rDossierA', r.dossierA); setV('rSituationAdmin', r.situationAdmin); setV('rProtection', r.protection);
   document.getElementById('btnDelete').style.display = '';
   updatePhotoPreview(pendingPhoto);
@@ -409,7 +445,7 @@ async function saveResident() {
     id: id || undefined,
     nom, prenom, photo: pendingPhoto,
     dob: gV('rDob'), genre: gV('rGenre'), entree: gV('rEntree'),
-    statut: gV('rStatut'), chambre: gV('rChambre'), referent: gV('rReferent'),
+    statut: gV('rStatut'), chambre: gV('rChambre'), referent: gV('rReferent'), coReferent: gV('rCoReferent'),
     color: document.getElementById('rColor').value,
     notes: gV('rNotes'), contacts: gV('rContacts'), objectifs: checked,
     medecin: gV('rMedecin'), medecinTel: gV('rMedecinTel'),
@@ -418,7 +454,7 @@ async function saveResident() {
     consent: gV('rConsent'), consentDate: gV('rConsentDate'),
     tuteur: gV('rTuteur'), tuteurTel: gV('rTuteurTel'), ecole: gV('rEcole'),
     classe: gV('rClasse'), organisme: gV('rOrganisme'), dossier: gV('rDossier'),
-    situationPro: gV('rSituationPro'), ressources: gV('rRessources'),
+    situationPro: gV('rSituationPro'), ressources: getRessources(),
     organismeA: gV('rOrganismeA'), dossierA: gV('rDossierA'), situationAdmin: gV('rSituationAdmin'),
     protection: gV('rProtection')
   };
@@ -458,7 +494,7 @@ function resetForm() {
   editingId = null; pendingPhoto = null;
   document.getElementById('residentId').value = '';
   document.getElementById('modalResidentTitle').textContent = 'Nouveau résident';
-  ['rNom','rPrenom','rDob','rChambre','rReferent','rNotes','rContacts',
+  ['rNom','rPrenom','rDob','rChambre','rReferent','rCoReferent','rNotes','rContacts',
    'rMedecin','rMedecinTel','rAllergies','rNSS',
    'rTuteur','rTuteurTel','rEcole','rClasse','rDossier','rDossierA'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
@@ -468,9 +504,10 @@ function resetForm() {
   if (docListEl) docListEl.innerHTML = '';
   const badge = document.getElementById('tabDocCount');
   if (badge) badge.style.display = 'none';
-  ['rGenre','rOrganisme','rOrganismeA','rSituationPro','rRessources','rSituationAdmin','rProtection'].forEach(id => {
+  ['rGenre','rOrganisme','rOrganismeA','rSituationPro','rSituationAdmin','rProtection'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  setRessources('');
   document.getElementById('rEntree').value = today();
   document.getElementById('rStatut').value = 'permanent';
   document.getElementById('rColor').value = '#3b82f6';
@@ -492,6 +529,7 @@ function activateTab(name) {
 // ── INIT ──
 async function initResidents() {
   if (!requireModule('view_residents')) return;
+  loadReferents();
   const entree = document.getElementById('rEntree');
   if (entree) entree.value = today();
   updateAdaptiveSections();

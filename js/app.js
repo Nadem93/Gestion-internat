@@ -58,7 +58,7 @@ function initEtabs() {
 function createEtab(nom, type, color) {
   const etabs = getEtabs();
   const id = Date.now();
-  const etab = { id, nom, type: type || 'adultes', color: color || '#0f2b4a', createdAt: new Date().toISOString() };
+  const etab = { id, nom, type: type || 'adultes', color: color || '#0f2b4a', bgColor: color || '#0f2b4a', createdAt: new Date().toISOString() };
   etabs.push(etab);
   saveEtabs(etabs);
   // Initialiser les données par défaut pour ce nouvel établissement
@@ -201,10 +201,28 @@ function etabTypeLabel(type) {
   return labels[type] || type || '—';
 }
 
+// Vocabulaire selon le type d'établissement :
+//  - 'jeune'    : structures enfants / adolescents
+//  - 'usager'   : adultes SANS internat (ambulatoire / services)
+//  - 'resident' : adultes AVEC internat (hébergement) — c'est le texte par défaut de l'app
+const ETAB_TYPES_JEUNES  = ['ime','itep','sessad','camsp','mecs','pead','aemo','cef','cea','enfants'];
+const ETAB_TYPES_USAGERS = ['esat','savs','samsah','saj','siao'];
+function etabTerme(type) {
+  if (ETAB_TYPES_JEUNES.includes(type))  return 'jeune';
+  if (ETAB_TYPES_USAGERS.includes(type)) return 'usager';
+  return 'resident';
+}
+function etabTermeLabel(type) {
+  return { jeune:'Jeunes', usager:'Usagers', resident:'Résidents' }[etabTerme(type)];
+}
+
 function applyTerminology() {
   const etab = getCurrentEtab();
-  if (!etab || etab.type !== 'enfants') return;
-  const replacements = [['Résidents','Jeunes'],['Résident','Jeune'],['résidents','jeunes'],['résident','jeune']];
+  if (!etab) return;
+  const terme = etabTerme(etab.type);
+  if (terme === 'resident') return; // texte par défaut déjà en « résident »
+  const cible = terme === 'jeune' ? ['Jeunes','Jeune','jeunes','jeune'] : ['Usagers','Usager','usagers','usager'];
+  const replacements = [['Résidents',cible[0]],['Résident',cible[1]],['résidents',cible[2]],['résident',cible[3]]];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.nodeName !== 'SCRIPT' && n.parentNode.nodeName !== 'STYLE' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
   let node;
   while ((node = walker.nextNode())) {
@@ -842,7 +860,7 @@ function initMenuPopup() {
       { page:'serafinph.html', color:'#8b5cf6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><path d="M6 4h12"/><path d="M6 20h12"/></svg>', label:'SERAFIN-PH' },
       { page:'pilotage.html', color:'#0f2b4a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Portail' },
       { page:'repertoire.html', color:'#7c3aed', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label:'Répertoire' },
-      { page:'admin-modules.html', color:'#78716c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Administration', admin:true }
+      { page:'admin.html', color:'#78716c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>', label:'Administration', admin:true }
     ];
 
     const body = document.getElementById('menuPopupBody');
