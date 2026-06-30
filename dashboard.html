@@ -77,9 +77,9 @@
               <span class="me-sl">Formations</span>
             </div>
             <div class="me-st">
-              <span class="me-sic" style="color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-              <span class="me-sv" id="meEntretiens">—</span>
-              <span class="me-sl">Entretiens</span>
+              <span class="me-sic" style="color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+              <span class="me-sv" id="meHeuresTrav">—</span>
+              <span class="me-sl">Heures trav.</span>
             </div>
           </div>
           <a href="mes-absences.html" class="me-link">Mes absences →</a>
@@ -431,11 +431,16 @@
       recupEl.textContent = peFormatRecup(recupMins);
       recupEl.style.color = recupMins >= 0 ? '#16a34a' : '#dc2626';
 
-      // RÈGLE : on n'affiche que les formations / entretiens passés en « réalisé »
-      const formationsRealisees = formations.filter(f => f.statut === 'realisee' && (f.participants || []).map(String).includes(String(fiche.id))).length;
-      const entretiensRealises = entretiens.filter(e => e.statut === 'realise' && String(e.employeId) === String(fiche.id)).length;
-      document.getElementById('meFormations').textContent = formationsRealisees;
-      document.getElementById('meEntretiens').textContent = entretiensRealises;
+      // Formations réalisées (compteur)
+      const mesFormationsReal = formations.filter(f => f.statut === 'realisee' && (f.participants || []).map(String).includes(String(fiche.id)));
+      document.getElementById('meFormations').textContent = mesFormationsReal.length;
+      // Heures travaillées du mois en cours (créneaux du planning)
+      const _moisCourant = new Date().toISOString().slice(0, 7);
+      const _minsTrav = shifts
+        .filter(sh => String(sh.employeId) === String(fiche.id) && sh.debut && sh.fin && sh.date && String(sh.date).slice(0, 7) === _moisCourant)
+        .reduce((sum, sh) => sum + _peDurMins(sh.debut, sh.fin), 0);
+      const _hT = Math.floor(_minsTrav / 60), _mT = _minsTrav % 60;
+      document.getElementById('meHeuresTrav').textContent = _hT + 'h' + (_mT ? String(_mT).padStart(2, '0') : '');
 
       const _ini = (((s.prenom || '').trim()[0] || '') + ((s.nom || '').trim()[0] || '')).toUpperCase();
       document.getElementById('meAvatar').textContent = _ini || '👤';
