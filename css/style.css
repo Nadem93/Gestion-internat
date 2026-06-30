@@ -216,6 +216,8 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
   background:rgba(255,255,255,.4);
   border-radius:var(--r-lg) var(--r-lg) 0 0;
 }
+/* En-têtes teintés (fond inline) : bande resserrée à la hauteur du texte */
+.card-header[style*="background"]{padding-top:.45rem;padding-bottom:.45rem}
 .card-title{font-size:.9rem;font-weight:700;color:var(--text)}
 .card-body{padding:1.5rem}
 .card-footer{
