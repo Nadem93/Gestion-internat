@@ -7,11 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     .mini-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.85rem;margin-bottom:1.5rem}
-    .mini-card{display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:inherit;background:#f1f5f9;border:1px solid rgba(15,43,74,.08);border-radius:14px;padding:1rem 1.15rem;box-shadow:0 1px 3px rgba(15,43,74,.06);transition:box-shadow .2s,transform .2s;min-width:0;min-height:96px}
+    .mini-card{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:inherit;background:color-mix(in srgb,var(--mc,#64748b) 10%,#fff);border:1px solid color-mix(in srgb,var(--mc,#64748b) 24%,#fff);border-radius:14px;padding:1rem 1.15rem;box-shadow:0 1px 3px rgba(15,43,74,.05);transition:box-shadow .2s,transform .2s;min-width:0;min-height:96px}
     a.mini-card:hover{box-shadow:0 6px 16px rgba(15,43,74,.1);transform:translateY(-2px)}
     .mini-card .mc-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:flex;align-items:center;gap:.4rem}
     .mini-card .mc-label svg{width:16px;height:16px;flex-shrink:0}
-    .mini-card .mc-val{font-size:1.7rem;font-weight:800;color:var(--primary);line-height:1.1;margin-top:.35rem}
+    .mini-card .mc-wm{position:absolute;right:-12px;bottom:-16px;width:82px;height:82px;color:var(--mc,#94a3b8);opacity:.16;pointer-events:none}
+    .mini-card .mc-label,.mini-card .mc-val,.mini-card .mc-sub,.mini-card .mc-alert{position:relative;z-index:1}
+    .mini-card .mc-val{font-size:1.7rem;font-weight:800;color:color-mix(in srgb,var(--mc,#0f2b4a) 58%,#10233a);line-height:1.1;margin-top:.35rem}
     .mini-card .mc-sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
     .mini-card .mc-alert{margin-top:.45rem;padding:.25rem .5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:7px;font-size:.7rem;font-weight:600;text-align:center}
     @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
@@ -49,40 +51,47 @@
 
       <!-- MINI CARTES -->
       <div class="mini-cards" id="miniCards">
-        <a href="planning.html" class="mini-card" id="miniEventCard" title="Voir le planning">
-          <div class="mc-label" style="color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Événements à venir</div>
+        <a href="planning.html" class="mini-card" id="miniEventCard" title="Voir le planning" style="--mc:#ef4444">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="mc-label" style="color:#ef4444">Événements à venir</div>
           <div class="mc-val" id="miniEventVal">0</div>
           <div class="mc-sub" id="miniEventSub">Aujourd'hui</div>
         </a>
-        <div class="mini-card" id="miniPresenceCard">
-          <div class="mc-label" style="color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Présents aujourd'hui</div>
+        <div class="mini-card" id="miniPresenceCard" style="--mc:#16a34a">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <div class="mc-label" style="color:#16a34a">Présents aujourd'hui</div>
           <div class="mc-val" id="miniPresentsVal">0</div>
           <div class="mc-sub" id="miniPresentsSub">Présences enregistrées</div>
           <div class="mc-alert" id="miniPresenceAlert" style="display:none;cursor:pointer" onclick="window.location='presences.html'">⚠ Présences non saisies</div>
         </div>
-        <a href="residents.html" class="mini-card" id="miniAnnivCard" title="Anniversaires du mois">
-          <div class="mc-label" style="color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Anniversaires du mois</div>
+        <a href="residents.html" class="mini-card" id="miniAnnivCard" title="Anniversaires du mois" style="--mc:#ec4899">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div class="mc-label" style="color:#ec4899">Anniversaires du mois</div>
           <div class="mc-val" id="miniAnnivVal" style="font-size:1.25rem">—</div>
           <div class="mc-sub" id="miniAnnivSub">Ce mois-ci</div>
         </a>
-        <a href="vehicules.html" class="mini-card" id="miniVehCard" title="Réservations véhicules du jour">
-          <div class="mc-label" style="color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg>Véhicules du jour</div>
+        <a href="vehicules.html" class="mini-card" id="miniVehCard" title="Réservations véhicules du jour" style="--mc:#6366f1">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg>
+          <div class="mc-label" style="color:#6366f1">Véhicules du jour</div>
           <div class="mc-val" id="miniVehVal">0</div>
           <div class="mc-sub" id="miniVehSub">Réservés aujourd'hui</div>
         </a>
-        <a href="echeances.html" class="mini-card" id="miniEcheanceCard" title="Échéancier administratif">
-          <div class="mc-label" style="color:#0369a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>Échéances urgentes</div>
+        <a href="echeances.html" class="mini-card" id="miniEcheanceCard" title="Échéancier administratif" style="--mc:#0369a1">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
+          <div class="mc-label" style="color:#0369a1">Échéances urgentes</div>
           <div class="mc-val" id="miniEcheanceVal">0</div>
           <div class="mc-sub" id="miniEcheanceSub">Sous 30 jours</div>
           <div class="mc-alert" id="miniEcheanceAlert" style="display:none">⚠ Échéances en retard</div>
         </a>
-        <a href="satisfaction.html" class="mini-card" id="miniSatCard" title="Satisfaction résidents">
-          <div class="mc-label" style="color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Satisfaction</div>
+        <a href="satisfaction.html" class="mini-card" id="miniSatCard" title="Satisfaction résidents" style="--mc:#8b5cf6">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <div class="mc-label" style="color:#8b5cf6">Satisfaction</div>
           <div class="mc-val" id="miniSatVal" style="font-size:1.5rem">—</div>
           <div class="mc-sub" id="miniSatSub">Score résidents</div>
         </a>
-        <a href="repas.html" class="mini-card" id="miniRepasCard" title="Repas du jour">
-          <div class="mc-label" style="color:#ea580c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>Repas du jour</div>
+        <a href="repas.html" class="mini-card" id="miniRepasCard" title="Repas du jour" style="--mc:#ea580c">
+          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+          <div class="mc-label" style="color:#ea580c">Repas du jour</div>
           <div class="mc-val" id="miniRepasVal">0</div>
           <div class="mc-sub" id="miniRepasSub">couverts midi / soir</div>
         </a>
