@@ -17,6 +17,20 @@
     .mini-card .mc-sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
     .mini-card .mc-alert{margin-top:.45rem;padding:.25rem .5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:7px;font-size:.7rem;font-weight:600;text-align:center}
     @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
+    .me-banner{background:#fff;border:1px solid rgba(15,43,74,.08);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(15,43,74,.05)}
+    .me-prof{display:flex;align-items:center;gap:11px;flex-shrink:0}
+    .me-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+    .me-hello{font-size:15px;font-weight:700;color:#1e293b}
+    .me-date{font-size:12px;color:var(--muted);text-transform:capitalize}
+    .me-stats{display:flex;flex:1;min-width:300px;justify-content:space-around}
+    .me-st{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 10px;text-align:center;position:relative;flex:1;text-decoration:none;color:inherit}
+    .me-st+.me-st::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:1px;background:rgba(15,43,74,.1)}
+    .me-sic{display:flex}.me-sic svg{width:18px;height:18px}
+    .me-sv{font-size:1.25rem;font-weight:800;color:#1e293b;line-height:1}
+    .me-sl{font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+    .me-link{font-size:.78rem;color:#4f46e5;background:#eef2ff;padding:6px 12px;border-radius:8px;text-decoration:none;flex-shrink:0;font-weight:600}
+    .me-link:hover{background:#e0e7ff}
+    @media(max-width:680px){.me-stats{order:3;width:100%;min-width:0;margin-top:8px}.me-link{margin-left:auto}}
   </style>
 </head>
 <body>
@@ -38,14 +52,38 @@
 
       <!-- MON ESPACE (salarié connecté) -->
       <div id="monEspaceCard" style="display:none;margin-bottom:1.5rem">
-        <div class="card" style="background:linear-gradient(135deg,#4f46e510,#7c3aed08),#fff">
-          <div class="card-header"><span class="card-title">👤 Mon espace</span><a href="mes-absences.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Mes absences →</a></div>
-          <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
-            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Congés pris (<span id="meYear"></span>)</div><div style="font-size:1.7rem;font-weight:800" id="meCongesPris">—</div><div style="font-size:.74rem;color:var(--muted)" id="meCongesAttente"></div></div>
-            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Heures de récup</div><div style="font-size:1.7rem;font-weight:800" id="meRecup">—</div><div style="font-size:.74rem;color:var(--muted)">écart cumulé planning</div></div>
-            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Formations suivies</div><div style="font-size:1.7rem;font-weight:800" id="meFormations">—</div><div style="font-size:.74rem;color:var(--muted)">réalisées</div></div>
-            <div><div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Entretiens</div><div style="font-size:1.7rem;font-weight:800" id="meEntretiens">—</div><div style="font-size:.74rem;color:var(--muted)">réalisés</div></div>
+        <div class="me-banner">
+          <div class="me-prof">
+            <div class="me-avatar" id="meAvatar">··</div>
+            <div>
+              <div class="me-hello" id="meHello">Bonjour</div>
+              <div class="me-date" id="meDate"></div>
+            </div>
           </div>
+          <div class="me-stats">
+            <a href="conges.html" class="me-st">
+              <span class="me-sic" style="color:#2F66D6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+              <span class="me-sv" id="meCongesPris">—</span>
+              <span class="me-sl">Congés</span>
+            </a>
+            <div class="me-st">
+              <span class="me-sic" style="color:#16934F"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              <span class="me-sv" id="meRecup">—</span>
+              <span class="me-sl">Récup</span>
+            </div>
+            <div class="me-st">
+              <span class="me-sic" style="color:#C76A12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg></span>
+              <span class="me-sv" id="meFormations">—</span>
+              <span class="me-sl">Formations</span>
+            </div>
+            <div class="me-st">
+              <span class="me-sic" style="color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <span class="me-sv" id="meEntretiens">—</span>
+              <span class="me-sl">Entretiens</span>
+            </div>
+          </div>
+          <a href="mes-absences.html" class="me-link">Mes absences →</a>
+          <span id="meYear" style="display:none"></span><span id="meCongesAttente" style="display:none"></span>
         </div>
       </div>
 
@@ -399,6 +437,10 @@
       document.getElementById('meFormations').textContent = formationsRealisees;
       document.getElementById('meEntretiens').textContent = entretiensRealises;
 
+      const _ini = (((s.prenom || '').trim()[0] || '') + ((s.nom || '').trim()[0] || '')).toUpperCase();
+      document.getElementById('meAvatar').textContent = _ini || '👤';
+      document.getElementById('meHello').textContent = 'Bonjour ' + ((s.prenom || '').trim() || '');
+      document.getElementById('meDate').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
       document.getElementById('monEspaceCard').style.display = '';
     } catch (e) { console.error('[monEspace]', e); }
   })();
