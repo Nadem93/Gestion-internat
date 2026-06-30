@@ -93,14 +93,14 @@
     /* Modal éval : panneau bleu de sélection des domaines + grille adaptative */
     #evalModal .modal-body{padding:0;overflow:hidden}
     .eval-layout{display:flex;height:min(62vh,520px)}
-    .eval-side{width:206px;flex-shrink:0;background:linear-gradient(165deg,#3b82f6,#2563eb);padding:1rem .75rem;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto}
-    .eval-side-h{color:#fff;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.85;margin:.1rem .45rem .55rem}
-    .eval-dom-btn{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;border:none;background:transparent;color:#fff;padding:.55rem .6rem;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:600;transition:background .15s;font-family:inherit}
-    .eval-dom-btn:hover{background:rgba(255,255,255,.15)}
-    .eval-dom-btn.active{background:#fff;color:#1e293b;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+    .eval-side{width:206px;flex-shrink:0;background:#f8fafc;border-right:0.5px solid var(--border);padding:1rem .75rem;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto}
+    .eval-side-h{color:var(--muted);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:.1rem .45rem .55rem}
+    .eval-dom-btn{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;border:none;background:transparent;color:var(--g700);padding:.55rem .6rem;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:600;transition:background .15s,color .15s;font-family:inherit}
+    .eval-dom-btn:hover{background:#eef1f5}
+    .eval-dom-btn.active{background:color-mix(in srgb,var(--bc,#6366f1) 14%,#fff);color:var(--bc,#6366f1)}
     .eval-dom-btn .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
     .eval-dom-btn .nm{flex:1;line-height:1.15}
-    .eval-dom-btn .cnt{font-size:.64rem;font-weight:700;opacity:.65}
+    .eval-dom-btn .cnt{font-size:.64rem;font-weight:700;opacity:.6}
     .eval-main{flex:1;min-width:0;padding:1.25rem 1.4rem;overflow-y:auto}
     .eval-dom-title{font-size:.92rem;font-weight:700;margin:.2rem 0 .7rem}
     @media(max-width:680px){
@@ -443,7 +443,7 @@ function renderViewMode(r) {
   const infoCard = (color, title, rows) => {
     const content = rows.filter(Boolean).join('');
     if (!content) return '';
-    return `<div class="card" style="border-left:3px solid #${color};background:linear-gradient(135deg,#${color}0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem"><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#${color}">${title}</div><div class="grid grid-2" style="gap:.75rem">${content}</div></div></div>`;
+    return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #${color} 12%, #fff)"><span class="card-title" style="color:#${color}">${title}</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem"><div class="grid grid-2" style="gap:.75rem">${content}</div></div></div>`;
   };
 
   const isEnfant = type === 'enfants' || type === 'mixte';
@@ -577,11 +577,10 @@ function serafinphCard(r) {
     </div>`;
   }).join('') || '<div style="font-size:.78rem;color:var(--g400);padding:.5rem 0">Aucune prestation sélectionnée. Cliquez sur « Modifier » pour configurer le profil SERAFIN-PH de ce résident.</div>';
 
-  return `<div class="card" style="border-left:3px solid #8b5cf6;background:linear-gradient(135deg,#8b5cf60d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
-    <div style="display:flex;align-items:center;gap:.5rem">
-      <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8b5cf6">📊 SERAFIN-PH</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #8b5cf6 12%, #fff)">
+      <span class="card-title" style="color:#8b5cf6">📊 SERAFIN-PH</span>
       ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSerafinphModal()">✎ Modifier</button>` : ''}
-    </div>
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
     <div style="display:flex;gap:1rem;padding:.5rem 0">
       <div style="text-align:center;flex:1">
         <div style="font-weight:800;font-size:1.2rem;color:#8b5cf6">${gmps}</div>
@@ -608,14 +607,13 @@ const _medRow = (label, value) => `<div><div style="font-size:.68rem;font-weight
 function rgpdCard(r) {
   const created = r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '—';
   const updated = r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('fr-FR') : '—';
-  return `<div class="card" style="border-left:3px solid #78716c;background:linear-gradient(135deg,#78716c0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
-    <div style="display:flex;align-items:center;gap:.5rem">
-      <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#78716c">🔐 RGPD / Données</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #78716c 12%, #fff)">
+      <span class="card-title" style="color:#78716c">🔐 RGPD / Données</span>
       <div style="margin-left:auto;display:flex;gap:.35rem">
         <button class="btn btn-ghost btn-sm no-print" onclick="exportResidentData()" title="Exporter les données">⬇ Export</button>
         <button class="btn btn-ghost btn-sm no-print" style="color:var(--red)" onclick="anonymizeResident()" title="Anonymiser">🕶 Anonymiser</button>
       </div>
-    </div>
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
     <div class="grid grid-4" style="gap:.5rem">
       ${_medRow('Consent. données santé', r.consent ? ({oui:'✅ Donné',non:'❌ Refusé',en_attente:'⏳ En attente'}[r.consent]||r.consent) : '—')}
       ${_medRow('Date consentement', r.consentDate || '—')}
@@ -679,11 +677,10 @@ function santeCard(r) {
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune vaccination enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #16a34a;background:linear-gradient(135deg,#16a34a0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#16a34a">🏥 Médical</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #16a34a 12%, #fff)">
+        <span class="card-title" style="color:#16a34a">🏥 Médical</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSanteModal('medical')">✎ Modifier</button>` : ''}
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
       <div class="grid grid-4" style="gap:.75rem">
         ${medRow('Groupe sanguin', s.groupeSanguin)}
         ${medRow('Médecin traitant', r.medecin)}
@@ -990,11 +987,10 @@ function sortiesCard(r) {
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune sortie enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #0d9488;background:linear-gradient(135deg,#0d94880d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0d9488">🚪 Sorties & permissions${enCours ? ` <span class="badge badge-amber" style="margin-left:.3rem">${enCours} en cours</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #0d9488 12%, #fff)">
+        <span class="card-title" style="color:#0d9488">🚪 Sorties & permissions${enCours ? ` <span class="badge badge-amber" style="margin-left:.3rem">${enCours} en cours</span>` : ''}</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSortieModal()">+ Nouvelle sortie</button>` : ''}
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:${sorted.length > 3 ? 'calc(3 * 72px)' : 'none'};overflow-y:${sorted.length > 3 ? 'auto' : 'visible'};scrollbar-width:thin;scrollbar-color:#0d948866 transparent">${rows}</div>
     </div></div>`;
 }
@@ -1106,14 +1102,13 @@ function trousseauCard(r) {
       </div>` : ''}
     </div>`).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun article inventorié</div>';
 
-  return `<div class="card" style="border-left:3px solid #7c3aed;background:linear-gradient(135deg,#7c3aed0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7c3aed">🧳 Trousseau & effets personnels${enDepot.length ? ` <span class="badge" style="background:#7c3aed1a;color:#7c3aed;margin-left:.3rem">${enDepot.length} en dépôt</span>` : ''}${restitues.length ? ` <span class="badge badge-gray">${restitues.length} restitué(s)</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #7c3aed 12%, #fff)">
+        <span class="card-title" style="color:#7c3aed">🧳 Trousseau & effets personnels${enDepot.length ? ` <span class="badge" style="background:#7c3aed1a;color:#7c3aed;margin-left:.3rem">${enDepot.length} en dépôt</span>` : ''}${restitues.length ? ` <span class="badge badge-gray">${restitues.length} restitué(s)</span>` : ''}</span>
         <span class="no-print" style="margin-left:auto;display:flex;gap:.3rem">
           ${items.length ? `<button class="btn btn-ghost btn-sm" onclick="printTrousseau()">🖨 Inventaire</button>` : ''}
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openTrousseauModal()">+ Article</button>` : ''}
         </span>
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
     </div></div>`;
 }
@@ -1266,14 +1261,13 @@ function activitesCard(r) {
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune activité éducative</div>';
 
-  return `<div class="card" style="border-left:3px solid #6366f1;background:linear-gradient(135deg,#6366f10d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6366f1">🎨 Activités éducatives${actives.length ? ` <span class="badge" style="background:#6366f11a;color:#6366f1;margin-left:.3rem">${actives.length} en cours</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #6366f1 12%, #fff)">
+        <span class="card-title" style="color:#6366f1">🎨 Activités éducatives${actives.length ? ` <span class="badge" style="background:#6366f11a;color:#6366f1;margin-left:.3rem">${actives.length} en cours</span>` : ''}</span>
         <span class="no-print" style="margin-left:auto;display:flex;gap:.3rem">
           <a href="activites.html" class="btn btn-ghost btn-sm">📋 Catalogue</a>
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openActiviteInscrModal()">+ Inscrire</button>` : ''}
         </span>
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
     </div></div>`;
 }
@@ -1384,11 +1378,10 @@ function budgetCard(r) {
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune opération enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #d97706;background:linear-gradient(135deg,#d977060d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d97706">💰 Budget personnel</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #d97706 12%, #fff)">
+        <span class="card-title" style="color:#d97706">💰 Budget personnel</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openBudgetModal()">+ Opération</button>` : ''}
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div class="grid grid-3" style="gap:.75rem">
         <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:${solde < 0 ? '#fef2f2' : '#f0fdf4'};border:1px solid ${solde < 0 ? '#fecaca' : '#bbf7d0'}">
           <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Solde actuel</div>
@@ -1513,11 +1506,10 @@ function objectifsCard(r) {
     </div>`;
   }).join('');
 
-  return `<div class="card" style="border-left:3px solid #f59e0b;background:linear-gradient(135deg,#f59e0b0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b">🎯 Objectifs personnalisés (${resObjs.length})</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #f59e0b 12%, #fff)">
+        <span class="card-title" style="color:#f59e0b">🎯 Objectifs personnalisés (${resObjs.length})</span>
         <span class="badge badge-green" style="margin-left:auto">${nbAtteint}/${resObjs.length} atteint${nbAtteint > 1 ? 's' : ''}</span>
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="height:7px;border-radius:4px;background:var(--g100);overflow:hidden"><div style="height:100%;width:${pct}%;background:#16a34a;transition:width .3s"></div></div>
       ${rows}
     </div></div>`;
@@ -1648,12 +1640,11 @@ function evaluationsCard(r) {
     </details>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune évaluation enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #9333ea;background:linear-gradient(135deg,#9333ea0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9333ea">📋 Grilles d'évaluation${last ? ` <span class="badge" style="background:${evalScoreColor(evalScorePct(last.scores))}22;color:${evalScoreColor(evalScorePct(last.scores))};margin-left:.3rem">${evalScorePct(last.scores)}% d'autonomie</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #9333ea 12%, #fff)">
+        <span class="card-title" style="color:#9333ea">📋 Grilles d'évaluation${last ? ` <span class="badge" style="background:${evalScoreColor(evalScorePct(last.scores))}22;color:${evalScoreColor(evalScorePct(last.scores))};margin-left:.3rem">${evalScorePct(last.scores)}% d'autonomie</span>` : ''}</span>
         ${trend}
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openEvalModal()">+ Nouvelle évaluation</button>` : ''}
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
     </div></div>`;
 }
@@ -1668,7 +1659,7 @@ function evalFormHtml(item) {
     const total = d.criteres.length;
     const filled = d.criteres.filter(c => scores[c.key] != null).length;
     const color = EVAL_DOM_COLORS[i % EVAL_DOM_COLORS.length];
-    return `<button type="button" class="eval-dom-btn${i === 0 ? ' active' : ''}" id="evdombtn_${i}" onclick="evalSelectDomain(${i})"><span class="dot" style="background:${color}"></span><span class="nm">${d.domaine}</span><span class="cnt" id="evdomcnt_${i}">${filled}/${total}</span></button>`;
+    return `<button type="button" class="eval-dom-btn${i === 0 ? ' active' : ''}" id="evdombtn_${i}" style="--bc:${color}" onclick="evalSelectDomain(${i})"><span class="dot" style="background:${color}"></span><span class="nm">${d.domaine}</span><span class="cnt" id="evdomcnt_${i}">${filled}/${total}</span></button>`;
   }).join('');
 
   const domBlocks = GRILLE_EVAL.map((d, i) => {
@@ -1768,7 +1759,7 @@ function docsHtml(docs) {
       <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocFromPage('${d.id}','${currentResidentId}')">✕</button>
     </div>`;
   }).join('');
-  return `<div class="card"><div class="card-header"><span class="card-title">Fichiers joints</span></div><div class="card-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>`;
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span class="card-title" style="color:var(--accent)">Fichiers joints</span></div><div class="card-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>`;
 }
 
 function inputField(id, label, value, type) {
@@ -2001,8 +1992,8 @@ function fvFilter(type, btn) {
 
 function filDeVieCard(r) {
   const ev = buildFilDeVie(r);
-  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>📋</span> Générer le bilan</button></div>`;
-  if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
+  const head = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title" style="color:var(--accent)">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>📋</span> Générer le bilan</button></div>`;
+  if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
   const types = [...new Set(ev.map(e => e.type))];
   const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
     types.map(t => `<button class="fv-chip" onclick="fvFilter('${t}',this)">${FV_TYPE_LABELS[t]||t}</button>`).join('');
@@ -2012,7 +2003,7 @@ function filDeVieCard(r) {
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><span style="font-weight:650;font-size:.83rem;color:${e.color}">${escHtml(e.title)}</span><span style="font-size:.7rem;color:var(--muted)">${fvDate(e.ts)}</span></div>
         ${e.detail ? `<div style="font-size:.78rem;color:var(--g700);margin-top:1px;white-space:pre-wrap">${escHtml(String(e.detail).slice(0,240))}</div>` : ''}
       </div></div>`).join('');
-  return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body" style="padding:1rem 1.25rem">
+  return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body" style="padding:1rem 1.25rem">
       <div class="fv-chips no-print" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">${chips}</div>
       <div id="fvList" style="max-height:520px;overflow-y:auto">${rows}</div>
     </div></div>`;
@@ -2081,11 +2072,10 @@ function radarSignauxCard(r) {
       <span style="font-size:1.05rem;flex-shrink:0;line-height:1.3">${x.icon}</span>
       <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.82rem;color:${cm[x.level].c}">${escHtml(x.label)}</div><div style="font-size:.76rem;color:var(--g700)">${escHtml(x.detail)}</div></div>
     </div>`).join('') : `<div style="padding:.85rem;font-size:.82rem;color:#16a34a">✓ Aucun signal faible détecté. La situation paraît stable.</div>`;
-  return `<div class="card" style="margin-bottom:1.5rem;border-left:3px solid ${lv.c}"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${lv.c}">📡 Radar de vigilance</span>
+  return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, ${lv.c} 12%, #fff)">
+        <span class="card-title" style="color:${lv.c}">📡 Radar de vigilance</span>
         <span class="badge" style="margin-left:auto;background:${lv.bg};color:${lv.c};border:1px solid ${lv.bd}">${lv.txt}</span>
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
     </div></div>`;
 }
@@ -2202,11 +2192,11 @@ function renderDataCards(r) {
   const rIncidents = incidents.filter(e => String(e.residentId) === String(currentResidentId)).slice(-5).reverse();
   const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
   const canSeeIncidents = _sess && typeof canViewAllIncidents === 'function' && canViewAllIncidents(_sess.userId);
-  const incidentsCardHtml = !canSeeIncidents ? '' : `<div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="card-title">Incidents récents</span><a href="incidents.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rIncidents.length ? rIncidents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.type||'Incident')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${escHtml(e.description||'').slice(0,80)}</div></div><span class="badge ${e.gravite === 'grave' ? 'badge-red' : e.gravite === 'modere' ? 'badge-amber' : 'badge-green'}">${e.gravite||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun incident</p></div>'}</div></div>`;
+  const incidentsCardHtml = !canSeeIncidents ? '' : `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="card-title" style="color:var(--accent)">Incidents récents</span><a href="incidents.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rIncidents.length ? rIncidents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.type||'Incident')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${escHtml(e.description||'').slice(0,80)}</div></div><span class="badge ${e.gravite === 'grave' ? 'badge-red' : e.gravite === 'modere' ? 'badge-amber' : 'badge-green'}">${e.gravite||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun incident</p></div>'}</div></div>`;
   return `<div class="grid grid-2" style="gap:1.5rem;margin-bottom:1rem">
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="card-title">Événements à venir</span><a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${upcomingEvents.length ? upcomingEvents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.titre||'Événement')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${e.time ? e.time.slice(0,5) : '—'}${e.timeEnd ? ' → '+e.timeEnd.slice(0,5) : ''}</div></div><span class="badge">${e.type||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun événement planifié</p></div>'}</div></div>
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="card-title">Journal de bord</span><a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rJournal.length ? rJournal.map(e => { const cat = categories.find(c=>String(c.id)===String(e.categorie)); return `<div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}<span style="font-size:.72rem;color:var(--muted)">${formatDateTime(e.date)}</span></div><div style="font-size:.8rem;color:var(--g700)">${escHtml(e.contenu||'')}</div></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucune entrée journal</p></div>'}</div></div>
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="card-title">Avenants (PPE)</span><a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rPpe.length ? rPpe.map(p => { const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0); return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html?id=${p.id}'"><div style="font-weight:600;font-size:.875rem">${escHtml(p.dateRedaction||'?')}</div><div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs</div></div><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucun avenant actif</p></div>'}</div></div>
+    <div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="card-title" style="color:var(--accent)">Événements à venir</span><a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${upcomingEvents.length ? upcomingEvents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.titre||'Événement')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${e.time ? e.time.slice(0,5) : '—'}${e.timeEnd ? ' → '+e.timeEnd.slice(0,5) : ''}</div></div><span class="badge">${e.type||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun événement planifié</p></div>'}</div></div>
+    <div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="card-title" style="color:var(--accent)">Journal de bord</span><a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rJournal.length ? rJournal.map(e => { const cat = categories.find(c=>String(c.id)===String(e.categorie)); return `<div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}<span style="font-size:.72rem;color:var(--muted)">${formatDateTime(e.date)}</span></div><div style="font-size:.8rem;color:var(--g700)">${escHtml(e.contenu||'')}</div></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucune entrée journal</p></div>'}</div></div>
+    <div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="card-title" style="color:var(--accent)">Avenants (PPE)</span><a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rPpe.length ? rPpe.map(p => { const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0); return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html?id=${p.id}'"><div style="font-weight:600;font-size:.875rem">${escHtml(p.dateRedaction||'?')}</div><div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs</div></div><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucun avenant actif</p></div>'}</div></div>
     ${incidentsCardHtml}
   </div>`;
 }
@@ -2269,9 +2259,9 @@ function residentTransmissionsCard(r) {
   const unread  = all.filter(t => !Array.isArray(t.readBy) || !t.readBy.includes(String(userId))).length;
   const urgent  = all.filter(t => t.priority === 'urgent' || t.cat === 'urgent').length;
 
-  const head = `<div class="card-header">
+  const head = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M8 9h8M8 13h5M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
-    <span class="card-title">📡 Transmissions</span>
+    <span class="card-title" style="color:var(--accent)">📡 Transmissions</span>
     <span class="badge badge-gray" style="margin-left:.5rem">${all.length}</span>
     ${unread ? `<span class="badge" style="margin-left:.3rem;background:#fef2f2;color:#dc2626;border:1px solid #fecaca">● ${unread} non lue${unread>1?'s':''}</span>` : ''}
     ${urgent ? `<span class="badge" style="margin-left:.3rem;background:#fef2f2;color:#dc2626;border:1px solid #fecaca">⚡ ${urgent} urgente${urgent>1?'s':''}</span>` : ''}
@@ -2279,7 +2269,7 @@ function residentTransmissionsCard(r) {
   </div>`;
 
   if (!all.length) {
-    return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucune transmission enregistrée pour ce résident.</p></div></div></div>`;
+    return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucune transmission enregistrée pour ce résident.</p></div></div></div>`;
   }
 
   // Affiche les 10 dernières, groupées par date
@@ -2324,7 +2314,7 @@ function residentTransmissionsCard(r) {
 
   const more = all.length > 10 ? `<div style="text-align:center;padding:.5rem 0"><a href="transmissions.html" style="font-size:.76rem;color:var(--primary)">Voir ${all.length - 10} transmission${all.length-10>1?'s':''} de plus →</a></div>` : '';
 
-  return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">${rows}${more}</div></div>`;
+  return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">${rows}${more}</div></div>`;
 }
 
 let pageDocFile = null;
@@ -2483,16 +2473,16 @@ function planningResidentCard(r) {
     ? `<div style="font-size:.75rem;color:var(--muted);text-align:center;padding:.3rem 0">Aucun événement cette semaine</div>`
     : '';
 
-  return `<div class="card" style="border-left:3px solid #2563eb;background:linear-gradient(135deg,#2563eb0d,#fff 55%)">
-    <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#2563eb">📅 Planning individuel</span>
+  return `<div class="card" style="overflow:hidden">
+    <div class="card-header" style="background:color-mix(in srgb, #2563eb 12%, #fff)">
+        <span class="card-title" style="color:#2563eb">📅 Planning individuel</span>
         ${totalItems ? `<span class="badge" style="background:#eff6ff;color:#2563eb">${totalItems} événement${totalItems>1?'s':''} cette semaine</span>` : ''}
         <div style="margin-left:auto;display:flex;gap:.4rem" class="no-print">
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:#2563eb" onclick="openPlanningResidentAdd()">+ Ajouter</button>` : ''}
           <a href="planning.html" class="btn btn-ghost btn-sm" style="color:#2563eb">Agenda →</a>
         </div>
       </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;min-width:0">${cols}</div>
       ${emptyMsg}
     </div>
