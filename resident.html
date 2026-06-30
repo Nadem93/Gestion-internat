@@ -90,6 +90,26 @@
     .evm-btn-series{background:transparent;border:1.5px solid #ef4444;color:#ef4444}
     .evm-btn-close{background:#f1f5f9;color:#334155}
     .evm-btn-agenda{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff}
+    /* Modal éval : panneau bleu de sélection des domaines + grille adaptative */
+    #evalModal .modal-body{padding:0;overflow:hidden}
+    .eval-layout{display:flex;height:min(62vh,520px)}
+    .eval-side{width:206px;flex-shrink:0;background:linear-gradient(165deg,#3b82f6,#2563eb);padding:1rem .75rem;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto}
+    .eval-side-h{color:#fff;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.85;margin:.1rem .45rem .55rem}
+    .eval-dom-btn{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;border:none;background:transparent;color:#fff;padding:.55rem .6rem;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:600;transition:background .15s;font-family:inherit}
+    .eval-dom-btn:hover{background:rgba(255,255,255,.15)}
+    .eval-dom-btn.active{background:#fff;color:#1e293b;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+    .eval-dom-btn .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .eval-dom-btn .nm{flex:1;line-height:1.15}
+    .eval-dom-btn .cnt{font-size:.64rem;font-weight:700;opacity:.65}
+    .eval-main{flex:1;min-width:0;padding:1.25rem 1.4rem;overflow-y:auto}
+    .eval-dom-title{font-size:.92rem;font-weight:700;margin:.2rem 0 .7rem}
+    @media(max-width:680px){
+      .eval-layout{flex-direction:column;height:auto;max-height:78vh}
+      .eval-side{width:auto;flex-direction:row;flex-wrap:wrap;gap:.4rem}
+      .eval-side-h{width:100%}
+      .eval-dom-btn{width:auto;flex:0 0 auto}
+      .eval-main{max-height:none}
+    }
   </style>
 </head>
 <body>
@@ -1638,29 +1658,59 @@ function evaluationsCard(r) {
     </div></div>`;
 }
 
+const EVAL_DOM_COLORS = ['#8b5cf6', '#f59e0b', '#0d9488', '#ef4444', '#16a34a', '#0ea5e9'];
+
 function evalFormHtml(item) {
   const scores = item.scores || {};
   const niveauxLegende = EVAL_NIVEAUX.map(n => `${n.v} = ${n.label}`).join(' · ');
-  const domaines = GRILLE_EVAL.map(d => `
-    <div style="margin-top:.5rem">
-      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9333ea;margin-bottom:.3rem">${d.domaine}</div>
-      ${d.criteres.map(c => {
-        const cur = scores[c.key];
-        const opts = EVAL_NIVEAUX.map(n => `<option value="${n.v}"${Number(cur) === n.v ? ' selected' : ''}>${n.v} — ${n.label}</option>`).join('');
-        return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
-          <label style="flex:1;font-size:.8rem;margin:0">${c.label}</label>
-          <select id="ev_${c.key}" class="form-input" style="width:230px;flex-shrink:0"><option value="">— Non évalué —</option>${opts}</select>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
-  return `
-    <div class="grid grid-2" style="gap:.75rem">
-      ${santeField('evDate', 'Date de l\'évaluation *', item.date || today(), 'date')}
-      ${santeField('evEvaluateur', 'Évaluateur', item.evaluateur)}
+
+  const sideBtns = GRILLE_EVAL.map((d, i) => {
+    const total = d.criteres.length;
+    const filled = d.criteres.filter(c => scores[c.key] != null).length;
+    const color = EVAL_DOM_COLORS[i % EVAL_DOM_COLORS.length];
+    return `<button type="button" class="eval-dom-btn${i === 0 ? ' active' : ''}" id="evdombtn_${i}" onclick="evalSelectDomain(${i})"><span class="dot" style="background:${color}"></span><span class="nm">${d.domaine}</span><span class="cnt" id="evdomcnt_${i}">${filled}/${total}</span></button>`;
+  }).join('');
+
+  const domBlocks = GRILLE_EVAL.map((d, i) => {
+    const color = EVAL_DOM_COLORS[i % EVAL_DOM_COLORS.length];
+    const crit = d.criteres.map(c => {
+      const cur = scores[c.key];
+      const opts = EVAL_NIVEAUX.map(n => `<option value="${n.v}"${Number(cur) === n.v ? ' selected' : ''}>${n.v} — ${n.label}</option>`).join('');
+      return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem"><label style="flex:1;font-size:.82rem;margin:0">${c.label}</label><select id="ev_${c.key}" class="form-input" style="width:230px;max-width:52%;flex-shrink:0" onchange="evalDomCount(${i})"><option value="">— Non évalué —</option>${opts}</select></div>`;
+    }).join('');
+    return `<div class="eval-dom" id="evdom_${i}" style="display:${i === 0 ? 'block' : 'none'}"><div class="eval-dom-title" style="color:${color}">${d.domaine}</div>${crit}</div>`;
+  }).join('');
+
+  return `<div class="eval-layout">
+    <div class="eval-side"><div class="eval-side-h">Domaines</div>${sideBtns}</div>
+    <div class="eval-main">
+      <div class="grid grid-2" style="gap:.75rem">
+        ${santeField('evDate', 'Date de l\'évaluation *', item.date || today(), 'date')}
+        ${santeField('evEvaluateur', 'Évaluateur', item.evaluateur)}
+      </div>
+      <div style="font-size:.7rem;color:var(--muted);padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm);margin:.7rem 0">Échelle : ${niveauxLegende}</div>
+      ${domBlocks}
+      <div style="margin-top:.8rem">${santeTextarea('evNote', 'Synthèse / commentaire', item.note)}</div>
     </div>
-    <div style="font-size:.7rem;color:var(--muted);padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm)">Échelle : ${niveauxLegende}</div>
-    ${domaines}
-    ${santeTextarea('evNote', 'Synthèse / commentaire', item.note)}`;
+  </div>`;
+}
+
+function evalSelectDomain(i) {
+  GRILLE_EVAL.forEach((d, j) => {
+    const blk = document.getElementById('evdom_' + j);
+    const btn = document.getElementById('evdombtn_' + j);
+    if (blk) blk.style.display = j === i ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', j === i);
+  });
+}
+
+function evalDomCount(i) {
+  const d = GRILLE_EVAL[i];
+  if (!d) return;
+  let filled = 0;
+  d.criteres.forEach(c => { const el = document.getElementById('ev_' + c.key); if (el && el.value !== '') filled++; });
+  const cnt = document.getElementById('evdomcnt_' + i);
+  if (cnt) cnt.textContent = filled + '/' + d.criteres.length;
 }
 
 function openEvalModal(id) {
