@@ -337,7 +337,7 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
 .grid-4{grid-template-columns:repeat(4,1fr)}
 .grid-5{grid-template-columns:repeat(5,1fr)}
 .grid-auto{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
-.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;max-width:840px;margin:0 auto}
 .flex{display:flex;gap:.75rem}
 .flex-1{flex:1}
 .items-center{align-items:center}
@@ -719,16 +719,20 @@ tbody tr:hover .table-actions{opacity:1}
   box-shadow:0 2px 12px rgba(15,43,74,.06);
   min-width:0;
 }
-.res-card .res-card-body{display:flex;flex-direction:row;align-items:center;padding:.55rem .75rem;gap:.7rem}
+.res-card .res-card-body{display:flex;flex-direction:column;align-items:center;text-align:center;padding:1rem .55rem .85rem;gap:.1rem}
 .res-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,43,74,.1),0 0 0 2.5px var(--card-color,var(--primary))}
 .res-card-cover{display:none}
-.res-card-photo{width:84px;height:84px;border-radius:12px;border:2px solid var(--card-color,rgba(232,93,4,.4));flex-shrink:0;object-fit:cover;align-self:center;transition:filter .18s ease}
+.res-card-photo{width:62px;height:62px;border-radius:14px;border:2px solid var(--card-color,rgba(232,93,4,.4));flex-shrink:0;object-fit:cover;margin-bottom:.5rem;box-shadow:0 5px 12px rgba(15,43,74,.16);transition:filter .18s ease}
 .res-card:hover .res-card-photo{filter:brightness(1.08);box-shadow:0 0 8px 2px rgba(0,0,0,.08)}
-.res-card-body .res-card-info{display:flex;flex-direction:column;gap:.12rem;flex:1;min-width:0}
+.res-card-body .res-card-info{display:flex;flex-direction:column;align-items:center;gap:.15rem;width:100%;min-width:0}
 .res-card-name{font-weight:650;font-size:.78rem;color:var(--text)}
 .res-card-meta{font-size:.65rem;color:var(--muted)}
 .res-card-ref{font-size:.6rem;color:var(--muted);font-weight:500}
 .res-card-footer{display:none}
+.res-card-ico{display:flex;gap:.4rem;margin-top:.65rem;list-style:none;padding:0}
+.res-card-ico a{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--g600);background:#fff;box-shadow:0 2px 6px rgba(15,43,74,.18);transition:background .25s,color .25s,transform .25s;text-decoration:none}
+.res-card-ico a svg{width:15px;height:15px}
+.res-card-ico a:hover{background:var(--card-color,var(--primary));color:#fff;transform:translateY(-2px)}
 
 /* ══════════════════════════════════════════
    JOURNAL ENTRY
