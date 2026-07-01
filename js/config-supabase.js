@@ -20,6 +20,18 @@ async function sbSaveAppConfig(cle, valeur) {
   if (error) throw error;
 }
 
+// Liste des véhicules du foyer (autocomplete des pages Véhicules/Planning).
+// Partagée via app_config (clé 'vehicules') au lieu d'un DEFAULTS local non
+// synchronisé entre navigateurs. Amorçage : si le cloud ne connaît pas encore
+// cette clé, on y pousse la valeur par défaut (DEFAULTS.vehicules, js/app.js).
+async function sbGetVehiculesListe() {
+  const cfg = await sbGetAppConfig();
+  if (Array.isArray(cfg.vehicules) && cfg.vehicules.length) return cfg.vehicules;
+  const seed = (typeof DEFAULTS !== 'undefined' && DEFAULTS.vehicules) || [];
+  if (seed.length) sbSaveAppConfig('vehicules', seed).catch(e => console.error('[sbGetVehiculesListe] amorçage', e));
+  return seed;
+}
+
 // Écrit une valeur dans le localStorage pour TOUS les établissements locaux (clé suffixée __<id>
 // lue par DB.get) + la clé brute en repli. Corrige le décalage de suffixe du multi-établissement.
 function _hydrateLocalAllEtabs(baseKey, value) {

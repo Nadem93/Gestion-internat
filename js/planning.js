@@ -753,10 +753,10 @@ function populateResidentSelect() {
   });
 }
 
-function populateVehiculeList() {
+async function populateVehiculeList() {
   const list = document.getElementById('evVehiculeList');
   if (!list) return;
-  const vehicules = DB.get(DB.keys.vehicules) || [];
+  const vehicules = await sbGetVehiculesListe();
   list.innerHTML = vehicules.map(v => `<option value="${escHtml(v)}"/>`).join('');
 }
 
@@ -765,7 +765,7 @@ async function initPlanning() {
   document.getElementById('evDate').value = today();
   await loadPlanningData();
   populateResidentSelect();
-  populateVehiculeList();
+  await populateVehiculeList();
   render();
   document.getElementById('prevBtn').onclick = () => navigate(-1);
   document.getElementById('nextBtn').onclick = () => navigate(1);

@@ -17,7 +17,7 @@ async function initVehicules() {
   document.getElementById('vVehicule').value = '';
   document.getElementById('vDestination').value = '';
   document.getElementById('vMotif').value = '';
-  const vehicules = DB.get(DB.keys.vehicules) || [];
+  const vehicules = await sbGetVehiculesListe();
   document.getElementById('vehiculesList').innerHTML = vehicules.map(v => `<option value="${escapeAttr(v)}"/>`).join('');
   const session = Auth.getSession();
   const name = session ? [session.prenom, session.nom].filter(Boolean).join(' ') || session.username : '';
@@ -117,10 +117,7 @@ function renderReservations() {
     .filter(e => e.type === 'vehicule' && (e.date < today || (e.date === today && e.time < now.toTimeString().slice(0,5))))
     .sort((a, b) => b.date.localeCompare(a.date) || (b.time||'').localeCompare(a.time||''));
 
-  const users = DB.get(DB.keys.users) || [];
-
   function renderRow(e) {
-    const u = users.find(x => x.prenom === e.reservedPrenom);
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
       <div style="width:36px;height:36px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" style="width:18px;height:18px"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/></svg>

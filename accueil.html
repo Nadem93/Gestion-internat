@@ -597,8 +597,8 @@ window.addEventListener('storage', e => {
 });
 setInterval(updateNotifs, 10000);
 
-function loadVehiculesAccueil() {
-  const v = DB.get(DB.keys.vehicules) || ['Renault Kangoo','Citroën Berlingo','Peugeot Partner','Volkswagen Caddy'];
+async function loadVehiculesAccueil() {
+  const v = await sbGetVehiculesListe();
   const dl = document.getElementById('mvVehiculesListA');
   if (dl) dl.innerHTML = v.map(x => '<option value="' + escHtml(x) + '">').join('');
 }
