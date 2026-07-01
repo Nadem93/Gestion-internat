@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
       fonction: fonction || '',
       role: role || 'educateur',
       etablissement_id: callerProfile.etablissement_id,
+      email: email || '',
     });
     if (profErr) {
       // Annule le compte Auth si le profil échoue, pour ne pas laisser un compte orphelin

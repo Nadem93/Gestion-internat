@@ -159,7 +159,7 @@
 <script>
   sessionStorage.removeItem('ftr_current_etab');
   initDefaults();
-  if (Auth.getSession()) window.location.href = 'accueil.html';
+  if (Auth.getSession()) window.location.href = Auth.getSession().role === 'famille' ? 'famille.html' : 'accueil.html';
   if (sessionStorage.getItem('ftr_lock_reason') === 'idle') {
     const li = document.getElementById('lockInfo'); if (li) li.style.display = 'block';
     sessionStorage.removeItem('ftr_lock_reason');
@@ -177,7 +177,7 @@
     // Récupère la config partagée (permissions, majoration paie) depuis Supabase → localStorage
     if (typeof hydrateConfigFromCloud === 'function') await hydrateConfigFromCloud();
     sessionStorage.setItem('ftr_fresh_login', '1');
-    window.location.href = 'accueil.html';
+    window.location.href = profile.role === 'famille' ? 'famille.html' : 'accueil.html';
   }
 
   document.getElementById('loginForm').addEventListener('submit', async e => {

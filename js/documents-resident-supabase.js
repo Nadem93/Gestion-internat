@@ -22,6 +22,7 @@ function _docResToRow(d, etablissementId) {
     fichier_path:  d.fichierPath || null,
     type:          d.type        || 'resident',
     uploaded_by:   d.uploadedBy  || '',
+    partage_famille: !!d.partageFamille,
     updated_at:    new Date().toISOString()
   };
 }
@@ -40,6 +41,7 @@ function _docResFromRow(r) {
     fichierPath: r.fichier_path || '',
     type:        r.type         || 'resident',
     uploadedBy:  r.uploaded_by  || '',
+    partageFamille: !!r.partage_famille,
     uploadedAt:  r.created_at,
     date:        r.created_at
   };

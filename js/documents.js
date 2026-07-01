@@ -47,6 +47,7 @@ function renderDocuments() {
   const filterRes = document.getElementById('docFilterResident')?.value || '';
   const filterCat = document.getElementById('docFilterCategory')?.value || '';
   const filterType = document.getElementById('docFilterType')?.value || '';
+  renderFamilleLiensPanel(filterRes);
 
   let filtered = list;
   if (filterRes) filtered = filtered.filter(d => d.residentId === filterRes);
@@ -102,6 +103,7 @@ function renderDocuments() {
         <td style="padding:.35rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
         <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
           <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
+          ${d.type !== 'resource' && Auth.isAdmin() ? `<button class="btn btn-ghost btn-sm" style="margin-left:.25rem;color:${d.partageFamille ? '#16a34a' : 'var(--muted)'}" onclick="toggleDocPartageFamille('${d.id}')" title="${d.partageFamille ? 'Partagé avec la famille — cliquer pour retirer' : 'Partager ce document avec la famille'}">👪</button>` : ''}
         </td>
       </tr>`;
           idx++;
@@ -123,6 +125,7 @@ function renderDocuments() {
         <td style="padding:.35rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
         <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
           <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
+          ${d.type !== 'resource' && Auth.isAdmin() ? `<button class="btn btn-ghost btn-sm" style="margin-left:.25rem;color:${d.partageFamille ? '#16a34a' : 'var(--muted)'}" onclick="toggleDocPartageFamille('${d.id}')" title="${d.partageFamille ? 'Partagé avec la famille — cliquer pour retirer' : 'Partager ce document avec la famille'}">👪</button>` : ''}
         </td>
       </tr>`;
       });
@@ -246,6 +249,109 @@ function deleteDocument(docId, resId) {
       _docResCache = _docResCache.filter(d => d.id !== docId);
     } catch (e) { console.error('[deleteDocument]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
     toast('Document supprimé', 'success');
+    renderDocuments();
+  })();
+}
+
+// ── COMPTES FAMILLE LIÉS AU RÉSIDENT FILTRÉ ──
+function genPassword(len = 10) { const c = 'abcdefghjkmnpqrstuvwxyz23456789ABCDEFGHJKMNPQRSTUVWXYZ'; return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join(''); }
+let _famCurrentResident = '';
+async function renderFamilleLiensPanel(residentId) {
+  const el = document.getElementById('famLiensPanel');
+  if (!el) return;
+  if (!residentId || !Auth.isAdmin()) { el.innerHTML = ''; return; }
+  const liens = await sbGetFamilleLiensResident(residentId);
+  el.innerHTML = `<div class="card" style="margin-bottom:1.25rem;max-width:760px;margin-left:auto;margin-right:auto">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+      <span class="card-title">👪 Comptes famille liés</span>
+      <button class="btn btn-outline btn-sm" onclick="openFamModal('${residentId}')">+ Compte famille</button>
+    </div>
+    <div class="card-body">
+      ${liens.length ? liens.map(l => `<div style="display:flex;align-items:center;gap:.75rem;padding:.4rem 0">
+        <span style="flex:1;font-size:.85rem">${escHtml((l.prenom + ' ' + l.nom).trim() || 'Compte famille')}</span>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delierCompteFamille('${l.lienId}','${residentId}')">Délier</button>
+      </div>`).join('') : '<div style="font-size:.8rem;color:var(--muted)">Aucun compte famille lié à ce résident.</div>'}
+    </div>
+  </div>`;
+}
+
+function openFamModal(residentId) {
+  _famCurrentResident = residentId;
+  document.getElementById('famFormPrenom').value = '';
+  document.getElementById('famFormNom').value = '';
+  document.getElementById('famFormEmail').value = '';
+  document.getElementById('famFormEmailExistant').value = '';
+  document.getElementById('famCreatedInfo').style.display = 'none';
+  document.querySelector('[name="famMode"][value="creer"]').checked = true;
+  toggleFamMode('creer');
+  openModal('famModal');
+}
+
+function toggleFamMode(mode) {
+  document.getElementById('famCreerGroup').style.display = mode === 'creer' ? '' : 'none';
+  document.getElementById('famLierGroup').style.display = mode === 'lier' ? '' : 'none';
+}
+
+async function soumettreCompteFamille() {
+  const mode = document.querySelector('[name="famMode"]:checked')?.value;
+  const info = document.getElementById('famCreatedInfo');
+  if (mode === 'creer') {
+    const prenom = document.getElementById('famFormPrenom').value.trim();
+    const nom = document.getElementById('famFormNom').value.trim();
+    const email = document.getElementById('famFormEmail').value.trim();
+    if (!prenom || !nom || !email) { toast('Prénom, nom et email requis', 'error'); return; }
+    const pw = genPassword();
+    try {
+      const { data, error } = await supabaseClient.functions.invoke('create-user', {
+        body: { email, password: pw, prenom, nom, role: 'famille' }
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || 'Échec de la création');
+      await sbLierFamilleResident(data.userId, _famCurrentResident);
+      info.style.display = '';
+      info.innerHTML = `✅ Compte créé — <strong>${escHtml(email)}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(notez-le, non ré-affiché)</span>`;
+      toast('Compte famille créé et lié', 'success');
+      renderFamilleLiensPanel(_famCurrentResident);
+    } catch (e) {
+      let msg = e?.message || 'Erreur inconnue';
+      if (/already been registered|already registered|already exists/i.test(msg)) msg = 'Cet email a déjà un compte. Utilisez « Lier un compte existant ».';
+      info.style.display = ''; info.innerHTML = `<span style="color:#dc2626">❌ ${escHtml(msg)}</span>`;
+      console.error('[soumettreCompteFamille]', e);
+    }
+    return;
+  }
+  // Lier un compte existant : recherche par email via l'Edge Function (service_role,
+  // les profils ne stockent pas l'email publiquement lisible côté client)
+  const email = document.getElementById('famFormEmailExistant').value.trim();
+  if (!email) { toast('Email requis', 'error'); return; }
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('find-famille-account', { body: { email } });
+    if (error) throw error;
+    if (!data?.ok) { toast(data?.error || 'Compte introuvable', 'error'); return; }
+    await sbLierFamilleResident(data.profileId, _famCurrentResident);
+    toast(`Compte famille lié — ${data.prenom || ''} ${data.nom || ''}`.trim(), 'success');
+    closeModal('famModal');
+    renderFamilleLiensPanel(_famCurrentResident);
+  } catch (e) { console.error('[soumettreCompteFamille:lier]', e); toast('Erreur : ' + (e?.message || e), 'error'); }
+}
+
+function delierCompteFamille(lienId, residentId) {
+  confirmDialog('Retirer l\'accès de ce compte famille à ce résident ?', async () => {
+    try { await sbDelierFamilleResident(lienId); } catch (e) { console.error('[delierCompteFamille]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    toast('Accès retiré', 'info');
+    renderFamilleLiensPanel(residentId);
+  });
+}
+
+function toggleDocPartageFamille(docId) {
+  const doc = docResAll().find(d => d.id === docId);
+  if (!doc) return;
+  (async () => {
+    try {
+      const saved = await sbSaveDocumentResident({ ...doc, partageFamille: !doc.partageFamille });
+      _docResCache = _docResCache.map(d => d.id === docId ? saved : d);
+    } catch (e) { console.error('[toggleDocPartageFamille]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+    toast(_docResCache.find(d => d.id === docId)?.partageFamille ? 'Document partagé avec la famille' : 'Partage retiré', 'success');
     renderDocuments();
   })();
 }

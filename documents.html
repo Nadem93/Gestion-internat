@@ -40,6 +40,7 @@
         <select id="docFilterResident" style="display:none"><option value="">Tous les résidents</option></select>
         <select id="docFilterCategory" style="width:auto"><option value="">Toutes catégories</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="ressource">Ressource</option><option value="autre">Autre</option></select>
       </div>
+      <div id="famLiensPanel"></div>
       <div id="documentList"></div>
     </main>
   </div>
@@ -81,6 +82,33 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="famModal">
+  <div class="modal modal-sm">
+    <div class="modal-header"><span>👪 Compte famille</span></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <div class="form-group"><div style="display:flex;gap:.75rem;padding:.25rem 0">
+        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="famMode" value="creer" checked onchange="toggleFamMode('creer')"/> Créer un nouveau compte</label>
+        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="famMode" value="lier" onchange="toggleFamMode('lier')"/> Lier un compte existant</label>
+      </div></div>
+      <div id="famCreerGroup" style="display:flex;flex-direction:column;gap:.85rem">
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div class="form-group" style="margin:0"><label class="required">Prénom</label><input type="text" id="famFormPrenom" class="form-input"/></div>
+          <div class="form-group" style="margin:0"><label class="required">Nom</label><input type="text" id="famFormNom" class="form-input"/></div>
+        </div>
+        <div class="form-group" style="margin:0"><label class="required">Email</label><input type="email" id="famFormEmail" class="form-input" placeholder="famille@exemple.fr"/></div>
+      </div>
+      <div id="famLierGroup" style="display:none">
+        <div class="form-group" style="margin:0"><label class="required">Email du compte famille existant</label><input type="email" id="famFormEmailExistant" class="form-input" placeholder="famille@exemple.fr"/></div>
+      </div>
+      <div id="famCreatedInfo" style="display:none;font-size:.82rem;padding:.6rem .8rem;border-radius:8px;background:var(--g50)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('famModal')">Fermer</button>
+      <button class="btn btn-primary" id="famSubmitBtn" onclick="soumettreCompteFamille()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/app.js"></script>
 <script src="js/residents.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -88,6 +116,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/absences-supabase.js"></script>
 <script src="js/documents-resident-supabase.js"></script>
+<script src="js/famille-supabase.js"></script>
 <script src="js/documents.js"></script>
 </body>
 </html>

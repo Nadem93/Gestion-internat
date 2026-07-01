@@ -461,6 +461,10 @@ const Auth = {
   requireAuth() {
     const s = this.getSession();
     if (!s) { window.location.href = 'index.html'; return null; }
+    // Compte famille : cantonné à l'espace famille, aucune autre page du site
+    if (s.role === 'famille' && location.pathname.split('/').pop() !== 'famille.html') {
+      window.location.href = 'famille.html'; return null;
+    }
     // Vérifier qu'un établissement est sélectionné
     const etabId = sessionStorage.getItem('ftr_current_etab');
     const etabs = getEtabs();
