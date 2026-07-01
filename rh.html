@@ -7,10 +7,10 @@
   <style>
     html,body{margin:0;height:100%}
     .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:transparent}
-    .rh-sidebar{width:78px;flex-shrink:0;background:transparent;border-right:none;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1rem .5rem;transition:width .2s}
+    .rh-sidebar{width:78px;flex-shrink:0;background:transparent;border-right:none;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;padding:1rem .5rem;transition:width .2s}
     .rh-sidebar.collapsed{width:78px}
     .rh-sidebar:not(.collapsed){width:max-content;max-width:226px;align-items:stretch}
-    .rh-sidebar-top{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;margin-bottom:1.1rem;width:100%}
+    .rh-sidebar-top{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;margin-bottom:.3rem;width:100%}
     .rh-sidebar-logo{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;overflow:hidden}
     .rh-sidebar-logo .rh-logo-badge{width:38px;height:38px;border-radius:11px;background:#4f46e5;border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(79,70,229,.35)}
     .rh-sidebar-logo .rh-logo-badge svg{width:18px;height:18px}
@@ -23,6 +23,7 @@
     .rh-sidebar.collapsed .rh-collapse-btn svg{transform:scaleX(-1)}
     .rh-nav-group{width:100%}
     .rh-nav-label{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#1e293b;margin-top:.55rem;padding:.1rem .6rem .3rem;white-space:nowrap;line-height:1.4}
+    .rh-nav-label:first-of-type{margin-top:0}
     .rh-nav-link{display:flex;align-items:center;gap:.65rem;padding:.5rem .6rem;color:#475569;text-decoration:none;font-size:.82rem;font-weight:500;transition:all .12s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-radius:9px;margin-bottom:2px;white-space:nowrap;overflow:hidden}
     .rh-nav-link:hover{background:#e7e0fd;color:#1e293b}
     .rh-nav-link.active{background:#fff;color:#1e293b;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.1)}
@@ -95,9 +96,6 @@
     <button class="rh-nav-link" data-page="diagnostic-droits.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#475569,#94a3b8);--ic2:#94a3b888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>Diagnostic des droits</span></button>
     <button class="rh-nav-link" id="rhNavVia" data-page="viatrajectoire.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0d9488,#2dd4bf);--ic2:#2dd4bf88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span><span>ViaTrajectoire</span></button>
 
-    <div class="rh-sidebar-bottom">
-      <div class="rh-sidebar-user" id="rhSidebarUser"></div>
-    </div>
   </nav>
 
   <div class="rh-main">
@@ -181,13 +179,7 @@
       localStorage.setItem('rh_sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
     });
 
-    // Utilisateur connecté, en bas de la colonne menu
-    const session = Auth.getSession();
-    if (session) {
-      const userEl = document.getElementById('rhSidebarUser');
-      const nom = [session.prenom, session.nom].filter(Boolean).join(' ') || session.username || 'Utilisateur';
-      userEl.innerHTML = `<div class="rh-user-avatar">${initials(session.prenom || '', session.nom || session.username || '')}</div><span class="rh-user-text">${escHtml(nom)}</span>`;
-    }
+    // (bloc utilisateur du menu retiré)
 
   }
 </script>
