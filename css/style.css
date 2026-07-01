@@ -730,9 +730,9 @@ tbody tr:hover .table-actions{opacity:1}
 .res-card-ref{font-size:.6rem;color:var(--muted);font-weight:500}
 .res-card-footer{display:none}
 .res-card-ico{display:flex;gap:.4rem;margin-top:.65rem;list-style:none;padding:0}
-.res-card-ico a{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--g600);background:#fff;box-shadow:0 2px 6px rgba(15,43,74,.18);transition:background .25s,color .25s,transform .25s;text-decoration:none}
+.res-card-ico a{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--bc,var(--card-color,var(--primary)));background:color-mix(in srgb, var(--bc,var(--card-color,var(--primary))) 12%, #fff);box-shadow:0 2px 6px rgba(15,43,74,.14);transition:background .25s,color .25s,transform .25s;text-decoration:none}
 .res-card-ico a svg{width:15px;height:15px}
-.res-card-ico a:hover{background:var(--card-color,var(--primary));color:#fff;transform:translateY(-2px)}
+.res-card-ico a:hover{background:var(--bc,var(--card-color,var(--primary)));color:#fff;transform:translateY(-2px)}
 
 /* ══════════════════════════════════════════
    JOURNAL ENTRY
