@@ -1004,9 +1004,9 @@ tbody tr:hover .table-actions{opacity:1}
   .card-header{flex-wrap:wrap;gap:.5rem}
   .presence-actions{width:100%;justify-content:flex-start!important}
 
-  /* Accueil — 2 colonnes pour que les labels ne wrappent pas */
-  .accueil-home-grid{grid-template-columns:repeat(4,1fr);gap:.5rem;max-width:100%}
-  .accueil-home-main{padding:.75rem;padding-top:calc(var(--header-h) + .75rem)}
+  /* Accueil — 3 colonnes ; padding-right réservé pour ne pas passer sous les FAB fixes (aide/intervention/incident/véhicules/astreinte) */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr);gap:.5rem;max-width:100%}
+  .accueil-home-main{padding:.75rem;padding-right:4.25rem;padding-top:calc(var(--header-h) + .75rem)}
   .accueil-home-card{padding:.6rem .25rem;border-radius:14px}
   .accueil-home-icon{width:40px;height:40px;border-radius:10px}
   .accueil-home-icon svg{width:20px;height:20px}
@@ -1035,8 +1035,9 @@ tbody tr:hover .table-actions{opacity:1}
   /* Photos résidents */
   .res-card-photo{width:44px;height:44px;border-radius:7px}
 
-  /* Accueil grid — 2 cols */
-  .accueil-home-grid{grid-template-columns:repeat(4,1fr);gap:.4rem;max-width:100%}
+  /* Accueil grid — 3 cols ; padding-right réservé pour les FAB fixes */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr);gap:.4rem;max-width:100%}
+  .accueil-home-main{padding-right:3.75rem}
   .accueil-home-icon{width:36px;height:36px;border-radius:9px}
   .accueil-home-icon svg{width:18px;height:18px}
   .accueil-home-card{padding:.5rem .2rem;border-radius:12px}
