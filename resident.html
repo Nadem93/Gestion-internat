@@ -394,7 +394,7 @@ function anonymizeResident() {
   const r = getResident();
   if (!r) return;
   confirmDialog('Anonymiser définitivement ce résident ? Ses données personnelles (nom, prénom, photo, contacts, NIR, INS) seront effacées. Les données médicales et d\'activité seront conservées anonymement.', async () => {
-    const data = { ...r, prenom: 'Résident', nom: 'Anonyme', photo: '', notes: '', contacts: '', medecin: '', medecinTel: '', allergies: '', nss: '', ins: '', dmp: '', tuteur: '', tuteurTel: '', ecole: '', classe: '', organisme: '', dossier: '', organismeA: '', dossierA: '', protectionNom: '', color: '#94a3b8', consent: 'non', updatedAt: new Date().toISOString() };
+    const data = { ...r, prenom: 'Résident', nom: 'Anonyme', photo: '', notes: '', contacts: '', medecin: '', medecinTel: '', allergies: '', nss: '', ins: '', dmp: '', tuteur: '', tuteurTel: '', ecole: '', classe: '', organisme: '', dossier: '', organismeA: '', dossierA: '', protectionNom: '', protectionTel: '', color: '#94a3b8', consent: 'non', updatedAt: new Date().toISOString() };
     try {
       const updated = await sbSaveResident(data);
       const idx = _residentDetailCache.findIndex(x => x.id === currentResidentId);
@@ -489,7 +489,8 @@ function renderViewMode(r) {
           infoRow('Organisme prescripteur', r.organismeA),
           infoRow('Situation administrative', r.situationAdmin),
           infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
-          infoRow('Tuteur / Curateur', r.protectionNom)
+          infoRow('Tuteur / Curateur', r.protectionNom),
+          infoRow('Tél. tuteur / curateur', r.protectionTel)
         ]) : '';
         // Séjour | Enfant ou Adulte (premier dispo), l'autre en dessous si mixte
         if (enfant)
@@ -1830,6 +1831,7 @@ function renderEditMode(r) {
           ${inputField('eSituationAdmin','Situation admin.',r.situationAdmin)}
           ${selectField('eProtection','Mesure de protection',r.protection, [['','—'],['tutelle','Tutelle'],['curatelle','Curatelle'],['sauvegarde','Sauvegarde de justice'],['habilitation','Habilitation familiale'],['masp','MASP'],['autre','Autre']])}
           ${inputField('eProtectionNom','Tuteur / Curateur',r.protectionNom)}
+          ${inputField('eProtectionTel','Tél. tuteur / curateur',r.protectionTel)}
         </div>`:''}
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:.25rem">🎯 Objectifs</div>
@@ -1863,7 +1865,7 @@ async function savePageEdit() {
     tuteur: g('eTuteur'), tuteurTel: g('eTuteurTel'), ecole: g('eEcole'),
     classe: g('eClasse'), organisme: g('eOrganisme'), dossier: g('eDossier'),
     situationPro: g('eSituationPro'), ressources: g('eRessources'),
-    organismeA: g('eOrganismeA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'),
+    organismeA: g('eOrganismeA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'), protectionTel: g('eProtectionTel'),
     objectifs: checked,
     notes: g('eNotes'), contacts: g('eContacts'),
     updatedAt: new Date().toISOString()
