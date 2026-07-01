@@ -923,8 +923,11 @@ tbody tr:hover .table-actions{opacity:1}
   .toast-container{bottom:.75rem;right:.75rem;left:.75rem}
   .toast{min-width:0;max-width:100%;width:100%}
 
-  /* Accueil grid */
-  .accueil-home-grid{grid-template-columns:repeat(3,1fr);gap:.875rem}
+  /* Accueil grid — !important nécessaire : la règle de base (non-media) de
+     .accueil-home-grid est plus loin dans ce fichier (section "ACCUEIL HOME")
+     et gagnerait sinon la cascade à spécificité égale, quelle que soit la
+     largeur d'écran (ordre source, pas le media query, qui décide) */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.875rem}
   .menu-popup-body{grid-template-columns:repeat(3,1fr)}
 
   /* Calendar — scroll horizontally */
@@ -1004,9 +1007,10 @@ tbody tr:hover .table-actions{opacity:1}
   .card-header{flex-wrap:wrap;gap:.5rem}
   .presence-actions{width:100%;justify-content:flex-start!important}
 
-  /* Accueil — 3 colonnes ; padding-right réservé pour ne pas passer sous les FAB fixes (aide/intervention/incident/véhicules/astreinte) */
-  .accueil-home-grid{grid-template-columns:repeat(3,1fr);gap:.5rem;max-width:100%}
-  .accueil-home-main{padding:.75rem;padding-right:4.25rem;padding-top:calc(var(--header-h) + .75rem)}
+  /* Accueil — 3 colonnes ; padding-right réservé pour les FAB fixes. !important :
+     voir explication plus haut (règle de base plus loin dans le fichier) */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.5rem;max-width:100%}
+  .accueil-home-main{padding:.75rem;padding-right:4.25rem !important;padding-top:calc(var(--header-h) + .75rem)}
   .accueil-home-card{padding:.6rem .25rem;border-radius:14px}
   .accueil-home-icon{width:40px;height:40px;border-radius:10px}
   .accueil-home-icon svg{width:20px;height:20px}
@@ -1035,9 +1039,9 @@ tbody tr:hover .table-actions{opacity:1}
   /* Photos résidents */
   .res-card-photo{width:44px;height:44px;border-radius:7px}
 
-  /* Accueil grid — 3 cols ; padding-right réservé pour les FAB fixes */
-  .accueil-home-grid{grid-template-columns:repeat(3,1fr);gap:.4rem;max-width:100%}
-  .accueil-home-main{padding-right:3.75rem}
+  /* Accueil grid — 3 cols ; padding-right réservé pour les FAB fixes. !important : idem */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.4rem;max-width:100%}
+  .accueil-home-main{padding-right:3.75rem !important}
   .accueil-home-icon{width:36px;height:36px;border-radius:9px}
   .accueil-home-icon svg{width:18px;height:18px}
   .accueil-home-card{padding:.5rem .2rem;border-radius:12px}
