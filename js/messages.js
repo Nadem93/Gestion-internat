@@ -1,6 +1,6 @@
 // ── DATA ── (source = Supabase, caches dans messages-supabase.js)
 function getMessages() { return _msgCache; }
-function getUsers() { return DB.get(DB.keys.users) || []; }
+function getUsers() { return sbProfiles(); }
 
 let currentConvId = null;
 let composeSelected = [];
@@ -507,6 +507,7 @@ async function initMessages() {
     chatInput.addEventListener('input', () => autoResizeTextarea(chatInput));
   }
   await loadMessagesData();
+  await sbLoadProfilesCache();
   renderConvs();
   renderChat();
 }
