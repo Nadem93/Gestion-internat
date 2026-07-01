@@ -933,8 +933,9 @@ tbody tr:hover .table-actions{opacity:1}
   /* Calendar — scroll horizontally */
   .calendar-grid{overflow-x:auto}
 
-  /* FAB stack */
-  .accueil-fab-stack{top:auto;bottom:5.5rem;right:.875rem;transform:none}
+  /* FAB stack — !important : la règle de base (right:1rem, plus loin dans ce
+     fichier) gagnait sinon la cascade quelle que soit la largeur d'écran */
+  .accueil-fab-stack{top:auto;bottom:5.5rem;right:.35rem !important;transform:none}
 
   /* Entry layout — stack vertically */
   .entry-detail{height:auto}
@@ -1057,7 +1058,7 @@ tbody tr:hover .table-actions{opacity:1}
   .wizard-card{border-radius:16px}
 
   /* FAB */
-  .accueil-fab-stack{bottom:4.5rem;right:.625rem}
+  .accueil-fab-stack{bottom:4.5rem;right:.25rem !important}
   .accueil-fab{width:46px;height:46px;border-radius:12px}
 
   /* Toast */
