@@ -134,7 +134,10 @@ async function genererFactures() {
   if (!periode) { toast('Choisissez une période', 'error'); return; }
   const t = getTarifs();
   const residents = sbResidents().filter(r => r.statut !== 'sorti');
-  const presences = DB.get(DB.keys.presences) || {};
+  const [anneeP, moisP] = periode.split('-').map(Number);
+  const dateDebut = `${periode}-01`;
+  const dateFin = `${periode}-${String(new Date(anneeP, moisP, 0).getDate()).padStart(2, '0')}`;
+  const presences = await sbGetPresencesRange(dateDebut, dateFin);
   let nb = 0;
 
   try {
