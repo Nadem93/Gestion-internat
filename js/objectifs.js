@@ -23,6 +23,16 @@ const AXE_SUGGESTIONS = [
   { match: /logement|habitat/i, axes: ['Entretenir sa chambre / son espace', 'Gérer un budget logement', 'Découvrir les démarches d\'accès au logement', 'Expérimenter un séjour en studio d\'essai'] }
 ];
 const AXE_SUGGESTIONS_DEFAUT = ['Étape 1 — découverte avec accompagnement', 'Étape 2 — mise en pratique accompagnée', 'Étape 3 — réalisation en autonomie'];
+
+// Échelle de la grille d'évaluation d'un objectif (mêmes niveaux que les grilles
+// d'autonomie de la fiche résident). Une note = niveau × 25 % de progression.
+const EVAL_OBJ_NIVEAUX = [
+  { v: 0, label: 'Non acquis', color: '#dc2626' },
+  { v: 1, label: 'Aide importante', color: '#f97316' },
+  { v: 2, label: 'Aide partielle', color: '#d97706' },
+  { v: 3, label: 'Avec supervision', color: '#6366f1' },
+  { v: 4, label: 'Autonome', color: '#16a34a' }
+];
 function axeSuggestions(tplObj) {
   const txt = `${tplObj?.name || ''} ${tplObj?.description || ''}`;
   const hit = AXE_SUGGESTIONS.find(s => s.match.test(txt));
@@ -281,8 +291,23 @@ function objectifCard(r, o) {
       </div>
       <div style="display:flex;flex-direction:column;gap:.55rem">${axesHtml}</div>
       ${objChartSvg(sv)}
+      ${evalsSection(o, sv, axes)}
     </div>
   </div>`;
+}
+
+// Section « Évaluations » de la carte : historique des grilles remplies pour cet objectif
+function evalsSection(o, sv, axes) {
+  const evals = getEvalsObj(sv).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  if (!axes.length && !evals.length) return '';
+  return `
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin:.9rem 0 .5rem">
+      <span>📊 Évaluations (${evals.length})</span>
+      ${_obCanEdit && axes.length ? `<button class="btn btn-ghost btn-sm" style="color:#6366f1" onclick="openEvalObjModal('${o.id}')">+ Évaluer</button>` : ''}
+    </div>
+    ${evals.length
+      ? `<div style="display:flex;flex-direction:column;gap:.45rem">${evals.slice(0, 6).map((ev, i) => evalObjRow(o, ev, evals[i + 1], axes)).join('')}</div>`
+      : `<div style="font-size:.75rem;color:var(--muted)">Aucune évaluation. « + Évaluer » ouvre une grille où chaque axe de travail est noté de 0 (non acquis) à 4 (autonome) — la progression se met à jour automatiquement.</div>`}`;
 }
 
 function axeRow(o, a) {
@@ -341,12 +366,13 @@ async function commitAxeProgression(el) {
   renderObjectifs();
 }
 
-// Enregistre le pointage du jour dans l'historique (une entrée par jour, 40 max)
-function pointageAxe(a, val) {
-  const d = today();
-  const histo = Array.isArray(a.histo) ? [...a.histo] : [];
-  if (histo.length && histo[histo.length - 1].d === d) histo[histo.length - 1] = { d, p: val };
-  else histo.push({ d, p: val });
+// Enregistre un pointage dans l'historique (une entrée par jour, 40 max).
+// dateJour permet d'antidater (évaluation saisie a posteriori) ; défaut : aujourd'hui.
+function pointageAxe(a, val, dateJour) {
+  const d = dateJour || today();
+  const histo = (Array.isArray(a.histo) ? [...a.histo] : []).filter(h => h.d !== d);
+  histo.push({ d, p: val });
+  histo.sort((x, y) => (x.d || '').localeCompare(y.d || ''));
   return { ...a, progression: val, dateMaj: new Date().toISOString(), histo: histo.slice(-40) };
 }
 
@@ -406,6 +432,143 @@ async function saveCatalogue() {
   } catch (e) { console.error('[saveCatalogue]', e); toast('Erreur enregistrement : ' + (e?.message || e), 'error'); return; }
   closeModal('modalCatalogue');
   renderObjectifs();
+}
+
+// ── GRILLE D'ÉVALUATION D'UN OBJECTIF ──
+// La grille est générée depuis les axes de travail : un axe = un critère noté 0-4.
+// Enregistrer une évaluation synchronise la progression des axes (note × 25 %).
+let eoObjId = null;
+
+function getEvalsObj(sv) { return Array.isArray(sv.evaluations) ? sv.evaluations : []; }
+
+function openEvalObjModal(objId) {
+  const r = currentResident();
+  if (!r || !_obCanEdit) return;
+  const sv = getSuivi(r, objId);
+  const axes = axesOf(sv);
+  if (!axes.length) { toast('Définissez d\'abord des axes de travail : ce sont eux qui composent la grille d\'évaluation', 'error'); return; }
+  eoObjId = objId;
+  const tplObj = objTemplates().find(o => String(o.id) === String(objId));
+  const derniere = getEvalsObj(sv).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
+  document.getElementById('eoModalTitle').textContent = `📊 Évaluer — ${tplObj ? tplObj.name : 'Objectif'}`;
+  document.getElementById('eoModalInfo').textContent =
+    `${resNom(r)} · chaque axe de travail est noté de « Non acquis » à « Autonome ». ` +
+    `L'enregistrement met à jour la progression des axes (note × 25 %).` +
+    (derniere ? ` Dernière évaluation : ${derniere.score}% le ${formatDate(derniere.date)}.` : '');
+  document.getElementById('eoDate').value = today();
+  document.getElementById('eoComment').value = '';
+  document.getElementById('eoGrid').innerHTML = axes.map(a => {
+    // Pré-remplissage : note de la dernière évaluation, sinon niveau déduit de la progression
+    const pre = derniere && derniere.notes && derniere.notes[a.id] != null
+      ? derniere.notes[a.id] : Math.round(clampPct(a.progression) / 25);
+    return `<div class="eo-axe">
+      <div class="eo-axe-nom">${escHtml(a.nom)} <span style="font-weight:400;font-size:.72rem;color:var(--g400)">(actuellement ${clampPct(a.progression)} %)</span></div>
+      <div class="eo-levels" role="radiogroup" aria-label="Niveau pour ${escAttr(a.nom)}">
+        ${EVAL_OBJ_NIVEAUX.map(n => `<label class="eo-level" style="--lc:${n.color}">
+          <input type="radio" name="eo_${a.id}" value="${n.v}"${pre === n.v ? ' checked' : ''} onchange="eoUpdateScore()"/>${n.v} · ${n.label}</label>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  eoUpdateScore();
+  openModal('modalEvalObj');
+}
+
+function eoLireNotes() {
+  const r = currentResident();
+  if (!r || !eoObjId) return { notes: {}, total: 0 };
+  const notes = {};
+  let total = 0;
+  axesOf(getSuivi(r, eoObjId)).forEach(a => {
+    const sel = document.querySelector(`input[name="eo_${a.id}"]:checked`);
+    if (sel) { notes[a.id] = +sel.value; total++; }
+  });
+  return { notes, total };
+}
+
+function eoUpdateScore() {
+  const r = currentResident();
+  if (!r || !eoObjId) return;
+  const nbAxes = axesOf(getSuivi(r, eoObjId)).length;
+  const { notes, total } = eoLireNotes();
+  const el = document.getElementById('eoLiveScore');
+  if (!total) { el.innerHTML = '<span style="color:var(--muted);font-size:.85rem">Notez chaque axe ci-dessous…</span>'; return; }
+  const somme = Object.values(notes).reduce((s, v) => s + v, 0);
+  const score = Math.round(somme / (nbAxes * 4) * 100);
+  el.innerHTML = `<span style="font-size:1.25rem;font-weight:800;color:${pctColor(score)}">${score}%</span>
+    <span style="font-size:.75rem;color:var(--muted)"> · ${somme}/${nbAxes * 4} points · ${total}/${nbAxes} axe${nbAxes > 1 ? 's' : ''} noté${total > 1 ? 's' : ''}</span>`;
+}
+
+async function saveEvalObj() {
+  const r = currentResident();
+  if (!r || !eoObjId) return;
+  const date = document.getElementById('eoDate').value;
+  if (!date) { toast('La date est requise', 'error'); return; }
+  const sv = { ...getSuivi(r, eoObjId) };
+  const axes = axesOf(sv);
+  const { notes, total } = eoLireNotes();
+  if (total < axes.length) { toast(`Notez tous les axes (${total}/${axes.length})`, 'error'); return; }
+  const somme = Object.values(notes).reduce((s, v) => s + v, 0);
+  const score = Math.round(somme / (axes.length * 4) * 100);
+  const s = Auth.getSession();
+  const evaluation = {
+    id: genId(), date, notes, score,
+    commentaire: document.getElementById('eoComment').value.trim(),
+    auteur: s ? (`${s.prenom || ''} ${s.nom || ''}`.trim() || s.username || '') : '',
+    createdAt: new Date().toISOString()
+  };
+  sv.evaluations = [...getEvalsObj(sv), evaluation];
+  // Synchronisation : la note de chaque axe pilote sa progression (0→0 %, 4→100 %)
+  sv.axes = axes.map(a => notes[a.id] != null ? pointageAxe(a, notes[a.id] * 25, date) : a);
+  if (score > 0 && (!sv.statut || sv.statut === 'non_commence')) sv.statut = 'en_cours';
+  try {
+    await persistSuivi(r, eoObjId, sv);
+    toast('Évaluation enregistrée — progression des axes mise à jour ✓');
+  } catch (e) { console.error('[saveEvalObj]', e); toast('Erreur enregistrement : ' + (e?.message || e), 'error'); return; }
+  closeModal('modalEvalObj');
+  renderObjectifs();
+}
+
+function deleteEvalObj(objId, evalId) {
+  confirmDialog('Supprimer cette évaluation ? (la progression actuelle des axes n\'est pas modifiée)', async () => {
+    const r = currentResident();
+    if (!r) return;
+    const sv = { ...getSuivi(r, objId) };
+    sv.evaluations = getEvalsObj(sv).filter(e => String(e.id) !== String(evalId));
+    try {
+      await persistSuivi(r, objId, sv);
+    } catch (e) { console.error('[deleteEvalObj]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    renderObjectifs();
+    toast('Évaluation supprimée', 'info');
+  });
+}
+
+// Ligne d'historique : score, évolution vs précédente, détail dépliable par axe
+function evalObjRow(o, ev, prec, axes) {
+  const delta = prec && prec.score != null && ev.score != null ? ev.score - prec.score : null;
+  const deltaBadge = delta == null || delta === 0 ? ''
+    : `<span style="font-size:.72rem;font-weight:700;color:${delta > 0 ? '#16a34a' : '#dc2626'}">${delta > 0 ? '▲ +' : '▼ '}${delta}</span>`;
+  const detail = Object.entries(ev.notes || {}).map(([axeId, note]) => {
+    const axe = axes.find(a => String(a.id) === String(axeId));
+    const niv = EVAL_OBJ_NIVEAUX.find(n => n.v === +note) || EVAL_OBJ_NIVEAUX[0];
+    return `<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <span style="flex:1;min-width:140px">${axe ? escHtml(axe.nom) : '<em>(axe supprimé)</em>'}</span>
+      <span class="badge" style="background:${niv.color}1a;color:${niv.color}">${niv.v} · ${niv.label}</span>
+    </div>`;
+  }).join('');
+  return `<details class="eo-histo">
+    <summary>
+      <span style="font-weight:700">${formatDate(ev.date)}</span>
+      <span class="badge" style="background:${pctColor(ev.score)}1a;color:${pctColor(ev.score)};font-weight:800">${ev.score}%</span>
+      ${deltaBadge}
+      ${ev.auteur ? `<span style="font-size:.7rem;color:var(--g400)">par ${escHtml(ev.auteur)}</span>` : ''}
+      <span style="margin-left:auto;font-size:.68rem;color:var(--g400)">détail ▾</span>
+      ${_obCanEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" title="Supprimer cette évaluation" onclick="event.preventDefault();event.stopPropagation();deleteEvalObj('${o.id}','${ev.id}')">✕</button>` : ''}
+    </summary>
+    <div class="eo-histo-body">
+      ${detail}
+      ${ev.commentaire ? `<div style="color:var(--g700);margin-top:.2rem">💬 ${escHtml(ev.commentaire)}</div>` : ''}
+    </div>
+  </details>`;
 }
 
 // ── CRUD AXES ──
@@ -523,5 +686,8 @@ async function initObjectifs() {
     : (sessionStorage.getItem('ob_tab') || 'objectifs');
   obSwitchTab(initialTab);
   renderObjectifs();
+  // Lien profond depuis la fiche résident : ?resident=X&evaluer=OBJID ouvre la grille
+  const evaluer = q.get('evaluer');
+  if (evaluer && currentResident()) openEvalObjModal(evaluer);
 }
 document.addEventListener('DOMContentLoaded', initObjectifs);

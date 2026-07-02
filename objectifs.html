@@ -51,6 +51,18 @@
 .ob-tab{font-size:.82rem;font-weight:600;padding:.45rem .9rem;border-radius:9px;border:none;background:none;cursor:pointer;color:var(--g600);font-family:inherit;transition:all .15s;white-space:nowrap}
 .ob-tab:hover{background:var(--g50);color:var(--text)}
 .ob-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(15,43,74,.25)}
+.eo-axe{background:var(--g50);border:1px solid var(--border);border-radius:9px;padding:.6rem .8rem}
+.eo-axe-nom{font-weight:600;font-size:.83rem;margin-bottom:.45rem}
+.eo-levels{display:flex;gap:.3rem;flex-wrap:wrap}
+.eo-level{position:relative;font-size:.7rem;font-weight:600;padding:.3rem .55rem;border-radius:999px;border:1.5px solid var(--border);background:#fff;color:var(--g600);cursor:pointer;transition:all .12s;user-select:none}
+.eo-level:hover{border-color:var(--g400)}
+.eo-level input{position:absolute;opacity:0;pointer-events:none}
+.eo-level:has(input:checked){border-color:var(--lc,#6366f1);background:var(--lc,#6366f1);color:#fff}
+.eo-level:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.eo-histo{background:#fff;border:1px solid var(--border);border-radius:9px;padding:.45rem .7rem}
+.eo-histo summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;font-size:.78rem}
+.eo-histo summary::-webkit-details-marker{display:none}
+.eo-histo-body{margin-top:.55rem;padding-top:.55rem;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:.3rem;font-size:.76rem}
 @media(max-width:640px){
   .ob-stats{grid-template-columns:repeat(2,1fr)}
   .ob-toolbar{flex-direction:column;align-items:stretch}
@@ -244,6 +256,41 @@
     <div class="modal-body" style="flex:1;overflow-y:auto" id="evDetailBody"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalEvDetail')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉVALUER UN OBJECTIF (grille 0-4 sur ses axes de travail) -->
+<div class="modal-overlay" id="modalEvalObj">
+  <div class="modal" style="max-width:640px;max-height:90vh;display:flex;flex-direction:column">
+    <div class="modal-header">
+      <h3 id="eoModalTitle">Évaluer l'objectif</h3>
+      <button class="modal-close" onclick="closeModal('modalEvalObj')">&times;</button>
+    </div>
+    <div class="modal-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.85rem">
+      <div id="eoModalInfo" style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm)"></div>
+
+      <div class="form-group" style="max-width:220px">
+        <label for="eoDate">Date de l'évaluation *</label>
+        <input type="date" id="eoDate"/>
+      </div>
+
+      <!-- Score en temps réel -->
+      <div style="padding:.6rem .85rem;background:#f8fafc;border-radius:8px;border:1px solid var(--border);text-align:center" id="eoLiveScore">
+        <span style="color:var(--muted);font-size:.85rem">Notez chaque axe ci-dessous…</span>
+      </div>
+
+      <!-- Grille : un axe = un critère noté de 0 à 4 -->
+      <div id="eoGrid" style="display:flex;flex-direction:column;gap:.6rem"></div>
+
+      <div class="form-group">
+        <label for="eoComment">Commentaire</label>
+        <textarea id="eoComment" rows="2" placeholder="Contexte, observations de l'équipe…" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalEvalObj')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEvalObj()">Enregistrer l'évaluation</button>
     </div>
   </div>
 </div>
