@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Objectifs &amp; axes de travail — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+.ob-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem}
+.ob-stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem;text-align:center}
+.ob-stat-num{font-size:1.5rem;font-weight:800;line-height:1;color:var(--primary)}
+.ob-stat-lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
+.ob-toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.ob-toolbar select{font-size:.8rem;padding:.35rem .6rem;border:1px solid var(--border);border-radius:8px;background:#fff;max-width:100%}
+.ob-res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.85rem}
+.ob-res-card{display:flex;align-items:center;gap:.85rem;padding:.85rem 1rem;background:#fff;border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;font-family:inherit;transition:box-shadow .15s,transform .15s}
+.ob-res-card:hover{box-shadow:0 6px 18px rgba(15,43,74,.12);transform:translateY(-2px)}
+.ob-res-nom{font-weight:800;font-size:.9rem;color:var(--text)}
+.ob-res-meta{font-size:.72rem;color:var(--muted);margin-top:2px}
+.ob-res-dots{display:flex;gap:4px;margin-top:.4rem;flex-wrap:wrap}
+.ob-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.ob-card{margin-bottom:1rem;overflow:hidden}
+.ob-card-head{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.15rem;flex-wrap:wrap}
+.ob-card-title{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.ob-statut-sel{font-size:.72rem;font-weight:700;padding:.2rem .5rem;border-radius:999px;border:1.5px solid;background:#fff;cursor:pointer;font-family:inherit}
+.ob-axes{border-top:1px solid var(--border);padding:.85rem 1.15rem 1rem;background:var(--g50)}
+.ob-axe{background:#fff;border:1px solid var(--border);border-radius:9px;padding:.6rem .8rem}
+.ob-axe-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.ob-axe-nom{font-weight:600;font-size:.83rem;flex:1;min-width:140px}
+.ob-axe-meta{font-size:.7rem;color:var(--muted)}
+.ob-axe-pct{font-weight:800;font-size:.85rem;min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.ob-axe-note{font-size:.74rem;color:var(--g700);margin-top:.25rem}
+.ob-bar{height:7px;border-radius:4px;background:var(--g100);overflow:hidden;margin-top:.45rem}
+.ob-range{-webkit-appearance:none;appearance:none;width:100%;height:7px;border-radius:4px;background:var(--g100);outline:none;margin-top:.55rem;cursor:pointer}
+.ob-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;border:2.5px solid var(--primary);box-shadow:0 1px 4px rgba(15,43,74,.3);cursor:grab}
+.ob-range::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.15)}
+.ob-range::-moz-range-thumb{width:19px;height:19px;border-radius:50%;background:#fff;border:2.5px solid var(--primary);box-shadow:0 1px 4px rgba(15,43,74,.3);cursor:grab}
+.ob-range:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:640px){
+  .ob-stats{grid-template-columns:repeat(2,1fr)}
+  .ob-toolbar{flex-direction:column;align-items:stretch}
+  .ob-card-head{gap:.75rem}
+}
+</style>
+</head>
+<body>
+<div class="app-layout"><div class="main">
+  <header class="header">
+    <div class="header-info">
+      <div class="header-title">🎯 Objectifs &amp; axes de travail</div>
+    </div>
+    <div class="header-right"></div>
+  </header>
+
+  <main class="content">
+    <div style="max-width:880px;margin:0 auto">
+
+      <!-- Stats -->
+      <div class="ob-stats">
+        <div class="ob-stat"><div class="ob-stat-num" id="obStatObjectifs">—</div><div class="ob-stat-lbl">Objectifs suivis</div></div>
+        <div class="ob-stat"><div class="ob-stat-num" id="obStatProgression" style="color:#6366f1">—</div><div class="ob-stat-lbl">Progression moyenne</div></div>
+        <div class="ob-stat"><div class="ob-stat-num" id="obStatAxes" style="color:#d97706">—</div><div class="ob-stat-lbl">Axes de travail</div></div>
+        <div class="ob-stat"><div class="ob-stat-num" id="obStatAtteints" style="color:#16a34a">—</div><div class="ob-stat-lbl">Objectifs atteints</div></div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="ob-toolbar">
+        <select id="obResident" aria-label="Choisir un résident">
+          <option value="">Tous les résidents — vue d'ensemble</option>
+        </select>
+        <select id="obFilterStatut" aria-label="Filtrer par statut">
+          <option value="">Tous les statuts</option>
+          <option value="non_commence">Non commencés</option>
+          <option value="en_cours">En cours</option>
+          <option value="atteint">Atteints</option>
+          <option value="abandonne">Abandonnés</option>
+        </select>
+      </div>
+
+      <!-- Contenu -->
+      <div id="obList" aria-live="polite"></div>
+    </div>
+  </main>
+</div></div>
+
+<!-- MODAL AXE DE TRAVAIL -->
+<div class="modal-overlay" id="modalAxe">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 id="axModalTitle">Nouvel axe de travail</h3>
+      <button class="modal-close" onclick="closeModal('modalAxe')">&times;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <div id="axModalObjectif" style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm)"></div>
+
+      <div class="form-group">
+        <label for="axNom">Axe de travail *</label>
+        <input type="text" id="axNom" placeholder="Ex : Préparer un repas simple en autonomie"/>
+      </div>
+
+      <div class="form-group">
+        <label for="axProgression">Progression : <output id="axProgVal" style="font-weight:800">0%</output></label>
+        <input type="range" id="axProgression" class="ob-range" min="0" max="100" step="5" value="0" oninput="axModalSlide(this)" style="margin-top:.35rem"/>
+      </div>
+
+      <div class="form-group">
+        <label for="axEcheance">Échéance visée</label>
+        <input type="date" id="axEcheance"/>
+      </div>
+
+      <div class="form-group">
+        <label for="axNote">Moyens / observations</label>
+        <textarea id="axNote" rows="2" placeholder="Ex : atelier cuisine hebdomadaire avec l'éducateur référent" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalAxe')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAxe()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/objectifs.js"></script>
+</body>
+</html>

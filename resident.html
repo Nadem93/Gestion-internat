@@ -1494,6 +1494,8 @@ function objectifsCard(r) {
   const rows = resObjs.map(o => {
     const sv = suivi[o.id] || {};
     const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
+    const axes = Array.isArray(sv.axes) ? sv.axes : [];
+    const axPct = axes.length ? Math.round(axes.reduce((s, a) => s + Math.max(0, Math.min(100, +a.progression || 0)), 0) / axes.length) : null;
     return `<div style="padding:.7rem .85rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border);border-left:3px solid ${st.color}">
       <div style="display:flex;align-items:flex-start;gap:.5rem">
         <div style="flex:1;min-width:0">
@@ -1501,6 +1503,10 @@ function objectifsCard(r) {
           ${o.description ? `<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}
           ${sv.note ? `<div style="font-size:.76rem;color:var(--g700);margin-top:.35rem">📌 ${escHtml(sv.note)}</div>` : ''}
           ${sv.dateMaj ? `<div style="font-size:.7rem;color:var(--g400);margin-top:2px">Mis à jour le ${formatDate(sv.dateMaj)}</div>` : ''}
+          ${axes.length ? `<div style="margin-top:.45rem">
+            <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--g400)"><span>🧭 ${axes.length} axe${axes.length > 1 ? 's' : ''} de travail</span><span style="font-weight:700;color:${axPct === 100 ? '#16a34a' : '#d97706'}">${axPct}%</span></div>
+            <div style="height:5px;border-radius:3px;background:var(--g100);overflow:hidden;margin-top:2px"><div style="height:100%;width:${axPct}%;background:${axPct === 100 ? '#16a34a' : '#f59e0b'};transition:width .3s"></div></div>
+          </div>` : ''}
         </div>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="color:var(--accent);flex-shrink:0" onclick="openObjectifModal('${o.id}')">✎ Suivi</button>` : ''}
       </div>
@@ -1510,6 +1516,7 @@ function objectifsCard(r) {
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #f59e0b 12%, #fff)">
         <span class="card-title" style="color:#f59e0b">🎯 Objectifs personnalisés (${resObjs.length})</span>
         <span class="badge badge-green" style="margin-left:auto">${nbAtteint}/${resObjs.length} atteint${nbAtteint > 1 ? 's' : ''}</span>
+        <a class="btn btn-ghost btn-sm no-print" href="objectifs.html?resident=${r.id}" style="color:var(--accent);flex-shrink:0" title="Définir les axes de travail et suivre la progression">🧭 Axes de travail</a>
       </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="height:7px;border-radius:4px;background:var(--g100);overflow:hidden"><div style="height:100%;width:${pct}%;background:#16a34a;transition:width .3s"></div></div>
       ${rows}
@@ -1539,7 +1546,8 @@ async function saveObjectifSuivi() {
   const statut = document.getElementById('objStatut').value;
   const note = document.getElementById('objNote').value.trim();
   const suivi = { ...getObjSuivi(r) };
-  suivi[objectifEditId] = { statut, note, dateMaj: new Date().toISOString() };
+  // On étend l'entrée existante : les axes de travail (page Objectifs) doivent être préservés
+  suivi[objectifEditId] = { ...(suivi[objectifEditId] || {}), statut, note, dateMaj: new Date().toISOString() };
   await persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
   closeModal('objectifModal');
   toast('Suivi mis à jour', 'success');
