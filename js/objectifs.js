@@ -88,6 +88,13 @@ function currentResident() {
 }
 
 // ── Visuels façon HUD (hexagones, rangs, barres segmentées) ──
+// Styles critiques inline (en plus des classes de la page) : le rendu reste correct
+// même si le navigateur sert une version en cache de objectifs.html avec un JS plus récent.
+const HEX_CLIP = 'polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)';
+const HEX_STYLE = `clip-path:${HEX_CLIP};-webkit-clip-path:${HEX_CLIP}`;
+const EYEBROW_STYLE = 'font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase';
+const CHIP_STYLE = 'display:inline-flex;align-items:center;font-size:.62rem;font-weight:800;letter-spacing:.08em;padding:.22rem .55rem;border-radius:5px;border:1px solid;text-transform:uppercase;white-space:nowrap';
+const STATUT_SEL_STYLE = 'width:auto;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.24rem .55rem;border-radius:5px;border:1.5px solid;background:#fff;cursor:pointer;font-family:inherit';
 // Rang de maîtrise dérivé de la progression : D (0-24) → C → B → A → S (100)
 function rangOf(p) { return p >= 100 ? 'S' : p >= 75 ? 'A' : p >= 50 ? 'B' : p >= 25 ? 'C' : 'D'; }
 function rangLabel(p) {
@@ -107,8 +114,8 @@ function hexSvg(pct, id, size) {
   const p = known ? clampPct(pct) : 0;
   const color = known ? pctColor(p) : '#cbd5e1';
   return `<div class="ob-hex" id="ring-${id}" role="img" aria-label="Progression ${known ? p + ' %' : 'non mesurée'}"
-    style="width:${w}px;height:${h}px;background:conic-gradient(${color} 0 ${p * 3.6}deg,#e2e8f0 ${p * 3.6}deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s">
-    <div class="ob-hex" style="width:${w - 10}px;height:${h - 10}px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    style="${HEX_STYLE};width:${w}px;height:${h}px;background:conic-gradient(${color} 0 ${p * 3.6}deg,#e2e8f0 ${p * 3.6}deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s">
+    <div class="ob-hex" style="${HEX_STYLE};width:${w - 10}px;height:${h - 10}px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
       <div id="ringtxt-${id}" style="font-size:${Math.round(w / 4.4)}px;font-weight:900;color:${known ? color : '#94a3b8'};font-variant-numeric:tabular-nums;line-height:1">${known ? p + '%' : '—'}</div>
       <div style="font-size:7px;font-weight:800;letter-spacing:.16em;color:#94a3b8;margin-top:2px">PROGRESSION</div>
     </div>
@@ -237,7 +244,7 @@ function renderOverview(residents, tpl) {
     return `<button class="ob-res-card" onclick="obSelectResident('${r.id}')" aria-label="Voir les objectifs de ${escAttr(resNom(r))}">
       ${hexSvg(global, 'res-' + r.id, 56)}
       <div class="ob-res-info">
-        <div class="ob-eyebrow" style="color:#94a3b8;font-size:.55rem">Résident · ${rangLabel(global)}</div>
+        <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#94a3b8;font-size:.55rem">Résident · ${rangLabel(global)}</div>
         <div class="ob-res-nom">${escHtml(resNom(r))}</div>
         <div class="ob-res-meta">${objs.length} objectif${objs.length > 1 ? 's' : ''} · ${atteints} atteint${atteints > 1 ? 's' : ''}</div>
         <div class="ob-res-dots">${dots}</div>
@@ -261,7 +268,7 @@ function objectifCard(r, o) {
   const pct = objPct(sv);
 
   const statutUi = _obCanEdit
-    ? `<select class="ob-statut-sel" onchange="setObjStatut('${o.id}', this.value)" aria-label="Statut de l'objectif ${escAttr(o.name)}" style="border-color:${st.color};color:${st.color}">
+    ? `<select class="ob-statut-sel" onchange="setObjStatut('${o.id}', this.value)" aria-label="Statut de l'objectif ${escAttr(o.name)}" style="${STATUT_SEL_STYLE};border-color:${st.color};color:${st.color}">
         ${Object.entries(OBJ_STATUTS).map(([k, v]) => `<option value="${k}"${(sv.statut || 'non_commence') === k ? ' selected' : ''}>${v.label}</option>`).join('')}
       </select>`
     : `<span class="badge ${st.cls}">${st.label}</span>`;
@@ -284,11 +291,11 @@ function objectifCard(r, o) {
     <div class="ob-card-head">
       ${hexSvg(pct, o.id, 78)}
       <div style="flex:1;min-width:0">
-        <div class="ob-eyebrow">Objectif personnalisé</div>
+        <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#0284c7">Objectif personnalisé</div>
         <div class="ob-card-title">
           <span style="font-weight:900;font-size:1rem;letter-spacing:-.01em">${escHtml(o.name)}</span>
           ${statutUi}
-          <span class="ob-chip" id="rang-${o.id}" style="border-color:#bae6fd;background:#f0f9ff;color:#0284c7">${rangLabel(pct)}</span>
+          <span class="ob-chip" id="rang-${o.id}" style="${CHIP_STYLE};border-color:#bae6fd;background:#f0f9ff;color:#0284c7">${rangLabel(pct)}</span>
         </div>
         ${o.description ? `<div style="font-size:.78rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.45rem">${ech}</div>
@@ -328,11 +335,11 @@ function axeRow(o, a, idx) {
   const late = a.echeance && a.echeance < today() && p < 100;
   return `<div style="display:flex;align-items:stretch">
     <div style="display:flex;align-items:center;flex-shrink:0" aria-hidden="true">
-      <div class="ob-hex" style="width:20px;height:23px;background:${pctColor(p)};transition:background .3s"></div>
+      <div class="ob-hex" style="${HEX_STYLE};width:20px;height:23px;background:${pctColor(p)};transition:background .3s"></div>
       <div style="width:12px;height:2px;background:linear-gradient(90deg,${pctColor(p)},#dbeafe)"></div>
     </div>
     <div class="ob-axe" style="flex:1;min-width:0">
-      <div class="ob-eyebrow" style="color:#94a3b8">Module ${String((idx || 0) + 1).padStart(2, '0')}${a.echeance ? ` · Échéance ${formatDate(a.echeance)}` : ''}${a.responsable ? ` · ${escHtml(a.responsable)}` : ''}</div>
+      <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#94a3b8">Module ${String((idx || 0) + 1).padStart(2, '0')}${a.echeance ? ` · Échéance ${formatDate(a.echeance)}` : ''}${a.responsable ? ` · ${escHtml(a.responsable)}` : ''}</div>
       <div class="ob-axe-top" style="margin-top:2px">
         <span class="ob-axe-nom">${p >= 100 ? '✅ ' : ''}${escHtml(a.nom)}</span>
         ${late ? '<span class="badge badge-red">En retard</span>' : ''}
