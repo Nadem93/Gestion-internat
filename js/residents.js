@@ -221,6 +221,7 @@ function renderResidents() {
   const list = getResidents();
   const container = document.getElementById('residentsContainer');
   const countEl = document.getElementById('residentCount');
+  if (!container || !countEl) return; // page sans liste (fiche résident, documents…)
   countEl.textContent = `${list.length} résident${list.length > 1 ? 's' : ''}`;
 
   if (!list.length) {
@@ -374,7 +375,9 @@ function showDetail(id) {
 let _refEducNames = [];
 async function loadReferents() {
   try {
-    const emps = await sbGetEmployes();
+    // residents.js est aussi chargé par resident.html / documents.html, qui n'incluent pas
+    // js/employes-supabase.js (la liste des référents n'y sert pas) : on ne plante pas.
+    const emps = (typeof sbGetEmployes === 'function') ? await sbGetEmployes() : [];
     const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     _refEducNames = emps
       .filter(e => norm(e.poste).includes('educ'))
