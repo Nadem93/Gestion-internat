@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__visualize__show_widget",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__visualize__read_me",
+      "Bash(export PATH=*)",
+      "mcp__ccd_session__mark_chapter",
+      "Bash(command -v*)",
+      "mcp__Claude_Preview__preview_list",
+      "Bash(python3 -m http.server *)"
+    ]
+  }
+}
