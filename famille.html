@@ -7,18 +7,28 @@
   <style>
     .fam-doc-row{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:.5rem;box-shadow:0 2px 6px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
     .fam-doc-ico{width:38px;height:38px;border-radius:10px;background:#eef2ff;color:#4338ca;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    /* RGAA : le h1 doit rester dans l'arbre d'accessibilité même masqué visuellement sur mobile
+       (la règle générale .header-title{display:none} le retirerait complètement) */
+    @media (max-width:640px){
+      .header-info h1.header-title{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;display:block}
+    }
+    /* RGAA : cible tactile 44x44 minimum + reste lisible sur mobile (le bouton n'a pas
+       d'icône SVG, contrairement aux boutons ghost habituels que la règle générale cible) */
+    #famLogoutBtn{min-width:44px;min-height:44px}
+    @media (max-width:640px){ #famLogoutBtn{font-size:.72rem;padding:.5rem .7rem} }
+    .fam-btn-ouvrir{min-height:44px}
   </style>
 </head>
 <body>
 <div class="app-layout"><div class="main">
   <header class="header">
-    <div class="header-info"><div class="header-title">👨‍👩‍👧 Espace famille</div></div>
-    <div class="header-right"><button class="btn btn-ghost btn-sm" onclick="Auth.logout()">Déconnexion</button></div>
+    <div class="header-info"><h1 class="header-title" style="margin:0;font:inherit;color:inherit"><span aria-hidden="true">👨‍👩‍👧</span> Espace famille</h1></div>
+    <div class="header-right"><button class="btn btn-ghost btn-sm" id="famLogoutBtn" onclick="Auth.logout()" aria-label="Déconnexion">Déconnexion</button></div>
   </header>
   <main class="content">
     <div style="max-width:720px;margin:0 auto">
-      <div id="famWelcome" style="margin-bottom:1.5rem"></div>
-      <div id="famResidents"></div>
+      <div id="famWelcome" style="margin-bottom:1.5rem" aria-live="polite"></div>
+      <div id="famResidents" aria-live="polite"></div>
     </div>
   </main>
 </div></div>
@@ -37,38 +47,48 @@
     const el = document.getElementById('famWelcome');
     if (!s || !el) return;
     const prenom = (s.prenom || '').trim();
-    el.innerHTML = `<div style="font-size:1.25rem;font-weight:800;color:var(--primary)">Bonjour${prenom ? ' ' + escHtml(prenom) : ''} 👋</div>
-      <div style="font-size:.84rem;color:var(--muted);margin-top:.25rem">Voici les documents que l'établissement a choisi de partager avec vous.</div>`;
+    el.innerHTML = `<div style="font-size:1.25rem;font-weight:800;color:var(--primary)">Bonjour${prenom ? ' ' + escHtml(prenom) : ''} <span aria-hidden="true">👋</span></div>
+      <div style="font-size:.84rem;color:var(--g600);margin-top:.25rem">Voici les documents mis à votre disposition par l'établissement.</div>`;
   })();
 
   async function renderFamille() {
     const docs = await sbGetMesDocumentsFamille();
     const el = document.getElementById('famResidents');
     if (!docs.length) {
-      el.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucun document partagé pour le moment.</p></div>';
+      el.innerHTML = `<div class="card"><div class="card-body" style="padding:3rem;text-align:center">
+        <p style="color:var(--text)">Aucun document n'a encore été partagé avec vous.</p>
+        <p style="font-size:.8rem;color:var(--g600);margin-top:.5rem">C'est normal si l'équipe n'a rien à transmettre pour le moment. Vous serez prévenu(e) dès qu'un nouveau document sera disponible.</p>
+      </div></div>`;
       return;
     }
     const byResident = {};
     docs.forEach(d => { (byResident[d.residentNom] ||= []).push(d); });
-    el.innerHTML = Object.entries(byResident).map(([nom, list]) => `
+    el.innerHTML = Object.entries(byResident).map(([nom, list], idx) => `
       <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-header"><span class="card-title">${escHtml(nom)}</span></div>
-        <div class="card-body">
-          ${list.map(d => `<div class="fam-doc-row">
-            <span class="fam-doc-ico">📄</span>
+        <div class="card-header"><h2 class="card-title" id="fam-res-${idx}" style="margin:0;font:inherit;color:inherit">${escHtml(nom)}</h2></div>
+        <div class="card-body" aria-labelledby="fam-res-${idx}">
+          ${list.map(d => {
+            const catLabel = FAM_CATEGORY_LABEL[d.category] || d.category || '';
+            const dateLabel = d.docDate ? formatDate(d.docDate) : '';
+            const docLabel = d.documentName || 'Document';
+            return `<div class="fam-doc-row">
+            <span class="fam-doc-ico" aria-hidden="true">📄</span>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:.86rem">${escHtml(d.documentName || 'Document')}</div>
-              <div style="font-size:.72rem;color:var(--muted)">${escHtml(FAM_CATEGORY_LABEL[d.category] || d.category || '')}${d.docDate ? ' · ' + formatDate(d.docDate) : ''}</div>
+              <div style="font-weight:600;font-size:.86rem">${escHtml(docLabel)}</div>
+              <div style="font-size:.72rem;color:var(--g600)">${escHtml(catLabel)}${dateLabel ? ' <span aria-hidden="true">·</span> ' + escHtml(dateLabel) : ''}</div>
             </div>
-            <button class="btn btn-outline btn-sm" onclick="famOpenDocument('${d.documentId}')">Ouvrir</button>
-          </div>`).join('')}
+            <button class="btn btn-outline btn-sm fam-btn-ouvrir" onclick="famOpenDocument('${d.documentId}')" aria-label="Ouvrir le document ${escHtml(docLabel)} de ${escHtml(nom)} (nouvel onglet)">Ouvrir</button>
+          </div>`;
+          }).join('')}
         </div>
       </div>`).join('');
   }
 
   async function famOpenDocument(documentId) {
     const url = await sbGetDocumentUrlFamille(documentId);
-    if (url) window.open(url, '_blank');
+    if (url) { window.open(url, '_blank'); return; }
+    if (typeof toast === 'function') toast("Impossible d'ouvrir le document. Réessayez ou contactez l'établissement.", 'error');
+    else alert("Impossible d'ouvrir le document. Réessayez ou contactez l'établissement.");
   }
 
   document.addEventListener('DOMContentLoaded', renderFamille);

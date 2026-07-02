@@ -393,7 +393,7 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
 /* Outline */
 .btn-outline{
   background:rgba(255,255,255,.8);color:var(--text);
-  border:1px solid rgba(15,43,74,.15);
+  border:1px solid rgba(15,43,74,.4);
   backdrop-filter:var(--blur-sm);
 }
 .btn-outline:hover{
