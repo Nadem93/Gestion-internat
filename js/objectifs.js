@@ -70,7 +70,9 @@ function objPct(sv) {
   return Math.round(axes.reduce((s, a) => s + clampPct(a.progression), 0) / axes.length);
 }
 function clampPct(v) { return Math.max(0, Math.min(100, +v || 0)); }
-function pctColor(p) { return p >= 100 ? '#16a34a' : p >= 67 ? '#0d9488' : p >= 34 ? '#6366f1' : '#d97706'; }
+// Accent HUD = bleu ciel de la maquette (même teinte quel que soit l'avancement),
+// vert uniquement quand l'étape est atteinte (100 %).
+function pctColor(p) { return p >= 100 ? '#16a34a' : '#0ea5e9'; }
 // escHtml n'échappe pas les guillemets : indispensable pour du texte injecté dans un attribut HTML
 function escAttr(s) { return escHtml(s).replace(/"/g, '&quot;'); }
 
@@ -131,8 +133,8 @@ function sparkSvg(histo) {
   const pts = h.map((e, i) => `${(i / (h.length - 1) * (w - 4) + 2).toFixed(1)},${y(e.p)}`).join(' ');
   const last = h[h.length - 1];
   return `<svg width="${w}" height="${ht}" viewBox="0 0 ${w} ${ht}" aria-hidden="true" style="flex-shrink:0">
-    <polyline points="${pts}" fill="none" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${w - 2}" cy="${y(last.p)}" r="2.2" fill="#6366f1"/></svg>`;
+    <polyline points="${pts}" fill="none" stroke="#38bdf8" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${w - 2}" cy="${y(last.p)}" r="2.2" fill="#0284c7"/></svg>`;
 }
 
 // Courbe d'évolution de l'objectif : moyenne des axes reconstruite jour par jour
@@ -323,7 +325,7 @@ function evalsSection(o, sv, axes) {
   return `
     <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin:.9rem 0 .5rem">
       <span>📊 Évaluations (${evals.length})</span>
-      ${_obCanEdit && axes.length ? `<button class="btn btn-ghost btn-sm" style="color:#6366f1" onclick="openEvalObjModal('${o.id}')">+ Évaluer</button>` : ''}
+      ${_obCanEdit && axes.length ? `<button class="btn btn-ghost btn-sm" style="color:#0284c7" onclick="openEvalObjModal('${o.id}')">+ Évaluer</button>` : ''}
     </div>
     ${evals.length
       ? `<div style="display:flex;flex-direction:column;gap:.45rem">${evals.slice(0, 6).map((ev, i) => evalObjRow(o, ev, evals[i + 1], axes)).join('')}</div>`
