@@ -22,6 +22,10 @@ const AL_PRIOS = {
 let _alDismissed = [];
 const AL_DISMISS_KEY = 'ftr_alertes_dismissed';
 
+// Cache des prises de médicaments du jour (chargé une fois dans initAlertes, lu en synchrone
+// dans generateAlertes — même patron que les autres sources DB.get(...) de ce fichier)
+let _alMedRecords = [];
+
 function _alLoadDismissed() {
   try { _alDismissed = JSON.parse(localStorage.getItem(AL_DISMISS_KEY) || '[]'); } catch { _alDismissed = []; }
 }
@@ -168,6 +172,25 @@ function generateAlertes() {
     const id = _alId('budget_remboursement', d.id);
     const prio = ageJ >= 21 ? 'critique' : 'urgent';
     alerts.push({ id, type:'budget_remboursement', prio, residentId:null, resName:d.employeNom||'', titre:`Demande de budget — ${d.employeNom||'Employé'}`, msg:`En attente depuis ${ageJ}j : ${manque.join(' et ')}`, date:refDateStr, link:'budget.html', diffJ:0 });
+  });
+
+  // ── 9. Médicaments — prise prévue non enregistrée, moment déjà passé ──────
+  const MED_ALERT_HEURE_LIMITE = { matin: 11, midi: 14, soir: 20, coucher: 23 };
+  const MED_ALERT_LABEL = { matin: 'Matin', midi: 'Midi', soir: 'Soir', coucher: 'Coucher' };
+  const nowH = new Date().getHours();
+  residents.forEach(r => {
+    if (r.statut === 'sorti') return;
+    const traitements = (r.sante?.traitements || []).filter(t =>
+      (t.moments || []).length && (!t.debut || t.debut <= todayStr) && (!t.fin || t.fin >= todayStr));
+    traitements.forEach(t => (t.moments || []).forEach(moment => {
+      const limite = MED_ALERT_HEURE_LIMITE[moment];
+      if (limite == null || nowH < limite) return; // pas encore l'heure de s'en inquiéter
+      const record = _alMedRecords.find(x => x.date === todayStr && String(x.residentId) === String(r.id) && String(x.traitementId) === String(t.id) && x.moment === moment);
+      if (record?.statut) return; // déjà traité (donné/confié/refusé/absent/reporté)
+      const resName = `${r.prenom || ''} ${r.nom || ''}`.trim();
+      const id = _alId('medicament', `${r.id}_${t.id}_${moment}_${todayStr}`);
+      alerts.push({ id, type:'medicament', prio:'critique', residentId:r.id, resName, titre:`Médicament — ${resName}`, msg:`${t.nom || 'Traitement'} (${MED_ALERT_LABEL[moment] || moment}) non enregistré`, date:todayStr, link:'medicaments.html', diffJ:0 });
+    }));
   });
 
   // Trier : critique → urgent → info, puis par diffJ croissant
@@ -317,6 +340,9 @@ async function initAlertes() {
   const s = Auth.requireAuth();
   if (!s) return;
   await sbLoadResidentsCache();
+  if (typeof sbGetMedDistribForDate === 'function') {
+    try { _alMedRecords = await sbGetMedDistribForDate(today()); } catch (e) { console.error('[initAlertes] médicaments', e); }
+  }
   renderAlertes();
 }
 

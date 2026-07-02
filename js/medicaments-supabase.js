@@ -47,6 +47,17 @@ async function sbGetMedDistrib() {
   return data.map(_medFromRow);
 }
 
+// Variante restreinte à une seule date (utilisée par alertes.html, pour éviter de
+// rapatrier tout l'historique juste pour vérifier les prises du jour).
+async function sbGetMedDistribForDate(date) {
+  const { data, error } = await supabaseClient
+    .from('med_distrib')
+    .select('*')
+    .eq('date', date);
+  if (error) { console.error(error); return []; }
+  return data.map(_medFromRow);
+}
+
 async function sbSaveMedDistrib(m) {
   const etablissementId = await sbGetEtablissementId();
   const row = _medToRow(m, etablissementId);

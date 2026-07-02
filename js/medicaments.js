@@ -13,6 +13,9 @@ const MED_MOMENTS = {
   soir: { label: 'Soir', icon: '🌆' },
   coucher: { label: 'Coucher', icon: '🌙' }
 };
+// Heure au-delà de laquelle une prise non enregistrée est considérée en retard
+// (même seuils que la génération d'alertes dans js/alertes.js)
+const MED_HEURE_LIMITE = { matin: 11, midi: 14, soir: 20, coucher: 23 };
 const MED_STATUTS = {
   donne:  { label: 'Donné',   icon: '✅', color: '#16a34a' },
   confie: { label: 'Confié',  icon: '🤝', color: '#2563eb' },
@@ -150,6 +153,8 @@ function renderMedicaments() {
       const mom = MED_MOMENTS[e.moment] || {};
       const rec = e.record;
       const mc  = MOMENT_STYLE[e.moment] || { bg:'#f1efe8', color:'#444441' };
+      const heureLimite = MED_HEURE_LIMITE[e.moment];
+      const enRetard = !rec?.statut && heureLimite != null && (date < today() || (date === today() && new Date().getHours() >= heureLimite));
 
       const btnDonne  = `<button class="med-btn med-btn-ok${rec?.statut==='donne'?' on':''}"  onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','donne')">✓ Donné</button>`;
       const btnConfie = `<button class="med-btn${rec?.statut==='confie'?' on':''}" style="${rec?.statut==='confie'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe'};padding:7px 16px;border-radius:20px;border:1.5px solid;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','confie')">🤝 Confié</button>`;
@@ -160,11 +165,12 @@ function renderMedicaments() {
 
       const statusBadge = rec?.statut ? MED_STATUTS[rec.statut] : null;
 
-      return `<div class="med-med-row">
+      return `<div class="med-med-row"${enRetard ? ' style="border-left:3px solid #dc2626;background:#fef2f2"' : ''}>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
             <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:${mc.bg};color:${mc.color}">${mom.icon||''} ${mom.label||e.moment}</span>
             ${rec?.heure?`<span style="font-size:11px;color:#94a3b8">${rec.heure.slice(11,16)}</span>`:''}
+            ${enRetard?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#fee2e2;color:#dc2626">⚠️ En retard</span>`:''}
           </div>
           <div class="med-med-name">${escHtml(e.medicament||'')}</div>
           <div class="med-med-meta">${e.posologie?escHtml(e.posologie):''}${rec?.auteur?' · '+escHtml(rec.auteur):''}</div>
