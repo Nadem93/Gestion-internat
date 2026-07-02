@@ -264,7 +264,7 @@ function residentCard(r) {
         <div>${statusBadge(presenceStatus)}</div>
       </div>
       <ul class="res-card-ico">
-        ${ico('Grille d\'évaluation', 'evaluations.html?residentId=' + r.id, svgEval, '#6366f1')}
+        ${ico('Grille d\'évaluation', 'objectifs.html?tab=evaluations&residentId=' + r.id, svgEval, '#6366f1')}
         ${ico('Repas', 'repas.html', svgRepas, '#ea580c')}
         ${ico('Agenda', 'planning.html', svgAgenda, '#0d9488')}
       </ul>

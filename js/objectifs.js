@@ -486,6 +486,16 @@ function deleteAxe(objId, axeId) {
   });
 }
 
+// ── ONGLETS (page fusionnée avec les grilles d'évaluation) ──
+function obSwitchTab(tab) {
+  const isEv = tab === 'evaluations';
+  document.getElementById('obTabObjectifs').style.display = isEv ? 'none' : '';
+  document.getElementById('obTabEvals').style.display = isEv ? '' : 'none';
+  document.getElementById('obTabBtnObjectifs').classList.toggle('active', !isEv);
+  document.getElementById('obTabBtnEvals').classList.toggle('active', isEv);
+  sessionStorage.setItem('ob_tab', isEv ? 'evaluations' : 'objectifs');
+}
+
 // ── INIT ──
 async function initObjectifs() {
   const s = Auth.requireAuth();
@@ -504,6 +514,14 @@ async function initObjectifs() {
   // Guide déplié tant que rien n'est configuré
   const guide = document.getElementById('obGuide');
   if (guide && !residentsAvecObjectifs().length) guide.open = true;
+  // Onglet initial : les paramètres explicites priment sur le dernier onglet mémorisé.
+  // ?resident= → objectifs ; ?tab=evaluations ou ?residentId=/?id= (anciens liens
+  // evaluations.html) → grilles d'évaluation.
+  const q = new URLSearchParams(location.search);
+  const initialTab = q.get('resident') ? 'objectifs'
+    : (q.get('tab') === 'evaluations' || q.get('residentId') || q.get('id')) ? 'evaluations'
+    : (sessionStorage.getItem('ob_tab') || 'objectifs');
+  obSwitchTab(initialTab);
   renderObjectifs();
 }
 document.addEventListener('DOMContentLoaded', initObjectifs);
