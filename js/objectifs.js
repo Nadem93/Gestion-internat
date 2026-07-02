@@ -11,8 +11,6 @@ const OBJ_STATUTS = {
   atteint: { label: 'Atteint', cls: 'badge-green', color: '#16a34a' },
   abandonne: { label: 'Abandonné', cls: 'badge-red', color: '#dc2626' }
 };
-const RING_C = 213.63; // circonférence du cercle de progression (r=34)
-
 // Suggestions d'axes proposées à la création, selon le modèle d'objectif
 const AXE_SUGGESTIONS = [
   { match: /autonomie/i, axes: ['Se lever et se préparer seul le matin', 'Préparer un repas simple en autonomie', 'Entretenir son linge', 'Se déplacer seul en ville'] },
@@ -89,20 +87,32 @@ function currentResident() {
   return rid ? _obResidents.find(r => String(r.id) === String(rid)) : null;
 }
 
-// ── Visuels SVG ──
-function ringSvg(pct, id, size) {
-  const s = size || 84;
+// ── Visuels façon HUD (hexagones, rangs, barres segmentées) ──
+// Rang de maîtrise dérivé de la progression : D (0-24) → C → B → A → S (100)
+function rangOf(p) { return p >= 100 ? 'S' : p >= 75 ? 'A' : p >= 50 ? 'B' : p >= 25 ? 'C' : 'D'; }
+function rangLabel(p) {
+  if (p == null) return 'RANG —';
+  const r = rangOf(p);
+  return r === 'S' ? 'RANG S ★' : `RANG ${r} → ${rangOf(p + 25)}`;
+}
+// Barre segmentée (10 blocs) : la couche de stries blanches découpe le remplissage
+function rangeBg(p) {
+  return `repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),#fff calc(10% - 2px) 10%),linear-gradient(90deg,${pctColor(p)} ${p}%,#e2e8f0 ${p}%)`;
+}
+
+// Hexagone de progression (remplace l'anneau circulaire)
+function hexSvg(pct, id, size) {
+  const w = size || 80, h = Math.round(w * 1.12);
   const known = pct != null;
   const p = known ? clampPct(pct) : 0;
-  const off = RING_C - RING_C * p / 100;
-  const color = known ? pctColor(p) : 'var(--g200)';
-  return `<svg width="${s}" height="${s}" viewBox="0 0 80 80" class="ob-ring" role="img" aria-label="Progression ${known ? p + ' %' : 'non mesurée'}">
-    <circle cx="40" cy="40" r="34" fill="none" stroke="var(--g100)" stroke-width="8"/>
-    <circle id="ring-${id}" cx="40" cy="40" r="34" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round"
-      stroke-dasharray="${RING_C}" stroke-dashoffset="${off}" transform="rotate(-90 40 40)"
-      style="transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .3s"/>
-    <text id="ringtxt-${id}" x="40" y="44" text-anchor="middle" font-size="17" font-weight="800" fill="${known ? 'var(--text)' : 'var(--g400)'}" font-family="inherit">${known ? p + '%' : '—'}</text>
-  </svg>`;
+  const color = known ? pctColor(p) : '#cbd5e1';
+  return `<div class="ob-hex" id="ring-${id}" role="img" aria-label="Progression ${known ? p + ' %' : 'non mesurée'}"
+    style="width:${w}px;height:${h}px;background:conic-gradient(${color} 0 ${p * 3.6}deg,#e2e8f0 ${p * 3.6}deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s">
+    <div class="ob-hex" style="width:${w - 10}px;height:${h - 10}px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div id="ringtxt-${id}" style="font-size:${Math.round(w / 4.4)}px;font-weight:900;color:${known ? color : '#94a3b8'};font-variant-numeric:tabular-nums;line-height:1">${known ? p + '%' : '—'}</div>
+      <div style="font-size:7px;font-weight:800;letter-spacing:.16em;color:#94a3b8;margin-top:2px">PROGRESSION</div>
+    </div>
+  </div>`;
 }
 
 // Mini-courbe d'évolution d'un axe (historique des progressions)
@@ -225,8 +235,9 @@ function renderOverview(residents, tpl) {
     }).join('');
     const global = pctN ? Math.round(pctSum / pctN) : null;
     return `<button class="ob-res-card" onclick="obSelectResident('${r.id}')" aria-label="Voir les objectifs de ${escAttr(resNom(r))}">
-      ${ringSvg(global, 'res-' + r.id, 68)}
+      ${hexSvg(global, 'res-' + r.id, 56)}
       <div class="ob-res-info">
+        <div class="ob-eyebrow" style="color:#94a3b8;font-size:.55rem">Résident · ${rangLabel(global)}</div>
         <div class="ob-res-nom">${escHtml(resNom(r))}</div>
         <div class="ob-res-meta">${objs.length} objectif${objs.length > 1 ? 's' : ''} · ${atteints} atteint${atteints > 1 ? 's' : ''}</div>
         <div class="ob-res-dots">${dots}</div>
@@ -266,16 +277,18 @@ function objectifCard(r, o) {
     : '';
 
   const axesHtml = axes.length
-    ? axes.map(a => axeRow(o, a)).join('')
+    ? axes.map((a, i) => axeRow(o, a, i)).join('')
     : `<div style="font-size:.78rem;color:var(--muted);padding:.5rem .25rem">Aucun axe de travail défini. ${_obCanEdit ? 'Découpez cet objectif en étapes concrètes et mesurables — des suggestions vous seront proposées.' : ''}</div>`;
 
   return `<div class="card ob-card" style="border-left:4px solid ${st.color}">
     <div class="ob-card-head">
-      ${ringSvg(pct, o.id, 84)}
+      ${hexSvg(pct, o.id, 78)}
       <div style="flex:1;min-width:0">
+        <div class="ob-eyebrow">Objectif personnalisé</div>
         <div class="ob-card-title">
-          <span style="font-weight:800;font-size:.95rem">${escHtml(o.name)}</span>
+          <span style="font-weight:900;font-size:1rem;letter-spacing:-.01em">${escHtml(o.name)}</span>
           ${statutUi}
+          <span class="ob-chip" id="rang-${o.id}" style="border-color:#bae6fd;background:#f0f9ff;color:#0284c7">${rangLabel(pct)}</span>
         </div>
         ${o.description ? `<div style="font-size:.78rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.45rem">${ech}</div>
@@ -310,47 +323,54 @@ function evalsSection(o, sv, axes) {
       : `<div style="font-size:.75rem;color:var(--muted)">Aucune évaluation. « + Évaluer » ouvre une grille où chaque axe de travail est noté de 0 (non acquis) à 4 (autonome) — la progression se met à jour automatiquement.</div>`}`;
 }
 
-function axeRow(o, a) {
+function axeRow(o, a, idx) {
   const p = clampPct(a.progression);
   const late = a.echeance && a.echeance < today() && p < 100;
-  return `<div class="ob-axe" style="border-left:3px solid ${pctColor(p)}">
-    <div class="ob-axe-top">
-      <span class="ob-axe-nom">${p >= 100 ? '✅ ' : ''}${escHtml(a.nom)}</span>
-      ${late ? '<span class="badge badge-red">En retard</span>' : ''}
-      ${a.echeance ? `<span class="ob-axe-meta">📅 ${formatDate(a.echeance)}</span>` : ''}
-      ${a.responsable ? `<span class="ob-axe-meta">👤 ${escHtml(a.responsable)}</span>` : ''}
-      ${sparkSvg(a.histo)}
-      <span class="ob-axe-pct" id="axpct-${o.id}-${a.id}" style="color:${pctColor(p)}">${p}%</span>
-      ${_obCanEdit ? `
-        <button class="btn btn-ghost btn-sm" title="Modifier l'axe" onclick="openAxeModal('${o.id}','${a.id}')">✎</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" title="Supprimer l'axe" onclick="deleteAxe('${o.id}','${a.id}')">✕</button>` : ''}
+  return `<div style="display:flex;align-items:stretch">
+    <div style="display:flex;align-items:center;flex-shrink:0" aria-hidden="true">
+      <div class="ob-hex" style="width:20px;height:23px;background:${pctColor(p)};transition:background .3s"></div>
+      <div style="width:12px;height:2px;background:linear-gradient(90deg,${pctColor(p)},#dbeafe)"></div>
     </div>
-    ${a.note ? `<div class="ob-axe-note">${escHtml(a.note)}</div>` : ''}
-    ${_obCanEdit
-      ? `<input type="range" class="ob-range" min="0" max="100" step="5" value="${p}"
-          data-obj="${o.id}" data-axe="${a.id}" aria-label="Progression de l'axe ${escAttr(a.nom)}"
-          style="background:linear-gradient(90deg,${pctColor(p)} ${p}%,var(--g100) ${p}%)"
-          oninput="onAxeSlide(this)" onchange="commitAxeProgression(this)"/>`
-      : `<div class="ob-bar"><div style="height:100%;width:${p}%;background:${pctColor(p)};border-radius:3px;transition:width .3s"></div></div>`}
-    ${a.dateMaj ? `<div style="font-size:.68rem;color:var(--g400);margin-top:2px">Dernier pointage le ${formatDate(a.dateMaj)}</div>` : ''}
+    <div class="ob-axe" style="flex:1;min-width:0">
+      <div class="ob-eyebrow" style="color:#94a3b8">Module ${String((idx || 0) + 1).padStart(2, '0')}${a.echeance ? ` · Échéance ${formatDate(a.echeance)}` : ''}${a.responsable ? ` · ${escHtml(a.responsable)}` : ''}</div>
+      <div class="ob-axe-top" style="margin-top:2px">
+        <span class="ob-axe-nom">${p >= 100 ? '✅ ' : ''}${escHtml(a.nom)}</span>
+        ${late ? '<span class="badge badge-red">En retard</span>' : ''}
+        ${sparkSvg(a.histo)}
+        <span class="ob-axe-pct" id="axpct-${o.id}-${a.id}" style="color:${pctColor(p)}">${p}%</span>
+        ${_obCanEdit ? `
+          <button class="btn btn-ghost btn-sm" title="Modifier l'axe" onclick="openAxeModal('${o.id}','${a.id}')">✎</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" title="Supprimer l'axe" onclick="deleteAxe('${o.id}','${a.id}')">✕</button>` : ''}
+      </div>
+      ${a.note ? `<div class="ob-axe-note">${escHtml(a.note)}</div>` : ''}
+      ${_obCanEdit
+        ? `<input type="range" class="ob-range" min="0" max="100" step="5" value="${p}"
+            data-obj="${o.id}" data-axe="${a.id}" aria-label="Progression de l'axe ${escAttr(a.nom)}"
+            style="background:${rangeBg(p)}"
+            oninput="onAxeSlide(this)" onchange="commitAxeProgression(this)"/>`
+        : `<div class="ob-bar" style="background:${rangeBg(p)}"></div>`}
+      ${a.dateMaj ? `<div style="font-size:.68rem;color:var(--g400);margin-top:2px">Dernier pointage le ${formatDate(a.dateMaj)}</div>` : ''}
+    </div>
   </div>`;
 }
 
-// ── Interactions curseur : retour visuel immédiat (anneau + couleur), sauvegarde au relâchement ──
+// ── Interactions curseur : retour visuel immédiat (hexagone + rang + couleur), sauvegarde au relâchement ──
 function onAxeSlide(el) {
   const v = clampPct(el.value);
-  el.style.background = `linear-gradient(90deg,${pctColor(v)} ${v}%,var(--g100) ${v}%)`;
+  el.style.background = rangeBg(v);
   const lbl = document.getElementById(`axpct-${el.dataset.obj}-${el.dataset.axe}`);
   if (lbl) { lbl.textContent = v + '%'; lbl.style.color = pctColor(v); }
-  // Recalcule l'anneau de l'objectif à partir des curseurs affichés
+  // Recalcule l'hexagone et le rang de l'objectif à partir des curseurs affichés
   const sliders = document.querySelectorAll(`.ob-range[data-obj="${el.dataset.obj}"]`);
   if (!sliders.length) return;
   let sum = 0; sliders.forEach(s => { sum += clampPct(s.value); });
   const avg = Math.round(sum / sliders.length);
-  const ring = document.getElementById(`ring-${el.dataset.obj}`);
+  const hex = document.getElementById(`ring-${el.dataset.obj}`);
   const txt = document.getElementById(`ringtxt-${el.dataset.obj}`);
-  if (ring) { ring.setAttribute('stroke-dashoffset', RING_C - RING_C * avg / 100); ring.setAttribute('stroke', pctColor(avg)); }
-  if (txt) txt.textContent = avg + '%';
+  const rang = document.getElementById(`rang-${el.dataset.obj}`);
+  if (hex) hex.style.background = `conic-gradient(${pctColor(avg)} 0 ${avg * 3.6}deg,#e2e8f0 ${avg * 3.6}deg 360deg)`;
+  if (txt) { txt.textContent = avg + '%'; txt.style.color = pctColor(avg); }
+  if (rang) rang.textContent = rangLabel(avg);
 }
 
 async function commitAxeProgression(el) {
@@ -557,6 +577,7 @@ function evalObjRow(o, ev, prec, axes) {
   }).join('');
   return `<details class="eo-histo">
     <summary>
+      <span style="width:8px;height:8px;border-radius:50%;background:${pctColor(ev.score)};box-shadow:0 0 6px ${pctColor(ev.score)}66;flex-shrink:0" aria-hidden="true"></span>
       <span style="font-weight:700">${formatDate(ev.date)}</span>
       <span class="badge" style="background:${pctColor(ev.score)}1a;color:${pctColor(ev.score)};font-weight:800">${ev.score}%</span>
       ${deltaBadge}
@@ -603,7 +624,7 @@ function openAxeModal(objId, axeId) {
 
 function axModalSlide(el) {
   const v = clampPct(el.value);
-  el.style.background = `linear-gradient(90deg,${pctColor(v)} ${v}%,var(--g100) ${v}%)`;
+  el.style.background = rangeBg(v);
   const out = document.getElementById('axProgVal');
   out.textContent = v + '%';
   out.style.color = pctColor(v);

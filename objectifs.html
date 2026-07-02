@@ -7,9 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 .ob-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem}
-.ob-stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem;text-align:center}
-.ob-stat-num{font-size:1.5rem;font-weight:800;line-height:1;color:var(--primary)}
-.ob-stat-lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
+.ob-stat{background:#fff;border:1px solid #dbeafe;border-radius:10px;padding:.65rem .85rem;text-align:center}
+.ob-stat-num{font-size:1.5rem;font-weight:800;line-height:1;color:var(--primary);font-variant-numeric:tabular-nums}
+.ob-stat-lbl{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-top:4px}
 .ob-toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1.25rem}
 .ob-toolbar select{font-size:.8rem;padding:.35rem .6rem;border:1px solid var(--border);border-radius:8px;background:#fff;max-width:100%}
 .ob-res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.85rem}
@@ -19,12 +19,15 @@
 .ob-res-meta{font-size:.72rem;color:var(--muted);margin-top:2px}
 .ob-res-dots{display:flex;gap:4px;margin-top:.4rem;flex-wrap:wrap}
 .ob-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
-.ob-card{margin-bottom:1rem;overflow:hidden}
+.ob-card{margin-bottom:1rem;overflow:hidden;border:1.5px solid #dbeafe}
 .ob-card-head{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.15rem;flex-wrap:wrap}
 .ob-card-title{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-.ob-statut-sel{font-size:.72rem;font-weight:700;padding:.2rem .5rem;border-radius:999px;border:1.5px solid;background:#fff;cursor:pointer;font-family:inherit}
-.ob-axes{border-top:1px solid var(--border);padding:.85rem 1.15rem 1rem;background:var(--g50)}
-.ob-axe{background:#fff;border:1px solid var(--border);border-radius:9px;padding:.6rem .8rem}
+.ob-statut-sel{font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.24rem .55rem;border-radius:5px;border:1.5px solid;background:#fff;cursor:pointer;font-family:inherit}
+.ob-hex{clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.ob-eyebrow{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:#0284c7;text-transform:uppercase}
+.ob-chip{display:inline-flex;align-items:center;font-size:.62rem;font-weight:800;letter-spacing:.08em;padding:.22rem .55rem;border-radius:5px;border:1px solid;text-transform:uppercase;white-space:nowrap}
+.ob-axes{border-top:1.5px solid #dbeafe;padding:.85rem 1.15rem 1rem;background:#f8fafc}
+.ob-axe{background:#fff;border:1px solid #dbeafe;border-radius:10px;padding:.6rem .8rem}
 .ob-axe-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .ob-axe-nom{font-weight:600;font-size:.83rem;flex:1;min-width:140px}
 .ob-axe-meta{font-size:.7rem;color:var(--muted)}
