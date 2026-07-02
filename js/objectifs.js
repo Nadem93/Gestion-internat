@@ -664,7 +664,10 @@ async function initObjectifs() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  _obCanEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
+  // Admin/modérateur : toujours éditeurs (même sans « fonction » dans la liste des permissions),
+  // comme sur la fiche résident. Les autres passent par la permission edit_residents.
+  _obCanEdit = ['admin', 'moderator', 'superadmin'].includes(s.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   await loadResidentsCache();
   // Tous les résidents actifs (pas seulement ceux ayant déjà des objectifs),
   // pour pouvoir assigner des objectifs à un nouveau résident depuis cette page.

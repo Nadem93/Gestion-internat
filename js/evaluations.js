@@ -131,7 +131,8 @@ async function initEvaluations() {
     const sel = document.getElementById('evResident');
     if (sel) sel.value = _evResidentId;
   }
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
+  const canEdit = ['admin', 'moderator', 'superadmin'].includes(s.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   if (!canEdit) { const b = document.getElementById('btnAddEv'); if (b) b.style.display = 'none'; }
   renderEvList();
 }
@@ -232,7 +233,9 @@ function _evCard(e, resColor) {
   const niveau  = _evNiveau(e.grille, score);
   const pct     = Math.round(score / scoreMax * 100);
   const dateStr = e.date ? new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '—';
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin();
+  const sessRole = Auth.getSession()?.role;
+  const canEdit = ['admin', 'moderator', 'superadmin'].includes(sessRole)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
   const ringCol = niveau?.color || col;
   const R = 26, C = 2 * Math.PI * R;
   const donut = `<svg width="64" height="64" viewBox="0 0 64 64" style="flex-shrink:0;transform:rotate(-90deg)">
