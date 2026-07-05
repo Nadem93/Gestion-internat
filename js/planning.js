@@ -253,7 +253,7 @@ function renderTimeline(days) {
       const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
       const cWidth = `calc(${colW} - 2px)`;
-      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
+      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escAttr(ev.residentName)+' — ':''}${escAttr(ev.titre)}${ev.vehicule?' — 🚗 '+escAttr(ev.vehicule):''}">
         <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
         <div class="pl-ev${isConflict?' pl-ev-conflict':''}" style="left:${cLeft};width:${cWidth};background:${bg}">
           ${isConflict?'<span class="pl-ev-conflict-ic">⚠</span>':''}

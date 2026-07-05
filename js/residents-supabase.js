@@ -41,6 +41,7 @@ function _sbToRow(r) {
     sante: r.sante || {}, sorties: r.sorties || [], trousseau: r.trousseau || [],
     activites: r.activites || [], budget: r.budget || {},
     objectifs_suivi: r.objectifsSuivi || {}, evaluations: r.evaluations || [],
+    regime: r.regime || {}, droits_visite: r.droitsVisite || [],
     serafinph: r.serafinph || {},
     updated_at: new Date().toISOString()
   };
@@ -69,6 +70,7 @@ function _sbFromRow(row) {
     sante: row.sante || {}, sorties: row.sorties || [], trousseau: row.trousseau || [],
     activites: row.activites || [], budget: row.budget || {},
     objectifsSuivi: row.objectifs_suivi || {}, evaluations: row.evaluations || [],
+    regime: row.regime || {}, droitsVisite: row.droits_visite || [],
     serafinph: row.serafinph || {},
     createdAt: row.created_at, updatedAt: row.updated_at
   };

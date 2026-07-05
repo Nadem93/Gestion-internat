@@ -112,7 +112,7 @@ function rgBadge(r) {
   if (rg.type && rg.type !== 'normal') parts.push(`<span class="badge" style="background:${t.color}1a;color:${t.color};border:1px solid ${t.color}44">${t.label}${rg.type === 'autre' && rg.autreLabel ? ' : ' + escHtml(rg.autreLabel) : ''}</span>`);
   if (rg.texture && rg.texture !== 'normale') parts.push(`<span class="badge badge-purple">${TEXTURES[rg.texture]}</span>`);
   const allerg = (rg.allergiesAlim || r.allergies || '').trim();
-  if (allerg) parts.push(`<span class="badge badge-red" title="${escHtml(allerg)}">⚠ Allergie</span>`);
+  if (allerg) parts.push(`<span class="badge badge-red" title="${escAttr(allerg)}">⚠ Allergie</span>`);
   return parts.join(' ') || '<span style="font-size:.72rem;color:var(--g400)">Normal</span>';
 }
 
@@ -158,9 +158,9 @@ function rpResidentCard(r, day, canEdit) {
     const menuChoice = m.key === 'midi' ? menuMidi : m.key === 'soir' ? menuSoir : null;
     const menuBtns = m.hasMenu ? `
       <div style="display:flex;gap:3px;margin-top:4px">
-        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','1')" title="${escHtml(getMenuTexte(repasDate, m.key, '1')) || 'Menu 1'}"
+        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','1')" title="${escAttr(getMenuTexte(repasDate, m.key, '1')) || 'Menu 1'}"
           style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='1'?'background:#16a34a;color:#fff;border-color:#16a34a':'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0'}">Menu1</button>
-        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','2')" title="${escHtml(getMenuTexte(repasDate, m.key, '2')) || 'Menu 2'}"
+        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','2')" title="${escAttr(getMenuTexte(repasDate, m.key, '2')) || 'Menu 2'}"
           style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='2'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#2563eb;border-color:#bfdbfe'}">Menu2</button>
       </div>` : '';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:center">
@@ -263,8 +263,8 @@ function renderRepas() {
     if (!total) return '';
     const txt1 = getMenuTexte(repasDate, m, '1');
     const txt2 = getMenuTexte(repasDate, m, '2');
-    return `<span style="font-size:.78rem;color:#16a34a;font-weight:600" title="${escHtml(txt1)}">Menu1${txt1 ? ' — ' + escHtml(txt1) : ''} × ${t['1']}</span>
-            <span style="font-size:.78rem;color:#2563eb;font-weight:600" title="${escHtml(txt2)}"> · Menu2${txt2 ? ' — ' + escHtml(txt2) : ''} × ${t['2']}</span>
+    return `<span style="font-size:.78rem;color:#16a34a;font-weight:600" title="${escAttr(txt1)}">Menu1${txt1 ? ' — ' + escHtml(txt1) : ''} × ${t['1']}</span>
+            <span style="font-size:.78rem;color:#2563eb;font-weight:600" title="${escAttr(txt2)}"> · Menu2${txt2 ? ' — ' + escHtml(txt2) : ''} × ${t['2']}</span>
             ${t.none ? `<span style="font-size:.78rem;color:var(--muted)"> · sans choix × ${t.none}</span>` : ''}`;
   };
 

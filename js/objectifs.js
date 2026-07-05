@@ -73,8 +73,7 @@ function clampPct(v) { return Math.max(0, Math.min(100, +v || 0)); }
 // Accent HUD = bleu ciel de la maquette (même teinte quel que soit l'avancement),
 // vert uniquement quand l'étape est atteinte (100 %).
 function pctColor(p) { return p >= 100 ? '#16a34a' : '#0ea5e9'; }
-// escHtml n'échappe pas les guillemets : indispensable pour du texte injecté dans un attribut HTML
-function escAttr(s) { return escHtml(s).replace(/"/g, '&quot;'); }
+// escAttr est fourni globalement par js/app.js (chargé avant).
 
 function echBadge(echeance, statut) {
   if (!echeance || statut === 'atteint') return '';

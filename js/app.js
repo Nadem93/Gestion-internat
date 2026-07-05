@@ -942,8 +942,18 @@ function escHtml(s) {
   if (!s) return '';
   const d = document.createElement('div');
   d.textContent = s;
-  return d.innerHTML;
+  // On échappe AUSSI " et ' pour que la sortie soit sûre à la fois dans le CORPS
+  // de la page ET dans un ATTRIBUT HTML (title="", value="", alt="", href="", …).
+  // Les entités s'affichent à l'identique dans le corps, donc aucune régression
+  // visuelle. ⚠️ Ne protège PAS une donnée placée dans une chaîne JS d'un onclick
+  // inline : le navigateur décode l'entité AVANT le parseur JS — dans ces cas,
+  // passer un id à la fonction et relire la valeur depuis le cache.
+  return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+
+// Alias explicite pour les contextes d'attribut. Identique à escHtml (qui échappe
+// désormais les guillemets) ; conservé comme marqueur d'intention à l'appel.
+function escAttr(s) { return escHtml(s); }
 
 // ── Nom de famille toujours en MAJUSCULES (convention « Prénom NOM ») ──
 function nomMaj(n) { return (n == null ? '' : String(n)).toUpperCase(); }

@@ -158,14 +158,18 @@ function vmShowDroits() {
   if (!rid) { box.innerHTML = ''; return; }
   box.innerHTML = droits.length
     ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:.25rem">Cadre défini pour ce résident :</div>` +
-      droits.map(d => `<span class="badge" style="background:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color}1a;color:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color};margin:0 .25rem .25rem 0;cursor:pointer" onclick="vmUseDroit('${escHtml(d.personne)}','${escHtml(d.lien || '')}','${d.type}')" title="${escHtml(d.modalites || '')}">${(VIS_TYPES[d.type] || VIS_TYPES.libre).icon} ${escHtml(d.personne)}${d.lien ? ' (' + escHtml(d.lien) + ')' : ''}</span>`).join('')
+      droits.map(d => `<span class="badge" style="background:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color}1a;color:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color};margin:0 .25rem .25rem 0;cursor:pointer" onclick="vmUseDroitById('${d.id}')" title="${escAttr(d.modalites || '')}">${(VIS_TYPES[d.type] || VIS_TYPES.libre).icon} ${escHtml(d.personne)}${d.lien ? ' (' + escHtml(d.lien) + ')' : ''}</span>`).join('')
     : `<div style="font-size:.72rem;color:#d97706;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:.35rem .6rem">Aucun droit de visite défini pour ce résident — pensez à renseigner le cadre (bouton « Droits de visite »).</div>`;
 }
 
-function vmUseDroit(personne, lien, type) {
-  document.getElementById('vmPersonne').value = personne;
-  document.getElementById('vmLien').value = lien;
-  document.getElementById('vmType').value = type;
+function vmUseDroitById(id) {
+  const rid = document.getElementById('vmResident').value;
+  const r = residentsList().find(x => String(x.id) === String(rid));
+  const d = ((r && r.droitsVisite) || []).find(x => String(x.id) === String(id));
+  if (!d) return;
+  document.getElementById('vmPersonne').value = d.personne || '';
+  document.getElementById('vmLien').value = d.lien || '';
+  document.getElementById('vmType').value = d.type || 'libre';
   vmTypeChanged();
 }
 

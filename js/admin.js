@@ -387,13 +387,13 @@ function renderPermDetail() {
   el.innerHTML = `
     <div class="perm2-head">
       <input type="color" value="${f.color || '#6366f1'}" style="width:30px;height:30px;padding:0;border:none;background:none;cursor:pointer" onchange="permSetColor(this.value)" title="Couleur du rôle"/>
-      <input type="text" value="${escHtml(f.fonction)}" onchange="permRename(this.value)" style="flex:1;min-width:0;font-size:.92rem;font-weight:700;border:none;background:none;padding:.2rem 0;outline:none" aria-label="Nom du rôle"/>
+      <input type="text" value="${escAttr(f.fonction)}" onchange="permRename(this.value)" style="flex:1;min-width:0;font-size:.92rem;font-weight:700;border:none;background:none;padding:.2rem 0;outline:none" aria-label="Nom du rôle"/>
       <span class="perm2-saved" id="permSaved">✓ Enregistré</span>
       ${permRecommendedFor(f.fonction) ? `<button class="btn btn-ghost btn-sm" onclick="permApplyRecommended()" title="Réappliquer les droits recommandés pour ce rôle">↺ Recommandés</button>` : ''}
       <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="permDeleteRole()" title="Supprimer ce rôle">🗑</button>
     </div>
     <div class="perm2-body">
-      <input type="text" placeholder="Filtrer un accès…" value="${escHtml(_permFilter)}" oninput="permSetFilter(this.value)" style="width:100%;box-sizing:border-box;margin-bottom:.3rem"/>
+      <input type="text" placeholder="Filtrer un accès…" value="${escAttr(_permFilter)}" oninput="permSetFilter(this.value)" style="width:100%;box-sizing:border-box;margin-bottom:.3rem"/>
       ${groupsHtml}
     </div>`;
   applyPermFilter();

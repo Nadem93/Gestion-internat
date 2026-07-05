@@ -453,12 +453,7 @@ function strSimilarity(a, b) {
   return matches / longer.length;
 }
 
-function escHtml(s) {
-  if (!s) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
+// escHtml est fourni globalement par js/app.js (chargé avant) — pas de redéfinition locale.
 
 document.addEventListener('DOMContentLoaded', () => {
   initIncidents();

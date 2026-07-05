@@ -45,6 +45,17 @@ Deno.serve(async (req) => {
     // 3) Lire le corps
     const { email, password, prenom, nom, fonction, role } = await req.json();
     if (!email || !password) return json({ ok: false, error: 'Email et mot de passe requis' });
+    // Politique alignée sur la validation côté client : 8+ car., majuscule, chiffre, spécial
+    const pwOk = (p: string) => String(p).length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p);
+    if (!pwOk(password)) return json({ ok: false, error: 'Mot de passe trop faible : 8 caractères minimum, avec majuscule, chiffre et caractère spécial' });
+
+    // Anti-élévation de privilège : un admin ne peut créer QUE des rôles de son périmètre.
+    // 'superadmin' (console multi-établissements) est volontairement exclu ici.
+    const ROLES_AUTORISES = ['educateur', 'moderator', 'admin', 'famille'];
+    const roleDemande = role || 'educateur';
+    if (!ROLES_AUTORISES.includes(roleDemande)) {
+      return json({ ok: false, error: 'Rôle non autorisé' });
+    }
 
     // 4) Créer le compte Auth (email déjà confirmé pour permettre la connexion immédiate)
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
@@ -60,7 +71,7 @@ Deno.serve(async (req) => {
       prenom: prenom || '',
       nom: nom || '',
       fonction: fonction || '',
-      role: role || 'educateur',
+      role: roleDemande,
       etablissement_id: callerProfile.etablissement_id,
       email: email || '',
     });

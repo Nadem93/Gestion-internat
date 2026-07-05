@@ -41,7 +41,9 @@ Deno.serve(async (req) => {
     // 3) Lire le corps
     const { userId, password } = await req.json();
     if (!userId || !password) return json({ ok: false, error: 'userId et mot de passe requis' });
-    if (String(password).length < 6) return json({ ok: false, error: 'Mot de passe : 6 caractères minimum' });
+    // Politique alignée sur la validation côté client : 8+ car., majuscule, chiffre, spécial
+    const pwOk = (p: string) => String(p).length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p);
+    if (!pwOk(password)) return json({ ok: false, error: 'Mot de passe trop faible : 8 caractères minimum, avec majuscule, chiffre et caractère spécial' });
 
     // 4) Le compte cible doit appartenir au même établissement que l'admin
     const { data: targetProfile } = await admin

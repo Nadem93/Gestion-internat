@@ -303,7 +303,7 @@ function renderFinance() {
 
   // ── Tableau des opérations ──
   const ops = [];
-  demandes.forEach(d => ops.push({ date: d.dateDepense, type: 'Dépense', label: `${d.motif||'—'} (${escHtml(d.employeNom||'')})`, montant: -Number(d.montant||0), statut: d.statut }));
+  demandes.forEach(d => ops.push({ date: d.dateDepense, type: 'Dépense', label: `${escHtml(d.motif||'—')} (${escHtml(d.employeNom||'')})`, montant: -Number(d.montant||0), statut: d.statut }));
   fichesPaie.forEach(f => ops.push({ date: f.dateAjout ? f.dateAjout.slice(0,10) : '', type: 'Paie', label: `Fiche de paie — ${escHtml(f.employeNom||'')} (${f.periode||''})`, montant: -Number(f.net||0), statut: 'accepte' }));
   ops.sort((a,b) => (b.date||'').localeCompare(a.date||''));
 

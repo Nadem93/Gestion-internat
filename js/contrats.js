@@ -141,7 +141,7 @@ function ctCard(c) {
       ${chips.length ? `<div class="ctx-chips">${chips.join('')}</div>` : ''}
     </div>
     ${canEdit ? `<div class="ctx-foot">
-      ${c.fichierPath ? `<button class="ctx-btn" onclick="ctOpenFichier('${c.id}')" title="${escHtml(c.fichierNom || 'Document joint')}">📎 Contrat</button>` : ''}
+      ${c.fichierPath ? `<button class="ctx-btn" onclick="ctOpenFichier('${c.id}')" title="${escAttr(c.fichierNom || 'Document joint')}">📎 Contrat</button>` : ''}
       <span class="sp"></span>
       <button class="ctx-btn primary" onclick="openContratDetail('${c.id}')">📑 Détail</button>
     </div>` : ''}

@@ -29,7 +29,7 @@ function _populateAstEmployes() {
   const sel = document.getElementById('astModalEmploye');
   if (!sel) return;
   sel.innerHTML = '<option value="">— Saisir manuellement —</option>' +
-    emp.map(e => `<option value="${escHtml(e.nom||'')+' '+(e.prenom||'')}">${escHtml((e.prenom||'')+' '+(e.nom||''))}</option>`).join('');
+    emp.map(e => `<option value="${escAttr((e.nom||'')+' '+(e.prenom||''))}">${escHtml((e.prenom||'')+' '+(e.nom||''))}</option>`).join('');
   sel.addEventListener('change', e => {
     if (e.target.value) {
       document.getElementById('astModalNom').value = e.target.value.trim();

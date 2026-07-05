@@ -170,7 +170,7 @@ function renderCvsMembresGallery() {
             });
           }
           const photo = (m.college === 'residents' && r?.photo)
-            ? `<img src="${escHtml(r.photo)}" alt="${nom}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${c.color}55"/>`
+            ? `<img src="${sanitizeUrl(r.photo)}" alt="${escAttr(m.nom||'')}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${c.color}55"/>`
             : `<div style="width:80px;height:80px;border-radius:50%;background:#fff;border:3px solid ${c.color}44;display:flex;align-items:center;justify-content:center;font-size:1.7rem;font-weight:700;color:${c.color}">${(m.nom||'?')[0].toUpperCase()}</div>`;
           const mandat = (m.mandatDebut || m.mandatFin)
             ? `<span style="font-size:.63rem;color:var(--muted);line-height:1.3">${m.mandatDebut ? formatDate(m.mandatDebut) : '—'} → ${m.mandatFin ? formatDate(m.mandatFin) : 'en cours'}</span>`
@@ -182,7 +182,7 @@ function renderCvsMembresGallery() {
           </div>` : '';
           return `<div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;width:90px;text-align:center">
             ${photo}
-            <div style="font-size:.75rem;font-weight:600;color:var(--text);line-height:1.2;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${nom}">${nom}</div>
+            <div style="font-size:.75rem;font-weight:600;color:var(--text);line-height:1.2;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(m.nom||'')}">${nom}</div>
             ${college}
             ${mandat}
             ${actions}
