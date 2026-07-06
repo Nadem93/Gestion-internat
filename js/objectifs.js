@@ -435,34 +435,97 @@ async function setObjEcheance(objId, date) {
 }
 
 // ── GÉRER LES OBJECTIFS DU RÉSIDENT (catalogue) ──
+// Modèles d'objectifs (localStorage, comme admin.html). Point de sortie unique
+// pour faciliter la future bascule vers app_config (liste partagée).
+function saveObjTemplate(name, description) {
+  const objs = objTemplates();
+  const newId = Math.max(0, ...objs.map(o => +o.id || 0)) + 1;
+  const obj = { id: newId, name, description };
+  DB.set(DB.keys.objectives, [...objs, obj]);
+  return obj;
+}
+function deleteObjTemplate(id) {
+  DB.set(DB.keys.objectives, objTemplates().filter(o => String(o.id) !== String(id)));
+}
+// Ensemble des objectifs assignés au résident affiché, autorité en mémoire du modal
+// (amorcé à l'ouverture depuis r.objectifs, muté uniquement par les actions explicites).
+let _catAssigned = new Set();
+// Écritures sérialisées : chaque action enfile son écriture, elles s'exécutent en série
+// → un double-clic ne perd plus d'affectation (last-write porte l'état complet).
+let _catChain = Promise.resolve();
+function catPersist() {
+  const objectifs = [..._catAssigned];
+  _catChain = _catChain.then(async () => {
+    const r = currentResident();
+    if (!r) return;
+    await persistResident({ ...r, objectifs, updatedAt: new Date().toISOString() });
+    renderObjectifs();
+  }).catch(e => { console.error('[catPersist]', e); toast('Erreur enregistrement : ' + (e?.message || e), 'error'); });
+  return _catChain;
+}
+
 function openCatalogue() {
   const r = currentResident();
   if (!r || !_obCanEdit) return;
-  const tpl = objTemplates();
-  if (!tpl.length) { toast('Aucun modèle d\'objectif — créez-les dans Administration → onglet Objectifs', 'error'); return; }
-  const assigned = (r.objectifs || []).map(String);
+  _catAssigned = new Set((r.objectifs || []).map(String));
   document.getElementById('catModalTitle').textContent = `Objectifs de ${resNom(r)}`;
-  document.getElementById('catList').innerHTML = tpl.map(o => `
-    <label class="cat-item">
-      <input type="checkbox" name="catObj" value="${o.id}"${assigned.includes(String(o.id)) ? ' checked' : ''}/>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:.85rem">${escHtml(o.name)}</div>
-        ${o.description ? `<div style="font-size:.74rem;color:var(--muted)">${escHtml(o.description)}</div>` : ''}
-      </div>
-    </label>`).join('');
+  document.getElementById('catNewName').value = '';
+  document.getElementById('catNewDesc').value = '';
+  renderCatList();
   openModal('modalCatalogue');
 }
 
-async function saveCatalogue() {
-  const r = currentResident();
-  if (!r) return;
-  const checked = [...document.querySelectorAll('input[name="catObj"]:checked')].map(el => el.value);
-  try {
-    await persistResident({ ...r, objectifs: checked, updatedAt: new Date().toISOString() });
-    toast('Objectifs mis à jour ✓');
-  } catch (e) { console.error('[saveCatalogue]', e); toast('Erreur enregistrement : ' + (e?.message || e), 'error'); return; }
-  closeModal('modalCatalogue');
-  renderObjectifs();
+function renderCatList() {
+  const tpl = objTemplates();
+  const el = document.getElementById('catList');
+  if (!tpl.length) {
+    el.innerHTML = `<div style="font-size:.8rem;color:var(--muted);text-align:center;padding:1rem 0">Aucun objectif pour l'instant. Créez le premier ci-dessus ⤴</div>`;
+    return;
+  }
+  el.innerHTML = tpl.map(o => `
+    <div style="display:flex;align-items:flex-start;gap:.4rem">
+      <label class="cat-item" style="flex:1">
+        <input type="checkbox" name="catObj" value="${o.id}"${_catAssigned.has(String(o.id)) ? ' checked' : ''} onchange="catToggle('${o.id}', this.checked)"/>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.85rem">${escHtml(o.name)}</div>
+          ${o.description ? `<div style="font-size:.74rem;color:var(--muted)">${escHtml(o.description)}</div>` : ''}
+        </div>
+      </label>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0" title="Supprimer ce modèle d'objectif" onclick="catDeleteObjectif('${o.id}')">✕</button>
+    </div>`).join('');
+}
+
+// (Dé)cocher un objectif : affectation enregistrée immédiatement
+function catToggle(id, checked) {
+  if (!_obCanEdit) return;
+  if (checked) _catAssigned.add(String(id)); else _catAssigned.delete(String(id));
+  catPersist();
+}
+
+// Créer un objectif et l'assigner immédiatement au résident affiché
+function catCreateObjectif() {
+  if (!_obCanEdit || !currentResident()) return;
+  const name = document.getElementById('catNewName').value.trim();
+  if (!name) { toast('Le nom de l\'objectif est requis', 'error'); return; }
+  const description = document.getElementById('catNewDesc').value.trim();
+  const obj = saveObjTemplate(name, description);
+  _catAssigned.add(String(obj.id));
+  document.getElementById('catNewName').value = '';
+  document.getElementById('catNewDesc').value = '';
+  renderCatList();
+  document.getElementById('catNewName').focus();
+  catPersist();
+  toast('Objectif créé et assigné ✓');
+}
+
+function catDeleteObjectif(id) {
+  confirmDialog('Supprimer ce modèle d\'objectif du catalogue ? Il ne sera plus proposé ni affiché pour aucun résident ; le suivi déjà saisi pour cet objectif ne sera plus visible.', () => {
+    deleteObjTemplate(id);
+    _catAssigned.delete(String(id));
+    renderCatList();
+    catPersist();
+    toast('Objectif supprimé', 'info');
+  });
 }
 
 // ── GRILLE D'ÉVALUATION D'UN OBJECTIF ──
