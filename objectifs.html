@@ -300,26 +300,32 @@
 
 <!-- MODAL GÉRER LES OBJECTIFS DU RÉSIDENT -->
 <div class="modal-overlay" id="modalCatalogue">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:480px">
     <div class="modal-header">
-      <h3 id="catModalTitle">Objectifs du résident</h3>
+      <h3 id="catModalTitle">Nouvel objectif</h3>
       <button class="modal-close" onclick="closeModal('modalCatalogue')">&times;</button>
     </div>
-    <div class="modal-body">
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">
-        Créez un objectif personnalisé — il est enregistré et assigné à ce résident immédiatement.
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <div id="catModalInfo" style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm)"></div>
+
+      <div class="form-group">
+        <label for="catNewName">Objectif *</label>
+        <input type="text" id="catNewName" placeholder="Ex : Développer l'autonomie au quotidien" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
       </div>
 
-      <!-- Créer un nouvel objectif -->
-      <div style="background:var(--g50);border:1px solid var(--border);border-radius:10px;padding:.7rem .8rem">
-        <div style="font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0284c7;margin-bottom:.45rem">➕ Nouvel objectif</div>
-        <input type="text" id="catNewName" placeholder="Nom (ex : Autonomie, Insertion sociale…)" style="margin-bottom:.4rem" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
-        <input type="text" id="catNewDesc" placeholder="Description (facultatif)" style="margin-bottom:.55rem" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
-        <button class="btn btn-accent btn-sm" onclick="catCreateObjectif()">+ Créer et assigner</button>
+      <div id="catSuggestWrap" style="display:none">
+        <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">Suggestions</div>
+        <div id="catSuggest" style="display:flex;flex-wrap:wrap;gap:.35rem"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="catNewDesc">Description</label>
+        <textarea id="catNewDesc" rows="2" placeholder="Objet de l'objectif, contexte…" style="resize:vertical"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="closeModal('modalCatalogue')">Fermer</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalCatalogue')">Annuler</button>
+      <button class="btn btn-primary" onclick="catCreateObjectif()">Enregistrer</button>
     </div>
   </div>
 </div>

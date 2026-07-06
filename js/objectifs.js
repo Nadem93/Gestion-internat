@@ -435,6 +435,19 @@ async function setObjEcheance(objId, date) {
 }
 
 // ── GÉRER LES OBJECTIFS DU RÉSIDENT (catalogue) ──
+// Suggestions d'objectifs courants du secteur (chips cliquables dans le modal de création)
+const OBJ_SUGGESTIONS = [
+  { name: 'Autonomie', desc: "Développement de l'autonomie au quotidien" },
+  { name: 'Insertion sociale', desc: 'Intégration dans la vie sociale et collective' },
+  { name: 'Santé', desc: 'Suivi et maintien de la santé physique et psychique' },
+  { name: 'Scolarité / Formation', desc: 'Accompagnement scolaire et professionnel' },
+  { name: 'Lien familial', desc: 'Maintien et soutien du lien familial' },
+  { name: 'Logement', desc: 'Préparation à un logement autonome' },
+  { name: 'Gestion du budget', desc: 'Apprentissage de la gestion de son argent' },
+  { name: 'Communication', desc: "Développer l'expression et la communication" },
+  { name: 'Vie affective', desc: 'Accompagnement de la vie affective et relationnelle' }
+];
+
 // Modèles d'objectifs (localStorage, comme admin.html). Point de sortie unique
 // pour faciliter la future bascule vers app_config (liste partagée).
 function saveObjTemplate(name, description) {
@@ -447,6 +460,7 @@ function saveObjTemplate(name, description) {
 // Ensemble des objectifs assignés au résident affiché, autorité en mémoire du modal
 // (amorcé à l'ouverture depuis r.objectifs, muté uniquement par les actions explicites).
 let _catAssigned = new Set();
+let _catBusy = false; // garde anti double-soumission (réarmée à chaque ouverture)
 // Écritures sérialisées : chaque action enfile son écriture, elles s'exécutent en série
 // → un double-clic ne perd plus d'affectation (last-write porte l'état complet).
 let _catChain = Promise.resolve();
@@ -464,25 +478,48 @@ function catPersist() {
 function openCatalogue() {
   const r = currentResident();
   if (!r || !_obCanEdit) return;
+  _catBusy = false;
   _catAssigned = new Set((r.objectifs || []).map(String));
-  document.getElementById('catModalTitle').textContent = `Objectifs de ${resNom(r)}`;
+  document.getElementById('catModalTitle').textContent = 'Nouvel objectif';
+  document.getElementById('catModalInfo').textContent = `Pour ${resNom(r)} — l'objectif sera enregistré et assigné immédiatement.`;
   document.getElementById('catNewName').value = '';
   document.getElementById('catNewDesc').value = '';
+  renderCatSuggestions();
   openModal('modalCatalogue');
+}
+
+// Suggestions : on écarte celles dont un objectif du même nom existe déjà
+function renderCatSuggestions() {
+  const existing = new Set(objTemplates().map(o => (o.name || '').toLowerCase()));
+  const wrap = document.getElementById('catSuggestWrap');
+  const chips = OBJ_SUGGESTIONS
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => !existing.has(s.name.toLowerCase()));
+  document.getElementById('catSuggest').innerHTML = chips
+    .map(({ s, i }) => `<button type="button" class="ax-chip" onclick="catPickSuggestion(${i})">${escHtml(s.name)}</button>`).join('');
+  wrap.style.display = chips.length ? '' : 'none';
+}
+
+function catPickSuggestion(i) {
+  const s = OBJ_SUGGESTIONS[i];
+  if (!s) return;
+  document.getElementById('catNewName').value = s.name;
+  const desc = document.getElementById('catNewDesc');
+  if (!desc.value.trim()) desc.value = s.desc || '';
+  document.getElementById('catNewName').focus();
 }
 
 // Créer un objectif et l'assigner immédiatement au résident affiché
 function catCreateObjectif() {
-  if (!_obCanEdit || !currentResident()) return;
+  if (_catBusy || !_obCanEdit || !currentResident()) return;
   const name = document.getElementById('catNewName').value.trim();
   if (!name) { toast('Le nom de l\'objectif est requis', 'error'); return; }
+  _catBusy = true;
   const description = document.getElementById('catNewDesc').value.trim();
   const obj = saveObjTemplate(name, description);
   _catAssigned.add(String(obj.id));
-  document.getElementById('catNewName').value = '';
-  document.getElementById('catNewDesc').value = '';
-  document.getElementById('catNewName').focus();
   catPersist();
+  closeModal('modalCatalogue');
   toast('Objectif créé et assigné ✓');
 }
 
