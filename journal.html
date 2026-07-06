@@ -20,6 +20,17 @@
       box-shadow: 0 0 0 3px rgba(15,43,74,.12);
       border-color: var(--primary);
     }
+
+    /* ═══════════ Design « Verre holographique » (journal de bord) ═══════════ */
+    @keyframes jHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    /* Fond aurora clair, identique aux autres pages */
+    body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
+    /* Cartes d'entrée en verre + liseré holographique animé.
+       Pas de !important sur le fond : les entrées « non lues » gardent leur surbrillance inline. */
+    .entry-card{position:relative;overflow:hidden;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.82);box-shadow:0 6px 20px rgba(80,90,200,.09)}
+    .entry-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:jHolo 4s linear infinite}
+    .entry-card:hover{box-shadow:0 12px 30px rgba(80,90,200,.16);border-color:rgba(167,139,250,.4)}
+    @media(prefers-reduced-motion:reduce){.entry-card::before{animation:none}}
   </style>
 </head>
 <body>
