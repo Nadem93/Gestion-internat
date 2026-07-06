@@ -50,33 +50,32 @@
     .srch-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.2rem .2rem .35rem}
     #searchGlobalResults a:hover{background:var(--g50)}
 
-    /* ═══════════ THÈME AURORA GLASS (page d'accueil) ═══════════ */
-    .accueil-home{position:relative;background:radial-gradient(130% 110% at 50% -10%,#2b3357,#171b30 62%)}
+    /* ═══════════ THÈME AURORA GLASS — VERSION CLAIRE (page d'accueil) ═══════════ */
+    .accueil-home{position:relative;background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%)}
     .acc-aurora{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
-    .acc-aurora span{position:absolute;border-radius:50%;filter:blur(72px);display:block}
-    .acc-aurora .ab1{width:520px;height:520px;background:#7c3aed;top:-150px;left:-90px;opacity:.55;animation:accAur 16s ease-in-out infinite}
-    .acc-aurora .ab2{width:480px;height:480px;background:#06b6d4;bottom:-170px;right:-70px;opacity:.5;animation:accAur 21s ease-in-out infinite reverse}
-    .acc-aurora .ab3{width:340px;height:340px;background:#db2777;top:38%;left:44%;opacity:.3;animation:accAur 26s ease-in-out infinite}
+    .acc-aurora span{position:absolute;border-radius:50%;filter:blur(74px);display:block}
+    .acc-aurora .ab1{width:520px;height:520px;background:#a78bfa;top:-150px;left:-90px;opacity:.42;animation:accAur 16s ease-in-out infinite}
+    .acc-aurora .ab2{width:480px;height:480px;background:#38bdf8;bottom:-170px;right:-70px;opacity:.4;animation:accAur 21s ease-in-out infinite reverse}
+    .acc-aurora .ab3{width:340px;height:340px;background:#f472b6;top:40%;left:46%;opacity:.26;animation:accAur 26s ease-in-out infinite}
     @keyframes accAur{0%{transform:translate(0,0) scale(1)}50%{transform:translate(38px,-28px) scale(1.16)}100%{transform:translate(0,0) scale(1)}}
     @media(prefers-reduced-motion:reduce){.acc-aurora span{animation:none}}
     .accueil-home-main{position:relative;z-index:1}
-    /* Cartes → verre dépoli (surcharge du fond blanc inline via !important) */
+    /* Cartes → verre clair (surcharge du fond inline via !important) */
     .accueil-home-card{
-      background:rgba(255,255,255,.11) !important;
-      -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.17) !important;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.2) !important;
-      color:#f8fafc !important;
+      background:rgba(255,255,255,.62) !important;
+      -webkit-backdrop-filter:blur(13px);backdrop-filter:blur(13px);
+      border:1px solid rgba(255,255,255,.8) !important;
+      box-shadow:0 4px 16px rgba(30,41,59,.09),inset 0 1px 0 rgba(255,255,255,.9) !important;
+      color:#1e293b !important;
     }
     .accueil-home-card:hover{
-      background:rgba(255,255,255,.15) !important;
-      border-color:color-mix(in srgb, var(--c) 60%, transparent) !important;
-      box-shadow:0 12px 32px color-mix(in srgb, var(--c) 42%, transparent),inset 0 1px 0 rgba(255,255,255,.26) !important;
+      background:rgba(255,255,255,.78) !important;
+      border-color:color-mix(in srgb, var(--c) 42%, #fff) !important;
+      box-shadow:0 12px 30px color-mix(in srgb, var(--c) 26%, transparent),inset 0 1px 0 rgba(255,255,255,.95) !important;
     }
-    .accueil-home-label{color:#f8fafc !important;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.45)}
-    /* Halo curseur renforcé + glow coloré sur l'icône de chaque module */
-    .accueil-home-card::before{background:radial-gradient(circle 150px at var(--mx,50%) var(--my,50%),color-mix(in srgb, var(--c,#4f46e5) 55%, transparent) 0%, transparent 70%) !important;filter:blur(10px)}
-    .accueil-home-illus{filter:drop-shadow(0 2px 9px color-mix(in srgb, var(--c) 48%, transparent))}
+    .accueil-home-label{color:#1e293b !important;font-weight:700}
+    /* Glow coloré discret sur l'icône de chaque module */
+    .accueil-home-illus{filter:drop-shadow(0 2px 8px color-mix(in srgb, var(--c) 34%, transparent))}
   </style>
 </head>
 <body>
