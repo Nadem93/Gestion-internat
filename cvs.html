@@ -39,6 +39,9 @@ body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !impor
 .cvs-card{position:relative;overflow:hidden;background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 5px 16px rgba(80,90,200,.09)}
 .cvs-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:cvHolo 4s linear infinite}
 @media(prefers-reduced-motion:reduce){.chx-stat::before,.cvs-card::before{animation:none}}
+/* Barre d'actions déplacée hors du header */
+.cvs-actions{display:flex;justify-content:flex-end;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+@media(max-width:560px){.cvs-actions{justify-content:stretch}.cvs-actions .btn{flex:1}}
 </style>
 </head>
 <body>
@@ -46,7 +49,13 @@ body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !impor
   <div class="main">
     <header class="header">
       <div class="header-info"><div class="header-title">🤝 Conseil de la Vie Sociale</div></div>
-      <div class="header-right">
+      <div class="header-right"></div>
+    </header>
+
+    <main class="content" style="max-width:1150px">
+
+      <!-- ── Barre d'actions (déplacée hors du header : les 3 boutons y chevauchaient le logo) ── -->
+      <div class="cvs-actions">
         <button class="btn btn-outline btn-sm no-cvs-edit" onclick="openMembreModal()">+ Membre</button>
         <button class="btn btn-outline btn-sm no-cvs-edit" onclick="openThematiqueModal()">+ Thématique</button>
         <button class="btn btn-accent btn-sm no-cvs-edit" onclick="openSeanceModal()">
@@ -54,9 +63,7 @@ body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !impor
           Nouvelle séance
         </button>
       </div>
-    </header>
 
-    <main class="content" style="max-width:1150px">
 
       <!-- ── Stats ── -->
       <div id="cvsStats" class="grid grid-5" style="margin-bottom:1.25rem"></div>
