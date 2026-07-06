@@ -196,7 +196,7 @@ function _renderTransmissions() {
   container.innerHTML = `<div class="kb-board">${
     TR_SHIFTS.map(shift => {
       const items = grouped[shift.id];
-      return `<div class="kb-col">
+      return `<div class="kb-col" style="--sc:${shift.color}">
         <div class="kb-col-hdr">
           <div class="kb-col-hdr-top">
             <div class="kb-col-name">
@@ -205,7 +205,7 @@ function _renderTransmissions() {
             </div>
             <span class="kb-col-count" style="background:${shift.bg};color:${shift.color}">${items.length}</span>
           </div>
-          <div class="kb-col-bar" style="background:${shift.color};opacity:.4"></div>
+          <div class="kb-col-dots"><span class="kb-dot on"></span><span class="kb-line"></span><span class="kb-dot"></span><span class="kb-line"></span><span class="kb-dot"></span></div>
         </div>
         <div class="kb-cards">
           ${items.length

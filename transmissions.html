@@ -28,7 +28,6 @@
 .kb-col-name{font-size:.88rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:.4rem}
 .kb-col-hours{font-size:.7rem;color:var(--muted);font-weight:400}
 .kb-col-count{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:20px}
-.kb-col-bar{height:4px;border-radius:2px;margin-top:0}
 
 /* Cards container */
 .kb-cards{padding:.65rem;display:flex;flex-direction:column;gap:.55rem}
@@ -78,6 +77,21 @@
 
 @media(max-width:900px){.kb-board{grid-template-columns:1fr 1fr}.kb-stat-pill{display:none}}
 @media(max-width:520px){.kb-board{grid-template-columns:1fr}}
+
+/* ═══ Design « Timeline lumineuse » (cartes de quart) ═══ */
+@keyframes trGlow{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.18)}}
+.kb-col{background:#fff !important;position:relative;box-shadow:0 4px 16px rgba(30,41,59,.06)}
+/* Barre néon latérale colorée par quart */
+.kb-col::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:2;
+  background:linear-gradient(180deg,var(--sc,#6366f1),color-mix(in srgb,var(--sc,#6366f1) 55%,#fff));
+  box-shadow:0 0 14px var(--sc,#6366f1)}
+.kb-col-hdr{padding-left:1.25rem}
+/* Points de progression pulsants */
+.kb-col-dots{display:flex;align-items:center;gap:6px;margin-top:.55rem}
+.kb-dot{width:9px;height:9px;border-radius:50%;background:#dbe3ee;flex-shrink:0}
+.kb-dot.on{background:var(--sc,#6366f1);box-shadow:0 0 8px var(--sc,#6366f1);animation:trGlow 2s ease-in-out infinite}
+.kb-line{flex:1;height:2px;background:#e8edf6;border-radius:2px}
+@media(prefers-reduced-motion:reduce){.kb-dot.on{animation:none}}
 </style>
 </head>
 <body>
