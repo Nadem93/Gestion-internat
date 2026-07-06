@@ -51,7 +51,7 @@
     #searchGlobalResults a:hover{background:var(--g50)}
 
     /* ═══════════ THÈME AURORA GLASS (page d'accueil) ═══════════ */
-    .accueil-home{position:relative;background:#090a1c}
+    .accueil-home{position:relative;background:radial-gradient(130% 110% at 50% -10%,#2b3357,#171b30 62%)}
     .acc-aurora{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
     .acc-aurora span{position:absolute;border-radius:50%;filter:blur(72px);display:block}
     .acc-aurora .ab1{width:520px;height:520px;background:#7c3aed;top:-150px;left:-90px;opacity:.55;animation:accAur 16s ease-in-out infinite}
@@ -62,17 +62,18 @@
     .accueil-home-main{position:relative;z-index:1}
     /* Cartes → verre dépoli (surcharge du fond blanc inline via !important) */
     .accueil-home-card{
-      background:rgba(255,255,255,.055) !important;
+      background:rgba(255,255,255,.11) !important;
       -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-      border:1px solid rgba(255,255,255,.12) !important;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.16) !important;
-      color:#e6ecf5 !important;
+      border:1px solid rgba(255,255,255,.17) !important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.2) !important;
+      color:#f8fafc !important;
     }
     .accueil-home-card:hover{
+      background:rgba(255,255,255,.15) !important;
       border-color:color-mix(in srgb, var(--c) 60%, transparent) !important;
-      box-shadow:0 12px 32px color-mix(in srgb, var(--c) 42%, transparent),inset 0 1px 0 rgba(255,255,255,.22) !important;
+      box-shadow:0 12px 32px color-mix(in srgb, var(--c) 42%, transparent),inset 0 1px 0 rgba(255,255,255,.26) !important;
     }
-    .accueil-home-label{color:#e6ecf5 !important}
+    .accueil-home-label{color:#f8fafc !important;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.45)}
     /* Halo curseur renforcé + glow coloré sur l'icône de chaque module */
     .accueil-home-card::before{background:radial-gradient(circle 150px at var(--mx,50%) var(--my,50%),color-mix(in srgb, var(--c,#4f46e5) 55%, transparent) 0%, transparent 70%) !important;filter:blur(10px)}
     .accueil-home-illus{filter:drop-shadow(0 2px 9px color-mix(in srgb, var(--c) 48%, transparent))}
