@@ -481,7 +481,8 @@ function renderEntries() {
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntryById('${e.id}')">Supprimer</button>
         </div>
       </div>` : '';
-    return `<div class="entry-card ${isSelected ? 'selected' : ''}" style="${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
+    const nodeColor = (entryCats[0] && entryCats[0].color) || e.residentColor || '#8b5cf6'; // couleur du nœud sur le fil = catégorie
+    return `<div class="entry-card ${isSelected ? 'selected' : ''}" style="--jc:${nodeColor};${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
       <div class="entry-header">
         ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
         <div style="flex:1;min-width:0">

@@ -21,14 +21,17 @@
       border-color: var(--primary);
     }
 
-    /* ═══════════ Design « Verre holographique » (journal de bord) ═══════════ */
-    @keyframes jHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    /* ═══════════ Design « Fil du journal » (timeline chronologique) ═══════════ */
+    @keyframes jGlow{0%,100%{opacity:.6}50%{opacity:1}}
     /* Fond aurora clair, identique aux autres pages */
     body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
-    /* Cartes d'entrée en verre + liseré holographique animé.
+    /* Fil chronologique vertical le long de la liste */
+    #entriesList{position:relative;padding-left:34px}
+    #entriesList::before{content:'';position:absolute;left:14px;top:10px;bottom:10px;width:2px;border-radius:2px;background:linear-gradient(180deg,#a78bfa,#38bdf8,#f472b6)}
+    /* Cartes en verre + nœud coloré (couleur de la catégorie) posé sur le fil.
        Pas de !important sur le fond : les entrées « non lues » gardent leur surbrillance inline. */
-    .entry-card{position:relative;overflow:hidden;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.82);box-shadow:0 6px 20px rgba(80,90,200,.09)}
-    .entry-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:jHolo 4s linear infinite}
+    .entry-card{position:relative;background:rgba(255,255,255,.64);border:1px solid rgba(255,255,255,.82);box-shadow:0 5px 16px rgba(80,90,200,.1)}
+    .entry-card::before{content:'';position:absolute;left:-27px;top:18px;width:14px;height:14px;border-radius:50%;z-index:2;background:var(--jc,#8b5cf6);border:3px solid #fff;box-shadow:0 0 8px color-mix(in srgb,var(--jc,#8b5cf6) 70%,transparent);animation:jGlow 2.4s ease-in-out infinite}
     .entry-card:hover{box-shadow:0 12px 30px rgba(80,90,200,.16);border-color:rgba(167,139,250,.4)}
     @media(prefers-reduced-motion:reduce){.entry-card::before{animation:none}}
   </style>
