@@ -307,19 +307,16 @@
     </div>
     <div class="modal-body">
       <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">
-        Créez un objectif ou cochez ceux à suivre avec ce résident — tout est enregistré immédiatement. Décocher un objectif le retire de sa page sans le supprimer.
+        Créez un objectif personnalisé — il est enregistré et assigné à ce résident immédiatement.
       </div>
 
       <!-- Créer un nouvel objectif -->
-      <div style="background:var(--g50);border:1px solid var(--border);border-radius:10px;padding:.7rem .8rem;margin-bottom:.9rem">
+      <div style="background:var(--g50);border:1px solid var(--border);border-radius:10px;padding:.7rem .8rem">
         <div style="font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0284c7;margin-bottom:.45rem">➕ Nouvel objectif</div>
         <input type="text" id="catNewName" placeholder="Nom (ex : Autonomie, Insertion sociale…)" style="margin-bottom:.4rem" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
         <input type="text" id="catNewDesc" placeholder="Description (facultatif)" style="margin-bottom:.55rem" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
         <button class="btn btn-accent btn-sm" onclick="catCreateObjectif()">+ Créer et assigner</button>
       </div>
-
-      <div style="font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--g400);margin-bottom:.4rem">Objectifs disponibles</div>
-      <div id="catList" style="display:flex;flex-direction:column;gap:.45rem"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="closeModal('modalCatalogue')">Fermer</button>

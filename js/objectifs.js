@@ -444,9 +444,6 @@ function saveObjTemplate(name, description) {
   DB.set(DB.keys.objectives, [...objs, obj]);
   return obj;
 }
-function deleteObjTemplate(id) {
-  DB.set(DB.keys.objectives, objTemplates().filter(o => String(o.id) !== String(id)));
-}
 // Ensemble des objectifs assignés au résident affiché, autorité en mémoire du modal
 // (amorcé à l'ouverture depuis r.objectifs, muté uniquement par les actions explicites).
 let _catAssigned = new Set();
@@ -471,35 +468,7 @@ function openCatalogue() {
   document.getElementById('catModalTitle').textContent = `Objectifs de ${resNom(r)}`;
   document.getElementById('catNewName').value = '';
   document.getElementById('catNewDesc').value = '';
-  renderCatList();
   openModal('modalCatalogue');
-}
-
-function renderCatList() {
-  const tpl = objTemplates();
-  const el = document.getElementById('catList');
-  if (!tpl.length) {
-    el.innerHTML = `<div style="font-size:.8rem;color:var(--muted);text-align:center;padding:1rem 0">Aucun objectif pour l'instant. Créez le premier ci-dessus ⤴</div>`;
-    return;
-  }
-  el.innerHTML = tpl.map(o => `
-    <div style="display:flex;align-items:flex-start;gap:.4rem">
-      <label class="cat-item" style="flex:1">
-        <input type="checkbox" name="catObj" value="${o.id}"${_catAssigned.has(String(o.id)) ? ' checked' : ''} onchange="catToggle('${o.id}', this.checked)"/>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:.85rem">${escHtml(o.name)}</div>
-          ${o.description ? `<div style="font-size:.74rem;color:var(--muted)">${escHtml(o.description)}</div>` : ''}
-        </div>
-      </label>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0" title="Supprimer ce modèle d'objectif" onclick="catDeleteObjectif('${o.id}')">✕</button>
-    </div>`).join('');
-}
-
-// (Dé)cocher un objectif : affectation enregistrée immédiatement
-function catToggle(id, checked) {
-  if (!_obCanEdit) return;
-  if (checked) _catAssigned.add(String(id)); else _catAssigned.delete(String(id));
-  catPersist();
 }
 
 // Créer un objectif et l'assigner immédiatement au résident affiché
@@ -512,20 +481,9 @@ function catCreateObjectif() {
   _catAssigned.add(String(obj.id));
   document.getElementById('catNewName').value = '';
   document.getElementById('catNewDesc').value = '';
-  renderCatList();
   document.getElementById('catNewName').focus();
   catPersist();
   toast('Objectif créé et assigné ✓');
-}
-
-function catDeleteObjectif(id) {
-  confirmDialog('Supprimer ce modèle d\'objectif du catalogue ? Il ne sera plus proposé ni affiché pour aucun résident ; le suivi déjà saisi pour cet objectif ne sera plus visible.', () => {
-    deleteObjTemplate(id);
-    _catAssigned.delete(String(id));
-    renderCatList();
-    catPersist();
-    toast('Objectif supprimé', 'info');
-  });
 }
 
 // ── GRILLE D'ÉVALUATION D'UN OBJECTIF ──
