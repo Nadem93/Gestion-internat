@@ -241,6 +241,28 @@
     .evm-btn-series{background:transparent;border:1.5px solid #ef4444;color:#ef4444}
     .evm-btn-close{background:#f1f5f9;color:#334155}
     .evm-btn-edit{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff}
+
+    /* ═══════════ Design « Verre holographique » (planning) ═══════════ */
+    @keyframes plHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    /* Fond aurora clair, identique à l'accueil et aux résidents */
+    body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
+    /* Mini-calendriers en verre + en-tête holographique */
+    .mini-cal{background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(80,90,200,.1)}
+    .mini-cal-head{background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6)}
+    .mini-grid .mg-inweek{background:rgba(56,189,248,.14)}
+    .mini-grid .mg-today,.mini-grid .mg-today.mg-inweek{background:linear-gradient(135deg,#a78bfa,#38bdf8);color:#fff}
+    /* Grille semaine en verre + liseré holographique animé */
+    .pl-week{position:relative;background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.82);box-shadow:0 8px 24px rgba(80,90,200,.1)}
+    .pl-week::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:6;pointer-events:none;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:plHolo 4s linear infinite}
+    .pl-week-head{background:rgba(243,247,251,.72)}
+    .pl-week-head .plh-day.is-today .plh-num{background:linear-gradient(135deg,#a78bfa,#38bdf8);box-shadow:0 2px 8px rgba(120,130,220,.4)}
+    /* Ligne « maintenant » en rose holographique lumineux */
+    .pl-day .pl-now{background:#f472b6;box-shadow:0 0 8px rgba(244,114,182,.7)}
+    .pl-day .pl-now::before{background:#f472b6;box-shadow:0 0 8px rgba(244,114,182,.8)}
+    /* Vue mois : aujourd'hui accordé au thème */
+    .plm-today{background:rgba(56,189,248,.08)}
+    .plm-num.is-today{background:linear-gradient(135deg,#a78bfa,#38bdf8);color:#fff}
+    @media(prefers-reduced-motion:reduce){.pl-week::before{animation:none}}
   </style>
 </head>
 <body>
