@@ -132,39 +132,6 @@ function sparkSvg(histo) {
     <circle cx="${w - 2}" cy="${y(last.p)}" r="2.2" fill="#0284c7"/></svg>`;
 }
 
-// Courbe d'évolution de l'objectif : moyenne des axes reconstruite jour par jour
-// depuis les historiques de pointage (report de la dernière valeur connue par axe).
-function objChartSvg(sv) {
-  const axes = axesOf(sv);
-  if (!axes.length) return '';
-  const dates = [...new Set(axes.flatMap(a => (Array.isArray(a.histo) ? a.histo : []).map(h => h.d)))].sort();
-  if (dates.length < 2) return '';
-  const series = dates.map(d => {
-    let sum = 0;
-    axes.forEach(a => {
-      const h = (Array.isArray(a.histo) ? a.histo : []).filter(x => x.d <= d);
-      sum += h.length ? clampPct(h[h.length - 1].p) : 0;
-    });
-    return Math.round(sum / axes.length);
-  });
-  const x = i => 10 + i / (dates.length - 1) * 300;
-  const y = v => 58 - v / 100 * 46;
-  const pts = series.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-  const last = series[series.length - 1];
-  return `<div style="margin-top:.8rem">
-    <div style="font-size:.68rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem">Évolution de l'objectif</div>
-    <svg viewBox="0 0 320 72" style="width:100%;height:auto;display:block" role="img" aria-label="Évolution de la progression : de ${series[0]} % à ${last} %">
-      <line x1="10" y1="12" x2="310" y2="12" stroke="var(--g100)" stroke-width="1" stroke-dasharray="3 3"/>
-      <line x1="10" y1="58" x2="310" y2="58" stroke="var(--g100)" stroke-width="1"/>
-      <text x="313" y="15" font-size="8" fill="var(--g400)">100</text>
-      <polygon points="10,58 ${pts} 310,58" fill="${pctColor(last)}22"/>
-      <polyline points="${pts}" fill="none" stroke="${pctColor(last)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      ${series.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.4" fill="${pctColor(v)}"/>`).join('')}
-      <text x="10" y="70" font-size="8" fill="var(--g400)">${formatDate(dates[0])}</text>
-      <text x="310" y="70" font-size="8" fill="var(--g400)" text-anchor="end">${formatDate(dates[dates.length - 1])}</text>
-    </svg></div>`;
-}
-
 // ── RENDU PRINCIPAL ──
 function renderObjectifs() {
   const rid = document.getElementById('obResident').value;
@@ -307,7 +274,6 @@ function objectifCard(r, o) {
         ${_obCanEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openAxeModal('${o.id}')">+ Ajouter un axe</button>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:.55rem">${axesHtml}</div>
-      ${objChartSvg(sv)}
       ${evalsSection(o, sv, axes)}
     </div>
   </div>`;
