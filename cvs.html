@@ -26,6 +26,19 @@
 #modalCvsResolutions input:focus,#modalCvsResolutions select:focus,#modalCvsResolutions textarea:focus,
 #modalCvsThematique input:focus,#modalCvsThematique select:focus,#modalCvsThematique textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.12)}
 #modalCvsMembre .modal,#modalCvsSeance .modal,#modalCvsResolutions .modal,#modalCvsThematique .modal{border-color:var(--border)}
+
+/* ═══════════ Design « Verre holographique » (CVS) ═══════════ */
+@keyframes cvHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+/* Fond aurora clair, identique aux autres pages */
+body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
+/* Cartes indicateurs → verre ; la barre latérale devient un liseré holographique en haut,
+   le halo d'angle coloré (::after, piloté par --c) est conservé */
+.chx-stat{background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.82);box-shadow:0 5px 16px rgba(80,90,200,.1)}
+.chx-stat::before{top:0;left:0;right:0;bottom:auto;width:auto;height:3px;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:cvHolo 4s linear infinite}
+/* Panneaux → verre + liseré holographique (bordure d'origine conservée pour garder les accents colorés) */
+.cvs-card{position:relative;overflow:hidden;background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 5px 16px rgba(80,90,200,.09)}
+.cvs-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:cvHolo 4s linear infinite}
+@media(prefers-reduced-motion:reduce){.chx-stat::before,.cvs-card::before{animation:none}}
 </style>
 </head>
 <body>
