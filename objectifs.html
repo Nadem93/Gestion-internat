@@ -33,12 +33,6 @@
 .ob-axe-meta{font-size:.7rem;color:var(--muted)}
 .ob-axe-pct{font-weight:800;font-size:.85rem;min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
 .ob-axe-note{font-size:.74rem;color:var(--g700);margin-top:.25rem}
-.ob-bar{height:7px;border-radius:4px;background:var(--g100);overflow:hidden;margin-top:.45rem}
-.ob-range{-webkit-appearance:none;appearance:none;width:100%;height:7px;border-radius:4px;background:var(--g100);outline:none;margin-top:.55rem;cursor:pointer}
-.ob-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;border:2.5px solid var(--primary);box-shadow:0 1px 4px rgba(15,43,74,.3);cursor:grab}
-.ob-range::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.15)}
-.ob-range::-moz-range-thumb{width:19px;height:19px;border-radius:50%;background:#fff;border:2.5px solid var(--primary);box-shadow:0 1px 4px rgba(15,43,74,.3);cursor:grab}
-.ob-range:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ob-guide{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.6rem .9rem;margin-bottom:1.25rem}
 .ob-guide summary{cursor:pointer;font-weight:700;font-size:.83rem;color:var(--primary);list-style:none}
 .ob-guide summary::-webkit-details-marker{display:none}
@@ -54,6 +48,11 @@
 .ob-tab{font-size:.82rem;font-weight:600;padding:.45rem .9rem;border-radius:9px;border:none;background:none;cursor:pointer;color:var(--g600);font-family:inherit;transition:all .15s;white-space:nowrap}
 .ob-tab:hover{background:var(--g50);color:var(--text)}
 .ob-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(15,43,74,.25)}
+.ob-step{transition:transform .2s cubic-bezier(.34,1.56,.64,1),background .3s}
+.ob-step[role=radio]{cursor:pointer}
+.ob-step[role=radio]:hover{transform:scale(1.13)}
+.ob-step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes obStepPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 .eo-axe{background:var(--g50);border:1px solid var(--border);border-radius:9px;padding:.6rem .8rem}
 .eo-axe-nom{font-weight:600;font-size:.83rem;margin-bottom:.45rem}
 .eo-levels{display:flex;gap:.3rem;flex-wrap:wrap}
@@ -174,8 +173,9 @@
       </div>
 
       <div class="form-group">
-        <label for="axProgression">Progression : <output id="axProgVal" style="font-weight:800">0%</output></label>
-        <input type="range" id="axProgression" class="ob-range" min="0" max="100" step="5" value="0" oninput="axModalSlide(this)" style="margin-top:.35rem"/>
+        <label>Niveau d'autonomie : <output id="axProgVal" style="font-weight:800">0%</output></label>
+        <input type="hidden" id="axProgression" value="0"/>
+        <div id="axSteps" role="radiogroup" aria-label="Niveau d'autonomie" style="display:flex;align-items:flex-start;margin-top:.4rem"></div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">

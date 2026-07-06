@@ -103,10 +103,6 @@ function rangLabel(p) {
   const r = rangOf(p);
   return r === 'S' ? 'RANG S ★' : `RANG ${r} → ${rangOf(p + 25)}`;
 }
-// Barre segmentée (10 blocs) : la couche de stries blanches découpe le remplissage
-function rangeBg(p) {
-  return `repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),#fff calc(10% - 2px) 10%),linear-gradient(90deg,${pctColor(p)} ${p}%,#e2e8f0 ${p}%)`;
-}
 
 // Hexagone de progression (remplace l'anneau circulaire)
 function hexSvg(pct, id, size) {
@@ -351,46 +347,87 @@ function axeRow(o, a, idx) {
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" title="Supprimer l'axe" onclick="deleteAxe('${o.id}','${a.id}')">✕</button>` : ''}
       </div>
       ${a.note ? `<div class="ob-axe-note">${escHtml(a.note)}</div>` : ''}
-      ${_obCanEdit
-        ? `<input type="range" class="ob-range" min="0" max="100" step="5" value="${p}"
-            data-obj="${o.id}" data-axe="${a.id}" aria-label="Progression de l'axe ${escAttr(a.nom)}"
-            style="background:${rangeBg(p)}"
-            oninput="onAxeSlide(this)" onchange="commitAxeProgression(this)"/>`
-        : `<div class="ob-bar" style="background:${rangeBg(p)}"></div>`}
-      ${a.dateMaj ? `<div style="font-size:.68rem;color:var(--g400);margin-top:2px">Dernier pointage le ${formatDate(a.dateMaj)}</div>` : ''}
+      ${stepperHtml(o, a, p)}
+      ${a.dateMaj ? `<div style="font-size:.68rem;color:var(--g400);margin-top:4px">Dernier pointage le ${formatDate(a.dateMaj)}</div>` : ''}
     </div>
   </div>`;
 }
 
-// ── Interactions curseur : retour visuel immédiat (hexagone + rang + couleur), sauvegarde au relâchement ──
-function onAxeSlide(el) {
-  const v = clampPct(el.value);
-  el.style.background = rangeBg(v);
-  const lbl = document.getElementById(`axpct-${el.dataset.obj}-${el.dataset.axe}`);
-  if (lbl) { lbl.textContent = v + '%'; lbl.style.color = pctColor(v); }
-  // Recalcule l'hexagone et le rang de l'objectif à partir des curseurs affichés
-  const sliders = document.querySelectorAll(`.ob-range[data-obj="${el.dataset.obj}"]`);
-  if (!sliders.length) return;
-  let sum = 0; sliders.forEach(s => { sum += clampPct(s.value); });
-  const avg = Math.round(sum / sliders.length);
-  const hex = document.getElementById(`ring-${el.dataset.obj}`);
-  const txt = document.getElementById(`ringtxt-${el.dataset.obj}`);
-  const rang = document.getElementById(`rang-${el.dataset.obj}`);
-  if (hex) hex.style.background = `conic-gradient(${pctColor(avg)} 0 ${avg * 3.6}deg,#e2e8f0 ${avg * 3.6}deg 360deg)`;
-  if (txt) { txt.textContent = avg + '%'; txt.style.color = pctColor(avg); }
+// ── PALIERS D'AUTONOMIE (modèle A) : 5 niveaux cliniques cliquables (0→4 = 0/25/50/75/100 %) ──
+const NIV_STEP = EVAL_OBJ_NIVEAUX.map(n => n.label); // Non acquis · Aide importante · … · Autonome
+
+function stepperHtml(o, a, p) {
+  const cur = clampPct(p);
+  const clickable = _obCanEdit;
+  let html = `<div id="steprow-${o.id}-${a.id}" style="display:flex;align-items:flex-start;margin-top:10px"${clickable ? ' role="radiogroup"' : ''} aria-label="Niveau d'autonomie de l'axe ${escAttr(a.nom)}">`;
+  for (let i = 0; i < 5; i++) {
+    const np = i * 25, reached = cur >= np, col = reached ? pctColor(np) : '#cbd5e1';
+    const interactive = clickable
+      ? `role="radio" tabindex="0" aria-checked="${cur === np}" aria-label="${escAttr(NIV_STEP[i])} (${np} %)" onclick="setAxeLevel('${o.id}','${a.id}',${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAxeLevel('${o.id}','${a.id}',${i})}"`
+      : `aria-hidden="true"`;
+    html += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto;width:56px">
+      <div class="ob-hex ob-step" data-lvl="${i}" ${interactive}
+        style="${HEX_STYLE};width:30px;height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;background:${col};${clickable ? 'cursor:pointer' : ''}">${i}</div>
+      <div class="ob-step-cap" style="font-size:8.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:${reached ? '#475569' : '#94a3b8'};text-align:center;line-height:1.15">${escHtml(NIV_STEP[i])}</div>
+    </div>`;
+    if (i < 4) {
+      const seg = Math.max(0, Math.min(100, (cur - np) / 25 * 100));
+      html += `<div style="flex:1;height:4px;background:#e2e8f0;border-radius:3px;margin-top:15px;overflow:hidden"><div class="ob-conn" data-after="${np}" style="width:${seg}%;height:100%;background:${pctColor(np + 25)};border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)"></div></div>`;
+    }
+  }
+  html += `</div>
+    <div style="text-align:center;margin-top:6px"><span class="ob-step-lbl" id="steplbl-${o.id}-${a.id}" style="font-size:.8rem;font-weight:800;color:${pctColor(cur)}">${cur >= 100 ? '★ ' : ''}${escHtml(NIV_STEP[Math.round(cur / 25)])} · ${cur}%</span></div>`;
+  return html;
+}
+
+// Met à jour l'hexagone + le rang de l'objectif (retour visuel immédiat), sans re-render
+function updateObjVisual(objId, avg) {
+  const col = pctColor(avg);
+  const hex = document.getElementById(`ring-${objId}`);
+  const txt = document.getElementById(`ringtxt-${objId}`);
+  const rang = document.getElementById(`rang-${objId}`);
+  if (hex) hex.style.background = `conic-gradient(${col} 0 ${avg * 3.6}deg,#e2e8f0 ${avg * 3.6}deg 360deg)`;
+  if (txt) { txt.textContent = avg + '%'; txt.style.color = col; }
   if (rang) rang.textContent = rangLabel(avg);
 }
 
-async function commitAxeProgression(el) {
+// Clic sur un palier : animation immédiate puis sauvegarde (progression = niveau × 25 %)
+async function setAxeLevel(objId, axeId, level) {
+  if (!_obCanEdit) return;
   const r = currentResident();
   if (!r) return;
-  const objId = el.dataset.obj, axeId = el.dataset.axe, val = clampPct(el.value);
+  const v = level * 25;
+  // Retour visuel optimiste (paliers, connecteurs, libellé, % et hexagone de l'objectif)
+  const row = document.getElementById(`steprow-${objId}-${axeId}`);
+  if (row) {
+    row.querySelectorAll('.ob-step').forEach(h => {
+      const idx = +h.dataset.lvl, np = idx * 25, reached = v >= np;
+      h.style.background = reached ? pctColor(np) : '#cbd5e1';
+      h.setAttribute('aria-checked', v === np);
+      const cap = h.parentNode.querySelector('.ob-step-cap');
+      if (cap) cap.style.color = reached ? '#475569' : '#94a3b8';
+      h.style.animation = '';
+      if (idx === level) { void h.offsetWidth; h.style.animation = 'obStepPulse .45s ease'; }
+    });
+    row.querySelectorAll('.ob-conn').forEach(c => {
+      const np = +c.dataset.after;
+      c.style.width = Math.max(0, Math.min(100, (v - np) / 25 * 100)) + '%';
+    });
+  }
+  const lbl = document.getElementById(`steplbl-${objId}-${axeId}`);
+  if (lbl) { lbl.textContent = (v >= 100 ? '★ ' : '') + NIV_STEP[level] + ' · ' + v + '%'; lbl.style.color = pctColor(v); }
+  const pctTop = document.getElementById(`axpct-${objId}-${axeId}`);
+  if (pctTop) { pctTop.textContent = v + '%'; pctTop.style.color = pctColor(v); }
+  const axes = axesOf(getSuivi(r, objId));
+  let sum = 0; axes.forEach(a => { sum += String(a.id) === String(axeId) ? v : clampPct(a.progression); });
+  updateObjVisual(objId, axes.length ? Math.round(sum / axes.length) : v);
+  // Sauvegarde
   const sv = { ...getSuivi(r, objId) };
-  sv.axes = axesOf(sv).map(a => String(a.id) === String(axeId) ? pointageAxe(a, val) : a);
-  if (val > 0 && (!sv.statut || sv.statut === 'non_commence')) sv.statut = 'en_cours';
+  sv.axes = axes.map(a => String(a.id) === String(axeId) ? pointageAxe(a, v) : a);
+  if (v > 0 && (!sv.statut || sv.statut === 'non_commence')) sv.statut = 'en_cours';
   try {
     await persistSuivi(r, objId, sv);
-  } catch (e) { console.error('[commitAxeProgression]', e); toast('Erreur enregistrement : ' + (e?.message || e), 'error'); }
+  } catch (e) { console.error('[setAxeLevel]', e); toast('Erreur enregistrement : ' + (e?.message || e), 'error'); }
   renderObjectifs();
 }
 
@@ -623,19 +660,38 @@ function openAxeModal(objId, axeId) {
       `<button type="button" class="ax-chip" data-v="${escAttr(sg)}" onclick="document.getElementById('axNom').value = this.dataset.v">${escHtml(sg)}</button>`).join('');
     wrap.style.display = sugg.length ? '' : 'none';
   } else wrap.style.display = 'none';
-  const p = clampPct(a.progression);
-  const range = document.getElementById('axProgression');
-  range.value = p;
-  axModalSlide(range);
+  axRenderSteps(clampPct(a.progression));
   openModal('modalAxe');
 }
 
-function axModalSlide(el) {
-  const v = clampPct(el.value);
-  el.style.background = rangeBg(v);
+// Sélecteur de niveau du modal : mêmes 5 paliers que les cartes (0→4 = 0/25/50/75/100 %)
+function axRenderSteps(pct) {
+  const cur = clampPct(pct);
+  document.getElementById('axProgression').value = cur;
   const out = document.getElementById('axProgVal');
-  out.textContent = v + '%';
-  out.style.color = pctColor(v);
+  out.textContent = (cur >= 100 ? '★ ' : '') + NIV_STEP[Math.round(cur / 25)] + ' · ' + cur + '%';
+  out.style.color = pctColor(cur);
+  let html = '';
+  for (let i = 0; i < 5; i++) {
+    const np = i * 25, reached = cur >= np, col = reached ? pctColor(np) : '#cbd5e1';
+    html += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto;width:56px">
+      <div class="ob-hex ob-step" role="radio" tabindex="0" aria-checked="${cur === np}" aria-label="${escAttr(NIV_STEP[i])} (${np} %)"
+        onclick="axStepPick(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();axStepPick(${i})}"
+        style="${HEX_STYLE};width:30px;height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;background:${col};cursor:pointer">${i}</div>
+      <div style="font-size:8.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:${reached ? '#475569' : '#94a3b8'};text-align:center;line-height:1.15">${escHtml(NIV_STEP[i])}</div>
+    </div>`;
+    if (i < 4) {
+      const seg = Math.max(0, Math.min(100, (cur - np) / 25 * 100));
+      html += `<div style="flex:1;height:4px;background:#e2e8f0;border-radius:3px;margin-top:15px;overflow:hidden"><div style="width:${seg}%;height:100%;background:${pctColor(np + 25)};border-radius:3px;transition:width .4s"></div></div>`;
+    }
+  }
+  document.getElementById('axSteps').innerHTML = html;
+}
+
+function axStepPick(level) {
+  axRenderSteps(level * 25);
+  const el = document.getElementById('axSteps').querySelectorAll('.ob-step')[level];
+  if (el) { el.style.animation = ''; void el.offsetWidth; el.style.animation = 'obStepPulse .45s ease'; }
 }
 
 async function saveAxe() {
