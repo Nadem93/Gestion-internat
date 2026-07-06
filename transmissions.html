@@ -89,8 +89,10 @@
 /* Points de progression pulsants */
 .kb-col-dots{display:flex;align-items:center;gap:6px;margin-top:.55rem}
 .kb-dot{width:9px;height:9px;border-radius:50%;background:#dbe3ee;flex-shrink:0}
+.kb-dot.lit{background:var(--sc,#6366f1);box-shadow:0 0 6px color-mix(in srgb,var(--sc,#6366f1) 60%,transparent)}
 .kb-dot.on{background:var(--sc,#6366f1);box-shadow:0 0 8px var(--sc,#6366f1);animation:trGlow 2s ease-in-out infinite}
 .kb-line{flex:1;height:2px;background:#e8edf6;border-radius:2px}
+.kb-line.lit{background:var(--sc,#6366f1);opacity:.55}
 @media(prefers-reduced-motion:reduce){.kb-dot.on{animation:none}}
 </style>
 </head>

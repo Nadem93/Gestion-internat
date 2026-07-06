@@ -40,6 +40,33 @@ function _trSession() {
 }
 function _trShift(id) { return TR_SHIFTS.find(s => s.id === id) || TR_SHIFTS[0]; }
 function _trCat(id)   { return TR_CATS.find(c => c.id === id) || TR_CATS[8]; }
+
+// « Fil du quart » : avancement du quart selon l'heure courante.
+// matin 07h–13h30, aprem 13h30–22h, nuit 22h–07h (chevauche minuit).
+// Renvoie { state:'past'|'current'|'future', filled:0..3 } (points remplis).
+function _trShiftProgress(id) {
+  const d = new Date();
+  let now = d.getHours() * 60 + d.getMinutes();
+  let start, end;
+  if (id === 'matin')      { start = 420;  end = 810; }
+  else if (id === 'aprem') { start = 810;  end = 1320; }
+  else                     { start = 1320; end = 1860; if (now < 420) now += 1440; } // nuit après minuit
+  if (now < start)  return { state: 'future',  filled: 0 };
+  if (now >= end)   return { state: 'past',    filled: 3 };
+  return { state: 'current', filled: Math.min(3, Math.floor((now - start) / (end - start) * 3) + 1) };
+}
+function _trDotsHtml(id) {
+  const p = _trShiftProgress(id);
+  const titre = p.state === 'past' ? 'Quart terminé' : p.state === 'future' ? 'Quart à venir' : 'Quart en cours';
+  let h = `<div class="kb-col-dots" title="${titre}">`;
+  for (let i = 0; i < 3; i++) {
+    const lit = i < p.filled;
+    const lead = p.state === 'current' && i === p.filled - 1;
+    h += `<span class="kb-dot${lead ? ' on' : lit ? ' lit' : ''}"></span>`;
+    if (i < 2) h += `<span class="kb-line${(i + 1) < p.filled ? ' lit' : ''}"></span>`;
+  }
+  return h + '</div>';
+}
 function _trIsRead(tr, userId) {
   return Array.isArray(tr.readBy) && tr.readBy.includes(String(userId));
 }
@@ -205,7 +232,7 @@ function _renderTransmissions() {
             </div>
             <span class="kb-col-count" style="background:${shift.bg};color:${shift.color}">${items.length}</span>
           </div>
-          <div class="kb-col-dots"><span class="kb-dot on"></span><span class="kb-line"></span><span class="kb-dot"></span><span class="kb-line"></span><span class="kb-dot"></span></div>
+          ${_trDotsHtml(shift.id)}
         </div>
         <div class="kb-cards">
           ${items.length
