@@ -257,10 +257,10 @@ function residentCard(r) {
   const svgAgenda = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
   return `<div class="res-card" style="--card-color:${coverColor}" onclick="window.location.href='resident.html?id=${r.id}'">
     <div class="res-card-body">
-      ${photoEl}
+      <div class="res-av-ring">${photoEl}</div>
       <div class="res-card-info">
         <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
-        <div class="res-card-meta">${r.dob ? age(r.dob)+' ans' : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
+        <div class="res-card-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
         <div>${statusBadge(presenceStatus)}</div>
       </div>
       <ul class="res-card-ico">

@@ -23,6 +23,22 @@
     .res-card-body{position:relative;z-index:1}
     /* Même fond que la page d'accueil (Aurora Glass clair) */
     body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
+
+    /* ═══ Cartes résident — design « Verre holographique » ═══ */
+    @keyframes rfSpin{to{transform:rotate(1turn)}}
+    @keyframes rfHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    .res-card{border-radius:18px !important}
+    /* Bandeau holographique animé en haut de chaque carte */
+    .res-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:3;pointer-events:none;
+      background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:rfHolo 4s linear infinite}
+    .res-card:hover{box-shadow:0 12px 30px color-mix(in srgb, var(--card-color,#6366f1) 22%, rgba(15,43,74,.12)) !important}
+    /* Anneau iridescent tournant autour de l'avatar */
+    .res-av-ring{position:relative;display:inline-block;border-radius:16px;margin-bottom:.5rem}
+    .res-av-ring::before{content:'';position:absolute;inset:-3px;border-radius:19px;z-index:0;
+      background:conic-gradient(#a78bfa,#38bdf8,#f472b6,#22d3ee,#a78bfa);
+      filter:drop-shadow(0 0 7px rgba(120,140,255,.45));animation:rfSpin 6s linear infinite}
+    .res-av-ring .res-card-photo{position:relative;z-index:1;border:2px solid #fff !important;margin-bottom:0 !important;box-shadow:none !important}
+    @media(prefers-reduced-motion:reduce){.res-card::after,.res-av-ring::before{animation:none}}
   </style>
 </head>
 <body>
