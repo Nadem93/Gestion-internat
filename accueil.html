@@ -77,9 +77,6 @@
     /* Halo curseur renforcé + glow coloré sur l'icône de chaque module */
     .accueil-home-card::before{background:radial-gradient(circle 150px at var(--mx,50%) var(--my,50%),color-mix(in srgb, var(--c,#4f46e5) 55%, transparent) 0%, transparent 70%) !important;filter:blur(10px)}
     .accueil-home-illus{filter:drop-shadow(0 2px 9px color-mix(in srgb, var(--c) 48%, transparent))}
-    /* Cloche de notifications en thème sombre */
-    .acc-bell{border-color:rgba(255,255,255,.18) !important;color:#e2e8f0 !important;background:rgba(255,255,255,.05) !important}
-    .acc-bell:hover{background:rgba(255,255,255,.13) !important;color:#fff !important}
   </style>
 </head>
 <body>
@@ -158,7 +155,7 @@ document.querySelectorAll('[data-perm]').forEach(el => {
 
 <div class="accueil-home" id="mainAccueilView" style="display:none">
   <div class="acc-aurora" aria-hidden="true"><span class="ab1"></span><span class="ab2"></span><span class="ab3"></span></div>
-  <header class="header" style="background:transparent;border:none;position:absolute;width:100%">
+  <header class="header" style="border:none;position:absolute;width:100%">
     <div style="visibility:hidden;pointer-events:none"><div class="header-title"></div></div>
     <div class="header-right" style="position:relative;z-index:40">
       <button class="acc-bell" id="accBell" onclick="toggleNotifPanel(event)" aria-label="Notifications">
