@@ -39,6 +39,7 @@ function axeSuggestions(tplObj) {
 
 let _obResidents = [];
 let _obCanEdit = false;
+let _obCollapsed = new Set(); // ids d'objectifs dont les axes sont repliés (mémorisé entre re-renders)
 let obAxeCtx = null; // { objId, axeId } pendant la création/édition d'un axe
 
 // ── Données ──
@@ -164,9 +165,13 @@ function renderObjectifs() {
   if (!r) { el.innerHTML = emptyBox('Résident introuvable.'); return; }
 
   const resObjs = (r.objectifs || []).map(id => tpl.find(o => String(o.id) === String(id))).filter(Boolean);
+  const allCollapsed = resObjs.length && resObjs.every(o => _obCollapsed.has(String(o.id)));
   const barre = `<div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap">
     <div style="font-size:.92rem;font-weight:800;color:var(--text)">${escHtml(resNom(r))} <span style="font-weight:500;color:var(--muted);font-size:.78rem">· ${resObjs.length} objectif${resObjs.length > 1 ? 's' : ''}</span></div>
-    ${_obCanEdit ? `<button class="btn btn-accent btn-sm" onclick="openCatalogue()">⚙ Gérer les objectifs</button>` : ''}
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      ${resObjs.length ? `<button class="btn btn-ghost btn-sm" onclick="obToggleAllAxes()">${allCollapsed ? '⊕ Déplier les axes' : '⊖ Réduire les axes'}</button>` : ''}
+      ${_obCanEdit ? `<button class="btn btn-accent btn-sm" onclick="openCatalogue()">⚙ Gérer les objectifs</button>` : ''}
+    </div>
   </div>`;
 
   if (!resObjs.length) {
@@ -230,6 +235,7 @@ function objectifCard(r, o) {
   const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
   const axes = axesOf(sv);
   const pct = objPct(sv);
+  const collapsed = _obCollapsed.has(String(o.id));
 
   const statutUi = _obCanEdit
     ? `<select class="ob-statut-sel" onchange="setObjStatut('${o.id}', this.value)" aria-label="Statut de l'objectif ${escAttr(o.name)}" style="${STATUT_SEL_STYLE};border-color:${st.color};color:${st.color}">
@@ -270,13 +276,45 @@ function objectifCard(r, o) {
     </div>
     <div class="ob-axes">
       <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-        <span>🧭 Axes de travail (${axes.length})</span>
+        <button type="button" onclick="obToggleAxes('${o.id}')" aria-expanded="${collapsed ? 'false' : 'true'}" style="display:inline-flex;align-items:center;gap:.4rem;background:none;border:none;padding:0;cursor:pointer;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit">
+          <span id="axchev-${o.id}" style="display:inline-block;transition:transform .2s;transform:rotate(${collapsed ? '-90deg' : '0deg'});font-size:.7rem">▾</span>
+          🧭 Axes de travail (${axes.length})<span id="axsum-${o.id}" style="font-weight:500;color:var(--g400);text-transform:none;letter-spacing:normal">${collapsed && pct != null ? ` · ${pct}%` : ''}</span>
+        </button>
         ${_obCanEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openAxeModal('${o.id}')">+ Ajouter un axe</button>` : ''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:.55rem">${axesHtml}</div>
+      <div id="axlist-${o.id}" style="display:${collapsed ? 'none' : 'flex'};flex-direction:column;gap:.55rem">${axesHtml}</div>
       ${evalsSection(o, sv, axes)}
     </div>
   </div>`;
+}
+
+// Replie / déplie les axes d'un objectif (mémorisé, mise à jour DOM directe sans re-render)
+function obToggleAxes(objId) {
+  const willCollapse = !_obCollapsed.has(objId);
+  if (willCollapse) _obCollapsed.add(objId); else _obCollapsed.delete(objId);
+  const list = document.getElementById('axlist-' + objId);
+  const chev = document.getElementById('axchev-' + objId);
+  const sum = document.getElementById('axsum-' + objId);
+  const btn = chev && chev.closest('button');
+  if (list) list.style.display = willCollapse ? 'none' : 'flex';
+  if (chev) chev.style.transform = willCollapse ? 'rotate(-90deg)' : 'rotate(0deg)';
+  if (btn) btn.setAttribute('aria-expanded', willCollapse ? 'false' : 'true');
+  if (sum) {
+    const r = currentResident();
+    const p = r ? objPct(getSuivi(r, objId)) : null;
+    sum.textContent = willCollapse && p != null ? ` · ${p}%` : '';
+  }
+}
+
+// Replie / déplie les axes de TOUS les objectifs affichés
+function obToggleAllAxes() {
+  const r = currentResident();
+  if (!r) return;
+  const ids = (r.objectifs || []).map(String);
+  const anyOpen = ids.some(id => !_obCollapsed.has(id));
+  if (anyOpen) ids.forEach(id => _obCollapsed.add(id));
+  else ids.forEach(id => _obCollapsed.delete(id));
+  renderObjectifs();
 }
 
 // Section « Évaluations » de la carte : historique des grilles remplies pour cet objectif
