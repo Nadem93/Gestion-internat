@@ -7,54 +7,46 @@
   <style>
     html,body{margin:0;height:100%}
     .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:transparent}
-    .rh-sidebar{width:56px;flex-shrink:0;background:transparent;border-right:none;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;padding:.6rem .4rem;transition:width .2s}
-    .rh-sidebar.collapsed{width:56px}
-    .rh-sidebar:not(.collapsed){width:max-content;max-width:196px;align-items:stretch}
-    .rh-sidebar-top{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;margin-bottom:.3rem;width:100%}
-    .rh-sidebar-logo{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;overflow:hidden}
-    .rh-sidebar-logo .rh-logo-badge{width:30px;height:30px;border-radius:9px;background:#4f46e5;border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(79,70,229,.35)}
-    .rh-sidebar-logo .rh-logo-badge svg{width:15px;height:15px}
-    .rh-sidebar-logo .rh-logo-text{white-space:nowrap;min-width:0}
-    .rh-sidebar-logo h1{font-size:.8rem;font-weight:800;letter-spacing:-.2px;white-space:nowrap;color:#1e293b}
-    .rh-sidebar-logo p{font-size:.58rem;color:#94a3b8;margin-top:.1rem;white-space:nowrap}
-    .rh-collapse-btn{width:24px;height:24px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-    .rh-collapse-btn:hover{background:#eef2ff;color:#4f46e5}
-    .rh-collapse-btn svg{width:12px;height:12px;transition:transform .2s}
-    .rh-sidebar.collapsed .rh-collapse-btn svg{transform:scaleX(-1)}
-    .rh-nav-group{width:100%}
-    .rh-nav-label{font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#1e293b;margin-top:.45rem;padding:.1rem .5rem .25rem;white-space:nowrap;line-height:1.4}
-    .rh-nav-label:first-of-type{margin-top:0}
-    .rh-nav-link{display:flex;align-items:center;gap:.5rem;padding:.32rem .5rem;color:#475569;text-decoration:none;font-size:.78rem;font-weight:500;transition:all .12s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-radius:8px;margin-bottom:1px;white-space:nowrap;overflow:hidden}
-    .rh-nav-link:hover{background:#e7e0fd;color:#1e293b}
-    .rh-nav-link.active{background:#fff;color:#1e293b;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.1)}
-    .rh-nav-icon{width:24px;height:24px;border-radius:8px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;
-      box-shadow:0 3px 8px var(--ic2,rgba(99,102,241,.4)),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.15);
-      transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
-      transform-style:preserve-3d}
-    .rh-nav-icon svg{width:13px;height:13px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
-    .rh-nav-link:hover .rh-nav-icon{transform:scale(1.15) rotate(-8deg) translateY(-2px);box-shadow:0 6px 14px var(--ic2,rgba(99,102,241,.5)),inset 0 1px 1px rgba(255,255,255,.6),inset 0 -2px 3px rgba(0,0,0,.15)}
-    .rh-nav-link.active .rh-nav-icon{animation:rhIconPulse 1.8s ease-in-out infinite}
-    @keyframes rhIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08) rotate(3deg)}}
-    .rh-sidebar.collapsed .rh-nav-label{height:0;padding:0;margin:.4rem .3rem;border-top:1px solid #e5e7eb;overflow:hidden;text-indent:-9999px}
-    .rh-sidebar.collapsed .rh-nav-link span:not(.rh-nav-icon),.rh-sidebar.collapsed .rh-sidebar-logo .rh-logo-text{display:none}
-    .rh-sidebar.collapsed .rh-nav-link{justify-content:center;padding:.45rem .2rem;margin-bottom:.3rem}
-    .rh-sidebar.collapsed .rh-nav-icon{width:30px;height:30px}
-    .rh-sidebar.collapsed .rh-nav-icon svg{width:16px;height:16px}
-    .rh-sidebar.collapsed .rh-sidebar-top{justify-content:center}
-    .rh-sidebar.collapsed .rh-sidebar-logo{display:none}
-    .rh-sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:.65rem;padding-top:.85rem;width:100%}
-    .rh-sidebar:not(.collapsed) .rh-sidebar-bottom{align-items:stretch}
-    .rh-sidebar-gear{width:28px;height:28px;border-radius:9px;border:none;background:transparent;color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;align-self:center}
-    .rh-sidebar-gear:hover{background:#e7e0fd;color:#475569}
-    .rh-sidebar-gear svg{width:18px;height:18px}
-    .rh-sidebar-user{display:flex;align-items:center;gap:.5rem;justify-content:center}
-    .rh-sidebar-user .rh-user-avatar{width:30px;height:30px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;box-shadow:0 0 0 2.5px #fff,0 0 0 4px #6366f1}
-    .rh-sidebar:not(.collapsed) .rh-sidebar-user{justify-content:flex-start;padding:0 .2rem}
-    .rh-sidebar:not(.collapsed) .rh-sidebar-user .rh-user-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.78rem;font-weight:600;color:#1e293b}
-    .rh-sidebar.collapsed .rh-user-text{display:none}
     .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
     #rhFrame{flex:1;width:100%;border:none}
-    @media(max-width:700px){.rh-sidebar{position:fixed;left:0;top:0;z-index:50;transform:translateX(-100%);transition:transform .2s}.rh-sidebar.open{transform:translateX(0)}}
+
+    /* ── Dock flottant ── */
+    .rh-dock{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:60;
+      display:flex;align-items:center;gap:8px;
+      background:rgba(15,43,74,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-radius:22px;padding:10px 14px;
+      box-shadow:0 18px 44px rgba(15,43,74,.42),0 2px 8px rgba(0,0,0,.2);
+      max-width:calc(100vw - 24px);overflow-x:auto}
+    .rh-dock::-webkit-scrollbar{height:0}
+    .rh-dock-item{display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;flex-shrink:0;
+      padding:8px 4px;border-radius:14px;border:none;background:none;color:#aebbd0;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
+    .rh-dock-item:hover{background:rgba(255,255,255,.08);color:#fff}
+    .rh-dock-item.active{background:rgba(255,255,255,.16);color:#fff}
+    .rh-dock-item svg{width:22px;height:22px;display:block}
+    .rh-dock-item .lbl{font-size:.64rem;font-weight:600;white-space:nowrap}
+    .rh-dock-grid{width:54px;height:54px;flex-shrink:0;border-radius:16px;border:none;
+      background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.5);transition:transform .15s,box-shadow .15s}
+    .rh-dock-grid:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(79,70,229,.6)}
+    .rh-dock-grid svg{width:24px;height:24px}
+
+    /* ── Popover « Tous les modules » ── */
+    .rh-pop-overlay{position:fixed;inset:0;z-index:59;background:rgba(15,23,42,.35);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:none}
+    .rh-pop-overlay.open{display:block}
+    .rh-pop{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);z-index:61;
+      background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(15,43,74,.3);
+      padding:20px 22px;max-width:calc(100vw - 28px);max-height:calc(100vh - 160px);overflow:auto;display:none}
+    .rh-pop.open{display:block}
+    .rh-pop-title{font-size:.9rem;font-weight:800;color:#0f2b4a;margin-bottom:14px}
+    .rh-pop-grid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:20px}
+    .rh-pop-col-title{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px}
+    .rh-pop-link{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;border:none;background:none;
+      width:100%;text-align:left;font-family:inherit;font-size:.8rem;font-weight:500;color:#334155;cursor:pointer;transition:background .12s}
+    .rh-pop-link:hover{background:#f1f5f9}
+    .rh-pop-link.active{background:#eef2ff;color:#4f46e5;font-weight:700}
+    .rh-pop-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+    @media(max-width:900px){.rh-pop-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.rh-pop-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -63,47 +55,16 @@
   <div class="header-right"></div>
 </header>
 <div class="rh-layout">
-
-  <nav class="rh-sidebar" id="rhSidebar">
-    <div class="rh-sidebar-top">
-      <button class="rh-collapse-btn" id="rhCollapseBtn" title="Réduire / agrandir le menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4 H5 a2 2 0 0 0 -2 2 V18 a2 2 0 0 0 2 2 H9 Z" fill="currentColor" stroke="none"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
-      </button>
-    </div>
-
-    <div class="rh-nav-label">Vue d'ensemble</div>
-    <button class="rh-nav-link" data-page="rh-dashboard.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#6366f1,#818cf8);--ic2:#818cf888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Tableau de bord RH</span></button>
-    <button class="rh-nav-link" data-page="admin.html?tab=employes"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);--ic2:#a78bfa88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span><span>Utilisateurs</span></button>
-    <button class="rh-nav-link" data-page="contacts-externes.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#e11d48,#fb7185);--ic2:#fb718588"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2"/><path d="M8 16a4 4 0 0 1 8 0"/></svg></span><span>Contacts extérieurs</span></button>
-
-    <div class="rh-nav-label">Contrats & absences</div>
-    <button class="rh-nav-link" data-page="contrats.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0891b2,#22d3ee);--ic2:#22d3ee88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span><span>Contrats</span></button>
-    <button class="rh-nav-link" data-page="absences.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#ef4444,#f87171);--ic2:#f8717188"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span>Absences & AT</span></button>
-    <button class="rh-nav-link" data-page="conges.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);--ic2:#fbbf2488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg></span><span>Demandes congés</span></button>
-
-    <div class="rh-nav-label">Temps de travail</div>
-    <button class="rh-nav-link" data-page="pointage.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0d9488,#2dd4bf);--ic2:#2dd4bf88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>Pointage</span></button>
-    <button class="rh-nav-link" data-page="planning-equipe.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#2563eb,#60a5fa);--ic2:#60a5fa88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span>Planning équipe</span></button>
-    <button class="rh-nav-link" data-page="astreintes.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);--ic2:#a78bfa88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><span>Astreintes</span></button>
-
-    <div class="rh-nav-label">Carrière & paie</div>
-    <button class="rh-nav-link" data-page="entretiens.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#db2777,#f472b6);--ic2:#f472b688"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span><span>Entretien pro</span></button>
-    <button class="rh-nav-link" data-page="formations.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#16a34a,#4ade80);--ic2:#4ade8088"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span><span>Formation</span></button>
-    <button class="rh-nav-link" data-page="paie.html" data-perm="access_paie"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#ea580c,#fb923c);--ic2:#fb923c88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span>Fiches de paie</span></button>
-
-    <div class="rh-nav-label">Recrutement & outils</div>
-    <button class="rh-nav-link" data-page="recrutement.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0284c7,#38bdf8);--ic2:#38bdf888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span><span>Recrutement</span></button>
-    <button class="rh-nav-link" data-page="diagnostic-droits.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#475569,#94a3b8);--ic2:#94a3b888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>Diagnostic des droits</span></button>
-    <button class="rh-nav-link" id="rhNavVia" data-page="viatrajectoire.html"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0d9488,#2dd4bf);--ic2:#2dd4bf88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span><span>ViaTrajectoire</span></button>
-
-  </nav>
-
   <div class="rh-main">
     <span id="rhTopTitle" style="display:none">Tableau de bord RH</span>
     <iframe id="rhFrame" src="rh-dashboard.html"></iframe>
   </div>
-
 </div>
+
+<!-- Dock flottant + popover (remplis par le script) -->
+<div class="rh-pop-overlay" id="rhPopOverlay"></div>
+<div class="rh-pop" id="rhPop" role="dialog" aria-label="Tous les modules RH"></div>
+<nav class="rh-dock" id="rhDock" aria-label="Navigation RH"></nav>
 
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -121,68 +82,93 @@
   if (!Auth.isRH()) {
     document.body.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé à l\'encadrement / RH.</p><a href="accueil.html" class="btn btn-accent">← Accueil</a></div>';
   } else {
+    // ── Les 15 modules RH (mêmes data-page, couleurs et icônes que l'ancienne barre) ──
+    const RH_NAV = [
+      { g:"Vue d'ensemble", page:'rh-dashboard.html', label:'Tableau de bord RH', c1:'#6366f1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+      { g:"Vue d'ensemble", page:'admin.html?tab=employes', label:'Utilisateurs', c1:'#8b5cf6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
+      { g:"Vue d'ensemble", page:'contacts-externes.html', label:'Contacts extérieurs', c1:'#e11d48', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2"/><path d="M8 16a4 4 0 0 1 8 0"/></svg>' },
+      { g:'Contrats & absences', page:'contrats.html', label:'Contrats', c1:'#0891b2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>' },
+      { g:'Contrats & absences', page:'absences.html', label:'Absences & AT', c1:'#ef4444', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' },
+      { g:'Contrats & absences', page:'conges.html', label:'Demandes congés', c1:'#f59e0b', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>' },
+      { g:'Temps de travail', page:'pointage.html', label:'Pointage', c1:'#0d9488', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
+      { g:'Temps de travail', page:'planning-equipe.html', label:'Planning équipe', c1:'#2563eb', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
+      { g:'Temps de travail', page:'astreintes.html', label:'Astreintes', c1:'#7c3aed', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' },
+      { g:'Carrière & paie', page:'entretiens.html', label:'Entretien pro', c1:'#db2777', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>' },
+      { g:'Carrière & paie', page:'formations.html', label:'Formation', c1:'#16a34a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>' },
+      { g:'Carrière & paie', page:'paie.html', label:'Fiches de paie', perm:'access_paie', c1:'#ea580c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
+      { g:'Recrutement & outils', page:'recrutement.html', label:'Recrutement', c1:'#0284c7', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' },
+      { g:'Recrutement & outils', page:'diagnostic-droits.html', label:'Diagnostic des droits', c1:'#475569', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
+      { g:'Recrutement & outils', page:'viatrajectoire.html', label:'ViaTrajectoire', adminOnly:true, c1:'#0d9488', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>' }
+    ];
+    // Accès rapides du dock (dans l'ordre) + libellés courts
+    const QUICK = ['rh-dashboard.html', 'admin.html?tab=employes', 'conges.html', 'planning-equipe.html', 'formations.html'];
+    const SHORT = { 'rh-dashboard.html':'Tableau', 'admin.html?tab=employes':'Utilisateurs', 'conges.html':'Congés', 'planning-equipe.html':'Planning', 'formations.html':'Formation' };
+    const GROUPS = ["Vue d'ensemble", 'Contrats & absences', 'Temps de travail', 'Carrière & paie', 'Recrutement & outils'];
+
+    const sess = Auth.getSession();
+    const allowed = e => {
+      if (e.adminOnly && !Auth.isAdmin()) return false;               // ViaTrajectoire : admin only
+      if (e.perm && !(Auth.isAdmin() || e.perm.split(',').some(p => hasPermission(sess.userId, p)))) return false; // ex. Fiches de paie
+      return true;
+    };
+    const entryOf = page => RH_NAV.find(e => e.page === page);
+
     const frame = document.getElementById('rhFrame');
     const title = document.getElementById('rhTopTitle');
-    const links = document.querySelectorAll('.rh-nav-link');
-    const sidebar = document.getElementById('rhSidebar');
-    const collapseBtn = document.getElementById('rhCollapseBtn');
+    const pop = document.getElementById('rhPop');
+    const overlay = document.getElementById('rhPopOverlay');
 
-    function labelOf(l) { return l.querySelector('span:not(.rh-nav-icon)').textContent.trim(); }
+    function closePop() { pop.classList.remove('open'); overlay.classList.remove('open'); }
+    function openPop() { pop.classList.add('open'); overlay.classList.add('open'); }
 
     function loadPage(page, label) {
       frame.src = page;
-      title.textContent = label;
-      links.forEach(l => l.classList.toggle('active', l.dataset.page === page));
+      if (title) title.textContent = label || '';
+      document.querySelectorAll('.rh-dock-item').forEach(d => d.classList.toggle('active', d.dataset.page === page));
+      document.querySelectorAll('.rh-pop-link').forEach(d => d.classList.toggle('active', d.dataset.page === page));
       sessionStorage.setItem('rh_last_page', page);
+      closePop();
     }
 
-    // Masquer les liens dont l'utilisateur n'a pas la permission (ex. Fiches de paie → access_paie)
-    (function gateLinks() {
-      const sess = Auth.getSession();
-      links.forEach(l => {
-        const perm = l.dataset.perm;
-        if (!perm) return;
-        const ok = sess && (Auth.isAdmin() || perm.split(',').some(p => hasPermission(sess.userId, p)));
-        if (!ok) l.style.display = 'none';
-      });
-      // ViaTrajectoire : réservé à l'administrateur
-      if (!Auth.isAdmin()) { const v = document.getElementById('rhNavVia'); if (v) v.style.display = 'none'; }
-    })();
+    // ── Dock : 3 accès rapides · bouton central · 2 accès rapides ──
+    const dockItem = page => {
+      const e = entryOf(page);
+      if (!e || !allowed(e)) return '';
+      return `<button class="rh-dock-item" data-page="${e.page}" title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[page] || e.label}</span></button>`;
+    };
+    const gridBtn = `<button class="rh-dock-grid" id="rhGridBtn" title="Tous les modules RH" aria-label="Tous les modules RH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
+    document.getElementById('rhDock').innerHTML =
+      dockItem(QUICK[0]) + dockItem(QUICK[1]) + dockItem(QUICK[2]) + gridBtn + dockItem(QUICK[3]) + dockItem(QUICK[4]);
 
-    links.forEach(l => {
-      l.addEventListener('click', () => loadPage(l.dataset.page, labelOf(l)));
+    // ── Popover : 5 colonnes = 5 groupes, entrées autorisées uniquement ──
+    pop.innerHTML = `<div class="rh-pop-title">Tous les modules RH</div><div class="rh-pop-grid">${
+      GROUPS.map(g => `<div><div class="rh-pop-col-title">${g}</div>${
+        RH_NAV.filter(e => e.g === g && allowed(e)).map(e =>
+          `<button class="rh-pop-link" data-page="${e.page}"><span class="rh-pop-dot" style="background:${e.c1}"></span>${e.label}</button>`).join('')
+      }</div>`).join('')
+    }</div>`;
+
+    // Clics (dock + popover) → loadPage
+    document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => {
+      b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
     });
+    // Bouton central : ouvre/ferme le popover ; overlay : ferme
+    document.getElementById('rhGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
+    overlay.addEventListener('click', closePop);
 
-    // Si une page chargée dans le panneau navigue vers l'accueil (clic sur la maison),
-    // on sort de l'iframe pour afficher l'accueil en plein écran au lieu de le coincer
-    // dans le panneau RH avec le menu latéral autour.
+    // Si une page chargée navigue vers l'accueil (clic maison), on sort de l'iframe
     frame.addEventListener('load', () => {
       try {
         const loadedFile = frame.contentWindow.location.pathname.split('/').pop();
         if (loadedFile === 'accueil.html') window.top.location.href = 'accueil.html';
-      } catch (e) { /* origine différente, on ignore */ }
+      } catch (e) { /* origine différente */ }
     });
 
-    // Reprend la page affichée avant un rafraîchissement, sinon le tableau de bord par défaut
+    // Reprend la page affichée avant un rafraîchissement, sinon le tableau de bord
     const lastPage = sessionStorage.getItem('rh_last_page');
-    const lastLink = lastPage && Array.from(links).find(l => l.dataset.page === lastPage);
-    if (lastLink) {
-      loadPage(lastPage, labelOf(lastLink));
-    } else {
-      links[0].classList.add('active');
-    }
-
-    // Menu réductible (icônes seules), état mémorisé
-    if (localStorage.getItem('rh_sidebar_collapsed') !== '0') sidebar.classList.add('collapsed');
-    collapseBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-      localStorage.setItem('rh_sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
-    });
-
-    // (bloc utilisateur du menu retiré)
-
+    const lastEntry = lastPage && entryOf(lastPage);
+    if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
+    else loadPage(RH_NAV[0].page, RH_NAV[0].label);
   }
 </script>
-<script>/* Info-bulle = libellé du module (utile quand le menu est replié) */
-document.querySelectorAll('.rh-nav-link').forEach(b=>{const t=b.querySelector('span:not(.rh-nav-icon)');if(t&&!b.title)b.title=t.textContent.trim();});</script>
 </body></html>
