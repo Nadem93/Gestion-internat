@@ -163,10 +163,15 @@
   const gridBtn = `<button class="rh-dock-grid" id="dsGridBtn" title="Toutes les rubriques" aria-label="Toutes les rubriques"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
   // Tous les modules dans le dock, groupés par catégorie (séparateurs entre groupes),
   // le bouton maison reste au début et le bouton central « Toutes les rubriques » en fin.
-  const groupHtml = g => DS_NAV.filter(e => e.g === g && allowed(e)).map(e => dockItem(e.page)).join('');
-  const allGroups = GROUPS.map(groupHtml).filter(s => s).join('<span class="rh-dock-sep"></span>');
-  document.getElementById('dsDock').innerHTML =
-    homeBtn + allGroups + '<span class="rh-dock-sep"></span>' + gridBtn;
+  const groupsData = GROUPS.map(g => DS_NAV.filter(e => e.g === g && allowed(e))).filter(a => a.length);
+  const totalItems = groupsData.reduce((n, a) => n + a.length, 0);
+  let run = 0, split = groupsData.length, bestDiff = Infinity;
+  for (let i = 1; i < groupsData.length; i++) { run += groupsData[i - 1].length; const d = Math.abs(run - (totalItems - run)); if (d < bestDiff) { bestDiff = d; split = i; } }
+  const dockSep = '<span class="rh-dock-sep"></span>';
+  const renderGroups = arr => arr.map(g => g.map(e => dockItem(e.page)).join('')).join(dockSep);
+  const dockLeft = renderGroups(groupsData.slice(0, split));
+  const dockRight = renderGroups(groupsData.slice(split));
+  document.getElementById('dsDock').innerHTML = homeBtn + dockLeft + (dockLeft ? dockSep : '') + gridBtn + (dockRight ? dockSep : '') + dockRight;
 
   // ── Popover : 3 colonnes = 3 groupes, entrées autorisées uniquement ──
   pop.innerHTML = `<div class="rh-pop-title">Toutes les rubriques</div><div class="rh-pop-grid">${

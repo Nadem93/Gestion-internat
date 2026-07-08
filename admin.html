@@ -2228,9 +2228,15 @@ document.querySelectorAll('.rh-dock-item').forEach(b=>{const t=b.querySelector('
   const gridBtn = `<button class="rh-dock-grid" id="adminGridBtn" title="Tous les réglages" aria-label="Tous les réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
   // Tous les modules dans le dock, groupés par catégorie (séparateurs entre groupes),
   // le bouton central « Tous les réglages » reste en fin comme vue d'ensemble.
-  const groupHtml = g => ADMIN_NAV.filter(e => e.g === g).map(e => dockItem(e.tab)).join('');
-  const allGroups = GROUPS.map(groupHtml).filter(s => s).join('<span class="rh-dock-sep"></span>');
-  dock.innerHTML = allGroups + '<span class="rh-dock-sep"></span>' + gridBtn;
+  const groupsData = GROUPS.map(g => ADMIN_NAV.filter(e => e.g === g)).filter(a => a.length);
+  const totalItems = groupsData.reduce((n, a) => n + a.length, 0);
+  let run = 0, split = groupsData.length, bestDiff = Infinity;
+  for (let i = 1; i < groupsData.length; i++) { run += groupsData[i - 1].length; const d = Math.abs(run - (totalItems - run)); if (d < bestDiff) { bestDiff = d; split = i; } }
+  const dockSep = '<span class="rh-dock-sep"></span>';
+  const renderGroups = arr => arr.map(g => g.map(e => dockItem(e.tab)).join('')).join(dockSep);
+  const dockLeft = renderGroups(groupsData.slice(0, split));
+  const dockRight = renderGroups(groupsData.slice(split));
+  dock.innerHTML = dockLeft + (dockLeft ? dockSep : '') + gridBtn + (dockRight ? dockSep : '') + dockRight;
   pop.innerHTML = `<div class="rh-pop-title">Tous les réglages</div><div class="rh-pop-grid">${GROUPS.map(g => `<div><div class="rh-pop-col-title">${g}</div>${ADMIN_NAV.filter(e => e.g === g).map(e => `<button class="rh-pop-link" data-tab="${e.tab}"><span class="rh-pop-dot" style="background:${e.c1}"></span>${e.label}</button>`).join('')}</div>`).join('')}</div>`;
   document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => b.addEventListener('click', () => { activateTab(b.dataset.tab); closePop(); }));
   document.getElementById('adminGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
