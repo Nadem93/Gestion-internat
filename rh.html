@@ -23,7 +23,8 @@
     .rh-dock-item:hover{background:rgba(15,23,42,.05);color:#334155}
     .rh-dock-item.active{background:#eef2ff;color:#4f46e5}
     .rh-dock-item svg{width:18px;height:18px;display:block}
-    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap}
+    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis;display:block;text-align:center}
+    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
     .rh-dock-grid{width:42px;height:42px;flex-shrink:0;border-radius:16px;border:none;
       background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;
       cursor:pointer;box-shadow:0 5px 13px rgba(79,70,229,.5);transition:transform .15s,box-shadow .15s}
@@ -137,8 +138,11 @@
       return `<button class="rh-dock-item" data-page="${e.page}" title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[page] || e.label}</span></button>`;
     };
     const gridBtn = `<button class="rh-dock-grid" id="rhGridBtn" title="Tous les modules RH" aria-label="Tous les modules RH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
-    document.getElementById('rhDock').innerHTML =
-      dockItem(QUICK[0]) + dockItem(QUICK[1]) + dockItem(QUICK[2]) + gridBtn + dockItem(QUICK[3]) + dockItem(QUICK[4]);
+    // Tous les modules dans le dock, groupés par catégorie (séparateurs entre groupes),
+    // le bouton central « Tous les modules » reste en fin comme vue d'ensemble.
+    const groupHtml = g => RH_NAV.filter(e => e.g === g && allowed(e)).map(e => dockItem(e.page)).join('');
+    const allGroups = GROUPS.map(groupHtml).filter(s => s).join('<span class="rh-dock-sep"></span>');
+    document.getElementById('rhDock').innerHTML = allGroups + '<span class="rh-dock-sep"></span>' + gridBtn;
 
     // ── Popover : 5 colonnes = 5 groupes, entrées autorisées uniquement ──
     pop.innerHTML = `<div class="rh-pop-title">Tous les modules RH</div><div class="rh-pop-grid">${
