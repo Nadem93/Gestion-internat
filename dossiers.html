@@ -23,7 +23,8 @@
     .rh-dock-item:hover{background:rgba(15,23,42,.05);color:#334155}
     .rh-dock-item.active{background:#eef2ff;color:#4f46e5}
     .rh-dock-item svg{width:18px;height:18px;display:block}
-    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap}
+    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis;display:block;text-align:center}
+    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
     .rh-dock-home{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;
       border-radius:13px;border:none;background:rgba(15,23,42,.05);color:#64748b;cursor:pointer;transition:background .15s,color .15s}
     .rh-dock-home:hover{background:rgba(15,23,42,.1);color:#334155}
@@ -160,8 +161,12 @@
   };
   const homeBtn = `<button class="rh-dock-home" id="dsHomeBtn" title="Accueil des dossiers" aria-label="Accueil des dossiers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>`;
   const gridBtn = `<button class="rh-dock-grid" id="dsGridBtn" title="Toutes les rubriques" aria-label="Toutes les rubriques"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
+  // Tous les modules dans le dock, groupés par catégorie (séparateurs entre groupes),
+  // le bouton maison reste au début et le bouton central « Toutes les rubriques » en fin.
+  const groupHtml = g => DS_NAV.filter(e => e.g === g && allowed(e)).map(e => dockItem(e.page)).join('');
+  const allGroups = GROUPS.map(groupHtml).filter(s => s).join('<span class="rh-dock-sep"></span>');
   document.getElementById('dsDock').innerHTML =
-    homeBtn + dockItem(QUICK[0]) + dockItem(QUICK[1]) + gridBtn + dockItem(QUICK[2]) + dockItem(QUICK[3]) + dockItem(QUICK[4]);
+    homeBtn + allGroups + '<span class="rh-dock-sep"></span>' + gridBtn;
 
   // ── Popover : 3 colonnes = 3 groupes, entrées autorisées uniquement ──
   pop.innerHTML = `<div class="rh-pop-title">Toutes les rubriques</div><div class="rh-pop-grid">${

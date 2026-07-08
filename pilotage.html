@@ -23,13 +23,13 @@
       cursor:pointer;transition:background .15s,color .15s}
     .rh-dock-home:hover{background:rgba(255,255,255,.2);color:#fff}
     .rh-dock-home svg{width:17px;height:17px}
-    .rh-dock-sep{width:1px;height:34px;background:rgba(255,255,255,.16);flex-shrink:0}
+    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
     .rh-dock-item{display:flex;flex-direction:column;align-items:center;gap:3px;width:52px;flex-shrink:0;
       padding:5px 3px;border-radius:12px;border:none;background:none;color:#64748b;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
     .rh-dock-item:hover{background:rgba(15,23,42,.05);color:#334155}
     .rh-dock-item.active{background:#eef2ff;color:#4f46e5}
     .rh-dock-item svg{width:18px;height:18px;display:block}
-    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap}
+    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis;display:block;text-align:center}
     .rh-dock-item{position:relative}
     .rh-dock-grid{width:42px;height:42px;flex-shrink:0;border-radius:16px;border:none;
       background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;
@@ -161,7 +161,7 @@
     closePop();
   }
 
-  // ── Dock : petit bouton accueil · 2 accès rapides · bouton central grille · 2 accès rapides ──
+  // ── Dock : bouton accueil · tous les modules groupés par catégorie · bouton central grille ──
   const dockItem = page => {
     const e = entryOf(page);
     if (!e || !allowed(e)) return '';
@@ -170,9 +170,13 @@
   };
   const homeBtn = `<button class="rh-dock-home" id="plHomeBtn" title="Accueil du portail" aria-label="Accueil du portail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
   const gridBtn = `<button class="rh-dock-grid" id="rhGridBtn" title="Tous les modules du portail" aria-label="Tous les modules du portail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
+  // Tous les modules autorisés dans le dock, groupés par catégorie (séparateurs entre groupes),
+  // avec l'accueil au début et le bouton central « Tous les modules » en fin comme vue d'ensemble.
+  const groupHtml = g => PL_NAV.filter(e => e.g === g && allowed(e)).map(e => dockItem(e.page)).join('');
+  const allGroups = GROUPS.map(groupHtml).filter(s => s).join('<span class="rh-dock-sep"></span>');
   document.getElementById('rhDock').innerHTML =
     homeBtn + `<span class="rh-dock-sep"></span>` +
-    dockItem(QUICK[0]) + dockItem(QUICK[1]) + gridBtn + dockItem(QUICK[2]) + dockItem(QUICK[3]) + dockItem(QUICK[4]);
+    allGroups + `<span class="rh-dock-sep"></span>` + gridBtn;
 
   // ── Popover : 3 colonnes = 3 groupes, entrées autorisées uniquement ──
   pop.innerHTML = `<div class="rh-pop-title">Tous les modules du portail</div><div class="rh-pop-grid">${
