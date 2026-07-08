@@ -7,87 +7,66 @@
   <style>
     html,body{margin:0;height:100%}
     .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:#fbe8d4}
-    .rh-sidebar{width:max-content;max-width:196px;flex-shrink:0;background:#fdf2e9;border-right:1px solid #f8ddc2;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:stretch;padding:.6rem .4rem;transition:width .2s}
-    .rh-sidebar.collapsed{width:56px;align-items:center}
-    .rh-sidebar-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;width:100%}
-    .rh-sidebar-logo{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;overflow:hidden;cursor:pointer;border-radius:9px;padding:.15rem}
-    .rh-sidebar-logo:hover{background:#fbe8d4}
-    .rh-sidebar-logo .rh-logo-badge{width:30px;height:30px;border-radius:9px;background:#0d9488;border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(13,148,136,.35)}
-    .rh-sidebar-logo .rh-logo-badge svg{width:15px;height:15px}
-    .rh-sidebar-logo .rh-logo-text{white-space:nowrap;min-width:0}
-    .rh-sidebar-logo h1{font-size:.8rem;font-weight:800;letter-spacing:-.2px;white-space:nowrap;color:#1e293b}
-    .rh-sidebar-logo p{font-size:.58rem;color:#94a3b8;margin-top:.1rem;white-space:nowrap}
-    .rh-collapse-btn{width:24px;height:24px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-    .rh-collapse-btn:hover{background:#ecfdf5;color:#0d9488}
-    .rh-collapse-btn svg{width:12px;height:12px;transition:transform .2s}
-    .rh-sidebar.collapsed .rh-collapse-btn svg{transform:scaleX(-1)}
-    .rh-nav-label{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;padding:.5rem .5rem .2rem;white-space:nowrap;overflow:hidden}
-    .rh-nav-link{display:flex;align-items:center;gap:.5rem;padding:.32rem .5rem;color:#475569;text-decoration:none;font-size:.78rem;font-weight:500;transition:all .12s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-radius:8px;margin-bottom:1px;white-space:nowrap;overflow:hidden}
-    .rh-nav-link:hover{background:#fbe8d4;color:#1e293b}
-    .rh-nav-link.active{background:#fff;color:#1e293b;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.1)}
-    .rh-nav-icon{position:relative;width:24px;height:24px;border-radius:8px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;
-      box-shadow:0 3px 8px var(--ic2,rgba(99,102,241,.4)),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.15);
-      transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
-      transform-style:preserve-3d}
-    .rh-nav-icon svg{width:13px;height:13px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
-    .rh-nav-link:hover .rh-nav-icon{transform:scale(1.15) rotate(-8deg) translateY(-2px);box-shadow:0 6px 14px var(--ic2,rgba(99,102,241,.5)),inset 0 1px 1px rgba(255,255,255,.6),inset 0 -2px 3px rgba(0,0,0,.15)}
-    .rh-nav-link.active .rh-nav-icon{animation:rhIconPulse 1.8s ease-in-out infinite}
-    @keyframes rhIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08) rotate(3deg)}}
-    .rh-sidebar.collapsed .rh-nav-label{height:0;padding:0;margin:.4rem .3rem;border-top:1px solid #e5e7eb;overflow:hidden;text-indent:-9999px}
-    .rh-sidebar.collapsed .rh-nav-link span:not(.rh-nav-icon),.rh-sidebar.collapsed .rh-sidebar-logo .rh-logo-text{display:none}
-    .rh-sidebar.collapsed .rh-nav-link{justify-content:center;padding:.45rem .2rem;margin-bottom:.3rem}
-    .rh-sidebar.collapsed .rh-nav-icon{width:30px;height:30px}
-    .rh-sidebar.collapsed .rh-nav-icon svg{width:16px;height:16px}
-    .rh-sidebar.collapsed .rh-sidebar-top{justify-content:center}
-    .rh-sidebar.collapsed .rh-sidebar-logo{display:none}
     .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
     #vqFrame{flex:1;width:100%;border:none;background:#fff}
-    .pl-burger{display:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:#fff;color:#475569;cursor:pointer;align-items:center;justify-content:center}
-    .pl-burger svg{width:18px;height:18px}
-    @media(max-width:700px){
-      .rh-sidebar{position:fixed;left:0;top:var(--header-h);height:calc(100vh - var(--header-h));z-index:50;transform:translateX(-100%);transition:transform .2s;box-shadow:0 8px 30px rgba(15,23,42,.18)}
-      .rh-sidebar.open{transform:translateX(0)}
-      .pl-burger{display:flex}
-    }
+
+    /* ── Dock flottant ── */
+    .rh-dock{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:60;
+      display:flex;align-items:center;gap:8px;
+      background:rgba(15,43,74,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-radius:22px;padding:10px 14px;
+      box-shadow:0 18px 44px rgba(15,43,74,.42),0 2px 8px rgba(0,0,0,.2);
+      max-width:calc(100vw - 24px);overflow-x:auto}
+    .rh-dock::-webkit-scrollbar{height:0}
+    .rh-dock-item{display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;flex-shrink:0;
+      padding:8px 4px;border-radius:14px;border:none;background:none;color:#aebbd0;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
+    .rh-dock-item:hover{background:rgba(255,255,255,.08);color:#fff}
+    .rh-dock-item.active{background:rgba(255,255,255,.16);color:#fff}
+    .rh-dock-item svg{width:22px;height:22px;display:block}
+    .rh-dock-item .lbl{font-size:.64rem;font-weight:600;white-space:nowrap}
+    .rh-dock-home{width:44px;height:44px;flex-shrink:0;border-radius:14px;border:none;
+      background:rgba(255,255,255,.08);color:#aebbd0;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:background .15s,color .15s}
+    .rh-dock-home:hover{background:rgba(255,255,255,.16);color:#fff}
+    .rh-dock-home svg{width:20px;height:20px}
+    .rh-dock-grid{width:54px;height:54px;flex-shrink:0;border-radius:16px;border:none;
+      background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.5);transition:transform .15s,box-shadow .15s}
+    .rh-dock-grid:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(79,70,229,.6)}
+    .rh-dock-grid svg{width:24px;height:24px}
+
+    /* ── Popover « Tous les modules » ── */
+    .rh-pop-overlay{position:fixed;inset:0;z-index:59;background:rgba(15,23,42,.35);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:none}
+    .rh-pop-overlay.open{display:block}
+    .rh-pop{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);z-index:61;
+      background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(15,43,74,.3);
+      padding:20px 22px;max-width:calc(100vw - 28px);max-height:calc(100vh - 160px);overflow:auto;display:none}
+    .rh-pop.open{display:block}
+    .rh-pop-title{font-size:.9rem;font-weight:800;color:#0f2b4a;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .rh-pop-home{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9px;border:none;
+      background:#eef2ff;color:#4f46e5;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700;transition:background .12s}
+    .rh-pop-home:hover{background:#e0e7ff}
+    .rh-pop-home svg{width:14px;height:14px}
+    .rh-pop-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:20px}
+    .rh-pop-col-title{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px}
+    .rh-pop-link{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;border:none;background:none;
+      width:100%;text-align:left;font-family:inherit;font-size:.8rem;font-weight:500;color:#334155;cursor:pointer;transition:background .12s}
+    .rh-pop-link:hover{background:#f1f5f9}
+    .rh-pop-link.active{background:#eef2ff;color:#4f46e5;font-weight:700}
+    .rh-pop-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+    @media(max-width:900px){.rh-pop-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.rh-pop-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 <header class="header">
   <div class="header-info" style="display:flex;align-items:center;gap:.7rem">
-    <button class="pl-burger" id="vqBurger" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="header-title" id="vqTitle">🏠 Vie quotidienne</div>
   </div>
   <div class="header-right"></div>
 </header>
 
 <div class="rh-layout">
-  <nav class="rh-sidebar" id="vqSidebar">
-    <div class="rh-sidebar-top">
-      <div class="rh-sidebar-logo" id="vqHomeBtn" title="Accueil de la vie quotidienne">
-        <div class="rh-logo-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="rh-logo-text"><h1>Vie quotidienne</h1><p>Le quotidien du résident</p></div>
-      </div>
-      <button class="rh-collapse-btn" id="vqCollapseBtn" title="Réduire / agrandir le menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4 H5 a2 2 0 0 0 -2 2 V18 a2 2 0 0 0 2 2 H9 Z" fill="currentColor" stroke="none"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
-      </button>
-    </div>
-
-    <div class="rh-nav-label">Suivi quotidien</div>
-    <button class="rh-nav-link" data-page="transmissions.html" data-perm="access_journal"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#3b82f6,#93c5fd);--ic2:#93c5fd88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v4l.586-.586z"/></svg></span><span>Transmissions</span></button>
-    <button class="rh-nav-link" data-page="presences.html" data-perm="access_presences"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#16a34a,#4ade80);--ic2:#4ade8088"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span>Présences</span></button>
-    <button class="rh-nav-link" data-page="nuit.html" data-perm="access_journal"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#312e81,#6366f1);--ic2:#6366f188"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span>Cahier de nuit</span></button>
-
-    <div class="rh-nav-label">Cadre de vie</div>
-    <button class="rh-nav-link" data-page="chambres.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#be185d,#f472b6);--ic2:#f472b688"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></span><span>Chambres</span></button>
-    <button class="rh-nav-link" data-page="repas.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#ea580c,#fb923c);--ic2:#fb923c88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></span><span>Repas &amp; régimes</span></button>
-    <button class="rh-nav-link" data-page="visites.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#65a30d,#a3e635);--ic2:#a3e63588"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span><span>Visites &amp; famille</span></button>
-    <button class="rh-nav-link" data-page="activites.html" data-perm="access_activites"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#6366f1,#a5b4fc);--ic2:#a5b4fc88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg></span><span>Activités éducatives</span></button>
-
-    <div class="rh-nav-label">Soins</div>
-    <button class="rh-nav-link" data-page="medicaments.html" data-perm="access_medicaments"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#dc2626,#f87171);--ic2:#f8717188"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 21 10a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg></span><span>Médicaments</span></button>
-    <button class="rh-nav-link" data-page="plan-soins.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0891b2,#38bdf8);--ic2:#38bdf888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></span><span>Plan de soins</span></button>
-  </nav>
-
   <div class="rh-main">
     <main class="content" id="vqHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem">
       <div style="max-width:640px;margin:0 auto">
@@ -97,6 +76,11 @@
     <iframe id="vqFrame" title="Contenu de la vie quotidienne" style="display:none"></iframe>
   </div>
 </div>
+
+<!-- Dock flottant + popover (remplis par le script) -->
+<div class="rh-pop-overlay" id="vqPopOverlay"></div>
+<div class="rh-pop" id="vqPop" role="dialog" aria-label="Tous les modules de la vie quotidienne"></div>
+<nav class="rh-dock" id="vqDock" aria-label="Navigation vie quotidienne"></nav>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
@@ -113,33 +97,93 @@
 <script>
   Auth.requireAuth();
 
-  const vqSidebar = document.getElementById('vqSidebar');
+  // ── Les 10 modules de la vie quotidienne (mêmes data-page, couleurs et icônes que l'ancienne barre) ──
+  const VQ_NAV = [
+    { g:'Suivi quotidien', page:'transmissions.html', label:'Transmissions', perm:'access_journal', c1:'#3b82f6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v4l.586-.586z"/></svg>' },
+    { g:'Suivi quotidien', page:'presences.html', label:'Présences', perm:'access_presences', c1:'#16a34a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
+    { g:'Suivi quotidien', page:'nuit.html', label:'Cahier de nuit', perm:'access_journal', c1:'#312e81', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' },
+    { g:'Cadre de vie', page:'chambres.html', label:'Chambres', perm:'view_residents', c1:'#be185d', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>' },
+    { g:'Cadre de vie', page:'repas.html', label:'Repas & régimes', perm:'view_residents', c1:'#ea580c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>' },
+    { g:'Cadre de vie', page:'visites.html', label:'Visites & famille', perm:'view_residents', c1:'#65a30d', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>' },
+    { g:'Cadre de vie', page:'activites.html', label:'Activités éducatives', perm:'access_activites', c1:'#6366f1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>' },
+    { g:'Soins', page:'medicaments.html', label:'Médicaments', perm:'access_medicaments', c1:'#dc2626', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 21 10a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg>' },
+    { g:'Soins', page:'plan-soins.html', label:'Plan de soins', perm:'view_residents', c1:'#0891b2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>' }
+  ];
+  // Accès rapides du dock (dans l'ordre) + libellés courts
+  const QUICK = ['transmissions.html', 'presences.html', 'chambres.html', 'medicaments.html', 'activites.html'];
+  const SHORT = { 'transmissions.html':'Transmis.', 'presences.html':'Présences', 'chambres.html':'Chambres', 'medicaments.html':'Médicam.', 'activites.html':'Activités' };
+  const GROUPS = ['Suivi quotidien', 'Cadre de vie', 'Soins'];
+
+  const sess = Auth.getSession();
+  const allowed = e => {
+    if (!e.perm) return true;
+    return sess && (sess.role === 'admin' || sess.role === 'superadmin' || hasPermission(sess.userId, e.perm));
+  };
+  const entryOf = page => VQ_NAV.find(e => e.page === page);
+
   const vqFrame = document.getElementById('vqFrame');
   const vqHome = document.getElementById('vqHome');
   const vqTitle = document.getElementById('vqTitle');
-  const vqLinks = document.querySelectorAll('.rh-nav-link[data-page]');
-  const labelOf = l => (l.querySelector('span:not(.rh-nav-icon)')?.textContent || '').trim();
+  const pop = document.getElementById('vqPop');
+  const overlay = document.getElementById('vqPopOverlay');
 
-  // ── Navigation interne : la page s'ouvre dans le panneau, le menu reste visible ──
+  function closePop() { pop.classList.remove('open'); overlay.classList.remove('open'); }
+  function openPop() { pop.classList.add('open'); overlay.classList.add('open'); }
+
+  function setActive(page) {
+    document.querySelectorAll('.rh-dock-item').forEach(d => d.classList.toggle('active', d.dataset.page === page));
+    document.querySelectorAll('.rh-pop-link').forEach(d => d.classList.toggle('active', d.dataset.page === page));
+  }
+
+  // ── Navigation interne : la page s'ouvre dans le panneau ──
   function showHome() {
     vqFrame.style.display = 'none';
     vqFrame.src = 'about:blank';
     vqHome.style.display = '';
-    vqLinks.forEach(l => l.classList.remove('active'));
+    setActive(null);
     vqTitle.textContent = '🏠 Vie quotidienne';
     sessionStorage.removeItem('vq_last_page');
+    closePop();
   }
-  function loadPage(page, link) {
+  function loadPage(page, label) {
     vqHome.style.display = 'none';
     vqFrame.style.display = '';
     vqFrame.src = page + (page.includes('?') ? '&' : '?') + 'embed=1';
-    vqLinks.forEach(l => l.classList.toggle('active', l === link));
-    vqTitle.textContent = labelOf(link);
+    setActive(page);
+    vqTitle.textContent = label || '';
     sessionStorage.setItem('vq_last_page', page);
-    vqSidebar.classList.remove('open');
+    closePop();
   }
-  vqLinks.forEach(l => l.addEventListener('click', () => loadPage(l.dataset.page, l)));
+
+  // ── Dock : 2 accès rapides · bouton central · 3 accès rapides ──
+  const dockItem = page => {
+    const e = entryOf(page);
+    if (!e || !allowed(e)) return '';
+    return `<button class="rh-dock-item" data-page="${e.page}" title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[page] || e.label}</span></button>`;
+  };
+  const homeBtn = `<button class="rh-dock-home" id="vqHomeBtn" title="Accueil de la vie quotidienne" aria-label="Accueil de la vie quotidienne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
+  const gridBtn = `<button class="rh-dock-grid" id="vqGridBtn" title="Tous les modules" aria-label="Tous les modules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
+  document.getElementById('vqDock').innerHTML =
+    homeBtn + dockItem(QUICK[0]) + dockItem(QUICK[1]) + gridBtn + dockItem(QUICK[2]) + dockItem(QUICK[3]) + dockItem(QUICK[4]);
+
+  // ── Popover : colonnes = groupes, entrées autorisées uniquement ──
+  pop.innerHTML = `<div class="rh-pop-title"><span>Tous les modules</span><button class="rh-pop-home" id="vqPopHome" title="Accueil de la vie quotidienne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Accueil</button></div><div class="rh-pop-grid">${
+    GROUPS.map(g => `<div><div class="rh-pop-col-title">${g}</div>${
+      VQ_NAV.filter(e => e.g === g && allowed(e)).map(e =>
+        `<button class="rh-pop-link" data-page="${e.page}"><span class="rh-pop-dot" style="background:${e.c1}"></span>${e.label}</button>`).join('')
+    }</div>`).join('')
+  }</div>`;
+
+  // Clics (dock + popover) → loadPage
+  document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => {
+    b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
+  });
+  // Boutons accueil (dock + popover) → showHome
   document.getElementById('vqHomeBtn').addEventListener('click', showHome);
+  document.getElementById('vqPopHome').addEventListener('click', showHome);
+  // Bouton central : ouvre/ferme le popover ; overlay : ferme
+  document.getElementById('vqGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
+  overlay.addEventListener('click', closePop);
 
   // Si une page chargée renvoie vers l'accueil ou la vie quotidienne, on sort de l'iframe
   vqFrame.addEventListener('load', () => {
@@ -152,20 +196,8 @@
 
   // Reprend la rubrique affichée avant un rafraîchissement
   const lastPage = sessionStorage.getItem('vq_last_page');
-  const lastLink = lastPage && Array.from(vqLinks).find(l => l.dataset.page === lastPage);
-  if (lastLink && lastLink.style.display !== 'none') loadPage(lastPage, lastLink);
-
-  // ── Menu : repli / déploiement (réduit par défaut, état mémorisé) ──
-  (function () {
-    const collapseBtn = document.getElementById('vqCollapseBtn');
-    const burger = document.getElementById('vqBurger');
-    if (localStorage.getItem('vq_sidebar_collapsed') !== '0') vqSidebar.classList.add('collapsed');
-    collapseBtn.addEventListener('click', () => {
-      vqSidebar.classList.toggle('collapsed');
-      localStorage.setItem('vq_sidebar_collapsed', vqSidebar.classList.contains('collapsed') ? '1' : '0');
-    });
-    burger.addEventListener('click', () => vqSidebar.classList.toggle('open'));
-  })();
+  const lastEntry = lastPage && entryOf(lastPage);
+  if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
 
   // ── Accueil de la rubrique ──
   (function () {
@@ -175,16 +207,7 @@
     const prenom = (s && (s.prenom || s.username) || '').trim();
     el.innerHTML = `
       <div style="font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:-.02em">🏠 Vie quotidienne</div>
-      <div style="font-size:.86rem;color:var(--muted);margin-top:.25rem">${prenom ? 'Bonjour ' + escHtml(prenom) + ' — c' : 'C'}hoisissez une rubrique dans le menu à gauche — elle s'ouvre ici, sans quitter la page.</div>`;
+      <div style="font-size:.86rem;color:var(--muted);margin-top:.25rem">${prenom ? 'Bonjour ' + escHtml(prenom) + ' — c' : 'C'}hoisissez une rubrique dans le dock en bas de l'écran — elle s'ouvre ici, sans quitter la page.</div>`;
   })();
-
-  // ── Masquer les rubriques sans permission ──
-  document.querySelectorAll('.rh-nav-link[data-perm]').forEach(el => {
-    const s = Auth.getSession();
-    const ok = s && (s.role === 'admin' || s.role === 'superadmin' || hasPermission(s.userId, el.dataset.perm));
-    if (!ok) el.style.display = 'none';
-  });
 </script>
-<script>/* Info-bulle = libellé du module (utile quand le menu est replié) */
-document.querySelectorAll('.rh-nav-link').forEach(b=>{const t=b.querySelector('span:not(.rh-nav-icon)');if(t&&!b.title)b.title=t.textContent.trim();});</script>
 </body></html>
