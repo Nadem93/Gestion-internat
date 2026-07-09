@@ -4,6 +4,22 @@
   <title>Entretiens professionnels — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Vue formulaire d'entretien (plein écran) ── */
+    #etFormView{max-width:860px;margin:0 auto}
+    .et-form-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;
+      background:rgba(255,255,255,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      border-bottom:1px solid var(--border);padding:.7rem 0;margin-bottom:1.4rem}
+    .et-form-heading{min-width:0;flex:1}
+    .et-form-title{font-size:1.15rem;font-weight:800;color:#0f2b4a;line-height:1.15}
+    .et-form-sub{font-size:.78rem;color:var(--muted);margin-top:1px}
+    .et-form-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+    .et-card{margin-bottom:1.15rem;padding:1.15rem 1.3rem;border-left:4px solid var(--mc,#9333ea)}
+    .et-card-head{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:.95rem;color:#0f2b4a;margin-bottom:1rem}
+    .et-card-head span{font-size:1.05rem}
+    .et-form-footer{display:flex;justify-content:flex-end;gap:.6rem;margin:1.5rem 0 2rem;padding-top:1.1rem;border-top:1px solid var(--border)}
+    @media(max-width:640px){.et-form-title{font-size:1rem}.et-form-bar .btn span.lbl{display:none}}
+  </style>
 </head>
 <body>
 <div class="app-layout"><div class="main">
@@ -12,6 +28,9 @@
     <div class="header-right"></div>
   </header>
   <main class="content" style="max-width:1280px">
+
+    <!-- ═══════════════ VUE LISTE ═══════════════ -->
+    <div id="etListView">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
       <div>
         <div style="font-weight:700;font-size:1rem">🧑‍💼 Entretiens & formations</div>
@@ -49,23 +68,27 @@
     </div>
 
     <div id="etList"><div class="empty" style="padding:3rem;text-align:center"><p>Aucun entretien</p></div></div>
-  </main>
-</div></div>
-<div id="toast-container" class="toast-container"></div>
+    </div><!-- /etListView -->
 
-<div class="modal-overlay" id="modalEntretien">
-  <div class="modal" style="max-width:540px;--mc:#9333ea">
-    <div class="mdx-hero">
-      <button class="mdx-close" onclick="closeModal('modalEntretien')" aria-label="Fermer">✕</button>
-      <div class="mdx-badge">🧑‍💼</div>
-      <div class="mdx-hero-txt">
-        <div class="mdx-title" id="etModalTitle">Nouvel entretien</div>
-        <div class="mdx-sub">Entretien professionnel</div>
+    <!-- ═══════════ VUE FORMULAIRE (plein écran) ═══════════ -->
+    <div id="etFormView" style="display:none">
+      <div class="et-form-bar">
+        <button class="btn btn-ghost" onclick="closeEntretienForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span class="lbl">Retour</span>
+        </button>
+        <div class="et-form-heading">
+          <div class="et-form-title" id="etFormTitle">Nouvel entretien</div>
+          <div class="et-form-sub" id="etFormSub">Entretien annuel</div>
+        </div>
+        <div class="et-form-actions">
+          <button class="btn btn-ghost" id="etExportBtn" style="display:none" onclick="exportEntretienPdf(document.getElementById('etFormView').dataset.editId)">🖨 <span class="lbl">Export PDF</span></button>
+          <button class="btn btn-primary" onclick="saveEntretien()">💾 <span class="lbl">Enregistrer</span></button>
+        </div>
       </div>
-    </div>
-    <div class="modal-body mdx-body">
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>🧑‍💼</span> L'entretien</div>
+
+      <section class="card et-card">
+        <div class="et-card-head"><span>🧑‍💼</span> L'entretien</div>
         <div class="form-row">
           <div class="form-group"><label>Employé *</label><select id="etFormEmploye" class="form-input" onchange="etModalSync()"></select></div>
           <div class="form-group"><label>Date *</label><input type="date" id="etFormDate" class="form-input"/></div>
@@ -86,29 +109,30 @@
           </div>
         </div>
         <div class="form-group"><label>Évaluateur</label><input type="text" id="etFormEvaluateur" class="form-input" placeholder="Nom du responsable"/></div>
-      </div>
+      </section>
 
-      <div class="mdx-section" id="etGrilleSection">
-        <div class="mdx-sec-head"><span>🧭</span> Positionnement — référentiel métier</div>
-        <div id="etGrilleMetier" style="font-size:.76rem;color:#7c3aed;font-weight:600;margin-bottom:.25rem"></div>
-        <div style="font-size:.74rem;color:var(--muted);background:#f5f3ff;border:1px solid #ede9fe;border-radius:8px;padding:.45rem .6rem;margin-bottom:.55rem">Entretien annuel : positionnement qualitatif sur le référentiel du métier (Acquis / En cours d'acquisition / À développer). <strong>Aucune note ni classement</strong> — support de dialogue avec le salarié, à partager avec lui.</div>
+      <section class="card et-card" id="etGrilleSection">
+        <div class="et-card-head"><span>🧭</span> Positionnement — référentiel métier</div>
+        <div id="etGrilleMetier" style="font-size:.8rem;color:#7c3aed;font-weight:600;margin-bottom:.35rem"></div>
+        <div style="font-size:.76rem;color:var(--muted);background:#f5f3ff;border:1px solid #ede9fe;border-radius:8px;padding:.55rem .7rem;margin-bottom:.75rem">Entretien annuel : positionnement qualitatif sur le référentiel du métier (Acquis / En cours d'acquisition / À développer). <strong>Aucune note ni classement</strong> — support de dialogue avec le salarié, à partager avec lui.</div>
         <div id="etGrilleBody"></div>
-      </div>
+      </section>
 
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>📝</span> Compte rendu</div>
-        <div class="form-group"><label>Bilan</label><textarea id="etFormBilan" class="form-input" rows="3" placeholder="Bilan de la période écoulée…"></textarea></div>
-        <div class="form-group"><label>Objectifs fixés</label><textarea id="etFormObjectifs" class="form-input" rows="3" placeholder="Objectifs pour la période à venir…"></textarea></div>
-        <div class="form-group"><label>Besoins en formation</label><textarea id="etFormFormations" class="form-input" rows="2" placeholder="Formations souhaitées ou prévues…"></textarea></div>
+      <section class="card et-card">
+        <div class="et-card-head"><span>📝</span> Compte rendu</div>
+        <div class="form-group"><label>Bilan</label><textarea id="etFormBilan" class="form-input" rows="4" placeholder="Bilan de la période écoulée…"></textarea></div>
+        <div class="form-group"><label>Objectifs fixés</label><textarea id="etFormObjectifs" class="form-input" rows="4" placeholder="Objectifs pour la période à venir…"></textarea></div>
+        <div class="form-group"><label>Besoins en formation</label><textarea id="etFormFormations" class="form-input" rows="3" placeholder="Formations souhaitées ou prévues…"></textarea></div>
+      </section>
+
+      <div class="et-form-footer">
+        <button class="btn btn-ghost" onclick="closeEntretienForm()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveEntretien()">💾 Enregistrer l'entretien</button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="etExportBtn" style="margin-right:auto;display:none" onclick="exportEntretienPdf(document.getElementById('modalEntretien').dataset.editId)">🖨 Export PDF</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalEntretien')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEntretien()">💾 Enregistrer</button>
-    </div>
-  </div>
-</div>
+  </main>
+</div></div>
+<div id="toast-container" class="toast-container"></div>
 
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

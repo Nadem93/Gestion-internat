@@ -130,7 +130,7 @@ function openEntretienModal(id) {
   const list = getEntretiens();
   const item = id ? list.find(e => e.id === id) : null;
   if (item && item.statut === 'realise') { toast('Entretien réalisé — repassez-le en « Planifié » pour le modifier', 'info'); return; }
-  document.getElementById('etModalTitle').textContent = item ? 'Modifier l’entretien' : 'Nouvel entretien';
+  document.getElementById('etFormTitle').textContent = item ? 'Modifier l’entretien' : 'Nouvel entretien';
   const sel = document.getElementById('etFormEmploye');
   sel.innerHTML = employes.map(e => `<option value="${e.id}">${escHtml(e.prenom + ' ' + e.nom)}</option>`).join('');
   if (item) sel.value = item.employeId;
@@ -141,27 +141,45 @@ function openEntretienModal(id) {
   document.getElementById('etFormBilan').value = item ? item.bilan || '' : '';
   document.getElementById('etFormObjectifs').value = item ? item.objectifs || '' : '';
   document.getElementById('etFormFormations').value = item ? item.formations || '' : '';
-  document.getElementById('modalEntretien').dataset.editId = item ? item.id : '';
+  document.getElementById('etFormView').dataset.editId = item ? item.id : '';
   etRenderGrille(item?.grille);
   const exportBtn = document.getElementById('etExportBtn');
   if (exportBtn) exportBtn.style.display = item ? '' : 'none';
   etModalSync();
-  openModal('modalEntretien');
+  etShowForm();
+}
+
+// Bascule liste → formulaire plein écran
+function etShowForm() {
+  const lv = document.getElementById('etListView');
+  const fv = document.getElementById('etFormView');
+  if (lv) lv.style.display = 'none';
+  if (fv) fv.style.display = '';
+  window.scrollTo(0, 0);
+}
+
+// Bascule formulaire → liste
+function closeEntretienForm() {
+  const lv = document.getElementById('etListView');
+  const fv = document.getElementById('etFormView');
+  if (fv) fv.style.display = 'none';
+  if (lv) lv.style.display = '';
+  window.scrollTo(0, 0);
 }
 
 // En-tête interactif : sous-titre « Type · Employé » + recoloration selon le statut
 function etModalSync() {
-  const sub = document.querySelector('#modalEntretien .mdx-sub');
+  const sub = document.getElementById('etFormSub');
   if (sub) {
     const lbl = ENTRETIEN_TYPE_LABELS[document.getElementById('etFormType')?.value] || 'Entretien';
     const empSel = document.getElementById('etFormEmploye');
     const empNom = (empSel && empSel.value && empSel.selectedIndex >= 0) ? empSel.options[empSel.selectedIndex].text : '';
     sub.textContent = empNom ? `${lbl} · ${empNom}` : lbl;
   }
-  const modalEl = document.querySelector('#modalEntretien .modal');
-  if (modalEl) {
+  const formEl = document.getElementById('etFormView');
+  if (formEl) {
     const st = ENTRETIEN_STATUT_STYLES[document.getElementById('etFormStatut')?.value] || ENTRETIEN_STATUT_STYLES.planifie;
-    modalEl.style.setProperty('--mc', st.c || '#9333ea');
+    formEl.style.setProperty('--mc', st.c || '#9333ea');
   }
   // Recharge le référentiel si l'employé (→ son métier) ou le type d'entretien change,
   // en conservant les positionnements déjà saisis.
@@ -169,7 +187,7 @@ function etModalSync() {
 }
 
 async function saveEntretien() {
-  const id = document.getElementById('modalEntretien').dataset.editId;
+  const id = document.getElementById('etFormView').dataset.editId;
   const employeId = document.getElementById('etFormEmploye').value;
   const emp = _etEmployesCache.find(e => String(e.id) === String(employeId));
   const date = document.getElementById('etFormDate').value;
@@ -198,7 +216,7 @@ async function saveEntretien() {
       toast('Entretien enregistré', 'success');
     }
     if (typeof auditLog === 'function') auditLog('entretien', `${emp.prenom} ${emp.nom} — ${ENTRETIEN_TYPE_LABELS[type] || type}`);
-    closeModal('modalEntretien');
+    closeEntretienForm();
     renderEntretiens();
   } catch (e) {
     const msg = e?.message || e?.details || JSON.stringify(e) || 'Erreur inconnue';
