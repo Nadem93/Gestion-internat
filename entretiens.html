@@ -88,9 +88,10 @@
         <div class="form-group"><label>Évaluateur</label><input type="text" id="etFormEvaluateur" class="form-input" placeholder="Nom du responsable"/></div>
       </div>
 
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>⭐</span> Grille de compétences</div>
-        <div id="etGrilleLive" style="padding:.5rem .75rem;background:#f8fafc;border-radius:8px;border:1px solid var(--border);text-align:center;font-size:.85rem">Notez chaque item ci-dessous…</div>
+      <div class="mdx-section" id="etGrilleSection">
+        <div class="mdx-sec-head"><span>🧭</span> Positionnement — référentiel métier</div>
+        <div id="etGrilleMetier" style="font-size:.76rem;color:#7c3aed;font-weight:600;margin-bottom:.25rem"></div>
+        <div style="font-size:.74rem;color:var(--muted);background:#f5f3ff;border:1px solid #ede9fe;border-radius:8px;padding:.45rem .6rem;margin-bottom:.55rem">Entretien annuel : positionnement qualitatif sur le référentiel du métier (Acquis / En cours d'acquisition / À développer). <strong>Aucune note ni classement</strong> — support de dialogue avec le salarié, à partager avec lui.</div>
         <div id="etGrilleBody"></div>
       </div>
 
@@ -115,6 +116,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/entretiens-supabase.js"></script>
+<script src="js/entretiens-referentiels.js"></script>
 <script src="js/entretiens.js"></script>
 <script>Auth.requireAuth(); if (!requireModule('access_entretiens')) { document.querySelector('.content').innerHTML = ''; }</script>
 </body></html>

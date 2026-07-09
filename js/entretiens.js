@@ -12,56 +12,85 @@ const ET_GRILLE = [
   { id:'objectifs_att',dim:'Résultats',   label:'Atteinte des objectifs précédents' },
   { id:'initiative',  dim:'Résultats',    label:'Initiative' }
 ];
-const ET_NOTES = [
-  { v:1, l:'À améliorer', c:'#dc2626' },
-  { v:2, l:'Satisfaisant', c:'#d97706' },
-  { v:3, l:'Bon', c:'#16a34a' },
-  { v:4, l:'Excellent', c:'#0891b2' }
+// ── Positionnement QUALITATIF (aucune note chiffrée, aucune moyenne, aucun classement) ──
+// L'entretien annuel s'appuie sur le référentiel de compétences du métier du salarié (ET_REFERENTIELS,
+// dans js/entretiens-referentiels.js), non sur une notation — pratique conforme au droit du travail.
+const ET_POS = [
+  { v:'acquis',     l:'Acquis',                  c:'#16a34a' },
+  { v:'encours',    l:"En cours d'acquisition",  c:'#d97706' },
+  { v:'developper', l:'À développer',            c:'#dc2626' },
+  { v:'na',         l:'Non abordé',              c:'#94a3b8' }
+];
+function etPos(v) { return ET_POS.find(p => p.v === v) || null; }
+function _etEscAttr(s) { return escHtml(s).replace(/"/g, '&quot;'); }
+
+// Référentiel générique si le métier du salarié n'a pas de référentiel dédié
+const ET_REF_DEFAUT = [
+  { titre: 'Compétences liées au poste', competences: ['Maîtrise des activités et tâches confiées', 'Qualité et fiabilité du travail réalisé', 'Respect des procédures, protocoles et consignes', 'Organisation et gestion des priorités'] },
+  { titre: 'Posture professionnelle et relationnel', competences: ['Communication et travail en équipe', 'Adaptation et prise d\'initiative', 'Respect du cadre institutionnel, du secret professionnel et de la bientraitance'] },
+  { titre: 'Développement professionnel', competences: ['Actualisation des connaissances et montée en compétences', 'Analyse de sa pratique et axes de progrès'] }
 ];
 
-function etRenderGrille(grille) {
+// Trouve le référentiel du métier à partir du libellé de poste (correspondance souple)
+function etRefKey(poste) {
+  if (typeof ET_REFERENTIELS === 'undefined') return null;
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  const p = norm(poste);
+  if (!p) return null;
+  const keys = Object.keys(ET_REFERENTIELS);
+  let k = keys.find(x => norm(x) === p);
+  // correspondance partielle, en exigeant une longueur suffisante pour éviter les faux positifs
+  // (ex. « AS » ne doit pas matcher « ...assistant... »)
+  if (!k) k = keys.find(x => { const nx = norm(x); return (nx.length >= 4 && p.includes(nx)) || (p.length >= 4 && nx.includes(p)); });
+  return k || null;
+}
+function etEmpPoste(employeId) {
+  const emp = _etEmployesCache.find(e => String(e.id) === String(employeId));
+  return emp ? emp.poste : '';
+}
+
+// Positionnement sur le référentiel du métier — UNIQUEMENT pour l'entretien annuel.
+// Aucune note chiffrée, aucune moyenne, aucun classement.
+function etRenderGrille(grilleData) {
   const container = document.getElementById('etGrilleBody');
+  const section = document.getElementById('etGrilleSection');
   if (!container) return;
-  const dims = [...new Set(ET_GRILLE.map(g => g.dim))];
-  container.innerHTML = dims.map(dim => `
-    <div style="margin-bottom:.6rem">
-      <div style="font-size:.74rem;font-weight:700;color:#9333ea;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">${dim}</div>
-      ${ET_GRILLE.filter(g => g.dim === dim).map(g => {
-        const val = grille?.[g.id] || '';
-        return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;padding:.3rem .5rem;background:#f8fafc;border-radius:6px">
-          <label style="flex:1;font-size:.8rem">${g.label}</label>
-          <select name="etg_${g.id}" style="font-size:.78rem;padding:.2rem .35rem;border:1px solid var(--border);border-radius:6px">
+  const type = document.getElementById('etFormType')?.value;
+  if (type !== 'annuel') { if (section) section.style.display = 'none'; container.innerHTML = ''; return; }
+  if (section) section.style.display = '';
+
+  const poste = etEmpPoste(document.getElementById('etFormEmploye')?.value);
+  const refKey = etRefKey(poste);
+  const domaines = (refKey && typeof ET_REFERENTIELS !== 'undefined') ? ET_REFERENTIELS[refKey].domaines : ET_REF_DEFAUT;
+  const metierEl = document.getElementById('etGrilleMetier');
+  if (metierEl) metierEl.textContent = refKey ? `Référentiel : ${refKey}` : (poste ? `Poste « ${poste} » — pas de référentiel dédié, trame générique` : 'Sélectionnez un employé pour charger son référentiel métier');
+
+  const prev = Array.isArray(grilleData) ? grilleData : [];
+  const posOf = (dom, comp) => (prev.find(x => x.domaine === dom && x.competence === comp) || {}).pos || '';
+  container.innerHTML = domaines.map(d => `
+    <div style="margin-bottom:.7rem">
+      <div style="font-size:.74rem;font-weight:700;color:#9333ea;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">${escHtml(d.titre)}</div>
+      ${d.competences.map(c => {
+        const cur = posOf(d.titre, c);
+        return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;padding:.35rem .5rem;background:#f8fafc;border-radius:6px">
+          <label style="flex:1;font-size:.8rem;line-height:1.3">${escHtml(c)}</label>
+          <select class="etg-sel" data-dom="${_etEscAttr(d.titre)}" data-comp="${_etEscAttr(c)}" style="font-size:.76rem;padding:.2rem .35rem;border:1px solid var(--border);border-radius:6px;flex-shrink:0">
             <option value="">—</option>
-            ${ET_NOTES.map(n => `<option value="${n.v}"${Number(val)===n.v?' selected':''}>${n.v} — ${n.l}</option>`).join('')}
+            ${ET_POS.map(p => `<option value="${p.v}"${cur === p.v ? ' selected' : ''}>${p.l}</option>`).join('')}
           </select>
         </div>`;
       }).join('')}
     </div>`).join('');
-  container.addEventListener('change', etUpdateLiveScore);
-  etUpdateLiveScore();
 }
 
-function etUpdateLiveScore() {
-  let total = 0, n = 0;
-  document.querySelectorAll('#etGrilleBody [name^="etg_"]').forEach(el => {
-    const v = Number(el.value);
-    if (v > 0) { total += v; n++; }
-  });
-  const el = document.getElementById('etGrilleLive');
-  if (!el) return;
-  if (!n) { el.innerHTML = '<span style="color:var(--muted)">Notez chaque item ci-dessous…</span>'; return; }
-  const avg = total / n;
-  const note = ET_NOTES.find(x => avg >= x.v - 0.5 && avg < x.v + 0.5) || ET_NOTES[Math.round(avg)-1] || ET_NOTES[0];
-  el.innerHTML = `<span style="font-size:1.3rem;font-weight:800;color:${note.c}">${avg.toFixed(1)}</span><span style="color:var(--muted)"> / 4</span> — <span style="color:${note.c};font-weight:600">${note.l}</span>`;
-}
-
+// Collecte le positionnement (tableau [{domaine, competence, pos}]) — vide hors entretien annuel
 function etCollectGrille() {
-  const grille = {};
-  document.querySelectorAll('#etGrilleBody [name^="etg_"]').forEach(el => {
-    const id = el.name.replace('etg_','');
-    if (el.value) grille[id] = Number(el.value);
+  if (document.getElementById('etFormType')?.value !== 'annuel') return [];
+  const out = [];
+  document.querySelectorAll('#etGrilleBody .etg-sel').forEach(el => {
+    if (el.value) out.push({ domaine: el.dataset.dom, competence: el.dataset.comp, pos: el.value });
   });
-  return grille;
+  return out;
 }
 
 let _etCache = [];
@@ -134,6 +163,9 @@ function etModalSync() {
     const st = ENTRETIEN_STATUT_STYLES[document.getElementById('etFormStatut')?.value] || ENTRETIEN_STATUT_STYLES.planifie;
     modalEl.style.setProperty('--mc', st.c || '#9333ea');
   }
+  // Recharge le référentiel si l'employé (→ son métier) ou le type d'entretien change,
+  // en conservant les positionnements déjà saisis.
+  etRenderGrille(etCollectGrille());
 }
 
 async function saveEntretien() {
@@ -189,10 +221,24 @@ function supprimerEntretien(id) {
   });
 }
 
-function etScoreMoyen(grille) {
-  const vals = Object.values(grille || {}).filter(v => v > 0);
-  if (!vals.length) return null;
-  return vals.reduce((a,b) => a+b, 0) / vals.length;
+// Convertit une grille en lignes { domaine, competence, label, color } pour l'affichage,
+// en gérant le NOUVEAU format (tableau qualitatif) et l'ANCIEN (objet noté 1-4 → positionnement).
+function etGrilleRows(grille) {
+  if (Array.isArray(grille)) {
+    return grille.filter(x => x && x.pos).map(x => {
+      const p = etPos(x.pos);
+      return { domaine: x.domaine || '', competence: x.competence || '', label: p ? p.l : x.pos, color: p ? p.c : '#334155' };
+    });
+  }
+  if (grille && typeof grille === 'object') {
+    // Ancien format noté : on affiche un positionnement équivalent, sans note ni moyenne
+    const legacy = { 1: 'developper', 2: 'encours', 3: 'acquis', 4: 'acquis' };
+    return (typeof ET_GRILLE !== 'undefined' ? ET_GRILLE : []).filter(g => grille[g.id]).map(g => {
+      const p = etPos(legacy[Number(grille[g.id])] || 'na');
+      return { domaine: g.dim, competence: g.label, label: p ? p.l : '', color: p ? p.c : '#334155' };
+    });
+  }
+  return [];
 }
 
 async function etSetStatut(id, statut) {
@@ -213,8 +259,7 @@ function entretienItemHtml(e, isAdmin) {
   const ac = st.c;
   const _emp = _etEmployesCache.find(x => String(x.id) === String(e.employeId));
   const nomAff = _emp ? `${_emp.prenom || ''} ${_emp.nom || ''}`.trim() : (e.employeNom || '');
-  const score = etScoreMoyen(e.grille);
-  const scoreNote = score !== null ? (ET_NOTES.find(n => score >= n.v - 0.5 && score < n.v + 0.5) || ET_NOTES[0]) : null;
+  const nbPos = etGrilleRows(e.grille).length;
 
   const statutCtrl = `<span class="frx-stbtns" onclick="event.stopPropagation()">${
     Object.keys(ENTRETIEN_STATUT_STYLES).map(s => {
@@ -238,7 +283,7 @@ function entretienItemHtml(e, isAdmin) {
       </div>
       ${!isAdmin ? `<span class="frx-status">${st.l}</span>` : ''}
     </div>
-    ${scoreNote ? `<div class="etx-score"><div class="etx-score-num" style="color:${scoreNote.c}">${score.toFixed(1)}</div><div class="etx-score-txt">sur 4 · <b style="color:${scoreNote.c}">${scoreNote.l}</b></div></div>` : ''}
+    ${nbPos ? `<div class="frx-chips" style="margin-top:.4rem"><span class="frx-chip" style="background:#f5f3ff;color:#7c3aed">🧭 ${nbPos} compétence${nbPos > 1 ? 's' : ''} positionnée${nbPos > 1 ? 's' : ''}</span></div>` : ''}
     <div class="frx-meta"><span>📅 ${formatDate(e.date)}</span>${e.evaluateur ? `<span>👤 ${escHtml(e.evaluateur)}</span>` : ''}</div>
     ${fields.join('')}
     ${isAdmin ? `<div class="frx-foot">
@@ -254,13 +299,14 @@ function entretienItemHtml(e, isAdmin) {
 function exportEntretienPdf(id) {
   const e = getEntretiens().find(x => x.id === id);
   if (!e) return;
-  const score = etScoreMoyen(e.grille);
-  const scoreNote = score !== null ? (ET_NOTES.find(n => score >= n.v - 0.5 && score < n.v + 0.5) || ET_NOTES[0]) : null;
-  const grilleRows = ET_GRILLE.filter(g => e.grille?.[g.id]).map(g => {
-    const v = e.grille[g.id];
-    const n = ET_NOTES.find(x => x.v === v);
-    return `<tr><td style="padding:.3rem .5rem;border-bottom:1px solid #e2e8f0">${g.dim} — ${g.label}</td><td style="padding:.3rem .5rem;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:700;color:${n?.c||'#000'}">${v} — ${n?.l||''}</td></tr>`;
-  }).join('');
+  // Positionnement qualitatif groupé par domaine (aucune note, aucune moyenne)
+  const rows = etGrilleRows(e.grille);
+  const byDom = {};
+  rows.forEach(r => { (byDom[r.domaine] = byDom[r.domaine] || []).push(r); });
+  const grilleHtml = Object.keys(byDom).map(dom => `
+    <tr><td colspan="2" style="padding:.5rem .5rem .2rem;font-weight:700;color:#7c3aed;border-bottom:1px solid #e2e8f0">${escHtml(dom)}</td></tr>
+    ${byDom[dom].map(r => `<tr><td style="padding:.3rem .5rem;border-bottom:1px solid #e2e8f0">${escHtml(r.competence)}</td><td style="padding:.3rem .5rem;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:${r.color}">${escHtml(r.label)}</td></tr>`).join('')}
+  `).join('');
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Entretien — ${escHtml(e.employeNom)}</title>
     <style>body{font-family:Georgia,serif;max-width:760px;margin:2rem auto;padding:0 1.5rem;line-height:1.6;color:#1e293b}
@@ -270,8 +316,7 @@ function exportEntretienPdf(id) {
     .meta{color:#64748b;font-size:.85rem;margin-bottom:1.5rem}</style></head><body>
     <h1>${ENTRETIEN_TYPE_LABELS[e.type]||e.type} — ${escHtml(e.employeNom)}</h1>
     <div class="meta">${formatDate(e.date)}${e.evaluateur?' · Évaluateur : '+escHtml(e.evaluateur):''}</div>
-    ${scoreNote ? `<h4>Score global</h4><p><strong style="font-size:1.3rem;color:${scoreNote.c}">${score.toFixed(1)} / 4</strong> — ${scoreNote.l}</p>` : ''}
-    ${grilleRows ? `<h4>Grille de compétences</h4><table>${grilleRows}</table>` : ''}
+    ${grilleHtml ? `<h4>Positionnement sur le référentiel métier</h4><p style="font-size:.8rem;color:#64748b;margin:0 0 .3rem">Positionnement qualitatif partagé avec le salarié — sans note ni classement.</p><table>${grilleHtml}</table>` : ''}
     ${e.bilan ? `<h4>Bilan</h4><p>${escHtml(e.bilan).replace(/\n/g,'<br/>')}</p>` : ''}
     ${e.objectifs ? `<h4>Objectifs fixés</h4><p>${escHtml(e.objectifs).replace(/\n/g,'<br/>')}</p>` : ''}
     ${e.formations ? `<h4>Besoins en formation</h4><p>${escHtml(e.formations).replace(/\n/g,'<br/>')}</p>` : ''}
