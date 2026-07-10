@@ -97,6 +97,7 @@
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
+<script src="js/portal-dock.js"></script>
 <script>
   Auth.requireAuth();
 
@@ -137,7 +138,7 @@
   function closePop() { pop.classList.remove('open'); overlay.classList.remove('open'); }
   function openPop() { pop.classList.add('open'); overlay.classList.add('open'); }
   function setActive(page) {
-    document.querySelectorAll('.rh-dock-item').forEach(d => d.classList.toggle('active', d.dataset.page === page));
+    if (window.PortalDock) PortalDock.setActive(page);
     document.querySelectorAll('.rh-pop-link').forEach(d => d.classList.toggle('active', d.dataset.page === page));
   }
 
@@ -161,26 +162,22 @@
     closePop();
   }
 
-  // ── Dock : bouton accueil · tous les modules groupés par catégorie · bouton central grille ──
-  const dockItem = page => {
-    const e = entryOf(page);
-    if (!e || !allowed(e)) return '';
-    const attrs = e.module ? ` data-module="${e.module}"` : '';
-    return `<button class="rh-dock-item" data-page="${e.page}"${attrs} title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[page] || e.label}</span></button>`;
-  };
+  // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
   const homeBtn = `<button class="rh-dock-home" id="plHomeBtn" title="Accueil du portail" aria-label="Accueil du portail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
-  const gridBtn = `<button class="rh-dock-grid" id="rhGridBtn" title="Tous les modules du portail" aria-label="Tous les modules du portail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
-  // Tous les modules autorisés dans le dock, groupés par catégorie (séparateurs entre groupes),
-  // avec l'accueil au début et le bouton central « Tous les modules » en fin comme vue d'ensemble.
-  const groupsData = GROUPS.map(g => PL_NAV.filter(e => e.g === g && allowed(e))).filter(a => a.length);
-  const totalItems = groupsData.reduce((n, a) => n + a.length, 0);
-  let run = 0, split = groupsData.length, bestDiff = Infinity;
-  for (let i = 1; i < groupsData.length; i++) { run += groupsData[i - 1].length; const d = Math.abs(run - (totalItems - run)); if (d < bestDiff) { bestDiff = d; split = i; } }
-  const dockSep = '<span class="rh-dock-sep"></span>';
-  const renderGroups = arr => arr.map(g => g.map(e => dockItem(e.page)).join('')).join(dockSep);
-  const dockLeft = renderGroups(groupsData.slice(0, split));
-  const dockRight = renderGroups(groupsData.slice(split));
-  document.getElementById('rhDock').innerHTML = homeBtn + dockSep + dockLeft + (dockLeft ? dockSep : '') + gridBtn + (dockRight ? dockSep : '') + dockRight;
+  const GROUP_META = {
+    'Mon espace personnel':  { short: 'Mon espace', color: '#6366f1', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
+    'Équipe & échanges':     { short: 'Équipe',     color: '#0891b2', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+    'Pilotage & ressources': { short: 'Pilotage',   color: '#16a34a', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>' }
+  };
+  const _plLast = sessionStorage.getItem('pl_last_page');
+  const _plLastE = _plLast && entryOf(_plLast);
+  PortalDock.init({
+    dock: document.getElementById('rhDock'),
+    nav: PL_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
+    allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
+    gridId: 'rhGridBtn', launcherLabel: 'Tous les modules du portail',
+    current: (_plLastE && allowed(_plLastE)) ? _plLastE.page : null
+  });
 
   // ── Popover : 3 colonnes = 3 groupes, entrées autorisées uniquement ──
   pop.innerHTML = `<div class="rh-pop-title">Tous les modules du portail</div><div class="rh-pop-grid">${
@@ -192,8 +189,8 @@
     }</div>`).join('')
   }</div>`;
 
-  // Clics (dock + popover) → loadPage
-  document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => {
+  // Clics du lanceur « Tous les modules » → loadPage (le dock catégories se gère seul)
+  document.querySelectorAll('.rh-pop-link').forEach(b => {
     b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
   });
   // Bouton accueil : revient à l'accueil du portail

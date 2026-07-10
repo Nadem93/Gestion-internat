@@ -2149,7 +2149,8 @@ function saveSegurConfig() {
 function activateTab(name) {
   if (!ALL_TABS.includes(name)) name = 'stats';
   document.querySelectorAll('.admin-nav-card').forEach(i => i.classList.toggle('active', i.dataset.tab === name));
-  document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if (window.PortalDock) PortalDock.setActive(name);
+  document.querySelectorAll('.rh-pop-link').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   ALL_TABS.forEach(n => {
     const el = document.getElementById('tab-' + n);
     if (!el) return;
@@ -2202,6 +2203,7 @@ document.querySelectorAll('.rh-dock-item').forEach(b=>{const t=b.querySelector('
 <div class="rh-pop-overlay" id="adminPopOverlay"></div>
 <div class="rh-pop" id="adminPop" role="dialog" aria-label="Tous les réglages"></div>
 <nav class="rh-dock" id="adminDock" aria-label="Navigation administration"></nav>
+<script src="js/portal-dock.js"></script>
 <script>
 (function () {
   const ADMIN_NAV = [
@@ -2224,21 +2226,23 @@ document.querySelectorAll('.rh-dock-item').forEach(b=>{const t=b.querySelector('
   const entryOf = t => ADMIN_NAV.find(e => e.tab === t);
   function closePop() { pop.classList.remove('open'); overlay.classList.remove('open'); }
   function openPop() { pop.classList.add('open'); overlay.classList.add('open'); }
-  const dockItem = t => { const e = entryOf(t); if (!e) return ''; return `<button class="rh-dock-item" data-tab="${e.tab}" title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[t] || e.label}</span></button>`; };
-  const gridBtn = `<button class="rh-dock-grid" id="adminGridBtn" title="Tous les réglages" aria-label="Tous les réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
-  // Tous les modules dans le dock, groupés par catégorie (séparateurs entre groupes),
-  // le bouton central « Tous les réglages » reste en fin comme vue d'ensemble.
-  const groupsData = GROUPS.map(g => ADMIN_NAV.filter(e => e.g === g)).filter(a => a.length);
-  const totalItems = groupsData.reduce((n, a) => n + a.length, 0);
-  let run = 0, split = groupsData.length, bestDiff = Infinity;
-  for (let i = 1; i < groupsData.length; i++) { run += groupsData[i - 1].length; const d = Math.abs(run - (totalItems - run)); if (d < bestDiff) { bestDiff = d; split = i; } }
-  const dockSep = '<span class="rh-dock-sep"></span>';
-  const renderGroups = arr => arr.map(g => g.map(e => dockItem(e.tab)).join('')).join(dockSep);
-  const dockLeft = renderGroups(groupsData.slice(0, split));
-  const dockRight = renderGroups(groupsData.slice(split));
-  dock.innerHTML = dockLeft + (dockLeft ? dockSep : '') + gridBtn + (dockRight ? dockSep : '') + dockRight;
+  // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
+  const GROUP_META = {
+    'Tableau de bord': { short: 'Tableau', color: '#7c6fcd', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
+    'Configuration':   { short: 'Config',  color: '#0891b2', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>' },
+    'Comptes & accès': { short: 'Comptes', color: '#9333ea', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+    'Système':         { short: 'Système', color: '#2563eb', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' }
+  };
+  const _adminTab = new URLSearchParams(location.search).get('tab');
+  PortalDock.init({
+    dock: dock,
+    nav: ADMIN_NAV, key: 'tab', groups: GROUPS, groupMeta: GROUP_META,
+    onNavigate: e => activateTab(e.tab),
+    gridId: 'adminGridBtn', launcherLabel: 'Tous les réglages',
+    current: (_adminTab && entryOf(_adminTab)) ? _adminTab : 'stats'
+  });
   pop.innerHTML = `<div class="rh-pop-title">Tous les réglages</div><div class="rh-pop-grid">${GROUPS.map(g => `<div><div class="rh-pop-col-title">${g}</div>${ADMIN_NAV.filter(e => e.g === g).map(e => `<button class="rh-pop-link" data-tab="${e.tab}"><span class="rh-pop-dot" style="background:${e.c1}"></span>${e.label}</button>`).join('')}</div>`).join('')}</div>`;
-  document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => b.addEventListener('click', () => { activateTab(b.dataset.tab); closePop(); }));
+  document.querySelectorAll('.rh-pop-link').forEach(b => b.addEventListener('click', () => { activateTab(b.dataset.tab); closePop(); }));
   document.getElementById('adminGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
   overlay.addEventListener('click', closePop);
 })();

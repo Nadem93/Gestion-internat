@@ -90,6 +90,7 @@
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
+<script src="js/portal-dock.js"></script>
 <script>
   Auth.requireAuth();
 
@@ -129,7 +130,7 @@
   function closePop() { pop.classList.remove('open'); overlay.classList.remove('open'); }
   function openPop() { pop.classList.add('open'); overlay.classList.add('open'); }
   function setActive(page) {
-    document.querySelectorAll('.rh-dock-item').forEach(d => d.classList.toggle('active', d.dataset.page === page));
+    if (window.PortalDock) PortalDock.setActive(page);
     document.querySelectorAll('.rh-pop-link').forEach(d => d.classList.toggle('active', d.dataset.page === page));
   }
 
@@ -153,25 +154,22 @@
     closePop();
   }
 
-  // ── Dock : 2 accès rapides · maison · bouton central · 3 accès rapides ──
-  const dockItem = page => {
-    const e = entryOf(page);
-    if (!e || !allowed(e)) return '';
-    return `<button class="rh-dock-item" data-page="${e.page}" title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[page] || e.label}</span></button>`;
-  };
+  // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
   const homeBtn = `<button class="rh-dock-home" id="dsHomeBtn" title="Accueil des dossiers" aria-label="Accueil des dossiers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>`;
-  const gridBtn = `<button class="rh-dock-grid" id="dsGridBtn" title="Toutes les rubriques" aria-label="Toutes les rubriques"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
-  // Tous les modules dans le dock, groupés par catégorie (séparateurs entre groupes),
-  // le bouton maison reste au début et le bouton central « Toutes les rubriques » en fin.
-  const groupsData = GROUPS.map(g => DS_NAV.filter(e => e.g === g && allowed(e))).filter(a => a.length);
-  const totalItems = groupsData.reduce((n, a) => n + a.length, 0);
-  let run = 0, split = groupsData.length, bestDiff = Infinity;
-  for (let i = 1; i < groupsData.length; i++) { run += groupsData[i - 1].length; const d = Math.abs(run - (totalItems - run)); if (d < bestDiff) { bestDiff = d; split = i; } }
-  const dockSep = '<span class="rh-dock-sep"></span>';
-  const renderGroups = arr => arr.map(g => g.map(e => dockItem(e.page)).join('')).join(dockSep);
-  const dockLeft = renderGroups(groupsData.slice(0, split));
-  const dockRight = renderGroups(groupsData.slice(split));
-  document.getElementById('dsDock').innerHTML = homeBtn + dockLeft + (dockLeft ? dockSep : '') + gridBtn + (dockRight ? dockSep : '') + dockRight;
+  const GROUP_META = {
+    'Admission & parcours':     { short: 'Admission',  color: '#4f46e5', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>' },
+    'Documents & évaluations':  { short: 'Documents',  color: '#8b5cf6', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
+    'Vie sociale & qualité':    { short: 'Vie sociale', color: '#16a34a', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' }
+  };
+  const _dsLast = sessionStorage.getItem('ds_last_page');
+  const _dsLastE = _dsLast && entryOf(_dsLast);
+  PortalDock.init({
+    dock: document.getElementById('dsDock'),
+    nav: DS_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
+    allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
+    gridId: 'dsGridBtn', launcherLabel: 'Toutes les rubriques',
+    current: (_dsLastE && allowed(_dsLastE)) ? _dsLastE.page : null
+  });
 
   // ── Popover : 3 colonnes = 3 groupes, entrées autorisées uniquement ──
   pop.innerHTML = `<div class="rh-pop-title">Toutes les rubriques</div><div class="rh-pop-grid">${
@@ -181,8 +179,8 @@
     }</div>`).join('')
   }</div>`;
 
-  // Clics (dock + popover) → loadPage
-  document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => {
+  // Clics du lanceur « Toutes les rubriques » → loadPage (le dock catégories se gère seul)
+  document.querySelectorAll('.rh-pop-link').forEach(b => {
     b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
   });
   // Maison : accueil de la rubrique
