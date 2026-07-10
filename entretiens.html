@@ -19,6 +19,25 @@
     .et-card-head span{font-size:1.05rem}
     .et-form-footer{display:flex;justify-content:flex-end;gap:.6rem;margin:1.5rem 0 2rem;padding-top:1.1rem;border-top:1px solid var(--border)}
     @media(max-width:640px){.et-form-title{font-size:1rem}.et-form-bar .btn span.lbl{display:none}}
+
+    /* ── Grille de positionnement : cartes de domaine + pastilles ── */
+    #etGrilleBody .etg-dom{border:1px solid #e9edf3;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:.9rem}
+    #etGrilleBody .etg-domhead{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.6rem .8rem;border-bottom:1px solid #eef1f5;background:#faf8ff}
+    #etGrilleBody .etg-domtitle{flex:1;min-width:160px;font-size:.82rem;font-weight:700;color:#0f2b4a;line-height:1.3}
+    #etGrilleBody .etg-count{font-size:.7rem;font-weight:600;color:#7c3aed;background:#f5f3ff;border:1px solid #ede9fe;border-radius:999px;padding:.18rem .55rem;white-space:nowrap}
+    #etGrilleBody .etg-count.done{color:#16a34a;background:#f0fdf4;border-color:#dcfce7}
+    #etGrilleBody .etg-comp{padding:.65rem .8rem;border-bottom:1px solid #f1f5f9}
+    #etGrilleBody .etg-comp:last-child{border-bottom:0}
+    #etGrilleBody .etg-lbl{display:block;font-size:.84rem;line-height:1.45;color:#1e293b;margin:0 0 .5rem}
+    #etGrilleBody .etg-pills{display:flex;flex-wrap:wrap;gap:.4rem}
+    #etGrilleBody .etg-pill{cursor:pointer;font:inherit;font-size:.76rem;font-weight:600;line-height:1;display:inline-flex;align-items:center;gap:.34rem;padding:.42rem .7rem;border-radius:999px;border:1.5px solid var(--pc);background:#fff;color:var(--ptc);white-space:nowrap;transition:background .12s,color .12s}
+    #etGrilleBody .etg-pill .etg-dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--pc);box-shadow:inset 0 0 0 2px #fff;flex-shrink:0}
+    #etGrilleBody .etg-pill:hover{background:#f8fafc}
+    #etGrilleBody .etg-pill.on{background:var(--pc);color:#fff}
+    #etGrilleBody .etg-pill.on:hover{background:var(--pc)}
+    #etGrilleBody .etg-pill.on .etg-dot{background:#fff;box-shadow:none}
+    #etGrilleBody .etg-pill:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(124,58,237,.35)}
+    @media print{#etGrilleBody .etg-pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}#etGrilleBody .etg-pill:not(.on){opacity:.35}#etGrilleBody .etg-dom{break-inside:avoid}}
   </style>
 </head>
 <body>

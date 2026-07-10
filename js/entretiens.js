@@ -21,6 +21,14 @@ const ET_POS = [
   { v:'developper', l:'À développer',            c:'#dc2626' },
   { v:'na',         l:'Non abordé',              c:'#94a3b8' }
 ];
+// Ordre d'affichage + couleurs des pastilles (rendu « cartes à pastilles »).
+// Mêmes valeurs que ET_POS ; tc = couleur de texte lisible à l'état non sélectionné.
+const ET_POS_UI = [
+  { v:'na',         l:'Non abordé',             c:'#94a3b8', tc:'#64748b' },
+  { v:'developper', l:'À développer',           c:'#dc2626', tc:'#b91c1c' },
+  { v:'encours',    l:"En cours d'acquisition", c:'#d97706', tc:'#b45309' },
+  { v:'acquis',     l:'Acquis',                 c:'#16a34a', tc:'#15803d' }
+];
 function etPos(v) { return ET_POS.find(p => p.v === v) || null; }
 function _etEscAttr(s) { return escHtml(s).replace(/"/g, '&quot;'); }
 
@@ -67,20 +75,96 @@ function etRenderGrille(grilleData) {
 
   const prev = Array.isArray(grilleData) ? grilleData : [];
   const posOf = (dom, comp) => (prev.find(x => x.domaine === dom && x.competence === comp) || {}).pos || '';
-  container.innerHTML = domaines.map(d => `
-    <div style="margin-bottom:.7rem">
-      <div style="font-size:.74rem;font-weight:700;color:#9333ea;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem">${escHtml(d.titre)}</div>
-      ${d.competences.map(c => {
-        const cur = posOf(d.titre, c);
-        return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;padding:.35rem .5rem;background:#f8fafc;border-radius:6px">
-          <label style="flex:1;font-size:.8rem;line-height:1.3">${escHtml(c)}</label>
-          <select class="etg-sel" data-dom="${_etEscAttr(d.titre)}" data-comp="${_etEscAttr(c)}" style="font-size:.76rem;padding:.2rem .35rem;border:1px solid var(--border);border-radius:6px;flex-shrink:0">
-            <option value="">—</option>
-            ${ET_POS.map(p => `<option value="${p.v}"${cur === p.v ? ' selected' : ''}>${p.l}</option>`).join('')}
-          </select>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
+  container.innerHTML = domaines.map((d, di) => {
+    const comps = d.competences.map((c, ci) => {
+      const cur = posOf(d.titre, c);
+      const lid = `etg-l-${di}-${ci}`;
+      const pills = ET_POS_UI.map(p => {
+        const on = cur === p.v;
+        return `<button type="button" class="etg-pill${on ? ' on' : ''}" role="radio" aria-checked="${on}" data-val="${p.v}" tabindex="-1" style="--pc:${p.c};--ptc:${p.tc}"><span class="etg-dot"></span>${escHtml(p.l)}</button>`;
+      }).join('');
+      return `<div class="etg-comp">
+        <label class="etg-lbl" id="${lid}">${escHtml(c)}</label>
+        <input type="hidden" class="etg-sel" data-dom="${_etEscAttr(d.titre)}" data-comp="${_etEscAttr(c)}" value="${cur}">
+        <div class="etg-pills" role="radiogroup" aria-labelledby="${lid}">${pills}</div>
+      </div>`;
+    }).join('');
+    const total = d.competences.length;
+    const done = d.competences.filter(c => posOf(d.titre, c)).length;
+    const allDone = done === total && total > 0;
+    return `<div class="etg-dom">
+      <div class="etg-domhead">
+        <span class="etg-domtitle">${escHtml(d.titre)}</span>
+        <span class="etg-count${allDone ? ' done' : ''}">${done}/${total} positionnées</span>
+      </div>
+      <div>${comps}</div>
+    </div>`;
+  }).join('');
+  etGrilleSetRoving();
+  etBindGrille();
+}
+
+// Un seul point d'entrée pour tabuler dans chaque groupe de pastilles (pattern radiogroup)
+function etGrilleSetRoving() {
+  document.querySelectorAll('#etGrilleBody .etg-pills').forEach(g => {
+    const pills = [...g.querySelectorAll('.etg-pill')];
+    if (!pills.length) return;
+    (pills.find(p => p.classList.contains('on')) || pills[0]).tabIndex = 0;
+  });
+}
+
+// Écouteurs délégués (attachés une seule fois : #etGrilleBody survit aux ré-rendus innerHTML)
+let _etGrilleBound = false;
+function etBindGrille() {
+  if (_etGrilleBound) return;
+  const body = document.getElementById('etGrilleBody');
+  if (!body) return;
+  body.addEventListener('click', etGrillePillClick);
+  body.addEventListener('keydown', etGrillePillKey);
+  _etGrilleBound = true;
+}
+
+function etGrillePillClick(e) {
+  const btn = e.target.closest('.etg-pill');
+  if (!btn) return;
+  const group = btn.parentNode;
+  const comp = group.closest('.etg-comp');
+  const input = comp.querySelector('.etg-sel');
+  const wasOn = btn.classList.contains('on');
+  group.querySelectorAll('.etg-pill').forEach(p => { p.classList.remove('on'); p.setAttribute('aria-checked', 'false'); p.tabIndex = -1; });
+  btn.tabIndex = 0;
+  if (wasOn) {
+    input.value = '';                       // re-cliquer désélectionne
+  } else {
+    btn.classList.add('on');
+    btn.setAttribute('aria-checked', 'true');
+    input.value = btn.dataset.val;
+  }
+  etUpdateDomCount(comp.closest('.etg-dom'));
+}
+
+// Flèches gauche/droite : déplacent le focus entre les pastilles d'une compétence
+function etGrillePillKey(e) {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const btn = e.target.closest('.etg-pill');
+  if (!btn) return;
+  e.preventDefault();
+  const pills = [...btn.parentNode.querySelectorAll('.etg-pill')];
+  let i = pills.indexOf(btn);
+  i = e.key === 'ArrowRight' ? (i + 1) % pills.length : (i - 1 + pills.length) % pills.length;
+  pills.forEach(p => p.tabIndex = -1);
+  pills[i].tabIndex = 0;
+  pills[i].focus();
+}
+
+function etUpdateDomCount(dom) {
+  if (!dom) return;
+  const inputs = [...dom.querySelectorAll('.etg-sel')];
+  const done = inputs.filter(i => i.value).length;
+  const badge = dom.querySelector('.etg-count');
+  if (!badge) return;
+  badge.textContent = `${done}/${inputs.length} positionnées`;
+  badge.classList.toggle('done', done === inputs.length && inputs.length > 0);
 }
 
 // Collecte le positionnement (tableau [{domaine, competence, pos}]) — vide hors entretien annuel
@@ -143,6 +227,7 @@ function openEntretienModal(id) {
   document.getElementById('etFormFormations').value = item ? item.formations || '' : '';
   document.getElementById('etFormView').dataset.editId = item ? item.id : '';
   etRenderGrille(item?.grille);
+  _etLastRefKey = etRefSyncKey();               // amorce : etModalSync ne re-rendra pas la grille juste après
   const exportBtn = document.getElementById('etExportBtn');
   if (exportBtn) exportBtn.style.display = item ? '' : 'none';
   etModalSync();
@@ -181,10 +266,17 @@ function etModalSync() {
     const st = ENTRETIEN_STATUT_STYLES[document.getElementById('etFormStatut')?.value] || ENTRETIEN_STATUT_STYLES.planifie;
     formEl.style.setProperty('--mc', st.c || '#9333ea');
   }
-  // Recharge le référentiel si l'employé (→ son métier) ou le type d'entretien change,
-  // en conservant les positionnements déjà saisis.
-  etRenderGrille(etCollectGrille());
+  // Ne recharge la grille que si l'employé (→ son métier) ou le type d'entretien a
+  // réellement changé — sinon un simple changement de statut détruirait le DOM des
+  // pastilles et ferait perdre le focus/scroll en pleine saisie. Les positionnements
+  // déjà saisis sont préservés (etCollectGrille les capture avant le re-rendu).
+  const key = etRefSyncKey();
+  if (key !== _etLastRefKey) { _etLastRefKey = key; etRenderGrille(etCollectGrille()); }
 }
+function etRefSyncKey() {
+  return (document.getElementById('etFormEmploye')?.value || '') + '|' + (document.getElementById('etFormType')?.value || '');
+}
+let _etLastRefKey = null;
 
 async function saveEntretien() {
   const id = document.getElementById('etFormView').dataset.editId;
