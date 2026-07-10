@@ -78,6 +78,7 @@
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
+<script src="js/portal-dock.js"></script>
 <script>
   Auth.requireAuth();
   if (!Auth.isRH()) {
@@ -125,30 +126,29 @@
     function loadPage(page, label) {
       frame.src = page;
       if (title) title.textContent = label || '';
-      document.querySelectorAll('.rh-dock-item').forEach(d => d.classList.toggle('active', d.dataset.page === page));
+      if (window.PortalDock) PortalDock.setActive(page);
       document.querySelectorAll('.rh-pop-link').forEach(d => d.classList.toggle('active', d.dataset.page === page));
       sessionStorage.setItem('rh_last_page', page);
       closePop();
     }
 
-    // ── Dock : 3 accès rapides · bouton central · 2 accès rapides ──
-    const dockItem = page => {
-      const e = entryOf(page);
-      if (!e || !allowed(e)) return '';
-      return `<button class="rh-dock-item" data-page="${e.page}" title="${e.label}"><span style="display:flex">${e.icon}</span><span class="lbl">${SHORT[page] || e.label}</span></button>`;
+    // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
+    const GROUP_META = {
+      "Vue d'ensemble":       { short: 'Équipe',      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>' },
+      'Contrats & absences':  { short: 'Contrats',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>' },
+      'Temps de travail':     { short: 'Temps',       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' },
+      'Carrière & paie':      { short: 'Carrière',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>' },
+      'Recrutement & outils': { short: 'Recrutement', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' }
     };
-    const gridBtn = `<button class="rh-dock-grid" id="rhGridBtn" title="Tous les modules RH" aria-label="Tous les modules RH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>`;
-    // Tous les modules dans le dock, groupés par catégorie ; le bouton « Tous les modules »
-    // est placé AU CENTRE (frontière de groupe la plus équilibrée : ~moitié à gauche, ~moitié à droite).
-    const groupsData = GROUPS.map(g => RH_NAV.filter(e => e.g === g && allowed(e))).filter(a => a.length);
-    const totalItems = groupsData.reduce((n, a) => n + a.length, 0);
-    let run = 0, split = groupsData.length, bestDiff = Infinity;
-    for (let i = 1; i < groupsData.length; i++) { run += groupsData[i - 1].length; const d = Math.abs(run - (totalItems - run)); if (d < bestDiff) { bestDiff = d; split = i; } }
-    const dockSep = '<span class="rh-dock-sep"></span>';
-    const renderGroups = arr => arr.map(g => g.map(e => dockItem(e.page)).join('')).join(dockSep);
-    const dockLeft = renderGroups(groupsData.slice(0, split));
-    const dockRight = renderGroups(groupsData.slice(split));
-    document.getElementById('rhDock').innerHTML = dockLeft + (dockLeft ? dockSep : '') + gridBtn + (dockRight ? dockSep : '') + dockRight;
+    const _rhLast = sessionStorage.getItem('rh_last_page');
+    const _rhLastE = _rhLast && entryOf(_rhLast);
+    PortalDock.init({
+      dock: document.getElementById('rhDock'),
+      nav: RH_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
+      allowed, onNavigate: e => loadPage(e.page, e.label),
+      gridId: 'rhGridBtn', launcherLabel: 'Tous les modules RH',
+      current: (_rhLastE && allowed(_rhLastE)) ? _rhLastE.page : RH_NAV[0].page
+    });
 
     // ── Popover : 5 colonnes = 5 groupes, entrées autorisées uniquement ──
     pop.innerHTML = `<div class="rh-pop-title">Tous les modules RH</div><div class="rh-pop-grid">${
@@ -158,8 +158,8 @@
       }</div>`).join('')
     }</div>`;
 
-    // Clics (dock + popover) → loadPage
-    document.querySelectorAll('.rh-dock-item, .rh-pop-link').forEach(b => {
+    // Clics du lanceur « Tous les modules » → loadPage (le dock catégories se gère seul)
+    document.querySelectorAll('.rh-pop-link').forEach(b => {
       b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
     });
     // Bouton central : ouvre/ferme le popover ; overlay : ferme
