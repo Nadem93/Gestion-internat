@@ -24,37 +24,6 @@
     .rh-dock-home:hover{background:rgba(255,255,255,.2);color:#fff}
     .rh-dock-home svg{width:17px;height:17px}
     .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
-    .rh-dock-item{display:flex;flex-direction:column;align-items:center;gap:3px;width:52px;flex-shrink:0;
-      padding:5px 3px;border-radius:12px;border:none;background:none;color:#64748b;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
-    .rh-dock-item:hover{background:rgba(15,23,42,.05);color:#334155}
-    .rh-dock-item.active{background:#eef2ff;color:#4f46e5}
-    .rh-dock-item svg{width:18px;height:18px;display:block}
-    .rh-dock-item .lbl{font-size:.55rem;font-weight:600;white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis;display:block;text-align:center}
-    .rh-dock-item{position:relative}
-    .rh-dock-grid{width:42px;height:42px;flex-shrink:0;border-radius:16px;border:none;
-      background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;
-      cursor:pointer;box-shadow:0 5px 13px rgba(79,70,229,.5);transition:transform .15s,box-shadow .15s}
-    .rh-dock-grid:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(79,70,229,.6)}
-    .rh-dock-grid svg{width:19px;height:19px}
-
-    /* ── Popover « Tous les modules » ── */
-    .rh-pop-overlay{position:fixed;inset:0;z-index:59;background:rgba(15,23,42,.35);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:none}
-    .rh-pop-overlay.open{display:block}
-    .rh-pop{position:fixed;bottom:66px;left:50%;transform:translateX(-50%);z-index:61;
-      background:#fff;border-radius:22px;box-shadow:0 24px 60px rgba(15,43,74,.3);
-      padding:20px 22px;max-width:calc(100vw - 28px);max-height:calc(100vh - 160px);overflow:auto;display:none}
-    .rh-pop.open{display:block}
-    .rh-pop-title{font-size:.9rem;font-weight:800;color:#0f2b4a;margin-bottom:14px}
-    .rh-pop-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:20px}
-    .rh-pop-col-title{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px}
-    .rh-pop-link{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;border:none;background:none;
-      width:100%;text-align:left;font-family:inherit;font-size:.8rem;font-weight:500;color:#334155;cursor:pointer;transition:background .12s}
-    .rh-pop-link:hover{background:#f1f5f9}
-    .rh-pop-link.active{background:#eef2ff;color:#4f46e5;font-weight:700}
-    .rh-pop-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
-    .rh-pop-link{position:relative}
-    @media(max-width:900px){.rh-pop-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:560px){.rh-pop-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -77,9 +46,7 @@
   </div>
 </div>
 
-<!-- Dock flottant + popover (remplis par le script) -->
-<div class="rh-pop-overlay" id="rhPopOverlay"></div>
-<div class="rh-pop" id="rhPop" role="dialog" aria-label="Tous les modules du portail"></div>
+<!-- Dock flottant (rempli par le script) -->
 <nav class="rh-dock" id="rhDock" aria-label="Navigation du portail"></nav>
 
 <div id="toast-container" class="toast-container"></div>
@@ -132,14 +99,9 @@
   const plFrame = document.getElementById('plFrame');
   const plHome = document.getElementById('plHome');
   const plTitle = document.getElementById('plTitle');
-  const pop = document.getElementById('rhPop');
-  const overlay = document.getElementById('rhPopOverlay');
 
-  function closePop() { pop.classList.remove('open'); overlay.classList.remove('open'); }
-  function openPop() { pop.classList.add('open'); overlay.classList.add('open'); }
   function setActive(page) {
     if (window.PortalDock) PortalDock.setActive(page);
-    document.querySelectorAll('.rh-pop-link').forEach(d => d.classList.toggle('active', d.dataset.page === page));
   }
 
   // ── Navigation interne : la page s'ouvre dans le panneau, le dock reste visible ──
@@ -150,7 +112,6 @@
     plTitle.textContent = 'Portail';
     setActive(null);
     sessionStorage.removeItem('pl_last_page');
-    closePop();
   }
   function loadPage(page, label) {
     plHome.style.display = 'none';
@@ -159,10 +120,9 @@
     plTitle.textContent = label || '';
     setActive(page);
     sessionStorage.setItem('pl_last_page', page);
-    closePop();
   }
 
-  // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
+  // ── Dock « par catégories » — 1 pastille par groupe (composant partagé) ──
   const homeBtn = `<button class="rh-dock-home" id="plHomeBtn" title="Accueil du portail" aria-label="Accueil du portail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
   const GROUP_META = {
     'Mon espace personnel':  { short: 'Mon espace', color: '#6366f1', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
@@ -178,24 +138,8 @@
     current: (_plLastE && allowed(_plLastE)) ? _plLastE.page : null
   });
 
-  // ── Popover : 3 colonnes = 3 groupes, entrées autorisées uniquement ──
-  pop.innerHTML = `<div class="rh-pop-title">Tous les modules du portail</div><div class="rh-pop-grid">${
-    GROUPS.map(g => `<div><div class="rh-pop-col-title">${g}</div>${
-      PL_NAV.filter(e => e.g === g && allowed(e)).map(e => {
-        const attrs = e.module ? ` data-module="${e.module}"` : '';
-        return `<button class="rh-pop-link" data-page="${e.page}"${attrs}><span class="rh-pop-dot" style="background:${e.c1}"></span>${e.label}</button>`;
-      }).join('')
-    }</div>`).join('')
-  }</div>`;
-
-  // Clics du lanceur « Tous les modules » → loadPage (le dock catégories se gère seul)
-  document.querySelectorAll('.rh-pop-link').forEach(b => {
-    b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
-  });
   // Bouton accueil : revient à l'accueil du portail
   document.getElementById('plHomeBtn').addEventListener('click', showHome);
-  // Bouton central : ouvre/ferme le popover ; overlay : ferme
-  overlay.addEventListener('click', closePop);
 
   // Si une page chargée navigue vers l'accueil ou le portail, on sort de l'iframe
   // (sinon on se retrouve avec un portail imbriqué dans le panneau).
