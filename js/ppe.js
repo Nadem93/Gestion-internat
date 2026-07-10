@@ -171,7 +171,6 @@ function renderAvenantFull(p) {
       </div>
     </div>
     ${DOMAINES.map(d => renderSectionCard(p, d)).join('')}
-    ${renderSerafinSync(p)}
     <div class="section-card">
       <div class="section-header" style="cursor:default"><strong>Conclusion</strong></div>
       <div class="section-body">
@@ -276,7 +275,8 @@ function objSerafinHtml(ppeId, domId, oi, o) {
   </div>`;
 }
 
-// Valide / retire un code SERAFIN sur un objectif, puis re-rend l'avenant (section rouverte)
+// Valide / retire un code SERAFIN sur un objectif, puis re-rend l'avenant (section rouverte).
+// Circuit automatique : la codification de l'avenant et la fiche résident suivent sans autre action.
 function toggleObjSerafin(ppeId, domId, oi, code) {
   const p = getPpe().find(x => x.id === ppeId);
   if (!p || !p.sections[domId] || !p.sections[domId].objectifs[oi]) return;
@@ -284,7 +284,9 @@ function toggleObjSerafin(ppeId, domId, oi, code) {
   if (!Array.isArray(o.serafin)) o.serafin = [];
   const i = o.serafin.indexOf(code);
   if (i >= 0) o.serafin.splice(i, 1); else o.serafin.push(code);
+  serafinDeriveAvenant(p);
   persistPpe(p);
+  serafinSyncResident(p);
   renderAvenantFull(p);
   const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
   if (bodyEl) bodyEl.style.display = '';
@@ -795,142 +797,35 @@ function regenerateAvenantFromJournal(id) {
 }
 
 // ═══════════════════════════════════════════
-//  SYNCHRONISATION SERAFIN-PH
+//  SERAFIN-PH — CIRCUIT AUTOMATIQUE
+//  (remplace l'ancien panneau manuel « Synchronisation SERAFIN-PH » : grille + boutons)
+//  Pastilles validées sur les objectifs → prestations de l'avenant → fiche résident.
 // ═══════════════════════════════════════════
 
-const SP_DESCRIPTIONS = {
-  '2.1.1': { desc: 'Soins médicaux, paramédicaux et psychologiques dispensés au résident.', ex: 'Suivi infirmier quotidien, consultation psychiatrique, distribution des médicaments.' },
-  '2.1.2': { desc: 'Maintien ou restauration des capacités motrices, cognitives ou sensorielles.', ex: 'Séances de kinésithérapie, ergothérapie, orthophonie.' },
-  '2.2.1': { desc: 'Soutien aux actes essentiels de la vie quotidienne : toilette, repas, hygiène, déplacements.', ex: 'Aide à la douche, accompagnement pour cuisiner, guidage dans les déplacements internes.' },
-  '2.3.1': { desc: 'Aide à la compréhension et à l\'exercice des droits civiques, administratifs et juridiques.', ex: 'Démarches pour la carte d\'invalidité, déclaration de revenus, accompagnement chez le tuteur.' },
-  '2.3.2': { desc: 'Soutien dans la gestion du cadre de vie et la préparation à un logement autonome.', ex: 'Apprentissage du rangement, entretien de la chambre, préparation à un appartement extérieur.' },
-  '2.3.3': { desc: 'Aide à l\'insertion professionnelle, scolaire ou en formation adaptée.', ex: 'Accompagnement à l\'ESAT, soutien en atelier, aide à la rédaction d\'un CV ou dossier de formation.' },
-  '2.3.4': { desc: 'Soutien à la participation aux activités culturelles, sportives, citoyennes et aux relations sociales.', ex: 'Sorties culturelles, clubs de sport, maintien du lien familial, participation à des associations.' },
-  '2.3.5': { desc: 'Aide à la gestion du budget, des ressources financières et des démarches administratives courantes.', ex: 'Suivi du budget mensuel, apprentissage du paiement de factures, gestion de l\'argent de poche.' },
-  '2.4.1': { desc: 'Coordination entre les intervenants pour garantir la cohérence du projet de vie du résident.', ex: 'Réunion de synthèse pluridisciplinaire, coordination MDPH, lien avec la famille et les partenaires externes.' }
-};
-
-function renderSerafinSync(p) {
-  const serafin = p.serafin || {};
-  const prestations = serafin.prestations || {};
-  const directes = (typeof SP_NOMENCLATURE !== 'undefined' ? SP_NOMENCLATURE : []).filter(s => s.cat === 'Directe');
-  const niveauLabels = ['0 — Nul', '1 — Faible', '2 — Modéré', '3 — Important', '4 — Très important'];
-  const niveauColors = ['#d1d5db', '#22c55e', '#eab308', '#f97316', '#ef4444'];
-  const activeCount = Object.values(prestations).filter(v => v.active).length;
-
-  return `<div class="section-card">
-    <div class="section-header" style="cursor:default">
-      <span>📊</span>
-      <span>Synchronisation SERAFIN-PH</span>
-      <span style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
-        ${activeCount ? `<span style="font-size:.68rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:2px 8px;border-radius:999px">${activeCount} prestation${activeCount>1?'s':''}</span>` : ''}
-        ${typeof spComptesAvenant === 'function' ? `<button class="btn btn-sm" style="background:#0d9488;color:#fff;border:none;font-size:.72rem;padding:3px 10px;border-radius:6px" onclick="autoCodeSerafin('${p.id}')" title="Coche automatiquement les prestations à partir des codes validés sur les objectifs">⚡ Coder depuis les objectifs</button>` : ''}
-        <button class="btn btn-sm" style="background:#7F77DD;color:#fff;border:none;font-size:.72rem;padding:3px 10px;border-radius:6px" onclick="syncSerafinToResident('${p.id}')">⟳ Synchroniser → résident</button>
-      </span>
-    </div>
-    <div class="section-body">
-      <p style="font-size:.78rem;margin:0 0 .85rem;color:#534AB7">Cochez les prestations SERAFIN-PH concernées par cet avenant et définissez le niveau de besoin. Cliquez sur <strong>Synchroniser</strong> pour mettre à jour la fiche SERAFIN-PH du résident.</p>
-      ${serafinRecapHtml(p)}
-      <div style="display:flex;flex-direction:column;gap:.45rem">
-        ${directes.map(sp => {
-          const item = prestations[sp.code] || { active: false, niveau: 0 };
-          const isActive = !!item.active;
-          const dotColor = niveauColors[item.niveau] || niveauColors[0];
-          const info = SP_DESCRIPTIONS[sp.code] || {};
-          return `<div style="padding:.65rem .85rem;background:${isActive?'#fff':'rgba(255,255,255,.45)'};border:0.5px solid ${isActive?'#7F77DD':'#CECBF6'};border-radius:8px" id="sp_row_${p.id}_${sp.code.replace(/\./g,'_')}">
-            <div style="display:flex;align-items:center;gap:.75rem">
-              <input type="checkbox" ${isActive?'checked':''} onchange="saveSerafinItem('${p.id}','${sp.code}','active',this.checked)" style="width:15px;height:15px;accent-color:#534AB7;flex-shrink:0;cursor:pointer"/>
-              <span style="font-size:.8rem;flex:1;font-weight:600;color:${isActive?'#26215C':'#534AB7'}">${sp.icon} <span style="font-size:.72rem;color:#7F77DD;font-weight:700">${sp.code}</span> ${sp.label}</span>
-              ${isActive ? `<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
-                <span style="width:9px;height:9px;border-radius:50%;background:${dotColor};display:inline-block"></span>
-                <select onchange="saveSerafinItem('${p.id}','${sp.code}','niveau',parseInt(this.value))" style="font-size:.72rem;padding:2px 6px;border:0.5px solid #CECBF6;border-radius:6px;background:#fff;color:#26215C;cursor:pointer">
-                  ${niveauLabels.map((l,i)=>`<option value="${i}" ${item.niveau===i?'selected':''}>${l}</option>`).join('')}
-                </select>
-              </div>` : ''}
-            </div>
-            ${info.desc ? `<div style="margin-top:.4rem;padding-left:27px">
-              <div style="font-size:.73rem;color:#534AB7;line-height:1.45">${info.desc}</div>
-              <div style="font-size:.7rem;color:#7F77DD;margin-top:.2rem;font-style:italic">Ex : ${info.ex}</div>
-            </div>` : ''}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── Récapitulatif de la codification des objectifs (comptes par code) ──
-function serafinRecapHtml(p) {
-  if (typeof spComptesAvenant !== 'function') return '';
-  const compte = spComptesAvenant(p);
-  const codes = Object.keys(compte).sort();
-  const totalObj = Object.values(p.sections || {}).reduce((a, s) => a + ((s.objectifs || []).filter(o => (o.objectif || '').trim()).length), 0);
-  const codesObj = Object.values(p.sections || {}).reduce((a, s) => a + ((s.objectifs || []).filter(o => ((o.serafin || []).filter(spCodeValide)).length && (o.objectif || '').trim()).length), 0);
-  if (!codes.length) {
-    return `<div style="font-size:.74rem;color:#534AB7;background:rgba(255,255,255,.5);border:0.5px dashed #CECBF6;border-radius:8px;padding:.5rem .7rem;margin-bottom:.85rem">
-      💡 Aucun objectif codé pour l'instant. Dans chaque domaine, cliquez sur les pastilles <strong>Serafin</strong> proposées sous les objectifs (violet = besoins 1.x, vert = prestations 2.x) pour les valider — la grille ci-dessous pourra ensuite être cochée automatiquement.</div>`;
-  }
-  return `<div style="background:rgba(255,255,255,.55);border:0.5px solid #CECBF6;border-radius:8px;padding:.55rem .7rem;margin-bottom:.85rem">
-    <div style="font-size:.7rem;font-weight:700;color:#26215C;margin-bottom:.35rem">Codification des objectifs — ${codesObj}/${totalObj} objectif${totalObj > 1 ? 's' : ''} codé${codesObj > 1 ? 's' : ''}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:.3rem">
-      ${codes.map(c => `<span title="${escHtml(spLabel(c))}" style="font-size:.64rem;font-weight:700;padding:.24rem .5rem;border-radius:999px;background:${spEstBesoin(c) ? '#f5f3ff' : '#f0fdfa'};border:0.5px solid ${spEstBesoin(c) ? '#ddd6fe' : '#99e5dc'};color:${spEstBesoin(c) ? '#6d28d9' : '#0f766e'}">${spIcon(c)} ${c} × ${compte[c]}</span>`).join('')}
-    </div>
-  </div>`;
-}
-
-// ── Codification automatique de la grille : coche les prestations issues des objectifs ──
-// Ne décoche jamais rien (les choix manuels restent) ; niveau par défaut « 2 — Modéré » pour
-// les nouvelles cases, à ajuster ensuite par le professionnel.
-function autoCodeSerafin(ppeId) {
-  const p = getPpe().find(x => x.id === ppeId);
-  if (!p) return;
-  const compte = spComptesAvenant(p);
-  // La grille ci-dessous n'affiche que les prestations DIRECTES : ne cocher qu'elles,
-  // sinon on créerait des prestations actives invisibles et indécochables (ex. 3.2.4).
-  const grille = (typeof SP_NOMENCLATURE !== 'undefined' ? SP_NOMENCLATURE : []).filter(s => s.cat === 'Directe').map(s => s.code);
-  const prestCodes = Object.keys(compte).filter(c => !spEstBesoin(c) && grille.includes(c));
-  if (!prestCodes.length) { toast('Aucun code prestation validé sur les objectifs — cliquez d\'abord les pastilles Serafin sous les objectifs', 'info'); return; }
-  if (!p.serafin) p.serafin = { prestations: {} };
-  if (!p.serafin.prestations) p.serafin.prestations = {};
-  let ajouts = 0;
-  prestCodes.forEach(c => {
-    const item = p.serafin.prestations[c];
-    if (!item || !item.active) {
-      p.serafin.prestations[c] = { active: true, niveau: (item && item.niveau) || 2 };
-      ajouts++;
-    }
-  });
-  persistPpe(p);
-  renderAvenantFull(p);
-  toast(ajouts ? `${ajouts} prestation${ajouts > 1 ? 's' : ''} cochée${ajouts > 1 ? 's' : ''} depuis les objectifs — ajustez les niveaux puis synchronisez` : 'Grille déjà à jour avec les objectifs', 'success');
-}
-
-function saveSerafinItem(ppeId, code, field, value) {
-  const list = getPpe();
-  const p = list.find(x => x.id === ppeId);
-  if (!p) return;
-  if (!p.serafin) p.serafin = { prestations: {} };
-  if (!p.serafin.prestations[code]) p.serafin.prestations[code] = { active: false, niveau: 0 };
-  p.serafin.prestations[code][field] = value;
-  persistPpe(p);
-  const full = document.getElementById('avenantFullView');
-  if (full) renderAvenantFull(p);
-}
-
-async function syncSerafinToResident(ppeId) {
-  const list = getPpe();
-  const p = list.find(x => x.id === ppeId);
-  if (!p) { toast('Avenant introuvable', 'error'); return; }
-  const spData = p.serafin && p.serafin.prestations ? p.serafin.prestations : {};
-  const selected = Object.entries(spData).filter(([,v]) => v.active).map(([k]) => k);
-  if (!selected.length) { toast('Aucune prestation sélectionnée', 'error'); return; }
-  const r = residentsList().find(x => String(x.id) === String(p.residentId));
-  if (!r) { toast('Résident introuvable', 'error'); return; }
+// Dérive p.serafin.prestations des codes prestation validés sur les objectifs
+// (miroir exact ; les niveaux déjà définis sont conservés, 2 = Modéré par défaut).
+function serafinDeriveAvenant(p) {
+  if (typeof spComptesAvenant !== 'function') return;
+  const codes = Object.keys(spComptesAvenant(p)).filter(c => !spEstBesoin(c));
+  const prev = (p.serafin && p.serafin.prestations) || {};
   const prestations = {};
-  selected.forEach(code => { prestations[code] = { niveau: spData[code].niveau || 0 }; });
-  const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: new Date().toISOString().slice(0,10) };
-  await persistResident({ ...r, serafinph });
-  toast(`✅ SERAFIN synchronisé pour ${p.residentName} — ${selected.length} prestation${selected.length>1?'s':''}`, 'success');
+  codes.forEach(c => { prestations[c] = { active: true, niveau: (prev[c] && prev[c].niveau) || 2 }; });
+  p.serafin = { ...(p.serafin || {}), prestations };
+}
+
+// Répercute silencieusement le profil dérivé sur la fiche SERAFIN-PH du résident.
+// Ne vide JAMAIS un profil existant (si plus aucun code : la fiche résident est laissée telle quelle).
+async function serafinSyncResident(p) {
+  const spData = (p.serafin && p.serafin.prestations) || {};
+  const selected = Object.entries(spData).filter(([, v]) => v.active).map(([k]) => k);
+  if (!selected.length) return;
+  const r = residentsList().find(x => String(x.id) === String(p.residentId));
+  if (!r) return;
+  const prestations = {};
+  selected.forEach(code => { prestations[code] = { niveau: spData[code].niveau || 2 }; });
+  const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: new Date().toISOString().slice(0, 10) };
+  try { await persistResident({ ...r, serafinph }); }
+  catch (e) { console.warn('[serafin] synchronisation fiche résident impossible', e); }
 }
 
 function initPpePage() {

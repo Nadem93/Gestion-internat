@@ -8,7 +8,8 @@ async function loadResidentsCache() { _residentsCache = await sbGetResidents(); 
 // DB.set(DB.keys.residents). Contrainte projet : aucune donnée fictive ne doit être
 // écrite dans les tables prod. On ne persiste donc plus rien : le seeding reste
 // uniquement en mémoire (cache) pour conserver l'aperçu de démonstration locale.
-// Les vraies évaluations SERAFIN-PH arrivent via ppe.js → syncSerafinToResident().
+// Les vraies évaluations SERAFIN-PH arrivent via ppe.js → serafinSyncResident()
+// (circuit automatique : pastilles validées sur les objectifs de l'avenant).
 function seedSpExemples() {
   const residents = residentsList();
   residents.forEach(r => {
