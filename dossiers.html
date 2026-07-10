@@ -7,7 +7,7 @@
   <style>
     html,body{margin:0;height:100%}
     .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:#e2ebfd}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
+    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative;padding-bottom:88px}
     #dsFrame{flex:1;width:100%;border:none;background:#fff}
 
     /* ── Dock flottant ── */
@@ -167,7 +167,6 @@
     dock: document.getElementById('dsDock'),
     nav: DS_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
     allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
-    gridId: 'dsGridBtn', launcherLabel: 'Toutes les rubriques',
     current: (_dsLastE && allowed(_dsLastE)) ? _dsLastE.page : null
   });
 
@@ -186,7 +185,6 @@
   // Maison : accueil de la rubrique
   document.getElementById('dsHomeBtn').addEventListener('click', showHome);
   // Bouton central : ouvre/ferme le popover ; overlay : ferme
-  document.getElementById('dsGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
   overlay.addEventListener('click', closePop);
 
   // Si une page chargée renvoie vers l'accueil ou les dossiers, on sort de l'iframe

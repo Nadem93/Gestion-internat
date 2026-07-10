@@ -7,7 +7,7 @@
   <style>
     html,body{margin:0;height:100%}
     .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:transparent}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
+    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;padding-bottom:88px}
     #rhFrame{flex:1;width:100%;border:none}
 
     /* ── Dock flottant ── */
@@ -146,7 +146,6 @@
       dock: document.getElementById('rhDock'),
       nav: RH_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
       allowed, onNavigate: e => loadPage(e.page, e.label),
-      gridId: 'rhGridBtn', launcherLabel: 'Tous les modules RH',
       current: (_rhLastE && allowed(_rhLastE)) ? _rhLastE.page : RH_NAV[0].page
     });
 
@@ -163,7 +162,6 @@
       b.addEventListener('click', () => { const e = entryOf(b.dataset.page); loadPage(b.dataset.page, e ? e.label : ''); });
     });
     // Bouton central : ouvre/ferme le popover ; overlay : ferme
-    document.getElementById('rhGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
     overlay.addEventListener('click', closePop);
 
     // Si une page chargée navigue vers l'accueil (clic maison), on sort de l'iframe

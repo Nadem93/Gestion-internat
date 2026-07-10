@@ -98,7 +98,7 @@
     .ppe-bar-fill{height:100%;border-radius:var(--r-full);transition:width 1s ease}
 
     /* ── CONTENT ── */
-    .admin-content{padding:1.25rem 2rem 3rem}
+    .admin-content{padding:1.25rem 2rem 96px}
     .admin-panel{display:none}
     .admin-panel.active{
       display:block;animation:fadeUp .25s ease;
@@ -157,14 +157,14 @@
     @media(max-width:900px){
       .stats-strip{grid-template-columns:repeat(2,1fr);padding:0 1rem}
       .stats-detail{grid-template-columns:1fr;padding:.75rem 1rem 0}
-      .admin-content{padding:1rem 1rem 3rem}
+      .admin-content{padding:1rem 1rem 96px}
       .admin-topbar{padding:.85rem 1.1rem}
       .fonc-grid{grid-template-columns:1fr}
       .atb-badge{display:none}
     }
     @media(max-width:480px){
       .stats-strip{gap:.625rem;padding:0 .75rem}
-      .admin-content{padding:.75rem .75rem 3rem}
+      .admin-content{padding:.75rem .75rem 96px}
       .admin-topbar{padding:.7rem .75rem}
       .atb-title{font-size:.9rem}
       .circ-wrap{width:72px;height:72px}
@@ -2238,12 +2238,10 @@ document.querySelectorAll('.rh-dock-item').forEach(b=>{const t=b.querySelector('
     dock: dock,
     nav: ADMIN_NAV, key: 'tab', groups: GROUPS, groupMeta: GROUP_META,
     onNavigate: e => activateTab(e.tab),
-    gridId: 'adminGridBtn', launcherLabel: 'Tous les réglages',
     current: (_adminTab && entryOf(_adminTab)) ? _adminTab : 'stats'
   });
   pop.innerHTML = `<div class="rh-pop-title">Tous les réglages</div><div class="rh-pop-grid">${GROUPS.map(g => `<div><div class="rh-pop-col-title">${g}</div>${ADMIN_NAV.filter(e => e.g === g).map(e => `<button class="rh-pop-link" data-tab="${e.tab}"><span class="rh-pop-dot" style="background:${e.c1}"></span>${e.label}</button>`).join('')}</div>`).join('')}</div>`;
   document.querySelectorAll('.rh-pop-link').forEach(b => b.addEventListener('click', () => { activateTab(b.dataset.tab); closePop(); }));
-  document.getElementById('adminGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
   overlay.addEventListener('click', closePop);
 })();
 </script>

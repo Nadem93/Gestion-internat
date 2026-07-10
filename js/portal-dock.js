@@ -149,10 +149,11 @@
           '<div class="pdk-foot"><span><span class="pdk-key">&uarr;</span> <span class="pdk-key">&darr;</span> naviguer</span><span><span class="pdk-key">&crarr;</span> ouvrir</span><span><span class="pdk-key">Échap</span> fermer</span></div>' +
         '</div></div>';
     }).join('');
-    var gridBtn = '<button class="rh-dock-grid" id="' + esc(cfg.gridId) + '" title="' + esc(cfg.launcherLabel || 'Tous les modules') + '" aria-label="' + esc(cfg.launcherLabel || 'Tous les modules') + '" aria-haspopup="dialog">' + GRID_SVG + '</button>';
     var sep = '<span class="rh-dock-sep"></span>';
+    // Bouton central « Tous les modules » : rendu UNIQUEMENT si un gridId est fourni.
+    var gridBtn = cfg.gridId ? sep + '<button class="rh-dock-grid" id="' + esc(cfg.gridId) + '" title="' + esc(cfg.launcherLabel || 'Tous les modules') + '" aria-label="' + esc(cfg.launcherLabel || 'Tous les modules') + '" aria-haspopup="dialog">' + GRID_SVG + '</button>' : '';
     // cfg.leading : HTML brut optionnel rendu avant les groupes (ex. bouton accueil du portail)
-    cfg.dock.innerHTML = (cfg.leading ? cfg.leading + sep : '') + html + sep + gridBtn;
+    cfg.dock.innerHTML = (cfg.leading ? cfg.leading + sep : '') + html + gridBtn;
     wire();
     if (cfg.current) setActive(cfg.current);
   }

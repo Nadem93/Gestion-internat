@@ -7,7 +7,7 @@
   <style>
     html,body{margin:0;height:100%}
     .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:#fbe8d4}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
+    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative;padding-bottom:88px}
     #vqFrame{flex:1;width:100%;border:none;background:#fff}
 
     /* ── Dock flottant ── */
@@ -167,7 +167,6 @@
     dock: document.getElementById('vqDock'),
     nav: VQ_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
     allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
-    gridId: 'vqGridBtn', launcherLabel: 'Tous les modules',
     current: (_vqLastE && allowed(_vqLastE)) ? _vqLastE.page : null
   });
 
@@ -187,7 +186,6 @@
   document.getElementById('vqHomeBtn').addEventListener('click', showHome);
   document.getElementById('vqPopHome').addEventListener('click', showHome);
   // Bouton central : ouvre/ferme le popover ; overlay : ferme
-  document.getElementById('vqGridBtn').addEventListener('click', () => pop.classList.contains('open') ? closePop() : openPop());
   overlay.addEventListener('click', closePop);
 
   // Si une page chargée renvoie vers l'accueil ou la vie quotidienne, on sort de l'iframe
