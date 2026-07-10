@@ -254,7 +254,40 @@ function objRowHtml(ppeId, domId, oi, o) {
       <input class="input" value="${escHtml(o.evaluation||'')}" onchange="updateSectionObjField('${ppeId}','${domId}',${oi},'evaluation',this.value)"/>
       <button class="btn btn-ghost btn-sm" style="flex-shrink:0;color:#dc2626;font-size:.7rem;padding:2px 6px" onclick="removeSectionObj('${ppeId}','${domId}',${oi})">✕</button>
     </div>
+  </div>${objSerafinHtml(ppeId, domId, oi, o)}`;
+}
+
+// ── Codification SERAFIN-PH de l'objectif : codes validés (pleins) + suggestions (pointillés) ──
+// Rien n'est enregistré sans clic de validation. Suggestions = analyse du texte + domaine.
+function objSerafinHtml(ppeId, domId, oi, o) {
+  if (typeof spSuggerer !== 'function') return '';
+  // Liste blanche : un code hors nomenclature (jsonb forgé) n'est ni rendu ni injecté en onclick
+  const valides = (Array.isArray(o.serafin) ? o.serafin : []).filter(spCodeValide);
+  let chips = valides.map(c => spChip(c, true, `onclick="toggleObjSerafin('${ppeId}','${domId}',${oi},'${c}')"`)).join('');
+  if ((o.objectif || '').trim()) {
+    const sug = spSuggerer(o.objectif, domId);
+    const restants = [...sug.besoins, ...sug.prestations].filter(c => !valides.includes(c));
+    chips += restants.map(c => spChip(c, false, `onclick="toggleObjSerafin('${ppeId}','${domId}',${oi},'${c}')"`)).join('');
+  }
+  if (!chips) return '';
+  return `<div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:-.15rem 0 .55rem;padding-left:.1rem">
+    <span style="font-size:.58rem;font-weight:800;letter-spacing:.08em;color:#94a3b8;text-transform:uppercase;flex-shrink:0" title="Codification SERAFIN-PH — violet : besoins (1.x) · vert : prestations (2.x/3.x)">Serafin</span>
+    ${chips}
   </div>`;
+}
+
+// Valide / retire un code SERAFIN sur un objectif, puis re-rend l'avenant (section rouverte)
+function toggleObjSerafin(ppeId, domId, oi, code) {
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p || !p.sections[domId] || !p.sections[domId].objectifs[oi]) return;
+  const o = p.sections[domId].objectifs[oi];
+  if (!Array.isArray(o.serafin)) o.serafin = [];
+  const i = o.serafin.indexOf(code);
+  if (i >= 0) o.serafin.splice(i, 1); else o.serafin.push(code);
+  persistPpe(p);
+  renderAvenantFull(p);
+  const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+  if (bodyEl) bodyEl.style.display = '';
 }
 
 function addSectionObj(ppeId, domId) {
@@ -277,6 +310,13 @@ function updateSectionObjField(ppeId, domId, idx, field, value) {
   if (!p.sections[domId].objectifs[idx]) p.sections[domId].objectifs[idx] = { objectif:'', moyens:'', echeance:'', evaluation:'' };
   p.sections[domId].objectifs[idx][field] = value;
   persistPpe(p);
+  // Le texte de l'objectif nourrit les suggestions SERAFIN : re-rendre pour les afficher
+  // immédiatement (sinon elles n'apparaîtraient qu'au prochain re-render fortuit).
+  if (field === 'objectif' && typeof spSuggerer === 'function') {
+    renderAvenantFull(p);
+    const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+    if (bodyEl) bodyEl.style.display = '';
+  }
 }
 
 function removeSectionObj(ppeId, domId, idx) {
@@ -381,7 +421,7 @@ ${DOMAINES.map(d => {
   return `<h2><span class="sep">▸</span>${d.label}</h2>
     ${s.bilan ? `<div class="card-bilan"><strong>Bilan :</strong> ${escHtml(s.bilan)}</div>` : ''}
     ${s.objectifs.length ? `<table><thead><tr><th style="width:28%">Objectif</th><th style="width:32%">Moyens / Actions</th><th style="width:15%">Échéance</th><th style="width:25%">Évaluation</th></tr></thead>
-    <tbody>${s.objectifs.map(o => `<tr><td>${escHtml(o.objectif||'')}</td><td>${escHtml(o.moyens||'')}</td><td>${o.echeance||''}</td><td>${escHtml(o.evaluation||'')}</td></tr>`).join('')}</tbody></table>` : '<div class="no-obj">Aucun objectif défini pour ce domaine.</div>'}
+    <tbody>${s.objectifs.map(o => { const spc = (o.serafin||[]).filter(c => typeof spCodeValide === 'function' && spCodeValide(c)); return `<tr><td>${escHtml(o.objectif||'')}${spc.length ? `<div style="font-size:.62rem;color:#6d28d9;margin-top:2px">SERAFIN-PH : ${spc.join(' · ')}</div>` : ''}</td><td>${escHtml(o.moyens||'')}</td><td>${o.echeance||''}</td><td>${escHtml(o.evaluation||'')}</td></tr>`; }).join('')}</tbody></table>` : '<div class="no-obj">Aucun objectif défini pour ce domaine.</div>'}
     ${s.expression ? `<div class="card-expression"><strong>Expression du résident :</strong> ${escHtml(s.expression)}</div>` : ''}`;
 }).join('')}
 
@@ -784,11 +824,13 @@ function renderSerafinSync(p) {
       <span>Synchronisation SERAFIN-PH</span>
       <span style="margin-left:auto;display:flex;align-items:center;gap:.6rem">
         ${activeCount ? `<span style="font-size:.68rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:2px 8px;border-radius:999px">${activeCount} prestation${activeCount>1?'s':''}</span>` : ''}
+        ${typeof spComptesAvenant === 'function' ? `<button class="btn btn-sm" style="background:#0d9488;color:#fff;border:none;font-size:.72rem;padding:3px 10px;border-radius:6px" onclick="autoCodeSerafin('${p.id}')" title="Coche automatiquement les prestations à partir des codes validés sur les objectifs">⚡ Coder depuis les objectifs</button>` : ''}
         <button class="btn btn-sm" style="background:#7F77DD;color:#fff;border:none;font-size:.72rem;padding:3px 10px;border-radius:6px" onclick="syncSerafinToResident('${p.id}')">⟳ Synchroniser → résident</button>
       </span>
     </div>
     <div class="section-body">
       <p style="font-size:.78rem;margin:0 0 .85rem;color:#534AB7">Cochez les prestations SERAFIN-PH concernées par cet avenant et définissez le niveau de besoin. Cliquez sur <strong>Synchroniser</strong> pour mettre à jour la fiche SERAFIN-PH du résident.</p>
+      ${serafinRecapHtml(p)}
       <div style="display:flex;flex-direction:column;gap:.45rem">
         ${directes.map(sp => {
           const item = prestations[sp.code] || { active: false, niveau: 0 };
@@ -815,6 +857,52 @@ function renderSerafinSync(p) {
       </div>
     </div>
   </div>`;
+}
+
+// ── Récapitulatif de la codification des objectifs (comptes par code) ──
+function serafinRecapHtml(p) {
+  if (typeof spComptesAvenant !== 'function') return '';
+  const compte = spComptesAvenant(p);
+  const codes = Object.keys(compte).sort();
+  const totalObj = Object.values(p.sections || {}).reduce((a, s) => a + ((s.objectifs || []).filter(o => (o.objectif || '').trim()).length), 0);
+  const codesObj = Object.values(p.sections || {}).reduce((a, s) => a + ((s.objectifs || []).filter(o => ((o.serafin || []).filter(spCodeValide)).length && (o.objectif || '').trim()).length), 0);
+  if (!codes.length) {
+    return `<div style="font-size:.74rem;color:#534AB7;background:rgba(255,255,255,.5);border:0.5px dashed #CECBF6;border-radius:8px;padding:.5rem .7rem;margin-bottom:.85rem">
+      💡 Aucun objectif codé pour l'instant. Dans chaque domaine, cliquez sur les pastilles <strong>Serafin</strong> proposées sous les objectifs (violet = besoins 1.x, vert = prestations 2.x) pour les valider — la grille ci-dessous pourra ensuite être cochée automatiquement.</div>`;
+  }
+  return `<div style="background:rgba(255,255,255,.55);border:0.5px solid #CECBF6;border-radius:8px;padding:.55rem .7rem;margin-bottom:.85rem">
+    <div style="font-size:.7rem;font-weight:700;color:#26215C;margin-bottom:.35rem">Codification des objectifs — ${codesObj}/${totalObj} objectif${totalObj > 1 ? 's' : ''} codé${codesObj > 1 ? 's' : ''}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+      ${codes.map(c => `<span title="${escHtml(spLabel(c))}" style="font-size:.64rem;font-weight:700;padding:.24rem .5rem;border-radius:999px;background:${spEstBesoin(c) ? '#f5f3ff' : '#f0fdfa'};border:0.5px solid ${spEstBesoin(c) ? '#ddd6fe' : '#99e5dc'};color:${spEstBesoin(c) ? '#6d28d9' : '#0f766e'}">${spIcon(c)} ${c} × ${compte[c]}</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ── Codification automatique de la grille : coche les prestations issues des objectifs ──
+// Ne décoche jamais rien (les choix manuels restent) ; niveau par défaut « 2 — Modéré » pour
+// les nouvelles cases, à ajuster ensuite par le professionnel.
+function autoCodeSerafin(ppeId) {
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p) return;
+  const compte = spComptesAvenant(p);
+  // La grille ci-dessous n'affiche que les prestations DIRECTES : ne cocher qu'elles,
+  // sinon on créerait des prestations actives invisibles et indécochables (ex. 3.2.4).
+  const grille = (typeof SP_NOMENCLATURE !== 'undefined' ? SP_NOMENCLATURE : []).filter(s => s.cat === 'Directe').map(s => s.code);
+  const prestCodes = Object.keys(compte).filter(c => !spEstBesoin(c) && grille.includes(c));
+  if (!prestCodes.length) { toast('Aucun code prestation validé sur les objectifs — cliquez d\'abord les pastilles Serafin sous les objectifs', 'info'); return; }
+  if (!p.serafin) p.serafin = { prestations: {} };
+  if (!p.serafin.prestations) p.serafin.prestations = {};
+  let ajouts = 0;
+  prestCodes.forEach(c => {
+    const item = p.serafin.prestations[c];
+    if (!item || !item.active) {
+      p.serafin.prestations[c] = { active: true, niveau: (item && item.niveau) || 2 };
+      ajouts++;
+    }
+  });
+  persistPpe(p);
+  renderAvenantFull(p);
+  toast(ajouts ? `${ajouts} prestation${ajouts > 1 ? 's' : ''} cochée${ajouts > 1 ? 's' : ''} depuis les objectifs — ajustez les niveaux puis synchronisez` : 'Grille déjà à jour avec les objectifs', 'success');
 }
 
 function saveSerafinItem(ppeId, code, field, value) {

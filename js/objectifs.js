@@ -41,6 +41,7 @@ let _obResidents = [];
 let _obCanEdit = false;
 let _obCollapsed = new Set(); // ids d'objectifs dont les axes sont repliés (mémorisé entre re-renders)
 let obAxeCtx = null; // { objId, axeId } pendant la création/édition d'un axe
+let _obPpe = []; // avenants (PPE) : objectifs du projet personnalisé affichés par résident
 
 // ── Données ──
 let _residentsCache = [];
@@ -63,6 +64,70 @@ function residentsAvecObjectifs() { return residentsActifs().filter(r => (r.obje
 function getSuivi(r, objId) { return (r.objectifsSuivi || {})[objId] || {}; }
 function axesOf(sv) { return Array.isArray(sv.axes) ? sv.axes : []; }
 function resNom(r) { return `${r.prenom || ''} ${r.nom || ''}`.trim(); }
+
+// ── Objectifs du projet personnalisé (avenant PPE) ──
+// Libellés des domaines de l'avenant (miroir de DOMAINES dans js/ppe.js, non chargé ici)
+const OB_PPA_DOMAINES = {
+  autonomie:   { label: 'Autonomie',                        icon: '🧍' },
+  sante:       { label: 'Santé et bien-être',               icon: '❤️' },
+  viePro:      { label: 'Vie professionnelle et Formation', icon: '💼' },
+  logement:    { label: 'Logement et Temps libre',          icon: '🏠' },
+  vieSociale:  { label: 'Vie sociale et loisirs',           icon: '👥' },
+  vieAffective:{ label: 'Vie affective et familiale',       icon: '💞' },
+  budget:      { label: 'Gestion du budget',                icon: '💰' },
+  transport:   { label: 'Transport et déplacements',        icon: '🚗' },
+  orientation: { label: 'Orientation',                      icon: '🧭' }
+};
+
+// Dernier avenant du résident (par date de rédaction, sinon date de création)
+function obPpaOf(r) {
+  const list = _obPpe.filter(p => String(p.residentId) === String(r.id));
+  if (!list.length) return null;
+  return list.slice().sort((a, b) =>
+    String(b.dateRedaction || b.createdAt || '').localeCompare(String(a.dateRedaction || a.createdAt || '')))[0];
+}
+
+// Pastille SERAFIN en lecture seule (violet = besoin 1.x, vert = prestation 2.x/3.x)
+function obSpChip(code) {
+  const besoin = typeof spEstBesoin === 'function' ? spEstBesoin(code) : String(code).charAt(0) === '1';
+  const label = typeof spLabel === 'function' ? spLabel(code) : code;
+  return `<span title="${escHtml(label)}" style="font-size:.6rem;font-weight:700;padding:.2rem .45rem;border-radius:999px;white-space:nowrap;background:${besoin ? '#f5f3ff' : '#f0fdfa'};border:0.5px solid ${besoin ? '#ddd6fe' : '#99e5dc'};color:${besoin ? '#6d28d9' : '#0f766e'}">${code}</span>`;
+}
+
+// Bloc « objectifs du projet personnalisé » affiché en tête de la vue résident
+function ppaBlockHtml(r) {
+  const p = obPpaOf(r);
+  if (!p) return '';
+  const rows = [];
+  Object.entries(p.sections || {}).forEach(([domId, s]) =>
+    (s.objectifs || []).forEach(o => { if ((o.objectif || '').trim()) rows.push({ domId, o }); }));
+  if (!rows.length) return '';
+  const dateAv = p.dateRedaction ? new Date(p.dateRedaction).toLocaleDateString('fr-FR') : '';
+  // Statuts réels d'un avenant : brouillon / actif / termine (cf. js/ppe.js)
+  const stChip = { brouillon: ['Brouillon', '#f59e0b', '#fffbeb'], actif: ['Actif', '#16a34a', '#f0fdf4'], termine: ['Terminé', '#64748b', '#f8fafc'] }[p.statut] || [p.statut || '—', '#64748b', '#f8fafc'];
+  return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b45309;border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem">
+      <span style="font-size:.85rem;font-weight:800;color:#0f2b4a">🗂 Objectifs du projet personnalisé</span>
+      <span style="font-size:.7rem;color:#64748b">avenant${dateAv ? ' du ' + dateAv : ''} · ${rows.length} objectif${rows.length > 1 ? 's' : ''}</span>
+      <span style="font-size:.64rem;font-weight:700;padding:.16rem .5rem;border-radius:999px;color:${stChip[1]};background:${stChip[2]};border:0.5px solid ${stChip[1]}33">${stChip[0]}</span>
+      <a href="ppe.html" style="margin-left:auto;font-size:.7rem;font-weight:600;color:#4f46e5;text-decoration:none;white-space:nowrap">Ouvrir l'avenant →</a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.45rem">
+      ${rows.map(({ domId, o }) => {
+        const d = OB_PPA_DOMAINES[domId] || { label: domId, icon: '📄' };
+        return `<div style="padding:.55rem .7rem;background:#f8fafc;border-radius:9px">
+          <div style="display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap">
+            <span style="font-size:.62rem;font-weight:700;color:#b45309;white-space:nowrap;flex-shrink:0">${d.icon} ${escHtml(d.label)}</span>
+            <span style="font-size:.8rem;color:#1e293b;line-height:1.4;flex:1;min-width:180px">${escHtml(o.objectif)}</span>
+            ${o.echeance ? `<span style="font-size:.66rem;color:#64748b;white-space:nowrap">📅 ${new Date(o.echeance).toLocaleDateString('fr-FR')}</span>` : ''}
+          </div>
+          ${(o.moyens || '').trim() ? `<div style="font-size:.7rem;color:#64748b;margin-top:.25rem;padding-left:.1rem">Moyens : ${escHtml(o.moyens)}</div>` : ''}
+          ${(() => { const spc = (o.serafin || []).filter(c => typeof spCodeValide === 'function' && spCodeValide(c)); return spc.length ? `<div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem">${spc.map(obSpChip).join('')}</div>` : ''; })()}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
 
 // % de l'objectif = moyenne des progressions de ses axes. Sans axe : 100 si atteint, sinon null (non mesurable).
 function objPct(sv) {
@@ -175,7 +240,7 @@ function renderObjectifs() {
   </div>`;
 
   if (!resObjs.length) {
-    el.innerHTML = barre + emptyBox(`Aucun objectif n'est encore assigné à <strong>${escHtml(resNom(r))}</strong>.` +
+    el.innerHTML = barre + ppaBlockHtml(r) + emptyBox(`Aucun objectif n'est encore assigné à <strong>${escHtml(resNom(r))}</strong>.` +
       (_obCanEdit
         ? `<br><button class="btn btn-accent" style="margin-top:.8rem" onclick="openCatalogue()">+ Assigner des objectifs</button>`
         : `<br><span style="font-size:.78rem">Un membre de l'équipe éducative peut lui en assigner depuis cette page.</span>`));
@@ -184,7 +249,7 @@ function renderObjectifs() {
   const cards = resObjs
     .filter(o => !fStatut || (getSuivi(r, o.id).statut || 'non_commence') === fStatut)
     .map(o => objectifCard(r, o));
-  el.innerHTML = barre + (cards.length ? cards.join('') : emptyBox('Aucun objectif ne correspond à ce filtre.'));
+  el.innerHTML = barre + ppaBlockHtml(r) + (cards.length ? cards.join('') : emptyBox('Aucun objectif ne correspond à ce filtre.'));
 }
 
 function emptyBox(html) {
@@ -816,6 +881,9 @@ async function initObjectifs() {
   _obCanEdit = ['admin', 'moderator', 'superadmin'].includes(s.role)
     || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   await loadResidentsCache();
+  // Avenants (PPE) : leurs objectifs sont affichés en tête de la vue résident.
+  // Non bloquant : sans la couche PPE (ou en cas d'erreur), la page fonctionne sans le bloc.
+  try { if (typeof sbGetPpe === 'function') _obPpe = await sbGetPpe(); } catch (e) { console.warn('[objectifs] avenants non chargés', e); }
   // Tous les résidents actifs (pas seulement ceux ayant déjà des objectifs),
   // pour pouvoir assigner des objectifs à un nouveau résident depuis cette page.
   const opts = residentsActifs()
