@@ -96,6 +96,39 @@ const EV_GRILLES = {
         ]
       }
     ]
+  },
+  serafin: {
+    label: 'SERAFIN-PH — Niveaux de besoin (nomenclature nationale)',
+    short: 'SERAFIN-PH',
+    icon: '🧩',
+    color: '#7c3aed',
+    scoreMin: 0, scoreMax: 44,
+    // Le total exprime l'INTENSITÉ GLOBALE DES BESOINS (plus il est haut, plus
+    // l'accompagnement requis est important) — lecture inverse de la MIF.
+    // Bornes calées sur la moyenne des 11 niveaux : ≤1 faible, ≤2 modéré, ≤3 important
+    niveaux: [
+      { min:0,  max:11, label:'Besoins faibles',         color:'#16a34a' },
+      { min:12, max:24, label:'Besoins modérés',         color:'#d97706' },
+      { min:25, max:36, label:'Besoins importants',      color:'#ea580c' },
+      { min:37, max:44, label:'Besoins très importants', color:'#dc2626' }
+    ],
+    // Dimensions dérivées de la nomenclature des besoins SERAFIN-PH
+    // (SP_BESOINS, js/serafin-codage.js — chargé avant ce fichier).
+    dimensions: (typeof SP_BESOINS !== 'undefined' ? [
+      { id: 'sante',         label: '1.1 — Santé somatique ou psychique',
+        items: SP_BESOINS.filter(b => b.code.indexOf('1.1') === 0).map(b => ({ id: b.code, label: `${b.code} · ${b.label}` })) },
+      { id: 'autonomie',     label: '1.2 — Autonomie',
+        items: SP_BESOINS.filter(b => b.code.indexOf('1.2') === 0).map(b => ({ id: b.code, label: `${b.code} · ${b.label}` })) },
+      { id: 'participation', label: '1.3 — Participation sociale',
+        items: SP_BESOINS.filter(b => b.code.indexOf('1.3') === 0).map(b => ({ id: b.code, label: `${b.code} · ${b.label}` })) }
+    ] : []),
+    scaleItems: [
+      { val: 0, label: 'Aucun besoin' },
+      { val: 1, label: 'Besoin faible' },
+      { val: 2, label: 'Besoin modéré' },
+      { val: 3, label: 'Besoin important' },
+      { val: 4, label: 'Besoin très important' }
+    ]
   }
 };
 
@@ -210,7 +243,7 @@ function _evScore(e) {
   const g = EV_GRILLES[e.grille];
   if (!g) return 0;
   let total = 0;
-  if (e.grille === 'mif') {
+  if (e.grille === 'mif' || e.grille === 'serafin') {
     g.dimensions.forEach(dim => dim.items.forEach(it => { total += Number(e.scores?.[it.id] || 0); }));
   } else if (e.grille === 'barthel') {
     g.dimensions[0].items.forEach(it => { total += Number(e.scores?.[it.id] || 0); });
@@ -344,6 +377,31 @@ function _renderEvForm(scores) {
         </div>
       </div>`;
     }).join('');
+  } else if (grille === 'serafin') {
+    if (!g.dimensions.length) {
+      container.innerHTML = '<div class="empty" style="padding:1.5rem;text-align:center"><p>Nomenclature SERAFIN-PH non chargée sur cette page.</p></div>';
+      return;
+    }
+    const scaleHtml = `<div style="margin-bottom:1rem;padding:.6rem .8rem;background:#faf5ff;border-radius:8px;border:1px solid #ede9fe">
+      <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em">Niveau de besoin (0 → 4)</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.2rem">${g.scaleItems.map(s=>`<div style="text-align:center;padding:.3rem .2rem;background:#fff;border-radius:4px;border:0.5px solid #ede9fe"><div style="font-size:.85rem;font-weight:800;color:#7c3aed">${s.val}</div><div style="font-size:.58rem;color:var(--muted);line-height:1.2">${s.label}</div></div>`).join('')}</div>
+      <div style="font-size:.66rem;color:var(--muted);margin-top:.4rem">Positionnement du résident sur la nomenclature nationale des besoins SERAFIN-PH — support d'échange en équipe pluridisciplinaire.</div>
+    </div>`;
+    container.innerHTML = scaleHtml + g.dimensions.map(dim =>
+      `<div style="margin-bottom:.85rem">
+        <div style="font-size:.78rem;font-weight:700;color:${g.color};margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">${dim.label}</div>
+        ${dim.items.map(it => {
+          const val = scores?.[it.id] ?? '';
+          return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;padding:.35rem .5rem;background:#faf5ff;border-radius:6px">
+            <label style="flex:1;font-size:.8rem;color:var(--text)">${it.label}</label>
+            <select name="score_${it.id}" style="font-size:.76rem;padding:.2rem .35rem;border:1px solid var(--border);border-radius:6px;width:190px;flex-shrink:0">
+              <option value="">—</option>
+              ${g.scaleItems.map(s=>`<option value="${s.val}"${val !== '' && Number(val)===s.val?' selected':''}>${s.val} — ${s.label}</option>`).join('')}
+            </select>
+          </div>`;
+        }).join('')}
+      </div>`
+    ).join('');
   }
 
   // Score live
@@ -440,6 +498,23 @@ function openEvDetail(id) {
       return `<div style="display:flex;justify-content:space-between;padding:.3rem .5rem;border-radius:4px;background:#f8fafc;margin-bottom:.25rem">
         <span style="font-size:.78rem">${it.label}</span>
         <span style="font-size:.78rem;font-weight:700;color:${v>=10?'#16a34a':v>=5?'#d97706':'#dc2626'}">${v} — ${opt?.l||''}</span>
+      </div>`;
+    }).join('');
+  } else if (ev.grille === 'serafin') {
+    // Lecture inverse de la MIF : plus le niveau de besoin est HAUT, plus la couleur alerte
+    detailHtml = g.dimensions.map(dim => {
+      const dimItems = dim.items.filter(it => ev.scores?.[it.id] !== undefined);
+      if (!dimItems.length) return '';
+      return `<div style="margin-bottom:.75rem">
+        <div style="font-size:.75rem;font-weight:700;color:${g.color};text-transform:uppercase;margin-bottom:.3rem">${dim.label}</div>
+        ${dimItems.map(it => {
+          const v = ev.scores[it.id];
+          const sc = g.scaleItems.find(s=>s.val===v);
+          return `<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.25rem .5rem;border-radius:4px;background:#faf5ff;margin-bottom:.2rem">
+            <span style="font-size:.78rem">${it.label}</span>
+            <span style="font-size:.78rem;font-weight:700;white-space:nowrap;color:${v>=3?'#dc2626':v===2?'#d97706':'#16a34a'}">${v} — ${sc?.label||''}</span>
+          </div>`;
+        }).join('')}
       </div>`;
     }).join('');
   }
