@@ -94,6 +94,24 @@ function obSpChip(code) {
   return `<span title="${escHtml(label)}" style="font-size:.6rem;font-weight:700;padding:.2rem .45rem;border-radius:999px;white-space:nowrap;background:${besoin ? '#f5f3ff' : '#f0fdfa'};border:0.5px solid ${besoin ? '#ddd6fe' : '#99e5dc'};color:${besoin ? '#6d28d9' : '#0f766e'}">${code}</span>`;
 }
 
+// Pastilles « distance à l'objectif » (outcomes du PPA) — lecture seule.
+// Échelle 1-5 (Très loin → Atteint) posée sur ppe.html ; on n'affiche que l'existant.
+function obOcChips(o) {
+  const oc = o.outcomes;
+  if (!oc) return '';
+  const COL = { 1: '#dc2626', 2: '#ea580c', 3: '#d97706', 4: '#65a30d', 5: '#16a34a' };
+  const cell = x => (x && COL[x.v]) ? `<b style="color:${COL[x.v]}">${x.v}</b>` : '<span style="color:#cbd5e1">·</span>';
+  const chip = (icon, title, deb, fin) => {
+    if (!deb && !fin) return '';
+    const delta = (deb && COL[deb.v] && fin && COL[fin.v]) ? fin.v - deb.v : null;
+    const dTxt = delta === null ? '' : ` <span style="font-weight:700;color:${delta > 0 ? '#16a34a' : delta < 0 ? '#dc2626' : '#94a3b8'}">(${delta > 0 ? '+' : ''}${delta})</span>`;
+    return `<span title="${title} — début → fin (1 Très loin … 5 Atteint)" style="display:inline-flex;align-items:center;gap:.25rem;font-size:.62rem;padding:.14rem .45rem;border-radius:999px;background:#f8fafc;border:0.5px solid #e2e8f0">${icon} ${cell(deb)} → ${cell(fin)}${dTxt}</span>`;
+  };
+  const g = (m, r) => (oc[m] && oc[m][r]) || null;
+  const html = chip('🧑', 'Selon la personne', g('debut', 'auto'), g('fin', 'auto')) + chip('👥', "Selon l'équipe", g('debut', 'pro'), g('fin', 'pro'));
+  return html ? `<div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem">${html}</div>` : '';
+}
+
 // Bloc « objectifs du projet personnalisé » affiché en tête de la vue résident
 function ppaBlockHtml(r) {
   const p = obPpaOf(r);
@@ -123,6 +141,7 @@ function ppaBlockHtml(r) {
           </div>
           ${(o.moyens || '').trim() ? `<div style="font-size:.7rem;color:#64748b;margin-top:.25rem;padding-left:.1rem">Moyens : ${escHtml(o.moyens)}</div>` : ''}
           ${(() => { const spc = (o.serafin || []).filter(c => typeof spCodeValide === 'function' && spCodeValide(c)); return spc.length ? `<div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem">${spc.map(obSpChip).join('')}</div>` : ''; })()}
+          ${obOcChips(o)}
         </div>`;
       }).join('')}
     </div>

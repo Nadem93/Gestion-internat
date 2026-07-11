@@ -260,7 +260,7 @@ function objRowHtml(ppeId, domId, oi, o) {
       <input class="input" value="${escHtml(o.evaluation||'')}" onchange="updateSectionObjField('${ppeId}','${domId}',${oi},'evaluation',this.value)"/>
       <button class="btn btn-ghost btn-sm" style="flex-shrink:0;color:#dc2626;font-size:.7rem;padding:2px 6px" onclick="removeSectionObj('${ppeId}','${domId}',${oi})">✕</button>
     </div>
-  </div>${objSerafinHtml(ppeId, domId, oi, o)}`;
+  </div>${objSerafinHtml(ppeId, domId, oi, o)}${objOutcomesHtml(ppeId, domId, oi, o)}`;
 }
 
 // ── Codification SERAFIN-PH de l'objectif : codes validés (pleins) + suggestions (pointillés) ──
@@ -846,6 +846,117 @@ async function serafinSyncResident(p) {
 }
 
 // ═══════════════════════════════════════════
+//  OUTCOMES — « Où en suis-je de mon objectif ? »
+//  Auto-évaluation du RÉSIDENT ⇄ évaluation de l'ÉQUIPE, en début et fin de cycle.
+//  Échelle qualitative en 5 niveaux (distance à l'objectif), stockée sur chaque
+//  objectif de l'avenant (o.outcomes — jsonb existant, aucune migration).
+// ═══════════════════════════════════════════
+
+const OC_NIVEAUX = [
+  { v: 1, label: 'Très loin',   c: '#dc2626' },
+  { v: 2, label: 'Loin',        c: '#ea580c' },
+  { v: 3, label: 'À mi-chemin', c: '#d97706' },
+  { v: 4, label: 'Proche',      c: '#65a30d' },
+  { v: 5, label: 'Atteint',     c: '#16a34a' }
+];
+const OC_MOMENTS = [{ id: 'debut', label: 'Début de cycle' }, { id: 'fin', label: 'Fin de cycle / bilan' }];
+const OC_RATERS  = [{ id: 'auto', icon: '🧑', label: 'Selon la personne' }, { id: 'pro', icon: '👥', label: "Selon l'équipe" }];
+const _ocOpen = new Set();   // panneaux dépliés — survit aux re-renders
+
+function _ocKey(ppeId, domId, oi) { return ppeId + '|' + domId + '|' + oi; }
+function _ocGet(o, moment, rater) { return (o.outcomes && o.outcomes[moment] && o.outcomes[moment][rater]) || null; }
+function _ocNiv(v) { return OC_NIVEAUX.find(n => n.v === Number(v)) || null; }
+
+// Pastille résumé « 2 → 4 (+2) » pour un évaluateur donné
+function _ocChip(icon, title, deb, fin) {
+  // Seules les valeurs présentes dans OC_NIVEAUX sont rendues (jsonb forgé → point neutre)
+  const nDeb = deb && _ocNiv(deb.v), nFin = fin && _ocNiv(fin.v);
+  if (!nDeb && !nFin) return '';
+  const f = n => n ? `<b style="color:${n.c}">${n.v}</b>` : '<span style="color:#cbd5e1">·</span>';
+  const delta = (nDeb && nFin) ? nFin.v - nDeb.v : null;
+  const dTxt = delta === null ? '' : ` <span style="font-weight:700;color:${delta > 0 ? '#16a34a' : delta < 0 ? '#dc2626' : '#94a3b8'}">(${delta > 0 ? '+' : ''}${delta})</span>`;
+  return `<span title="${title} — début → fin" style="display:inline-flex;align-items:center;gap:.25rem;font-size:.66rem;padding:.14rem .45rem;border-radius:999px;background:#f8fafc;border:0.5px solid #e2e8f0">${icon} ${f(nDeb)} → ${f(nFin)}${dTxt}</span>`;
+}
+
+function objOutcomesHtml(ppeId, domId, oi, o) {
+  if (!(o.objectif || '').trim()) return '';
+  const key = _ocKey(ppeId, domId, oi);
+  const open = _ocOpen.has(key);
+  const chips = OC_RATERS.map(r => _ocChip(r.icon, r.label, _ocGet(o, 'debut', r.id), _ocGet(o, 'fin', r.id))).join('');
+  let panel = '';
+  if (open) {
+    panel = `<div style="margin-top:.4rem;padding:.6rem .7rem;background:#f0f9ff;border:1px solid #e0f2fe;border-radius:8px">
+      <div style="font-size:.66rem;color:#0369a1;margin-bottom:.5rem">Où en est-on de cet objectif ? Positionnement partagé avec la personne — l'écart entre les deux regards nourrit le dialogue.</div>
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:.35rem .6rem;align-items:center">
+        <span></span>
+        ${OC_MOMENTS.map(m => `<span style="font-size:.64rem;font-weight:700;color:#475569;text-align:center">${m.label}</span>`).join('')}
+        ${OC_RATERS.map(r => `
+          <span style="font-size:.68rem;font-weight:600;color:#334155;white-space:nowrap">${r.icon} ${r.label}</span>
+          ${OC_MOMENTS.map(m => {
+            const cur = _ocGet(o, m.id, r.id);
+            return `<div style="display:flex;gap:.2rem;justify-content:center">${OC_NIVEAUX.map(n => {
+              const on = cur && cur.v === n.v;
+              return `<button type="button" title="${n.label}" aria-label="${r.label} — ${m.label} : ${n.label}" aria-pressed="${on}"
+                onclick="ocSet('${ppeId}','${domId}',${oi},'${m.id}','${r.id}',${n.v})"
+                style="width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:.66rem;font-weight:800;line-height:1;border:1.5px solid ${n.c};${on ? `background:${n.c};color:#fff` : `background:#fff;color:${n.c}`}">${n.v}</button>`;
+            }).join('')}</div>`;
+          }).join('')}`).join('')}
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.45rem;font-size:.6rem;color:#64748b;flex-wrap:wrap">${OC_NIVEAUX.map(n => `<span><b style="color:${n.c}">${n.v}</b> ${n.label}</span>`).join('')}</div>
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.15rem 0 .45rem;padding-left:.1rem">
+    <button type="button" class="btn btn-ghost btn-sm" style="font-size:.62rem;padding:1px 7px;color:#0369a1" onclick="ocToggle('${ppeId}','${domId}',${oi})">${open ? '▾' : '▸'} 🎯 Distance à l'objectif</button>
+    ${chips}
+  </div>${panel}`;
+}
+
+function ocToggle(ppeId, domId, oi) {
+  const key = _ocKey(ppeId, domId, oi);
+  if (_ocOpen.has(key)) _ocOpen.delete(key); else _ocOpen.add(key);
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p) return;
+  renderAvenantFull(p);
+  const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+  if (bodyEl) bodyEl.style.display = '';
+}
+
+// Pose / retire un positionnement (re-cliquer le même niveau le retire)
+function ocSet(ppeId, domId, oi, moment, rater, v) {
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p || !p.sections[domId] || !p.sections[domId].objectifs[oi]) return;
+  const o = p.sections[domId].objectifs[oi];
+  if (!o.outcomes) o.outcomes = {};
+  if (!o.outcomes[moment]) o.outcomes[moment] = {};
+  const cur = o.outcomes[moment][rater];
+  if (cur && cur.v === v) delete o.outcomes[moment][rater];
+  else o.outcomes[moment][rater] = { v, d: today() };
+  persistPpe(p);
+  renderAvenantFull(p);
+  const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+  if (bodyEl) bodyEl.style.display = '';
+}
+
+// Récapitulatif des positionnements pour le bilan intermédiaire (lecture seule)
+function pcOutcomesRecapHtml(p) {
+  const rows = [];
+  (typeof DOMAINES !== 'undefined' ? DOMAINES : []).forEach(d => {
+    const s = (p.sections || {})[d.id];
+    (s && s.objectifs || []).forEach(o => {
+      if (!(o.objectif || '').trim() || !o.outcomes) return;
+      const chips = OC_RATERS.map(r => _ocChip(r.icon, r.label, _ocGet(o, 'debut', r.id), _ocGet(o, 'fin', r.id))).join(' ');
+      if (chips.trim()) rows.push(`<div style="display:flex;align-items:center;gap:.5rem;padding:.25rem 0;border-bottom:1px dashed #ede9fe">
+        <span style="flex-shrink:0">${d.icon}</span>
+        <span style="flex:1;font-size:.72rem;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(o.objectif)}</span>
+        <span style="display:inline-flex;gap:.3rem;flex-shrink:0">${chips}</span>
+      </div>`);
+    });
+  });
+  if (!rows.length) return '';
+  return `<div style="margin-bottom:.6rem"><div style="font-size:.68rem;font-weight:600;color:var(--muted);margin-bottom:.25rem">🎯 Distance aux objectifs (personne / équipe, début → fin)</div>${rows.join('')}</div>`;
+}
+
+// ═══════════════════════════════════════════
 //  CYCLE DU PPA — parcours guidé
 //  Recueil des attentes → Co-construction → Rédaction & signatures →
 //  Bilan intermédiaire (6 mois) → Réévaluation annuelle (HAS 1.10.6).
@@ -942,6 +1053,7 @@ function renderCycleCard(p) {
           <div><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Date du bilan</label><input type="date" class="input" id="pcBilanDate" value="${escHtml(b.date || today())}"/></div>
           <div><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Participants</label><input class="input" id="pcBilanParticipants" value="${escHtml(b.participants || '')}" placeholder="Résident, référent, chef de service…"/></div>
         </div>
+        ${pcOutcomesRecapHtml(p)}
         <div style="margin-bottom:.5rem"><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Synthèse — où en est-on des objectifs ?</label><textarea class="input" id="pcBilanSynthese" style="min-height:70px">${escHtml(b.synthese || '')}</textarea></div>
         <div style="margin-bottom:.6rem"><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Ajustements décidés (objectifs modifiés, moyens, échéances…)</label><textarea class="input" id="pcBilanAjust" style="min-height:56px">${escHtml(b.ajustements || '')}</textarea></div>
         <div style="display:flex;gap:.5rem;justify-content:flex-end">
