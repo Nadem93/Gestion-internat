@@ -345,10 +345,10 @@ on conflict (etablissement_id, date) do nothing;
 
 delete from public.presences
  where date between current_date - 6 and current_date
-   and resident_id in (select id::text from public.residents);
+   and resident_id in (select id from public.residents);
 
 with actifs as (
-  select r.id::text as rid,
+  select r.id as rid,
          r.etablissement_id,
          (row_number() over (order by r.id))::int as rn
   from public.residents r
