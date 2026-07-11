@@ -99,7 +99,13 @@ async function saveAvenant() {
   try {
     if (editId) {
       const idx = list.findIndex(p => p.id === editId);
-      if (idx >= 0) { Object.assign(list[idx], data); list[idx] = await sbSavePpe(list[idx]); }
+      if (idx >= 0) {
+        Object.assign(list[idx], data);
+        list[idx] = await sbSavePpe(list[idx]);
+        ppeSyncEcheances(list[idx]);              // la date de révision pilote l'échéance de réévaluation
+        const full = document.getElementById('avenantFullView');
+        if (full) renderAvenantFull(list[idx]);
+      }
       toast('Avenant mis à jour');
     } else {
       const sections = {};
@@ -170,6 +176,7 @@ function renderAvenantFull(p) {
         <span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
       </div>
     </div>
+    ${renderCycleCard(p)}
     ${DOMAINES.map(d => renderSectionCard(p, d)).join('')}
     <div class="section-card">
       <div class="section-header" style="cursor:default"><strong>Conclusion</strong></div>
@@ -346,6 +353,8 @@ function updateSignature(ppeId, field, value) {
   if (!p.signatures) p.signatures = { resident:'', referent:'', direction:'', date:'' };
   p.signatures[field] = value;
   persistPpe(p);
+  // La date de signature pilote l'étape « Rédaction & signatures » et la cible du bilan à 6 mois
+  if (field === 'date') { ppeSyncEcheances(p); renderAvenantFull(p); }
 }
 
 function printAvenant(id) {
@@ -544,6 +553,7 @@ function changeAvenantStatut(id) {
   else if (p.statut === 'actif') p.statut = 'termine';
   else return;
   persistPpe(p);
+  ppeSyncEcheances(p);
   toast(`Avenant ${p.statut === 'actif' ? 'activé' : 'terminé'}`);
   const full = document.getElementById('avenantFullView');
   if (full) renderAvenantFull(p);
@@ -555,6 +565,11 @@ function deleteAvenant(id) {
   (async () => {
     try { await sbDeletePpe(id); _ppeCache = _ppeCache.filter(p => p.id !== id); }
     catch (e) { console.error('[deleteAvenant]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
+    // Échéances du cycle liées à cet avenant : on ne laisse pas d'orphelines
+    if (typeof sbDeleteEcheancesBySource === 'function') {
+      try { await sbDeleteEcheancesBySource('ppa6_' + id); await sbDeleteEcheancesBySource('ppa12_' + id); }
+      catch (e) { console.warn('[deleteAvenant] échéances du cycle non supprimées', e); }
+    }
     toast('Avenant supprimé');
     const full = document.getElementById('avenantFullView');
     if (full) backToList();
@@ -604,7 +619,9 @@ async function genererAvenantFromJournal(existingId) {
     const list = getPpe();
     const p = list.find(x => x.id === existingId);
     if (!p) return;
+    const _cyc = p.sections && p.sections._cycle;   // le cycle du PPA survit à la régénération
     p.sections = result.sections || {};
+    if (_cyc) p.sections._cycle = _cyc;
     p.conclusion = result.conclusion || '';
     ensureSectionsComplete(p.sections);
     persistPpe(p);
@@ -826,6 +843,184 @@ async function serafinSyncResident(p) {
   const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: new Date().toISOString().slice(0, 10) };
   try { await persistResident({ ...r, serafinph }); }
   catch (e) { console.warn('[serafin] synchronisation fiche résident impossible', e); }
+}
+
+// ═══════════════════════════════════════════
+//  CYCLE DU PPA — parcours guidé
+//  Recueil des attentes → Co-construction → Rédaction & signatures →
+//  Bilan intermédiaire (6 mois) → Réévaluation annuelle (HAS 1.10.6).
+//  Données rangées dans sections._cycle (jsonb existant : aucune migration) ;
+//  toutes les lectures de sections passent par (s.objectifs || []) → clé inoffensive.
+// ═══════════════════════════════════════════
+
+function ppeCycle(p) {
+  if (!p.sections) p.sections = {};
+  if (!p.sections._cycle) p.sections._cycle = {};
+  return p.sections._cycle;
+}
+function _pcAddMonths(dateStr, n) {
+  // Midi local : évite le décalage d'un jour au passage par toISOString (UTC).
+  // Le jour est borné au dernier jour du mois cible (31 août + 6 mois → 28/29 février).
+  const d = dateStr ? new Date(dateStr + 'T12:00:00') : new Date();
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return d.toISOString().slice(0, 10);
+}
+function _pcUser() {
+  const s = Auth.getSession();
+  return s ? ([s.prenom, s.nom].filter(Boolean).join(' ') || s.username || '') : '';
+}
+function _pcFmt(d) { return d ? new Date(d).toLocaleDateString('fr-FR') : ''; }
+
+// Les 5 étapes, avec leur état calculé (fait / en retard / à venir)
+function ppeCycleSteps(p) {
+  const c = ppeCycle(p);
+  const base = (p.signatures && p.signatures.date) || p.dateRedaction || '';
+  const cible6  = base ? _pcAddMonths(base, 6) : '';
+  const cible12 = p.dateRevision || (base ? _pcAddMonths(base, 12) : '');
+  const td = today();
+  const late = (done, cible) => !done && p.statut === 'actif' && cible && cible < td;
+  return [
+    { id: 'attentes',       n: 1, label: 'Recueil des attentes',          done: !!(c.attentes && c.attentes.date),             date: c.attentes && c.attentes.date,       par: c.attentes && c.attentes.par,             manual: true },
+    { id: 'coconstruction', n: 2, label: 'Co-construction',               done: !!(c.coconstruction && c.coconstruction.date), date: c.coconstruction && c.coconstruction.date, par: c.coconstruction && c.coconstruction.par, manual: true },
+    { id: 'signatures',     n: 3, label: 'Rédaction & signatures',        done: p.statut !== 'brouillon' && !!(p.signatures && p.signatures.date), date: p.signatures && p.signatures.date },
+    { id: 'bilan6',         n: 4, label: 'Bilan intermédiaire (6 mois)',  done: !!(c.bilan6 && c.bilan6.date), date: c.bilan6 && c.bilan6.date, cible: cible6,  late: late(!!(c.bilan6 && c.bilan6.date), cible6) },
+    { id: 'reeval',         n: 5, label: 'Réévaluation annuelle',         done: !!(c.reeval && c.reeval.date), date: c.reeval && c.reeval.date, cible: cible12, late: late(!!(c.reeval && c.reeval.date), cible12) }
+  ];
+}
+
+// Carte « Cycle du PPA » affichée en tête de l'avenant
+function renderCycleCard(p) {
+  const steps = ppeCycleSteps(p);
+  const c = ppeCycle(p);
+  const current = steps.find(s => !s.done);
+  const stepHtml = steps.map((s, i) => {
+    const col = s.done ? '#16a34a' : s.late ? '#dc2626' : (current && current.id === s.id) ? '#4f46e5' : '#94a3b8';
+    const bg  = s.done ? '#f0fdf4' : s.late ? '#fef2f2' : (current && current.id === s.id) ? '#eef2ff' : '#f8fafc';
+    const pastille = s.done ? '✓' : s.late ? '!' : s.n;
+    let sub = '';
+    if (s.done) sub = 'Fait le ' + _pcFmt(s.date) + (s.par ? ' · ' + escHtml(s.par) : '');
+    else if (s.late) sub = 'En retard — prévu le ' + _pcFmt(s.cible);
+    else if (s.cible) sub = 'Prévu le ' + _pcFmt(s.cible);
+    else if (s.id === 'signatures') sub = p.statut === 'brouillon' ? 'Avenant à activer + date de signature' : 'Date de signature à renseigner';
+    else sub = 'À faire';
+    let action = '';
+    if (s.manual) {
+      action = s.done
+        ? `<button class="btn btn-ghost btn-sm" style="font-size:.62rem;padding:1px 6px;color:#94a3b8" onclick="pcUnmark('${p.id}','${s.id}')" title="Annuler">✕</button>`
+        : `<button class="btn btn-outline btn-sm" style="font-size:.64rem;padding:2px 8px" onclick="pcMark('${p.id}','${s.id}')">Marquer fait</button>`;
+    } else if (s.id === 'bilan6') {
+      action = `<button class="btn btn-outline btn-sm" style="font-size:.64rem;padding:2px 8px" onclick="pcToggleBilanForm()">${s.done ? 'Voir / modifier' : '📝 Réaliser le bilan'}</button>`;
+    } else if (s.id === 'reeval') {
+      action = s.done
+        ? `<button class="btn btn-ghost btn-sm" style="font-size:.62rem;padding:1px 6px;color:#94a3b8" onclick="pcUnmark('${p.id}','reeval')" title="Annuler">✕</button>`
+        : `<button class="btn btn-outline btn-sm" style="font-size:.64rem;padding:2px 8px" onclick="pcMark('${p.id}','reeval')">Marquer réalisée</button>`;
+    }
+    return `<div style="flex:1;min-width:128px;display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:.6rem .4rem;border-radius:10px;background:${bg};border:1px solid ${col}33;text-align:center">
+      <div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;font-size:.78rem;font-weight:800;display:flex;align-items:center;justify-content:center">${pastille}</div>
+      <div style="font-size:.7rem;font-weight:700;color:#0f2b4a;line-height:1.25">${s.label}</div>
+      <div style="font-size:.62rem;color:${s.late ? '#dc2626' : 'var(--muted)'};line-height:1.3">${sub}</div>
+      ${action}
+    </div>`;
+  }).join('<div style="align-self:center;color:#cbd5e1;font-size:.8rem;flex-shrink:0">›</div>');
+
+  const b = c.bilan6 || {};
+  const bilanDone = !!b.date;
+  return `<div class="section-card">
+    <div class="section-header" style="cursor:default;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <strong>🧭 Cycle du PPA</strong>
+      <span style="font-size:.62rem;color:var(--muted)">réévaluation annuelle tracée (HAS 1.10.6) · échéances créées automatiquement</span>
+    </div>
+    <div class="section-body">
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:stretch">${stepHtml}</div>
+      <div id="pcBilanForm" style="display:none;margin-top:.85rem;padding:.85rem;border:1px solid #ede9fe;border-radius:10px;background:#faf5ff">
+        <div style="font-size:.78rem;font-weight:700;color:#0f2b4a;margin-bottom:.6rem">📝 Bilan intermédiaire à 6 mois ${bilanDone ? '— réalisé le ' + _pcFmt(b.date) : ''}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Date du bilan</label><input type="date" class="input" id="pcBilanDate" value="${escHtml(b.date || today())}"/></div>
+          <div><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Participants</label><input class="input" id="pcBilanParticipants" value="${escHtml(b.participants || '')}" placeholder="Résident, référent, chef de service…"/></div>
+        </div>
+        <div style="margin-bottom:.5rem"><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Synthèse — où en est-on des objectifs ?</label><textarea class="input" id="pcBilanSynthese" style="min-height:70px">${escHtml(b.synthese || '')}</textarea></div>
+        <div style="margin-bottom:.6rem"><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Ajustements décidés (objectifs modifiés, moyens, échéances…)</label><textarea class="input" id="pcBilanAjust" style="min-height:56px">${escHtml(b.ajustements || '')}</textarea></div>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="pcToggleBilanForm()">Fermer</button>
+          <button class="btn btn-accent btn-sm" onclick="pcSaveBilan('${p.id}')">💾 Enregistrer le bilan</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function pcMark(ppeId, stepId) {
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p) return;
+  if (stepId === 'reeval' && !confirm('Marquer la réévaluation annuelle comme réalisée ?')) return;
+  ppeCycle(p)[stepId] = { date: today(), par: _pcUser() };
+  persistPpe(p);
+  ppeSyncEcheances(p);
+  renderAvenantFull(p);
+}
+function pcUnmark(ppeId, stepId) {
+  if (!confirm('Annuler cette étape ?')) return;
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p) return;
+  delete ppeCycle(p)[stepId];
+  persistPpe(p);
+  ppeSyncEcheances(p);
+  renderAvenantFull(p);
+}
+function pcToggleBilanForm() {
+  const el = document.getElementById('pcBilanForm');
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+function pcSaveBilan(ppeId) {
+  const p = getPpe().find(x => x.id === ppeId);
+  if (!p) return;
+  const date = document.getElementById('pcBilanDate').value;
+  if (!date) { toast('La date du bilan est obligatoire', 'error'); return; }
+  ppeCycle(p).bilan6 = {
+    date,
+    par: _pcUser(),
+    participants: document.getElementById('pcBilanParticipants').value.trim(),
+    synthese: document.getElementById('pcBilanSynthese').value.trim(),
+    ajustements: document.getElementById('pcBilanAjust').value.trim()
+  };
+  persistPpe(p);
+  ppeSyncEcheances(p);
+  toast('Bilan intermédiaire enregistré', 'success');
+  renderAvenantFull(p);
+}
+
+// Échéancier : crée/actualise les 2 échéances du cycle (dédup par sourceId, comme le CVS).
+// Les appels sont SÉRIALISÉS (file de promesses) : deux clics rapprochés ne peuvent pas
+// lire la liste en parallèle et créer des doublons.
+let _pcSyncChain = Promise.resolve();
+function ppeSyncEcheances(p) {
+  _pcSyncChain = _pcSyncChain.then(() => _ppeSyncEcheancesNow(p)).catch(e => console.warn('[cycle PPA] sync', e));
+  return _pcSyncChain;
+}
+async function _ppeSyncEcheancesNow(p) {
+  if (typeof sbGetEcheances !== 'function' || typeof sbSaveEcheance !== 'function') return;
+  if (p.statut === 'brouillon') return;
+  try {
+    const steps = ppeCycleSteps(p);
+    const all = await sbGetEcheances();
+    const jobs = [
+      { sid: 'ppa6_'  + p.id, step: steps.find(s => s.id === 'bilan6'), lib: 'Bilan intermédiaire PPA — ' + (p.residentName || '') },
+      { sid: 'ppa12_' + p.id, step: steps.find(s => s.id === 'reeval'), lib: 'Réévaluation annuelle PPA — ' + (p.residentName || '') }
+    ];
+    for (const j of jobs) {
+      if (!j.step || !j.step.cible) continue;
+      const existing = all.find(e => e.sourceId === j.sid);
+      if (!existing) {
+        await sbSaveEcheance({ type: 'ppe', libelle: j.lib, date: j.step.cible, residentId: p.residentId || '', residentName: p.residentName || '', notes: 'Créée automatiquement par le cycle du PPA', done: !!j.step.done, doneAt: j.step.done ? new Date().toISOString() : null, author: _pcUser(), sourceId: j.sid });
+      } else if (!!existing.done !== !!j.step.done || existing.date !== j.step.cible) {
+        await sbSaveEcheance({ ...existing, date: j.step.cible, done: !!j.step.done, doneAt: j.step.done ? (existing.doneAt || new Date().toISOString()) : null });
+      }
+    }
+  } catch (e) { console.warn('[cycle PPA] échéances non synchronisées', e); }
 }
 
 function initPpePage() {
