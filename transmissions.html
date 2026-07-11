@@ -241,6 +241,18 @@
             <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Observation *</label>
             <textarea id="trContent" rows="5" placeholder="Décrivez l'observation, l'événement ou la consigne à transmettre à l'équipe suivante…" style="resize:vertical"></textarea>
           </div>
+          <div style="margin-top:.7rem;padding:.7rem .8rem;background:#f0fdfa;border:1px solid #99e5dc55;border-radius:10px">
+            <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:#0f766e;font-weight:700">🤝 Accompagnement apporté <span style="text-transform:none;letter-spacing:0;font-weight:500;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></label>
+            <textarea id="trSoutien" rows="2" placeholder="Ex : incitation verbale pour la toilette, médiation avec un pair, reformulation des consignes, présence rassurante…" style="resize:vertical;margin-top:.35rem"></textarea>
+            <select id="trSoutienNiveau" style="margin-top:.4rem">
+              <option value="">Niveau de soutien — non précisé</option>
+              <option value="autonomie">🟢 Autonomie — présence simple</option>
+              <option value="supervision">🔵 Supervision / veille</option>
+              <option value="verbal">🟡 Incitation / guidance verbale</option>
+              <option value="partiel">🟠 Aide partielle</option>
+              <option value="total">🔴 Aide totale</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="modal-footer" style="border-radius:0 0 20px 0;justify-content:space-between">

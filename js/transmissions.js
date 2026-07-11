@@ -309,6 +309,10 @@ function _trCard(t, residents, userId) {
       <div class="kb-time-wrap"><span class="kb-card-time">${time}</span></div>
     </div>
     <div class="kb-card-body">${escHtml(t.content || '')}</div>
+    ${(t.soutien || (t.soutienNiveau && TR_SOUTIEN[t.soutienNiveau])) ? `<div style="margin-top:.4rem;padding:.4rem .55rem;background:#f0fdfa;border-left:3px solid #14b8a6;border-radius:6px;font-size:.72rem;color:#134e4a">
+      <span style="font-weight:700">🤝 Accompagnement :</span> ${escHtml(t.soutien || '')}
+      ${(t.soutienNiveau && TR_SOUTIEN[t.soutienNiveau]) ? `<span style="display:inline-block;margin-left:.3rem;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;color:#fff;background:${TR_SOUTIEN[t.soutienNiveau].c}">${TR_SOUTIEN[t.soutienNiveau].l}</span>` : ''}
+    </div>` : ''}
     <div class="kb-card-foot">
       <div class="kb-badges">
         <span class="kb-badge" style="background:${cat.color}22;color:${cat.color}">${cat.icon} ${cat.label}</span>
@@ -452,6 +456,15 @@ async function addTrReply(id) {
 }
 
 // ─── Sauvegarde modal ─────────────────────────────────────────────────────────
+// P4 « deux couches » : libellés du niveau de soutien apporté par le professionnel
+const TR_SOUTIEN = {
+  autonomie:   { l: 'Autonomie',            c: '#16a34a' },
+  supervision: { l: 'Supervision',          c: '#0284c7' },
+  verbal:      { l: 'Guidance verbale',     c: '#d97706' },
+  partiel:     { l: 'Aide partielle',       c: '#ea580c' },
+  total:       { l: 'Aide totale',          c: '#dc2626' }
+};
+
 async function saveTr_Modal() {
   const editId     = document.getElementById('trEditId')?.value  || '';
   const residentId = document.getElementById('trResident')?.value || '';
@@ -459,6 +472,8 @@ async function saveTr_Modal() {
   const cat        = document.getElementById('trCat')?.value      || 'administratif';
   const priority   = document.getElementById('trPriority')?.value || 'normal';
   const content    = document.getElementById('trContent')?.value.trim() || '';
+  const soutien       = document.getElementById('trSoutien')?.value.trim() || '';
+  const soutienNiveau = document.getElementById('trSoutienNiveau')?.value  || '';
   if (!content) { toast('Le contenu est obligatoire', 'error'); return; }
 
   const sess = _trSession();
@@ -469,7 +484,7 @@ async function saveTr_Modal() {
     if (editId) {
       const existing = _trCache.find(x => x.id === editId);
       if (!existing) return;
-      const updated = await sbSaveTransmission({ ...existing, residentId, shift, cat, priority, content, updatedAt: now });
+      const updated = await sbSaveTransmission({ ...existing, residentId, shift, cat, priority, content, soutien, soutienNiveau, updatedAt: now });
       const idx = _trCache.findIndex(x => x.id === editId);
       if (idx !== -1) _trCache[idx] = updated;
       toast('Transmission modifiée');
@@ -478,7 +493,7 @@ async function saveTr_Modal() {
         date: _trCurrentDate,
         residentId,
         residentName: r ? `${r.prenom||''} ${r.nom||''}`.trim() : '',
-        shift, cat, priority, content,
+        shift, cat, priority, content, soutien, soutienNiveau,
         authorId:   String(sess.id),
         authorName: sess.name,
         createdAt:  now,
@@ -508,6 +523,8 @@ function editTr(id) {
   document.getElementById('trCat').value       = t.cat         || 'administratif';
   document.getElementById('trPriority').value  = t.priority    || 'normal';
   document.getElementById('trContent').value   = t.content     || '';
+  const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = t.soutien || '';
+  const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = t.soutienNiveau || '';
   document.getElementById('modalTrTitle').textContent = 'Modifier la transmission';
   openModal('modalTr');
 }
@@ -615,6 +632,8 @@ function resetTrModal() {
   document.getElementById('trEditId').value    = '';
   document.getElementById('trResident').value  = '';
   document.getElementById('trContent').value   = '';
+  const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = '';
+  const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = '';
   document.getElementById('trCat').value       = 'administratif';
   document.getElementById('trPriority').value  = 'normal';
   document.getElementById('modalTrTitle').textContent = 'Nouvelle transmission';

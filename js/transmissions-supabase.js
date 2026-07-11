@@ -17,6 +17,8 @@ function _trToRow(t, etablissementId) {
     replies:          t.replies     || [],
     incident_id:      t.incidentId  || null,
     journal_entry_id: t.journalEntryId || null,
+    soutien:          t.soutien      || '',
+    soutien_niveau:   t.soutienNiveau || '',
     created_at:       t.createdAt   || new Date().toISOString(),
     updated_at:       t.updatedAt   || null
   };
@@ -38,6 +40,8 @@ function _trFromRow(r) {
     replies:        r.replies        || [],
     incidentId:     r.incident_id    || null,
     journalEntryId: r.journal_entry_id || null,
+    soutien:        r.soutien        || '',
+    soutienNiveau:  r.soutien_niveau || '',
     createdAt:      r.created_at,
     updatedAt:      r.updated_at
   };
@@ -52,20 +56,42 @@ async function sbGetTransmissions() {
   return data.map(_trFromRow);
 }
 
+// Écriture DÉFENSIVE : si les colonnes soutien/soutien_niveau n'existent pas encore
+// (migration-transmissions-soutien.sql non exécutée), on réessaie sans elles pour ne
+// jamais bloquer une transmission — avec un avertissement une seule fois.
+let _trSoutienColOk = true;
+function _trColManquante(error) {
+  const msg = (error && (error.message || '') + ' ' + (error.code || '')).toLowerCase();
+  return msg.includes('soutien') || (error && error.code === 'PGRST204');
+}
 async function sbSaveTransmission(t) {
   const etablissementId = await sbGetEtablissementId();
   const row = _trToRow(t, etablissementId);
-  if (t.id) {
+  if (!_trSoutienColOk) { delete row.soutien; delete row.soutien_niveau; }
+  const run = async r => {
+    if (t.id) {
+      const { data, error } = await supabaseClient
+        .from('transmissions').update(r).eq('id', t.id).select();
+      if (error) throw error;
+      if (!data || !data.length) throw new Error('Aucune ligne mise à jour — id=' + t.id);
+      return _trFromRow(data[0]);
+    }
     const { data, error } = await supabaseClient
-      .from('transmissions').update(row).eq('id', t.id).select();
+      .from('transmissions').insert(r).select();
     if (error) throw error;
-    if (!data || !data.length) throw new Error('Aucune ligne mise à jour — id=' + t.id);
     return _trFromRow(data[0]);
+  };
+  try { return await run(row); }
+  catch (e) {
+    if (_trSoutienColOk && _trColManquante(e)) {
+      _trSoutienColOk = false;
+      console.warn('[transmissions] colonnes soutien absentes — exécuter migration-transmissions-soutien.sql', e);
+      if (typeof toast === 'function') toast('Champ « accompagnement » non enregistré : exécutez migration-transmissions-soutien.sql', 'info');
+      delete row.soutien; delete row.soutien_niveau;
+      return await run(row);
+    }
+    throw e;
   }
-  const { data, error } = await supabaseClient
-    .from('transmissions').insert(row).select();
-  if (error) throw error;
-  return _trFromRow(data[0]);
 }
 
 async function sbDeleteTransmission(id) {
