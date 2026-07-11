@@ -28,7 +28,7 @@
 --
 -- Idempotence :
 --   • transmissions.author_id = 'seed-demo'      → purgées par le DELETE de section
---   • journal_entries.author_id = 'seed-demo'    → idem
+--   • journal_entries : marqueur "seed-demo" dans edit_history (author_id = uuid → null)
 --   • nuits.veilleur_id = 'seed-demo'            → idem (+ on conflict do nothing sur (etablissement_id, date))
 --   • presences / repas_jour : pas de colonne auteur → purge de la fenêtre datée
 --     (base de démonstration : tous les résidents sont factices) + on conflict do nothing.
@@ -157,9 +157,10 @@ join contenus c
 -- ~8 entrées par résident étalées sur ~3 semaines.
 -- categorie laissée '' : les catégories sont définies par l'utilisateur dans Admin
 -- (ids inconnus en base de démo) ; l'app gère très bien l'absence de catégorie.
--- Marqueur de démo : author_id = 'seed-demo'.
+-- Marqueur de démo : edit_history contient "seed-demo" (author_id est de type uuid
+-- en base : on n'y met jamais de texte ; il reste null, seul author — le nom — est affiché).
 
-delete from public.journal_entries where author_id = 'seed-demo';
+delete from public.journal_entries where edit_history::text like '%seed-demo%';
 
 with actifs as (
   select r.id::text as rid,
@@ -217,7 +218,7 @@ select
   case mod(a.rn + k, 4) when 1 then 'direct' when 3 then 'indirect' else '' end,
   '[]'::jsonb,
   p.auteurs[1 + mod(a.rn * 2 + k, 8)],
-  'seed-demo',
+  null,
   case when k = 1 then jsonb_build_array(jsonb_build_object(
     'id',        'sdjrep-' || a.rn::text,
     'author',    p.auteurs[1 + mod(a.rn * 2 + k + 4, 8)],
@@ -226,7 +227,7 @@ select
     'createdAt', to_char(t.ts + interval '1 hour 40 minutes', 'YYYY-MM-DD"T"HH24:MI:SS.000"Z"')
   )) else '[]'::jsonb end,
   '[]'::jsonb,
-  '[]'::jsonb,
+  $j$["seed-demo"]$j$::jsonb,
   t.ts,
   t.ts
 from actifs a
