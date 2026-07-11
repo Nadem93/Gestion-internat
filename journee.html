@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Journée — Ma tournée — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Vue « Ma tournée » (design A — Le Fil du quart) ── */
+    .jr-quarts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.7);margin-bottom:.9rem}
+    .jr-quart{min-height:54px;border:1px solid transparent;border-radius:12px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--muted);font-weight:700;font-size:.86rem;cursor:pointer;font-family:inherit}
+    .jr-quart small{font-weight:500;font-size:.66rem}
+    .jr-quart.on{background:#fff;border-color:var(--border);color:#0f2b4a;box-shadow:0 8px 20px rgba(15,43,74,.08)}
+    .jr-quart.on small{color:#4f46e5;font-weight:600}
+    .jr-hero{display:flex;flex-wrap:wrap;gap:.9rem 1.6rem;align-items:center;background:rgba(255,255,255,.85);border:1px solid var(--border);border-radius:16px;padding:.9rem 1.15rem;margin-bottom:.9rem}
+    .jr-bar{height:9px;border-radius:999px;background:#e6ecf5;overflow:hidden;margin-top:6px}
+    .jr-barfill{height:100%;border-radius:999px;background:linear-gradient(90deg,#4f46e5,#0f766e);transition:width .4s ease}
+    .jr-rail{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:.4rem}
+    .jr-rail::-webkit-scrollbar{height:0}
+    .jr-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 14px 4px 5px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.9);font-weight:700;font-size:.8rem;white-space:nowrap;color:#0f2b4a;cursor:pointer;font-family:inherit}
+    .jr-chip small{color:var(--muted);font-weight:600}
+    .jr-chip small.todo{color:#4f46e5}
+    .jr-chip:hover{border-color:#4f46e5}
+    .jr-av{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:.72rem;flex-shrink:0}
+    .jr-group{margin:0 0 1.1rem;scroll-margin-top:12px}
+    .jr-ghead{display:flex;align-items:center;gap:10px;padding:6px 4px 8px}
+    .jr-gname{font-size:.95rem;font-weight:800;color:#0f2b4a}
+    .jr-gmeta{font-size:.72rem;color:var(--muted)}
+    .jr-task{background:rgba(255,255,255,.95);border:1px solid var(--border);border-left:4px solid #cbd5e1;border-radius:14px;padding:.8rem .95rem;margin-bottom:.55rem;box-shadow:0 4px 14px rgba(15,43,74,.05)}
+    .jr-task.fait{border-left-color:#16a34a;background:linear-gradient(rgba(22,163,74,.05),rgba(22,163,74,.05)),#fff}
+    .jr-task.reporte{border-left-color:#d97706;background:linear-gradient(rgba(217,119,6,.05),rgba(217,119,6,.05)),#fff}
+    .jr-lib{font-size:.87rem;font-weight:600;color:#0f2b4a}
+    .jr-task.fait .jr-lib{text-decoration:line-through;color:#334155;font-weight:500}
+    .jr-obj{font-size:.72rem;color:#7c3aed;margin-top:2px}
+    .jr-note{font-size:.72rem;color:#0f766e;margin-top:3px}
+    .jr-note.rep{color:#b45309}
+    .jr-btn-fait{min-height:44px;min-width:96px;padding:0 16px;border-radius:11px;border:none;background:#4f46e5;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit}
+    .jr-btn-fait:hover{background:#4338ca}
+    .jr-btn-sec{min-height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:.74rem;cursor:pointer;font-family:inherit}
+    .jr-btn-sec:hover{border-color:#94a3b8;color:#334155}
+    .jr-mode{display:flex;align-items:flex-start;gap:6px;margin-top:7px;padding:7px 9px;background:#faf5ff;border-radius:9px;border:1px solid #ede9fe;font-size:.74rem;color:#6d28d9;line-height:1.45}
+    .jr-strip{display:flex;align-items:center;gap:5px;margin-top:8px;flex-wrap:wrap}
+    .jr-strip-label{font-size:.68rem;color:var(--muted)}
+    .jr-pill{font-size:.68rem;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;color:#64748b;cursor:pointer;font-family:inherit;min-height:32px}
+    .jr-pill.attendu{border:2px solid #d97706;background:#fffbeb;color:#b45309;font-weight:800}
+    .jr-pill.on{background:#0f766e;border-color:#0f766e;color:#fff}
+    .jr-footnote{text-align:center;font-size:.74rem;color:var(--muted);margin:1.2rem 0 .4rem}
+    .jr-footnote a{color:#0f766e;font-weight:700}
+    button:focus-visible{outline:3px solid rgba(79,70,229,.4);outline-offset:2px}
+    @media(max-width:640px){.jr-btn-fait{min-width:74px}}
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="header-info"><div class="header-title">🧭 Journée — Ma tournée</div></div>
+  <div class="header-right"></div>
+</header>
+
+<main class="content" style="max-width:1020px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem">
+    <div>
+      <div style="font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4f46e5">Projets personnalisés · Journée</div>
+      <div id="jrDateLabel" style="font-size:1.15rem;font-weight:800;color:#0f2b4a"></div>
+      <div id="jrCharge" style="font-size:.8rem;color:var(--muted);margin-top:2px"></div>
+    </div>
+    <button class="btn btn-accent btn-sm" id="jrAddBtn" onclick="openTacheModal()" style="display:none">+ Nouvelle tâche</button>
+  </div>
+
+  <div class="jr-quarts" id="jrQuarts" role="group" aria-label="Choix du quart"></div>
+
+  <div class="jr-hero">
+    <div style="min-width:120px">
+      <div style="font-size:.66rem;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase">Ce quart</div>
+      <div><span id="jrDone" style="font-size:1.9rem;font-weight:800;color:#0f2b4a">0</span><span id="jrTotal" style="font-size:1.1rem;color:var(--muted);font-weight:700"> / 0</span></div>
+    </div>
+    <div style="flex:1;min-width:220px">
+      <div id="jrBarLabel" class="jr-gmeta"></div>
+      <div class="jr-bar"><div class="jr-barfill" id="jrBarFill" style="width:0%"></div></div>
+    </div>
+    <div style="flex-basis:100%;border-top:1px dashed var(--border);padding-top:.6rem;font-size:.74rem;color:var(--muted)">
+      💚 La coche garde la trace — <strong>la transmission raconte l'essentiel</strong>. <a href="transmissions.html" style="color:#0f766e;font-weight:700">✎ Écrire une transmission</a>
+    </div>
+  </div>
+
+  <div class="jr-rail" id="jrRail"></div>
+  <div id="jrList"><div class="empty" style="padding:3rem;text-align:center"><p>Chargement…</p></div></div>
+
+  <div class="jr-footnote">Ces moments sont des <strong>supports d'accompagnement</strong>, pas une cadence : l'équipe ajuste avec la personne, et son refus est un droit.</div>
+</main>
+
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ── Modal création / édition de tâche ── -->
+<div class="modal-overlay" id="modalTache">
+  <div class="modal" style="max-width:520px;--mc:#4f46e5">
+    <div class="mdx-hero">
+      <button class="mdx-close" onclick="closeModal('modalTache')" aria-label="Fermer">✕</button>
+      <div class="mdx-badge">🧭</div>
+      <div class="mdx-hero-txt">
+        <div class="mdx-title" id="tacheModalTitle">Nouvelle tâche</div>
+        <div class="mdx-sub">Un moment du projet personnalisé</div>
+      </div>
+    </div>
+    <div class="modal-body mdx-body">
+      <input type="hidden" id="tcEditId"/>
+      <div class="mdx-section">
+        <div class="mdx-sec-head"><span>🧑</span> La personne et le geste</div>
+        <div class="form-group"><label>Résident *</label><select id="tcResident" class="form-input" onchange="tcSyncObjectifs()"></select></div>
+        <div class="form-group"><label>Tâche *</label><input id="tcLibelle" class="form-input" placeholder="Ex : Trier son linge et lancer une machine"/></div>
+        <div class="form-group"><label>🎯 Objectif du projet relié</label>
+          <select id="tcObjectif" class="form-input"></select>
+          <input id="tcObjectifLibre" class="form-input" placeholder="Ou saisissez l'objectif librement…" style="margin-top:.35rem;display:none"/>
+        </div>
+      </div>
+      <div class="mdx-section">
+        <div class="mdx-sec-head"><span>🕐</span> Quand</div>
+        <div class="form-row">
+          <div class="form-group"><label>Moment *</label>
+            <select id="tcMoment" class="form-input">
+              <option value="matin">☀️ Matin</option>
+              <option value="aprem">🌤 Après-midi</option>
+              <option value="soir">🌙 Soir / nuit</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Heure indicative</label><input id="tcHeure" type="time" class="form-input"/></div>
+        </div>
+        <div class="form-group"><label>Récurrence</label>
+          <select id="tcRecurrence" class="form-input" onchange="document.getElementById('tcJours').style.display=this.value==='jours'?'':'none'">
+            <option value="quotidien">Tous les jours</option>
+            <option value="jours">Certains jours</option>
+          </select>
+          <div id="tcJours" style="display:none;margin-top:.4rem;display:none;gap:.3rem;flex-wrap:wrap"></div>
+        </div>
+      </div>
+      <div class="mdx-section">
+        <div class="mdx-sec-head"><span>📖</span> Mode d'emploi (pour les remplaçants)</div>
+        <div class="form-group"><label>Consigne</label><textarea id="tcConsigne" class="form-input" rows="2" placeholder="Ex : proposer 2 tenues maximum, la laisser trancher ; machine de l'étage 2, la laisser doser la lessive…"></textarea></div>
+        <div class="form-group"><label>Niveau de soutien attendu</label>
+          <select id="tcSoutien" class="form-input">
+            <option value="">Non précisé</option>
+            <option value="autonomie">🟢 Autonomie — présence simple</option>
+            <option value="supervision">🔵 Supervision / veille</option>
+            <option value="verbal">🟡 Incitation / guidance verbale</option>
+            <option value="partiel">🟠 Aide partielle</option>
+            <option value="total">🔴 Aide totale</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="tcArchiveBtn" style="margin-right:auto;display:none;color:#dc2626" onclick="archiveTache()">🗄 Retirer cette tâche</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalTache')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveTache()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/taches-supabase.js"></script>
+<script src="js/journee.js"></script>
+<script>Auth.requireAuth(); if (!requireModule('access_journal')) { const c = document.querySelector('.content'); if (c) c.innerHTML = ''; } else { initJournee(); }</script>
+</body></html>
