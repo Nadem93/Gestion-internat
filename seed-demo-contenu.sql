@@ -2586,7 +2586,7 @@ insert into public.planning_events
 select
   b.etablissement_id,
   (v.titres)[1 + mod(b.rn * 5 + k.k, array_length(v.titres, 1))],
-  b.id::text,
+  b.id,
   b.full_name,
   'rdv',
   to_char(case when k.k = 1
@@ -2650,7 +2650,7 @@ insert into public.planning_events
 select
   b.etablissement_id,
   (v.titres)[1 + mod(b.rn, array_length(v.titres, 1))],
-  b.id::text,
+  b.id,
   b.full_name,
   'activite',
   to_char(current_date - 7 + mod(b.rn, 5) + o.s * 7, 'YYYY-MM-DD'),  -- semaine passée, courante, suivante
@@ -2694,7 +2694,7 @@ select
   b.etablissement_id,
   case when mod(b.rn, 2) = 0 then $t$Réunion de synthèse$t$
        else $t$Point d'étape du projet personnalisé$t$ end,
-  b.id::text,
+  b.id,
   b.full_name,
   case when mod(b.rn, 2) = 0 then 'reunion' else 'projet' end,
   to_char(current_date + (3 + mod(b.rn * 2, 15)), 'YYYY-MM-DD'),   -- J+3 à J+17
@@ -2752,7 +2752,7 @@ insert into public.planning_events
 select
   b.etablissement_id,
   (v.titres)[1 + mod(b.rn * 5, array_length(v.titres, 1))],
-  b.id::text,
+  b.id,
   b.full_name,
   'sortie',
   to_char(current_date + (1 + mod(b.rn * 3, 14)), 'YYYY-MM-DD'),   -- J+1 à J+14
@@ -2794,7 +2794,7 @@ insert into public.planning_events
 select
   b.etablissement_id,
   (v.titres)[1 + mod((b.rn - 1) / 3, array_length(v.titres, 1))],  -- rn ≡ 1 (mod 3) → indexer sur (rn-1)/3
-  b.id::text,
+  b.id,
   b.full_name,
   'evaluation',
   to_char(current_date + (5 + mod(b.rn, 10)), 'YYYY-MM-DD'),       -- J+5 à J+14
