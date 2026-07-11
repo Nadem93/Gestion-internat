@@ -1232,6 +1232,9 @@ tbody tr:hover .table-actions{opacity:1}
 
 /* Page ouverte dans un hub (portail / vie quotidienne / dossiers) : titre masqué (le hub l'affiche déjà) */
 .is-embedded .header-title{display:none}
+/* L'iframe du hub descend jusqu'en bas de l'écran (aucune ligne de coupe) : c'est le CONTENU
+   de la page embarquée qui réserve l'espace du dock flottant, pour scroller au-dessus de lui. */
+.is-embedded .content{padding-bottom:110px}
 @keyframes badgePop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 
 /* ══════════════════════════════════════════
