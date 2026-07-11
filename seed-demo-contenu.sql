@@ -163,7 +163,7 @@ join contenus c
 delete from public.journal_entries where edit_history::text like '%seed-demo%';
 
 with actifs as (
-  select r.id::text as rid,
+  select r.id as rid,
          r.etablissement_id,
          trim(coalesce(r.prenom, '') || ' ' || coalesce(r.nom, '')) as resident_name,
          coalesce(r.color, '') as color,
