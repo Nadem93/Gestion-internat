@@ -1,7 +1,9 @@
 // ── COUCHE SUPABASE — CONSOLE GROUPE (vue consolidée superadmin uniquement) ──
-// Périmètre volontairement réduit : seule la vue consolidée est migrée
-// (voir migration-console-vue-consolidee.sql). Les autres onglets legacy
-// de console.html restent basés sur getEtabs()/getEtabData() (localStorage).
+// Périmètre volontairement réduit : la vue consolidée et l'onglet
+// « Établissements affichés » sont sur Supabase (voir migration-console-
+// vue-consolidee.sql). Les 4 autres onglets (Utilisateurs, Rôles, Audit,
+// Paramétrage) sont des placeholders « pas encore disponible » — plus aucun
+// code localStorage dans console.html.
 
 async function sbGetEtablissementsMeta() {
   const { data, error } = await supabaseClient
