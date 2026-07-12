@@ -41,7 +41,7 @@ function chOccupants(room) {
 
 function renderChambres() {
   const rooms = getChambres();
-  const canEdit = ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
     || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
   const totalLits = rooms.reduce((a, c) => a + (parseInt(c.capacite) || 1), 0);
   let occupes = 0;
@@ -312,7 +312,7 @@ async function initChambres() {
   await Promise.all([loadChambresCache(), loadEdlCache()]);
   const added = await seedChambresFromResidents();
   if (added) toast(`${added} chambre(s) importée(s) depuis les fiches résidents`, 'info');
-  const canEdit = ['admin', 'moderator', 'superadmin'].includes(s.role)
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(s.role)
     || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   const addBtn = document.getElementById('btnAddChambre');
   if (addBtn && !canEdit) addBtn.style.display = 'none';

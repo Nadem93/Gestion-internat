@@ -84,7 +84,7 @@ function renderActivites() {
 function activiteCardGrille(a) {
   const c = ACT_CATEGORIES[a.categorie] || ACT_CATEGORIES.autre;
   const inscrits = actInscriptions(a.id).length;
-  const canEdit = ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
     || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
   const plein = a.placesMax > 0 && inscrits >= a.placesMax;
   const pct = a.placesMax > 0 ? Math.min(100, Math.round(inscrits / a.placesMax * 100)) : null;
@@ -339,7 +339,7 @@ async function initActivites() {
   document.getElementById('aFilterJour').innerHTML = '<option value="">Tous les jours</option>' + ACT_JOURS.map(j => `<option value="${j}">${j}</option>`).join('');
   document.getElementById('amCategorie').innerHTML = Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');
   document.getElementById('amJour').innerHTML = ACT_JOURS.map(j => `<option value="${j}">${j}</option>`).join('');
-  const canEdit = ['admin', 'moderator', 'superadmin'].includes(s.role)
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(s.role)
     || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   if (!canEdit) { const b = document.getElementById('btnAddActivite'); if (b) b.style.display = 'none'; }
   ['aFilterCat', 'aFilterJour'].forEach(id => document.getElementById(id)?.addEventListener('change', renderActivites));
