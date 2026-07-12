@@ -35,6 +35,31 @@ function sigImageValide(img) {
     && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(img);
 }
 
+// ── Contresignature SERVEUR (edge function signature-sceau) ──
+// Best-effort : si la function n'est pas déployée / réseau KO, on renvoie null
+// et l'appelant retombe sur l'empreinte locale. Ne bloque jamais la signature.
+async function _sigSceauFetch(action, ppeId, role, nom) {
+  if (typeof supabaseClient === 'undefined' || typeof SUPABASE_URL === 'undefined') return null;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return null;
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/signature-sceau`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action, ppeId: String(ppeId), role, nom: nom || '' }),
+    });
+    if (!resp.ok) return null;
+    const d = await resp.json().catch(() => null);
+    return (d && d.ok) ? d : null;
+  } catch (e) { return null; }
+}
+function sigScellerServeur(ppeId, role, nom) { return _sigSceauFetch('sceller', ppeId, role, nom); }
+function sigVerifierServeur(ppeId, role)     { return _sigSceauFetch('verifier', ppeId, role, ''); }
+
 const SignaturePad = (() => {
   let _overlay = null, _dialog = null, _canvas = null, _ctx = null, _onSave = null;
   let _drawing = false, _hasDrawn = false, _last = null;

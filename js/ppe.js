@@ -475,6 +475,16 @@ function ppeSigner(ppeId, role) {
       // on ne confirme le succès qu'une fois la sauvegarde réellement aboutie.
       const ok = await persistPpe(p);
       if (ok) toast(`Signature de ${escHtml(nom)} enregistrée ✓`);
+      // Contresignature serveur (best-effort) : fige l'empreinte dans le
+      // registre append-only, hors de portée d'une réécriture cliente.
+      if (typeof sigScellerServeur === 'function') {
+        const sceau = await sigScellerServeur(ppeId, role, nom);
+        if (sceau && p.signatures.pads[role]) {
+          p.signatures.pads[role].sceau = { id: sceau.id, empreinte: sceau.empreinte, scelleLe: sceau.scelle_le };
+          await persistPpe(p);
+          renderAvenantFull(p);
+        }
+      }
     }
   });
 }
@@ -514,24 +524,50 @@ function sigBlockHtml(p, rd) {
 
 // Vérifie a posteriori (SHA-256 asynchrone) que chaque tracé correspond
 // toujours au contenu actuel de l'avenant, et met à jour les badges.
+let _sigVerifSeq = 0;   // anti-course : seul le dernier appel a le droit d'écrire le DOM
 async function ppeVerifSignatures(p) {
   const pads = sigPads(p);
   const roles = Object.keys(pads);
   if (!roles.length) return;
+  const seq = ++_sigVerifSeq;
   const hash = await sigHashHex(sigContenuAvenant(p));
+
+  // Repli LOCAL (rapide, garantie faible) : empreinte cliente stockée dans le
+  // jsonb. Clairement étiqueté « (local) » — jamais présenté comme le scellé
+  // serveur, qu'un compte interne pourrait contrefaire.
+  const poserLocal = (el, pad, suffixe) => {
+    const sfx = suffixe || '';
+    if (!hash || !pad.hash || pad.hash === 'indisponible') { el.textContent = 'empreinte non vérifiable' + sfx; el.style.color = '#94a3b8'; return; }
+    if (pad.hash === hash) { el.textContent = '🔒 conforme au document (local)' + sfx; el.style.color = '#15803d'; el.style.fontWeight = '400'; }
+    else { el.textContent = '⚠️ document modifié depuis la signature (local)' + sfx; el.style.color = '#b45309'; el.style.fontWeight = '700'; }
+  };
+
   roles.forEach(role => {
     const el = document.getElementById('sigEtat-' + role);
     if (!el) return;
-    const pad = pads[role];
-    if (!hash || !pad.hash || pad.hash === 'indisponible') { el.textContent = 'empreinte non vérifiable'; return; }
-    if (pad.hash === hash) {
-      el.textContent = '🔒 conforme au document';
-      el.style.color = '#15803d';
-    } else {
-      el.textContent = '⚠️ document modifié depuis la signature';
-      el.style.color = '#b45309';
-      el.style.fontWeight = '700';
-    }
+    poserLocal(el, pads[role]);
+    // Vérification SERVEUR pour CHAQUE signature, indépendamment du jsonb : le
+    // registre est interrogé par (avenant, rôle), donc effacer pad.sceau côté
+    // client ne contourne rien. Le verdict serveur, quand il répond, fait foi.
+    if (typeof sigVerifierServeur !== 'function') return;
+    sigVerifierServeur(p.id, role).then(r => {
+      if (seq !== _sigVerifSeq) return;   // un re-render a eu lieu entre-temps
+      const e = document.getElementById('sigEtat-' + role);
+      if (!e || !r) return;
+      if (!r.scelle) { poserLocal(e, pads[role], ' · non scellé serveur'); return; }
+      const quand = r.scelle_le ? ' le ' + formatDateTime(r.scelle_le) : '';
+      const nb = r.nb_sceaux > 1 ? ` <span style="font-weight:400;color:#94a3b8">(${r.nb_sceaux} scellés)</span>` : '';
+      if (r.altere) {
+        e.innerHTML = `⛔ altération : contenu modifié et re-scellé${nb}`;
+        e.style.color = '#dc2626'; e.style.fontWeight = '700';
+      } else if (r.conforme) {
+        e.innerHTML = `🔐 scellé serveur — conforme${escHtml(quand)}${nb}`;
+        e.style.color = '#15803d'; e.style.fontWeight = '700';
+      } else {
+        e.innerHTML = `⚠️ document modifié depuis la signature${escHtml(quand)}${nb}`;
+        e.style.color = '#dc2626'; e.style.fontWeight = '700';
+      }
+    });
   });
 }
 
@@ -547,6 +583,15 @@ async function printAvenant(id) {
   // La fenêtre s'ouvre AVANT tout await, sinon les bloqueurs de popups la refusent
   const w = window.open('', '_blank');
   const sigEmpreinte = await sigHashHex(sigContenuAvenant(p));
+  // Verdicts SERVEUR (registre append-only) récupérés avant impression : le PDF
+  // ne se fie jamais au jsonb (falsifiable en interne) pour affirmer « conforme ».
+  const sigVerdicts = {};
+  if (typeof sigVerifierServeur === 'function') {
+    for (const rd of SIG_ROLES) {
+      const pad = sigPads(p)[rd.key];
+      if (pad && sigImageValide(pad.image)) sigVerdicts[rd.key] = await sigVerifierServeur(p.id, rd.key);
+    }
+  }
   const settings = DB.get(DB.keys.settings) || {};
   w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Avenant — ${escHtml(p.residentName)}</title>
 <style>
@@ -713,13 +758,26 @@ ${p.conclusion ? `<div class="section" style="--dc:#0f2b4a"><h2><span class="dot
   ${SIG_ROLES.filter(rd => !rd.si || rd.si(p) || sigPads(p)[rd.key]).map(rd => {
     const pad = sigPads(p)[rd.key];
     if (pad && sigImageValide(pad.image)) {
-      const scelle = pad.hash && pad.hash !== 'indisponible';
-      const valide = scelle && sigEmpreinte && pad.hash === sigEmpreinte;
-      const etat = valide
-        ? '<span style="font-size:6.4pt;color:#15803d">🔒 conforme au document imprimé</span>'
-        : scelle
-          ? '<span style="font-size:6.4pt;color:#b45309;font-weight:700">⚠️ antérieure à la dernière modification du document</span>'
-          : '<span style="font-size:6.4pt;color:#94a3b8">empreinte non vérifiable</span>';
+      // Verdict SERVEUR prioritaire (calculé depuis la base + registre
+      // append-only, non falsifiable en interne). Repli sur l'empreinte locale
+      // seulement si le serveur n'a pas répondu, et alors CLAIREMENT étiqueté
+      // « local » pour ne jamais revendiquer à tort un scellé serveur.
+      const v = sigVerdicts[rd.key];
+      let etat;
+      if (v && v.scelle) {
+        etat = v.altere
+          ? '<span style="font-size:6.4pt;color:#dc2626;font-weight:700">⛔ altération : contenu modifié et re-scellé</span>'
+          : v.conforme
+            ? '<span style="font-size:6.4pt;color:#15803d;font-weight:700">🔐 scellé serveur — conforme</span>'
+            : '<span style="font-size:6.4pt;color:#dc2626;font-weight:700">⚠️ document modifié depuis la signature</span>';
+      } else {
+        const refLoc = pad.hash && pad.hash !== 'indisponible' ? pad.hash : null;
+        etat = refLoc && sigEmpreinte && refLoc === sigEmpreinte
+          ? '<span style="font-size:6.4pt;color:#15803d">🔒 conforme au document (vérification locale)</span>'
+          : refLoc
+            ? '<span style="font-size:6.4pt;color:#b45309;font-weight:700">⚠️ document modifié depuis la signature (local)</span>'
+            : '<span style="font-size:6.4pt;color:#94a3b8">empreinte non vérifiable</span>';
+      }
       return `<div class="sig-box"><div class="sig-role">${rd.label}</div>
         <div style="margin-top:.12cm"><img src="${pad.image}" alt="" style="max-height:1.05cm;max-width:100%"/></div>
         <div class="sig-line" style="margin-top:.05cm">${escHtml(pad.nom||'')}<br><span style="font-size:6.6pt;color:#94a3b8">signé électroniquement le ${formatDateTime(pad.signeLe)}${pad.parNom ? ` · recueillie par ${escHtml(pad.parNom)}` : ''}</span><br>${etat}</div>
