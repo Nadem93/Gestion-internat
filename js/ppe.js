@@ -388,7 +388,7 @@ function printAvenant(id) {
   const settings = DB.get(DB.keys.settings) || {};
   w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Avenant — ${escHtml(p.residentName)}</title>
 <style>
-  @page { margin:1.5cm 1.4cm 2.1cm; }
+  @page { margin:1.5cm 1.4cm; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:'Inter','Segoe UI',system-ui,sans-serif; font-size:9.5pt; line-height:1.65; color:#334155;
          -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -454,11 +454,17 @@ function printAvenant(id) {
   .sig-date { text-align:center; margin-top:.3cm; font-size:8.4pt; color:#475569; }
   .sig-date strong { color:#0f2b4a; }
 
-  /* ── Signature INTERNALIS : répétée en bas de CHAQUE page imprimée ── */
-  .brand-footer { position:fixed; bottom:-1.55cm; left:0; right:0; text-align:center; }
+  /* ── Signature INTERNALIS, répétée en bas de CHAQUE page imprimée ──
+     Recette robuste : le <tfoot> du tableau-cadre RÉSERVE la place sur chaque
+     page (les navigateurs répètent le tfoot à l'impression), et ce bloc fixe
+     vient s'y peindre — aucun chevauchement, aucun décalage du contenu. */
+  table.frame { width:100%; border-collapse:collapse; }
+  table.frame > tbody > tr > td, table.frame > tfoot > tr > td { border:none; padding:0; }
+  .footer-space { height:1.3cm; }
+  .brand-footer { position:fixed; bottom:0; left:0; right:0; height:1.3cm; background:#fff; text-align:center; padding-top:6px; }
   .brand-footer .rule { width:36%; height:1px; background:#e2e8f0; margin:0 auto 5px; }
-  .brand-footer .brand { font-family:Georgia,'Times New Roman',serif; font-size:9.5pt; font-weight:700; letter-spacing:.28em; color:#1e40af; }
-  .brand-footer .tagline { font-size:6.4pt; color:#94a3b8; letter-spacing:.04em; margin-top:1px; }
+  .brand-footer .brand { font-family:Georgia,'Times New Roman',serif; font-size:9pt; font-weight:700; letter-spacing:.28em; color:#1e40af; }
+  .brand-footer .tagline { font-size:6.2pt; color:#94a3b8; letter-spacing:.04em; margin-top:1px; }
 </style></head><body>
 
 <div class="brand-footer">
@@ -467,6 +473,9 @@ function printAvenant(id) {
   <div class="tagline">Le projet personnalisé, du papier à la vie quotidienne — document généré le ${new Date().toLocaleDateString('fr-FR')}</div>
 </div>
 
+<table class="frame">
+<tfoot><tr><td><div class="footer-space"></div></td></tr></tfoot>
+<tbody><tr><td>
 <div class="page">
 <div class="head-stripe"></div>
 <div class="doc-meta"><span>Document confidentiel — usage professionnel</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
@@ -547,6 +556,8 @@ ${p.conclusion ? `<div class="section" style="--dc:#0f2b4a"><h2><span class="dot
 </div>
 
 </div>
+</td></tr></tbody>
+</table>
 </body></html>`);
   w.document.close();
   w.focus();
