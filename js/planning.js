@@ -253,8 +253,14 @@ function renderTimeline(days) {
       const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
       const cWidth = `calc(${colW} - 2px)`;
+      // La bande de durée SORT du bloc par le bas (côté gauche) et descend jusqu'à
+      // l'heure de fin ; un événement court (durée ≈ hauteur du bloc) n'en a pas.
+      const bandTop = 34;
+      const band = (fullH - bandTop) > 8
+        ? `<div class="pl-ev-band" style="left:${bandLeft}px;top:${bandTop}px;background:${bg}"></div>`
+        : '';
       return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escAttr(ev.residentName)+' — ':''}${escAttr(ev.titre)}${ev.vehicule?' — 🚗 '+escAttr(ev.vehicule):''}">
-        <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
+        ${band}
         <div class="pl-ev${isConflict?' pl-ev-conflict':''}" style="left:${cLeft};width:${cWidth};background:${bg}">
           ${isConflict?'<span class="pl-ev-conflict-ic">⚠</span>':''}
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}${ev.recurId?' <span style="opacity:.75;font-size:.55rem">↻</span>':''}</div>
