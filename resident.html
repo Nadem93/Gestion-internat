@@ -118,6 +118,7 @@
     <header class="header">
       <div class="header-info"><div class="header-title" id="pageTitle">Fiche résident</div></div>
       <div class="header-right">
+        <button class="btn btn-ghost btn-sm btn-add-resident" id="btnIaSynthese" onclick="iaOuvrirSynthese(currentResidentId)" title="Synthèse de période assistée par IA (relecture obligatoire avant insertion)">✨<span class="btn-add-label"> Synthèse IA</span></button>
         <button class="btn btn-ghost btn-sm btn-add-resident" id="btnDownload" onclick="printResident()" title="Télécharger la fiche">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span class="btn-add-label"> Télécharger</span>
@@ -371,6 +372,7 @@
 <script src="js/absences-supabase.js"></script>
 <script src="js/documents-resident-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
+<script src="js/ia-assistant.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
 <script src="js/residents.js"></script>

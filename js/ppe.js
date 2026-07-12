@@ -1410,7 +1410,7 @@ function renderCycleCard(p) {
     <div class="section-body">
       <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:stretch">${stepHtml}</div>
       <div id="pcBilanForm" style="display:none;margin-top:.85rem;padding:.85rem;border:1px solid #ede9fe;border-radius:10px;background:#faf5ff">
-        <div style="font-size:.78rem;font-weight:700;color:#0f2b4a;margin-bottom:.6rem">📝 Bilan intermédiaire à 6 mois ${bilanDone ? '— réalisé le ' + _pcFmt(b.date) : ''}</div>
+        <div style="font-size:.78rem;font-weight:700;color:#0f2b4a;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">📝 Bilan intermédiaire à 6 mois ${bilanDone ? '— réalisé le ' + _pcFmt(b.date) : ''} ${bilanDone && b._ia && typeof iaBadge === 'function' ? iaBadge(b) : ''}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
           <div><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Date du bilan</label><input type="date" class="input" id="pcBilanDate" value="${escHtml(b.date || today())}"/></div>
           <div><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Participants</label><input class="input" id="pcBilanParticipants" value="${escHtml(b.participants || '')}" placeholder="Résident, référent, chef de service…"/></div>
@@ -1418,8 +1418,10 @@ function renderCycleCard(p) {
         ${pcOutcomesRecapHtml(p)}
         <div style="margin-bottom:.5rem"><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Synthèse — où en est-on des objectifs ?</label><textarea class="input" id="pcBilanSynthese" style="min-height:70px">${escHtml(b.synthese || '')}</textarea></div>
         <div style="margin-bottom:.6rem"><label style="font-size:.68rem;font-weight:600;color:var(--muted)">Ajustements décidés (objectifs modifiés, moyens, échéances…)</label><textarea class="input" id="pcBilanAjust" style="min-height:56px">${escHtml(b.ajustements || '')}</textarea></div>
-        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+        <div id="pcBilanIaStatus" style="font-size:.7rem;color:#7e22ce;min-height:1rem;margin-bottom:.35rem"></div>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="pcToggleBilanForm()">Fermer</button>
+          ${typeof iaPreremplirBilan === 'function' ? `<button class="btn btn-sm" id="pcBilanIa" style="background:#faf5ff;border:1px solid #e9d5ff;color:#7e22ce" onclick="iaPreremplirBilan('${p.id}')" title="Proposition générée par IA à relire et valider">✨ Pré-remplir (IA)</button>` : ''}
           <button class="btn btn-accent btn-sm" onclick="pcSaveBilan('${p.id}')">💾 Enregistrer le bilan</button>
         </div>
       </div>
@@ -1461,6 +1463,12 @@ function pcSaveBilan(ppeId) {
     synthese: document.getElementById('pcBilanSynthese').value.trim(),
     ajustements: document.getElementById('pcBilanAjust').value.trim()
   };
+  // Traçabilité IA : si une proposition de l'assistant a servi de base, on
+  // marque le bilan (qui a demandé, qui a relu, texte modifié ou non).
+  if (typeof iaMarquageBilan === 'function') {
+    const m = iaMarquageBilan(ppeId);
+    if (m) ppeCycle(p).bilan6._ia = m;
+  }
   persistPpe(p);
   ppeSyncEcheances(p);
   toast('Bilan intermédiaire enregistré', 'success');
