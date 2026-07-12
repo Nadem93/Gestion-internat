@@ -1947,7 +1947,7 @@ function buildFilDeVie(r) {
   const cats = DB.get(DB.keys.categories) || [];
   _residentJournalAll.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e)).forEach(e => {
     const cat = cats.find(c => String(c.id) === String(e.categorie));
-    push(new Date(e.date), 'journal', '📔', cat ? cat.color : '#059669', cat ? cat.name : 'Journal', e.contenu);
+    push(new Date(e.date), 'journal', '📔', cat ? safeColor(cat.color, '#059669') : '#059669', cat ? cat.name : 'Journal', e.contenu);
   });
   (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
     push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `${e.eig?.declarable ? '🚨 EIG — ' : 'Incident — '}${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);

@@ -122,7 +122,7 @@ function populateEtabSelector() {
   const el = document.getElementById('etabSelector');
   const etabs = getEtabs();
   el.innerHTML = etabs.map(e =>
-    `<label class="etab-chip"><input type="checkbox" value="${e.id}" checked onchange="updateGenBtn()"/><span class="etab-dot" style="background:${e.color||'#3b82f6'}"></span>${escHtml(e.nom||'Sans nom')}</label>`
+    `<label class="etab-chip"><input type="checkbox" value="${e.id}" checked onchange="updateGenBtn()"/><span class="etab-dot" style="background:${safeColor(e.color,'#3b82f6')}"></span>${escHtml(e.nom||'Sans nom')}</label>`
   ).join('');
   updateGenBtn();
 }

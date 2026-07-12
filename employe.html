@@ -648,8 +648,8 @@ function empReferentsHtml(e) {
   const rows = residents.map(r => {
     const initiales = ((r.prenom||'')[0]||'') + ((r.nom||'')[0]||'');
     const av = r.photo
-      ? `<img src="${r.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
-      : `<div style="width:40px;height:40px;border-radius:50%;background:${r.color||'#6366f1'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0">${escHtml(initiales)}</div>`;
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
+      : `<div style="width:40px;height:40px;border-radius:50%;background:${safeColor(r.color,'#6366f1')};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0">${escHtml(initiales)}</div>`;
     const a = age(r.dob);
     return `<a href="resident.html?id=${r.id}" style="display:flex;align-items:center;gap:.85rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background .1s" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
       ${av}
