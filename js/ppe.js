@@ -11,6 +11,13 @@ const DOMAINE_SERAFIN_MAP = {
   orientation:['2.4.1']
 };
 
+// Couleur d'accent de chaque domaine (en-têtes clairs du design « dossier aéré »)
+const DOM_COLORS = {
+  autonomie: '#ea580c', sante: '#dc2626', viePro: '#0284c7', logement: '#b45309',
+  vieSociale: '#16a34a', vieAffective: '#db2777', budget: '#d97706',
+  transport: '#0d9488', orientation: '#6366f1'
+};
+
 const DOMAINES = [
   { id:'autonomie', label:'Autonomie', icon:'🧍' },
   { id:'sante', label:'Santé et bien-être', icon:'❤️' },
@@ -160,32 +167,42 @@ function renderAvenantFull(p) {
         <button class="btn btn-accent btn-sm" onclick="printAvenant('${p.id}')">Télécharger PDF</button>
       </div>
     </div>
-    <div class="section-card">
-      <div class="section-header" style="cursor:default"><strong>Informations générales</strong></div>
-      <div class="section-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.85rem">
-          <div><strong>Résident :</strong> ${escHtml(p.residentName)}</div>
-          <div><strong>Date de rédaction :</strong> ${p.dateRedaction||'—'}</div>
-          <div><strong>Prochaine révision :</strong> ${p.dateRevision||'—'}</div>
-          <div><strong>Référent éducatif :</strong> ${escHtml(p.referent||'—')}</div>
-          <div><strong>Mesure de protection :</strong> ${escHtml(p.protection||'—')}</div>
-          <div><strong>Établissement employeur :</strong> ${escHtml(p.employeur||'—')}</div>
-          <div><strong>Atelier :</strong> ${escHtml(p.atelier||'—')}</div>
-          <div><strong>Date d\'entrée ESAT :</strong> ${p.entreeEsat||'—'}</div>
+    ${(() => {
+      const r = residentsList().find(x => String(x.id) === String(p.residentId));
+      const col = r?.color || '#0f2b4a';
+      const avatar = r?.photo
+        ? `<img src="${r.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="${escHtml(p.residentName)}"/>`
+        : `<span style="width:52px;height:52px;border-radius:50%;background:${col}22;border:2px solid ${col}55;color:${col};font-size:1rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${_avInitials(p.residentName)}</span>`;
+      const pill = (ic, txt, style) => txt ? `<span style="font-size:.68rem;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap;${style || 'color:#475569;background:#f8fafc;border:0.5px solid #e2e8f0'}">${ic} ${escHtml(String(txt))}</span>` : '';
+      return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 4px 14px rgba(15,43,74,.05);padding:1rem 1.15rem;margin-bottom:1rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap">
+        ${avatar}
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <span style="font-size:1.05rem;font-weight:800;color:#0f2b4a">${escHtml(p.residentName||'—')}</span>
+            <span class="badge-ppe ${p.statut}" style="margin:0">${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
+          </div>
+          <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem">
+            ${pill('📅', p.dateRedaction ? 'Rédigé le ' + formatDate(p.dateRedaction) : '')}
+            ${pill('🔄', p.dateRevision ? 'Révision le ' + formatDate(p.dateRevision) : '', 'color:#b45309;background:#fffbeb;border:0.5px solid #fde68a')}
+            ${pill('🧑‍🏫', p.referent)}
+            ${pill('🏭', [p.atelier, p.employeur].filter(Boolean).join(' · '))}
+            ${pill('🛡', p.protection)}
+            ${pill('🚪', p.entreeEsat ? 'Entrée ESAT ' + formatDate(p.entreeEsat) : '')}
+            ${pill('👤', p.createdBy)}
+          </div>
         </div>
-        <span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
-      </div>
-    </div>
+      </div>`;
+    })()}
     ${renderCycleCard(p)}
     ${DOMAINES.map(d => renderSectionCard(p, d)).join('')}
     <div class="section-card">
-      <div class="section-header" style="cursor:default"><strong>Conclusion</strong></div>
+      <div class="section-header" style="cursor:default"><span class="sec-ic">✍</span><strong>Conclusion</strong></div>
       <div class="section-body">
         <textarea class="input" style="min-height:80px;width:100%" onchange="updateConclusion('${p.id}',this.value)">${escHtml(p.conclusion||'')}</textarea>
       </div>
     </div>
     <div class="section-card">
-      <div class="section-header" style="cursor:default"><strong>Signatures</strong></div>
+      <div class="section-header" style="cursor:default"><span class="sec-ic">🖋</span><strong>Signatures</strong></div>
       <div class="section-body">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;font-size:.85rem;text-align:center">
           <div><strong>Le résident</strong><div style="margin-top:.5rem"><input class="input" style="text-align:center;font-size:.8rem" value="${escHtml(p.signatures.resident||'')}" onchange="updateSignature('${p.id}','resident',this.value)" placeholder="Nom/prénom"/></div></div>
@@ -201,13 +218,14 @@ function renderAvenantFull(p) {
 
 function renderSectionCard(p, domaine) {
   const s = p.sections[domaine.id] || emptySection();
-  return `<div class="section-card">
+  const domCol = DOM_COLORS[domaine.id] || '#7c3aed';
+  return `<div class="section-card" style="--dc:${domCol}">
     <div class="section-header" onclick="toggleSection('${p.id}','${domaine.id}')">
-      <span>${domaine.icon}</span>
+      <span class="sec-ic">${domaine.icon}</span>
       <span>${domaine.label}</span>
       <span style="margin-left:auto;display:flex;align-items:center;gap:.3rem">
-        ${(DOMAINE_SERAFIN_MAP[domaine.id]||[]).map(c=>`<span style="font-size:.6rem;background:rgba(255,255,255,.18);color:#EEEDFE;padding:1px 6px;border-radius:999px;font-weight:600">${c}</span>`).join('')}
-        <span style="font-size:.7rem;color:#CECBF6;margin-left:.25rem">${s.objectifs.length} obj.</span>
+        ${(DOMAINE_SERAFIN_MAP[domaine.id]||[]).map(c=>`<span style="font-size:.6rem;background:#f0fdfa;border:0.5px solid #99e5dc;color:#0f766e;padding:1px 6px;border-radius:999px;font-weight:700">${c}</span>`).join('')}
+        <span class="muted-count" style="font-size:.7rem;margin-left:.25rem">${s.objectifs.length} obj.</span>
       </span>
     </div>
     <div class="section-body" id="sectionBody_${p.id}_${domaine.id}">
@@ -1115,7 +1133,7 @@ function renderCycleCard(p) {
   const bilanDone = !!b.date;
   return `<div class="section-card">
     <div class="section-header" style="cursor:default;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-      <strong>🧭 Cycle du PPA</strong>
+      <span class="sec-ic">🧭</span><strong>Cycle du PPA</strong>
       <span style="font-size:.62rem;color:var(--muted)">réévaluation annuelle tracée (HAS 1.10.6) · échéances créées automatiquement</span>
     </div>
     <div class="section-body">
