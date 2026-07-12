@@ -348,6 +348,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="planningHebdoModal">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title">🗓 Semaine type — absences récurrentes</span>
+      <button class="modal-close" onclick="closeModal('planningHebdoModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="phModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('planningHebdoModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="savePlanningHebdo()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
@@ -500,6 +514,7 @@ function renderViewMode(r) {
         return sejour;
       })()}
       ${planningResidentCard(r)}
+      ${planningHebdoCard(r)}
       ${santeCard(r)}
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${trousseauCard(r)}${activitesCard(r)}</div>
@@ -2398,6 +2413,98 @@ function deleteDocFromPage(docId, resId) {
 const PR_TYPE_COLORS = { activite:'#3b82f6', rdv:'#ef4444', sortie:'#10b981', reunion:'#8b5cf6', avenant:'#f59e0b', projet:'#06b6d4', evaluation:'#9333ea', autre:'#94a3b8' };
 const PR_JOUR_DOW    = { lundi:1, mardi:2, mercredi:3, jeudi:4, vendredi:5, samedi:6, dimanche:0 };
 const PR_JOURS_COURT = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
+// ─── SEMAINE TYPE (r.planningHebdo) — absences récurrentes ───
+// Distinct du « Planning individuel » ci-dessous (agenda d'événements datés) :
+// ici on décrit les jours de la semaine où le résident est habituellement
+// absent (retour en famille, travail…). Lu par presences.js (présomption
+// « sortie », exclusion de « Tous présents ») et medicaments.js (filtre
+// « Présents seulement », tag 📅).
+const PH_JOURS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+const PH_JOURS_COURT = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', vendredi:'Ven', samedi:'Sam', dimanche:'Dim' };
+
+function planningHebdoCard(r) {
+  const ph = r.planningHebdo || {};
+  const canEdit = canEditResident();
+  const actifs = PH_JOURS.filter(j => ph[j] && ph[j].actif);
+
+  const pills = PH_JOURS.map(j => {
+    const on = !!(ph[j] && ph[j].actif);
+    return `<div style="flex:1;text-align:center;padding:.35rem 0;border-radius:8px;font-size:.72rem;font-weight:700;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:var(--g50, #f8fafc);color:var(--g400);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</div>`;
+  }).join('');
+
+  const rows = actifs.length ? actifs.map((j, i) => {
+    const d = ph[j];
+    const horaires = [d.debut ? 'départ ' + d.debut : '', d.fin ? 'retour ' + d.fin : ''].filter(Boolean).join(' · ');
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <span style="width:34px;flex-shrink:0;font-size:.72rem;font-weight:800;color:#0369a1;text-transform:uppercase">${PH_JOURS_COURT[j]}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem">📅 ${escHtml(d.label || 'Absence planifiée')}</div>
+        ${horaires ? `<div style="font-size:.73rem;color:var(--muted);margin-top:1px">${horaires}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune absence récurrente — le résident est attendu chaque jour.</div>';
+
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #0369a1 12%, #fff)">
+      <span class="card-title" style="color:#0369a1">🗓 Semaine type${actifs.length ? ` <span class="badge" style="margin-left:.3rem;background:#e0f2fe;color:#0369a1">${actifs.length} jour${actifs.length > 1 ? 's' : ''} d'absence</span>` : ''}</span>
+      ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openPlanningHebdoModal()">✎ Modifier</button>` : ''}
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+    <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (retour en famille, travail, activité extérieure…). Les jours cochés sont présumés « sortie » au pointage et filtrables dans Médicaments.</div>
+    <div style="display:flex;gap:.35rem">${pills}</div>
+    <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">${rows}</div>
+  </div></div>`;
+}
+
+function openPlanningHebdoModal() {
+  if (!canEditResident()) return;
+  const r = getResident();
+  if (!r) return;
+  const ph = r.planningHebdo || {};
+  document.getElementById('phModalBody').innerHTML = `
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">Cochez les jours où le résident est habituellement absent de l'internat. Le pointage et la distribution des médicaments en tiennent compte automatiquement.</div>
+    <div style="display:grid;grid-template-columns:118px 1fr 96px 96px;gap:.5rem;align-items:center;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-bottom:.25rem">
+      <span>Jour</span><span>Motif</span><span>Départ</span><span>Retour</span>
+    </div>
+    ${PH_JOURS.map(j => {
+      const d = ph[j] || {};
+      return `<div style="display:grid;grid-template-columns:118px 1fr 96px 96px;gap:.5rem;align-items:center;padding:.3rem 0;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:.45rem;font-weight:600;font-size:.83rem;cursor:pointer;text-transform:capitalize;user-select:none"><input type="checkbox" id="ph_actif_${j}"${d.actif ? ' checked' : ''} onchange="phToggleJour('${j}')" style="width:auto"/> ${j}</label>
+        <input type="text" id="ph_label_${j}" class="form-input" placeholder="Retour en famille, travail…" value="${escAttr(d.label || '')}"/>
+        <input type="time" id="ph_debut_${j}" class="form-input" value="${escAttr(d.debut || '')}" title="Heure de départ"/>
+        <input type="time" id="ph_fin_${j}" class="form-input" value="${escAttr(d.fin || '')}" title="Heure de retour"/>
+      </div>`;
+    }).join('')}`;
+  PH_JOURS.forEach(phToggleJour);
+  openModal('planningHebdoModal');
+}
+
+function phToggleJour(j) {
+  const on = document.getElementById('ph_actif_' + j).checked;
+  ['label', 'debut', 'fin'].forEach(k => {
+    const el = document.getElementById(`ph_${k}_${j}`);
+    if (!el) return;
+    el.disabled = !on;
+    el.style.opacity = on ? '' : '.45';
+  });
+}
+
+async function savePlanningHebdo() {
+  const r = getResident();
+  if (!r) return;
+  const ph = {};
+  PH_JOURS.forEach(j => {
+    const actif = document.getElementById('ph_actif_' + j).checked;
+    const label = document.getElementById('ph_label_' + j).value.trim();
+    const debut = document.getElementById('ph_debut_' + j).value;
+    const fin   = document.getElementById('ph_fin_' + j).value;
+    // Un jour décoché garde son motif/horaires : on peut le réactiver sans tout resaisir
+    if (actif || label || debut || fin) ph[j] = { actif, label, debut, fin };
+  });
+  await persistResident({ ...r, planningHebdo: ph, updatedAt: new Date().toISOString() });
+  closeModal('planningHebdoModal');
+  toast('Semaine type enregistrée', 'success');
+  loadResident();
+}
 
 function planningResidentCard(r) {
   const todayStr = today();

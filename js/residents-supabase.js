@@ -43,6 +43,7 @@ function _sbToRow(r) {
     objectifs_suivi: r.objectifsSuivi || {}, evaluations: r.evaluations || [],
     regime: r.regime || {}, droits_visite: r.droitsVisite || [],
     serafinph: r.serafinph || {},
+    planning_hebdo: r.planningHebdo || {},
     updated_at: new Date().toISOString()
   };
 }
@@ -72,6 +73,7 @@ function _sbFromRow(row) {
     objectifsSuivi: row.objectifs_suivi || {}, evaluations: row.evaluations || [],
     regime: row.regime || {}, droitsVisite: row.droits_visite || [],
     serafinph: row.serafinph || {},
+    planningHebdo: row.planning_hebdo || {},
     createdAt: row.created_at, updatedAt: row.updated_at
   };
 }
