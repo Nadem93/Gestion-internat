@@ -1,4 +1,7 @@
 // ── TRAÇABILITÉ DE LA DISTRIBUTION DES MÉDICAMENTS ──
+
+// Heure d'une distribution : accepte un horodatage ISO complet ou une heure « HH:MM »
+function medHeure(h) { return !h ? '' : (String(h).includes('T') ? String(h).slice(11, 16) : String(h).slice(0, 5)); }
 let medCanEdit = false;
 let medNoteCtx = null;
 let medSearch = '';
@@ -169,7 +172,7 @@ function renderMedicaments() {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
             <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:${mc.bg};color:${mc.color}">${mom.icon||''} ${mom.label||e.moment}</span>
-            ${rec?.heure?`<span style="font-size:11px;color:#94a3b8">${rec.heure.slice(11,16)}</span>`:''}
+            ${rec?.heure?`<span style="font-size:11px;color:#94a3b8">${medHeure(rec.heure)}</span>`:''}
             ${enRetard?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#fee2e2;color:#dc2626">⚠️ En retard</span>`:''}
           </div>
           <div class="med-med-name">${escHtml(e.medicament||'')}</div>
@@ -208,7 +211,7 @@ function medRow(date, e) {
     <span style="font-size:1.1rem;width:28px;text-align:center" title="${escHtml(mom.label || e.moment)}">${mom.icon || ''}</span>
     <div style="flex:1;min-width:160px">
       <div style="font-weight:600;font-size:.83rem">${escHtml(e.medicament || '')}</div>
-      <div style="font-size:.72rem;color:var(--muted)">${escHtml(mom.label || e.moment)}${e.posologie ? ' · ' + escHtml(e.posologie) : ''}${r?.heure ? ' · ' + r.heure.slice(0,5) : ''}${r?.auteur ? ' · ' + escHtml(r.auteur) : ''}</div>
+      <div style="font-size:.72rem;color:var(--muted)">${escHtml(mom.label || e.moment)}${e.posologie ? ' · ' + escHtml(e.posologie) : ''}${r?.heure ? ' · ' + medHeure(r.heure) : ''}${r?.auteur ? ' · ' + escHtml(r.auteur) : ''}</div>
       ${r?.observation ? `<div style="font-size:.72rem;color:var(--muted);margin-top:1px">📝 ${escHtml(r.observation)}</div>` : ''}
     </div>
     ${medCanEdit ? `<div class="no-print" style="display:flex;gap:.25rem;flex-wrap:wrap">
@@ -315,7 +318,7 @@ function printMedSheet() {
         <td>${escHtml(p.medicament || '')}</td>
         <td>${escHtml(p.posologie || '')}</td>
         <td>${st ? st.label : '—'}</td>
-        <td>${r?.heure ? r.heure.slice(11,16) : ''}</td>
+        <td>${r?.heure ? medHeure(r.heure) : ''}</td>
         <td>${escHtml(r?.observation || '')}</td>
         <td></td>
       </tr>`;
