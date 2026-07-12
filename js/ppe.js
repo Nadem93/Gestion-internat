@@ -376,6 +376,11 @@ function updateSignature(ppeId, field, value) {
 }
 
 function printAvenant(id) {
+  // TEMPS RÉEL : un champ encore focalisé n'a pas déclenché son onchange (il ne part
+  // qu'au blur — et Safari ne blur pas au clic sur un bouton). On le force pour que
+  // le PDF capture exactement ce qui est à l'écran, puis on lit le cache à jour.
+  const ae = document.activeElement;
+  if (ae && ['TEXTAREA', 'INPUT', 'SELECT'].includes(ae.tagName)) ae.blur();
   const list = getPpe();
   const p = list.find(x => x.id === id);
   if (!p) return;
@@ -445,12 +450,36 @@ function printAvenant(id) {
   <div class="ig-item"><span class="ig-label">Date d'entrée ESAT</span><span>${p.entreeEsat||'—'}</span></div>
 </div>
 
+${(() => {
+  const steps = ppeCycleSteps(p);
+  const LBL = { attentes: 'Recueil des attentes', coconstruction: 'Co-construction', signatures: 'Rédaction & signatures', bilan6: 'Bilan intermédiaire (6 mois)', reeval: 'Réévaluation annuelle' };
+  const rows = steps.map(s => `<tr><td style="width:38%">${LBL[s.id]}</td><td>${
+    s.done ? '✔ Fait' + (s.date ? ' le ' + formatDate(s.date) : '') + (s.par ? ' — ' + escHtml(s.par) : '')
+    : s.late ? '⚠ En retard — prévu le ' + formatDate(s.cible)
+    : (s.cible ? 'Prévu le ' + formatDate(s.cible) : 'À venir')
+  }</td></tr>`).join('');
+  const b = (p.sections && p.sections._cycle && p.sections._cycle.bilan6) || null;
+  const bilanHtml = b && b.date ? `<div class="card-bilan" style="margin-top:.15cm"><strong>Bilan intermédiaire du ${formatDate(b.date)}${b.participants ? ' — ' + escHtml(b.participants) : ''} :</strong> ${escHtml(b.synthese || '—')}${b.ajustements ? `<br><strong>Ajustements décidés :</strong> ${escHtml(b.ajustements)}` : ''}</div>` : '';
+  return `<h2><span class="sep">▸</span>Cycle du projet personnalisé</h2>
+    <table><tbody>${rows}</tbody></table>${bilanHtml}`;
+})()}
+
 ${DOMAINES.map(d => {
   const s = p.sections[d.id] || emptySection();
   return `<h2><span class="sep">▸</span>${d.label}</h2>
     ${s.bilan ? `<div class="card-bilan"><strong>Bilan :</strong> ${escHtml(s.bilan)}</div>` : ''}
     ${s.objectifs.length ? `<table><thead><tr><th style="width:28%">Objectif</th><th style="width:32%">Moyens / Actions</th><th style="width:15%">Échéance</th><th style="width:25%">Évaluation</th></tr></thead>
-    <tbody>${s.objectifs.map(o => { const spc = (o.serafin||[]).filter(c => typeof spCodeValide === 'function' && spCodeValide(c)); return `<tr><td>${escHtml(o.objectif||'')}${spc.length ? `<div style="font-size:.62rem;color:#6d28d9;margin-top:2px">SERAFIN-PH : ${spc.join(' · ')}</div>` : ''}</td><td>${escHtml(o.moyens||'')}</td><td>${o.echeance||''}</td><td>${escHtml(o.evaluation||'')}</td></tr>`; }).join('')}</tbody></table>` : '<div class="no-obj">Aucun objectif défini pour ce domaine.</div>'}
+    <tbody>${s.objectifs.map(o => {
+      const spc = (o.serafin||[]).filter(c => typeof spCodeValide === 'function' && spCodeValide(c));
+      let oc = '';
+      if (o.outcomes && typeof _ocNiv === 'function') {
+        const g = (m, r) => { const x = o.outcomes[m] && o.outcomes[m][r]; return (x && _ocNiv(x.v)) ? x.v : null; };
+        const part = (lbl, r) => { const d = g('debut', r), f = g('fin', r); return (d !== null || f !== null) ? `${lbl} ${d ?? '·'}→${f ?? '·'}` : ''; };
+        const txt = [part('personne', 'auto'), part('équipe', 'pro')].filter(Boolean).join(' · ');
+        if (txt) oc = `<div style="font-size:.62rem;color:#1d4ed8;margin-top:2px">Distance à l'objectif (1 Très loin → 5 Atteint) : ${txt}</div>`;
+      }
+      return `<tr><td>${escHtml(o.objectif||'')}${spc.length ? `<div style="font-size:.62rem;color:#6d28d9;margin-top:2px">SERAFIN-PH : ${spc.join(' · ')}</div>` : ''}${oc}</td><td>${escHtml(o.moyens||'')}</td><td>${o.echeance||''}</td><td>${escHtml(o.evaluation||'')}</td></tr>`;
+    }).join('')}</tbody></table>` : '<div class="no-obj">Aucun objectif défini pour ce domaine.</div>'}
     ${s.expression ? `<div class="card-expression"><strong>Expression du résident :</strong> ${escHtml(s.expression)}</div>` : ''}`;
 }).join('')}
 
