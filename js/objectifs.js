@@ -199,7 +199,7 @@ function hexSvg(pct, id, size) {
     style="${HEX_STYLE};width:${w}px;height:${h}px;background:conic-gradient(${color} 0 ${p * 3.6}deg,#e2e8f0 ${p * 3.6}deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s">
     <div class="ob-hex" style="${HEX_STYLE};width:${w - 10}px;height:${h - 10}px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
       <div id="ringtxt-${id}" style="font-size:${Math.round(w / 4.4)}px;font-weight:900;color:${known ? color : '#94a3b8'};font-variant-numeric:tabular-nums;line-height:1">${known ? p + '%' : '—'}</div>
-      <div style="font-size:7px;font-weight:800;letter-spacing:.16em;color:#94a3b8;margin-top:2px">PROGRESSION</div>
+      ${w >= 70 ? '<div style="font-size:7px;font-weight:800;letter-spacing:.16em;color:#94a3b8;margin-top:2px">PROGRESSION</div>' : ''}
     </div>
   </div>`;
 }
@@ -284,24 +284,53 @@ function renderOverview(residents, tpl) {
   const cards = residents.map(r => {
     const objs = (r.objectifs || []).map(id => tpl.find(o => String(o.id) === String(id))).filter(Boolean);
     if (!objs.length) return '';
-    let pctSum = 0, pctN = 0, atteints = 0;
-    const dots = objs.map(o => {
+    let pctSum = 0, pctN = 0, atteints = 0, axesActifs = 0, lastMaj = '';
+    const badges = objs.map(o => {
       const sv = getSuivi(r, o.id);
       const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
-      if (sv.statut === 'atteint') atteints++;
       const p = objPct(sv);
       if (p != null) { pctSum += p; pctN++; }
-      return `<span class="ob-dot" title="${escAttr(o.name)} — ${st.label}${p != null ? ' (' + p + ' %)' : ''}" style="background:${st.color}"></span>`;
+      axesOf(sv).forEach(a => {
+        if (clampPct(a.progression) < 100) axesActifs++;
+        if (a.dateMaj && a.dateMaj > lastMaj) lastMaj = a.dateMaj;
+      });
+      if (sv.dateMaj && sv.dateMaj > lastMaj) lastMaj = sv.dateMaj;
+      if (sv.statut === 'atteint') {
+        atteints++;
+        return `<span class="ob-bdg ob-bdg-ok" title="${escAttr(o.name)} — atteint">🏆 ${escHtml(o.name)}</span>`;
+      }
+      if (sv.statut === 'en_cours') {
+        return `<span class="ob-bdg ob-bdg-run" title="${escAttr(o.name)} — en cours${p != null ? ' (' + p + ' %)' : ''}">⚡ ${escHtml(o.name)}${p != null ? ` <b>${p} %</b>` : ''}</span>`;
+      }
+      return `<span class="ob-bdg" title="${escAttr(o.name)} — ${st.label}">${escHtml(o.name)}</span>`;
     }).join('');
     const global = pctN ? Math.round(pctSum / pctN) : null;
+    // Jauge de rang : lettre actuelle → suivante, point placé dans la tranche de 25 %
+    let gauge = '';
+    if (global != null) {
+      const rg = rangOf(global);
+      gauge = rg === 'S'
+        ? `<span class="ob-rgauge"><b>S</b><span class="ob-rtrack"><span class="ob-rdot" style="left:100%"></span></span><b>★</b></span>`
+        : `<span class="ob-rgauge"><b>${rg}</b><span class="ob-rtrack"><span class="ob-rdot" style="left:${Math.round((global % 25) / 25 * 100)}%"></span></span><b style="color:#cbd5e1">${rangOf(global + 25)}</b></span>`;
+    }
+    let majTxt = '';
+    if (lastMaj) {
+      const jours = Math.floor((Date.now() - new Date(lastMaj).getTime()) / 86400000);
+      majTxt = jours <= 0 ? 'maj aujourd’hui' : jours === 1 ? 'maj hier' : `maj il y a ${jours} j`;
+    }
+    const hairColor = global != null ? pctColor(global) : '#cbd5e1';
     return `<button class="ob-res-card" onclick="obSelectResident('${r.id}')" aria-label="Voir les objectifs de ${escAttr(resNom(r))}">
-      ${hexSvg(global, 'res-' + r.id, 56)}
-      <div class="ob-res-info">
-        <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#94a3b8;font-size:.55rem">Résident · ${rangLabel(global)}</div>
-        <div class="ob-res-nom">${escHtml(resNom(r))}</div>
-        <div class="ob-res-meta">${objs.length} objectif${objs.length > 1 ? 's' : ''} · ${atteints} atteint${atteints > 1 ? 's' : ''}</div>
-        <div class="ob-res-dots">${dots}</div>
+      <span class="ob-res-hair" aria-hidden="true" style="background:linear-gradient(90deg,${hairColor} ${global || 0}%,#e6ecf5 ${global || 0}%)"></span>
+      <div class="ob-res-top">
+        ${hexSvg(global, 'res-' + r.id, 56)}
+        <div class="ob-res-info">
+          <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#94a3b8;font-size:.55rem">Résident · Niveau ${global != null ? rangOf(global) : '—'}</div>
+          <div class="ob-res-nom">${escHtml(resNom(r))}</div>
+          <div class="ob-res-meta">${objs.length} objectif${objs.length > 1 ? 's' : ''} · ${atteints} atteint${atteints > 1 ? 's' : ''}</div>
+        </div>
       </div>
+      <div class="ob-res-bdgs">${badges}</div>
+      <div class="ob-res-foot">${gauge}<span>${axesActifs} axe${axesActifs > 1 ? 's' : ''} actif${axesActifs > 1 ? 's' : ''}</span>${majTxt ? `<span class="ob-foot-sep">·</span><span>${majTxt}</span>` : ''}</div>
     </button>`;
   }).join('');
   return `<div style="font-size:.8rem;color:var(--muted);margin-bottom:.85rem">Cliquez sur un résident pour définir ses axes de travail et suivre sa progression.</div>
