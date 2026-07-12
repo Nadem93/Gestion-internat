@@ -126,8 +126,12 @@ function iaBuildPanel() {
       </div>
     </div>`;
   document.body.appendChild(ov);
-  ov.addEventListener('click', e => { if (e.target === ov && !_iaEnCours) iaFermer(); });
-  ov.addEventListener('keydown', e => { if (e.key === 'Escape') iaFermer(); });
+  ov.addEventListener('click', e => { if (e.target === ov) iaFermer(); });
+  // Échap au niveau document : opérant même quand le focus a quitté l'overlay
+  // (bouton devenu disabled pendant le flux → focus rendu au <body>).
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && ov.style.display !== 'none' && ov.style.display !== '') iaFermer();
+  });
 }
 
 async function iaOuvrirSynthese(residentId, nom) {
@@ -149,7 +153,10 @@ async function iaOuvrirSynthese(residentId, nom) {
   _iaEl('iaStatut').textContent = '';
   _iaEl('iaCopier').disabled = true;
   _iaEl('iaInserer').disabled = true;
+  iaResetControls();   // au cas où une génération précédente a été fermée en cours
   _iaEl('iaOverlay').style.display = 'flex';
+  // Focus dans le panneau : rend Échap opérant et annonce l'ouverture aux lecteurs d'écran
+  setTimeout(() => { const g = _iaEl('iaGenerer'); if (g && g.focus) g.focus(); }, 50);
 }
 
 function iaRaccourci(jours) {
@@ -172,6 +179,11 @@ async function iaLancer() {
   _iaEl('iaInserer').disabled = true;
   _iaEl('iaArreter').style.display = '';
 
+  // Contrôleur créé AVANT le fetch → « Arrêter »/« Fermer » agissent dès la
+  // fenêtre de collecte serveur (et pas seulement une fois le flux commencé).
+  const ctrl = new AbortController();
+  _iaAbort = () => ctrl.abort();
+
   const finir = () => {
     _iaEnCours = false;
     _iaAbort = null;
@@ -183,6 +195,7 @@ async function iaLancer() {
     action: 'synthese_resident',
     residentId: _iaResident.id,
     periode: { du, au },
+    controller: ctrl,
     params: { anonymiser: !!_iaEl('iaAnonymiser').checked },
     onMeta: m => {
       const v = m.volumes || {};
@@ -207,37 +220,60 @@ async function iaLancer() {
     },
     onError: err => {
       finir();
-      const messages = {
-        rate_limited: 'Limite atteinte (15 demandes IA par heure) — réessayez plus tard.',
+      let msg = ({
         contexte_vide: 'Aucune donnée sur la période choisie — élargissez les dates.',
         refusal: 'Le modèle a refusé cette demande.',
         non_authentifie: 'Session expirée — reconnectez-vous.',
         forbidden: 'Accès réservé à l’équipe éducative.',
-      };
-      _iaEl('iaStatut').textContent = '✕ ' + (messages[err.code] || err.message || 'Erreur inattendue');
+        interne: 'Assistant IA momentanément indisponible.',
+      })[err.code] || err.message || 'Erreur inattendue';
+      if (err.code === 'rate_limited') msg = iaMsgRateLimit(err.retry_at);
+      _iaEl('iaStatut').textContent = '✕ ' + msg;
       _iaEl('iaStatut').style.color = '#dc2626';
       if (_iaEl('iaTexte').value) { _iaEl('iaCopier').disabled = false; }
     },
   });
-  if (handle) _iaAbort = handle.abort;
-  else finir();
+  if (!handle) finir();   // erreur pré-flux déjà signalée par onError
+}
+
+// Message de limite atteinte AVEC l'heure de réessai (spec §5.2)
+function iaMsgRateLimit(retryAt) {
+  let quand = '';
+  if (retryAt) {
+    const d = new Date(retryAt);
+    if (!isNaN(d.getTime())) quand = ` — réessayez après ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  return `Limite atteinte (15 demandes IA / heure)${quand || ' — réessayez plus tard'}.`;
+}
+
+// Remet les boutons du panneau dans l'état repos (générable, rien en cours).
+function iaResetControls() {
+  _iaEnCours = false;
+  _iaAbort = null;
+  const g = _iaEl('iaGenerer'); if (g) g.disabled = false;
+  const a = _iaEl('iaArreter'); if (a) a.style.display = 'none';
 }
 
 function iaArreter() {
   if (_iaAbort) _iaAbort();
-  _iaEnCours = false;
-  _iaAbort = null;
-  _iaEl('iaGenerer').disabled = false;
-  _iaEl('iaArreter').style.display = 'none';
+  iaResetControls();
   _iaEl('iaStatut').textContent = '■ Génération arrêtée — le texte reçu reste modifiable.';
   _iaEl('iaStatut').style.color = '#64748b';
   if (_iaEl('iaTexte').value) { _iaEl('iaCopier').disabled = false; _iaEl('iaInserer').disabled = false; }
 }
 
-function iaFermer() {
+// Perte de travail : si le texte a été relu/modifié et pas encore inséré,
+// on confirme avant de fermer (Échap, ✕, clic sur le fond).
+function iaPeutFermerSansPerte() {
+  const txt = (_iaEl('iaTexte') && _iaEl('iaTexte').value || '').trim();
+  if (!txt || _iaInsere) return true;
+  return confirm('Fermer sans insérer la synthèse ? Le texte affiché sera perdu.');
+}
+
+function iaFermer(force) {
+  if (!force && !_iaEnCours && !iaPeutFermerSansPerte()) return;
   if (_iaAbort) _iaAbort();
-  _iaEnCours = false;
-  _iaAbort = null;
+  iaResetControls();
   const ov = _iaEl('iaOverlay');
   if (ov) ov.style.display = 'none';
 }
@@ -323,12 +359,23 @@ async function iaPreremplirBilan(ppeId) {
       };
       _iaBilanStatus('✕ ' + (messages[err.code] || err.message || 'Erreur'), '#dc2626');
     },
-    onDone: () => {
+    onDone: d => {
       if (btn) btn.disabled = false;
+      // Le formulaire a-t-il été reconstruit pendant la génération (pcMark, édition
+      // d'objectif, pastille SERAFIN) ? Les champs capturés seraient détachés :
+      // on n'écrit pas dans le vide et on ne pose SURTOUT pas de marquage IA.
+      const cur = _iaEl('pcBilanSynthese');
+      if (!cur || (synthEl && cur !== synthEl)) {
+        _iaBilanStatus('Le formulaire a changé pendant la génération — relancez « Pré-remplir ».', '#b45309');
+        return;
+      }
+      const tronque = d && d.stop_reason === 'max_tokens';
       let data;
       try { data = JSON.parse(buffer); } catch (e) { data = null; }
       if (!data || typeof data !== 'object') {
-        _iaBilanStatus('✕ Réponse illisible — réessayez.', '#dc2626');
+        _iaBilanStatus(tronque
+          ? '✕ Proposition trop longue (tronquée) — avenant volumineux, réessayez.'
+          : '✕ Réponse illisible — réessayez.', '#dc2626');
         return;
       }
       const synthese = iaFormatBilanSynthese(data);
@@ -336,16 +383,29 @@ async function iaPreremplirBilan(ppeId) {
       if (synthEl) synthEl.value = synthese;
       if (ajustEl) ajustEl.value = ajustements;
       const s = Auth.getSession() || {};
+      // On mémorise les NŒUDS remplis : à l'enregistrement, iaMarquageBilan ne
+      // pose le marquage IA que si ce sont toujours les mêmes (pas de re-render).
       _iaBilanPending[ppeId] = {
         modele: modeleUtilise,
         genere_le: new Date().toISOString(),
         demande_par: `${s.prenom || ''} ${s.nom || ''}`.trim() || s.username || '',
-        synthese, ajustements,
+        synthese, ajustements, synthEl, ajustEl,
       };
-      _iaBilanStatus('✓ Proposition insérée dans les champs — relisez, modifiez, puis enregistrez le bilan.', '#15803d');
+      _iaBilanStatus(tronque
+        ? '⚠️ Proposition tronquée (avenant volumineux) — relisez et complétez avant d’enregistrer.'
+        : '✓ Proposition insérée dans les champs — relisez, modifiez, puis enregistrez le bilan.',
+        tronque ? '#b45309' : '#15803d');
     },
   });
   if (!handle && btn) btn.disabled = false;
+}
+
+// Abandon d'une proposition non enregistrée (fermeture du formulaire, retour à
+// la liste) : à appeler depuis ppe.js pour ne pas laisser une proposition
+// fantôme estampiller un futur bilan saisi à la main.
+function iaOublierBilanPending(ppeId) {
+  if (ppeId == null) { for (const k in _iaBilanPending) delete _iaBilanPending[k]; }
+  else delete _iaBilanPending[ppeId];
 }
 
 // Appelé par pcSaveBilan (ppe.js) : renvoie le marquage _ia à poser sur le
@@ -356,6 +416,10 @@ function iaMarquageBilan(ppeId) {
   if (!pend) return null;
   delete _iaBilanPending[ppeId];
   const synthEl = _iaEl('pcBilanSynthese'), ajustEl = _iaEl('pcBilanAjust');
+  // Garde-fou traçabilité : si le champ courant n'est PLUS celui rempli par
+  // l'IA (formulaire reconstruit, avenant rouvert), la proposition n'a pas servi
+  // de base au texte saisi → on ne marque pas « assisté par IA ».
+  if (!synthEl || (pend.synthEl && synthEl !== pend.synthEl)) return null;
   const modifie = (synthEl ? synthEl.value.trim() : '') !== (pend.synthese || '').trim()
     || (ajustEl ? ajustEl.value.trim() : '') !== (pend.ajustements || '').trim();
   const s = Auth.getSession() || {};
@@ -386,16 +450,17 @@ async function iaInsererJournal() {
     await sbSaveJournalEntry({
       residentId: _iaResident.id,
       resident: _iaResident.nom,
-      categorie: 'synthese',
-      date: today(),
+      categorie: '',                          // pas d'ID de catégorie forcé (le préfixe identifie l'entrée)
+      date: new Date().toISOString(),         // datetime : le journal trie et affiche l'heure réelle
       contenu: `[Synthèse assistée par IA — relue par ${relecteur}]\n\n${txt}`,
       author: relecteur,
       authorId: s.userId || null,
+      readBy: s.userId ? [s.userId] : [],     // déjà « lue » par son auteur (pas de badge non-lu)
       visibilite: 'equipe',
     });
     _iaInsere = true;
     toast('Synthèse insérée au journal ✓');
-    _iaEl('iaStatut').textContent = '✓ Insérée au journal de bord (catégorie « synthese »).';
+    _iaEl('iaStatut').textContent = '✓ Insérée au journal de bord — préfixe « Synthèse assistée par IA ».';
     _iaEl('iaStatut').style.color = '#15803d';
   } catch (e) {
     console.error('[ia]', e);

@@ -265,39 +265,13 @@ function periodeParDefaut(ppe: Record<string, unknown> | null): { du: string; au
   const au = new Date().toISOString().slice(0, 10);
   const sig = ppe && (ppe.signatures as Record<string, unknown> | undefined);
   let du = (sig && typeof sig.date === 'string' && sig.date) || (ppe && ppe.date_redaction as string) || '';
+  // Sans date de départ, ou trop ancienne : on borne à 12 mois glissants.
   const ilYa12mois = (() => { const d = new Date(); d.setMonth(d.getMonth() - 12); return d.toISOString().slice(0, 10); })();
   if (!du || du < ilYa12mois) du = ilYa12mois;
-  const ilYa6mois = (() => { const d = new Date(); d.setMonth(d.getMonth() - 6); return d.toISOString().slice(0, 10); })();
-  if (!du) du = ilYa6mois;
   return { du, au };
 }
 
 // ── Journal d'audit — jamais le contenu ──────────────────────────────────────
-// Insertion « one-shot » (refus, rate-limit, erreurs pré-flux).
-async function auditer(admin: ReturnType<typeof createClient>, a: {
-  etabId: string; callerId: string; userName: string; action: string; residentId: unknown;
-  periode: { du?: string; au?: string } | null; statut: string;
-  usage?: { input_tokens?: number; output_tokens?: number } | null; erreur?: string; modele?: string; t0: number;
-}) {
-  try {
-    await admin.from('ia_journal').insert({
-      etablissement_id: a.etabId,
-      user_id: a.callerId,
-      user_name: a.userName,
-      action: a.action,
-      resident_id: String(a.residentId ?? ''),
-      periode_du: a.periode?.du || null,
-      periode_au: a.periode?.au || null,
-      modele: a.modele || '',
-      input_tokens: a.usage?.input_tokens ?? null,
-      output_tokens: a.usage?.output_tokens ?? null,
-      duree_ms: Date.now() - a.t0,
-      statut: a.statut,
-      erreur: (a.erreur || '').slice(0, 500),
-    });
-  } catch (e) { console.error('[ia_journal]', e); }   // l'audit ne casse jamais la réponse
-}
-
 // Ligne posée AVANT l'appel Anthropic (statut 'en_cours'). Elle compte
 // immédiatement pour le rate-limit (une requête en vol occupe un créneau) et
 // garantit une trace même si le client annule le flux. Renvoie l'id à mettre

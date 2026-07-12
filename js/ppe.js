@@ -154,6 +154,9 @@ function openAvenant(id) {
 }
 
 function backToList() {
+  // Une proposition IA non enregistrée ne doit pas survivre à la navigation
+  // (sinon elle estamperait à tort un futur bilan saisi à la main).
+  if (typeof iaOublierBilanPending === 'function') iaOublierBilanPending();
   const el = document.getElementById('avenantFullView');
   if (el) el.remove();
   document.getElementById('avenantList').style.display = '';
@@ -1449,7 +1452,11 @@ function pcUnmark(ppeId, stepId) {
 }
 function pcToggleBilanForm() {
   const el = document.getElementById('pcBilanForm');
-  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+  if (!el) return;
+  const ouvrir = el.style.display === 'none';
+  el.style.display = ouvrir ? '' : 'none';
+  // À la fermeture du formulaire, on oublie une proposition IA non enregistrée.
+  if (!ouvrir && typeof iaOublierBilanPending === 'function') iaOublierBilanPending();
 }
 function pcSaveBilan(ppeId) {
   const p = getPpe().find(x => x.id === ppeId);
