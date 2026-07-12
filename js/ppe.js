@@ -202,18 +202,19 @@ function renderAvenantFull(p) {
       </div>
     </div>
     <div class="section-card">
-      <div class="section-header" style="cursor:default"><span class="sec-ic">🖋</span><strong>Signatures</strong></div>
+      <div class="section-header" style="cursor:default"><span class="sec-ic">🖋</span><strong>Signatures</strong>
+        <span class="muted-count" style="margin-left:auto;font-size:.68rem;font-weight:500">électroniques · horodatées · scellées</span></div>
       <div class="section-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;font-size:.85rem;text-align:center">
-          <div><strong>Le résident</strong><div style="margin-top:.5rem"><input class="input" style="text-align:center;font-size:.8rem" value="${escHtml(p.signatures.resident||'')}" onchange="updateSignature('${p.id}','resident',this.value)" placeholder="Nom/prénom"/></div></div>
-          <div><strong>L'éducateur référent</strong><div style="margin-top:.5rem"><input class="input" style="text-align:center;font-size:.8rem" value="${escHtml(p.signatures.referent||'')}" onchange="updateSignature('${p.id}','referent',this.value)" placeholder="Nom/prénom"/></div></div>
-          <div><strong>La direction</strong><div style="margin-top:.5rem"><input class="input" style="text-align:center;font-size:.8rem" value="${escHtml(p.signatures.direction||'')}" onchange="updateSignature('${p.id}','direction',this.value)" placeholder="Nom/prénom"/></div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.75rem;font-size:.85rem;text-align:center">
+          ${SIG_ROLES.filter(rd => !rd.si || rd.si(p)).map(rd => sigBlockHtml(p, rd)).join('')}
         </div>
         <div style="margin-top:1rem;font-size:.85rem"><strong>Date de signature :</strong> <input type="date" class="input" style="width:auto;font-size:.8rem" value="${p.signatures.date||''}" onchange="updateSignature('${p.id}','date',this.value)"/></div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">✍ Signature électronique simple : tracé recueilli sur place (tablette, souris), horodaté, rattaché au compte connecté et scellé par une empreinte du document. Toute modification de l'avenant après signature la rend caduque.</div>
       </div>
     </div>
   </div>`;
   document.querySelector('.content').appendChild(div);
+  ppeVerifSignatures(p);
 }
 
 function renderSectionCard(p, domaine) {
@@ -375,7 +376,129 @@ function updateSignature(ppeId, field, value) {
   if (field === 'date') { ppeSyncEcheances(p); renderAvenantFull(p); }
 }
 
-function printAvenant(id) {
+// ── SIGNATURES ÉLECTRONIQUES (tracés) ──
+// Stockées dans p.signatures.pads (jsonb existant, aucune migration) :
+// pads[role] = { image (PNG data URL), nom, signeLe, par, parNom, hash }.
+// hash = SHA-256 du contenu signé ; s'il diffère du contenu actuel, la
+// signature est signalée caduque (document modifié après signature).
+const SIG_ROLES = [
+  { key: 'resident',     label: 'La personne' },
+  { key: 'representant', label: 'Le représentant légal', si: p => !!(p.protection || '').trim() },
+  { key: 'referent',     label: "L'éducateur référent" },
+  { key: 'direction',    label: 'La direction' }
+];
+
+function sigPads(p) { return (p.signatures && p.signatures.pads) || {}; }
+
+// Contenu scellé par la signature : l'essentiel de l'avenant (pas les
+// signatures elles-mêmes, sinon signer invaliderait les signatures voisines).
+function sigContenuAvenant(p) {
+  return sigStableStringify({
+    residentId: p.residentId || '', residentName: p.residentName || '',
+    sections: p.sections || {}, conclusion: p.conclusion || ''
+  });
+}
+
+function sigNomParDefaut(p, role) {
+  if (role === 'resident') return p.residentName || '';
+  if (role === 'referent') return p.referent || '';
+  if (role === 'direction') {
+    const s = Auth.getSession();
+    return s ? `${s.prenom || ''} ${s.nom || ''}`.trim() : '';
+  }
+  if (role === 'representant') {
+    const r = residentsList().find(x => String(x.id) === String(p.residentId));
+    return (r && r.protectionNom) || '';
+  }
+  return '';
+}
+
+function ppeSigner(ppeId, role) {
+  const p = getPpe().find(x => x.id === ppeId);
+  const roleDef = SIG_ROLES.find(x => x.key === role);
+  if (!p || !roleDef) return;
+  const pad = sigPads(p)[role];
+  SignaturePad.open({
+    titre: `Signature — ${roleDef.label}`,
+    nom: (pad && pad.nom) || sigNomParDefaut(p, role),
+    onSave: async (image, nom) => {
+      const hash = await sigHashHex(sigContenuAvenant(p));
+      if (!p.signatures) p.signatures = { resident: '', referent: '', direction: '', date: '' };
+      if (!p.signatures.pads) p.signatures.pads = {};
+      const s = Auth.getSession();
+      p.signatures.pads[role] = {
+        image, nom,
+        signeLe: new Date().toISOString(),
+        par: s ? s.userId : null,
+        parNom: s ? `${s.prenom || ''} ${s.nom || ''}`.trim() : '',
+        hash: hash || 'indisponible'
+      };
+      // Compat : les affichages existants lisent les noms tapés
+      if (!(p.signatures[role] || '').trim()) p.signatures[role] = nom;
+      if (!p.signatures.date) { p.signatures.date = today(); ppeSyncEcheances(p); }
+      persistPpe(p);
+      renderAvenantFull(p);
+      toast(`Signature de ${nom} enregistrée ✓`);
+    }
+  });
+}
+
+function ppeSupprSignature(ppeId, role) {
+  confirmDialog('Supprimer cette signature ? Le tracé sera définitivement effacé.', () => {
+    const p = getPpe().find(x => x.id === ppeId);
+    if (!p || !p.signatures || !p.signatures.pads) return;
+    delete p.signatures.pads[role];
+    persistPpe(p);
+    renderAvenantFull(p);
+  });
+}
+
+function sigBlockHtml(p, rd) {
+  const pad = sigPads(p)[rd.key];
+  if (pad && sigImageValide(pad.image)) {
+    return `<div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;padding:.6rem">
+      <strong style="font-size:.78rem">${rd.label}</strong>
+      <img src="${pad.image}" alt="Signature de ${escAttr(pad.nom || '')}" style="display:block;max-height:56px;max-width:100%;margin:.4rem auto 0"/>
+      <div style="font-size:.72rem;color:#15803d;font-weight:600">✒️ ${escHtml(pad.nom || '')}</div>
+      <div style="font-size:.66rem;color:#64748b">le ${formatDateTime(pad.signeLe)}</div>
+      <div id="sigEtat-${rd.key}" style="font-size:.64rem;margin-top:2px;color:#94a3b8">vérification de l'empreinte…</div>
+      <div style="display:flex;gap:.3rem;justify-content:center;margin-top:.4rem">
+        <button class="btn btn-ghost btn-sm" style="font-size:.66rem" onclick="ppeSigner('${p.id}','${rd.key}')">↺ Refaire</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:.66rem;color:#dc2626" onclick="ppeSupprSignature('${p.id}','${rd.key}')" aria-label="Supprimer la signature">✕</button>
+      </div>
+    </div>`;
+  }
+  return `<div style="border:1px dashed #cbd5e1;border-radius:10px;padding:.6rem">
+    <strong style="font-size:.78rem">${rd.label}</strong>
+    <div style="margin-top:.5rem"><input class="input" style="text-align:center;font-size:.8rem" value="${escAttr(p.signatures[rd.key] || '')}" onchange="updateSignature('${p.id}','${rd.key}',this.value)" placeholder="Nom/prénom"/></div>
+    <button class="btn btn-accent btn-sm" style="margin-top:.5rem;font-size:.72rem" onclick="ppeSigner('${p.id}','${rd.key}')">✍ Signer</button>
+  </div>`;
+}
+
+// Vérifie a posteriori (SHA-256 asynchrone) que chaque tracé correspond
+// toujours au contenu actuel de l'avenant, et met à jour les badges.
+async function ppeVerifSignatures(p) {
+  const pads = sigPads(p);
+  const roles = Object.keys(pads);
+  if (!roles.length) return;
+  const hash = await sigHashHex(sigContenuAvenant(p));
+  roles.forEach(role => {
+    const el = document.getElementById('sigEtat-' + role);
+    if (!el) return;
+    const pad = pads[role];
+    if (!hash || !pad.hash || pad.hash === 'indisponible') { el.textContent = 'empreinte non vérifiable'; return; }
+    if (pad.hash === hash) {
+      el.textContent = '🔒 conforme au document';
+      el.style.color = '#15803d';
+    } else {
+      el.textContent = '⚠️ document modifié depuis la signature';
+      el.style.color = '#b45309';
+      el.style.fontWeight = '700';
+    }
+  });
+}
+
+async function printAvenant(id) {
   // TEMPS RÉEL : un champ encore focalisé n'a pas déclenché son onchange (il ne part
   // qu'au blur — et Safari ne blur pas au clic sur un bouton). On le force pour que
   // le PDF capture exactement ce qui est à l'écran, puis on lit le cache à jour.
@@ -384,7 +507,9 @@ function printAvenant(id) {
   const list = getPpe();
   const p = list.find(x => x.id === id);
   if (!p) return;
+  // La fenêtre s'ouvre AVANT tout await, sinon les bloqueurs de popups la refusent
   const w = window.open('', '_blank');
+  const sigEmpreinte = await sigHashHex(sigContenuAvenant(p));
   const settings = DB.get(DB.keys.settings) || {};
   w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Avenant — ${escHtml(p.residentName)}</title>
 <style>
@@ -548,11 +673,19 @@ ${p.conclusion ? `<div class="section" style="--dc:#0f2b4a"><h2><span class="dot
 <div class="sig-section section" style="--dc:#0f2b4a">
 <h2><span class="dot"></span>Signatures</h2>
 <div class="sig-row">
-  <div class="sig-box"><div class="sig-role">La personne</div><div class="sig-line">${escHtml(p.signatures.resident||'')}</div></div>
-  <div class="sig-box"><div class="sig-role">L'éducateur référent</div><div class="sig-line">${escHtml(p.signatures.referent||'')}</div></div>
-  <div class="sig-box"><div class="sig-role">La direction</div><div class="sig-line">${escHtml(p.signatures.direction||'')}</div></div>
+  ${SIG_ROLES.filter(rd => !rd.si || rd.si(p)).map(rd => {
+    const pad = sigPads(p)[rd.key];
+    if (pad && sigImageValide(pad.image)) {
+      return `<div class="sig-box"><div class="sig-role">${rd.label}</div>
+        <div style="margin-top:.12cm"><img src="${pad.image}" alt="" style="max-height:1.05cm;max-width:100%"/></div>
+        <div class="sig-line" style="margin-top:.05cm">${escHtml(pad.nom||'')}<br><span style="font-size:6.6pt;color:#94a3b8">signé électroniquement le ${formatDateTime(pad.signeLe)}</span></div>
+      </div>`;
+    }
+    return `<div class="sig-box"><div class="sig-role">${rd.label}</div><div class="sig-line">${escHtml(p.signatures[rd.key]||'')}</div></div>`;
+  }).join('')}
 </div>
 <div class="sig-date"><strong>Date de signature :</strong> ${formatDate(p.signatures.date)||'__________'}</div>
+${Object.keys(sigPads(p)).length ? `<div style="text-align:center;font-size:6.6pt;color:#94a3b8;margin-top:.15cm">Signatures électroniques simples recueillies sur INTERNALIS — horodatées, rattachées au compte signataire et scellées par empreinte SHA-256 du document${sigEmpreinte ? ` (${sigEmpreinte.slice(0,12)}…)` : ''}.</div>` : ''}
 </div>
 
 </div>
