@@ -248,16 +248,16 @@ function renderTimeline(days) {
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
       const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
-      const bandLeft = it.bandCol * PL_BAND_W;
-      const inset = it.bandN * PL_BAND_W + 2;
+      const inset = 2;   // plus de gouttière : la barre est intégrée au bloc lui-même
       const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
       const cWidth = `calc(${colW} - 2px)`;
-      // La bande de durée SORT du bloc par le bas (côté gauche) et descend jusqu'à
-      // l'heure de fin ; un événement court (durée ≈ hauteur du bloc) n'en a pas.
-      const bandTop = 34;
-      const band = (fullH - bandTop) > 8
-        ? `<div class="pl-ev-band" style="left:${bandLeft}px;top:${bandTop}px;background:${bg}"></div>`
+      // La bande de durée est INTÉGRÉE au carré : alignée sur son bord gauche, elle
+      // sort de sa base (léger chevauchement masqué par le bloc, peint par-dessus)
+      // et descend jusqu'à l'heure de fin. Un événement court n'en a pas.
+      const bandTop = 28;
+      const band = (fullH - bandTop) > 12
+        ? `<div class="pl-ev-band" style="left:calc(${cLeft} + 3px);top:${bandTop}px;background:${bg}"></div>`
         : '';
       return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escAttr(ev.residentName)+' — ':''}${escAttr(ev.titre)}${ev.vehicule?' — 🚗 '+escAttr(ev.vehicule):''}">
         ${band}
