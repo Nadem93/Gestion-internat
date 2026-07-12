@@ -2,8 +2,8 @@
 -- Trace QUI a demandé QUOI, QUAND, avec quels volumes — JAMAIS le contenu
 -- des prompts ni des réponses. Sert aussi de compteur pour le rate-limit
 -- (15 demandes / heure / utilisateur, comptées par l'edge function).
--- À exécuter dans le SQL Editor de Supabase AVANT le premier usage de
--- l'assistant (le bouton ✨ renverra une erreur de collecte sinon).
+-- À exécuter dans le SQL Editor de Supabase AVANT le premier usage : sans
+-- cette table, l'assistant refuse toute demande (fail-closed, code 503).
 
 create table if not exists public.ia_journal (
   id               uuid primary key default gen_random_uuid(),
@@ -18,7 +18,7 @@ create table if not exists public.ia_journal (
   input_tokens     integer,
   output_tokens    integer,
   duree_ms         integer,
-  statut           text not null default 'ok' check (statut in ('ok','erreur','refus','rate_limited')),
+  statut           text not null default 'ok' check (statut in ('en_cours','ok','erreur','refus','rate_limited')),
   erreur           text not null default '',
   created_at       timestamptz not null default now()
 );

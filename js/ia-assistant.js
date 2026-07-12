@@ -7,11 +7,14 @@
 // ── Client SSE (réutilisable pour les 3 actions de la spec) ──
 // supabaseClient.functions.invoke() ne convient pas au streaming (il attend le
 // corps complet) → fetch direct sur l'URL de la function, avec le JWT de session.
-async function iaDemander({ action, residentId, periode, params = {}, onMeta, onDelta, onDone, onError }) {
+async function iaDemander({ action, residentId, periode, params = {}, controller, onMeta, onDelta, onDone, onError }) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) { onError({ code: 'non_authentifie', message: 'Session expirée — reconnectez-vous' }); return null; }
 
-  const ctrl = new AbortController();
+  // Le contrôleur est fourni par l'appelant (créé AVANT le fetch) pour que
+  // « Arrêter » fonctionne dès la fenêtre de collecte serveur, pas seulement
+  // une fois le flux commencé.
+  const ctrl = controller || new AbortController();
   let resp;
   try {
     resp = await fetch(`${SUPABASE_URL}/functions/v1/ia-assistant`, {
