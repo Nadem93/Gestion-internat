@@ -156,7 +156,7 @@ function renderMedicaments() {
 
   listEl.innerHTML = entries.map(([residentId, g]) => {
     const r = resMap[String(residentId)];
-    const color = r?.color || '#2563eb';
+    const color = safeColor(r?.color, '#2563eb');
     const av = r?.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${color}33" alt=""/>`
       : `<div class="med-avatar" style="background:${color}15;color:${color}">${initials(r?.prenom||'',r?.nom||'')}</div>`;

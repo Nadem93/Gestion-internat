@@ -118,7 +118,7 @@ function rgBadge(r) {
 
 function rpResidentCard(r, day, canEdit) {
   const rg = rgOf(r);
-  const color = r.color || '#6b7280';
+  const color = safeColor(r.color, '#6b7280');
   const nom = escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim());
   const chambre = r.chambre ? escHtml(r.chambre) : '—';
   const avatar = r.photo
@@ -439,7 +439,7 @@ function renderSemaineView(residents, canEdit) {
 
   // Lignes résidents
   const rows = residents.map(r => {
-    const color = r.color || '#6b7280';
+    const color = safeColor(r.color, '#6b7280');
     const nom   = `${r.prenom || ''} ${r.nom || ''}`.trim();
     const av    = r.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid ${color}44;flex-shrink:0" alt=""/>`

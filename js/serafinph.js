@@ -128,7 +128,7 @@ function renderSerafinph() {
       </span>`;
     }).join('');
     return `<div style="display:flex;align-items:center;gap:.75rem;padding:.65rem 1.25rem;border-bottom:1px solid var(--border)">
-      <span style="width:32px;height:32px;border-radius:50%;background:${s.resident.color||'#3b82f6'}20;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;color:${s.resident.color||'#3b82f6'};flex-shrink:0">${(s.resident.prenom||'')[0]}${(s.resident.nom||'')[0]}</span>
+      <span style="width:32px;height:32px;border-radius:50%;background:${safeColor(s.resident.color,'#3b82f6')}20;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;color:${safeColor(s.resident.color,'#3b82f6')};flex-shrink:0">${(s.resident.prenom||'')[0]}${(s.resident.nom||'')[0]}</span>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.8rem">${escHtml(s.resident.prenom+' '+s.resident.nom)}</div>
         <div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:3px">${prestItems}</div>

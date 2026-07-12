@@ -354,7 +354,7 @@ function renderPermLeft() {
   if (!el) return;
   const list = getFonctions();
   el.innerHTML = list.map(f => `<div class="perm2-role ${String(f.id) === String(_permSel) ? 'active' : ''}" onclick="permSelect(${f.id})">
-    <span class="perm2-dot" style="background:${f.color || '#6366f1'}"></span>
+    <span class="perm2-dot" style="background:${safeColor(f.color, '#6366f1')}"></span>
     <span class="perm2-role-name">${escHtml(f.fonction)}</span>
     <span class="perm2-role-count">${(f.permissions || []).length}</span>
   </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:1rem">Aucun rôle</div>';
@@ -386,7 +386,7 @@ function renderPermDetail() {
 
   el.innerHTML = `
     <div class="perm2-head">
-      <input type="color" value="${f.color || '#6366f1'}" style="width:30px;height:30px;padding:0;border:none;background:none;cursor:pointer" onchange="permSetColor(this.value)" title="Couleur du rôle"/>
+      <input type="color" value="${safeColor(f.color, '#6366f1')}" style="width:30px;height:30px;padding:0;border:none;background:none;cursor:pointer" onchange="permSetColor(this.value)" title="Couleur du rôle"/>
       <input type="text" value="${escAttr(f.fonction)}" onchange="permRename(this.value)" style="flex:1;min-width:0;font-size:.92rem;font-weight:700;border:none;background:none;padding:.2rem 0;outline:none" aria-label="Nom du rôle"/>
       <span class="perm2-saved" id="permSaved">✓ Enregistré</span>
       ${permRecommendedFor(f.fonction) ? `<button class="btn btn-ghost btn-sm" onclick="permApplyRecommended()" title="Réappliquer les droits recommandés pour ce rôle">↺ Recommandés</button>` : ''}
@@ -545,7 +545,7 @@ function renderEducateurs() {
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.875rem">${escHtml([u.prenom, u.nom].filter(Boolean).join(' ') || u.username)}</div>
         <div style="font-size:.75rem;color:var(--muted)">${u.fonction ? escHtml(u.fonction)+' · ' : ''}@${escHtml(u.username)}</div>
-        ${userEtabs.length ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">${userEtabs.map(e => `<span class="badge" style="background:${e.color||'#0f2b4a'}22;color:${e.color||'#0f2b4a'};font-size:.65rem">${escHtml(e.nom)}</span>`).join('')}</div>` : ''}
+        ${userEtabs.length ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">${userEtabs.map(e => `<span class="badge" style="background:${safeColor(e.color,'#0f2b4a')}22;color:${safeColor(e.color,'#0f2b4a')};font-size:.65rem">${escHtml(e.nom)}</span>`).join('')}</div>` : ''}
       </div>
       <button class="btn btn-ghost btn-sm" onclick="editEducateur(${u.id})">Modifier</button>
     </div>`;

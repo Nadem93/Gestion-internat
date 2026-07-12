@@ -65,7 +65,7 @@ function renderFicheLiaison() {
   const { r, lastEval, meds, soins, contacts, redacteur } = _flData;
   if (!r) return;
 
-  const col = r.color || '#dc2626';
+  const col = safeColor(r.color, '#dc2626');
   const age = r.dateNaissance ? Math.floor((Date.now() - new Date(r.dateNaissance)) / 31557600000) : null;
   const today = new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 

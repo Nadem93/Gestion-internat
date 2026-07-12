@@ -246,7 +246,7 @@ function renderTimeline(days) {
       const isConflict = conflictIds.has(ev.id);
       const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
-      const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+      const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
       const inset = 2;   // plus de gouttière : la barre est intégrée au bloc lui-même
       const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
@@ -395,7 +395,7 @@ function renderMonth() {
     const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
     const num = `<div class="plm-num${isTod?' is-today':''}">${d.getDate()}</div>`;
     const evHtml = dayEvs.map(ev => {
-      const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+      const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const time = (ev.heure || ev.time || '').slice(0, 5);
       const label = (time ? time + ' ' : '') + escHtml(ev.titre);
       return '<div class="plm-ev" onclick="event.stopPropagation();viewEvent(\'' + ev.id + '\')">'
@@ -428,7 +428,7 @@ function renderListView() {
     return;
   }
   tbody.innerHTML = events.map(ev => `<tr>
-    <td><span style="display:inline-flex;align-items:center;gap:.4rem"><span style="width:10px;height:10px;border-radius:50%;background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};flex-shrink:0"></span><strong>${ev.vehicule?'🚗 ':''}${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</strong></span></td>
+    <td><span style="display:inline-flex;align-items:center;gap:.4rem"><span style="width:10px;height:10px;border-radius:50%;background:${safeColor(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};flex-shrink:0"></span><strong>${ev.vehicule?'🚗 ':''}${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</strong></span></td>
     <td>${escHtml(ev.residentName)||'Tous'}</td>
     <td>${ev.date ? formatDate(ev.date) : '—'}</td>
     <td>${ev.heure||ev.time||'—'}</td>
@@ -489,7 +489,7 @@ function resetVehiculeFields() {
 function viewEvent(id) {
   const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
-  const color = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+  const color = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
   const dureeLabels = { '30':'30 min', '60':'1h', '90':'1h30', '120':'2h', '180':'3h', 'journee':'Journée' };
   const dureeLabel = dureeLabels[ev.duree] || (ev.duree ? ev.duree + ' min' : '');
   const heure = (ev.heure || ev.time || '').slice(0,5);

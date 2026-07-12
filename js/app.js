@@ -559,7 +559,7 @@ function residentPhoto(r, size = 48) {
   if (r && r.photo) {
     return `<img src="${escHtml(r.photo)}" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"/>`;
   }
-  const bg = r?.color || 'var(--blue)';
+  const bg = safeColor(r?.color, 'var(--blue)');
   const fs = size < 36 ? '.65rem' : size < 48 ? '.75rem' : size < 64 ? '1rem' : '1.4rem';
   return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs};color:#fff;flex-shrink:0">${initials(r?.prenom||'', r?.nom||'')}</div>`;
 }
@@ -665,12 +665,22 @@ function sanitizeUrl(url) {
   return url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// Les couleurs stockées en base (residents.color, planning.color, employes.color,
+// catégories de la config…) sont modifiables par PATCH REST par tout membre de
+// l'établissement : la RLS n'impose aucun format. Sans validation, une chaîne
+// forgée ferme l'attribut style et injecte du HTML (XSS stocké).
+// N'accepte que l'hexadécimal #rgb → #rrggbbaa ; sinon renvoie le fallback.
+function safeColor(c, fallback) {
+  return /^#[0-9a-fA-F]{3,8}$/.test(c || '') ? c : (fallback || '');
+}
+
 // ── CATEGORY BADGE ──
 function categoryBadge(catId) {
   const cats = DB.get(DB.keys.categories) || [];
   const cat = cats.find(c => c.id == catId);
   if (!cat) return '<span class="badge badge-gray">—</span>';
-  return `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${escHtml(cat.name)}</span>`;
+  const catColor = safeColor(cat.color, '#6366f1');
+  return `<span class="badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${escHtml(cat.name)}</span>`;
 }
 
 // ── CONFIRM DIALOG ──

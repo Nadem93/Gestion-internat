@@ -101,7 +101,7 @@ function renderPlanSoins() {
 
   container.innerHTML = Object.entries(byResident).map(([rid, soins]) => {
     const r = residents.find(x => x.id === rid);
-    const resColor = r?.color || '#0f2b4a';
+    const resColor = safeColor(r?.color, '#0f2b4a');
     const resName  = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Général';
 
     const byCat = {};

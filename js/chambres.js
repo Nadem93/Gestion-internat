@@ -93,11 +93,14 @@ function chRoomCard(c, canEdit) {
   const over = occ.length > cap;
   const stateColor = over ? '#dc2626' : full ? '#d97706' : '#16a34a';
   const stateLabel = over ? 'Sur-occupée' : full ? 'Complète' : occ.length ? `${cap - occ.length} lit(s) libre(s)` : 'Libre';
-  const chips = occ.map(r => `
-    <div onclick="event.stopPropagation();location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche" style="display:flex;align-items:center;gap:.4rem;padding:.25rem .55rem .25rem .3rem;border-radius:99px;background:${(r.color || '#3b82f6')}14;border:1px solid ${(r.color || '#3b82f6')}33;cursor:pointer;max-width:100%">
-      <span style="width:20px;height:20px;border-radius:50%;background:${r.color || '#3b82f6'};color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(r.prenom, r.nom)}</span>
+  const chips = occ.map(r => {
+    const rc = safeColor(r.color, '#3b82f6');
+    return `
+    <div onclick="event.stopPropagation();location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche" style="display:flex;align-items:center;gap:.4rem;padding:.25rem .55rem .25rem .3rem;border-radius:99px;background:${rc}14;border:1px solid ${rc}33;cursor:pointer;max-width:100%">
+      <span style="width:20px;height:20px;border-radius:50%;background:${rc};color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(r.prenom, r.nom)}</span>
       <span style="font-size:.72rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="card" style="border-left:3px solid ${stateColor}">
     <div class="card-body" style="padding:.9rem 1rem;display:flex;flex-direction:column;gap:.55rem">
       <div style="display:flex;align-items:center;gap:.5rem">

@@ -906,7 +906,7 @@ window.viewEvent = function(id) {
   // ── Événement normal ──
   const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
-  const color  = ev.color || (typeof TYPE_COLORS !== 'undefined' ? TYPE_COLORS[ev.type] : '') || '#3b82f6';
+  const color  = safeColor(ev.color) || (typeof TYPE_COLORS !== 'undefined' ? TYPE_COLORS[ev.type] : '') || '#3b82f6';
   const typeLabel = (typeof TYPE_LABELS !== 'undefined' ? TYPE_LABELS[ev.type] : '') || ev.type || 'Événement';
   const icon   = (typeof _MEV_ICONS !== 'undefined' ? _MEV_ICONS[ev.type] : '') || '📅';
   const dureeLabels = {'30':'30 min','60':'1h','90':'1h30','120':'2h','180':'3h','journee':'Journée'};

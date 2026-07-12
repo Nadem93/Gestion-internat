@@ -141,7 +141,7 @@ function renderEntryForm() {
     const r = residents.find(x => x.id === id);
     if (!r) return '';
     const name = `${r.prenom||''} ${r.nom||''}`.trim();
-    const color = r.color || '#7C4DFF';
+    const color = safeColor(r.color, '#7C4DFF');
     return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1.5px solid ${color}44;border-radius:20px;font-size:.72rem;padding:3px 10px 3px 9px;font-weight:600">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.5;margin-left:2px;font-size:.9em">×</span></span>`;
   }).join('');
 
@@ -293,7 +293,7 @@ function selectCatPill(id) {
     const on = ids.includes(el.dataset.id);
     el.classList.toggle('active', on);
     const cat = cats.find(c => String(c.id) === String(el.dataset.id));
-    const color = cat?.color || '#7C3AED';
+    const color = safeColor(cat?.color, '#7C3AED');
     el.style.cssText = on
       ? `${BASE};border:1.5px solid ${color};background:${color}22;color:${color};font-weight:600`
       : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
@@ -328,7 +328,7 @@ function renderResidentChips(ids) {
     const r = residents.find(x => x.id === id);
     if (!r) return '';
     const name = `${r.prenom||''} ${r.nom||''}`.trim();
-    const color = r.color || 'var(--accent)';
+    const color = safeColor(r.color, 'var(--accent)');
     return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1px solid ${color};border-radius:20px;font-size:.72rem;padding:2px 8px 2px 7px;font-weight:500">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.55;margin-left:1px">×</span></span>`;
   }).join('');
 }
@@ -397,7 +397,7 @@ async function saveInlineEntry() {
       await sbSaveJournalEntry({
         residentId,
         resident: name,
-        residentColor: res?.color || 'var(--blue)',
+        residentColor: safeColor(res?.color, 'var(--blue)'),
         categorie: document.getElementById('iCategorie').value,
         date: document.getElementById('iDate').value || new Date().toISOString(),
         objectif: document.getElementById('iObjectif').value,
@@ -661,7 +661,7 @@ async function saveEntry() {
   const data = {
     residentId,
     resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
-    residentColor: res?.color || 'var(--blue)',
+    residentColor: safeColor(res?.color, 'var(--blue)'),
     categorie: Array.from(document.getElementById('eCategorie').selectedOptions).map(o => o.value).join(','),
     date: document.getElementById('eDate').value || new Date().toISOString(),
     objectif: document.getElementById('eObjectif').value,

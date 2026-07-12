@@ -251,7 +251,7 @@ function _renderTransmissions() {
 function _trCard(t, residents, userId) {
   const r        = residents.find(x => x.id === t.residentId);
   const resName  = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : '';
-  const resColor = r?.color || '#64748b';
+  const resColor = safeColor(r?.color, '#64748b');
   const cat      = _trCat(t.cat);
   const isRead   = _trIsRead(t, userId);
   const isUrgent = t.priority === 'urgent' || t.cat === 'urgent';
@@ -596,7 +596,7 @@ async function trVersJournal(trId) {
     type: 'observation',
     residentId:    t.residentId,
     resident:      r ? `${r.prenom||''} ${r.nom||''}`.trim() : '',
-    residentColor: r?.color || '#3b82f6',
+    residentColor: safeColor(r?.color, '#3b82f6'),
     categorie:     t.cat || 'general',
     date:          new Date().toISOString(),
     contenu:       `[Transmission ${shiftLabel} — ${t.date}]\n${t.content || ''}`,

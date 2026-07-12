@@ -60,11 +60,11 @@
   }
   function meta(g) {
     var m = (cfg.groupMeta && cfg.groupMeta[g]) || {};
-    return { short: m.short || g, icon: m.icon || DEFAULT_ICON, color: m.color || null };
+    return { short: m.short || g, icon: m.icon || DEFAULT_ICON, color: safeColor(m.color) || null };
   }
   function groupColor(grp) {
     var m = meta(grp.g);
-    return m.color || (grp.items[0] && grp.items[0].c1) || '#6366f1';
+    return m.color || safeColor(grp.items[0] && grp.items[0].c1) || '#6366f1';
   }
 
   function injectCSS() {

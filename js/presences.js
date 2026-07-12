@@ -14,8 +14,8 @@ function getDateStr() { return document.getElementById('presenceDate').value || 
 function presResidentById(id) { return _presResidentsCache.find(r => String(r.id) === String(id)); }
 
 // La couleur résident vient de la base : on ne l'injecte dans un attribut
-// style que si c'est un vrai code hexadécimal.
-function presColor(c) { return /^#[0-9a-fA-F]{3,8}$/.test(c || '') ? c : '#6b7280'; }
+// style que si c'est un vrai code hexadécimal (validation centralisée dans app.js).
+function presColor(c) { return safeColor(c, '#6b7280'); }
 
 // Rechargement du jour, protégé contre l'obsolescence : si deux navigations
 // se chevauchent, seule la plus récente a le droit d'écrire le cache et de

@@ -279,7 +279,7 @@ function renderParticipantsList(inscrits, activite) {
   box.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${inscrits.map(({ resident: r, inscription: i }) => {
     const lastBilan = (i.bilans || []).slice().sort((x, y) => (y.date || '').localeCompare(x.date || ''))[0];
     const nbBilans = (i.bilans || []).length;
-    const color = r.color || '#6366f1';
+    const color = safeColor(r.color, '#6366f1');
     const name = `${r.prenom || ''} ${r.nom || ''}`.trim();
     const av = r.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${color}44" alt=""/>`

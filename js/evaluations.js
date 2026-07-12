@@ -220,7 +220,7 @@ function renderEvList() {
 
   container.innerHTML = Object.entries(byRes).map(([rid, evals]) => {
     const r = residents.find(x => x.id === rid);
-    const col = r?.color || '#6366f1';
+    const col = safeColor(r?.color, '#6366f1');
     const nom = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Inconnu';
     const av = r?.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${col}44" alt=""/>`

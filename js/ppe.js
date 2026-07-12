@@ -169,7 +169,7 @@ function renderAvenantFull(p) {
     </div>
     ${(() => {
       const r = residentsList().find(x => String(x.id) === String(p.residentId));
-      const col = r?.color || '#0f2b4a';
+      const col = safeColor(r?.color, '#0f2b4a');
       const avatar = r?.photo
         ? `<img src="${r.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="${escHtml(p.residentName)}"/>`
         : `<span style="width:52px;height:52px;border-radius:50%;background:${col}22;border:2px solid ${col}55;color:${col};font-size:1rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${_avInitials(p.residentName)}</span>`;
