@@ -26,6 +26,7 @@ let _jrResidents = [];
 let _jrPpe = [];
 let _jrQuart = 'matin';
 let _jrVue = 'tournee';      // 'tournee' (équipe) | 'resident' (timeline co-validée avec la personne)
+let _jrTri = (typeof localStorage !== 'undefined' && localStorage.getItem('jr_tri')) || 'resident';   // tri de la tournée : 'resident' | 'heure'
 let _jrResSel = '';          // résident affiché dans la vue « Ma journée »
 let _jrCanEdit = false;
 const _jrOpenMode = new Set();   // modes d'emploi dépliés
@@ -181,6 +182,37 @@ function renderTournee() {
     </button>`;
   }).join('');
 
+  // Commutateur de tri (👥 par résident / 🕐 par heure)
+  const triEl = document.getElementById('jrTriBar');
+  if (triEl) triEl.innerHTML = list.length ? `<div class="jr-tri" role="group" aria-label="Ordre de la tournée">
+    <button type="button" class="jr-tribtn${_jrTri === 'resident' ? ' on' : ''}" aria-pressed="${_jrTri === 'resident'}" onclick="jrSetTri('resident')">👥 Par résident</button>
+    <button type="button" class="jr-tribtn${_jrTri === 'heure' ? ' on' : ''}" aria-pressed="${_jrTri === 'heure'}" onclick="jrSetTri('heure')">🕐 Par heure</button>
+  </div>` : '';
+
+  // Fil chronologique : rails d'heure, cartes avec avatar du résident
+  if (_jrTri === 'heure') {
+    if (railEl) railEl.innerHTML = '';
+    const el2 = document.getElementById('jrList');
+    if (!list.length) {
+      el2.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><p>Aucun moment d'accompagnement sur ce quart.${_jrCanEdit ? '<br><button class="btn btn-accent" style="margin-top:.8rem" onclick="openTacheModal()">+ Créer une tâche depuis un projet</button>' : ''}</p></div>`;
+      return;
+    }
+    const avecHeure = list.filter(t => t.heure).sort((a, b) => a.heure.localeCompare(b.heure));
+    const sansHeure = list.filter(t => !t.heure).sort((a, b) => (a.residentName || '').localeCompare(b.residentName || ''));
+    let html = '';
+    let curH = null;
+    avecHeure.forEach(t => {
+      const h = t.heure.slice(0, 2);
+      if (h !== curH) { curH = h; html += `<div class="jr-hrail"><span>${parseInt(h, 10)} h</span><i></i></div>`; }
+      html += jrCardHtml(t, true);
+    });
+    if (sansHeure.length) {
+      html += `<div class="jr-hrail"><span>🕐 Sans heure précise</span><i></i></div>` + sansHeure.map(t => jrCardHtml(t, true)).join('');
+    }
+    el2.innerHTML = html;
+    return;
+  }
+
   const el = document.getElementById('jrList');
   if (!rids.length) {
     el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><p>Aucun moment d'accompagnement sur ce quart.${_jrCanEdit ? '<br><button class="btn btn-accent" style="margin-top:.8rem" onclick="openTacheModal()">+ Créer une tâche depuis un projet</button>' : ''}</p></div>`;
@@ -203,7 +235,13 @@ function renderTournee() {
 
 function jrSetQuart(q) { _jrQuart = q; renderJournee(); }
 
-function jrCardHtml(t) {
+function jrSetTri(t) {
+  _jrTri = t;
+  try { localStorage.setItem('jr_tri', t); } catch (e) {}
+  renderJournee();
+}
+
+function jrCardHtml(t, avecResident) {
   const c = _jrCoches[t.id];
   const etat = c ? c.statut : '';
   const modeOpen = _jrOpenMode.has(t.id);
@@ -259,9 +297,13 @@ function jrCardHtml(t) {
   }
   const edit = (!etat && _jrCanEdit) ? `<button type="button" class="jr-btn-sec" style="min-height:28px;padding:0 8px;font-size:.68rem" onclick="openTacheModal('${t.id}')">✎</button>` : '';
 
+  const resLine = avecResident
+    ? `<div class="jr-resline"><span class="jr-av" style="background:${_jrAvColor(t.residentId)}">${escHtml(_jrInitiales(t.residentName))}</span><b>${escHtml((t.residentName || '').split(' ')[0])}</b></div>`
+    : '';
   return `<article class="jr-task ${etat}">
     <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
       <div style="flex:1;min-width:220px">
+        ${resLine}
         <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           ${t.heure ? `<span style="font-size:.68rem;color:var(--muted);font-weight:700">${escHtml(t.heure)}</span>` : ''}
           <span class="jr-lib">${escHtml(t.libelle)}</span>${edit}
