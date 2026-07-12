@@ -386,117 +386,166 @@ function printAvenant(id) {
   if (!p) return;
   const w = window.open('', '_blank');
   const settings = DB.get(DB.keys.settings) || {};
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Avenant - ${escHtml(p.residentName)}</title>
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Avenant — ${escHtml(p.residentName)}</title>
 <style>
-  @page { margin:1.8cm 1.5cm; }
-  body { font-family:'Inter','Segoe UI',system-ui,sans-serif; font-size:9.5pt; line-height:1.7; color:#334155; max-width:780px; margin:0 auto; padding:0; }
-  .page { padding:0 .3cm; }
-  .top-stripe { height:6px; background:#0f2b4a; border-radius:0 0 4px 4px; margin-bottom:.6cm; }
-  .doc-ref { text-align:right; font-size:7.5pt; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.2cm; }
-  .header-block { margin-bottom:.6cm; }
-  .header-block .etab { font-size:13pt; font-weight:300; color:#0f2b4a; letter-spacing:-.02em; }
-  .header-block .etab strong { font-weight:700; }
-  .header-block .doc-title { font-size:16pt; font-weight:800; color:#0f2b4a; margin-top:.05cm; letter-spacing:-.02em; }
-  .header-block .doc-ref-line { font-size:7.5pt; color:#64748b; margin-top:.15cm; }
-  .header-block .doc-ref-line span { display:inline-block; margin-right:.6cm; }
-  .header-block .doc-ref-line .label { color:#94a3b8; }
-  h2 { font-size:10.5pt; font-weight:600; color:#0f2b4a; border-bottom:1px solid #e2e8f0; padding-bottom:3px; margin-top:.55cm; margin-bottom:.25cm; text-transform:uppercase; letter-spacing:.04em; }
-  h2 .sep { color:#e85d04; margin-right:.3em; }
-  table { width:100%; border-collapse:collapse; font-size:8.5pt; margin:.2cm 0; }
-  td, th { border:1px solid #e2e8f0; padding:5px 8px; vertical-align:top; }
-  th { background:#f1f5f9; color:#0f2b4a; font-weight:600; text-align:left; font-size:7.5pt; text-transform:uppercase; letter-spacing:.04em; }
-  tr:nth-child(even) td { background:#fafbfc; }
-  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin:.2cm 0; }
-  .info-grid .ig-item { display:flex; padding:4px 8px; font-size:8.5pt; }
-  .info-grid .ig-item .ig-label { width:130px; font-weight:600; color:#0f2b4a; flex-shrink:0; }
-  .info-grid .ig-item:nth-child(even) { background:#fafbfc; }
-  .card-bilan { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:7px 10px; margin:.15cm 0; font-size:8.5pt; }
-  .card-bilan strong { color:#0f2b4a; }
-  .card-expression { background:#fff; border:1px solid #e2e8f0; border-left:3px solid #e85d04; border-radius:6px; padding:7px 10px; margin:.15cm 0; font-size:8.5pt; }
-  .card-expression strong { color:#e85d04; }
-  .card-conclusion { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin:.2cm 0; font-size:8.5pt; line-height:1.6; }
-  .card-conclusion strong { color:#0f2b4a; }
-  .no-obj { font-style:italic; color:#94a3b8; font-size:8.5pt; padding:3px 0; }
-  .sig-section { margin-top:1.2cm; border-top:2px solid #e2e8f0; padding-top:.4cm; }
-  .sig-row { display:flex; justify-content:space-between; gap:.6cm; }
-  .sig-box { flex:1; text-align:center; }
-  .sig-box .sig-role { font-size:7pt; font-weight:700; color:#0f2b4a; text-transform:uppercase; letter-spacing:.06em; }
-  .sig-box .sig-line { border-top:1px solid #94a3b8; margin-top:.7cm; padding-top:3px; font-size:8pt; color:#475569; min-height:1.2cm; }
-  .sig-date { text-align:center; margin-top:.5cm; font-size:8.5pt; color:#475569; }
-  .sig-date strong { color:#0f2b4a; }
-  .page-footer { margin-top:.8cm; padding-top:.3cm; border-top:1px solid #e2e8f0; text-align:center; font-size:7pt; color:#cbd5e1; }
-</style></head><body>
-<div class="page">
-<div class="top-stripe"></div>
-<div class="doc-ref">Document confidentiel — ${new Date().toLocaleDateString('fr-FR')}</div>
+  @page { margin:1.5cm 1.4cm 2.1cm; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter','Segoe UI',system-ui,sans-serif; font-size:9.5pt; line-height:1.65; color:#334155;
+         -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { max-width:780px; margin:0 auto; }
 
-<div class="header-block">
-  <div class="etab"><strong>${escHtml(settings.etablissement||'Foyer d\'Hébergement')}</strong></div>
-  <div class="doc-title">Avenant — Projet Personnalisé</div>
-  <div class="doc-ref-line">
-    <span><span class="label">Rédaction :</span> ${p.dateRedaction||'___'}</span>
-    <span><span class="label">Révision :</span> ${p.dateRevision||'___'}</span>
-    <span><span class="label">Statut :</span> ${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
-  </div>
+  /* ── En-tête de marque ── */
+  .head-stripe { height:7px; background:linear-gradient(90deg,#0f2b4a,#4f46e5 55%,#7c3aed); border-radius:0 0 5px 5px; }
+  .doc-meta { display:flex; justify-content:space-between; font-size:7pt; color:#94a3b8; text-transform:uppercase; letter-spacing:.1em; margin:.35cm 0 .5cm; }
+  .head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:.5cm; }
+  .etab { font-size:9pt; font-weight:600; color:#64748b; letter-spacing:.02em; }
+  .doc-title { font-size:19pt; font-weight:800; color:#0f2b4a; letter-spacing:-.02em; line-height:1.15; margin-top:.05cm; }
+  .statut-chip { font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:4px 12px; border-radius:999px; white-space:nowrap; }
+  .statut-chip.actif { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .statut-chip.brouillon { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+  .statut-chip.termine { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
+
+  /* ── Bandeau résident ── */
+  .res-band { display:flex; align-items:center; gap:.4cm; background:#f8faff; border:1px solid #e0e7ff; border-radius:12px; padding:.32cm .4cm; margin:.45cm 0 .55cm; }
+  .res-avatar { width:1.35cm; height:1.35cm; border-radius:50%; background:#0f2b4a; color:#fff; font-size:12pt; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .res-nom { font-size:13pt; font-weight:800; color:#0f2b4a; }
+  .res-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+  .pill { display:inline-block; font-size:7pt; font-weight:600; color:#475569; background:#fff; border:1px solid #e2e8f0; border-radius:999px; padding:2px 8px; }
+  .pill.amber { color:#b45309; background:#fffbeb; border-color:#fde68a; }
+
+  /* ── Sections ── */
+  h2 { font-size:10.5pt; font-weight:800; color:#0f2b4a; margin:.55cm 0 .22cm; display:flex; align-items:center; gap:6px;
+       border-bottom:2px solid var(--dc,#e2e8f0); padding-bottom:3px; }
+  h2 .dot { width:9pt; height:9pt; border-radius:3pt; background:var(--dc,#7c3aed); display:inline-block; flex-shrink:0; }
+  .section { --dc:#7c3aed; page-break-inside:auto; }
+
+  /* ── Cycle du projet ── */
+  table.cycle { width:100%; border-collapse:separate; border-spacing:4px 0; table-layout:fixed; margin:.15cm 0 .1cm; }
+  table.cycle td { border:1px solid #e2e8f0; border-radius:8px; padding:5px 4px; text-align:center; vertical-align:top; background:#fff; }
+  table.cycle td.fait { background:#f0fdf4; border-color:#bbf7d0; }
+  table.cycle td.retard { background:#fef2f2; border-color:#fecaca; }
+  .cyc-ico { font-size:9pt; font-weight:800; }
+  td.fait .cyc-ico { color:#15803d; } td.retard .cyc-ico { color:#dc2626; } .cyc-ico { color:#94a3b8; }
+  .cyc-lbl { font-size:6.8pt; font-weight:700; color:#0f2b4a; line-height:1.25; margin-top:1px; }
+  .cyc-sub { font-size:6.2pt; color:#94a3b8; line-height:1.3; }
+  td.retard .cyc-sub { color:#dc2626; font-weight:600; }
+
+  /* ── Tableaux d'objectifs ── */
+  table.obj { width:100%; border-collapse:collapse; font-size:8.3pt; margin:.15cm 0; }
+  table.obj td, table.obj th { border:1px solid #e5eaf1; padding:5px 8px; vertical-align:top; }
+  table.obj th { background:color-mix(in srgb, var(--dc,#7c3aed) 7%, #fff); color:#0f2b4a; font-weight:700; text-align:left; font-size:7pt; text-transform:uppercase; letter-spacing:.05em; }
+  table.obj tr:nth-child(even) td { background:#fafbfd; }
+  .tag { display:inline-block; font-size:6.6pt; font-weight:700; border-radius:999px; padding:1px 7px; margin-top:3px; margin-right:3px; }
+  .tag.ser { color:#6d28d9; background:#f5f3ff; border:1px solid #ede9fe; }
+  .tag.oc  { color:#1d4ed8; background:#eff6ff; border:1px solid #dbeafe; }
+
+  .card { background:#f8fafc; border:1px solid #e5eaf1; border-left:3px solid var(--dc,#7c3aed); border-radius:8px; padding:7px 11px; margin:.15cm 0; font-size:8.4pt; }
+  .card strong { color:#0f2b4a; }
+  .card.expr { background:#fff; border-left-color:#e85d04; }
+  .card.expr strong { color:#e85d04; }
+  .no-obj { font-style:italic; color:#94a3b8; font-size:8.4pt; padding:2px 0; }
+
+  /* ── Signatures ── */
+  .sig-section { margin-top:.9cm; page-break-inside:avoid; }
+  .sig-row { display:flex; justify-content:space-between; gap:.5cm; margin-top:.25cm; }
+  .sig-box { flex:1; border:1px solid #e5eaf1; border-radius:10px; padding:.25cm .3cm .1cm; background:#fafbfd; text-align:center; }
+  .sig-role { font-size:6.8pt; font-weight:800; color:#0f2b4a; text-transform:uppercase; letter-spacing:.07em; }
+  .sig-line { border-top:1px solid #cbd5e1; margin-top:1.15cm; padding:3px 0 4px; font-size:8pt; color:#475569; min-height:.55cm; }
+  .sig-date { text-align:center; margin-top:.3cm; font-size:8.4pt; color:#475569; }
+  .sig-date strong { color:#0f2b4a; }
+
+  /* ── Signature INTERNALIS : répétée en bas de CHAQUE page imprimée ── */
+  .brand-footer { position:fixed; bottom:-1.55cm; left:0; right:0; text-align:center; }
+  .brand-footer .rule { width:36%; height:1px; background:#e2e8f0; margin:0 auto 5px; }
+  .brand-footer .brand { font-family:Georgia,'Times New Roman',serif; font-size:9.5pt; font-weight:700; letter-spacing:.28em; color:#1e40af; }
+  .brand-footer .tagline { font-size:6.4pt; color:#94a3b8; letter-spacing:.04em; margin-top:1px; }
+</style></head><body>
+
+<div class="brand-footer">
+  <div class="rule"></div>
+  <div class="brand">INTERNALIS</div>
+  <div class="tagline">Le projet personnalisé, du papier à la vie quotidienne — document généré le ${new Date().toLocaleDateString('fr-FR')}</div>
 </div>
 
-<h2><span class="sep">▸</span>Informations générales</h2>
-<div class="info-grid">
-  <div class="ig-item"><span class="ig-label">Résident</span><span>${escHtml(p.residentName)}</span></div>
-  <div class="ig-item"><span class="ig-label">Référent éducatif</span><span>${escHtml(p.referent||'—')}</span></div>
-  <div class="ig-item"><span class="ig-label">Mesure de protection</span><span>${escHtml(p.protection||'—')}</span></div>
-  <div class="ig-item"><span class="ig-label">Établissement employeur</span><span>${escHtml(p.employeur||'—')}</span></div>
-  <div class="ig-item"><span class="ig-label">Atelier</span><span>${escHtml(p.atelier||'—')}</span></div>
-  <div class="ig-item"><span class="ig-label">Date d'entrée ESAT</span><span>${p.entreeEsat||'—'}</span></div>
+<div class="page">
+<div class="head-stripe"></div>
+<div class="doc-meta"><span>Document confidentiel — usage professionnel</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
+
+<div class="head-row">
+  <div>
+    <div class="etab">${escHtml(settings.etablissement||"Foyer d'Hébergement")}</div>
+    <div class="doc-title">Projet personnalisé<br>Avenant</div>
+  </div>
+  <span class="statut-chip ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
+</div>
+
+<div class="res-band">
+  <div class="res-avatar">${_avInitials(p.residentName)}</div>
+  <div>
+    <div class="res-nom">${escHtml(p.residentName||'—')}</div>
+    <div class="res-pills">
+      ${p.dateRedaction ? `<span class="pill">📅 Rédigé le ${formatDate(p.dateRedaction)}</span>` : ''}
+      ${p.dateRevision ? `<span class="pill amber">🔄 Révision le ${formatDate(p.dateRevision)}</span>` : ''}
+      ${p.referent ? `<span class="pill">🧑‍🏫 ${escHtml(p.referent)}</span>` : ''}
+      ${p.protection ? `<span class="pill">🛡 ${escHtml(p.protection)}</span>` : ''}
+      ${[p.atelier, p.employeur].filter(Boolean).length ? `<span class="pill">🏭 ${escHtml([p.atelier, p.employeur].filter(Boolean).join(' · '))}</span>` : ''}
+      ${p.entreeEsat ? `<span class="pill">🚪 Entrée ESAT ${formatDate(p.entreeEsat)}</span>` : ''}
+    </div>
+  </div>
 </div>
 
 ${(() => {
   const steps = ppeCycleSteps(p);
-  const LBL = { attentes: 'Recueil des attentes', coconstruction: 'Co-construction', signatures: 'Rédaction & signatures', bilan6: 'Bilan intermédiaire (6 mois)', reeval: 'Réévaluation annuelle' };
-  const rows = steps.map(s => `<tr><td style="width:38%">${LBL[s.id]}</td><td>${
-    s.done ? '✔ Fait' + (s.date ? ' le ' + formatDate(s.date) : '') + (s.par ? ' — ' + escHtml(s.par) : '')
-    : s.late ? '⚠ En retard — prévu le ' + formatDate(s.cible)
-    : (s.cible ? 'Prévu le ' + formatDate(s.cible) : 'À venir')
-  }</td></tr>`).join('');
+  const LBL = { attentes: 'Recueil des attentes', coconstruction: 'Co-construction', signatures: 'Rédaction & signatures', bilan6: 'Bilan intermédiaire', reeval: 'Réévaluation annuelle' };
+  const cells = steps.map(s => {
+    const cls = s.done ? 'fait' : s.late ? 'retard' : '';
+    const ico = s.done ? '✔' : s.late ? '⚠' : '○';
+    const sub = s.done ? 'Fait le ' + formatDate(s.date) + (s.par ? '<br>' + escHtml(s.par) : '')
+      : s.late ? 'En retard<br>prévu le ' + formatDate(s.cible)
+      : (s.cible ? 'Prévu le<br>' + formatDate(s.cible) : 'À venir');
+    return `<td class="${cls}"><div class="cyc-ico">${ico}</div><div class="cyc-lbl">${LBL[s.id]}</div><div class="cyc-sub">${sub}</div></td>`;
+  }).join('');
   const b = (p.sections && p.sections._cycle && p.sections._cycle.bilan6) || null;
-  const bilanHtml = b && b.date ? `<div class="card-bilan" style="margin-top:.15cm"><strong>Bilan intermédiaire du ${formatDate(b.date)}${b.participants ? ' — ' + escHtml(b.participants) : ''} :</strong> ${escHtml(b.synthese || '—')}${b.ajustements ? `<br><strong>Ajustements décidés :</strong> ${escHtml(b.ajustements)}` : ''}</div>` : '';
-  return `<h2><span class="sep">▸</span>Cycle du projet personnalisé</h2>
-    <table><tbody>${rows}</tbody></table>${bilanHtml}`;
+  const bilanHtml = b && b.date ? `<div class="card" style="--dc:#4f46e5"><strong>Bilan intermédiaire du ${formatDate(b.date)}${b.participants ? ' — ' + escHtml(b.participants) : ''} :</strong> ${escHtml(b.synthese || '—')}${b.ajustements ? `<br><strong>Ajustements décidés :</strong> ${escHtml(b.ajustements)}` : ''}</div>` : '';
+  return `<div class="section" style="--dc:#4f46e5"><h2><span class="dot"></span>Cycle du projet personnalisé</h2>
+    <table class="cycle"><tr>${cells}</tr></table>${bilanHtml}</div>`;
 })()}
 
 ${DOMAINES.map(d => {
   const s = p.sections[d.id] || emptySection();
-  return `<h2><span class="sep">▸</span>${d.label}</h2>
-    ${s.bilan ? `<div class="card-bilan"><strong>Bilan :</strong> ${escHtml(s.bilan)}</div>` : ''}
-    ${s.objectifs.length ? `<table><thead><tr><th style="width:28%">Objectif</th><th style="width:32%">Moyens / Actions</th><th style="width:15%">Échéance</th><th style="width:25%">Évaluation</th></tr></thead>
-    <tbody>${s.objectifs.map(o => {
+  const dc = (typeof DOM_COLORS !== 'undefined' && DOM_COLORS[d.id]) || '#7c3aed';
+  const hasContent = (s.bilan || '').trim() || (s.expression || '').trim() || (s.objectifs || []).some(o => (o.objectif || '').trim());
+  if (!hasContent) return '';
+  return `<div class="section" style="--dc:${dc}"><h2><span class="dot"></span>${d.icon} ${d.label}</h2>
+    ${s.bilan ? `<div class="card"><strong>Bilan :</strong> ${escHtml(s.bilan)}</div>` : ''}
+    ${s.objectifs.length ? `<table class="obj"><thead><tr><th style="width:30%">Objectif</th><th style="width:31%">Moyens / Actions</th><th style="width:14%">Échéance</th><th style="width:25%">Évaluation</th></tr></thead>
+    <tbody>${s.objectifs.filter(o => (o.objectif || '').trim()).map(o => {
       const spc = (o.serafin||[]).filter(c => typeof spCodeValide === 'function' && spCodeValide(c));
       let oc = '';
       if (o.outcomes && typeof _ocNiv === 'function') {
-        const g = (m, r) => { const x = o.outcomes[m] && o.outcomes[m][r]; return (x && _ocNiv(x.v)) ? x.v : null; };
-        const part = (lbl, r) => { const d = g('debut', r), f = g('fin', r); return (d !== null || f !== null) ? `${lbl} ${d ?? '·'}→${f ?? '·'}` : ''; };
+        const g = (m, rt) => { const x = o.outcomes[m] && o.outcomes[m][rt]; return (x && _ocNiv(x.v)) ? x.v : null; };
+        const part = (lbl, rt) => { const dd = g('debut', rt), f = g('fin', rt); return (dd !== null || f !== null) ? `${lbl} ${dd ?? '·'}→${f ?? '·'}` : ''; };
         const txt = [part('personne', 'auto'), part('équipe', 'pro')].filter(Boolean).join(' · ');
-        if (txt) oc = `<div style="font-size:.62rem;color:#1d4ed8;margin-top:2px">Distance à l'objectif (1 Très loin → 5 Atteint) : ${txt}</div>`;
+        if (txt) oc = `<span class="tag oc">Distance : ${txt}</span>`;
       }
-      return `<tr><td>${escHtml(o.objectif||'')}${spc.length ? `<div style="font-size:.62rem;color:#6d28d9;margin-top:2px">SERAFIN-PH : ${spc.join(' · ')}</div>` : ''}${oc}</td><td>${escHtml(o.moyens||'')}</td><td>${o.echeance||''}</td><td>${escHtml(o.evaluation||'')}</td></tr>`;
+      return `<tr><td>${escHtml(o.objectif||'')}${spc.length ? `<br><span class="tag ser">SERAFIN-PH ${spc.join(' · ')}</span>` : ''}${oc ? '<br>' + oc : ''}</td><td>${escHtml(o.moyens||'')}</td><td>${formatDate(o.echeance)||''}</td><td>${escHtml(o.evaluation||'')}</td></tr>`;
     }).join('')}</tbody></table>` : '<div class="no-obj">Aucun objectif défini pour ce domaine.</div>'}
-    ${s.expression ? `<div class="card-expression"><strong>Expression du résident :</strong> ${escHtml(s.expression)}</div>` : ''}`;
+    ${s.expression ? `<div class="card expr"><strong>Expression de la personne :</strong> ${escHtml(s.expression)}</div>` : ''}</div>`;
 }).join('')}
 
-<h2><span class="sep">▸</span>Conclusion</h2>
-${p.conclusion ? `<div class="card-conclusion">${escHtml(p.conclusion)}</div>` : '<div class="no-obj">—</div>'}
+${p.conclusion ? `<div class="section" style="--dc:#0f2b4a"><h2><span class="dot"></span>Conclusion</h2>
+<div class="card" style="--dc:#0f2b4a">${escHtml(p.conclusion)}</div></div>` : ''}
 
-<div class="sig-section">
-<h2 style="margin-top:0"><span class="sep">▸</span>Signatures</h2>
+<div class="sig-section section" style="--dc:#0f2b4a">
+<h2><span class="dot"></span>Signatures</h2>
 <div class="sig-row">
-  <div class="sig-box"><div class="sig-role">Le résident</div><div class="sig-line">${p.signatures.resident||''}</div></div>
-  <div class="sig-box"><div class="sig-role">L'éducateur référent</div><div class="sig-line">${p.signatures.referent||''}</div></div>
-  <div class="sig-box"><div class="sig-role">La direction</div><div class="sig-line">${p.signatures.direction||''}</div></div>
+  <div class="sig-box"><div class="sig-role">La personne</div><div class="sig-line">${escHtml(p.signatures.resident||'')}</div></div>
+  <div class="sig-box"><div class="sig-role">L'éducateur référent</div><div class="sig-line">${escHtml(p.signatures.referent||'')}</div></div>
+  <div class="sig-box"><div class="sig-role">La direction</div><div class="sig-line">${escHtml(p.signatures.direction||'')}</div></div>
 </div>
-<div class="sig-date"><strong>Date de signature :</strong> ${p.signatures.date||'__________'}</div>
+<div class="sig-date"><strong>Date de signature :</strong> ${formatDate(p.signatures.date)||'__________'}</div>
 </div>
 
-<div class="page-footer">Foyer Trois Rivières — Document généré le ${new Date().toLocaleDateString('fr-FR')}</div>
 </div>
 </body></html>`);
   w.document.close();
