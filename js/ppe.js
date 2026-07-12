@@ -35,9 +35,19 @@ let _ppeCache = [];
 function getPpe() { return _ppeCache; }
 async function loadPpeCache() { _ppeCache = await sbGetPpe(); }
 // Persiste un avenant précis (remonte une erreur via toast)
+// Écritures sérialisées : chaque sbSavePpe réécrit la ligne entière, deux
+// requêtes qui se doublent (corriger un bilan puis signer 2 s après) peuvent
+// sinon se terminer dans le désordre et perdre la plus récente (lost update).
+// Retourne une promesse (true = sauvegardé) que les appels critiques attendent.
+let _ppeSaveChain = Promise.resolve();
 function persistPpe(p) {
-  if (!p || !p.id) return;
-  sbSavePpe(p).catch(e => { console.error('[ppe]', e); toast('Erreur sauvegarde avenant', 'error'); });
+  if (!p || !p.id) return Promise.resolve(false);
+  const job = _ppeSaveChain.then(() => sbSavePpe(p)).then(
+    () => true,
+    e => { console.error('[ppe]', e); toast('Erreur sauvegarde avenant', 'error'); return false; }
+  );
+  _ppeSaveChain = job;
+  return job;
 }
 
 // ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
@@ -206,10 +216,10 @@ function renderAvenantFull(p) {
         <span class="muted-count" style="margin-left:auto;font-size:.68rem;font-weight:500">électroniques · horodatées · scellées</span></div>
       <div class="section-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.75rem;font-size:.85rem;text-align:center">
-          ${SIG_ROLES.filter(rd => !rd.si || rd.si(p)).map(rd => sigBlockHtml(p, rd)).join('')}
+          ${SIG_ROLES.filter(rd => !rd.si || rd.si(p) || sigPads(p)[rd.key]).map(rd => sigBlockHtml(p, rd)).join('')}
         </div>
-        <div style="margin-top:1rem;font-size:.85rem"><strong>Date de signature :</strong> <input type="date" class="input" style="width:auto;font-size:.8rem" value="${p.signatures.date||''}" onchange="updateSignature('${p.id}','date',this.value)"/></div>
-        <div style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">✍ Signature électronique simple : tracé recueilli sur place (tablette, souris), horodaté, rattaché au compte connecté et scellé par une empreinte du document. Toute modification de l'avenant après signature la rend caduque.</div>
+        <div style="margin-top:1rem;font-size:.85rem"><strong>Date de signature :</strong> <input type="date" class="input" style="width:auto;font-size:.8rem" value="${escAttr(p.signatures.date||'')}" onchange="updateSignature('${p.id}','date',this.value)"/></div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">✍ Signature électronique simple : tracé recueilli sur place (tablette, souris), horodaté et rattaché au compte connecté, avec empreinte de contrôle du document — une modification de l'avenant après signature est détectée et signalée.</div>
       </div>
     </div>
   </div>`;
@@ -338,12 +348,18 @@ function updateSectionObjField(ppeId, domId, idx, field, value) {
   if (!p.sections[domId].objectifs[idx]) p.sections[domId].objectifs[idx] = { objectif:'', moyens:'', echeance:'', evaluation:'' };
   p.sections[domId].objectifs[idx][field] = value;
   persistPpe(p);
-  // Le texte de l'objectif nourrit les suggestions SERAFIN : re-rendre pour les afficher
-  // immédiatement (sinon elles n'apparaîtraient qu'au prochain re-render fortuit).
+  // Le texte de l'objectif nourrit les suggestions SERAFIN : re-rendre pour
+  // les afficher. DIFFÉRÉ : le change part au blur, donc un re-render immédiat
+  // détruit le bouton que l'utilisateur est en train de cliquer (mousedown →
+  // blur → change → DOM remplacé → le click ne part jamais, « ✍ Signer » ou
+  // « Télécharger PDF » semblent morts au premier clic).
   if (field === 'objectif' && typeof spSuggerer === 'function') {
-    renderAvenantFull(p);
-    const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
-    if (bodyEl) bodyEl.style.display = '';
+    setTimeout(() => {
+      if (!document.getElementById('avenantFullView')) return; // vue refermée entre-temps
+      renderAvenantFull(p);
+      const bodyEl = document.getElementById('sectionBody_' + ppeId + '_' + domId);
+      if (bodyEl) bodyEl.style.display = '';
+    }, 350);
   }
 }
 
@@ -390,12 +406,27 @@ const SIG_ROLES = [
 
 function sigPads(p) { return (p.signatures && p.signatures.pads) || {}; }
 
-// Contenu scellé par la signature : l'essentiel de l'avenant (pas les
-// signatures elles-mêmes, sinon signer invaliderait les signatures voisines).
+// Contenu scellé par la signature : le fond de l'avenant uniquement.
+// Sont EXCLUS : les signatures elles-mêmes (signer invaliderait les voisines),
+// le cycle PPA (sections._cycle : le bilan à 6 mois et la réévaluation ont
+// lieu APRÈS la signature par construction), les positionnements outcomes et
+// les pastilles SERAFIN des objectifs (mêmes flux post-signature) — sinon le
+// déroulement normal du cycle rendrait toutes les signatures caduques.
 function sigContenuAvenant(p) {
+  const sections = {};
+  Object.entries(p.sections || {}).forEach(([k, s]) => {
+    if (k === '_cycle' || !s || typeof s !== 'object') return;
+    sections[k] = {
+      ...s,
+      objectifs: (Array.isArray(s.objectifs) ? s.objectifs : []).map(o => {
+        const { outcomes, serafin, ...fond } = (o || {});
+        return fond;
+      })
+    };
+  });
   return sigStableStringify({
     residentId: p.residentId || '', residentName: p.residentName || '',
-    sections: p.sections || {}, conclusion: p.conclusion || ''
+    sections, conclusion: p.conclusion || ''
   });
 }
 
@@ -436,9 +467,11 @@ function ppeSigner(ppeId, role) {
       // Compat : les affichages existants lisent les noms tapés
       if (!(p.signatures[role] || '').trim()) p.signatures[role] = nom;
       if (!p.signatures.date) { p.signatures.date = today(); ppeSyncEcheances(p); }
-      persistPpe(p);
       renderAvenantFull(p);
-      toast(`Signature de ${nom} enregistrée ✓`);
+      // Une signature recueillie physiquement est difficile à re-solliciter :
+      // on ne confirme le succès qu'une fois la sauvegarde réellement aboutie.
+      const ok = await persistPpe(p);
+      if (ok) toast(`Signature de ${escHtml(nom)} enregistrée ✓`);
     }
   });
 }
@@ -461,6 +494,7 @@ function sigBlockHtml(p, rd) {
       <img src="${pad.image}" alt="Signature de ${escAttr(pad.nom || '')}" style="display:block;max-height:56px;max-width:100%;margin:.4rem auto 0"/>
       <div style="font-size:.72rem;color:#15803d;font-weight:600">✒️ ${escHtml(pad.nom || '')}</div>
       <div style="font-size:.66rem;color:#64748b">le ${formatDateTime(pad.signeLe)}</div>
+      ${pad.parNom ? `<div style="font-size:.62rem;color:#94a3b8">recueillie par ${escHtml(pad.parNom)}</div>` : ''}
       <div id="sigEtat-${rd.key}" style="font-size:.64rem;margin-top:2px;color:#94a3b8">vérification de l'empreinte…</div>
       <div style="display:flex;gap:.3rem;justify-content:center;margin-top:.4rem">
         <button class="btn btn-ghost btn-sm" style="font-size:.66rem" onclick="ppeSigner('${p.id}','${rd.key}')">↺ Refaire</button>
@@ -673,19 +707,26 @@ ${p.conclusion ? `<div class="section" style="--dc:#0f2b4a"><h2><span class="dot
 <div class="sig-section section" style="--dc:#0f2b4a">
 <h2><span class="dot"></span>Signatures</h2>
 <div class="sig-row">
-  ${SIG_ROLES.filter(rd => !rd.si || rd.si(p)).map(rd => {
+  ${SIG_ROLES.filter(rd => !rd.si || rd.si(p) || sigPads(p)[rd.key]).map(rd => {
     const pad = sigPads(p)[rd.key];
     if (pad && sigImageValide(pad.image)) {
+      const scelle = pad.hash && pad.hash !== 'indisponible';
+      const valide = scelle && sigEmpreinte && pad.hash === sigEmpreinte;
+      const etat = valide
+        ? '<span style="font-size:6.4pt;color:#15803d">🔒 conforme au document imprimé</span>'
+        : scelle
+          ? '<span style="font-size:6.4pt;color:#b45309;font-weight:700">⚠️ antérieure à la dernière modification du document</span>'
+          : '<span style="font-size:6.4pt;color:#94a3b8">empreinte non vérifiable</span>';
       return `<div class="sig-box"><div class="sig-role">${rd.label}</div>
         <div style="margin-top:.12cm"><img src="${pad.image}" alt="" style="max-height:1.05cm;max-width:100%"/></div>
-        <div class="sig-line" style="margin-top:.05cm">${escHtml(pad.nom||'')}<br><span style="font-size:6.6pt;color:#94a3b8">signé électroniquement le ${formatDateTime(pad.signeLe)}</span></div>
+        <div class="sig-line" style="margin-top:.05cm">${escHtml(pad.nom||'')}<br><span style="font-size:6.6pt;color:#94a3b8">signé électroniquement le ${formatDateTime(pad.signeLe)}${pad.parNom ? ` · recueillie par ${escHtml(pad.parNom)}` : ''}</span><br>${etat}</div>
       </div>`;
     }
     return `<div class="sig-box"><div class="sig-role">${rd.label}</div><div class="sig-line">${escHtml(p.signatures[rd.key]||'')}</div></div>`;
   }).join('')}
 </div>
 <div class="sig-date"><strong>Date de signature :</strong> ${formatDate(p.signatures.date)||'__________'}</div>
-${Object.keys(sigPads(p)).length ? `<div style="text-align:center;font-size:6.6pt;color:#94a3b8;margin-top:.15cm">Signatures électroniques simples recueillies sur INTERNALIS — horodatées, rattachées au compte signataire et scellées par empreinte SHA-256 du document${sigEmpreinte ? ` (${sigEmpreinte.slice(0,12)}…)` : ''}.</div>` : ''}
+${Object.keys(sigPads(p)).length ? `<div style="text-align:center;font-size:6.6pt;color:#94a3b8;margin-top:.15cm">Signatures électroniques simples recueillies sur INTERNALIS — horodatées et rattachées au compte connecté. Empreinte de contrôle SHA-256 du document imprimé : ${sigEmpreinte ? `${sigEmpreinte.slice(0,12)}…` : 'indisponible'}.</div>` : ''}
 </div>
 
 </div>
@@ -1124,7 +1165,14 @@ function ensureSectionsComplete(sections) {
 }
 
 function regenerateAvenantFromJournal(id) {
-  genererAvenantFromJournal(id);
+  // Écrase bilans, objectifs et conclusion sans retour arrière possible :
+  // jamais sans confirmation, a fortiori si des signatures ont été recueillies.
+  const p = getPpe().find(x => x.id === id);
+  const nbSig = p ? Object.keys(sigPads(p)).length : 0;
+  confirmDialog(
+    `Remplacer le contenu de l'avenant par une génération depuis le journal ? Les bilans et objectifs actuels seront écrasés.${nbSig ? ` Les ${nbSig} signature${nbSig > 1 ? 's' : ''} déjà recueillie${nbSig > 1 ? 's' : ''} deviendron${nbSig > 1 ? 't' : 'a'} caduque${nbSig > 1 ? 's' : ''}.` : ''}`,
+    () => genererAvenantFromJournal(id)
+  );
 }
 
 // ═══════════════════════════════════════════
