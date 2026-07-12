@@ -11,12 +11,6 @@
   <div class="main">
     <header class="header">
       <div class="header-info"><div class="header-title">Activités éducatives</div></div>
-      <div class="header-right">
-        <button id="btnAddActivite" class="btn btn-accent btn-sm btn-add-resident" onclick="openActiviteModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="btn-add-label">Nouvelle activité</span>
-        </button>
-      </div>
     </header>
 
     <main class="content" style="max-width:1100px">
@@ -24,6 +18,10 @@
       <div class="toolbar" style="margin-bottom:1.25rem">
         <select id="aFilterCat" style="width:auto"></select>
         <select id="aFilterJour" style="width:auto"></select>
+        <button id="btnAddActivite" class="btn btn-accent btn-sm" onclick="openActiviteModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle activité
+        </button>
       </div>
       <div id="aGrid"></div>
     </main>
