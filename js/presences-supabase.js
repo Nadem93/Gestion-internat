@@ -2,12 +2,15 @@
 // Une ligne = un résident + une date + un statut.
 // sbGetEtablissementId() est défini dans js/residents-supabase.js (chargé avant ce fichier).
 
+// select('*') plutôt qu'une liste de colonnes : la colonne motif peut ne pas
+// encore exister (migration-presences-motif.sql) et une colonne absente dans
+// un select nommé fait échouer toute la requête.
 async function sbGetPresencesForDate(date) {
   const { data, error } = await supabaseClient
-    .from('presences').select('resident_id, statut').eq('date', date);
+    .from('presences').select('*').eq('date', date);
   if (error) { console.error(error); toast('Erreur de chargement des présences', 'error'); return {}; }
   const out = {};
-  data.forEach(row => { out[row.resident_id] = row.statut; });
+  data.forEach(row => { out[row.resident_id] = { statut: row.statut, motif: row.motif || '' }; });
   return out;
 }
 
@@ -25,11 +28,24 @@ async function sbGetPresencesRange(startDate, endDate) {
   return out;
 }
 
-async function sbSetPresence(residentId, date, statut) {
+// Écriture défensive : si la colonne motif n'existe pas encore (PGRST204),
+// on réessaie sans elle et on prévient une seule fois.
+let _sbPresMotifOk = true;
+
+async function sbSetPresence(residentId, date, statut, motif) {
   const etablissementId = await sbGetEtablissementId();
-  const { error } = await supabaseClient
-    .from('presences')
-    .upsert({ resident_id: residentId, date, statut, etablissement_id: etablissementId }, { onConflict: 'resident_id,date' });
+  const row = { resident_id: residentId, date, statut, etablissement_id: etablissementId };
+  const withMotif = _sbPresMotifOk && motif !== undefined;
+  if (withMotif) row.motif = motif || null;
+  let { error } = await supabaseClient
+    .from('presences').upsert(row, { onConflict: 'resident_id,date' });
+  if (error && withMotif && error.code === 'PGRST204') {
+    _sbPresMotifOk = false;
+    delete row.motif;
+    ({ error } = await supabaseClient
+      .from('presences').upsert(row, { onConflict: 'resident_id,date' }));
+    if (!error && motif) toast('Statut enregistré, mais pas le motif : exécutez migration-presences-motif.sql', 'error');
+  }
   if (error) throw error;
 }
 

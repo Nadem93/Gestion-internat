@@ -6,6 +6,32 @@
   <title>Présences — FTR</title>
   <link rel="stylesheet" href="css/style.css?v=2"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ── Trombinoscope (design B) : la tuile entière est le bouton de pointage ── */
+.pr-hint{font-size:.72rem;color:var(--muted);padding:1rem 1.25rem 0}
+.pr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.75rem;padding:1.1rem 1.25rem 1.25rem}
+.pr-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:1rem .6rem .65rem;background:var(--st-bg);border:2px solid var(--st-ring);border-radius:16px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;text-align:center;transition:transform .12s,box-shadow .12s,border-color .15s,background .15s}
+.pr-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,43,74,.10)}
+.pr-tile:active{transform:scale(.97)}
+.pr-tile:focus-visible{outline:3px solid #0ea5e9;outline-offset:2px}
+.pr-off{border-style:dashed;background:#fff}
+.pr-off .pr-ava{filter:grayscale(.7);opacity:.75;border-color:#cbd5e1}
+.pr-off .pr-badge{background:#cbd5e1}
+.pr-off .pr-pill{color:#94a3b8}
+.pr-lock{cursor:not-allowed;opacity:.6}
+.pr-ava-wrap{position:relative;display:inline-block}
+.pr-ava{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--st);display:block}
+.pr-ava-ini{color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.05rem;font-weight:700}
+.pr-badge{position:absolute;bottom:-2px;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--st);color:#fff;font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.pr-nom{font-weight:700;font-size:.8rem;color:var(--text);margin-top:.35rem;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-ch{font-size:.68rem;color:var(--muted)}
+.pr-plan{font-size:.62rem;color:#0369a1;background:#e0f2fe;border-radius:5px;padding:1px 6px;margin-top:2px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-foot{display:flex;align-items:center;gap:.3rem;margin-top:.45rem;max-width:100%}
+.pr-pill{font-size:.64rem;font-weight:800;color:var(--st);background:#fff;border:1px solid var(--st-ring);border-radius:999px;padding:.14rem .5rem;white-space:nowrap}
+.pr-edit{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:#fff;color:#64748b;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.pr-edit:hover{background:#f1f5f9;color:var(--text)}
+.pr-motif{font-size:.64rem;color:#64748b;background:#fff;border:1px dashed var(--st-ring);border-radius:8px;padding:.2rem .45rem;margin-top:.3rem;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -29,10 +55,12 @@
           <span id="presenceDateLabel" style="font-size:.8rem;color:var(--muted);margin-left:.5rem"></span>
           <div class="presence-actions" style="margin-left:auto;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end">
             <div class="presence-legend" style="display:flex;gap:.5rem;font-size:.75rem;color:var(--muted);align-items:center">
-              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#ecfdf5;border:1px solid #a7f3d0"></span>Présent</span>
-              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#fef2f2;border:1px solid #fecaca"></span>Absent</span>
-              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#fffbeb;border:1px solid #fde68a"></span>Sortie</span>
+              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:50%;background:#f0fdf4;border:2px solid #86efac"></span>Présent</span>
+              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:50%;background:#fef2f2;border:2px solid #fca5a5"></span>Absent</span>
+              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:50%;background:#fffbeb;border:2px solid #fcd34d"></span>Sortie</span>
+              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:50%;background:#fff;border:2px dashed #cbd5e1"></span>Non pointé</span>
             </div>
+            <button class="btn btn-accent btn-sm" onclick="markAllPresent()" title="Pointer présents tous les résidents non pointés">✓ <span class="btn-add-label">Tous présents</span></button>
             <div style="display:flex;align-items:center;gap:.35rem">
               <button class="btn btn-outline btn-sm" id="prevDay">&#8592;</button>
               <input type="date" id="presenceDate" style="font-weight:600;font-size:.8rem;padding:.3rem .4rem;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--glass);color:var(--text)"/>
@@ -51,6 +79,24 @@
 </div>
 
 <div id="toast-container" class="toast-container"></div>
+
+<!-- Modal Motif / pointage détaillé (appui long ou ✎ sur une tuile) -->
+<div id="modalMotif" class="modal-overlay" onclick="closeModal('modalMotif')" onkeydown="if(event.key==='Escape')closeModal('modalMotif')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="motifModalTitle" onclick="event.stopPropagation()" style="max-width:400px">
+    <div class="modal-header"><span class="modal-title" id="motifModalTitle">Pointage — <span id="motifResName"></span></span><button class="modal-close" onclick="closeModal('modalMotif')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Statut</label>
+        <div id="motifSeg" style="display:flex;gap:.35rem"></div>
+      </div>
+      <div class="form-group">
+        <label>Motif <span style="font-weight:400;color:var(--muted)">(facultatif)</span></label>
+        <input type="text" id="motifInput" class="form-control" maxlength="120" placeholder="Ex : hospitalisation, retour famille, rendez-vous…"/>
+      </div>
+      <button class="btn btn-primary" onclick="presSaveMotif()" style="width:100%;margin-top:.5rem">Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal Export Absences -->
 <div id="modalExportAbs" class="modal-overlay" onclick="closeModal('modalExportAbs')">
