@@ -457,6 +457,62 @@ ${p.conclusion ? `<div class="card-conclusion">${escHtml(p.conclusion)}</div>` :
   setTimeout(() => { w.print(); }, 500);
 }
 
+// ── Carte avenant « Cycle du projet » (design C) ──
+
+// Mini-stepper des 5 étapes du cycle (✓ fait, n° en cours, ! en retard)
+function _avCycleMini(p) {
+  const steps = ppeCycleSteps(p);
+  const current = steps.find(s => !s.done);
+  const LBL = { attentes: 'Attentes', coconstruction: 'Co-constr.', signatures: 'Signé', bilan6: 'Bilan 6 m', reeval: 'Rééval.' };
+  const dots = steps.map((s, i) => {
+    const cur = current && current.id === s.id;
+    let dot;
+    if (s.done) dot = `<span style="width:20px;height:20px;border-radius:50%;background:#16a34a;color:#fff;font-size:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">✓</span>`;
+    else if (s.late) dot = `<span style="width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">!</span>`;
+    else if (cur) dot = `<span style="width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #4f46e5;color:#4f46e5;font-size:9px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${s.n}</span>`;
+    else dot = `<span style="width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #cbd5e1;color:#94a3b8;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${s.n}</span>`;
+    const link = i < steps.length - 1 ? `<span style="flex:1;height:2px;background:${s.done ? '#16a34a' : '#e2e8f0'}"></span>` : '';
+    return dot + link;
+  }).join('');
+  const labels = steps.map(s => {
+    const cur = current && current.id === s.id;
+    return `<span style="font-size:8.5px;color:${s.late ? '#dc2626' : cur ? '#4f46e5' : '#94a3b8'};font-weight:${cur || s.late ? '800' : '500'}">${LBL[s.id] || s.id}</span>`;
+  }).join('');
+  return `<div style="display:flex;align-items:center;gap:3px;margin:.55rem 0 .15rem">${dots}</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:.5rem">${labels}</div>`;
+}
+
+// Pastille outcomes agrégée : moyenne des positionnements début → fin (🧑 personne / 👥 équipe)
+function _avOutcomesPill(p) {
+  if (typeof _ocGet !== 'function') return '';
+  const acc = { auto: { deb: [], fin: [] }, pro: { deb: [], fin: [] } };
+  Object.values(p.sections || {}).forEach(s => (s.objectifs || []).forEach(o => {
+    if (!o || !o.outcomes) return;
+    ['auto', 'pro'].forEach(r => {
+      const d = _ocGet(o, 'debut', r), f = _ocGet(o, 'fin', r);
+      if (d && _ocNiv(d.v)) acc[r].deb.push(d.v);
+      if (f && _ocNiv(f.v)) acc[r].fin.push(f.v);
+    });
+  }));
+  const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
+  const part = (icon, r) => {
+    const d = avg(acc[r].deb), f = avg(acc[r].fin);
+    if (d === null && f === null) return '';
+    return `${icon} ${d ?? '·'}→${f ?? '·'}`;
+  };
+  const txt = [part('🧑', 'auto'), part('👥', 'pro')].filter(Boolean).join(' · ');
+  return txt ? `<span style="font-size:.64rem;font-weight:700;color:#1d4ed8;background:#eff6ff;border-radius:999px;padding:2px 8px;white-space:nowrap">${txt}</span>` : '';
+}
+
+// Ouvre l'avenant directement sur le formulaire de bilan intermédiaire
+function openAvenantBilan(id) {
+  openAvenant(id);
+  setTimeout(() => {
+    const f = document.getElementById('pcBilanForm');
+    if (f) { f.style.display = ''; f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }, 60);
+}
+
 function renderAvenant() {
   const container = document.getElementById('avenantList');
   if (!container) return;
@@ -487,10 +543,6 @@ function renderAvenant() {
   function _avStatutDot(s) {
     return s==='actif'?'●':s==='brouillon'?'◐':'○';
   }
-  function _avRow(icon, label, val) {
-    if (!val || val === '—') return '';
-    return `<div class="av-card-row"><span class="av-icon">${icon}</span><span class="av-label">${label}</span><span class="av-val">${escHtml(String(val))}</span></div>`;
-  }
   function _hexToRgba(hex, a) {
     const h = (hex||'#0f2b4a').replace('#','');
     const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
@@ -501,27 +553,48 @@ function renderAvenant() {
     const col = r?.color || '#0f2b4a';
     const totalObj = Object.values(p.sections||{}).reduce((a,s)=>a+(s.objectifs?.filter(o=>o.objectif?.trim()).length||0),0);
     const domainesActifs = Object.values(p.sections||{}).filter(s=>(s.bilan||'').trim()).length;
-    const avatarHtml = r?.photo
-      ? `<img src="${r.photo}" class="av-card-avatar" style="object-fit:cover" alt="${escHtml(p.residentName)}"/>`
-      : `<div class="av-card-avatar" style="background:${_hexToRgba(col,.25)};border-color:${_hexToRgba(col,.5)}">${_avInitials(p.residentName)}</div>`;
+    // Anneau de complétude du cycle autour de l'avatar
+    const steps = ppeCycleSteps(p);
+    const faits = steps.filter(s => s.done).length;
+    const enRetard = steps.some(s => s.late);
+    const courant = steps.find(s => !s.done);
+    const C = 2 * Math.PI * 24;
+    const ringCol = enRetard ? '#dc2626' : col;
+    const inner = r?.photo
+      ? `<img src="${r.photo}" style="position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);border-radius:50%;object-fit:cover" alt="${escHtml(p.residentName)}"/>`
+      : `<span style="position:absolute;inset:5px;border-radius:50%;background:${_hexToRgba(col,.18)};color:${col};font-size:.85rem;font-weight:800;display:flex;align-items:center;justify-content:center">${_avInitials(p.residentName)}</span>`;
+    const avatarHtml = `<div style="position:relative;width:54px;height:54px;flex-shrink:0" title="Cycle du projet : ${faits}/5 étapes">
+      <svg viewBox="0 0 54 54" width="54" height="54"><circle cx="27" cy="27" r="24" fill="none" stroke="#eef1f6" stroke-width="4"/>
+      <circle cx="27" cy="27" r="24" fill="none" stroke="${ringCol}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - faits / 5)).toFixed(1)}" transform="rotate(-90 27 27)"/></svg>
+      ${inner}
+    </div>`;
+    // Bouton contextuel selon l'étape du cycle
+    let ctx;
+    if (courant && courant.id === 'bilan6') ctx = `<button class="btn btn-sm" style="flex:1;justify-content:center;background:#faf5ff;border:1px solid #ede9fe;color:#6d28d9" onclick="event.stopPropagation();openAvenantBilan('${p.id}')">📝 Faire le bilan</button>`;
+    else if (courant && courant.id === 'reeval' && courant.late) ctx = `<button class="btn btn-sm" style="flex:1;justify-content:center;background:#fef2f2;border:1px solid #fecaca;color:#dc2626" onclick="event.stopPropagation();openAvenant('${p.id}')">⚠ Réévaluer</button>`;
+    else ctx = `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;border-color:${_hexToRgba(col,.4)};color:${col}" onclick="event.stopPropagation();editAvenant('${p.id}')">Modifier</button>`;
+    const ocPill = _avOutcomesPill(p);
     return `<div class="av-card" style="border-color:${_hexToRgba(col,.25)}" onclick="openAvenant('${p.id}')">
-      <div class="av-card-head" style="background:${col}">
+      <div style="display:flex;align-items:center;gap:.7rem;padding:.85rem .95rem .35rem">
         ${avatarHtml}
-        <div class="av-card-name">${escHtml(p.residentName||'—')}</div>
-        <div><span class="av-card-statut ${p.statut}">${_avStatutDot(p.statut)} ${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.95rem;font-weight:800;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.residentName||'—')}</div>
+          <div style="font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.atelier||'—')}${p.referent ? ' · ' + escHtml(p.referent) : ''}</div>
+        </div>
+        <span class="av-card-statut ${p.statut}" style="flex-shrink:0">${_avStatutDot(p.statut)} ${STATUT_PPE_LABEL[p.statut]||p.statut}</span>
       </div>
-      <div class="av-card-body">
-        ${_avRow('👤','Ouvert par', p.createdBy||'—')}
-        ${_avRow('📅','Rédaction', formatDate(p.dateRedaction))}
-        ${_avRow('🔄','Révision', formatDate(p.dateRevision))}
-        ${_avRow('🧑‍🏫','Référent', p.referent)}
-        ${_avRow('🏭','Atelier', p.atelier)}
-        ${_avRow('🛡️','Protection', p.protection)}
-        <div class="av-card-row"><span class="av-icon">🎯</span><span class="av-label">Objectifs</span><span class="av-val" style="font-weight:700;color:var(--accent)">${totalObj} objectif${totalObj>1?'s':''} · ${domainesActifs} domaine${domainesActifs>1?'s':''}</span></div>
+      <div style="padding:0 .95rem">
+        ${_avCycleMini(p)}
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
+          <span style="font-size:.64rem;font-weight:700;color:#6d28d9;background:#f5f3ff;border-radius:999px;padding:2px 8px;white-space:nowrap">🎯 ${totalObj} objectif${totalObj>1?'s':''} · ${domainesActifs} domaine${domainesActifs>1?'s':''}</span>
+          ${ocPill}
+          ${p.protection ? `<span style="font-size:.64rem;font-weight:600;color:#475569;background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:999px;padding:2px 8px;white-space:nowrap">🛡 ${escHtml(p.protection)}</span>` : ''}
+        </div>
+        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:.55rem">📅 ${formatDate(p.dateRedaction)} → 🔄 ${formatDate(p.dateRevision) || '—'} · ${escHtml(p.createdBy||'—')}</div>
       </div>
       <div class="av-card-footer" style="border-top-color:${_hexToRgba(col,.15)}">
         <button class="btn btn-sm" style="flex:1;justify-content:center;background:${col};color:#fff;border:none" onclick="event.stopPropagation();openAvenant('${p.id}')">Ouvrir</button>
-        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;border-color:${_hexToRgba(col,.4)};color:${col}" onclick="event.stopPropagation();editAvenant('${p.id}')">Modifier</button>
+        ${ctx}
         <button class="btn btn-ghost btn-sm" style="color:#dc2626;flex:0" onclick="event.stopPropagation();deleteAvenant('${p.id}')" title="Supprimer">✕</button>
       </div>
     </div>`;
