@@ -6,13 +6,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* ── Vue « Ma tournée » (design A — Le Fil du quart) ── */
-    .jr-quarts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.7);margin-bottom:.9rem}
-    .jr-quart{min-height:54px;border:1px solid transparent;border-radius:12px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--muted);font-weight:700;font-size:.86rem;cursor:pointer;font-family:inherit}
-    .jr-quart small{font-weight:500;font-size:.66rem}
-    .jr-quart.on{background:#fff;border-color:var(--border);color:#0f2b4a;box-shadow:0 8px 20px rgba(15,43,74,.08)}
-    .jr-quart.on small{color:#4f46e5;font-weight:600}
-    .jr-hero{display:flex;flex-wrap:wrap;gap:.9rem 1.6rem;align-items:center;background:rgba(255,255,255,.85);border:1px solid var(--border);border-radius:16px;padding:.9rem 1.15rem;margin-bottom:.9rem}
-    .jr-bar{height:9px;border-radius:999px;background:#e6ecf5;overflow:hidden;margin-top:6px}
+    /* ── Cockpit : quarts + progression + compteur + transmission, sur UNE barre collante ── */
+    .jr-cockpit{position:sticky;top:8px;z-index:30;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
+      background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border:1px solid var(--border);border-radius:14px;padding:.5rem .8rem;margin-bottom:.7rem;
+      box-shadow:0 8px 24px rgba(15,43,74,.08)}
+    .jr-cockq{display:flex;gap:4px}
+    .jr-quart{min-height:38px;padding:0 11px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--muted);font-weight:700;font-size:.74rem;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .jr-quart.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
+    .jr-bar{height:8px;border-radius:999px;background:#e6ecf5;overflow:hidden;margin-top:6px}
     .jr-barfill{height:100%;border-radius:999px;background:linear-gradient(90deg,#4f46e5,#0f766e);transition:width .4s ease}
     .jr-rail{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:.4rem}
     .jr-rail::-webkit-scrollbar{height:0}
@@ -25,6 +27,8 @@
     .jr-ghead{display:flex;align-items:center;gap:10px;padding:6px 4px 8px}
     .jr-gname{font-size:.95rem;font-weight:800;color:#0f2b4a}
     .jr-gmeta{font-size:.72rem;color:var(--muted)}
+    .jr-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.55rem;margin-bottom:.55rem}
+    .jr-cards .jr-task{margin-bottom:0}
     .jr-task{background:rgba(255,255,255,.95);border:1px solid var(--border);border-left:4px solid #cbd5e1;border-radius:14px;padding:.8rem .95rem;margin-bottom:.55rem;box-shadow:0 4px 14px rgba(15,43,74,.05)}
     .jr-task.fait{border-left-color:#16a34a;background:linear-gradient(rgba(22,163,74,.05),rgba(22,163,74,.05)),#fff}
     .jr-task.reporte{border-left-color:#d97706;background:linear-gradient(rgba(217,119,6,.05),rgba(217,119,6,.05)),#fff}
@@ -33,7 +37,7 @@
     .jr-obj{font-size:.72rem;color:#7c3aed;margin-top:2px}
     .jr-note{font-size:.72rem;color:#0f766e;margin-top:3px}
     .jr-note.rep{color:#b45309}
-    .jr-btn-fait{min-height:44px;min-width:96px;padding:0 16px;border-radius:11px;border:none;background:#4f46e5;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit}
+    .jr-btn-fait{min-height:44px;min-width:66px;padding:0 12px;border-radius:11px;border:none;background:#4f46e5;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;font-family:inherit}
     .jr-btn-fait:hover{background:#4338ca}
     .jr-btn-sec{min-height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:.74rem;cursor:pointer;font-family:inherit}
     .jr-btn-sec:hover{border-color:#94a3b8;color:#334155}
@@ -111,23 +115,16 @@
   </div>
 
   <div id="jrVueTournee">
-  <div class="jr-quarts" id="jrQuarts" role="group" aria-label="Choix du quart"></div>
-
-  <div class="jr-hero">
-    <div style="min-width:120px">
-      <div style="font-size:.66rem;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase">Ce quart</div>
-      <div><span id="jrDone" style="font-size:1.9rem;font-weight:800;color:#0f2b4a">0</span><span id="jrTotal" style="font-size:1.1rem;color:var(--muted);font-weight:700"> / 0</span></div>
+  <div class="jr-cockpit">
+    <div class="jr-cockq" id="jrQuarts" role="group" aria-label="Choix du quart"></div>
+    <div style="flex:1;min-width:130px">
+      <div class="jr-bar" style="margin-top:0"><div class="jr-barfill" id="jrBarFill" style="width:0%"></div></div>
+      <div id="jrBarLabel" style="font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
     </div>
-    <div style="flex:1;min-width:220px">
-      <div id="jrBarLabel" class="jr-gmeta"></div>
-      <div class="jr-bar"><div class="jr-barfill" id="jrBarFill" style="width:0%"></div></div>
-    </div>
-    <div style="flex-basis:100%;border-top:1px dashed var(--border);padding-top:.6rem;font-size:.74rem;color:var(--muted)">
-      💚 La coche garde la trace — <strong>la transmission raconte l'essentiel</strong>. <a href="transmissions.html" style="color:#0f766e;font-weight:700">✎ Écrire une transmission</a>
-    </div>
+    <span style="font-size:.78rem;color:var(--muted);white-space:nowrap"><span id="jrDone" style="font-size:1.05rem;font-weight:800;color:#0f2b4a">0</span><span id="jrTotal"> / 0</span></span>
+    <a href="transmissions.html" title="La coche garde la trace — la transmission raconte l'essentiel" style="color:#0f766e;font-weight:700;font-size:.76rem;text-decoration:none;white-space:nowrap">✎ transmission</a>
+    <div id="jrTriBar" style="display:flex"></div>
   </div>
-
-  <div id="jrTriBar" style="display:flex;justify-content:flex-end;margin-bottom:.4rem"></div>
   <div class="jr-rail" id="jrRail"></div>
   <div id="jrList"><div class="empty" style="padding:3rem;text-align:center"><p>Chargement…</p></div></div>
   </div><!-- /jrVueTournee -->

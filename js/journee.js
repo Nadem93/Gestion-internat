@@ -144,9 +144,7 @@ function renderTournee() {
   quartsEl.innerHTML = JR_MOMENTS.map(m => {
     const list = parQuart(m.id);
     const faits = list.filter(t => jrEtat(t) === 'fait').length;
-    return `<button type="button" class="jr-quart${_jrQuart === m.id ? ' on' : ''}" aria-pressed="${_jrQuart === m.id}" onclick="jrSetQuart('${m.id}')">
-      <span>${m.ico} ${m.label}</span><small>${list.length ? `${faits}/${list.length}` : '—'} · ${m.sub}</small>
-    </button>`;
+    return `<button type="button" class="jr-quart${_jrQuart === m.id ? ' on' : ''}" aria-pressed="${_jrQuart === m.id}" title="${m.label} · ${m.sub}" onclick="jrSetQuart('${m.id}')">${m.ico} ${list.length ? `${faits}/${list.length}` : '—'}</button>`;
   }).join('');
 
   const list = parQuart(_jrQuart);
@@ -199,15 +197,13 @@ function renderTournee() {
     }
     const avecHeure = list.filter(t => t.heure).sort((a, b) => a.heure.localeCompare(b.heure));
     const sansHeure = list.filter(t => !t.heure).sort((a, b) => (a.residentName || '').localeCompare(b.residentName || ''));
-    let html = '';
-    let curH = null;
-    avecHeure.forEach(t => {
-      const h = t.heure.slice(0, 2);
-      if (h !== curH) { curH = h; html += `<div class="jr-hrail"><span>${parseInt(h, 10)} h</span><i></i></div>`; }
-      html += jrCardHtml(t, true);
-    });
+    const parHeure = {};
+    avecHeure.forEach(t => { const h = t.heure.slice(0, 2); (parHeure[h] = parHeure[h] || []).push(t); });
+    let html = Object.keys(parHeure).sort().map(h =>
+      `<div class="jr-hrail"><span>${parseInt(h, 10)} h</span><i></i></div><div class="jr-cards">${parHeure[h].map(t => jrCardHtml(t, true)).join('')}</div>`
+    ).join('');
     if (sansHeure.length) {
-      html += `<div class="jr-hrail"><span>🕐 Sans heure précise</span><i></i></div>` + sansHeure.map(t => jrCardHtml(t, true)).join('');
+      html += `<div class="jr-hrail"><span>🕐 Sans heure précise</span><i></i></div><div class="jr-cards">${sansHeure.map(t => jrCardHtml(t, true)).join('')}</div>`;
     }
     el2.innerHTML = html;
     return;
@@ -228,7 +224,7 @@ function renderTournee() {
         <div class="jr-gmeta">${ts.length} moment${ts.length > 1 ? 's' : ''} sur ce quart</div></div>
         <button type="button" class="jr-btn-sec" style="margin-left:auto" onclick="jrOpenResident('${rid}')">🧑 Sa journée →</button>
       </div>
-      ${ts.map(jrCardHtml).join('')}
+      <div class="jr-cards">${ts.map(t => jrCardHtml(t)).join('')}</div>
     </section>`;
   }).join('');
 }
