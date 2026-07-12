@@ -27,6 +27,14 @@ const MED_STATUTS = {
   report: { label: 'Reporté', icon: '⏭️', color: '#d97706' }
 };
 
+// ── Pilulier : bandelette d'actions ouverte (une seule à la fois) ──
+let _medOpenChip = '';   // clé `${residentId}|${traitementId}|${moment}`
+function medToggleChip(key) { _medOpenChip = _medOpenChip === key ? '' : key; renderMedicaments(); }
+function medMomentCourant() {
+  const h = new Date().getHours();
+  return h < 11 ? 'matin' : h < 14 ? 'midi' : h < 20 ? 'soir' : 'coucher';
+}
+
 // Source = Supabase. Cache mémoire chargé au démarrage.
 let _medCache = [];
 function getMedDistrib() { return _medCache; }
@@ -144,45 +152,70 @@ function renderMedicaments() {
     return;
   }
 
+  const momentNow = (date === today()) ? medMomentCourant() : null;
+
   listEl.innerHTML = entries.map(([residentId, g]) => {
-    g.items.sort((a,b) => momentOrder.indexOf(a.moment) - momentOrder.indexOf(b.moment));
     const r = resMap[String(residentId)];
     const color = r?.color || '#2563eb';
     const av = r?.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${color}33" alt=""/>`
       : `<div class="med-avatar" style="background:${color}15;color:${color}">${initials(r?.prenom||'',r?.nom||'')}</div>`;
 
-    const rows = g.items.map(e => {
-      const mom = MED_MOMENTS[e.moment] || {};
-      const rec = e.record;
-      const mc  = MOMENT_STYLE[e.moment] || { bg:'#f1efe8', color:'#444441' };
-      const heureLimite = MED_HEURE_LIMITE[e.moment];
-      const enRetard = !rec?.statut && heureLimite != null && (date < today() || (date === today() && new Date().getHours() >= heureLimite));
+    // Alertes de sécurité : allergies/CI médicales, allergies alimentaires, texture
+    const reg = r?.regime || {};
+    const alertes = [];
+    if ((r?.allergies || '').trim()) alertes.push(`⚠ ${escHtml(r.allergies)}`);
+    if ((reg.allergiesAlim || '').trim()) alertes.push(`🍽 Allergie alim. : ${escHtml(reg.allergiesAlim)}`);
+    if (reg.texture && reg.texture !== 'normale') alertes.push(`🥄 Texture ${escHtml(reg.texture)}`);
 
-      const btnDonne  = `<button class="med-btn med-btn-ok${rec?.statut==='donne'?' on':''}"  onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','donne')">✓ Donné</button>`;
-      const btnConfie = `<button class="med-btn${rec?.statut==='confie'?' on':''}" style="${rec?.statut==='confie'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe'};padding:7px 16px;border-radius:20px;border:1.5px solid;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','confie')">🤝 Confié</button>`;
-      const btnRefuse = `<button class="med-btn med-btn-ref${rec?.statut==='refuse'?' on':''}" onclick="setMedStatutRefuse('${date}','${residentId}','${e.traitementId}','${e.moment}')">✕ Refus</button>`;
-      const btnAbsent = `<button class="med-btn med-btn-abs${rec?.statut==='absent'?' on':''}" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','absent')">— Absent</button>`;
-      const btnReport = `<button class="med-btn med-btn-rep${rec?.statut==='report'?' on':''}" onclick="setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','report')">⏭ Reporté</button>`;
-      const btnNote   = `<button class="med-note-btn" title="Observation" onclick="openMedNote('${date}','${residentId}','${e.traitementId}','${e.moment}')">📝</button>`;
+    const nbDonneR = g.items.filter(e => e.record?.statut === 'donne').length;
 
-      const statusBadge = rec?.statut ? MED_STATUTS[rec.statut] : null;
-
-      return `<div class="med-med-row"${enRetard ? ' style="border-left:3px solid #dc2626;background:#fef2f2"' : ''}>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
-            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:${mc.bg};color:${mc.color}">${mom.icon||''} ${mom.label||e.moment}</span>
-            ${rec?.heure?`<span style="font-size:11px;color:#94a3b8">${medHeure(rec.heure)}</span>`:''}
-            ${enRetard?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#fee2e2;color:#dc2626">⚠️ En retard</span>`:''}
-          </div>
-          <div class="med-med-name">${escHtml(e.medicament||'')}</div>
-          <div class="med-med-meta">${e.posologie?escHtml(e.posologie):''}${rec?.auteur?' · '+escHtml(rec.auteur):''}</div>
-        </div>
-        ${medCanEdit
-          ? `<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">${btnDonne}${btnConfie}${btnRefuse}${btnAbsent}${btnReport}${btnNote}</div>`
-          : statusBadge ? `<span style="font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:${statusBadge.color}15;color:${statusBadge.color};border:1.5px solid ${statusBadge.color}33">${statusBadge.icon} ${statusBadge.label}</span>` : '<span style="font-size:12px;color:#94a3b8">En attente</span>'}
-      </div>
-      ${rec?.observation?`<div class="med-alert">📝 ${escHtml(rec.observation)}</div>`:''}`;
+    // La bandelette d'actions de la puce ouverte (si elle appartient à ce résident)
+    let strip = '';
+    const cells = momentOrder.map(m => {
+      const items = g.items.filter(e => e.moment === m);
+      const mom = MED_MOMENTS[m];
+      const mc = MOMENT_STYLE[m] || { bg:'#f1efe8', color:'#444441' };
+      const isNow = momentNow === m;
+      const chips = items.map(e => {
+        const rec = e.record;
+        const key = `${residentId}|${e.traitementId}|${e.moment}`;
+        const heureLimite = MED_HEURE_LIMITE[e.moment];
+        const enRetard = !rec?.statut && heureLimite != null && (date < today() || (date === today() && new Date().getHours() >= heureLimite));
+        const st = rec?.statut ? MED_STATUTS[rec.statut] : null;
+        let style, inner;
+        if (st && ['donne','confie'].includes(rec.statut)) {
+          style = `background:${st.color};border:1px solid ${st.color};color:#fff`;
+          inner = `${st.icon} ${escHtml(e.medicament||'')}`;
+        } else if (st) {
+          style = `background:${st.color}14;border:1px solid ${st.color}55;color:${st.color}`;
+          inner = `${st.icon} ${escHtml(e.medicament||'')}`;
+        } else if (enRetard) {
+          style = `background:#fef2f2;border:1.5px solid #dc2626;color:#dc2626`;
+          inner = `⚠ ${escHtml(e.medicament||'')}`;
+        } else {
+          style = `background:#fff;border:1px solid #cbd5e1;color:#334155`;
+          inner = escHtml(e.medicament||'');
+        }
+        const obs = rec?.observation ? ' 📝' : '';
+        const sel = _medOpenChip === key ? ';box-shadow:0 0 0 3px rgba(79,70,229,.35)' : '';
+        const tip = `${escAttr(e.medicament||'')}${e.posologie ? ' — ' + escAttr(e.posologie) : ''}${rec?.heure ? ' — ' + medHeure(rec.heure) : ''}${rec?.auteur ? ' — ' + escAttr(rec.auteur) : ''}${rec?.observation ? ' — 📝 ' + escAttr(rec.observation) : ''}`;
+        if (_medOpenChip === key && medCanEdit) {
+          const btn = (k, v) => `<button class="plr-act${rec?.statut === k ? ' on' : ''}" style="${rec?.statut === k ? `background:${v.color};border-color:${v.color};color:#fff` : `color:${v.color}`}" onclick="event.stopPropagation();${k === 'refuse' ? `setMedStatutRefuse('${date}','${residentId}','${e.traitementId}','${e.moment}')` : `setMedStatut('${date}','${residentId}','${e.traitementId}','${e.moment}','${k}')`}">${v.icon} ${v.label}</button>`;
+          strip = `<div class="plr-strip">
+            <span style="font-size:.72rem;font-weight:700;color:#0f2b4a;flex-shrink:0">${mom.icon} ${escHtml(e.medicament||'')}${e.posologie ? ` <span style="font-weight:500;color:#64748b">· ${escHtml(e.posologie)}</span>` : ''}</span>
+            ${Object.entries(MED_STATUTS).map(([k, v]) => btn(k, v)).join('')}
+            <button class="plr-act" style="color:#6d28d9" onclick="event.stopPropagation();openMedNote('${date}','${residentId}','${e.traitementId}','${e.moment}')">📝 Note</button>
+            <button class="plr-act" style="color:#94a3b8" onclick="event.stopPropagation();medToggleChip('${key}')">Fermer</button>
+          </div>`;
+        }
+        const click = medCanEdit ? ` onclick="medToggleChip('${key}')"` : '';
+        return `<button type="button" class="plr-chip" style="${style}${sel}" title="${tip}"${click}${medCanEdit ? '' : ' disabled'}>${inner}${obs}</button>`;
+      }).join('');
+      return `<div class="plr-cell${isNow ? ' now' : ''}">
+        <div class="plr-mom" style="${isNow ? 'color:#4f46e5' : `color:${mc.color}`}">${mom.icon} ${mom.label.toUpperCase()}${isNow ? ' ←' : ''}</div>
+        ${chips || '<div class="plr-vide">—</div>'}
+      </div>`;
     }).join('');
 
     const planningJourMed = r?.planningHebdo?.[jourMed];
@@ -193,12 +226,15 @@ function renderMedicaments() {
     return `<div class="med-patient-section">
       <div class="med-patient-header">
         ${av}
-        <div>
+        <div style="flex:1;min-width:0">
           <a href="resident.html?id=${residentId}" style="text-decoration:none"><div class="med-patient-name">${escHtml(g.name)}</div></a>
+          ${alertes.length ? `<div style="font-size:11px;font-weight:600;color:#dc2626;margin-top:1px">${alertes.join(' · ')}</div>` : ''}
           ${planningTag}
         </div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;flex-shrink:0;${nbDonneR === g.items.length ? 'color:#15803d;background:#f0fdf4;border:1px solid #dcfce7' : 'color:#475569;background:#f8fafc;border:1px solid #e2e8f0'}">${nbDonneR}/${g.items.length} données</span>
       </div>
-      ${rows}
+      <div class="plr-grid">${cells}</div>
+      ${strip}
     </div>`;
   }).join('');
 }
