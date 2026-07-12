@@ -476,6 +476,18 @@ ${p.conclusion ? `<div class="card-conclusion">${escHtml(p.conclusion)}</div>` :
 }
 
 // ── Carte avenant « Cycle du projet » (design C) ──
+function _avInitials(name) {
+  return (name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+}
+function _avStatutDot(s) {
+  return s==='actif'?'●':s==='brouillon'?'◐':'○';
+}
+function _hexToRgba(hex, a) {
+  const h = (hex||'#0f2b4a').replace('#','');
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
 
 // Mini-stepper des 5 étapes du cycle (✓ fait, n° en cours, ! en retard)
 function _avCycleMini(p) {
@@ -555,17 +567,6 @@ function renderAvenant() {
   }
 
   const residents = residentsList();
-  function _avInitials(name) {
-    return (name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
-  }
-  function _avStatutDot(s) {
-    return s==='actif'?'●':s==='brouillon'?'◐':'○';
-  }
-  function _hexToRgba(hex, a) {
-    const h = (hex||'#0f2b4a').replace('#','');
-    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-    return `rgba(${r},${g},${b},${a})`;
-  }
   container.innerHTML = `<div class="av-grid">${list.map(p => {
     const r = residents.find(x => x.id === p.residentId);
     const col = r?.color || '#0f2b4a';
