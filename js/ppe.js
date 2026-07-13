@@ -929,7 +929,7 @@ function renderAvenant() {
       <div style="padding:0 .95rem">
         ${_avCycleMini(p)}
         <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem">
-          <span style="font-size:.64rem;font-weight:700;color:#6d28d9;background:#f5f3ff;border-radius:999px;padding:2px 8px;white-space:nowrap">🎯 ${totalObj} objectif${totalObj>1?'s':''} · ${domainesActifs} domaine${domainesActifs>1?'s':''}</span>
+          <span style="font-size:.64rem;font-weight:700;color:#64748b;background:transparent;border:0.5px solid #e2e8f0;border-radius:999px;padding:2px 8px;white-space:nowrap">🎯 ${totalObj} objectif${totalObj>1?'s':''} · ${domainesActifs} domaine${domainesActifs>1?'s':''}</span>
           ${ocPill}
           ${p.protection ? `<span style="font-size:.64rem;font-weight:600;color:#475569;background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:999px;padding:2px 8px;white-space:nowrap">🛡 ${escHtml(p.protection)}</span>` : ''}
         </div>
