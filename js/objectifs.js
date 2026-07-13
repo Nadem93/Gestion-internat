@@ -190,13 +190,28 @@ function rangLabel(p) {
 }
 
 // Hexagone de progression (remplace l'anneau circulaire)
-function hexSvg(pct, id, size) {
+function hexSvg(pct, id, size, holo) {
   const w = size || 80, h = Math.round(w * 1.12);
   const known = pct != null;
   const p = known ? clampPct(pct) : 0;
+  const deg = p * 3.6;
+  // Variante « Holo Glass » : anneau holographique cyan→violet sur la portion
+  // atteinte, verre translucide pour le reste, cœur sombre, texte lumineux.
+  if (holo) {
+    const ring = known
+      ? `conic-gradient(from -90deg,#22d3ee 0deg,#a855f7 ${deg}deg,rgba(255,255,255,.12) ${deg}deg 360deg)`
+      : `conic-gradient(rgba(255,255,255,.12) 0 360deg)`;
+    return `<div class="ob-hex" id="ring-${id}" role="img" aria-label="Progression ${known ? p + ' %' : 'non mesurée'}"
+      style="${HEX_STYLE};width:${w}px;height:${h}px;background:${ring};display:flex;align-items:center;justify-content:center;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(34,211,238,.45))">
+      <div class="ob-hex" style="${HEX_STYLE};width:${w - 8}px;height:${h - 8}px;background:#0c1330;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div id="ringtxt-${id}" style="font-size:${Math.round(w / 4.4)}px;font-weight:900;color:${known ? '#7ff3ff' : '#7dd3fc'};font-variant-numeric:tabular-nums;line-height:1">${known ? p + '%' : '—'}</div>
+        ${w >= 70 ? '<div style="font-size:7px;font-weight:800;letter-spacing:.16em;color:#5f76aa;margin-top:2px">PROGRESSION</div>' : ''}
+      </div>
+    </div>`;
+  }
   const color = known ? pctColor(p) : '#cbd5e1';
   return `<div class="ob-hex" id="ring-${id}" role="img" aria-label="Progression ${known ? p + ' %' : 'non mesurée'}"
-    style="${HEX_STYLE};width:${w}px;height:${h}px;background:conic-gradient(${color} 0 ${p * 3.6}deg,#e2e8f0 ${p * 3.6}deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s">
+    style="${HEX_STYLE};width:${w}px;height:${h}px;background:conic-gradient(${color} 0 ${deg}deg,#e2e8f0 ${deg}deg 360deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s">
     <div class="ob-hex" style="${HEX_STYLE};width:${w - 10}px;height:${h - 10}px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
       <div id="ringtxt-${id}" style="font-size:${Math.round(w / 4.4)}px;font-weight:900;color:${known ? color : '#94a3b8'};font-variant-numeric:tabular-nums;line-height:1">${known ? p + '%' : '—'}</div>
       ${w >= 70 ? '<div style="font-size:7px;font-weight:800;letter-spacing:.16em;color:#94a3b8;margin-top:2px">PROGRESSION</div>' : ''}
@@ -311,20 +326,20 @@ function renderOverview(residents, tpl) {
       const rg = rangOf(global);
       gauge = rg === 'S'
         ? `<span class="ob-rgauge"><b>S</b><span class="ob-rtrack"><span class="ob-rdot" style="left:100%"></span></span><b>★</b></span>`
-        : `<span class="ob-rgauge"><b>${rg}</b><span class="ob-rtrack"><span class="ob-rdot" style="left:${Math.round((global % 25) / 25 * 100)}%"></span></span><b style="color:#cbd5e1">${rangOf(global + 25)}</b></span>`;
+        : `<span class="ob-rgauge"><b>${rg}</b><span class="ob-rtrack"><span class="ob-rdot" style="left:${Math.round((global % 25) / 25 * 100)}%"></span></span><b style="color:#5f76aa">${rangOf(global + 25)}</b></span>`;
     }
     let majTxt = '';
     if (lastMaj) {
       const jours = Math.floor((Date.now() - new Date(lastMaj).getTime()) / 86400000);
       majTxt = jours <= 0 ? 'maj aujourd’hui' : jours === 1 ? 'maj hier' : `maj il y a ${jours} j`;
     }
-    const hairColor = global != null ? pctColor(global) : '#cbd5e1';
+    const hairColor = global != null ? pctColor(global) : '#7dd3fc';
     return `<button class="ob-res-card" onclick="obSelectResident('${r.id}')" aria-label="Voir les objectifs de ${escAttr(resNom(r))}">
-      <span class="ob-res-hair" aria-hidden="true" style="background:linear-gradient(90deg,${hairColor} ${global || 0}%,#e6ecf5 ${global || 0}%)"></span>
+      <span class="ob-res-hair" aria-hidden="true" style="background:linear-gradient(90deg,${hairColor} ${global || 0}%,rgba(255,255,255,.14) ${global || 0}%)"></span>
       <div class="ob-res-top">
-        ${hexSvg(global, 'res-' + r.id, 56)}
+        ${hexSvg(global, 'res-' + r.id, 56, true)}
         <div class="ob-res-info">
-          <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#94a3b8;font-size:.55rem">Résident · Niveau ${global != null ? rangOf(global) : '—'}</div>
+          <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#7dd3fc;font-size:.55rem">Résident · Niveau ${global != null ? rangOf(global) : '—'}</div>
           <div class="ob-res-nom">${escHtml(resNom(r))}</div>
           <div class="ob-res-meta">${objs.length} objectif${objs.length > 1 ? 's' : ''} · ${atteints} atteint${atteints > 1 ? 's' : ''}</div>
         </div>
@@ -334,7 +349,7 @@ function renderOverview(residents, tpl) {
     </button>`;
   }).join('');
   return `<div style="font-size:.8rem;color:var(--muted);margin-bottom:.85rem">Cliquez sur un résident pour définir ses axes de travail et suivre sa progression.</div>
-    <div class="ob-res-grid">${cards}</div>`;
+    <div class="ob-holo"><div class="ob-res-grid">${cards}</div></div>`;
 }
 
 function obSelectResident(id) {
