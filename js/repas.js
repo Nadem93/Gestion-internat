@@ -2,7 +2,7 @@
 // Inscriptions midi/soir par jour + régimes alimentaires (stockés sur la fiche résident)
 let repasDate = null;
 let regimeEditId = null;
-let rpView = 'cartes';
+let rpView = 'tableau';   // « Planche de service » (design A) par défaut
 
 function rpSetView(v) {
   rpView = v;
@@ -298,21 +298,58 @@ function renderRepas() {
   if (rpView === 'cartes') {
     el.innerHTML = `<div class="rp-card-grid">${list.map(r => rpResidentCard(r, day, canEdit)).join('')}</div>`;
   } else {
-    el.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Résident</th><th>Chambre</th><th>Régime & allergies</th><th style="text-align:center">🌅 Matin</th><th style="text-align:center">☀️ Midi</th><th style="text-align:center">🌙 Soir</th><th class="no-print"></th></tr></thead>
-      <tbody>${list.map(r => {
-        const allerg = (rgOf(r).allergiesAlim || r.allergies || '').trim();
-        return `<tr>
-          <td style="font-weight:600">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</td>
-          <td>${r.chambre ? 'Ch. ' + escHtml(r.chambre) : '—'}</td>
-          <td><div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">${rgBadge(r)}</div>${allerg ? `<div style="font-size:.7rem;color:#dc2626;margin-top:2px">⚠ ${escHtml(allerg)}</div>` : ''}</td>
-          <td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb" ${isInscrit(day, 'matin', r.id) ? 'checked' : ''} onchange="toggleRepas('${r.id}','matin',this.checked)"/></td>
-          <td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb" ${isInscrit(day, 'midi', r.id) ? 'checked' : ''} onchange="toggleRepas('${r.id}','midi',this.checked)"/></td>
-          <td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb" ${isInscrit(day, 'soir', r.id) ? 'checked' : ''} onchange="toggleRepas('${r.id}','soir',this.checked)"/></td>
-          <td class="no-print" style="text-align:right">${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="openRegimeModal('${r.id}')">🍽 Régime</button>` : ''}</td>
-        </tr>`;
-      }).join('')}</tbody></table></div>`;
+    el.innerHTML = rpPlancheView(list, day, canEdit);
   }
+}
+
+// ── PLANCHE DE SERVICE (design A) : grille résidents × repas ──
+// Chaque case repas = une pastille de présence (clic = inscrire/retirer) ;
+// pour midi/soir, si présent, deux pastilles M1/M2 pour le choix de menu.
+// Réutilise toggleRepas() et setMenuChoice() (persistent + re-render).
+function rpPlancheView(list, day, canEdit) {
+  const MEALS = [
+    { key: 'matin', label: 'Matin', ic: '🌅', c: '#0891b2', hasMenu: false },
+    { key: 'midi',  label: 'Midi',  ic: '☀️', c: '#d97706', hasMenu: true  },
+    { key: 'soir',  label: 'Soir',  ic: '🌙', c: '#7c3aed', hasMenu: true  },
+  ];
+  const head = `<div class="rp-pl-head name">Résident</div>` +
+    MEALS.map(m => `<div class="rp-pl-head" style="color:${m.c}">${m.ic} ${m.label}</div>`).join('');
+
+  const rows = list.map(r => {
+    const color = safeColor(r.color, '#6b7280');
+    const nom = escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim());
+    const av = r.photo
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
+      : `<span style="width:30px;height:30px;border-radius:50%;background:${color};color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(r.prenom, r.nom)}</span>`;
+    const allerg = (rgOf(r).allergiesAlim || r.allergies || '').trim();
+    const regChip = canEdit
+      ? `<button class="rp-pl-reg" onclick="openRegimeModal('${r.id}')" title="Modifier le régime">${rgBadge(r)}</button>`
+      : rgBadge(r);
+    const nameCell = `<div class="rp-pl-cell" style="gap:.5rem">
+      ${av}
+      <div style="min-width:0">
+        <div style="font-weight:700;font-size:.8rem;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nom}</div>
+        <div style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;margin-top:1px"><span style="font-size:.66rem;color:#94a3b8">Ch. ${escHtml(r.chambre || '—')}</span>${regChip}</div>
+        ${allerg ? `<div style="font-size:.62rem;color:#dc2626;margin-top:1px">⚠ ${escHtml(allerg)}</div>` : ''}
+      </div>
+    </div>`;
+
+    const cells = MEALS.map(m => {
+      const on = isInscrit(day, m.key, r.id);
+      const toggle = `<button class="rp-pl-toggle${on ? ' on' : ''}" style="${on ? `background:${m.c}18;border-color:${m.c};color:${m.c}` : ''}" ${canEdit ? `onclick="toggleRepas('${r.id}','${m.key}',${!on})"` : 'disabled'} title="${on ? 'Présent — cliquer pour retirer' : 'Absent — cliquer pour inscrire'}" aria-label="${escAttr(nom)} ${m.label} : ${on ? 'présent' : 'absent'}">${on ? '✓' : ''}</button>`;
+    let menu = '';
+      if (m.hasMenu && on) {
+        const ch = getMenuChoice(repasDate, r.id, m.key);
+        const pill = (n, col) => `<button class="rp-pl-menu${ch === n ? ' sel' : ''}" style="${ch === n ? `background:${col};color:#fff;border-color:${col}` : `color:${col};border-color:${col}66`}" ${canEdit ? `onclick="setMenuChoice('${repasDate}','${r.id}','${m.key}','${n}')"` : 'disabled'} title="Menu ${n}">M${n}</button>`;
+        menu = `<div class="rp-pl-menus">${pill('1', '#16a34a')}${pill('2', '#2563eb')}</div>`;
+      }
+      return `<div class="rp-pl-cell rp-pl-mealcell">${toggle}${menu}</div>`;
+    }).join('');
+
+    return nameCell + cells;
+  }).join('');
+
+  return `<div class="rp-planche">${head}${rows}</div>`;
 }
 
 function toggleRepas(rid, meal, checked, dateOverride) {
