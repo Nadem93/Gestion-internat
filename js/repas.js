@@ -432,8 +432,11 @@ function renderDateStrip() {
     </button>`;
   }
   el.innerHTML = html;
+  // Centrer la date sélectionnée dans la frise HORIZONTALEMENT seulement.
+  // (scrollIntoView faisait aussi défiler la page verticalement → à chaque
+  //  clic sur une sélection, la page « remontait » vers la frise.)
   const sel = el.querySelector('.rp-date-chip.selected');
-  if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  if (sel) el.scrollLeft += sel.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - sel.offsetWidth) / 2;
 }
 
 function renderSemaineView(residents, canEdit) {
