@@ -375,6 +375,7 @@
 <script src="js/ia-assistant.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 let currentResidentId = null;
@@ -1248,12 +1249,18 @@ const _actCategories = {
 };
 let activiteBilanInscrId = null;
 
+// Catalogue des activités : source = Supabase (table activites), comme le
+// module activites.html. Chargé au démarrage de la fiche. Les inscriptions du
+// résident (r.activites) restent sur le résident lui-même.
+let _residentActCatalogue = [];
+function actCatalogue() { return _residentActCatalogue; }
+
 function getResidentActivites(r) { return r.activites || []; }
 
 function activitesCard(r) {
   const inscriptions = getResidentActivites(r);
   const canEdit = canEditResident();
-  const catalogue = DB.get(DB.keys.activites) || [];
+  const catalogue = actCatalogue();
   const actives = inscriptions.filter(i => i.statut === 'active');
   const sorted = [...inscriptions].sort((a, b) => (a.statut === 'active' ? 0 : 1) - (b.statut === 'active' ? 0 : 1) || (b.dateInscription || '').localeCompare(a.dateInscription || ''));
 
@@ -1294,7 +1301,7 @@ function openActiviteInscrModal() {
   if (!canEditResident()) return;
   const r = getResident();
   if (!r) return;
-  const catalogue = (DB.get(DB.keys.activites) || []).filter(a => a.actif !== false);
+  const catalogue = actCatalogue().filter(a => a.actif !== false);
   const inscritIds = new Set(getResidentActivites(r).filter(i => i.statut === 'active').map(i => i.activiteId));
   const opts = catalogue.filter(a => !inscritIds.has(a.id));
   document.getElementById('aiDate').value = today();
@@ -1341,7 +1348,7 @@ function openActiviteBilanModal(inscriptionId) {
   activiteBilanInscrId = inscriptionId;
   const r = getResident();
   const i = getResidentActivites(r).find(x => x.id === inscriptionId);
-  const catalogue = DB.get(DB.keys.activites) || [];
+  const catalogue = actCatalogue();
   const act = catalogue.find(a => a.id === i?.activiteId);
   document.getElementById('abmTitle').textContent = `Bilan — ${act ? act.nom : 'Activité'}`;
   document.getElementById('abmDate').value = today();
@@ -1977,7 +1984,7 @@ function buildFilDeVie(r) {
     });
   }
   getResidentActivites(r).forEach(i => {
-    const catalogue = DB.get(DB.keys.activites) || [];
+    const catalogue = actCatalogue();
     const act = catalogue.find(a => a.id === i.activiteId);
     const c = _actCategories[act?.categorie] || _actCategories.autre;
     const nom = act ? act.nom : 'Activité';
@@ -2534,7 +2541,7 @@ function planningResidentCard(r) {
   const actInscritIds = new Set(
     (r.activites || []).filter(i => i.statut === 'active').map(i => String(i.activiteId))
   );
-  const myActivites = (DB.get(DB.keys.activites) || []).filter(a => actInscritIds.has(String(a.id)));
+  const myActivites = actCatalogue().filter(a => actInscritIds.has(String(a.id)));
 
   // Construire le map jour → événements
   const byDay = {};
@@ -2753,7 +2760,7 @@ function viewPlanningResidentEvent(eventId, actId) {
 
   // ── Activité récurrente ──
   if (actId) {
-    const act = (DB.get(DB.keys.activites) || []).find(a => a.id === actId);
+    const act = actCatalogue().find(a => a.id === actId);
     if (!act) return;
     const color    = _PR_ACT_COLORS[act.categorie] || '#8b5cf6';
     const icon     = _PR_ACT_ICONS[act.categorie]  || '✨';
@@ -2828,11 +2835,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!requireModule('view_residents')) return;
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
   document.getElementById('residentContent').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
-  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache] = await Promise.all([
+  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache, _residentActCatalogue] = await Promise.all([
     sbGetResidents(),
     sbGetJournalEntries(),
     sbGetPresencesRange(daysAgo(35), today()),
-    sbGetPlanningEvents()
+    sbGetPlanningEvents(),
+    (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([]))
   ]);
   await loadDocResCache();
   loadResident();
