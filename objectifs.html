@@ -30,21 +30,19 @@
 .ob-rgauge b{font-weight:900;color:#334155;font-size:.7rem}
 .ob-rtrack{position:relative;width:38px;height:2px;background:#e2e8f0;border-radius:2px}
 .ob-rdot{position:absolute;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 0 2px #fff}
-/* ── Design A « Holo Glass » : vue d'ensemble sur panneau sombre, cartes en verre néon ── */
-.ob-holo{background:radial-gradient(120% 120% at 18% 0%,#1b1150 0%,#0a1230 55%,#081226 100%);border:1px solid rgba(120,140,255,.22);border-radius:16px;padding:1.1rem}
-.ob-holo .ob-res-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);box-shadow:0 0 32px rgba(90,120,255,.22),inset 0 1px 0 rgba(255,255,255,.14);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-.ob-holo .ob-res-card:hover{box-shadow:0 0 44px rgba(120,150,255,.42),inset 0 1px 0 rgba(255,255,255,.22);transform:translateY(-2px)}
-.ob-holo .ob-res-nom{color:#fff}
-.ob-holo .ob-res-meta{color:#9db4ff}
-.ob-holo .ob-bdg{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#c9d6ff}
-.ob-holo .ob-bdg b{color:#fff}
-.ob-holo .ob-bdg-ok{background:rgba(34,197,94,.14);border-color:rgba(74,222,128,.45);color:#86efac}
-.ob-holo .ob-bdg-run{background:rgba(168,85,247,.16);border-color:rgba(168,85,247,.45);color:#d8b4fe}
-.ob-holo .ob-res-foot{color:#8ea3d6;border-top-color:rgba(255,255,255,.12)}
-.ob-holo .ob-foot-sep{color:#5f76aa}
-.ob-holo .ob-rgauge b{color:#cbd9ff}
-.ob-holo .ob-rtrack{background:rgba(255,255,255,.16)}
-.ob-holo .ob-rdot{background:#22d3ee;box-shadow:0 0 8px #22d3ee}
+/* ── Design C « Aurora Bento » : vue d'ensemble sur panneau aurore clair, cartes premium ── */
+.ob-aurora{background:radial-gradient(90% 80% at 0% 0%,#e0e7ff 0%,transparent 55%),radial-gradient(80% 80% at 100% 15%,#fce7f3 0%,transparent 55%),radial-gradient(90% 90% at 55% 100%,#d1fae5 0%,transparent 55%),#f6f7ff;border-radius:16px;padding:1.1rem}
+.ob-aurora .ob-res-card{background:#fff;border:none;border-radius:16px;box-shadow:0 10px 30px rgba(90,80,180,.14)}
+.ob-aurora .ob-res-card:hover{box-shadow:0 16px 42px rgba(90,80,180,.24);transform:translateY(-2px)}
+.ob-aurora .ob-res-nom{color:#1e1b4b}
+.ob-aurora .ob-bdg{background:#f4f5ff;border:0.5px solid #e6e6f5;color:#5b5b78}
+.ob-aurora .ob-bdg b{color:#1e1b4b}
+.ob-aurora .ob-bdg-ok{background:linear-gradient(135deg,#d1fae5,#e0f2fe);border:none;color:#0f766e}
+.ob-aurora .ob-bdg-run{background:linear-gradient(135deg,#ede9fe,#f5d0fe);border:none;color:#5b21b6}
+.ob-aurora .ob-res-foot{border-top-color:#eef0fb}
+.ob-aurora .ob-rgauge b{color:#4f46e5}
+.ob-aurora .ob-rtrack{background:#ece9ff}
+.ob-aurora .ob-rdot{background:#6366f1;box-shadow:0 2px 6px rgba(99,102,241,.5)}
 .ob-card{margin-bottom:1rem;overflow:hidden;border:1.5px solid #dbeafe}
 .ob-card-head{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.15rem;flex-wrap:wrap}
 .ob-card-title{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
