@@ -231,7 +231,12 @@ function renderComposeUsers() {
   }).join('');
 
   if (!html) {
-    html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem"><p style="margin:0">${q ? 'Aucun utilisateur trouvé' : 'Aucun autre utilisateur'}</p></div>`;
+    html = q
+      ? `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem"><p style="margin:0">Aucun utilisateur trouvé</p></div>`
+      : `<div style="padding:1.5rem 1.25rem;text-align:center;color:var(--muted);font-size:.82rem;line-height:1.5">
+          <p style="margin:0 0 .4rem;font-weight:600;color:var(--text)">Aucun collègue avec un compte de connexion</p>
+          <p style="margin:0">Seules les personnes ayant un compte peuvent être contactées.<br>Créez un accès depuis <strong>Administration → Employés → « 🔑 Créer un compte »</strong>.</p>
+        </div>`;
   }
   document.getElementById('composeList').innerHTML = html;
   document.getElementById('composeStartBtn').disabled = composeSelected.length === 0;
