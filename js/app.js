@@ -290,7 +290,7 @@ const DEFAULTS = {
   ],
   settings: { etablissement:'Foyer d\'Hébergement Les Trois Rivières', ville:'', tel:'', email:'', capacite:'' },
   branding: { primaryColor:'#0f2b4a', accentColor:'#e85d04', logo:'' },
-  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
+  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
     { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules'] },
