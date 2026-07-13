@@ -190,7 +190,7 @@ function renderRepas() {
   const residents = repasResidents();
   const all = getRepas();
   const day = all[repasDate] || {};
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ((typeof canEditResidents === 'function') && canEditResidents(Auth.getSession()?.userId));
 
   const dEl = document.getElementById('rpDate');
   if (dEl && dEl.value !== repasDate) dEl.value = repasDate;
