@@ -880,11 +880,11 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
     if (day === 0 || day === 6) {
       // Week-end : clé sur le samedi de la semaine
       if (day === 0) d.setDate(d.getDate() - 1);
-      return 'ast_collapsed_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_wknd';
+      return 'ast_open_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_wknd';
     }
     // Nuit de semaine : clé sur le jour de début (si avant 9h → nuit précédente)
     if (hour < 9) d.setDate(d.getDate() - 1);
-    return 'ast_collapsed_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_night';
+    return 'ast_open_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_night';
   }
 
   function positionAstSoirCard() {
@@ -912,8 +912,8 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
     const collapsed = card.classList.toggle('ast-collapsed');
     astApplyHeight(collapsed);
     btn.title = collapsed ? 'Agrandir' : 'Réduire';
-    if (collapsed) localStorage.setItem(getPeriodKey(), '1');
-    else           localStorage.removeItem(getPeriodKey());
+    if (collapsed) localStorage.removeItem(getPeriodKey());
+    else           localStorage.setItem(getPeriodKey(), '1');   // mémorise l'ouverture pour cette période
   };
 
   async function loadAstreintesSoir() {
@@ -953,8 +953,8 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
         if (arrow) arrow.style.display = 'block';
       }
 
-      // Restaurer l'état réduit si l'utilisateur avait réduit cette période
-      if (localStorage.getItem(getPeriodKey())) {
+      // Réduite PAR DÉFAUT ; déployée seulement si l'utilisateur l'a ouverte cette période
+      if (!localStorage.getItem(getPeriodKey())) {
         card.classList.add('ast-collapsed');
         document.getElementById('astSoirToggle').title = 'Agrandir';
         astApplyHeight(true);
