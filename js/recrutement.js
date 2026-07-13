@@ -73,9 +73,14 @@ function rcCard(c, color) {
 }
 
 // Mot de passe temporaire (identique à la logique de la page Admin)
-function genPassword(len = 10) {
-  const c = 'abcdefghjkmnpqrstuvwxyz23456789ABCDEFGHJKMNPQRSTUVWXYZ';
-  return Array.from({ length: len }, () => c[Math.floor(Math.random() * c.length)]).join('');
+function genPassword(len = 12) {
+  // Politique create-user : ≥8 car., majuscule, minuscule, chiffre ET spécial.
+  const U = 'ABCDEFGHJKMNPQRSTUVWXYZ', L = 'abcdefghijkmnpqrstuvwxyz', D = '23456789', S = '!@#$%*?-';
+  const all = U + L + D + S, pick = s => s[Math.floor(Math.random() * s.length)];
+  const pw = [pick(U), pick(L), pick(D), pick(S)];
+  while (pw.length < Math.max(len, 8)) pw.push(pick(all));
+  for (let i = pw.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pw[i], pw[j]] = [pw[j], pw[i]]; }
+  return pw.join('');
 }
 
 function rcCreateCompte(id) {

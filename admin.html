@@ -1008,7 +1008,17 @@ function resetEmployeForm() {
   pp.style.border = '2px dashed #cbd5e1';
   umxLiveName(); umxTauxHoraire();
 }
-function genPassword(len=10) { const c = 'abcdefghjkmnpqrstuvwxyz23456789ABCDEFGHJKMNPQRSTUVWXYZ'; return Array.from({length:len}, () => c[Math.floor(Math.random()*c.length)]).join(''); }
+function genPassword(len = 12) {
+  // Garantit la politique du serveur (create-user) : ≥8 car., majuscule,
+  // minuscule, chiffre ET caractère spécial. Caractères spéciaux sûrs à
+  // afficher/saisir (pas de <>&"' qui casseraient l'affichage HTML).
+  const U = 'ABCDEFGHJKMNPQRSTUVWXYZ', L = 'abcdefghijkmnpqrstuvwxyz', D = '23456789', S = '!@#$%*?-';
+  const all = U + L + D + S, pick = s => s[Math.floor(Math.random() * s.length)];
+  const pw = [pick(U), pick(L), pick(D), pick(S)];
+  while (pw.length < Math.max(len, 8)) pw.push(pick(all));
+  for (let i = pw.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pw[i], pw[j]] = [pw[j], pw[i]]; }
+  return pw.join('');
+}
 // Crée un VRAI compte de connexion via l'Edge Function "create-user" (clé service_role côté serveur)
 async function createUserFromEmploye() {
   const id     = document.getElementById('empId').value;
