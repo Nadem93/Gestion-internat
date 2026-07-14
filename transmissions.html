@@ -131,9 +131,7 @@
 
 <!-- MODAL NOUVELLE TRANSMISSION — Template 2 panneau latéral -->
 <div class="modal-overlay" id="modalTr">
-  <div class="modal" style="max-width:600px;padding:0">
-    <!-- Formulaire -->
-    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+  <div class="modal" style="max-width:600px">
       <div class="modal-header" style="border-radius:20px 20px 0 0">
         <div>
           <div class="modal-title" id="modalTrTitle">Nouvelle transmission</div>
@@ -205,14 +203,13 @@
           </div>
         </div>
       </div>
-      <div class="modal-footer" style="border-radius:0 0 20px 0;justify-content:space-between">
+      <div class="modal-footer" style="border-radius:0 0 20px 20px;justify-content:space-between">
         <span id="trStepLabel" style="font-size:.72rem;color:var(--muted)">Étape 1 sur 3</span>
         <div style="display:flex;gap:.5rem">
           <button class="btn btn-ghost" onclick="closeModal('modalTr')">Annuler</button>
           <button class="btn btn-primary" onclick="saveTr_Modal()">Enregistrer</button>
         </div>
       </div>
-    </div>
   </div>
 </div>
 

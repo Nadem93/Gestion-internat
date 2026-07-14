@@ -90,10 +90,7 @@
 
 <!-- MODAL NOUVELLE ENTRÉE -->
 <div class="modal-overlay" id="modalEntry">
-  <div class="modal lg" style="max-width:640px;padding:0">
-
-    <!-- Formulaire -->
-    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+  <div class="modal lg" style="max-width:640px">
       <div class="modal-header" style="border-radius:20px 20px 0 0">
         <div>
           <div class="modal-title" id="modalEntryTitle">Nouvelle entrée</div>
@@ -135,14 +132,13 @@
         </div>
       </div>
 
-      <div class="modal-footer" style="border-radius:0 0 20px 0;justify-content:space-between">
+      <div class="modal-footer" style="border-radius:0 0 20px 20px;justify-content:space-between">
         <button class="btn btn-danger btn-sm" id="btnDeleteEntry" style="display:none" onclick="deleteEntry()">Supprimer</button>
         <div style="display:flex;gap:.5rem;margin-left:auto">
           <button class="btn btn-ghost" onclick="closeAllModals()">Annuler</button>
           <button class="btn btn-primary" onclick="saveEntry()">Enregistrer</button>
         </div>
       </div>
-    </div>
 
   </div>
 </div>
