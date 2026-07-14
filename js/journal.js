@@ -450,6 +450,24 @@ function getEntries() {
   return list;
 }
 
+// ── Séparateur de jour entre les entrées (design inspiré des transmissions) ──
+function journalDayLabel(dayKey) {
+  const today     = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const d    = new Date(dayKey + 'T12:00:00');
+  const base = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (dayKey === today)     return "Aujourd'hui — " + base;
+  if (dayKey === yesterday) return 'Hier — ' + base;
+  return base;
+}
+function renderJournalDaySep(dayKey) {
+  return `<div style="display:flex;align-items:center;gap:.75rem;margin:.5rem 0 .1rem;user-select:none">
+    <span style="flex:1;height:1px;background:var(--border)"></span>
+    <span style="font-size:.72rem;font-weight:700;text-transform:capitalize;letter-spacing:.02em;color:var(--muted);white-space:nowrap">${escHtml(journalDayLabel(dayKey))}</span>
+    <span style="flex:1;height:1px;background:var(--border)"></span>
+  </div>`;
+}
+
 function renderEntries() {
   const list = getEntries();
   const el = document.getElementById('entriesList');
@@ -461,6 +479,7 @@ function renderEntries() {
   }
   updateUnreadBadge();
   const session = Auth.getSession();
+  let lastDay = null;
   el.innerHTML = list.map(e => {
     const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
     const jRes = journalResidents.find(r => r.id === e.residentId);
@@ -482,7 +501,10 @@ function renderEntries() {
         </div>
       </div>` : '';
     const nodeColor = (entryCats[0] && entryCats[0].color) || e.residentColor || '#8b5cf6'; // couleur du nœud sur le fil = catégorie
-    return `<div class="entry-card ${isSelected ? 'selected' : ''}" style="--jc:${nodeColor};${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
+    const dayKey = (e.date || '').slice(0, 10);
+    let daySep = '';
+    if (dayKey && dayKey !== lastDay) { daySep = renderJournalDaySep(dayKey); lastDay = dayKey; }
+    return daySep + `<div class="entry-card ${isSelected ? 'selected' : ''}" style="--jc:${nodeColor};${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
       <div class="entry-header">
         ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
         <div style="flex:1;min-width:0">
