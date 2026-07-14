@@ -831,8 +831,12 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
 .ast-rib-bell{width:15px;height:15px;flex-shrink:0}
 .ast-rib-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:.62rem;font-weight:700;letter-spacing:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.12)}
 .ast-rib-chevron{width:10px;height:10px;opacity:.8}
-/* Sur mobile, on remonte le volet pour dégager la barre de navigation du bas */
-@media(max-width:768px){#astSoirCard{bottom:5rem;right:.6rem}}
+/* Sur mobile : volet affiné pour ne pas cacher les cartes — replié = fin
+   onglet de 30px collé au bord droit ; déployé plus étroit. */
+@media(max-width:768px){
+  #astSoirCard{bottom:1.4rem;right:.35rem;width:158px}
+  #astSoirCard.ast-collapsed{width:30px}
+}
 </style>
 
 <div id="astSoirCard" style="display:none">
