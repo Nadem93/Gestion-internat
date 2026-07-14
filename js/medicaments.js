@@ -35,6 +35,10 @@ function medMomentCourant() {
   return h < 11 ? 'matin' : h < 14 ? 'midi' : h < 20 ? 'soir' : 'coucher';
 }
 
+// Onglet de moment affiché (matin/midi/soir/coucher)
+let _medMomentTab = '';
+function medSetMomentTab(m) { _medMomentTab = m; renderMedicaments(); }
+
 // Source = Supabase. Cache mémoire chargé au démarrage.
 let _medCache = [];
 function getMedDistrib() { return _medCache; }
@@ -176,9 +180,13 @@ function ensureMedUI() {
     const s = document.createElement('style');
     s.id = 'med-tiles-styles';
     s.textContent = `
-    .med-mom-sec{margin-bottom:1.4rem}
-    .med-mom-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin:0 0 10px}
-    .med-mom-h .n{margin-left:auto;font-size:11px;font-weight:700;color:#64748b;text-transform:none;letter-spacing:0}
+    .med-tabs{display:flex;gap:5px;margin:0 0 14px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:5px}
+    .med-tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:10px;border:none;background:none;cursor:pointer;font-family:inherit;color:#64748b;transition:background .15s,color .15s}
+    .med-tab:hover{background:#f1f5f9}
+    .med-tab.active{background:#4f46e5;color:#fff}
+    .med-tab-lbl{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .med-tab-count{font-size:10.5px;font-weight:600;opacity:.85}
+    .med-tab-now{color:#f59e0b;font-size:9px;vertical-align:middle}
     .med-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
     .mtile{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px 9px;border-radius:16px;border:2px solid var(--rg);background:var(--bg);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;text-align:center;transition:transform .12s,box-shadow .12s,border-color .15s,background .15s}
     .mtile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,43,74,.10)}
@@ -276,13 +284,6 @@ function renderMedicaments() {
 
   const listEl = document.getElementById('medResidentList');
 
-  const MOMENT_STYLE = {
-    matin:   { bg:'#faeeda', color:'#633806' },
-    midi:    { bg:'#e6f1fb', color:'#0c447c' },
-    soir:    { bg:'#eeedfe', color:'#3c3489' },
-    coucher: { bg:'#f1efe8', color:'#444441' },
-  };
-
   const momentOrder = Object.keys(MED_MOMENTS);
   const JOURS_MED = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   const jourMed = JOURS_MED[new Date(date + 'T00:00:00').getDay()];
@@ -318,18 +319,30 @@ function renderMedicaments() {
   };
   const themeFor = (statut, enRetard) => TILE_THEME[statut] || (enRetard ? { st:'#dc2626', rg:'#fecaca', bg:'#fef2f2' } : { st:'#94a3b8', rg:'#e2e8f0', bg:'#ffffff' });
 
-  // Une section par moment (matin/midi/soir/coucher), grille de tuiles par prise
-  listEl.innerHTML = momentOrder.map(m => {
-    const items = visibles.filter(e => e.moment === m)
-      .sort((a, b) => (a.residentName || '').localeCompare(b.residentName || '', 'fr'));
-    if (!items.length) return '';
-    const mom = MED_MOMENTS[m];
-    const mc = MOMENT_STYLE[m] || { color:'#444441' };
-    const isNow = momentNow === m;
-    const heureLimite = MED_HEURE_LIMITE[m];
-    const nbDone = items.filter(e => e.record?.statut === 'donne').length;
+  // Onglets Matin / Midi / Soir / Coucher — on n'affiche que le moment actif
+  if (!momentOrder.includes(_medMomentTab)) _medMomentTab = momentNow || momentOrder[0];
 
-    const tiles = items.map(e => {
+  const byMoment = {};
+  momentOrder.forEach(m => {
+    byMoment[m] = visibles.filter(e => e.moment === m)
+      .sort((a, b) => (a.residentName || '').localeCompare(b.residentName || '', 'fr'));
+  });
+
+  const tabsHtml = momentOrder.map(m => {
+    const its = byMoment[m];
+    const mom = MED_MOMENTS[m];
+    const done = its.filter(e => e.record?.statut === 'donne').length;
+    const active = _medMomentTab === m;
+    const isNow = momentNow === m;
+    return `<button type="button" class="med-tab${active ? ' active' : ''}" aria-pressed="${active}" onclick="medSetMomentTab('${m}')">
+      <span class="med-tab-lbl">${mom.icon} ${escHtml(mom.label)}${isNow ? ' <span class="med-tab-now" title="Moment en cours">●</span>' : ''}</span>
+      <span class="med-tab-count">${done}/${its.length}</span>
+    </button>`;
+  }).join('');
+
+  const activeItems = byMoment[_medMomentTab] || [];
+  const heureLimite = MED_HEURE_LIMITE[_medMomentTab];
+  const tiles = activeItems.map(e => {
       const r = resMap[String(e.residentId)];
       const rec = e.record;
       const statut = rec?.statut || '';
@@ -369,16 +382,12 @@ function renderMedicaments() {
         </div>
         ${rec?.observation ? `<div class="mtile-note" title="${escAttr(rec.observation)}">📝 ${escHtml(rec.observation)}</div>` : ''}
       </div>`;
-    }).join('');
-
-    return `<div class="med-mom-sec">
-      <div class="med-mom-h${isNow ? ' now' : ''}" style="color:${isNow ? '#4f46e5' : mc.color}">
-        <span>${mom.icon} ${escHtml(mom.label)}${isNow ? ' — en cours' : ''}</span>
-        <span class="n">${nbDone}/${items.length} données</span>
-      </div>
-      <div class="med-grid">${tiles}</div>
-    </div>`;
   }).join('');
+
+  listEl.innerHTML = `<div class="med-tabs">${tabsHtml}</div>
+    ${activeItems.length
+      ? `<div class="med-grid">${tiles}</div>`
+      : `<div style="background:rgba(255,255,255,.85);border-radius:16px;padding:1.75rem;text-align:center;font-size:13px;color:#64748b;font-style:italic">Aucune prise prévue à ce moment${(medSearch || medFilterPresent) ? ' (avec ces filtres)' : ''}.</div>`}`;
 }
 
 function medRow(date, e) {
