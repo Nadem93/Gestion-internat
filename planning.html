@@ -88,8 +88,28 @@
       .pl-week-body{grid-template-columns:36px 1fr!important}
       .pl-days{grid-template-columns:1fr!important}
       .plh-day .plh-dow{font-size:.55rem}
-      .pl-search-wrap input{width:110px}
       .btn-add-label{display:none}
+
+      /* Sélecteur de vue (Jour/Semaine/Mois/Liste) : pleine largeur, réparti */
+      .planning-view-switch{width:100%}
+      .planning-view-switch .btn{flex:1;padding:.3rem .35rem;font-size:.82rem}
+
+      /* Barre de navigation du calendrier : passe à la ligne, compacte */
+      .pl-nav{flex-wrap:wrap!important;gap:.5rem!important;margin-bottom:1rem!important}
+      .pl-nav #calTitle{min-width:0!important;flex:1;font-size:1.02rem;text-align:center}
+      .pl-nav #sidebarToggleBtn{display:none!important}
+      .pl-nav .pl-search-wrap{margin-left:0!important;flex:1 1 100%;order:10}
+      .pl-nav .pl-search-wrap input{width:100%!important}
+      .pl-nav #filterEventResident{flex:1 1 100%;order:11;width:100%!important}
+
+      /* Vue Mois : cellules compactes pour tenir sur 7 colonnes sans déborder */
+      .plm-grid{grid-auto-rows:minmax(58px,auto)}
+      .plm-cell{padding:.25rem .18rem}
+      .plm-num{font-size:.72rem;width:20px;height:20px;margin-bottom:2px}
+      .plm-dow{font-size:.5rem;padding:.35rem .05rem}
+      .plm-ev-txt{padding:1px 3px;font-size:.58rem}
+      .plm-ev-time{display:none}
+      .pl-content{overflow-x:hidden}
     }
 
     /* Légende / filtre par type */
@@ -288,7 +308,7 @@
 
     <main class="content">
       <!-- Nav calendrier -->
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+      <div class="pl-nav" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
         <button class="btn btn-outline btn-sm" id="prevBtn">&#8592;</button>
         <h2 id="calTitle" style="font-size:1.1rem;font-weight:700;min-width:220px;text-align:center"></h2>
         <button class="btn btn-outline btn-sm" id="nextBtn">&#8594;</button>
