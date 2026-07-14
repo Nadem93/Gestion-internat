@@ -67,7 +67,40 @@ function _populatePsResidents() {
   });
 }
 
+// Injecte le CSS de la frise depuis le JS (solidaire du rendu, cache-proof).
+function ensurePsUI() {
+  if (typeof document === 'undefined' || document.getElementById('ps-frise-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'ps-frise-styles';
+  s.textContent = `
+    .ps-res{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:1rem 1.15rem 1.15rem;margin-bottom:1.25rem}
+    .ps-res-head{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+    .ps-res-ava{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;flex-shrink:0}
+    .ps-frise{display:flex;flex-direction:column}
+    .ps-rail{display:flex;gap:.85rem}
+    .ps-rail-lbl{width:84px;flex-shrink:0;text-align:right;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#64748b;padding-top:.65rem}
+    .ps-rail-body{flex:1;min-width:0;border-left:2px solid #e2e8f0;padding:0 0 .85rem 1.1rem;display:flex;flex-direction:column;gap:.5rem}
+    .ps-rail:last-child .ps-rail-body{padding-bottom:.15rem}
+    .ps-soin{position:relative;background:#f8fafc;border:0.5px solid #e2e8f0;border-left:3px solid var(--cc,#64748b);border-radius:0 10px 10px 0;padding:.55rem .7rem;display:flex;align-items:flex-start;gap:.55rem;transition:background .12s}
+    .ps-soin:hover{background:#f1f5f9}
+    .ps-soin::before{content:'';position:absolute;left:calc(-1.1rem - 6px);top:.7rem;width:10px;height:10px;border-radius:50%;background:var(--cc,#64748b);border:2px solid #fff}
+    .ps-soin.susp{opacity:.55}
+    .ps-soin-ic{font-size:1rem;line-height:1.2;flex-shrink:0}
+    .ps-soin-body{flex:1;min-width:0}
+    .ps-soin-t{font-size:.83rem;font-weight:700;color:#1e293b}
+    .ps-soin-d{font-size:.72rem;color:#64748b;margin-top:1px;line-height:1.45}
+    .ps-soin-meta{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;align-items:center}
+    .ps-cat{font-size:.66rem;padding:1px 7px;border-radius:999px;font-weight:600}
+    .ps-who{font-size:.66rem;background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:999px}
+    .ps-susp-tag{font-size:.66rem;background:#f1f5f9;color:#94a3b8;padding:1px 7px;border-radius:999px}
+    .ps-acts{display:flex;gap:.1rem;flex-shrink:0}
+    .ps-acts button{width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:#94a3b8;font-size:.8rem;display:flex;align-items:center;justify-content:center;padding:0}
+    .ps-acts button:hover{background:#e2e8f0;color:#334155}`;
+  document.head.appendChild(s);
+}
+
 function renderPlanSoins() {
+  ensurePsUI();
   const container = document.getElementById('psList');
   if (!container) return;
   const filterCat = document.getElementById('psFilterCat')?.value || '';
@@ -99,59 +132,60 @@ function renderPlanSoins() {
     byResident[key].push(p);
   });
 
+  const h = new Date().getHours();
+  const momentNow = h < 11 ? 'matin' : h < 14 ? 'midi' : h < 20 ? 'soir' : 'nuit';
+
   container.innerHTML = Object.entries(byResident).map(([rid, soins]) => {
     const r = residents.find(x => x.id === rid);
     const resColor = safeColor(r?.color, '#0f2b4a');
     const resName  = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Général';
+    const initiales = (resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase();
+    const nbActif = soins.filter(s=>s.actif!==false).length;
+    const nbInterv = new Set(soins.map(s=>s.intervenant).filter(Boolean)).size;
 
-    const byCat = {};
-    PS_CATS.forEach(c => { byCat[c.id] = []; });
-    soins.forEach(s => { if (byCat[s.cat]) byCat[s.cat].push(s); });
+    // Frise : un rail par moment (fréquence), dans l'ordre PS_FREQS
+    const rails = PS_FREQS.map(f => {
+      const items = soins.filter(s => s.freq === f.id);
+      if (!items.length) return '';
+      const isNow = f.id === momentNow;
+      return `<div class="ps-rail">
+        <div class="ps-rail-lbl"${isNow ? ' style="color:#4f46e5"' : ''}>${escHtml(f.label)}${isNow ? ' <span style="color:#f59e0b" title="Moment en cours">●</span>' : ''}</div>
+        <div class="ps-rail-body">${items.map(s => _psRow(s)).join('')}</div>
+      </div>`;
+    }).join('');
 
-    return `<div style="margin-bottom:1.5rem">
-      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;padding:.6rem .85rem;background:#fff;border-radius:10px;border:1.5px solid ${resColor}33">
-        <div style="width:34px;height:34px;border-radius:50%;background:${resColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;flex-shrink:0">${(resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase()}</div>
-        <span style="font-weight:700;font-size:.95rem;color:${resColor}">${escHtml(resName)}</span>
-        <span style="margin-left:auto;font-size:.75rem;color:var(--muted)">${soins.filter(s=>s.actif!==false).length} soin${soins.length>1?'s':''} actif${soins.length>1?'s':''}</span>
-        <button class="btn btn-accent btn-sm" onclick="openPsModal('','${rid}')">+ Ajouter</button>
+    return `<div class="ps-res" style="border-color:${resColor}22">
+      <div class="ps-res-head">
+        <div class="ps-res-ava" style="background:${resColor}">${initiales}</div>
+        <div style="min-width:0">
+          <div style="font-weight:800;font-size:.95rem;color:${resColor}">${escHtml(resName)}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${nbActif} soin${nbActif>1?'s':''} actif${nbActif>1?'s':''}${nbInterv?` · ${nbInterv} intervenant${nbInterv>1?'s':''}`:''}</div>
+        </div>
+        <button class="btn btn-accent btn-sm" style="margin-left:auto" onclick="openPsModal('','${rid}')">+ Ajouter</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.6rem">
-        ${PS_CATS.map(cat => {
-          const items = byCat[cat.id];
-          if (!items.length) return '';
-          return `<div style="background:#fff;border-radius:10px;border:1px solid ${cat.color}33;overflow:hidden">
-            <div style="padding:.5rem .85rem;background:${cat.color}15;border-bottom:1px solid ${cat.color}22;display:flex;align-items:center;gap:.4rem">
-              <span>${cat.icon}</span>
-              <span style="font-size:.78rem;font-weight:700;color:${cat.color}">${cat.label}</span>
-              <span style="margin-left:auto;font-size:.7rem;color:var(--muted)">${items.length}</span>
-            </div>
-            <div style="padding:.5rem .85rem;display:flex;flex-direction:column;gap:.4rem">
-              ${items.map(s => _psRow(s)).join('')}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="ps-frise">${rails}</div>
     </div>`;
   }).join('');
 }
 
 function _psRow(s) {
-  const freq = _psFreq(s.freq);
+  const cat = _psCat(s.cat);
   const isActif = s.actif !== false;
-  return `<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.45rem .55rem;border-radius:6px;background:${isActif?'#f8fafc':'#f1f5f9'};border:0.5px solid var(--border);opacity:${isActif?1:.6}">
-    <div style="flex:1;min-width:0">
-      <div style="font-size:.82rem;font-weight:600;color:var(--text)">${escHtml(s.libelle||'—')}</div>
-      ${s.detail ? `<div style="font-size:.72rem;color:var(--muted);margin-top:1px">${escHtml(s.detail)}</div>` : ''}
-      <div style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">
-        <span style="font-size:.66rem;background:var(--g100);color:var(--g700);padding:1px 6px;border-radius:999px;font-weight:600">${freq.label}</span>
-        ${s.intervenant ? `<span style="font-size:.66rem;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:999px">${escHtml(s.intervenant)}</span>` : ''}
-        ${!isActif ? '<span style="font-size:.66rem;background:#f1f5f9;color:#94a3b8;padding:1px 6px;border-radius:999px">Suspendu</span>' : ''}
+  return `<div class="ps-soin${isActif ? '' : ' susp'}" style="--cc:${cat.color}">
+    <span class="ps-soin-ic">${cat.icon}</span>
+    <div class="ps-soin-body">
+      <div class="ps-soin-t">${escHtml(s.libelle||'—')}</div>
+      ${s.detail ? `<div class="ps-soin-d">${escHtml(s.detail)}</div>` : ''}
+      <div class="ps-soin-meta">
+        <span class="ps-cat" style="background:${cat.color}18;color:${cat.color}">${escHtml(cat.label)}</span>
+        ${s.intervenant ? `<span class="ps-who">${escHtml(s.intervenant)}</span>` : ''}
+        ${!isActif ? '<span class="ps-susp-tag">Suspendu</span>' : ''}
       </div>
     </div>
-    <div style="display:flex;gap:.2rem;flex-shrink:0">
-      <button class="btn btn-ghost btn-sm" style="padding:2px 5px" onclick="openPsModal('${s.id}')" title="Modifier">✎</button>
-      <button class="btn btn-ghost btn-sm" style="padding:2px 5px" onclick="togglePsActif('${s.id}')" title="${isActif?'Suspendre':'Réactiver'}">${isActif?'⏸':'▶'}</button>
-      <button class="btn btn-ghost btn-sm" style="padding:2px 5px;color:#dc2626" onclick="deletePs('${s.id}')" title="Supprimer">✕</button>
+    <div class="ps-acts">
+      <button onclick="openPsModal('${s.id}')" title="Modifier">✎</button>
+      <button onclick="togglePsActif('${s.id}')" title="${isActif ? 'Suspendre' : 'Réactiver'}">${isActif ? '⏸' : '▶'}</button>
+      <button onclick="deletePs('${s.id}')" title="Supprimer" style="color:#dc2626">✕</button>
     </div>
   </div>`;
 }
