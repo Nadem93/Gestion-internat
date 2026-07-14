@@ -65,6 +65,42 @@ function medRecord(date, residentId, traitementId, moment) {
   return getMedDistrib().find(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
 }
 
+// ── File d'écriture unique (calquée sur la page présences) ──
+// Les taps sont appliqués de façon optimiste au cache puis écrits en base
+// dans l'ordre des gestes. En cas d'échec, on ne recharge la vérité serveur
+// qu'une fois la file vidée, pour ne pas effacer les écritures en attente.
+let _medWriteChain = Promise.resolve();
+let _medPendingWrites = 0, _medWriteFailed = false;
+function medQueueWrite(fn) {
+  _medPendingWrites++;
+  _medWriteChain = _medWriteChain.then(async () => {
+    try { await fn(); }
+    catch (e) { console.error('[medQueueWrite]', e); _medWriteFailed = true; toast('Erreur lors de l\'enregistrement', 'error'); }
+    finally {
+      _medPendingWrites--;
+      if (!_medPendingWrites && _medWriteFailed) { _medWriteFailed = false; await loadMedCache(); renderMedicaments(); }
+    }
+  });
+  return _medWriteChain;
+}
+
+// ── Appui long sur une pastille (500 ms) → menu complet des statuts ──
+let _medLpTimer = null, _medLpFired = false;
+function medChipDown(ev, key) {
+  if (ev && ev.button > 0) return; // clic droit : ignoré
+  _medLpFired = false;
+  clearTimeout(_medLpTimer);
+  _medLpTimer = setTimeout(() => { _medLpFired = true; medToggleChip(key); }, 500);
+}
+function medChipUp() { clearTimeout(_medLpTimer); }
+// Un tap = « Donné » (re-tap sur Donné = annule). Si l'appui long a déjà
+// ouvert le menu, on avale ce click de relâchement.
+function medChipClick(date, residentId, traitementId, moment) {
+  if (!medCanEdit) return;
+  if (_medLpFired) { _medLpFired = false; return; }
+  setMedStatut(date, residentId, traitementId, moment, 'donne');
+}
+
 // ── RENDU PRINCIPAL ──
 function renderMedicaments() {
   const date = document.getElementById('medDate').value || today();
@@ -108,6 +144,7 @@ function renderMedicaments() {
       Présents seulement
     </button>
   </div>
+  ${medCanEdit ? `<div style="font-size:11.5px;color:#64748b;margin:-2px 0 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span aria-hidden="true">👆</span> Un tap = <b style="color:#16a34a">Donné</b> · appui long = plus d'options (confié, refusé, absent, reporté, note)</div>` : ''}
   <div id="medResidentList"></div>`;
 
   const listEl = document.getElementById('medResidentList');
@@ -209,8 +246,10 @@ function renderMedicaments() {
             <button class="plr-act" style="color:#94a3b8" onclick="event.stopPropagation();medToggleChip('${key}')">Fermer</button>
           </div>`;
         }
-        const click = medCanEdit ? ` onclick="medToggleChip('${key}')"` : '';
-        return `<button type="button" class="plr-chip" style="${style}${sel}" title="${tip}"${click}${medCanEdit ? '' : ' disabled'}>${inner}${obs}</button>`;
+        const handlers = medCanEdit
+          ? ` onpointerdown="medChipDown(event,'${key}')" onpointerup="medChipUp()" onpointerleave="medChipUp()" onclick="medChipClick('${date}','${residentId}','${e.traitementId}','${e.moment}')"`
+          : '';
+        return `<button type="button" class="plr-chip" style="${style}${sel}" title="${tip}"${handlers}${medCanEdit ? '' : ' disabled'}>${inner}${obs}</button>`;
       }).join('');
       return `<div class="plr-cell${isNow ? ' now' : ''}">
         <div class="plr-mom" style="${isNow ? 'color:#4f46e5' : `color:${mc.color}`}">${mom.icon} ${mom.label.toUpperCase()}${isNow ? ' ←' : ''}</div>
@@ -258,27 +297,42 @@ function medRow(date, e) {
 }
 
 async function setMedStatut(date, residentId, traitementId, moment, statut) {
+  if (!medCanEdit) return;
   const list = getMedDistrib();
+  const keyMatch = x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment;
   const session = Auth.getSession();
   const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
-  const i = list.findIndex(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
   const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
-  try {
-    if (i >= 0) {
-      if (list[i].statut === statut) {
-        const id = list[i].id;
-        list.splice(i, 1); // re-clic sur le même statut → réinitialise
-        await sbDeleteMedDistrib(id);
-      } else {
-        list[i] = await sbSaveMedDistrib({ ...list[i], statut, heure: new Date().toISOString(), auteur });
-      }
-    } else if (prevue) {
-      const saved = await sbSaveMedDistrib({ date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: new Date().toISOString(), auteur, observation: '' });
-      list.push(saved);
-    }
-  } catch (e) { console.error('[setMedStatut]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
-  if (typeof auditLog === 'function' && prevue) auditLog('med_distrib', `${prevue.medicament} (${MED_MOMENTS[moment]?.label || moment}) — ${prevue.residentName} → ${MED_STATUTS[statut]?.label || statut}`);
+  const i = list.findIndex(keyMatch);
+
+  // Mise à jour optimiste (synchrone). On mute TOUJOURS le même objet et on
+  // capture sa référence pour l'écriture : ainsi des taps rapides (insertion
+  // puis suppression) réconcilient le bon id une fois les écritures sérialisées.
+  let rec, op;
+  if (i >= 0 && list[i].statut === statut) {
+    rec = list[i]; op = 'delete';
+    list.splice(i, 1); // re-tap sur le même statut → réinitialise
+  } else if (i >= 0) {
+    rec = list[i]; op = 'save';
+    rec.statut = statut; rec.heure = new Date().toISOString(); rec.auteur = auteur;
+  } else if (prevue) {
+    rec = { date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: new Date().toISOString(), auteur, observation: '' };
+    op = 'save';
+    list.push(rec);
+  } else {
+    return; // rien de prévu pour cette case
+  }
   renderMedicaments();
+  if (typeof auditLog === 'function' && prevue) auditLog('med_distrib', `${prevue.medicament} (${MED_MOMENTS[moment]?.label || moment}) — ${prevue.residentName} → ${op === 'delete' ? 'réinitialisé' : (MED_STATUTS[statut]?.label || statut)}`);
+
+  await medQueueWrite(async () => {
+    if (op === 'delete') {
+      if (rec.id) await sbDeleteMedDistrib(rec.id); // sans id = jamais persisté → rien à supprimer
+    } else {
+      const saved = await sbSaveMedDistrib(rec); // update si rec.id (posé par une insertion antérieure de la file), sinon insert
+      Object.assign(rec, saved);
+    }
+  });
 }
 
 async function setMedStatutRefuse(date, residentId, traitementId, moment) {
@@ -304,21 +358,24 @@ async function saveMedNote() {
   const { date, residentId, traitementId, moment } = medNoteCtx;
   const observation = document.getElementById('mnTexte').value.trim();
   const list = getMedDistrib();
-  const i = list.findIndex(x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment);
-  try {
-    if (i >= 0) {
-      list[i] = await sbSaveMedDistrib({ ...list[i], observation });
-    } else {
-      const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
-      if (!prevue) return;
-      const session = Auth.getSession();
-      const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
-      const saved = await sbSaveMedDistrib({ date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut: '', heure: '', auteur, observation });
-      list.push(saved);
-    }
-  } catch (e) { console.error('[saveMedNote]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  const keyMatch = x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment;
+  let rec = list.find(keyMatch);
+  if (rec) {
+    rec.observation = observation; // mutation en place (récupère l'id d'une insertion antérieure de la file)
+  } else {
+    const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
+    if (!prevue) { closeModal('modalMedNote'); return; }
+    const session = Auth.getSession();
+    const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
+    rec = { date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut: '', heure: '', auteur, observation };
+    list.push(rec);
+  }
   closeModal('modalMedNote');
   renderMedicaments();
+  await medQueueWrite(async () => {
+    const saved = await sbSaveMedDistrib(rec);
+    Object.assign(rec, saved);
+  });
 }
 
 // ── IMPRESSION ──
