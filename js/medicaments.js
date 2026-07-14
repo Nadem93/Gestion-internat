@@ -167,8 +167,69 @@ async function medSaveDetail() {
   });
 }
 
+// Injecte le CSS des tuiles + le modal détail depuis le JS : ils restent
+// ainsi solidaires du rendu même si le HTML de la page est servi depuis un
+// cache plus ancien (service worker). Idempotent.
+function ensureMedUI() {
+  if (typeof document === 'undefined') return;
+  if (!document.getElementById('med-tiles-styles')) {
+    const s = document.createElement('style');
+    s.id = 'med-tiles-styles';
+    s.textContent = `
+    .med-mom-sec{margin-bottom:1.4rem}
+    .med-mom-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin:0 0 10px}
+    .med-mom-h .n{margin-left:auto;font-size:11px;font-weight:700;color:#64748b;text-transform:none;letter-spacing:0}
+    .med-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    .mtile{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px 9px;border-radius:16px;border:2px solid var(--rg);background:var(--bg);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;text-align:center;transition:transform .12s,box-shadow .12s,border-color .15s,background .15s}
+    .mtile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,43,74,.10)}
+    .mtile:active{transform:scale(.97)}
+    .mtile:focus-visible{outline:3px solid #0ea5e9;outline-offset:2px}
+    .mtile-ava{width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid var(--st);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0}
+    .mtile-badge{position:absolute;top:8px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--st);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+    .mtile-alert{position:absolute;top:8px;left:10px;min-width:20px;height:20px;padding:0 3px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+    .mtile-nom{font-weight:700;font-size:13px;color:#1e293b;margin-top:6px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mtile-med{font-size:11px;color:#64748b;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mtile-foot{display:flex;align-items:center;gap:5px;margin-top:8px;max-width:100%}
+    .mtile-pill{font-size:11px;font-weight:800;color:var(--st);background:#fff;border:1px solid var(--rg);border-radius:999px;padding:2px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .mtile-edit{width:22px;height:22px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+    .mtile-edit:hover{background:#f1f5f9;color:#1e293b}
+    .mtile-note{font-size:11px;color:#64748b;background:#fff;border:1px dashed var(--rg);border-radius:8px;padding:2px 7px;margin-top:6px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}`;
+    document.head.appendChild(s);
+  }
+  if (!document.getElementById('modalMedDetail')) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="modal-overlay" id="modalMedDetail">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div>
+        <span class="modal-title" id="mdTitle">Prise</span>
+        <div id="mdSub" style="font-size:.72rem;color:var(--muted);margin-top:2px;font-weight:400">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalMedDetail')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;font-weight:700;margin-bottom:.5rem">Statut</div>
+        <div id="mdSeg" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem"></div>
+      </div>
+      <div class="form-group"><label>Observation (motif de refus, remarque…)</label><textarea id="mdNote" rows="3" placeholder="Ex : médicament refusé, résident absent, prise reportée au soir…"></textarea></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="medDetailReset()">Réinitialiser</button>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-ghost" onclick="closeModal('modalMedDetail')">Annuler</button>
+        <button class="btn btn-primary" onclick="medSaveDetail()">💾 Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+    if (wrap.firstElementChild) document.body.appendChild(wrap.firstElementChild);
+  }
+}
+
 // ── RENDU PRINCIPAL ──
 function renderMedicaments() {
+  ensureMedUI();
   const date = document.getElementById('medDate').value || today();
   const prevues = medPrevues(date);
   const records = getMedDistrib();
