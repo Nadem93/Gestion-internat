@@ -211,6 +211,16 @@ document.querySelectorAll('[data-perm]').forEach(el => {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg>
   </a>
 </div>
+<script>
+  // Place la rangée de boutons flottants DANS le contenu de l'accueil, juste
+  // au-dessus de la grille de cartes (au lieu de flotter par-dessus). Sur
+  // desktop elle reste en colonne fixe à droite (CSS), le DOM ne change rien.
+  (function(){
+    var fab = document.querySelector('.accueil-fab-stack');
+    var main = document.querySelector('.accueil-home-main');
+    if (fab && main && fab.parentNode !== main) main.insertBefore(fab, main.firstChild);
+  })();
+</script>
 
 <div class="modal-overlay" id="modalIncident" onclick="closeModal('modalIncident')">
   <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
@@ -797,7 +807,7 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
 <!-- ── CARTE ASTREINTES DU SOIR (visible dès 18h) ── -->
 <style>
 #astSoirCard{
-  position:fixed;right:1rem;z-index:300;
+  position:fixed;right:1rem;bottom:1.5rem;z-index:300;
   background:linear-gradient(135deg,#1e3a5f,#0f2b4a);
   border:1px solid rgba(255,255,255,.15);
   border-radius:12px;padding:.55rem .7rem .55rem 1.7rem;
@@ -831,6 +841,8 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
 .ast-rib-bell{width:15px;height:15px;flex-shrink:0}
 .ast-rib-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:.62rem;font-weight:700;letter-spacing:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.12)}
 .ast-rib-chevron{width:10px;height:10px;opacity:.8}
+/* Sur mobile, on remonte le volet pour dégager la barre de navigation du bas */
+@media(max-width:768px){#astSoirCard{bottom:5rem;right:.6rem}}
 </style>
 
 <div id="astSoirCard" style="display:none">
@@ -887,14 +899,9 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
     return 'ast_open_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_night';
   }
 
-  function positionAstSoirCard() {
-    const aide = document.querySelector('.accueil-fab-stack .accueil-fab');
-    const card = document.getElementById('astSoirCard');
-    if (!aide || !card || card.style.display === 'none') return;
-    const rect = aide.getBoundingClientRect();
-    card.style.top    = '';
-    card.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
-  }
+  // Position gérée entièrement en CSS (#astSoirCard : ancré en bas à droite).
+  // Plus de dépendance à la position des boutons flottants (qui la décalait).
+  function positionAstSoirCard() {}
 
   // Hauteur du ruban réduit = exactement celle du panneau déployé (mini pour rester lisible)
   let _astExpandedH = 0;

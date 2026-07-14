@@ -936,11 +936,11 @@ tbody tr:hover .table-actions{opacity:1}
   /* FAB stack sur mobile : rangée horizontale centrée juste sous le header.
      !important partout car la règle de base (top:50%, right:1rem, colonne…),
      plus loin dans ce fichier, gagnerait sinon la cascade. */
-  .accueil-fab-stack{top:calc(var(--header-h) + .5rem) !important;bottom:auto !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;flex-direction:row !important;gap:.5rem !important}
+  .accueil-fab-stack{position:static !important;inset:auto !important;transform:none !important;flex-direction:row !important;justify-content:center !important;gap:.5rem !important;margin:0 auto 1.1rem !important;width:auto !important}
   /* Contenu de l'accueil : écoulement depuis le haut (pas de centrage vertical
      qui, avec une grille plus haute que l'écran, la ferait déborder sous les
      FAB) + réserve la place en haut pour la rangée de FAB */
-  .accueil-home-main{display:block;padding-top:calc(var(--header-h) + 4.5rem)}
+  .accueil-home-main{display:block;padding-top:calc(var(--header-h) + .5rem)}
 
   /* Entry layout — stack vertically */
   .entry-detail{height:auto}
@@ -1016,7 +1016,7 @@ tbody tr:hover .table-actions{opacity:1}
   /* Accueil — 3 colonnes ; padding-right réservé pour les FAB fixes. !important :
      voir explication plus haut (règle de base plus loin dans le fichier) */
   .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.5rem;max-width:100%}
-  .accueil-home-main{padding:.75rem;padding-top:calc(var(--header-h) + 4.5rem)}
+  .accueil-home-main{padding:.75rem;padding-top:calc(var(--header-h) + .5rem)}
   .accueil-home-card{padding:.6rem .25rem;border-radius:14px}
   .accueil-home-icon{width:40px;height:40px;border-radius:10px}
   .accueil-home-icon svg{width:20px;height:20px}
@@ -1047,7 +1047,7 @@ tbody tr:hover .table-actions{opacity:1}
 
   /* Accueil grid — 3 cols ; padding-right réservé pour les FAB fixes. !important : idem */
   .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.4rem;max-width:100%}
-  .accueil-home-main{padding-top:calc(var(--header-h) + 4.25rem)}
+  .accueil-home-main{padding-top:calc(var(--header-h) + .5rem)}
   .accueil-home-icon{width:36px;height:36px;border-radius:9px}
   .accueil-home-icon svg{width:18px;height:18px}
   .accueil-home-card{padding:.5rem .2rem;border-radius:12px}
