@@ -501,10 +501,12 @@ function renderEntries() {
         </div>
       </div>` : '';
     const nodeColor = (entryCats[0] && entryCats[0].color) || e.residentColor || '#8b5cf6'; // couleur du nœud sur le fil = catégorie
+    const heure = e.date ? new Date(e.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
     const dayKey = (e.date || '').slice(0, 10);
     let daySep = '';
     if (dayKey && dayKey !== lastDay) { daySep = renderJournalDaySep(dayKey); lastDay = dayKey; }
     return daySep + `<div class="entry-card ${isSelected ? 'selected' : ''}" style="--jc:${nodeColor};${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
+      ${heure ? `<div class="entry-time">${heure}</div>` : ''}
       <div class="entry-header">
         ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
         <div style="flex:1;min-width:0">
