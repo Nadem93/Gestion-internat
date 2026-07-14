@@ -60,12 +60,11 @@
     @keyframes accAur{0%{transform:translate(0,0) scale(1)}50%{transform:translate(38px,-28px) scale(1.16)}100%{transform:translate(0,0) scale(1)}}
     @media(prefers-reduced-motion:reduce){.acc-aurora span{animation:none}}
     .accueil-home-main{position:relative;z-index:1}
-    /* Mise en page mobile forcée EN INLINE (cache-proof) : la grille s'empile
-       SOUS la rangée de boutons, jamais côte à côte. Écrase css/style.css. */
-    @media(max-width:768px){
-      .accueil-home-main{display:block !important;padding-top:calc(var(--header-h,60px) + .5rem) !important}
-      .accueil-fab-stack{position:static !important;inset:auto !important;transform:none !important;display:flex !important;flex-direction:row !important;flex-wrap:wrap !important;justify-content:center !important;gap:.5rem !important;margin:.25rem 0 1.1rem !important;width:auto !important;z-index:auto !important}
-    }
+    /* Mise en page de l'accueil forcée EN INLINE (cache-proof, TOUTES largeurs) :
+       boutons en rangée centrée EN HAUT, grille de cartes EN DESSOUS — jamais
+       côte à côte ni superposés. Écrase css/style.css quel que soit le cache. */
+    .accueil-home-main{display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-start !important;padding-top:calc(var(--header-h,60px) + 1rem) !important}
+    .accueil-fab-stack{position:static !important;inset:auto !important;transform:none !important;display:flex !important;flex-direction:row !important;flex-wrap:wrap !important;justify-content:center !important;gap:.6rem !important;margin:.25rem 0 1.4rem !important;width:auto !important;z-index:auto !important}
     /* Cartes → verre clair (surcharge du fond inline via !important) */
     .accueil-home-card{
       background:rgba(255,255,255,.62) !important;
