@@ -937,8 +937,10 @@ tbody tr:hover .table-actions{opacity:1}
      !important partout car la règle de base (top:50%, right:1rem, colonne…),
      plus loin dans ce fichier, gagnerait sinon la cascade. */
   .accueil-fab-stack{top:calc(var(--header-h) + .5rem) !important;bottom:auto !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;flex-direction:row !important;gap:.5rem !important}
-  /* Contenu de l'accueil : réserve la place en haut pour la rangée de FAB */
-  .accueil-home-main{padding-top:calc(var(--header-h) + 4.5rem)}
+  /* Contenu de l'accueil : écoulement depuis le haut (pas de centrage vertical
+     qui, avec une grille plus haute que l'écran, la ferait déborder sous les
+     FAB) + réserve la place en haut pour la rangée de FAB */
+  .accueil-home-main{display:block;padding-top:calc(var(--header-h) + 4.5rem)}
 
   /* Entry layout — stack vertically */
   .entry-detail{height:auto}
