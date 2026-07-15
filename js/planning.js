@@ -1,4 +1,4 @@
-let currentView = 'week';
+let currentView = 'month';
 let currentDate = new Date();
 // Mois affiché en premier dans les mini-calendriers (indépendant de la date sélectionnée)
 let sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -820,14 +820,8 @@ async function initPlanning() {
   document.getElementById('filterEventResident').onchange = render;
   const searchEl = document.getElementById('searchEvent');
   if (searchEl) searchEl.oninput = () => { searchQuery = searchEl.value.trim(); render(); };
-  if (window.innerWidth < 640) { currentView = 'day'; setViewBtn('viewDay'); }
-  window.addEventListener('resize', () => {
-    if (window.innerWidth < 640 && currentView !== 'day') { currentView = 'day'; setViewBtn('viewDay'); render(); }
-  });
-  document.getElementById('viewDay').onclick = () => { currentView='day'; setViewBtn('viewDay'); document.getElementById('listContainer').style.display='none'; render(); };
-  document.getElementById('viewWeek').onclick = () => { currentView='week'; setViewBtn('viewWeek'); document.getElementById('listContainer').style.display='none'; render(); };
-  document.getElementById('viewMonth').onclick = () => { currentView='month'; setViewBtn('viewMonth'); document.getElementById('listContainer').style.display='none'; render(); };
-  document.getElementById('viewList').onclick = () => { currentView='list'; setViewBtn('viewList'); render(); };
+  // Vue unique : Mois (le sélecteur Jour/Semaine/Mois/Liste a été retiré)
+  currentView = 'month';
 }
 document.addEventListener('DOMContentLoaded', initPlanning);
 if (typeof registerPageInit === 'function') registerPageInit('planning', initPlanning);
