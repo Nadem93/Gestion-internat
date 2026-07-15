@@ -421,7 +421,7 @@ function renderMonth() {
   }).join('');
 
   const calEl = document.getElementById('calContainer');
-  calEl.classList.toggle('plm-ios', plIsMobile());   // vue iOS si écran ≤ seuil
+  calEl.classList.add('plm-ios');   // vue Mois en style Calendrier iOS (toutes largeurs)
   calEl.innerHTML =
     '<div class="card" style="overflow:hidden;padding:0">'
     + '<div class="plm-head">' + head + '</div>'
@@ -430,24 +430,8 @@ function renderMonth() {
     + plDayListHtml(_plSelDay);
 }
 
-// Seuil « mobile/tablette » pour la vue iOS (couvre téléphones et tablettes)
-function plIsMobile() { return window.innerWidth <= 1024; }
-
-// Clic sur un jour : mobile → sélectionne (affiche ses événements dessous) ; desktop → ajout rapide
-function plDayClick(ds) {
-  if (plIsMobile()) { _plSelDay = ds; renderMonth(); }
-  else quickAddEvent(ds, '');
-}
-
-// Re-rendu de la vue Mois quand on franchit le seuil (rotation, redimension)
-let _plResizeT = null;
-window.addEventListener('resize', () => {
-  clearTimeout(_plResizeT);
-  _plResizeT = setTimeout(() => {
-    const cal = document.getElementById('calContainer');
-    if (cal && cal.querySelector('.plm-grid') && cal.classList.contains('plm-ios') !== plIsMobile()) renderMonth();
-  }, 200);
-});
+// Clic sur un jour : le sélectionne et affiche ses événements dessous
+function plDayClick(ds) { _plSelDay = ds; renderMonth(); }
 
 // Liste des événements du jour sélectionné, façon iOS (affichée en mobile via CSS)
 function plDayListHtml(ds) {
