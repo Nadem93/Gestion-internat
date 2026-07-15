@@ -99,6 +99,8 @@ function renderEntryForm() {
   const currentDate = document.getElementById('iDate')?.value || new Date().toISOString().slice(0,16);
   const currentContenu = document.getElementById('iContenu')?.value || '';
   const currentObjectif = document.getElementById('iObjectif')?.value || '';
+  const currentAccomp = document.getElementById('iAccompagnement')?.value || '';
+  const currentNiveau = document.getElementById('iNiveauSoutien')?.value || '';
   const currentVis = document.querySelector('input[name="iVisibilite"]:checked')?.value || 'equipe';
 
   const CARD = 'background:#fff;border-radius:20px;padding:1.75rem 2rem;box-shadow:0 2px 16px rgba(0,0,0,.05);border:1px solid #f1f5f9';
@@ -177,6 +179,18 @@ function renderEntryForm() {
           </div>
           <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="margin-bottom:1rem"/>
           <textarea id="iContenu" class="form-control" placeholder="Décrivez l'événement, l'observation ou l'intervention…" style="height:220px;resize:vertical">${escHtml(currentContenu)}</textarea>
+          <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #99e5dc55;border-radius:12px;padding:.8rem .9rem">
+            <div style="font-size:.72rem;font-weight:700;color:#0f766e;margin-bottom:.5rem">🤝 Accompagnement apporté <span style="font-weight:400;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></div>
+            <textarea id="iAccompagnement" class="form-control" placeholder="Ex : incitation verbale, médiation avec un pair, reformulation des consignes, présence rassurante…" style="height:72px;resize:vertical">${escHtml(currentAccomp)}</textarea>
+            <select id="iNiveauSoutien" class="form-control" style="margin-top:.5rem">
+              <option value="">Niveau de soutien — non précisé</option>
+              <option value="autonomie" ${currentNiveau==='autonomie'?'selected':''}>🟢 Autonomie — présence simple</option>
+              <option value="supervision" ${currentNiveau==='supervision'?'selected':''}>🔵 Supervision / veille</option>
+              <option value="verbal" ${currentNiveau==='verbal'?'selected':''}>🟡 Incitation / guidance verbale</option>
+              <option value="partiel" ${currentNiveau==='partiel'?'selected':''}>🟠 Aide partielle</option>
+              <option value="total" ${currentNiveau==='total'?'selected':''}>🔴 Aide totale</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -403,6 +417,8 @@ async function saveInlineEntry() {
         objectif: document.getElementById('iObjectif').value,
         contenu, visibilite: visEl?.value || 'equipe',
         serafinphType: document.getElementById('iSerafinph')?.value || '',
+        accompagnement: (document.getElementById('iAccompagnement')?.value || '').trim(),
+        niveauSoutien: document.getElementById('iNiveauSoutien')?.value || '',
         attachments: inlineAttachments.slice(),
         author: userName, authorId: session?.userId,
         replies: [], readBy: [session?.userId],
