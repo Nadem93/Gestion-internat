@@ -619,7 +619,8 @@ async function saveEvent() {
     color: document.getElementById('evColor').value,
     desc: document.getElementById('evDesc').value.trim(),
     accompagnement: (document.getElementById('evAccompagnement')?.value || '').trim(),
-    niveauSoutien: document.getElementById('evNiveauSoutien')?.value || ''
+    niveauSoutien: document.getElementById('evNiveauSoutien')?.value || '',
+    serafin: (document.getElementById('evNiveauSoutien')?.value ? 'directe' : 'indirecte')
   };
   const vehCb = document.getElementById('evVehiculeCheck');
   if (vehCb && vehCb.checked) {

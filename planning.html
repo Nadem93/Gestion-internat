@@ -436,7 +436,7 @@
         <p>👥 <span id="mevSumResTxt">Tous / Groupe</span></p>
         <p>⏱ <span id="mevSumDurTxt">1 heure</span></p>
         <p id="mevSumVeh" style="display:none">🚐 Véhicule requis</p>
-        <p id="mevSumSerafin">🔵 <span id="mevSumSerafinTxt">Prestation directe</span></p>
+        <p id="mevSumSerafin" title="Classification SERAFIN-PH calculée automatiquement : un niveau de soutien renseigné = prestation directe, sinon indirecte.">🟡 <span id="mevSumSerafinTxt">Prestation indirecte</span> <span style="font-size:.7rem;color:#94a3b8">(auto)</span></p>
       </div>
     </div>
 
@@ -508,19 +508,8 @@
           <input type="text" id="evLieu" placeholder="Adresse ou lieu de l'événement"/>
         </div>
 
-        <div class="mev-field full">
-          <label>Prestation SERAFIN-PH</label>
-          <div class="mev-serafin-toggle">
-            <button type="button" class="mev-serafin-btn active-direct" data-serafin="directe" onclick="selectMevSerafin('directe')">🔵 Directe</button>
-            <button type="button" class="mev-serafin-btn" data-serafin="indirecte" onclick="selectMevSerafin('indirecte')">🟡 Indirecte</button>
-            <button type="button" class="mev-serafin-btn" data-serafin="nc" onclick="selectMevSerafin('nc')">⚪ Non comptabilisé</button>
-          </div>
-          <select id="evSerafin" style="display:none">
-            <option value="directe">Directe</option>
-            <option value="indirecte">Indirecte</option>
-            <option value="nc">Non comptabilisé</option>
-          </select>
-        </div>
+        <!-- Prestation SERAFIN-PH directe/indirecte : calculée automatiquement depuis le niveau de soutien (renseigné = directe, sinon indirecte). -->
+        <input type="hidden" id="evSerafin"/>
 
         <input type="hidden" id="evColor" value="#2563eb"/>
 
@@ -548,7 +537,7 @@
         <div class="mev-field full">
           <label>🤝 Accompagnement apporté <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></label>
           <textarea id="evAccompagnement" rows="2" placeholder="Ex : incitation verbale, médiation avec un pair, reformulation des consignes, présence rassurante…"></textarea>
-          <select id="evNiveauSoutien" style="margin-top:8px">
+          <select id="evNiveauSoutien" style="margin-top:8px" onchange="selectMevSerafin(this.value ? 'directe' : 'indirecte')">
             <option value="">Niveau de soutien — non précisé</option>
             <option value="autonomie">🟢 Autonomie — présence simple</option>
             <option value="supervision">🔵 Supervision / veille</option>
@@ -805,7 +794,7 @@ window.editEvent = function(id) {
   setTimeout(() => {
     const ev = _planningEventsCache.find(e => String(e.id) === String(id));
     if (ev) {
-      selectMevSerafin(ev.serafin || 'directe');
+      selectMevSerafin(ev.niveauSoutien ? 'directe' : 'indirecte');
       const lieu = document.getElementById('evLieu');
       if (lieu) lieu.value = ev.lieu || '';
       _mevResSelected = new Set(ev.residentIds || (ev.residentId ? [ev.residentId] : []));
@@ -819,7 +808,7 @@ function resetModalEvent() {
   _mevResSelected = new Set();
   renderMevResChips();
   syncMevResHiddenSelect();
-  selectMevSerafin('directe');
+  selectMevSerafin('indirecte');
   selectMevType('activite');
   const lieu = document.getElementById('evLieu');
   if (lieu) lieu.value = '';
@@ -1070,7 +1059,7 @@ window.openModal = function(id) {
       }
       updateMevPreview();
       selectMevColor(document.getElementById('evColor')?.value || '#2563eb');
-      selectMevSerafin(document.getElementById('evSerafin')?.value || 'directe');
+      selectMevSerafin(document.getElementById('evNiveauSoutien')?.value ? 'directe' : 'indirecte');
       syncVehiculeToggle();
     }, 30);
   }

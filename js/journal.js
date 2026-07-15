@@ -234,19 +234,8 @@ function renderEntryForm() {
           </div>
         </div>
 
-        <!-- SERAFIN-PH -->
-        <div style="${CARD}">
-          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span style="${HDR_LABEL}">SERAFIN-PH <span style="font-weight:400;opacity:.6">(optionnel)</span></span>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:.5rem">
-            <div class="sp-pill" data-sp="" onclick="selectSpPill('')" ${spPillStyle('', !document.getElementById('iSerafinph')?.value)}>Aucun</div>
-            <div class="sp-pill" data-sp="direct" onclick="selectSpPill('direct')" ${spPillStyle('direct', false)}>Direct</div>
-            <div class="sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" ${spPillStyle('indirect', false)}>Indirect</div>
-          </div>
-          <input type="hidden" id="iSerafinph" value=""/>
-        </div>
+        <!-- SERAFIN-PH : classification directe/indirecte calculée automatiquement
+             depuis le niveau de soutien (renseigné = directe, sinon indirecte). -->
 
         <!-- Pièces jointes -->
         <div style="${CARD}">
@@ -276,21 +265,6 @@ function renderEntryForm() {
       if (dd) dd.style.display = 'none';
       document.removeEventListener('click', _closeRes);
     }
-  });
-}
-
-function selectSpPill(val) {
-  const isp = document.getElementById('iSerafinph');
-  if (isp) isp.value = val;
-  const palettes = { '': ['#64748b','#e2e8f0','#f8fafc'], direct: ['#8b5cf6','#ddd6fe','#f5f3ff'], indirect: ['#f97316','#fed7aa','#fff7ed'] };
-  const BASE = 'padding:.45rem 1rem;border-radius:10px;cursor:pointer;font-size:.8rem;transition:all .15s';
-  document.querySelectorAll('.sp-pill').forEach(el => {
-    const on = el.dataset.sp === val;
-    el.classList.toggle('active', on);
-    const [fg, border, bg] = palettes[el.dataset.sp] || palettes[''];
-    el.style.cssText = on
-      ? `${BASE};border:1.5px solid ${border};background:${bg};color:${fg};font-weight:600`
-      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
   });
 }
 
@@ -416,7 +390,7 @@ async function saveInlineEntry() {
         date: document.getElementById('iDate').value || new Date().toISOString(),
         objectif: document.getElementById('iObjectif').value,
         contenu, visibilite: visEl?.value || 'equipe',
-        serafinphType: document.getElementById('iSerafinph')?.value || '',
+        serafinphType: (document.getElementById('iNiveauSoutien')?.value ? 'direct' : 'indirect'),
         accompagnement: (document.getElementById('iAccompagnement')?.value || '').trim(),
         niveauSoutien: document.getElementById('iNiveauSoutien')?.value || '',
         attachments: inlineAttachments.slice(),
@@ -718,7 +692,7 @@ async function saveEntry() {
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
-    serafinphType: document.getElementById('eSerafinph')?.value || '',
+    serafinphType: (document.getElementById('eNiveauSoutien')?.value ? 'direct' : 'indirect'),
     accompagnement: (document.getElementById('eAccompagnement')?.value || '').trim(),
     niveauSoutien: document.getElementById('eNiveauSoutien')?.value || '',
     updatedAt: new Date().toISOString()
