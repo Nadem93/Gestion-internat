@@ -136,6 +136,19 @@
     .plm-ios .plm-dl-s{font-size:.8rem;color:var(--muted);margin-top:1px}
     .plm-ios .plm-dl-empty{padding:1.75rem .1rem;text-align:center;color:var(--muted);font-size:.84rem;font-style:italic}
 
+    /* Grand écran : 2 colonnes (calendrier agrandi à gauche, liste du jour à droite) pour remplir la largeur */
+    @media(min-width:900px){
+      .plm-ios{display:flex;gap:1.75rem;align-items:flex-start;max-width:1200px;margin:0 auto}
+      .plm-ios .card{flex:1.6;max-width:none;margin:0}
+      .plm-ios .plm-daylist{flex:1;max-width:none;margin:0;position:sticky;top:1rem}
+      .plm-ios .plm-grid{grid-auto-rows:minmax(88px,auto)}
+      .plm-ios .plm-cell{min-height:88px;justify-content:flex-start;padding-top:.5rem}
+      .plm-ios .plm-num{font-size:1.05rem;width:34px;height:34px}
+      .plm-ios .plm-dow{font-size:.78rem;padding:.6rem 0 .45rem}
+      .plm-ios .plm-dl-title{font-size:1rem}
+      .plm-ios .plm-dl-ev{padding:.8rem .2rem}
+    }
+
     /* Légende / filtre par type */
     .pl-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
     .pl-legend .lg-chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:600;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:opacity .15s,filter .15s}
