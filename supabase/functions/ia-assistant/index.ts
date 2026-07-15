@@ -49,7 +49,10 @@ Règles absolues :
   soutien, autonomie) ; jamais de jugement de valeur ; formulations positives mais honnêtes.
 - Tu produis une PROPOSITION destinée à être relue, modifiée et validée par un professionnel :
   ne prétends jamais qu'elle est définitive.
-- Cite les dates des faits marquants (JJ/MM) pour permettre la vérification.`;
+- Cite les dates des faits marquants (JJ/MM) pour permettre la vérification.
+- Si un bloc <autonomie_niveau_de_soutien> est fourni, exploite-le pour décrire explicitement
+  l'évolution de l'autonomie et du niveau de soutien requis (tendance, degré d'aide), en lien
+  avec les objectifs du projet personnalisé.`;
 
 const SYSTEMES: Record<string, string> = {
   synthese_resident: SOCLE + `
@@ -168,6 +171,36 @@ function agregerPresences(rows: Record<string, unknown>[]): string {
   return `Pointages sur la période — ${compte}.` + (absences.length ? ` Absences : ${absences.join(', ')}.` : '');
 }
 
+// Niveau de soutien / autonomie : AGRÉGÉ en une synthèse de trajectoire
+// (début → fin, tendance, répartition) à partir du journal + de l'agenda.
+const NIV_LABELS: Record<string, string> = {
+  autonomie: 'Autonomie', supervision: 'Supervision / veille', verbal: 'Guidance verbale',
+  partiel: 'Aide partielle', total: 'Aide totale',
+};
+const NIV_SCORE: Record<string, number> = { autonomie: 5, supervision: 4, verbal: 3, partiel: 2, total: 1 };
+
+function agregerNiveauSoutien(rows: Record<string, unknown>[]): string {
+  const pts = rows
+    .map(r => ({ date: String(r.date || '').slice(0, 10), niv: String(r.niveau_soutien || '') }))
+    .filter(p => NIV_SCORE[p.niv] && p.date)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (!pts.length) return '';
+  const counts: Record<string, number> = {};
+  pts.forEach(p => { counts[p.niv] = (counts[p.niv] || 0) + 1; });
+  const first = pts[0], last = pts[pts.length - 1];
+  const delta = NIV_SCORE[last.niv] - NIV_SCORE[first.niv];
+  const tendance = pts.length < 2 ? 'donnée unique (pas encore de tendance)'
+    : delta > 0 ? 'évolution vers plus d\'autonomie'
+    : delta < 0 ? 'besoin de soutien accru'
+    : 'niveau stable';
+  const repartition = ['autonomie', 'supervision', 'verbal', 'partiel', 'total']
+    .filter(k => counts[k]).map(k => `${NIV_LABELS[k]} ×${counts[k]}`).join(', ');
+  return `Niveau de soutien relevé (${pts.length} observations, du ${first.date} au ${last.date}) — `
+    + `début : ${NIV_LABELS[first.niv]} ; fin : ${NIV_LABELS[last.niv]} ; tendance : ${tendance}. `
+    + `Répartition : ${repartition}. `
+    + `(Échelle décroissante en besoin de soutien : Aide totale < Aide partielle < Guidance < Supervision < Autonomie.)`;
+}
+
 // Écrêtage : coupe chaque entrée à MAX_ENTREE caractères, applique l'anonymisation,
 // puis retire les entrées LES PLUS ANCIENNES source par source (ordre de priorité
 // inverse : presences → nuits → coches → journal → transmissions → incidents)
@@ -185,7 +218,7 @@ function ecreter(
     }
     return out;
   };
-  const nonEcrete = new Set(['identite', 'ppe', 'evaluations']);   // matière essentielle du bilan
+  const nonEcrete = new Set(['identite', 'ppe', 'evaluations', 'autonomie']);   // matière essentielle du bilan
   const listes: Record<string, string[]> = {};
   for (const [k, v] of Object.entries(blocs)) {
     const lignes = (Array.isArray(v) ? v : (v ? [v] : []))
@@ -210,6 +243,7 @@ function assemblerUser(action: string, blocs: Record<string, string>, consignes:
     blocs.identite,
     bloc('avenant_ppa', blocs.ppe),
     bloc('evaluations', blocs.evaluations),
+    bloc('autonomie_niveau_de_soutien', blocs.autonomie),
     bloc('incidents', blocs.incidents),
     bloc('transmissions', blocs.transmissions),
     bloc('journal_de_bord', blocs.journal),
@@ -350,7 +384,7 @@ async function construirePrompt(
       .eq('etablissement_id', etabId).eq('resident_id', String(resident.id))
       .gte('date', p.du).lte('date', p.au).order('date', { ascending: false }).limit(400),
     admin.from('journal_entries')
-      .select('date, categorie, objectif, contenu, serafinph_type')
+      .select('date, categorie, objectif, contenu, serafinph_type, niveau_soutien')
       .eq('etablissement_id', etabId).eq('resident_id', resident.id)
       .gte('date', p.du).lte('date', p.au).order('date', { ascending: false }).limit(250),
     admin.from('taches_ppa')
@@ -385,12 +419,21 @@ async function construirePrompt(
   if (coches.error) throw new Error(coches.error.message);
   if (Array.isArray(coches.data)) coches.data.reverse();
 
+  // Niveau de soutien saisi dans l'agenda (planning_events) sur la période —
+  // complète les relevés du journal pour la trajectoire d'autonomie.
+  const planNiv = await admin.from('planning_events')
+    .select('date, niveau_soutien')
+    .eq('etablissement_id', etabId).eq('resident_id', resident.id)
+    .gte('date', p.du).lte('date', p.au).limit(400);
+  if (planNiv.error) throw new Error(planNiv.error.message);
+
   const nuitsResident = filtrerEvenementsNuit(nuits.data || [], resident);
 
   const blocs = ecreter({
     identite: `Résident : ${alias}. Période analysée : du ${p.du} au ${p.au}.`,
     ppe: ppe ? serialiserPpe(ppe, alias) : '',
     evaluations: serialiserEvaluations(evaluations),
+    autonomie: agregerNiveauSoutien([...(journal.data || []), ...(planNiv.data || [])]),
     incidents: (incidents.data || []).map(mapIncident),
     transmissions: (transmissions.data || []).map((t: Record<string, unknown>) =>
       `${t.date} [${t.shift}/${t.cat}${t.priority && t.priority !== 'normal' ? '/' + t.priority : ''}] ${t.content}` +
