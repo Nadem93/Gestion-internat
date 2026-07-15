@@ -2269,6 +2269,11 @@ function autonomieCard(r) {
   (_residentPlanningCache||[]).forEach(e => {
     if (String(e.residentId) === String(currentResidentId) || e.residentName === fullName) pushPt(e.date, e.niveauSoutien);
   });
+  // Transmissions (champ soutienNiveau — mêmes valeurs que le journal/agenda)
+  const _trAll = (typeof DB !== 'undefined' && DB.get) ? (DB.get(DB.keys.transmissions) || []) : [];
+  _trAll.forEach(t => {
+    if (String(t.residentId) === String(currentResidentId) || t.residentName === fullName) pushPt(t.date || t.createdAt, t.soutienNiveau);
+  });
 
   // Moyenne mensuelle (8 derniers mois avec données)
   const byMonth = {};
@@ -2279,7 +2284,7 @@ function autonomieCard(r) {
   const header = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span style="font-size:18px">📈</span><span class="card-title" style="color:var(--accent)">Évolution de l'autonomie</span>`;
 
   if (series.length === 0) {
-    return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}</div><div class="card-body"><div class="empty" style="padding:2rem"><p>Aucun niveau de soutien saisi pour ce résident.</p><p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Renseignez le « niveau de soutien » dans le journal de bord ou l'agenda : la courbe se construira automatiquement.</p></div></div></div>`;
+    return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}</div><div class="card-body"><div class="empty" style="padding:2rem"><p>Aucun niveau de soutien saisi pour ce résident.</p><p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Renseignez le « niveau de soutien » dans les transmissions, le journal de bord ou l'agenda : la courbe se construira automatiquement.</p></div></div></div>`;
   }
 
   // Géométrie
@@ -2318,7 +2323,7 @@ function autonomieCard(r) {
   return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">
     ${header}${trendBlock}</div>
     <div class="card-body">
-      <div style="font-size:.78rem;color:var(--muted);margin:-.2rem 0 .5rem">${escHtml(fullName)} · d'après le niveau de soutien saisi (journal + agenda)</div>
+      <div style="font-size:.78rem;color:var(--muted);margin:-.2rem 0 .5rem">${escHtml(fullName)} · d'après le niveau de soutien saisi (transmissions, journal, agenda)</div>
       <svg viewBox="0 0 640 230" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Courbe d'évolution de l'autonomie">
         <defs><linearGradient id="autoArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#818cf8" stop-opacity=".33"/><stop offset="1" stop-color="#818cf8" stop-opacity="0"/></linearGradient></defs>
         ${bands}${grids}

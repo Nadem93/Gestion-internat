@@ -422,6 +422,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/conges-supabase.js"></script>
 <script src="js/planning-equipe-supabase.js"></script>
@@ -952,9 +953,10 @@
 
     const jP = (typeof sbGetJournalEntries === 'function') ? sbGetJournalEntries() : Promise.resolve([]);
     const pP = (typeof sbGetPlanningEvents === 'function') ? sbGetPlanningEvents() : Promise.resolve([]);
-    const [journal, planning] = await Promise.all([jP.catch(() => []), pP.catch(() => [])]);
+    const tP = (typeof sbGetTransmissions === 'function') ? sbGetTransmissions() : Promise.resolve([]);
+    const [journal, planning, transmissions] = await Promise.all([jP.catch(() => []), pP.catch(() => []), tP.catch(() => [])]);
 
-    // Dernier niveau saisi par résident (journal + agenda confondus)
+    // Dernier niveau saisi par résident (transmissions + journal + agenda confondus)
     const latest = {};
     const consider = (rid, name, date, niv) => {
       if (!VALID.has(niv) || !date) return;
@@ -964,6 +966,7 @@
     };
     (journal || []).forEach(e => consider(e.residentId, e.resident, e.date || e.createdAt, e.niveauSoutien));
     (planning || []).forEach(e => consider(e.residentId, e.residentName, e.date, e.niveauSoutien));
+    (transmissions || []).forEach(t => consider(t.residentId, t.residentName, t.date || t.createdAt, t.soutienNiveau));
 
     const counts = { autonomie:0, supervision:0, verbal:0, partiel:0, total:0 };
     let evalues = 0;
@@ -974,7 +977,8 @@
     });
     const nonEval = residents.length - evalues;
     const totalObs = (journal||[]).filter(e => VALID.has(e.niveauSoutien)).length
-                   + (planning||[]).filter(e => VALID.has(e.niveauSoutien)).length;
+                   + (planning||[]).filter(e => VALID.has(e.niveauSoutien)).length
+                   + (transmissions||[]).filter(t => VALID.has(t.soutienNiveau)).length;
     const maxCount = Math.max(...LEVELS.map(l => counts[l.k]), 1);
 
     const rows = LEVELS.map(l => {
@@ -989,7 +993,7 @@
     }).join('');
 
     el.innerHTML = `<div style="padding:1.05rem 1.35rem 1.2rem">
-      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (journal + agenda) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (transmissions, journal, agenda) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
       ${rows}
       ${nonEval ? `<div style="margin-top:.75rem;padding-top:.7rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)">⚪ ${nonEval} résident${nonEval>1?'s':''} sans niveau de soutien renseigné</div>` : ''}
     </div>`;

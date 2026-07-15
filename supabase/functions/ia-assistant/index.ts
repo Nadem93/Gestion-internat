@@ -433,7 +433,12 @@ async function construirePrompt(
     identite: `Résident : ${alias}. Période analysée : du ${p.du} au ${p.au}.`,
     ppe: ppe ? serialiserPpe(ppe, alias) : '',
     evaluations: serialiserEvaluations(evaluations),
-    autonomie: agregerNiveauSoutien([...(journal.data || []), ...(planNiv.data || [])]),
+    autonomie: agregerNiveauSoutien([
+      ...(journal.data || []),
+      ...(planNiv.data || []),
+      // Transmissions : le niveau y est stocké sous 'soutien_niveau' → on l'aligne sur 'niveau_soutien'
+      ...(transmissions.data || []).map((t: Record<string, unknown>) => ({ date: t.date, niveau_soutien: t.soutien_niveau })),
+    ]),
     incidents: (incidents.data || []).map(mapIncident),
     transmissions: (transmissions.data || []).map((t: Record<string, unknown>) =>
       `${t.date} [${t.shift}/${t.cat}${t.priority && t.priority !== 'normal' ? '/' + t.priority : ''}] ${t.content}` +
