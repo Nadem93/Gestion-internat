@@ -539,6 +539,7 @@ function renderViewMode(r) {
     <div class="no-print">${filDeVieCard(r)}</div>
     <div class="no-print">${residentTransmissionsCard(r)}</div>
     <div class="no-print">${renderDataCards(r)}</div>
+    ${autonomieCard(r)}
     <div class="no-print tabs" style="margin-bottom:1rem">
       <button class="tab active" data-tab="documents">📎 Documents ${docs.length ? `<span class="badge badge-gray" style="margin-left:.3rem">${docs.length}</span>` : ''}</button>
     </div>
@@ -2237,6 +2238,97 @@ function renderDataCards(r) {
     <div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="card-title" style="color:var(--accent)">Journal de bord</span><a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rJournal.length ? rJournal.map(e => { const cat = categories.find(c=>String(c.id)===String(e.categorie)); return `<div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">${cat?`<span class="badge" style="background:${safeColor(cat.color,'#7C3AED')}22;color:${safeColor(cat.color,'#7C3AED')}">${escHtml(cat.name)}</span>`:''}<span style="font-size:.72rem;color:var(--muted)">${formatDateTime(e.date)}</span></div><div style="font-size:.8rem;color:var(--g700)">${escHtml(e.contenu||'')}</div></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucune entrée journal</p></div>'}</div></div>
     <div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="card-title" style="color:var(--accent)">Avenants (PPE)</span><a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rPpe.length ? rPpe.map(p => { const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0); return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html?id=${p.id}'"><div style="font-weight:600;font-size:.875rem">${escHtml(p.dateRedaction||'?')}</div><div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs</div></div><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucun avenant actif</p></div>'}</div></div>
     ${incidentsCardHtml}
+  </div>`;
+}
+
+// ── ÉVOLUTION DE L'AUTONOMIE (courbe du niveau de soutien) ──
+// Alimentée automatiquement par les niveaux de soutien saisis dans le journal + l'agenda.
+function autonomieCard(r) {
+  const NIV_SCORE = { autonomie:5, supervision:4, verbal:3, partiel:2, total:1 };
+  const LEVELS = [
+    { s:5, label:'Autonomie',      color:'#10b981', emoji:'🟢' },
+    { s:4, label:'Supervision',    color:'#3b82f6', emoji:'🔵' },
+    { s:3, label:'Guidance',       color:'#f59e0b', emoji:'🟡' },
+    { s:2, label:'Aide partielle', color:'#f97316', emoji:'🟠' },
+    { s:1, label:'Aide totale',    color:'#ef4444', emoji:'🔴' }
+  ];
+  const MONTHS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const fullName = `${r.prenom||''} ${r.nom||''}`.trim();
+  const nearest = s => LEVELS.reduce((b,l)=> Math.abs(l.s-s) < Math.abs(b.s-s) ? l : b, LEVELS[0]);
+
+  // Collecte des points (journal + agenda) ayant un niveau de soutien renseigné
+  const pts = [];
+  const pushPt = (dateStr, niv) => {
+    const sc = NIV_SCORE[niv]; if (!sc || !dateStr) return;
+    const key = String(dateStr).slice(0,7);
+    if (/^\d{4}-\d{2}$/.test(key)) pts.push({ key, s: sc });
+  };
+  (_residentJournalAll||[]).forEach(e => {
+    if (String(e.residentId) === String(currentResidentId) || e.resident === fullName) pushPt(e.date || e.createdAt, e.niveauSoutien);
+  });
+  (_residentPlanningCache||[]).forEach(e => {
+    if (String(e.residentId) === String(currentResidentId) || e.residentName === fullName) pushPt(e.date, e.niveauSoutien);
+  });
+
+  // Moyenne mensuelle (8 derniers mois avec données)
+  const byMonth = {};
+  pts.forEach(p => { (byMonth[p.key] = byMonth[p.key] || []).push(p.s); });
+  const months = Object.keys(byMonth).sort().slice(-8);
+  const series = months.map(k => { const a = byMonth[k]; return { key:k, avg: a.reduce((x,y)=>x+y,0)/a.length }; });
+
+  const header = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span style="font-size:18px">📈</span><span class="card-title" style="color:var(--accent)">Évolution de l'autonomie</span>`;
+
+  if (series.length === 0) {
+    return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}</div><div class="card-body"><div class="empty" style="padding:2rem"><p>Aucun niveau de soutien saisi pour ce résident.</p><p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Renseignez le « niveau de soutien » dans le journal de bord ou l'agenda : la courbe se construira automatiquement.</p></div></div></div>`;
+  }
+
+  // Géométrie
+  const X0=120, X1=596, Y_TOP=34, Y_BOT=178;
+  const yFor = s => Y_BOT - (s-1)/4*(Y_BOT-Y_TOP);
+  const xFor = i => series.length===1 ? (X0+X1)/2 : X0 + i*(X1-X0)/(series.length-1);
+  const coords = series.map((d,i)=>({ x:xFor(i), y:yFor(d.avg), d, lvl:nearest(d.avg) }));
+  const linePath = coords.map((c,i)=> (i?'L':'M')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
+  const areaPath = coords.length>1 ? `${linePath} L${coords[coords.length-1].x.toFixed(1)},196 L${coords[0].x.toFixed(1)},196 Z` : '';
+
+  const bands   = LEVELS.map(l=>`<rect x="90" y="${(yFor(l.s)-18).toFixed(1)}" width="510" height="36" fill="${l.color}" opacity=".06"/>`).join('');
+  const grids   = LEVELS.map(l=>`<line x1="90" y1="${yFor(l.s).toFixed(1)}" x2="600" y2="${yFor(l.s).toFixed(1)}" stroke="rgba(148,163,184,.22)" stroke-width="1"/>`).join('');
+  const yLabels = LEVELS.map(l=>`<text x="84" y="${(yFor(l.s)+3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="#64748b" font-weight="600">${l.emoji} ${l.label}</text>`).join('');
+  const xLabels = coords.map(c=>{ const m=+c.d.key.split('-')[1]; return `<text x="${c.x.toFixed(1)}" y="214" text-anchor="middle" font-size="9.5" fill="#64748b">${MONTHS[m-1]||''}</text>`; }).join('');
+  const dots    = coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="6" fill="${c.lvl.color}" stroke="#fff" stroke-width="2.5"/>`).join('');
+
+  // Tendance
+  const first = series[0].avg, last = series[series.length-1].avg, delta = last-first;
+  const up = delta>0.05, down = delta<-0.05;
+  const arrow = up?'↗':down?'↘':'→', tColor = up?'#059669':down?'#dc2626':'#64748b';
+  const deltaTxt = (delta>=0?'+':'') + delta.toFixed(1).replace('.',',');
+  const lastLvl = nearest(last);
+  const trendWord = up?'vers plus d\'autonomie':down?'besoin de soutien accru':'stable';
+  const trendBlock = series.length>1
+    ? `<span style="margin-left:auto;text-align:right;line-height:1.15"><span style="font-size:1.05rem;font-weight:800;color:${tColor}">${arrow} ${deltaTxt}</span><span style="display:block;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">sur ${series.length} mois</span></span>`
+    : '';
+
+  const pill = (html) => `<span style="font-size:.74rem;color:#475569;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:20px;padding:.28rem .75rem">${html}</span>`;
+  const pills = [
+    series.length>1 ? pill(`Tendance : <b style="color:#4338ca">${trendWord}</b>`) : '',
+    pill(`Dernier niveau : <b style="color:${lastLvl.color}">${lastLvl.emoji} ${lastLvl.label}</b>`),
+    pill(`${pts.length} observation${pts.length>1?'s':''} saisie${pts.length>1?'s':''}`)
+  ].filter(Boolean).join('');
+  const legend = LEVELS.map(l=>`<span style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:#475569"><span style="width:11px;height:11px;border-radius:50%;background:${l.color};flex-shrink:0"></span>${l.label}</span>`).join('');
+
+  return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">
+    ${header}${trendBlock}</div>
+    <div class="card-body">
+      <div style="font-size:.78rem;color:var(--muted);margin:-.2rem 0 .5rem">${escHtml(fullName)} · d'après le niveau de soutien saisi (journal + agenda)</div>
+      <svg viewBox="0 0 640 230" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Courbe d'évolution de l'autonomie">
+        <defs><linearGradient id="autoArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#818cf8" stop-opacity=".33"/><stop offset="1" stop-color="#818cf8" stop-opacity="0"/></linearGradient></defs>
+        ${bands}${grids}
+        ${areaPath?`<path d="${areaPath}" fill="url(#autoArea)"/>`:''}
+        ${coords.length>1?`<path d="${linePath}" fill="none" stroke="#6366f1" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`:''}
+        ${dots}${yLabels}${xLabels}
+      </svg>
+      <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.75rem">${pills}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.45rem 1.1rem;margin-top:.85rem;padding-top:.8rem;border-top:1px solid var(--border)">${legend}</div>
+    </div>
   </div>`;
 }
 
