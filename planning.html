@@ -522,6 +522,19 @@
           <textarea id="evDesc" rows="4" placeholder="Détails, lieu, intervenants…"></textarea>
         </div>
 
+        <div class="mev-field full">
+          <label>🤝 Accompagnement apporté <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></label>
+          <textarea id="evAccompagnement" rows="2" placeholder="Ex : incitation verbale, médiation avec un pair, reformulation des consignes, présence rassurante…"></textarea>
+          <select id="evNiveauSoutien" style="margin-top:8px">
+            <option value="">Niveau de soutien — non précisé</option>
+            <option value="autonomie">🟢 Autonomie — présence simple</option>
+            <option value="supervision">🔵 Supervision / veille</option>
+            <option value="verbal">🟡 Incitation / guidance verbale</option>
+            <option value="partiel">🟠 Aide partielle</option>
+            <option value="total">🔴 Aide totale</option>
+          </select>
+        </div>
+
         <input type="checkbox" id="evVehiculeCheck" style="display:none"/>
         <button type="button" class="mev-veh-toggle full" id="evVehiculeToggle" onclick="toggleMevVehicule()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0"><path d="M5 17h14M5 17a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h8l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2M5 17a2 2 0 1 0 4 0M19 17a2 2 0 1 0-4 0"/></svg>

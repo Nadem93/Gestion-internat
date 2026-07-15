@@ -468,6 +468,10 @@ function renderJournalDaySep(dayKey) {
   </div>`;
 }
 
+function journalNiveauLabel(v) {
+  return ({ autonomie:'🟢 Autonomie — présence simple', supervision:'🔵 Supervision / veille', verbal:'🟡 Incitation / guidance verbale', partiel:'🟠 Aide partielle', total:'🔴 Aide totale' })[v] || v;
+}
+
 function renderEntries() {
   const list = getEntries();
   const el = document.getElementById('entriesList');
@@ -488,6 +492,11 @@ function renderEntries() {
     const expandedSection = isSelected ? `
       <div onclick="event.stopPropagation()" style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
         <p style="font-size:.88rem;line-height:1.8;white-space:pre-wrap;color:var(--text);margin-bottom:.5rem">${escHtml(e.contenu)||''}</p>
+        ${(e.accompagnement || e.niveauSoutien) ? `<div style="background:#f0fdf4;border:1px solid #99e5dc55;border-radius:8px;padding:.5rem .65rem;margin-bottom:.6rem">
+          <div style="font-size:.68rem;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.15rem">🤝 Accompagnement apporté</div>
+          ${e.accompagnement ? `<div style="font-size:.82rem;color:var(--text);white-space:pre-wrap">${escHtml(e.accompagnement)}</div>` : ''}
+          ${e.niveauSoutien ? `<div style="font-size:.74rem;color:#0f766e;margin-top:.25rem">${journalNiveauLabel(e.niveauSoutien)}</div>` : ''}
+        </div>` : ''}
         ${e.editedAt ? `<div style="font-size:.7rem;color:var(--muted);margin-bottom:.6rem;font-style:italic">✎ Modifié par ${escHtml(e.editedBy||'?')} le ${formatDateTime(e.editedAt)}${(e.editHistory&&e.editHistory.length)?` · <a href="#" onclick="event.preventDefault();event.stopPropagation();showEditHistory('${e.id}')" style="color:var(--accent)">historique (${e.editHistory.length})</a>`:''}</div>` : ''}
         ${renderEntryAttachments(e)}
         ${renderReplies(e)}
@@ -662,6 +671,8 @@ function editEntry(id) {
   document.getElementById('eDate').value = e.date ? e.date.slice(0,16) : '';
   document.getElementById('eObjectif').value = e.objectif || '';
   document.getElementById('eContenu').value = e.contenu || '';
+  const eAcc = document.getElementById('eAccompagnement'); if (eAcc) eAcc.value = e.accompagnement || '';
+  const eNiv = document.getElementById('eNiveauSoutien'); if (eNiv) eNiv.value = e.niveauSoutien || '';
   const vis = document.querySelector(`input[name="eVisibilite"][value="${e.visibilite||'equipe'}"]`);
   if (vis) vis.checked = true;
   const sp = document.getElementById('eSerafinph');
@@ -692,6 +703,8 @@ async function saveEntry() {
     contenu,
     visibilite: visEl?.value || 'equipe',
     serafinphType: document.getElementById('eSerafinph')?.value || '',
+    accompagnement: (document.getElementById('eAccompagnement')?.value || '').trim(),
+    niveauSoutien: document.getElementById('eNiveauSoutien')?.value || '',
     updatedAt: new Date().toISOString()
   };
 
@@ -763,6 +776,8 @@ function resetEntryForm() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   document.getElementById('eObjectif').value = '';
   document.getElementById('eContenu').value = '';
+  const rAcc = document.getElementById('eAccompagnement'); if (rAcc) rAcc.value = '';
+  const rNiv = document.getElementById('eNiveauSoutien'); if (rNiv) rNiv.value = '';
   document.querySelector('input[name="eVisibilite"][value="equipe"]').checked = true;
   document.getElementById('btnDeleteEntry').style.display = 'none';
 }

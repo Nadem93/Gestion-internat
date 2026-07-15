@@ -508,6 +508,8 @@ function quickAddEvent(date, heure) {
   document.getElementById('btnDeleteEvent').style.display = 'none';
   document.getElementById('modalEventTitle').textContent = 'Nouvel événement';
   document.getElementById('eventId').value = '';
+  const accNew = document.getElementById('evAccompagnement'); if (accNew) accNew.value = '';
+  const nivNew = document.getElementById('evNiveauSoutien'); if (nivNew) nivNew.value = '';
   resetVehiculeFields();
   const recurRow = document.getElementById('evRecurRow');
   if (recurRow) recurRow.style.display = '';
@@ -541,6 +543,9 @@ function viewEvent(id) {
   body += row('📅', 'Date', ev.date ? formatDate(ev.date) : '—');
   body += row('🕒', 'Horaire', [heure, dureeLabel].filter(Boolean).join(' · '));
   body += row('📝', 'Description', ev.desc ? escHtml(ev.desc) : '');
+  const NIV_LABELS = { autonomie:'🟢 Autonomie — présence simple', supervision:'🔵 Supervision / veille', verbal:'🟡 Incitation / guidance verbale', partiel:'🟠 Aide partielle', total:'🔴 Aide totale' };
+  body += row('🤝', 'Accompagnement apporté', ev.accompagnement ? escHtml(ev.accompagnement) : '');
+  body += row('🎚️', 'Niveau de soutien', ev.niveauSoutien ? (NIV_LABELS[ev.niveauSoutien] || escHtml(ev.niveauSoutien)) : '');
   if (ev.vehicule) {
     body += row('🚗', 'Véhicule', escHtml(ev.vehicule));
     body += row('📍', 'Destination', ev.destination ? escHtml(ev.destination) : '');
@@ -576,6 +581,8 @@ function editEvent(id) {
   document.getElementById('evDuree').value = ev.duree || '60';
   document.getElementById('evColor').value = ev.color || '#3b82f6';
   document.getElementById('evDesc').value = ev.desc || '';
+  const accEd = document.getElementById('evAccompagnement'); if (accEd) accEd.value = ev.accompagnement || '';
+  const nivEd = document.getElementById('evNiveauSoutien'); if (nivEd) nivEd.value = ev.niveauSoutien || '';
   document.getElementById('btnDeleteEvent').style.display = '';
   // Masquer la récurrence en mode édition (on édite un seul événement)
   const recurRow = document.getElementById('evRecurRow');
@@ -610,7 +617,9 @@ async function saveEvent() {
     heure: document.getElementById('evHeure').value,
     duree: document.getElementById('evDuree').value,
     color: document.getElementById('evColor').value,
-    desc: document.getElementById('evDesc').value.trim()
+    desc: document.getElementById('evDesc').value.trim(),
+    accompagnement: (document.getElementById('evAccompagnement')?.value || '').trim(),
+    niveauSoutien: document.getElementById('evNiveauSoutien')?.value || ''
   };
   const vehCb = document.getElementById('evVehiculeCheck');
   if (vehCb && vehCb.checked) {
