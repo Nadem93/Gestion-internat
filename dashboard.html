@@ -17,6 +17,18 @@
     .mini-card .mc-sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
     .mini-card .mc-alert{margin-top:.45rem;padding:.25rem .5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:7px;font-size:.7rem;font-weight:600;text-align:center}
     @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
+    .niv-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0}
+    .niv-label{width:158px;flex-shrink:0;font-size:.82rem;color:#334155;display:flex;align-items:center;gap:.45rem}
+    .niv-label .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+    .niv-bar{flex:1;min-width:40px;background:#f1f5f9;border-radius:8px;height:20px;overflow:hidden}
+    .niv-bar>span{display:block;height:100%;border-radius:8px;transition:width .4s}
+    .niv-val{width:118px;flex-shrink:0;text-align:right;font-size:.82rem;color:#475569;white-space:nowrap}
+    @media(max-width:560px){
+      .niv-row{flex-wrap:wrap;gap:.35rem .6rem;padding:.55rem 0}
+      .niv-label{width:auto;flex:1 1 auto;min-width:0}
+      .niv-val{width:auto}
+      .niv-bar{order:3;flex:1 1 100%;min-width:0}
+    }
     .me-banner{background:#fff;border:1px solid rgba(15,43,74,.08);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(15,43,74,.05)}
     .me-prof{display:flex;align-items:center;gap:11px;flex-shrink:0}
     .me-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
@@ -173,6 +185,18 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- RÉPARTITION DES NIVEAUX DE SOUTIEN -->
+      <div class="card" id="dashCardNiveaux" style="overflow:hidden;margin-top:1.5rem">
+        <div class="card-header" style="background:#EEF2FF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#6366f1"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="card-title" style="color:#4338ca">Répartition des niveaux de soutien</span>
+          <a href="residents.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#4338ca">Résidents</a>
+        </div>
+        <div class="card-body" id="dashNiveauxSoutien">
+          <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
+        </div>
       </div>
 
       <!-- JOURNAL + AVENANTS -->
@@ -396,6 +420,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/conges-supabase.js"></script>
 <script src="js/planning-equipe-supabase.js"></script>
@@ -909,10 +935,71 @@
     else el.style.display = 'none';
   }
 
+  // ── Répartition des niveaux de soutien (résidents classés par dernier niveau saisi) ──
+  async function renderNiveauxSoutien() {
+    const el = document.getElementById('dashNiveauxSoutien');
+    if (!el) return;
+    const LEVELS = [
+      { k:'autonomie',   label:'Autonomie',            color:'#10b981' },
+      { k:'supervision', label:'Supervision / veille', color:'#3b82f6' },
+      { k:'verbal',      label:'Guidance verbale',     color:'#f59e0b' },
+      { k:'partiel',     label:'Aide partielle',       color:'#f97316' },
+      { k:'total',       label:'Aide totale',          color:'#ef4444' },
+    ];
+    const VALID = new Set(LEVELS.map(l => l.k));
+    const residents = (typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti');
+    if (!residents.length) { el.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident</p></div>'; return; }
+
+    const jP = (typeof sbGetJournalEntries === 'function') ? sbGetJournalEntries() : Promise.resolve([]);
+    const pP = (typeof sbGetPlanningEvents === 'function') ? sbGetPlanningEvents() : Promise.resolve([]);
+    const [journal, planning] = await Promise.all([jP.catch(() => []), pP.catch(() => [])]);
+
+    // Dernier niveau saisi par résident (journal + agenda confondus)
+    const latest = {};
+    const consider = (rid, name, date, niv) => {
+      if (!VALID.has(niv) || !date) return;
+      const key = (rid != null && rid !== '') ? String(rid) : ('name:' + name);
+      const d = String(date).slice(0, 10);
+      if (!latest[key] || d > latest[key].date) latest[key] = { date: d, niv };
+    };
+    (journal || []).forEach(e => consider(e.residentId, e.resident, e.date || e.createdAt, e.niveauSoutien));
+    (planning || []).forEach(e => consider(e.residentId, e.residentName, e.date, e.niveauSoutien));
+
+    const counts = { autonomie:0, supervision:0, verbal:0, partiel:0, total:0 };
+    let evalues = 0;
+    residents.forEach(r => {
+      const nom = `${r.prenom||''} ${r.nom||''}`.trim();
+      const rec = latest[String(r.id)] || latest['name:' + nom];
+      if (rec) { counts[rec.niv]++; evalues++; }
+    });
+    const nonEval = residents.length - evalues;
+    const totalObs = (journal||[]).filter(e => VALID.has(e.niveauSoutien)).length
+                   + (planning||[]).filter(e => VALID.has(e.niveauSoutien)).length;
+    const maxCount = Math.max(...LEVELS.map(l => counts[l.k]), 1);
+
+    const rows = LEVELS.map(l => {
+      const n = counts[l.k];
+      const pct = evalues ? Math.round(n/evalues*100) : 0;
+      const w = Math.round(n/maxCount*100);
+      return `<div class="niv-row">
+        <div class="niv-label"><span class="dot" style="background:${l.color}"></span>${l.label}</div>
+        <div class="niv-bar"><span style="width:${w}%;background:${l.color};min-width:${n?'8px':'0'}"></span></div>
+        <div class="niv-val"><b style="color:#1e293b">${n}</b> résident${n>1?'s':''} · ${pct}%</div>
+      </div>`;
+    }).join('');
+
+    el.innerHTML = `<div style="padding:1.05rem 1.35rem 1.2rem">
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (journal + agenda) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
+      ${rows}
+      ${nonEval ? `<div style="margin-top:.75rem;padding-top:.7rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)">⚪ ${nonEval} résident${nonEval>1?'s':''} sans niveau de soutien renseigné</div>` : ''}
+    </div>`;
+  }
+
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
   (async () => {
     try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
     renderDashboard();
+    renderNiveauxSoutien().catch(e => console.error(e));
   })();
 </script>
 </body>
