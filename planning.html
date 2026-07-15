@@ -135,8 +135,13 @@
     .plm-ios .plm-daylist{display:block;margin:1rem auto 0;max-width:600px;background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);border:1px solid rgba(255,255,255,.72);border-radius:14px;padding:.35rem .9rem;box-shadow:0 8px 24px rgba(80,90,200,.1)}
     .plm-ios .plm-dl-head{display:flex;align-items:center;gap:.5rem;padding:.5rem .1rem;border-bottom:0.5px solid var(--border)}
     .plm-ios .plm-dl-title{font-size:.9rem;font-weight:800;color:var(--text);text-transform:capitalize}
-    .plm-ios .plm-dl-add{margin-left:auto;color:#6366f1;font-size:.8rem;font-weight:600}
-    .plm-ios .plm-dl-ev{display:flex;gap:.7rem;padding:.65rem .1rem;border-bottom:0.5px solid var(--border);align-items:flex-start;cursor:pointer}
+    .plm-ios .plm-dl-add{margin-left:auto;color:#6366f1;font-size:.8rem;font-weight:600;cursor:pointer;border-radius:999px;padding:.2rem .6rem;transition:background .13s}
+    .plm-ios .plm-dl-add:hover{background:rgba(99,102,241,.12)}
+    .plm-ios .plm-dl-ev{position:relative;display:flex;gap:.7rem;padding:.7rem 1.7rem .7rem .55rem;border-bottom:0.5px solid var(--border);align-items:flex-start;cursor:pointer;border-radius:11px;transition:background .13s,box-shadow .13s}
+    .plm-ios .plm-dl-ev:hover{background:rgba(99,102,241,.08);box-shadow:0 2px 10px rgba(99,102,241,.12)}
+    .plm-ios .plm-dl-ev:active{background:rgba(99,102,241,.15)}
+    .plm-ios .plm-dl-ev::after{content:'›';position:absolute;right:.7rem;top:50%;transform:translateY(-50%);color:#c3c8ea;font-size:1.2rem;line-height:1;transition:color .13s,right .13s}
+    .plm-ios .plm-dl-ev:hover::after{color:#6366f1;right:.5rem}
     .plm-ios .plm-dl-time{width:48px;flex-shrink:0;text-align:right;font-size:.82rem;color:var(--muted);line-height:1.25}
     .plm-ios .plm-dl-time b{color:var(--text);font-weight:700}
     .plm-ios .plm-dl-bar{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:34px}
@@ -155,7 +160,7 @@
       .plm-ios .plm-num{font-size:1.05rem;width:34px;height:34px}
       .plm-ios .plm-dow{font-size:.78rem;padding:.6rem 0 .45rem}
       .plm-ios .plm-dl-title{font-size:1rem}
-      .plm-ios .plm-dl-ev{padding:.8rem .2rem}
+      .plm-ios .plm-dl-ev{padding:.85rem 1.8rem .85rem .55rem}
     }
 
     /* Légende / filtre par type */
