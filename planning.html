@@ -70,6 +70,9 @@
     .plm-ev-txt{padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);flex:1;min-width:0}
     .plm-ev-time{opacity:.7;font-weight:400}
     .plm-more{font-size:.65rem;color:var(--muted);padding:1px 0;margin-top:1px}
+    /* Pastilles + liste du jour (façon iOS) : masquées sur desktop, activées en mobile */
+    .plm-dots{display:none}
+    .plm-daylist{display:none}
 
     /* ── Recherche ── */
     .pl-search-wrap{position:relative;display:flex;align-items:center}
@@ -102,13 +105,33 @@
       .pl-nav .pl-search-wrap input{width:100%!important}
       .pl-nav #filterEventResident{flex:1 1 100%;order:11;width:100%!important}
 
-      /* Vue Mois : cellules compactes pour tenir sur 7 colonnes sans déborder */
-      .plm-grid{grid-auto-rows:minmax(58px,auto)}
-      .plm-cell{padding:.25rem .18rem}
-      .plm-num{font-size:.72rem;width:20px;height:20px;margin-bottom:2px}
-      .plm-dow{font-size:.5rem;padding:.35rem .05rem}
-      .plm-ev-txt{padding:1px 3px;font-size:.58rem}
-      .plm-ev-time{display:none}
+      /* Vue Mois façon Calendrier iOS : grille aérée, pastilles, liste du jour dessous */
+      .plm-head{background:transparent;border-bottom:none}
+      .plm-dow{border-left:none;font-size:.6rem;padding:.4rem 0 .3rem;color:var(--muted);text-transform:none}
+      .plm-grid{grid-auto-rows:minmax(50px,auto)}
+      .plm-cell{border:none;border-top:0.5px solid var(--border);padding:.3rem .1rem;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;overflow:visible}
+      .plm-cell.plm-empty{background:transparent}
+      .plm-num{font-size:.92rem;font-weight:500;width:30px;height:30px;margin-bottom:0}
+      .plm-num.is-today{background:#ff3b30!important;color:#fff!important}
+      .plm-sel .plm-num{box-shadow:inset 0 0 0 1.5px #ff3b30;color:#ff3b30}
+      .plm-today.plm-sel .plm-num{box-shadow:none;background:#ff3b30!important;color:#fff!important}
+      .plm-ev{display:none}
+      .plm-dots{display:flex;gap:3px;height:6px;justify-content:center}
+      .plm-dot{width:5px;height:5px;border-radius:50%}
+
+      /* Liste des événements du jour sélectionné */
+      .plm-daylist{display:block;margin-top:1rem}
+      .plm-dl-head{display:flex;align-items:center;gap:.5rem;padding:.4rem .1rem;border-bottom:0.5px solid var(--border)}
+      .plm-dl-title{font-size:.85rem;font-weight:800;color:var(--text);text-transform:capitalize}
+      .plm-dl-add{margin-left:auto;color:#ff3b30;font-size:.78rem;font-weight:600}
+      .plm-dl-ev{display:flex;gap:.7rem;padding:.6rem .1rem;border-bottom:0.5px solid var(--border);align-items:flex-start;cursor:pointer}
+      .plm-dl-time{width:46px;flex-shrink:0;text-align:right;font-size:.8rem;color:var(--muted);line-height:1.25}
+      .plm-dl-time b{color:var(--text);font-weight:700}
+      .plm-dl-bar{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:34px}
+      .plm-dl-body{min-width:0;flex:1}
+      .plm-dl-t{font-size:.9rem;color:var(--text);line-height:1.25}
+      .plm-dl-s{font-size:.78rem;color:var(--muted);margin-top:1px}
+      .plm-dl-empty{padding:1.75rem .1rem;text-align:center;color:var(--muted);font-size:.82rem;font-style:italic}
       .pl-content{overflow-x:hidden}
     }
 

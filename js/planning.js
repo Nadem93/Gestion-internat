@@ -374,6 +374,8 @@ function shiftSidebar(dir) {
   renderMiniCalendars();
 }
 
+let _plSelDay = null; // jour sélectionné pour la liste iOS mobile
+
 function renderMonth() {
   const y = currentDate.getFullYear(), m = currentDate.getMonth();
   document.getElementById('calTitle').textContent = `${MONTHS[m]} ${y}`;
@@ -383,6 +385,11 @@ function renderMonth() {
   const events = getFilteredEvents();
   const todayD = new Date();
 
+  // Jour sélectionné (vue iOS mobile) : dans le mois affiché ; défaut = aujourd'hui sinon le 1er
+  if (!_plSelDay || _plSelDay < dateStr(first) || _plSelDay > dateStr(last)) {
+    _plSelDay = (todayD.getFullYear() === y && todayD.getMonth() === m) ? dateStr(todayD) : dateStr(first);
+  }
+
   let cells = [];
   for (let i = 0; i < startDay; i++) cells.push(null);
   for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(y, m, d));
@@ -391,8 +398,9 @@ function renderMonth() {
 
   const grid = cells.map(d => {
     if (!d) return `<div class="plm-cell plm-empty"></div>`;
+    const ds = dateStr(d);
     const isTod = sameDay(d, todayD);
-    const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
+    const dayEvs = events.filter(e => eventOnDay(e, ds));
     const num = `<div class="plm-num${isTod?' is-today':''}">${d.getDate()}</div>`;
     const evHtml = dayEvs.map(ev => {
       const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
@@ -403,9 +411,12 @@ function renderMonth() {
         + '<span class="plm-ev-txt">' + label + '</span>'
         + '</div>';
     }).join('');
-    const more = '';
-    return `<div class="plm-cell${isTod ? ' plm-today' : ''}" onclick="quickAddEvent('${dateStr(d)}','')">
-      ${num}${evHtml}${more}
+    // Pastilles iOS (mobile) : jusqu'à 3 points colorés
+    const dots = dayEvs.slice(0, 3).map(ev =>
+      `<span class="plm-dot" style="background:${safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6'}"></span>`
+    ).join('');
+    return `<div class="plm-cell${isTod ? ' plm-today' : ''}${ds === _plSelDay ? ' plm-sel' : ''}" onclick="plDayClick('${ds}')">
+      ${num}${evHtml}<div class="plm-dots">${dots}</div>
     </div>`;
   }).join('');
 
@@ -413,7 +424,38 @@ function renderMonth() {
     '<div class="card" style="overflow:hidden;padding:0">'
     + '<div class="plm-head">' + head + '</div>'
     + '<div class="plm-grid">' + grid + '</div>'
-    + '</div>';
+    + '</div>'
+    + plDayListHtml(_plSelDay);
+}
+
+// Clic sur un jour : mobile → sélectionne (affiche ses événements dessous) ; desktop → ajout rapide
+function plDayClick(ds) {
+  if (window.innerWidth <= 640) { _plSelDay = ds; renderMonth(); }
+  else quickAddEvent(ds, '');
+}
+
+// Liste des événements du jour sélectionné, façon iOS (affichée en mobile via CSS)
+function plDayListHtml(ds) {
+  const evs = getFilteredEvents().filter(e => eventOnDay(e, ds))
+    .sort((a, b) => (a.heure || a.time || '') > (b.heure || b.time || '') ? 1 : -1);
+  const d = new Date(ds + 'T12:00:00');
+  let title = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (ds === dateStr(new Date())) title = "Aujourd'hui · " + title;
+  const rows = evs.length ? evs.map(ev => {
+    const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+    const time = (ev.heure || ev.time || '').slice(0, 5);
+    const sub = [ev.residentName, TYPE_LABELS[ev.type] || ev.type, ev.destination].filter(Boolean).join(' · ');
+    return `<div class="plm-dl-ev" onclick="viewEvent('${ev.id}')">
+      <div class="plm-dl-time">${time ? '<b>' + time + '</b>' : '<span style="color:var(--muted)">–</span>'}</div>
+      <div class="plm-dl-bar" style="background:${bg}"></div>
+      <div class="plm-dl-body"><div class="plm-dl-t">${escHtml(ev.titre) || 'Événement'}</div>${sub ? `<div class="plm-dl-s">${escHtml(sub)}</div>` : ''}</div>
+    </div>`;
+  }).join('') : '<div class="plm-dl-empty">Aucun événement ce jour</div>';
+  return `<div class="plm-daylist">
+    <div class="plm-dl-head"><span class="plm-dl-title">${escHtml(title)}</span>
+      <button class="btn btn-ghost btn-sm plm-dl-add" onclick="quickAddEvent('${ds}','')">＋ Ajouter</button></div>
+    ${rows}
+  </div>`;
 }
 
 function renderListView() {
