@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Données démo (Supabase) — Internalis</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+  .wrap{max-width:780px;margin:0 auto;padding:2rem 1rem 4rem}
+  h1{font-size:1.4rem;font-weight:800;color:#0f2b4a;margin-bottom:.2rem}
+  .sub{font-size:.82rem;color:#64748b;margin-bottom:1.5rem}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);padding:1.4rem;margin-bottom:1rem}
+  .card-title{font-weight:700;font-size:.9rem;margin-bottom:.9rem;color:#0f2b4a}
+  .warn-banner{background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:.85rem 1rem;font-size:.82rem;color:#991b1b;margin-bottom:1rem;line-height:1.5}
+  .etab-info{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:8px;padding:.7rem .9rem;font-size:.82rem;color:#0369a1;line-height:1.6}
+  .stat-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.3rem}
+  .stat{text-align:center;flex:1;min-width:78px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.6rem .3rem}
+  .stat-n{font-size:1.35rem;font-weight:800;color:#0f2b4a}
+  .stat-l{font-size:.68rem;color:#64748b;margin-top:.1rem}
+  .btn{padding:.65rem 1.4rem;border-radius:9px;font-weight:700;font-size:.88rem;cursor:pointer;border:none;transition:.15s}
+  .btn-go{background:#0f2b4a;color:#fff}
+  .btn-go:hover{background:#1e3a5f}
+  .btn-go:disabled{background:#94a3b8;cursor:not-allowed}
+  .btn-del{background:#fee2e2;color:#dc2626;margin-left:.5rem}
+  .btn-del:hover{background:#fecaca}
+  .btn-del:disabled{opacity:.5;cursor:not-allowed}
+  .check-row{display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:#475569;margin-bottom:1rem;line-height:1.4}
+  .log{background:#0f172a;color:#94a3b8;border-radius:10px;padding:1rem;font-family:ui-monospace,monospace;font-size:.75rem;line-height:1.65;max-height:360px;overflow-y:auto;margin-top:1rem;white-space:pre-wrap}
+  .log .ok{color:#4ade80}.log .info{color:#60a5fa}.log .warn{color:#fbbf24}.log .err{color:#f87171}
+  progress{width:100%;height:8px;border-radius:4px;margin-top:.85rem;accent-color:#0f2b4a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧪 Données de démonstration</h1>
+  <p class="sub">Peuple <b>Supabase</b> avec 50 résidents et une activité réaliste sur ~4 mois — journal, transmissions, agenda, présences, incidents et activités, avec les niveaux de soutien et l'accompagnement.</p>
+
+  <div class="warn-banner">
+    ⚠️ <b>À utiliser sur un établissement de démonstration.</b> Ce générateur ajoute de vraies lignes dans votre base Supabase (établissement de la session connectée). Toutes les données créées sont marquées <b>[démo]</b> et peuvent être retirées avec le bouton « Supprimer les données de démonstration ».
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cible</div>
+    <div id="etabInfo" class="etab-info">Vérification de la session…</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ce qui sera généré</div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-n">50</div><div class="stat-l">Résidents</div></div>
+      <div class="stat"><div class="stat-n">~250</div><div class="stat-l">Journal</div></div>
+      <div class="stat"><div class="stat-n">~200</div><div class="stat-l">Transmissions</div></div>
+      <div class="stat"><div class="stat-n">~150</div><div class="stat-l">Agenda</div></div>
+      <div class="stat"><div class="stat-n">21 j</div><div class="stat-l">Présences</div></div>
+      <div class="stat"><div class="stat-n">~14</div><div class="stat-l">Incidents</div></div>
+      <div class="stat"><div class="stat-n">8</div><div class="stat-l">Activités</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Actions</div>
+    <div class="check-row">
+      <input type="checkbox" id="chkConfirm"/>
+      <label for="chkConfirm">Je confirme vouloir ajouter ces données de démonstration à l'établissement ci-dessus.</label>
+    </div>
+    <button class="btn btn-go" id="btnRun" onclick="runSeed()" disabled>▶ Générer les données</button>
+    <button class="btn btn-del" id="btnDel" onclick="deleteDemo()" disabled>🗑 Supprimer les données de démonstration</button>
+    <progress id="prog" value="0" max="100" style="display:none"></progress>
+    <div id="logBox" class="log" style="display:none"></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script>
+// ═══════════════════════ Utilitaires ═══════════════════════
+let logEl, progEl;
+function log(msg, cls='info'){ if(!logEl) return; logEl.style.display=''; const d=document.createElement('div'); d.className=cls; d.textContent='▸ '+msg; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }
+function setProgress(v){ if(progEl){ progEl.style.display=''; progEl.value=Math.min(100,Math.round(v)); } }
+function rnd(n){ return Math.floor(Math.random()*n); }
+function pick(a){ return a[rnd(a.length)]; }
+function pickN(a,n){ const s=[...a],o=[]; while(o.length<n&&s.length) o.push(s.splice(rnd(s.length),1)[0]); return o; }
+function clamp(x,lo,hi){ return Math.max(lo,Math.min(hi,x)); }
+function shuffle(a){ const s=[...a]; for(let i=s.length-1;i>0;i--){ const j=rnd(i+1); [s[i],s[j]]=[s[j],s[i]]; } return s; }
+function dISO(daysAgo,h,m){ const d=new Date(); d.setDate(d.getDate()-daysAgo); d.setHours(h==null?9+rnd(9):h, m==null?(Math.random()<.5?0:30):m, 0, 0); return d.toISOString(); }
+function dDay(daysAgo){ const d=new Date(); d.setDate(d.getDate()-daysAgo); return d.toISOString().slice(0,10); }
+async function pool(items, worker, size, onTick){
+  size = size || 6; let i=0, done=0; const results=new Array(items.length);
+  async function run(){ while(i<items.length){ const idx=i++; try{ results[idx]=await worker(items[idx],idx); }catch(e){ results[idx]=null; log('Erreur sur un élément : '+(e&&e.message||e),'err'); } done++; if(onTick) onTick(done,items.length); } }
+  await Promise.all(Array.from({length:Math.min(size,items.length||1)}, run));
+  return results;
+}
+const DEMO_TAG = '[démo]';
+
+// ═══════════════════════ Vocabulaire niveau de soutien ═══════════════════════
+// score 1..5  ->  index 0..4
+const NIVEAUX = ['total','partiel','verbal','supervision','autonomie'];
+function scoreKey(score){ return NIVEAUX[clamp(Math.round(score)-1,0,4)]; }
+// trajectoire : score à une fraction f (0 = plus ancien, 1 = plus récent)
+function niveauAt(res, f){
+  if(!res._assessed) return '';
+  const s = res._start + (res._end - res._start)*f + (Math.random()-0.5)*0.7;
+  return scoreKey(s);
+}
+
+// ═══════════════════════ Pools de contenu ═══════════════════════
+const PRENOMS_M = ['Antoine','Rayan','Kevin','Dylan','Mathieu','Samir','Lucas','Hugo','Théo','Nathan','Enzo','Yanis','Mehdi','Bilal','Adrien','Quentin','Maxime','Florian','Jordan','Killian','Bastien','Anthony','Jérémy','Sofiane','Alexandre'];
+const PRENOMS_F = ['Emma','Lucie','Jade','Sarah','Pauline','Laura','Manon','Chloé','Léa','Inès','Camille','Sabrina','Nadia','Yasmine','Océane','Marine','Elodie','Amandine','Sonia','Julie','Aurélie','Fatima','Clara','Maëva','Noémie'];
+const NOMS = ['Girard','Petit','Mansouri','Fontaine','Lebrun','Moreau','Rousseau','Benali','Garnier','Vidal','Karim','Martin','Dubois','Bernard','Lefèvre','Roux','Fournier','Morel','Giraud','André','Mercier','Blanc','Guerin','Muller','Henry','Chevalier','Robin','Masson','Simon','Gauthier','Perrin','Clément','Da Silva','Riva','Sanchez','Lopez','Nguyen','Traoré','Diallo','Bouhadi'];
+const REFERENTS = ['Marie Lefebvre','Thomas Bernard','Lucas Petit','Inès Chabrier','Karim Saïdi','Aurélie Fontaine','Bastien Collignon','Sara Lemoine'];
+const COLORS = ['#3b82f6','#6366f1','#0ea5e9','#8b5cf6','#ec4899','#f59e0b','#10b981','#14b8a6','#ef4444','#f97316','#06b6d4','#84cc16'];
+const STATUTS = [['permanent',38],['temporaire',7],['stage',3],['urgence',2]];
+
+const JOURNAL_TXT = [
+  n => `Entretien individuel avec ${n} : évoque son projet et ses difficultés du moment. Écoute active et reformulation.`,
+  n => `${n} a participé à l'atelier collectif. Bonne implication, échanges positifs avec le groupe.`,
+  n => `Accompagnement de ${n} à un rendez-vous extérieur. Trajet et démarche se sont bien déroulés.`,
+  n => `Point sur les objectifs du projet personnalisé avec ${n}. Progrès notés sur l'autonomie quotidienne.`,
+  n => `${n} a préparé son repas avec étayage. Gestes techniques mieux maîtrisés qu'auparavant.`,
+  n => `Gestion d'une tension avec ${n} suite à un désaccord. Retour au calme après médiation.`,
+  n => `${n} a réalisé seul·e sa toilette ce matin. Encouragements apportés, satisfaction exprimée.`,
+  n => `Aide aux démarches administratives de ${n} (CAF, dossier MDPH). Compréhension progressive.`,
+  n => `${n} exprime de la fatigue et des difficultés de sommeil. Transmis à l'équipe soignante.`,
+  n => `Activité extérieure avec ${n} : sortie appréciée, participation active aux échanges.`,
+];
+const ACCOMP_TXT = [
+  'Incitation verbale et reformulation des consignes.',
+  'Présence rassurante tout au long de l\'activité.',
+  'Guidage gestuel pour les étapes techniques.',
+  'Médiation avec un pair pour apaiser la situation.',
+  'Aide partielle puis encouragement à faire seul·e.',
+  'Accompagnement physique pour le déplacement.',
+  'Supervision à distance, intervention ponctuelle.',
+  'Étayage verbal pour la gestion des émotions.',
+  'Stimulation et valorisation des réussites.',
+];
+const TR_TXT = [
+  'Journée calme, bonne participation aux temps collectifs.',
+  'A bien mangé au repas. Humeur stable.',
+  'Moment de tension en fin d\'après-midi, apaisé rapidement.',
+  'Fatigue observée, sieste proposée et acceptée.',
+  'A sollicité de l\'aide pour ses démarches, accompagnement fait.',
+  'Bon investissement dans l\'activité du jour.',
+  'Repli en matinée, échanges renoués l\'après-midi.',
+  'Nuit reposante d\'après le relais du matin.',
+];
+const TR_CATS = ['sante','comportement','alimentation','hygiene','activite','famille','sortie','administratif'];
+const TR_SHIFTS = ['matin','aprem','nuit'];
+const JOURNAL_CATS = ['1','2','3','4','5','9','10']; // Autonomie, Santé, Logement, Vie sociale, Vie affective, Accompagnement, Administratif
+const PLAN_TYPES = ['activite','rdv','sortie'];
+const PLAN_TITRES = {
+  activite:['Atelier cuisine','Atelier créatif','Groupe de parole','Activité sportive','Médiation animale'],
+  rdv:['Rendez-vous médical','Consultation psychologue','Entretien éducatif','Bilan orthophonie','RDV dentiste'],
+  sortie:['Sortie piscine','Courses accompagnées','Sortie culturelle','Marche en extérieur','Sortie médiathèque'],
+};
+const INCIDENT_TYPES = ['chute','agression','fugue','violence','medical','materiel','accident','autre'];
+const INCIDENT_GRAV = ['leger','moyen','grave'];
+const INCIDENT_DESC = {
+  chute:'Chute sans gravité dans le couloir, pas de blessure. Surveillance mise en place.',
+  agression:'Altercation verbale entre deux résidents. Médiation effectuée, retour au calme.',
+  fugue:'Absence non signalée en soirée. Contact établi, retour au foyer dans la soirée.',
+  violence:'Geste d\'énervement sur du mobilier. Aucun blessé. Entretien de recadrage.',
+  medical:'Malaise passager, prise en charge immédiate. Récupération complète.',
+  materiel:'Dégradation involontaire de matériel commun. Constat effectué.',
+  accident:'Légère coupure lors d\'un atelier. Soins prodigués sur place.',
+  autre:'Événement inhabituel consigné pour suivi de l\'équipe.',
+};
+const ACTIVITES = [
+  {nom:'Atelier cuisine',categorie:'autonomie',jour:'Lundi',heureDebut:'10:00',heureFin:'12:00',lieu:'Cuisine pédagogique',placesMax:8},
+  {nom:'Groupe sportif',categorie:'sportive',jour:'Mardi',heureDebut:'14:00',heureFin:'16:00',lieu:'Gymnase municipal',placesMax:12},
+  {nom:'Atelier créatif',categorie:'creative',jour:'Mercredi',heureDebut:'14:30',heureFin:'16:30',lieu:'Salle d\'activités',placesMax:10},
+  {nom:'Médiation animale',categorie:'autre',jour:'Jeudi',heureDebut:'10:30',heureFin:'11:30',lieu:'Jardin',placesMax:6},
+  {nom:'Groupe de parole',categorie:'citoyennete',jour:'Jeudi',heureDebut:'16:00',heureFin:'17:00',lieu:'Salle de réunion',placesMax:10},
+  {nom:'Sortie culturelle',categorie:'sortie',jour:'Vendredi',heureDebut:'14:00',heureFin:'17:00',lieu:'Extérieur',placesMax:8},
+  {nom:'Atelier informatique',categorie:'scolaire',jour:'Ponctuel',heureDebut:'09:30',heureFin:'11:00',lieu:'Salle multimédia',placesMax:6},
+  {nom:'Piscine',categorie:'sportive',jour:'Samedi',heureDebut:'10:00',heureFin:'12:00',lieu:'Piscine municipale',placesMax:8},
+];
+
+// ═══════════════════════ Session / init ═══════════════════════
+let AUTHOR = { id:null, name:'Démo' };
+window.addEventListener('DOMContentLoaded', async () => {
+  logEl = document.getElementById('logBox');
+  progEl = document.getElementById('prog');
+  const info = document.getElementById('etabInfo');
+  const chk = document.getElementById('chkConfirm');
+  const btn = document.getElementById('btnRun');
+  const btnDel = document.getElementById('btnDel');
+
+  const sess = (typeof Auth!=='undefined' && Auth.getSession) ? Auth.getSession() : null;
+  if(sess){ AUTHOR.id = sess.userId || null; AUTHOR.name = [sess.prenom, sess.nom].filter(Boolean).join(' ') || sess.username || 'Démo'; }
+
+  try{
+    if(typeof supabaseClient==='undefined') throw new Error('Client Supabase non chargé.');
+    try{ const { data:{ user } } = await supabaseClient.auth.getUser(); if(user && user.id) AUTHOR.id = user.id; }catch(_){}
+    const etabId = await sbGetEtablissementId();
+    info.innerHTML = `📍 Établissement (session) : <b>${etabId}</b><br>👤 Auteur des écritures : <b>${AUTHOR.name}</b>`;
+    chk.addEventListener('change', () => { btn.disabled = !chk.checked; });
+    btnDel.disabled = false;
+  }catch(e){
+    info.innerHTML = `⚠️ Impossible de déterminer l'établissement : ${e.message}.<br>Connectez-vous à l'application (même onglet/domaine) avant d'ouvrir cette page.`;
+  }
+});
+
+// ═══════════════════════ Génération ═══════════════════════
+async function runSeed(){
+  const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel');
+  btn.disabled=true; btnDel.disabled=true; logEl.innerHTML=''; setProgress(1);
+  const t0=Date.now();
+  try{
+    log('Démarrage de la génération…','info');
+
+    // ── 1. Résidents (50) ──
+    const usedNames=new Set();
+    const specs=[];
+    for(let i=0;i<50;i++){
+      const isF = Math.random()<0.5;
+      let prenom, nom, full, guard=0;
+      do{ prenom=pick(isF?PRENOMS_F:PRENOMS_M); nom=pick(NOMS); full=prenom+' '+nom; guard++; }while(usedNames.has(full)&&guard<30);
+      usedNames.add(full);
+      const y=1972+rnd(34), mo=1+rnd(12), da=1+rnd(28);
+      specs.push({ prenom, nom, genre:isF?'F':'M', dob:`${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}`,
+        chambre:'', referent:pick(REFERENTS), color:pick(COLORS) });
+    }
+    // chambres lisibles : 101.., 201.., 301.. par étage
+    specs.forEach((s,i)=>{ s.chambre = String(100 + Math.floor(i/12)*100 + (i%12) + 1); });
+
+    // trajectoires d'autonomie : répartition variée du "dernier niveau"
+    const endsPool = shuffle([
+      ...Array(6).fill(1), ...Array(11).fill(2), ...Array(12).fill(3), ...Array(12).fill(4), ...Array(9).fill(5)
+    ]); // 50 valeurs, score 1..5
+    specs.forEach((s,i)=>{
+      s._assessed = i >= 5; // 5 résidents non évalués (courbe vide + "non évalué" au dashboard)
+      const end = endsPool[i] || 3;
+      s._end = end;
+      s._start = clamp(end + pick([-2,-1,-1,0,0,1]), 1, 5);
+    });
+
+    log('Création de 50 résidents…','info');
+    const savedRes = await pool(specs, async (s) => {
+      const saved = await sbSaveResident({
+        prenom:s.prenom, nom:s.nom, genre:s.genre, dob:s.dob,
+        entree: dDay(30 + rnd(900)), statut: weightedStatut(),
+        chambre:s.chambre, referent:s.referent, color:s.color,
+        notes: `Résident de démonstration ${DEMO_TAG}.`, objectifs:[]
+      });
+      return saved ? { ...saved, _spec:s } : null;
+    }, 6, (d,t)=>setProgress(1 + d/t*17));
+    const residents = savedRes.filter(Boolean);
+    log(`✓ ${residents.length} résidents créés`,'ok');
+    if(!residents.length){ throw new Error('Aucun résident créé — arrêt.'); }
+
+    // ── 2. Journal de bord ──
+    log('Génération du journal de bord…','info');
+    const journalTasks=[];
+    const OFFS_J=[128,100,74,50,30,12];
+    residents.forEach(r=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`;
+      const n=4+rnd(3);
+      const offs=pickN(OFFS_J,n).sort((a,b)=>b-a);
+      offs.forEach(off=>{
+        const f=1-off/135;
+        const niv=niveauAt(spec,f);
+        journalTasks.push({
+          residentId:r.id, resident:full, residentColor:r._spec.color||'',
+          categorie:pick(JOURNAL_CATS), date:dISO(off), contenu:pick(JOURNAL_TXT)(full),
+          accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv,
+          visibilite:'equipe', serafinphType: niv?'direct':'indirect',
+          author:AUTHOR.name, authorId:AUTHOR.id, readBy: AUTHOR.id?[String(AUTHOR.id)]:[],
+          createdAt:dISO(off)
+        });
+      });
+    });
+    await pool(journalTasks, t=>sbSaveJournalEntry(t), 8, (d,tot)=>setProgress(18 + d/tot*24));
+    log(`✓ ${journalTasks.length} entrées de journal créées`,'ok');
+
+    // ── 3. Transmissions ──
+    log('Génération des transmissions…','info');
+    const trTasks=[];
+    const OFFS_T=[85,58,32,14,6];
+    residents.forEach(r=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`;
+      const n=3+rnd(3);
+      const offs=pickN(OFFS_T,n).sort((a,b)=>b-a);
+      offs.forEach(off=>{
+        const f=1-off/135;
+        const niv=niveauAt(spec,f);
+        trTasks.push({
+          date:dDay(off), shift:pick(TR_SHIFTS), cat:pick(TR_CATS), priority: Math.random()<.12?'urgent':'normal',
+          content:pick(TR_TXT), residentId:r.id, residentName:full,
+          authorId:AUTHOR.id, authorName:AUTHOR.name, readBy: AUTHOR.id?[String(AUTHOR.id)]:[],
+          soutien: niv?pick(ACCOMP_TXT):'', soutienNiveau:niv, createdAt:dISO(off)
+        });
+      });
+    });
+    await pool(trTasks, t=>sbSaveTransmission(t), 8, (d,tot)=>setProgress(42 + d/tot*20));
+    log(`✓ ${trTasks.length} transmissions créées`,'ok');
+
+    // ── 4. Agenda (planning_events) ──
+    log('Génération de l\'agenda…','info');
+    const planEvents=[];
+    residents.forEach(r=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`;
+      // 1 passé + 2 à venir
+      const offsets=[ 8, -4, -12 ]; // jours (négatif = futur)
+      offsets.forEach(off=>{
+        const type=pick(PLAN_TYPES);
+        const niv = spec._assessed ? niveauAt(spec, off<=0?1:0.9) : '';
+        planEvents.push({
+          titre:pick(PLAN_TITRES[type]), residentId:r.id, residentName:full,
+          type, date:dDay(off), heure:`${9+rnd(8)}:${Math.random()<.5?'00':'30'}`,
+          duree:pick(['30','60','90','120']), color:r._spec.color||'#2563eb',
+          desc:'Activité de démonstration '+DEMO_TAG, accompagnement: niv?pick(ACCOMP_TXT):'',
+          niveauSoutien:niv, serafin: niv?'directe':'indirecte'
+        });
+      });
+    });
+    // insert en masse par lots de 100
+    for(let i=0;i<planEvents.length;i+=100){
+      await sbSavePlanningEventsBulk(planEvents.slice(i,i+100));
+      setProgress(62 + (i/planEvents.length)*8);
+    }
+    log(`✓ ${planEvents.length} événements d'agenda créés`,'ok');
+
+    // ── 5. Présences (21 derniers jours) ──
+    log('Génération des présences…','info');
+    const ids=residents.map(r=>r.id);
+    for(let d=20; d>=0; d--){
+      const day=dDay(d);
+      await sbSetPresencesBulk(ids, day, 'present');
+      // quelques absences / sorties
+      const nb=1+rnd(3);
+      const absents=pickN(ids, nb);
+      for(const rid of absents){
+        const st = Math.random()<.5?'absent':'sortie';
+        await sbSetPresence(rid, day, st, st==='absent'?'Motif familial':'Sortie encadrée');
+      }
+      setProgress(70 + (20-d)/21*12);
+    }
+    log('✓ Présences des 21 derniers jours créées','ok');
+
+    // ── 6. Incidents ──
+    log('Génération des incidents…','info');
+    const incTasks=[];
+    for(let i=0;i<14;i++){
+      const r=pick(residents), full=`${r.prenom} ${r.nom}`;
+      const type=pick(INCIDENT_TYPES), off=2+rnd(60);
+      incTasks.push({
+        titre:`${type[0].toUpperCase()+type.slice(1)} — ${full}`, type, gravite:pick(INCIDENT_GRAV),
+        date:dDay(off), heure:`${9+rnd(11)}:${Math.random()<.5?'00':'30'}`,
+        residentId:r.id, residentName:full, lieu:pick(['Salle commune','Chambre','Couloir','Extérieur','Réfectoire']),
+        description:(INCIDENT_DESC[type]||'')+' '+DEMO_TAG, statut:pick(['declare','cours','valide']),
+        declaredBy:AUTHOR.name, declaredById:AUTHOR.id, declaredAt:dISO(off)
+      });
+    }
+    await pool(incTasks, t=>sbSaveIncident(t), 6, (d,tot)=>setProgress(82 + d/tot*8));
+    log(`✓ ${incTasks.length} incidents créés`,'ok');
+
+    // ── 7. Activités (catalogue global) ──
+    log('Génération du catalogue d\'activités…','info');
+    await pool(ACTIVITES, a=>sbSaveActivite({...a, animateur:'Animateur (démo)'}), 4, (d,tot)=>setProgress(90 + d/tot*8));
+    log(`✓ ${ACTIVITES.length} activités créées`,'ok');
+
+    setProgress(100);
+    log('','info');
+    log('═══════════════════════════════════════','info');
+    log(`✅ Terminé en ${Math.round((Date.now()-t0)/1000)} s — rechargez l'application.`,'ok');
+    log(`   50 résidents · ${journalTasks.length} journal · ${trTasks.length} transmissions · ${planEvents.length} agenda · ${incTasks.length} incidents`,'info');
+    log('═══════════════════════════════════════','info');
+  }catch(e){
+    log('ERREUR : '+(e&&e.message||e),'err'); console.error(e);
+  }finally{
+    btn.disabled=false; btnDel.disabled=false;
+  }
+}
+function weightedStatut(){
+  const bag=[]; STATUTS.forEach(([v,w])=>{ for(let i=0;i<w;i++) bag.push(v); }); return pick(bag);
+}
+
+// ═══════════════════════ Suppression des données démo ═══════════════════════
+async function deleteDemo(){
+  if(!confirm('Supprimer tous les résidents [démo] et leurs données liées (journal, transmissions, agenda, incidents) ?\n\nLes vraies données ne sont pas touchées.')) return;
+  const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel');
+  btn.disabled=true; btnDel.disabled=true; logEl.innerHTML=''; setProgress(1);
+  try{
+    log('Recherche des données de démonstration…','info');
+    const [residents, journal, transmissions, planning, incidents, activites] = await Promise.all([
+      sbGetResidents(), sbGetJournalEntries(), sbGetTransmissions(), sbGetPlanningEvents(), sbGetIncidents(),
+      (typeof sbGetActivites==='function'?sbGetActivites():Promise.resolve([]))
+    ]);
+    const demoRes = residents.filter(r => (r.notes||'').includes(DEMO_TAG));
+    if(!demoRes.length){ log('Aucun résident [démo] trouvé.','warn'); btn.disabled=false; btnDel.disabled=false; return; }
+    const demoIds = new Set(demoRes.map(r=>String(r.id)));
+    log(`${demoRes.length} résidents [démo] trouvés — suppression des données liées…`, 'info');
+
+    const jDel = journal.filter(e=>demoIds.has(String(e.residentId)));
+    const tDel = transmissions.filter(e=>demoIds.has(String(e.residentId)));
+    const pDel = planning.filter(e=>demoIds.has(String(e.residentId)));
+    const iDel = incidents.filter(e=>demoIds.has(String(e.residentId)));
+    const aDel = (activites||[]).filter(a=>(a.animateur||'').includes('démo') || (a.nom||'').includes(DEMO_TAG));
+
+    await pool(jDel, e=>sbDeleteJournalEntry(e.id), 8, (d,t)=>setProgress(5+d/t*20));
+    log(`✓ ${jDel.length} entrées de journal supprimées`,'ok');
+    await pool(tDel, e=>sbDeleteTransmission(e.id), 8, (d,t)=>setProgress(25+d/t*20));
+    log(`✓ ${tDel.length} transmissions supprimées`,'ok');
+    await pool(pDel, e=>sbDeletePlanningEvent(e.id), 8, (d,t)=>setProgress(45+d/t*15));
+    log(`✓ ${pDel.length} événements d'agenda supprimés`,'ok');
+    await pool(iDel, e=>sbDeleteIncident(e.id), 6, (d,t)=>setProgress(60+d/t*15));
+    log(`✓ ${iDel.length} incidents supprimés`,'ok');
+    await pool(aDel, a=>sbDeleteActivite(a.id), 4, (d,t)=>setProgress(75+d/t*8));
+    log(`✓ ${aDel.length} activités [démo] supprimées`,'ok');
+    await pool(demoRes, r=>sbDeleteResident(r.id), 6, (d,t)=>setProgress(83+d/t*15));
+    log(`✓ ${demoRes.length} résidents [démo] supprimés`,'ok');
+
+    setProgress(100);
+    log('✅ Données de démonstration supprimées. (Les présences liées, sans fonction de suppression, deviennent orphelines et n\'apparaissent plus.)','ok');
+  }catch(e){
+    log('ERREUR : '+(e&&e.message||e),'err'); console.error(e);
+  }finally{
+    btn.disabled=false; btnDel.disabled=false;
+  }
+}
+</script>
+</body>
+</html>
