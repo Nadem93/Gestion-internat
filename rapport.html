@@ -17,7 +17,7 @@
   </header>
 
   <main class="content">
-    <div style="max-width:720px;margin:0 auto">
+    <div style="max-width:900px;margin:0 auto">
 
       <div class="card" style="margin-bottom:1.25rem">
         <div class="card-header"><span class="card-title">📄 Générer un rapport d'activité</span></div>
@@ -38,16 +38,25 @@
             </div>
             <div class="form-group" style="margin:0" id="rapportMoisWrap">
               <label>Mois</label>
-              <input type="month" id="rapportMois"/>
+              <input type="month" id="rapportMois" onchange="renderApercu()"/>
             </div>
             <div class="form-group" style="margin:0;display:none" id="rapportAnneeWrap">
               <label>Année</label>
-              <input type="number" id="rapportAnnee" min="2000" max="2100" step="1"/>
+              <input type="number" id="rapportAnnee" min="2000" max="2100" step="1" onchange="renderApercu()"/>
             </div>
           </div>
-          <button class="btn btn-violet" onclick="genererRapportPDF()" style="font-weight:700;align-self:flex-start">
-            📄 Générer le rapport PDF
-          </button>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            <button class="btn btn-violet" onclick="genererRapportPDF()" style="font-weight:700">
+              📄 Générer le rapport PDF
+            </button>
+            <button class="btn btn-outline" onclick="renderApercu()" style="font-weight:700">
+              🔄 Actualiser l'aperçu
+            </button>
+          </div>
+          <div style="border-top:1px solid var(--border);margin-top:.5rem;padding-top:1rem">
+            <div style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.6rem">👁 Aperçu à l'écran</div>
+            <div id="rapportApercu"></div>
+          </div>
         </div>
       </div>
 

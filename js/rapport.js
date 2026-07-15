@@ -15,6 +15,7 @@ function toggleRapportPeriode() {
   const t = document.getElementById('rapportType').value;
   document.getElementById('rapportMoisWrap').style.display = t === 'mois' ? '' : 'none';
   document.getElementById('rapportAnneeWrap').style.display = t === 'annee' ? '' : 'none';
+  if (typeof renderApercu === 'function' && document.getElementById('rapportApercu')) renderApercu();
 }
 
 // ── CONTRIBUTIONS DE L'ÉQUIPE (qualitatif, saisi par les éducateurs etc.) ──
@@ -176,7 +177,7 @@ function svgDonut(segments, centerLabel) {
   return `<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="120" height="120" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
 }
 
-async function genererRapportPDF() {
+async function genererRapportPDF(previewIframe) {
   const type = document.getElementById('rapportType').value;
   let startStr, endStr, label;
   if (type === 'mois') {
@@ -197,9 +198,13 @@ async function genererRapportPDF() {
   const _start = new Date(startStr + 'T00:00:00'), _end = new Date(endStr + 'T00:00:00');
   const _days = Math.round((_end - _start) / 86400000) + 1;
 
-  // Onglet ouvert AVANT les fetchs → préserve le geste utilisateur (pas de blocage pop-up)
-  const w = window.open('', '_blank');
-  if (w) w.document.write('<!doctype html><meta charset=utf-8><body style="font:15px system-ui,sans-serif;padding:3rem;text-align:center;color:#334155"><p>⏳ Génération du rapport en cours…</p>');
+  // Onglet ouvert AVANT les fetchs → préserve le geste utilisateur (pas de blocage pop-up).
+  // En mode aperçu (previewIframe fourni), on écrira dans l'iframe de la page à la place.
+  let w = null;
+  if (!previewIframe) {
+    w = window.open('', '_blank');
+    if (w) w.document.write('<!doctype html><meta charset=utf-8><body style="font:15px system-ui,sans-serif;padding:3rem;text-align:center;color:#334155"><p>⏳ Génération du rapport en cours…</p>');
+  }
 
   const session = Auth.getSession();
   const residents = sbResidents();
@@ -468,9 +473,7 @@ async function genererRapportPDF() {
   const entrPeriod = (entretiens || []).filter(e => inRange(e.date));
   const entrReal = entrPeriod.filter(e => e.statut === 'realise' || e.statut === 'realisee').length;
 
-  if (!w) { toast('Autorisez les fenêtres pop-up pour ouvrir le rapport.', 'error'); return; }
-  w.document.open();
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const __html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Rapport d'activité — ${escHtml(label)}</title>
 <style>
   @page{margin:1.8cm 1.5cm}
@@ -680,9 +683,45 @@ ${empActifs.length ? `<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-ite
 ${contribHtml}
 
 <div class="footer">${escHtml(settings.etablissement || 'Établissement')} · Rapport d'activité ${escHtml(label)} · Document interne</div>
-</body></html>`);
+</body></html>`;
+
+  // Mode aperçu : on écrit le rapport dans l'iframe de la page
+  if (previewIframe) {
+    const d = previewIframe.contentDocument || (previewIframe.contentWindow && previewIframe.contentWindow.document);
+    if (d) { d.open(); d.write(__html); d.close(); }
+    return;
+  }
+  // Mode PDF : nouvel onglet imprimable
+  if (!w) { toast('Autorisez les fenêtres pop-up pour ouvrir le rapport.', 'error'); return; }
+  w.document.open();
+  w.document.write(__html);
   w.document.close();
   if (typeof auditLog === 'function') auditLog('export', `Rapport d'activité — ${label}`);
+}
+
+// ── Aperçu graphique à l'écran (même rendu que le PDF, dans un iframe) ──
+async function renderApercu() {
+  const cont = document.getElementById('rapportApercu');
+  if (!cont) return;
+  if (!document.getElementById('rapportType')) return;
+  const type = document.getElementById('rapportType').value;
+  const per = type === 'mois' ? document.getElementById('rapportMois').value : document.getElementById('rapportAnnee').value;
+  if (!per) { cont.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:1.5rem;font-size:.85rem">Choisissez une période pour afficher l\'aperçu.</p>'; return; }
+  cont.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#94a3b8;font-size:.9rem">⏳ Chargement de l\'aperçu…</div>';
+  const ifr = document.createElement('iframe');
+  ifr.title = 'Aperçu du rapport d\'activité';
+  ifr.style.cssText = 'width:100%;border:1px solid #e2e8f0;border-radius:12px;background:#fff;min-height:640px;box-shadow:0 4px 16px rgba(15,43,74,.08)';
+  cont.innerHTML = '';
+  cont.appendChild(ifr);
+  try {
+    await genererRapportPDF(ifr);
+    const doc = ifr.contentDocument || (ifr.contentWindow && ifr.contentWindow.document);
+    const resize = () => { try { ifr.style.height = (doc.documentElement.scrollHeight + 24) + 'px'; } catch (e) {} };
+    resize(); setTimeout(resize, 200); setTimeout(resize, 700);
+  } catch (e) {
+    console.error(e);
+    cont.innerHTML = '<p style="text-align:center;color:#dc2626;padding:1.5rem;font-size:.85rem">Erreur lors du chargement de l\'aperçu.</p>';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
