@@ -2287,87 +2287,69 @@ function autonomieCard(r) {
     { s:2, label:'Aide partielle', color:'#f97316', emoji:'🟠' },
     { s:1, label:'Aide totale',    color:'#ef4444', emoji:'🔴' }
   ];
-  const MONTHS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const byScore = s => LEVELS.find(l => l.s === Math.round(s)) || LEVELS[LEVELS.length-1];
   const fullName = `${r.prenom||''} ${r.nom||''}`.trim();
-  const nearest = s => LEVELS.reduce((b,l)=> Math.abs(l.s-s) < Math.abs(b.s-s) ? l : b, LEVELS[0]);
+  const TR_CAT = { sante:'Santé', medicament:'Médicament', comportement:'Comportement', alimentation:'Alimentation', hygiene:'Hygiène', activite:'Activité', famille:'Famille', sortie:'Sortie / Retour', administratif:'Administratif', maintenance:'Maintenance', urgent:'Urgent' };
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  const categories = (typeof DB !== 'undefined' && DB.get) ? (DB.get(DB.keys.categories) || []) : [];
 
-  // Collecte des points (journal + agenda) ayant un niveau de soutien renseigné
-  const pts = [];
-  const pushPt = (dateStr, niv) => {
-    const sc = NIV_SCORE[niv]; if (!sc || !dateStr) return;
-    const key = String(dateStr).slice(0,7);
-    if (/^\d{4}-\d{2}$/.test(key)) pts.push({ key, s: sc });
-  };
+  // Observations { date, s(1..5), cat } collectées depuis journal + agenda + transmissions
+  const obs = [];
+  const push = (dateStr, niv, cat) => { const sc = NIV_SCORE[niv]; if (!sc || !dateStr) return; obs.push({ date: String(dateStr).slice(0,10), s: sc, cat: cat || 'Autre' }); };
   (_residentJournalAll||[]).forEach(e => {
-    if (String(e.residentId) === String(currentResidentId) || e.resident === fullName) pushPt(e.date || e.createdAt, e.niveauSoutien);
+    if (String(e.residentId) === String(currentResidentId) || e.resident === fullName) {
+      const jc = categories.find(c => String(c.id) === String(e.categorie));
+      push(e.date || e.createdAt, e.niveauSoutien, jc ? jc.name : 'Journal');
+    }
   });
   (_residentPlanningCache||[]).forEach(e => {
-    if (String(e.residentId) === String(currentResidentId) || e.residentName === fullName) pushPt(e.date, e.niveauSoutien);
+    if (String(e.residentId) === String(currentResidentId) || e.residentName === fullName) push(e.date, e.niveauSoutien, 'Agenda');
   });
-  // Transmissions (champ soutienNiveau — mêmes valeurs que le journal/agenda)
   const _trAll = (typeof DB !== 'undefined' && DB.get) ? (DB.get(DB.keys.transmissions) || []) : [];
   _trAll.forEach(t => {
-    if (String(t.residentId) === String(currentResidentId) || t.residentName === fullName) pushPt(t.date || t.createdAt, t.soutienNiveau);
+    if (String(t.residentId) === String(currentResidentId) || t.residentName === fullName) push(t.date || t.createdAt, t.soutienNiveau, TR_CAT[t.cat] || (t.cat ? cap(t.cat) : 'Transmission'));
   });
-
-  // Moyenne mensuelle (8 derniers mois avec données)
-  const byMonth = {};
-  pts.forEach(p => { (byMonth[p.key] = byMonth[p.key] || []).push(p.s); });
-  const months = Object.keys(byMonth).sort().slice(-8);
-  const series = months.map(k => { const a = byMonth[k]; return { key:k, avg: a.reduce((x,y)=>x+y,0)/a.length }; });
 
   const header = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span style="font-size:18px">📈</span><span class="card-title" style="color:var(--accent)">Évolution de l'autonomie</span>`;
 
-  if (series.length === 0) {
-    return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}</div><div class="card-body"><div class="empty" style="padding:2rem"><p>Aucun niveau de soutien saisi pour ce résident.</p><p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Renseignez le « niveau de soutien » dans les transmissions, le journal de bord ou l'agenda : la courbe se construira automatiquement.</p></div></div></div>`;
+  if (!obs.length) {
+    return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}</div><div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun niveau de soutien saisi pour ce résident.</p><p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Renseignez le « niveau de soutien » dans les transmissions, le journal ou l'agenda : l'évolution par domaine s'affichera ici.</p></div></div></div>`;
   }
 
-  // Géométrie
-  const X0=120, X1=596, Y_TOP=34, Y_BOT=178;
-  const yFor = s => Y_BOT - (s-1)/4*(Y_BOT-Y_TOP);
-  const xFor = i => series.length===1 ? (X0+X1)/2 : X0 + i*(X1-X0)/(series.length-1);
-  const coords = series.map((d,i)=>({ x:xFor(i), y:yFor(d.avg), d, lvl:nearest(d.avg) }));
-  const linePath = coords.map((c,i)=> (i?'L':'M')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
-  const areaPath = coords.length>1 ? `${linePath} L${coords[coords.length-1].x.toFixed(1)},196 L${coords[0].x.toFixed(1)},196 Z` : '';
+  // Regroupement par domaine
+  const byCat = {};
+  obs.forEach(o => { (byCat[o.cat] = byCat[o.cat] || []).push(o); });
+  const allRows = Object.entries(byCat).map(([name, arr]) => {
+    arr.sort((a,b) => a.date.localeCompare(b.date));
+    const first = arr[0].s, last = arr[arr.length-1].s;
+    return { name, first, last, delta: last - first, n: arr.length };
+  }).sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta) || b.n - a.n);
+  const rows = allRows.slice(0, 8);
 
-  const bands   = LEVELS.map(l=>`<rect x="90" y="${(yFor(l.s)-18).toFixed(1)}" width="510" height="36" fill="${l.color}" opacity=".06"/>`).join('');
-  const grids   = LEVELS.map(l=>`<line x1="90" y1="${yFor(l.s).toFixed(1)}" x2="600" y2="${yFor(l.s).toFixed(1)}" stroke="rgba(148,163,184,.22)" stroke-width="1"/>`).join('');
-  const yLabels = LEVELS.map(l=>`<text x="84" y="${(yFor(l.s)+3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="#64748b" font-weight="600">${l.emoji} ${l.label}</text>`).join('');
-  const xLabels = coords.map(c=>{ const m=+c.d.key.split('-')[1]; return `<text x="${c.x.toFixed(1)}" y="214" text-anchor="middle" font-size="9.5" fill="#64748b">${MONTHS[m-1]||''}</text>`; }).join('');
-  const dots    = coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="6" fill="${c.lvl.color}" stroke="#fff" stroke-width="2.5"/>`).join('');
+  // Tendance globale = moyenne des évolutions par domaine
+  const oDelta = allRows.reduce((a,x) => a + x.delta, 0) / allRows.length;
+  const trend = d => d > 0.01 ? { a:'↗', c:'#059669' } : d < -0.01 ? { a:'↘', c:'#dc2626' } : { a:'→', c:'#64748b' };
+  const ot = trend(oDelta);
+  const deltaTxt = (oDelta >= 0 ? '+' : '') + oDelta.toFixed(1).replace('.', ',');
+  const trendBlock = `<span style="margin-left:auto;text-align:right;line-height:1.15"><span style="font-size:1.05rem;font-weight:800;color:${ot.c}">${ot.a} ${deltaTxt}</span><span style="display:block;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">tendance globale</span></span>`;
 
-  // Tendance
-  const first = series[0].avg, last = series[series.length-1].avg, delta = last-first;
-  const up = delta>0.05, down = delta<-0.05;
-  const arrow = up?'↗':down?'↘':'→', tColor = up?'#059669':down?'#dc2626':'#64748b';
-  const deltaTxt = (delta>=0?'+':'') + delta.toFixed(1).replace('.',',');
-  const lastLvl = nearest(last);
-  const trendWord = up?'vers plus d\'autonomie':down?'besoin de soutien accru':'stable';
-  const trendBlock = series.length>1
-    ? `<span style="margin-left:auto;text-align:right;line-height:1.15"><span style="font-size:1.05rem;font-weight:800;color:${tColor}">${arrow} ${deltaTxt}</span><span style="display:block;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">sur ${series.length} mois</span></span>`
-    : '';
+  const badge = s => { const l = byScore(s); return `<span style="display:inline-flex;align-items:center;gap:.2rem;padding:.12rem .5rem;border-radius:20px;background:${l.color}1f;color:${l.color};font-weight:700;font-size:.72rem;white-space:nowrap">${l.emoji} ${l.label}</span>`; };
 
-  const pill = (html) => `<span style="font-size:.74rem;color:#475569;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.18);border-radius:20px;padding:.28rem .75rem">${html}</span>`;
-  const pills = [
-    series.length>1 ? pill(`Tendance : <b style="color:#4338ca">${trendWord}</b>`) : '',
-    pill(`Dernier niveau : <b style="color:${lastLvl.color}">${lastLvl.emoji} ${lastLvl.label}</b>`),
-    pill(`${pts.length} observation${pts.length>1?'s':''} saisie${pts.length>1?'s':''}`)
-  ].filter(Boolean).join('');
-  const legend = LEVELS.map(l=>`<span style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:#475569"><span style="width:11px;height:11px;border-radius:50%;background:${l.color};flex-shrink:0"></span>${l.label}</span>`).join('');
+  const list = rows.map(row => {
+    const t = trend(row.delta);
+    const evo = row.n > 1 ? `${badge(row.first)}<span style="color:var(--muted);font-weight:700">→</span>${badge(row.last)}` : badge(row.last);
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .1rem;border-top:1px solid var(--border)">
+      <div style="width:104px;flex-shrink:0"><div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(row.name)}</div><div style="font-size:.68rem;color:var(--muted)">${row.n} obs.</div></div>
+      <div style="flex:1;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${evo}</div>
+      <span style="font-weight:800;font-size:1rem;color:${t.c};width:22px;text-align:center;flex-shrink:0">${t.a}</span>
+    </div>`;
+  }).join('');
 
-  return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">
-    ${header}${trendBlock}</div>
-    <div class="card-body">
-      <div style="font-size:.78rem;color:var(--muted);margin:-.2rem 0 .5rem">${escHtml(fullName)} · d'après le niveau de soutien saisi (transmissions, journal, agenda)</div>
-      <svg viewBox="0 0 640 230" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Courbe d'évolution de l'autonomie">
-        <defs><linearGradient id="autoArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#818cf8" stop-opacity=".33"/><stop offset="1" stop-color="#818cf8" stop-opacity="0"/></linearGradient></defs>
-        ${bands}${grids}
-        ${areaPath?`<path d="${areaPath}" fill="url(#autoArea)"/>`:''}
-        ${coords.length>1?`<path d="${linePath}" fill="none" stroke="#6366f1" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`:''}
-        ${dots}${yLabels}${xLabels}
-      </svg>
-      <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.75rem">${pills}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:.45rem 1.1rem;margin-top:.85rem;padding-top:.8rem;border-top:1px solid var(--border)">${legend}</div>
+  return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}${trendBlock}</div>
+    <div class="card-body" style="padding-top:.5rem">
+      <div style="font-size:.76rem;color:var(--muted);margin-bottom:.2rem">${escHtml(fullName)} · évolution du niveau de soutien par domaine — d'après les transmissions, le journal et l'agenda</div>
+      ${list}
+      <div style="font-size:.68rem;color:var(--muted);margin-top:.75rem;padding-top:.55rem;border-top:1px solid var(--border)">🔴 Aide totale · 🟠 Aide partielle · 🟡 Guidance · 🔵 Supervision · 🟢 Autonomie</div>
     </div>
   </div>`;
 }
