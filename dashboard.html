@@ -610,12 +610,14 @@
     const myResidents = _dashScope(allResidents);
     const _myIds = new Set(myResidents.map(r => String(r.id)));
     const _myNames = new Set(myResidents.map(r => `${r.prenom||''} ${r.nom||''}`.trim()));
+    // Une donnée « appartient » à mes résidents si son residentId (ou son nom) est dans mon périmètre référent/co-référent
+    const _mine = (rid, rname) => _myIds.has(String(rid)) || (!!rname && _myNames.has(rname));
     _dashBanner(_scoped, myResidents.length);
 
     // ── MINI CARTES ──
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     // Événements à venir (à partir de maintenant, hors véhicules)
-    const upcomingEv = planning.filter(e => e.type !== 'vehicule')
+    const upcomingEv = planning.filter(e => e.type !== 'vehicule' && (!_scoped || _mine(e.residentId, e.residentName)))
       .map(e => ({ e, start: new Date(e.date + 'T' + (e.time || '00:00')).getTime() }))
       .filter(x => x.start >= now.getTime())
       .sort((a, b) => a.start - b.start);
@@ -647,13 +649,13 @@
       setText('miniAnnivSub', 'Ce mois-ci');
     }
     // Véhicules réservés dans la journée
-    const vehToday = planning.filter(e => e.type === 'vehicule' && (e.date || '') <= todayStr && (e.dateEnd || e.date || '') >= todayStr)
+    const vehToday = planning.filter(e => e.type === 'vehicule' && (e.date || '') <= todayStr && (e.dateEnd || e.date || '') >= todayStr && (!_scoped || _mine(e.residentId, e.residentName)))
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
     setText('miniVehVal', vehToday.length);
     setText('miniVehSub', vehToday.length ? [...new Set(vehToday.map(v => v.vehicule).filter(Boolean))].join(', ') : 'Aucun aujourd\'hui');
 
     // Échéances administratives urgentes (retard + sous 30 j)
-    const echList = (_dashLive.echeances || []).filter(e => !e.done);
+    const echList = (_dashLive.echeances || []).filter(e => !e.done && (!_scoped || _mine(e.residentId, e.residentName)));
     const echLate = echList.filter(e => (e.date || '') < todayStr).length;
     const echSoon = echList.filter(e => {
       if ((e.date || '') < todayStr) return false;
@@ -667,12 +669,12 @@
     // Repas du jour (inscrits par défaut sauf décochés)
     const repasAll = _dashLive.repas || {};
     const repasDay = repasAll[todayStr] || {};
-    const actifs = allResidents.filter(r => r.statut !== 'sorti');
+    const actifs = _scoped ? myResidents : allResidents;
     const cnt = m => actifs.filter(r => { const v = (repasDay[m] || {})[r.id]; return v === undefined ? true : !!v; }).length;
     setText('miniRepasVal', `${cnt('midi')} / ${cnt('soir')}`);
 
     // Score satisfaction
-    const satAllDash = _dashLive.satisfaction || [];
+    const satAllDash = (_dashLive.satisfaction || []).filter(s => !_scoped || _mine(s.residentId, s.residentName));
     const satValEl = document.getElementById('miniSatVal');
     const satSubEl = document.getElementById('miniSatSub');
     if (satValEl) {
