@@ -432,6 +432,10 @@
 <script src="js/echeances-supabase.js"></script>
 <script src="js/repas-supabase.js"></script>
 <script src="js/satisfaction-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/repertoire-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
 <script>
   // Carte « Mon espace » : congés + heures de récup du salarié connecté
   (async function loadMonEspace() {
@@ -582,16 +586,18 @@
   }
 
   // ── Données live Supabase pour les cartes du haut (le localStorage n'est plus alimenté) ──
-  var _dashLive = { planning: [], presences: {}, echeances: [], repas: {}, satisfaction: [] };
+  var _dashLive = { planning: [], presences: {}, echeances: [], repas: {}, satisfaction: [], ppe: [], incidents: [], journal: [], repertoire: [], cats: [] };
   async function _dashLoadLive(){
     const SBF = async (name, ...args) => { try { return (typeof window[name] === 'function') ? await window[name](...args) : null; } catch (e) { console.error(name, e); return null; } };
     const t = new Date(), f = new Date(); f.setDate(f.getDate() - 8);
     const iso = d => d.toISOString().slice(0, 10);
-    const [pl, pr, ec, rp, sa] = await Promise.all([
+    const [pl, pr, ec, rp, sa, pe, inc, jo, re, cfg] = await Promise.all([
       SBF('sbGetPlanningEvents'), SBF('sbGetPresencesRange', iso(f), iso(t)),
-      SBF('sbGetEcheances'), SBF('sbGetRepasAll'), SBF('sbGetSatisfaction')
+      SBF('sbGetEcheances'), SBF('sbGetRepasAll'), SBF('sbGetSatisfaction'),
+      SBF('sbGetPpe'), SBF('sbGetIncidents'), SBF('sbGetJournalEntries'), SBF('sbGetRepertoire'), SBF('sbGetAppConfig')
     ]);
-    _dashLive = { planning: pl || [], presences: pr || {}, echeances: ec || [], repas: rp || {}, satisfaction: sa || [] };
+    _dashLive = { planning: pl || [], presences: pr || {}, echeances: ec || [], repas: rp || {}, satisfaction: sa || [],
+      ppe: pe || [], incidents: inc || [], journal: jo || [], repertoire: re || [], cats: (cfg && cfg.categories) || [] };
   }
 
   function renderDashboard() {
@@ -686,7 +692,7 @@
     }
 
     // Résidents sans avenant actif
-    const ppeList = DB.get(DB.keys.ppe) || [];
+    const ppeList = _dashLive.ppe || [];
     const residentsWithPpe = new Set(ppeList.filter(p => p.statut === 'actif').map(p => p.residentId));
     const sansAvenant = myResidents.filter(r => !residentsWithPpe.has(r.id));
     const saEl = document.getElementById('dashboardSansAvenant');
@@ -714,7 +720,7 @@
       if (diff >= 0 && diff <= 30) alertes.push({ type: 'avenant', label: `Révision avenant : ${p.residentName||'?'}`, date: p.dateRevision, jours: diff });
     });
     // Incidents non validés depuis > 7j (réservé aux droits incidents)
-    if (_aCanInc) (DB.get(DB.keys.incidents)||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
+    if (_aCanInc) (_dashLive.incidents||[]).filter(i => i.statut === 'declare' || i.statut === 'cours').forEach(i => {
       if (i.date) {
         const d = new Date(i.date + (i.heure ? 'T'+i.heure : 'T00:00:00'));
         const diff = Math.round((nowDate2 - d) / 86400000);
@@ -737,7 +743,7 @@
     }
 
     // Répertoire récent
-    const contacts = (DB.get(DB.keys.repertoire)||[]).filter(c => c.updatedAt).sort((a,b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5);
+    const contacts = (_dashLive.repertoire||[]).filter(c => c.updatedAt).sort((a,b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5);
     const repEl = document.getElementById('dashboardRepertoire');
     if (contacts.length) {
       repEl.innerHTML = contacts.map(c => {
@@ -756,7 +762,7 @@
     }
 
     // Avenants récents (dashboard cards)
-    const avenants = (DB.get(DB.keys.ppe)||[]).filter(p => p.statut !== 'termine').slice(-4).reverse();
+    const avenants = (_dashLive.ppe||[]).filter(p => p.statut !== 'termine').slice(-4).reverse();
     const da = document.getElementById('dashboardAvenants');
     if (avenants.length) {
       da.innerHTML = avenants.map(p => {
@@ -775,9 +781,9 @@
     if (nc && s.totalResidents > 0) { nc.style.display=''; nc.textContent = s.totalResidents; }
 
     const _js = Auth.getSession();
-    const journal = (DB.get(DB.keys.journal)||[]).filter(e => (e.visibilite !== 'confidentiel' || _js?.role === 'admin' || String(e.authorId) === String(_js?.userId)) && (!_scoped || _myIds.has(String(e.residentId)) || _myNames.has(e.resident))).slice(-5).reverse();
+    const journal = (_dashLive.journal||[]).filter(e => (e.visibilite !== 'confidentiel' || _js?.role === 'admin' || String(e.authorId) === String(_js?.userId)) && (!_scoped || _myIds.has(String(e.residentId)) || _myNames.has(e.resident))).slice(-5).reverse();
     const jEl = document.getElementById('recentJournal');
-    const cats = DB.get(DB.keys.categories)||[];
+    const cats = _dashLive.cats||[];
     if (journal.length) {
       jEl.innerHTML = journal.map(e=>{
         const cat = cats.find(c=>c.id==e.categorie);
@@ -825,7 +831,7 @@
     }
 
     // ── Graphique incidents par statut ──
-    const incAll = DB.get(DB.keys.incidents) || [];
+    const incAll = _dashLive.incidents || [];
     const incStats = {
       declare: { label:'Déclaré', color:'#3b82f6', count: incAll.filter(i=>i.statut==='declare').length },
       cours:   { label:'En cours', color:'#f59e0b', count: incAll.filter(i=>i.statut==='cours').length },
