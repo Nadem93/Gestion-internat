@@ -260,13 +260,13 @@
 
         <!-- SOLDES BUDGET NÉGATIFS -->
         <div class="card" id="dashCardSoldes" style="overflow:hidden">
-          <div class="card-header" style="background:#FBE7E7">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#dc2626"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span class="card-title" style="color:#A32D2D">Soldes budget négatifs</span>
+          <div class="card-header" style="background:#FEF4E3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#d97706"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span class="card-title" style="color:#B45309">Soldes budget</span>
             <span class="badge badge-gray" id="dashSoldesCount" style="margin-left:auto;display:none">0</span>
           </div>
           <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSoldes">
-            <div class="empty" style="padding:1.5rem"><p>Aucun solde négatif</p></div>
+            <div class="empty" style="padding:1.5rem"><p>Aucun résident référé</p></div>
           </div>
         </div>
 
@@ -947,24 +947,25 @@
       </a>`).join('');
     } else { soEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>'; }
 
-    // 3) Soldes budget négatifs
-    const soldes = [];
-    residents.forEach(r => {
+    // 3) Soldes budget des résidents référés (solde actuel de chacun)
+    const soldes = residents.map(r => {
       const ops = (r.budget && r.budget.operations) || [];
-      if (!ops.length) return;
       const solde = ops.reduce((a,o) => a + (o.type==='recette' ? Number(o.montant||0) : -Number(o.montant||0)), 0);
-      if (solde < 0) soldes.push({ r, solde });
+      return { r, solde };
     });
-    soldes.sort((a,b) => a.solde - b.solde);
+    soldes.sort((a,b) => a.solde - b.solde);   // soldes négatifs en tête
     const sdEl = document.getElementById('dashSoldes');
-    setCount('dashSoldesCount', soldes.length);
+    setCount('dashSoldesCount', soldes.filter(s => s.solde < 0).length);   // badge = nb de soldes négatifs
     if (soldes.length) {
-      sdEl.innerHTML = soldes.slice(0,10).map(({r,solde}) => `${rowOpen(r)}
+      sdEl.innerHTML = soldes.slice(0,12).map(({r,solde}) => {
+        const col = solde < 0 ? '#dc2626' : (solde > 0 ? '#0f2b4a' : '#94a3b8');
+        return `${rowOpen(r)}
         ${avatar(r)}
         <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div></div>
-        <span style="font-weight:700;color:#dc2626;white-space:nowrap">${solde.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
-      </a>`).join('');
-    } else { sdEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun solde négatif</p></div>'; }
+        <span style="font-weight:700;color:${col};white-space:nowrap">${solde.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
+      </a>`;
+      }).join('');
+    } else { sdEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident référé</p></div>'; }
 
     // 4) Rappels de vaccins en retard
     const vaccins = [];
