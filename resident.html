@@ -376,6 +376,7 @@
 <script src="js/presences-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
 <script src="js/activites-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 let currentResidentId = null;
@@ -1809,12 +1810,19 @@ function selectField(id, label, value, options) {
   const opts = options.map(o => `<option value="${o[0]}"${value===o[0]?' selected':''}>${o[1]}</option>`).join('');
   return `<div class="form-group"><label>${label}</label><select id="${id}" class="form-input">${opts}</select></div>`;
 }
+// Comme selectField mais préserve une valeur existante hors-liste (évite toute perte de donnée)
+function selectFieldP(id, label, value, options) {
+  const opts = (value && !options.some(o => String(o[0]) === String(value))) ? [...options, [value, value]] : options;
+  return selectField(id, label, value, opts);
+}
 
 function renderEditMode(r) {
   const type = getStructureType();
   const objs = DB.get(DB.keys.objectives) || [];
   const resObjIds = r.objectifs || [];
 
+  const ressourcesOpts = [['rsa','RSA'],['aah','AAH'],['salaire','Salaire'],['apl','APL'],['autre','Autre']];
+  const ressSet = new Set(String(r.ressources || '').split(',').map(s => s.trim()).filter(Boolean));
   document.getElementById('residentContent').innerHTML = `
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-header"><span class="card-title">✎ Modification — ${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</span></div>
@@ -1822,7 +1830,7 @@ function renderEditMode(r) {
         <div class="grid grid-3" style="gap:.75rem">
           ${inputField('ePrenom','Prénom',r.prenom)}
           ${inputField('eNom','Nom',r.nom)}
-          ${selectField('eGenre','Genre',r.genre, [['','—'],['M','Masculin'],['F','Féminin'],['A','Autre']])}
+          ${selectFieldP('eGenre','Genre',r.genre, [['','—'],['M','Masculin'],['F','Féminin'],['autre','Autre']])}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
           ${inputField('eDob','Date de naissance',r.dob,'date')}
@@ -1830,23 +1838,27 @@ function renderEditMode(r) {
           ${inputField('eChambre','Chambre / Unité',r.chambre)}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
-          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent'],['sorti','Sorti(e)']])}
-          ${inputField('eReferent','Référent',r.referent)}
-          ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
+          ${selectFieldP('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent'],['sorti','Sorti(e)']])}
+          <div class="form-group"><label>Référent principal</label><select id="eReferent" class="form-input"><option value="">— Aucun —</option></select></div>
+          <div class="form-group"><label>Co-référent</label><select id="eCoReferent" class="form-input"><option value="">— Aucun —</option></select></div>
         </div>
         <div class="grid grid-3" style="gap:.75rem">
           ${inputField('eDateSortie','Date de sortie (si sorti)',r.dateSortie,'date')}
+          ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
-        <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem">👤 Informations personnelles</div>
+        <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem">👤 Informations personnelles &amp; santé</div>
         <div class="grid grid-2" style="gap:.75rem">
           ${inputField('eMedecin','Médecin traitant',r.medecin)}
           ${inputField('eMedecinTel','Tél. médecin',r.medecinTel)}
           ${inputField('eAllergies','Allergies / CI',r.allergies)}
           ${inputField('eNss','NIR (Sécurité sociale)',r.nss)}
           ${inputField('eIns','INS (Identifiant National de Santé)',r.ins)}
-          ${selectField('eDmp','DMP (Dossier Médical Partagé)',r.dmp,[['','—'],['actif','Actif'],['en_attente','En attente'],['non_ouvert','Non ouvert']])}
-          ${selectField('eConsent','Consentement partage données santé',r.consent,[['','—'],['oui','Donné'],['non','Refusé'],['en_attente','En attente']])}
+          <div></div>
+          ${selectFieldP('eDmp','DMP (Dossier Médical Partagé)',r.dmp,[['','—'],['actif','Actif'],['en_attente','En attente'],['non_ouvert','Non ouvert']])}
+          ${inputField('eDmpDate','Date ouverture DMP',r.dmpDate,'date')}
+          ${selectFieldP('eConsent','Consentement partage données santé',r.consent,[['','—'],['oui','Donné'],['non','Refusé'],['en_attente','En attente']])}
+          ${inputField('eConsentDate','Date consentement',r.consentDate,'date')}
         </div>
         ${(type==='enfants'||type==='mixte')?`
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
@@ -1856,18 +1868,19 @@ function renderEditMode(r) {
           ${inputField('eTuteurTel','Tél. tuteur',r.tuteurTel)}
           ${inputField('eEcole','Établissement scolaire',r.ecole)}
           ${inputField('eClasse','Classe',r.classe)}
-          ${inputField('eOrganisme','Organisme',r.organisme)}
+          ${selectFieldP('eOrganisme','Organisme prescripteur',r.organisme,[['','—'],['ase','ASE'],['mdph','MDPH'],['pjj','PJJ'],['autre','Autre']])}
           ${inputField('eDossier','N° dossier',r.dossier)}
         </div>`:''}
         ${(type==='adultes'||type==='mixte')?`
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3b82f6;margin-bottom:.25rem">👤 Adulte</div>
         <div class="grid grid-2" style="gap:.75rem">
-          ${selectField('eSituationPro','Situation pro.',r.situationPro, [['','—'],['emploi','Emploi'],['chantier','Chantier éducatif'],['formation','Formation'],['stage','Stage'],['inactif','Inactif'],['retraite','Retraite'],['autre','Autre']])}
-          ${selectField('eRessources','Ressources',r.ressources, [['','—'],['aaH','AAH'],['rsa','RSA'],['sans','Sans'],['autre','Autre']])}
-          ${inputField('eOrganismeA','Organisme',r.organismeA)}
-          ${inputField('eSituationAdmin','Situation admin.',r.situationAdmin)}
-          ${selectField('eProtection','Mesure de protection',r.protection, [['','—'],['tutelle','Tutelle'],['curatelle','Curatelle'],['sauvegarde','Sauvegarde de justice'],['habilitation','Habilitation familiale'],['masp','MASP'],['autre','Autre']])}
+          ${selectFieldP('eSituationPro','Situation professionnelle',r.situationPro, [['','—'],['emploi','En emploi'],['formation','En formation'],['recherche','Recherche d\'emploi'],['inactif','Inactif']])}
+          <div class="form-group"><label>Ressources / Revenus <span style="font-weight:400;color:var(--muted);font-size:.72rem">(plusieurs possibles)</span></label><div id="rRessources" style="display:flex;flex-wrap:wrap;gap:.4rem .9rem;padding:.5rem .2rem">${ressourcesOpts.map(o => `<label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="${o[0]}" style="width:auto"${ressSet.has(o[0])?' checked':''}/>${o[1]}</label>`).join('')}</div></div>
+          ${selectFieldP('eOrganismeA','Organisme prescripteur',r.organismeA,[['','—'],['siao','SIAO'],['mdph','MDPH'],['ccas','CCAS'],['prefecture','Préfecture'],['autre','Autre']])}
+          ${inputField('eDossierA','N° dossier',r.dossierA)}
+          ${selectFieldP('eSituationAdmin','Situation administrative',r.situationAdmin,[['','—'],['francais','Français'],['ue','UE'],['titre_sejour','Titre de séjour'],['demandeur','Demandeur d\'asile'],['refugie','Réfugié reconnu']])}
+          ${selectFieldP('eProtection','Mesure de protection',r.protection, [['','—'],['tutelle','Tutelle'],['curatelle','Curatelle'],['curatelle_renforcee','Curatelle renforcée'],['sauvegarde','Sauvegarde de justice'],['habilitation','Habilitation familiale'],['masp','MASP'],['autre','Autre']])}
           ${inputField('eProtectionNom','Tuteur / Curateur',r.protectionNom)}
           ${inputField('eProtectionTel','Tél. tuteur / curateur',r.protectionTel)}
         </div>`:''}
@@ -1885,6 +1898,12 @@ function renderEditMode(r) {
         <button class="btn btn-primary" onclick="savePageEdit()">💾 Enregistrer</button>
       </div>
     </div>`;
+  // Peupler les sélecteurs référent/co-référent avec la liste des éducateurs
+  // (mêmes helpers que residents.html — formulaire unique et cohérent)
+  if (typeof fillReferentSelect === 'function') {
+    fillReferentSelect('eReferent', r.referent || '');
+    fillReferentSelect('eCoReferent', r.coReferent || '');
+  }
 }
 
 async function savePageEdit() {
@@ -1896,14 +1915,15 @@ async function savePageEdit() {
     ...r,
     prenom: g('ePrenom'), nom: g('eNom'), genre: g('eGenre'),
     dob: g('eDob'), entree: g('eEntree'), chambre: g('eChambre'),
-    statut: g('eStatut'), dateSortie: g('eDateSortie'), referent: g('eReferent'), color: g('eColor') || '#3b82f6',
+    statut: g('eStatut'), dateSortie: g('eDateSortie'),
+    referent: g('eReferent'), coReferent: g('eCoReferent'), color: g('eColor') || '#3b82f6',
     medecin: g('eMedecin'), medecinTel: g('eMedecinTel'),
     allergies: g('eAllergies'), nss: g('eNss'), ins: g('eIns'),
-    dmp: g('eDmp'), consent: g('eConsent'),
+    dmp: g('eDmp'), dmpDate: g('eDmpDate'), consent: g('eConsent'), consentDate: g('eConsentDate'),
     tuteur: g('eTuteur'), tuteurTel: g('eTuteurTel'), ecole: g('eEcole'),
     classe: g('eClasse'), organisme: g('eOrganisme'), dossier: g('eDossier'),
-    situationPro: g('eSituationPro'), ressources: g('eRessources'),
-    organismeA: g('eOrganismeA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'), protectionTel: g('eProtectionTel'),
+    situationPro: g('eSituationPro'), ressources: (typeof getRessources === 'function' ? getRessources() : g('eRessources')),
+    organismeA: g('eOrganismeA'), dossierA: g('eDossierA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'), protectionTel: g('eProtectionTel'),
     objectifs: checked,
     notes: g('eNotes'), contacts: g('eContacts'),
     updatedAt: new Date().toISOString()
@@ -2937,7 +2957,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     sbGetJournalEntries(),
     sbGetPresencesRange(daysAgo(35), today()),
     sbGetPlanningEvents(),
-    (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([]))
+    (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([])),
+    (typeof loadReferents === 'function' ? loadReferents() : Promise.resolve())
   ]);
   await loadDocResCache();
   loadResident();
