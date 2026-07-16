@@ -428,6 +428,10 @@
 <script src="js/planning-equipe-supabase.js"></script>
 <script src="js/formations-supabase.js"></script>
 <script src="js/entretiens-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/echeances-supabase.js"></script>
+<script src="js/repas-supabase.js"></script>
+<script src="js/satisfaction-supabase.js"></script>
 <script>
   // Carte « Mon espace » : congés + heures de récup du salarié connecté
   (async function loadMonEspace() {
@@ -577,9 +581,22 @@
     b.innerHTML = `👤 Vous voyez uniquement <b style="margin:0 .2rem">vos résidents référés</b> · ${n} résident${n>1?'s':''}`;
   }
 
+  // ── Données live Supabase pour les cartes du haut (le localStorage n'est plus alimenté) ──
+  var _dashLive = { planning: [], presences: {}, echeances: [], repas: {}, satisfaction: [] };
+  async function _dashLoadLive(){
+    const SBF = async (name, ...args) => { try { return (typeof window[name] === 'function') ? await window[name](...args) : null; } catch (e) { console.error(name, e); return null; } };
+    const t = new Date(), f = new Date(); f.setDate(f.getDate() - 8);
+    const iso = d => d.toISOString().slice(0, 10);
+    const [pl, pr, ec, rp, sa] = await Promise.all([
+      SBF('sbGetPlanningEvents'), SBF('sbGetPresencesRange', iso(f), iso(t)),
+      SBF('sbGetEcheances'), SBF('sbGetRepasAll'), SBF('sbGetSatisfaction')
+    ]);
+    _dashLive = { planning: pl || [], presences: pr || {}, echeances: ec || [], repas: rp || {}, satisfaction: sa || [] };
+  }
+
   function renderDashboard() {
     const s = getStats();
-    const planning = DB.get(DB.keys.planning) || [];
+    const planning = _dashLive.planning || [];
     const now = new Date();
     const todayStr = now.toISOString().slice(0,10);
     const allResidents = sbResidents().filter(r => r.statut !== 'sorti');
@@ -600,9 +617,10 @@
     const nextEv = upcomingEv[0] && upcomingEv[0].e;
     setText('miniEventSub', nextEv ? (formatDate(nextEv.date) + (nextEv.time ? ' ' + nextEv.time.slice(0,5) : '') + ' · ' + (nextEv.residentName || nextEv.titre || '')) : 'Aucun à venir');
     // Présents aujourd'hui + alerte saisie
-    const todayPres = (DB.get(DB.keys.presences) || {})[todayStr] || {};
+    const todayPres = (_dashLive.presences || {})[todayStr] || {};
     const _presentCount = myResidents.filter(r => todayPres[r.id] === 'present').length;
-    setText('miniPresentsVal', _scoped ? _presentCount : s.presentsToday);
+    const _presentCountAll = allResidents.filter(r => todayPres[r.id] === 'present').length;
+    setText('miniPresentsVal', _scoped ? _presentCount : _presentCountAll);
     const markedCount = myResidents.filter(r => todayPres[r.id]).length;
     const incomplete = myResidents.length > 0 && markedCount < myResidents.length;
     const pAlert = document.getElementById('miniPresenceAlert');
@@ -629,7 +647,7 @@
     setText('miniVehSub', vehToday.length ? [...new Set(vehToday.map(v => v.vehicule).filter(Boolean))].join(', ') : 'Aucun aujourd\'hui');
 
     // Échéances administratives urgentes (retard + sous 30 j)
-    const echList = (DB.keys.echeances ? (DB.get(DB.keys.echeances) || []) : []).filter(e => !e.done);
+    const echList = (_dashLive.echeances || []).filter(e => !e.done);
     const echLate = echList.filter(e => (e.date || '') < todayStr).length;
     const echSoon = echList.filter(e => {
       if ((e.date || '') < todayStr) return false;
@@ -641,14 +659,14 @@
     if (echAlert) echAlert.style.display = echLate ? '' : 'none';
 
     // Repas du jour (inscrits par défaut sauf décochés)
-    const repasAll = (DB.keys.repas ? (DB.get(DB.keys.repas) || {}) : {});
+    const repasAll = _dashLive.repas || {};
     const repasDay = repasAll[todayStr] || {};
     const actifs = allResidents.filter(r => r.statut !== 'sorti');
     const cnt = m => actifs.filter(r => { const v = (repasDay[m] || {})[r.id]; return v === undefined ? true : !!v; }).length;
     setText('miniRepasVal', `${cnt('midi')} / ${cnt('soir')}`);
 
     // Score satisfaction
-    const satAllDash = DB.get(DB.keys.satisfaction) || [];
+    const satAllDash = _dashLive.satisfaction || [];
     const satValEl = document.getElementById('miniSatVal');
     const satSubEl = document.getElementById('miniSatSub');
     if (satValEl) {
@@ -777,7 +795,7 @@
       }).join('');
     }
     // ── Graphique présences 7 jours ──
-    const presencesData = DB.get(DB.keys.presences) || {};
+    const presencesData = _dashLive.presences || {};
     const allRes = sbResidents().filter(r => r.statut !== 'sorti');
     const total = allRes.length || 1;
     const days7 = [];
@@ -1030,6 +1048,7 @@
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
   (async () => {
     try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
+    try { await _dashLoadLive(); } catch (e) { console.error(e); }
     renderDashboard();
     renderNiveauxSoutien().catch(e => console.error(e));
   })();
