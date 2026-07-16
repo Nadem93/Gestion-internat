@@ -100,31 +100,37 @@
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
-if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-if (!Auth.isRH()) document.querySelectorAll('.rh-only').forEach(el => el.style.display = 'none');
-if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
-document.querySelectorAll('[data-perm]').forEach(el => {
-  const _s = Auth.getSession();
-  const perms = el.dataset.perm.split(',');
-  const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || perms.some(p => hasPermission(_s.userId, p)));
-  if (!ok) el.style.display = 'none';
+// IMPORTANT : les tuiles et boutons réservés (.admin-only, .rh-only, .superadmin-only,
+// [data-perm], #tileInterventions) sont plus bas dans le document. Ce masquage doit donc
+// s'exécuter sur DOMContentLoaded — sinon il tourne AVANT que ces éléments existent,
+// querySelectorAll ne trouve rien, et les cartes réservées (RH, Finance, Administration,
+// Interventions…) restent visibles pour tout le monde.
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  if (!Auth.isRH()) document.querySelectorAll('.rh-only').forEach(el => el.style.display = 'none');
+  if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('[data-perm]').forEach(el => {
+    const _s = Auth.getSession();
+    const perms = el.dataset.perm.split(',');
+    const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || perms.some(p => hasPermission(_s.userId, p)));
+    if (!ok) el.style.display = 'none';
+  });
+  // Tuile « Interventions » : visible seulement pour ceux qui peuvent traiter les demandes
+  // (admin/superadmin, permission access_interventions, ou fonction technicien/maintenance).
+  // Les autres demandent une intervention via le bouton flottant « Demander une intervention ».
+  // Même règle que le garde d'accès de interventions.html (canAccessPage).
+  const tileI = document.getElementById('tileInterventions');
+  if (tileI) {
+    const _s = Auth.getSession();
+    const f = ((_s && _s.fonction) || '').toLowerCase();
+    const canSee = !!_s && (
+      _s.role === 'admin' || _s.role === 'superadmin' ||
+      (typeof hasPermission === 'function' && hasPermission(_s.userId, 'access_interventions')) ||
+      f.includes('technicien') || f.includes('maintenance')
+    );
+    if (!canSee) tileI.style.display = 'none';
+  }
 });
-// Tuile « Interventions » : visible seulement pour ceux qui peuvent traiter les demandes
-// (admin/superadmin, permission access_interventions, ou fonction technicien/maintenance).
-// Les éducateurs et autres utilisateurs ne la voient pas — ils demandent une intervention
-// via le bouton flottant « Demander une intervention » au-dessus des cartes. Même règle que
-// le garde d'accès de interventions.html (canAccessPage).
-(function(){
-  const tile = document.getElementById('tileInterventions'); if (!tile) return;
-  const _s = Auth.getSession();
-  const f = ((_s && _s.fonction) || '').toLowerCase();
-  const canSee = !!_s && (
-    _s.role === 'admin' || _s.role === 'superadmin' ||
-    (typeof hasPermission === 'function' && hasPermission(_s.userId, 'access_interventions')) ||
-    f.includes('technicien') || f.includes('maintenance')
-  );
-  if (!canSee) tile.style.display = 'none';
-})();
 </script>
 
 <!-- ── SÉLECTION ÉTABLISSEMENT ── -->
