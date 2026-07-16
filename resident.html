@@ -1392,38 +1392,53 @@ function budgetCard(r) {
     if (o.type === 'recette') moisRecettes += Number(o.montant || 0); else moisDepenses += Number(o.montant || 0);
   });
 
+  const net = moisRecettes - moisDepenses;
+  const fluxTotal = moisRecettes + moisDepenses;
+  const recPct = fluxTotal > 0 ? Math.round(moisRecettes / fluxTotal * 100) : 0;
+  const depPct = fluxTotal > 0 ? 100 - recPct : 0;
+  let moisLabel = new Date(today() + 'T00:00').toLocaleDateString('fr-FR', { month: 'long' });
+  moisLabel = moisLabel.charAt(0).toUpperCase() + moisLabel.slice(1);
+
   const rows = sorted.length ? sorted.map((o, i) => {
     const isRec = o.type === 'recette';
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
-      <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isRec ? '#dcfce7' : '#fee2e2'};color:${isRec ? '#16a34a' : '#dc2626'};font-weight:800">${isRec ? '+' : '–'}</div>
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <span style="width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isRec ? '#dcfce7' : '#fee2e2'};color:${isRec ? '#16a34a' : '#dc2626'};font-size:.95rem;font-weight:700">${isRec ? '↑' : '↓'}</span>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.libelle || (isRec ? 'Recette' : 'Dépense'))}${o.categorie ? ` <span class="badge badge-gray">${escHtml(o.categorie)}</span>` : ''}</div>
-        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${formatDate(o.date)}${o.notes ? ' · ' + escHtml(o.notes) : ''}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:1px">${formatDate(o.date)}${o.notes ? ' · ' + escHtml(o.notes) : ''}</div>
       </div>
       <div style="font-weight:700;font-size:.85rem;color:${isRec ? '#16a34a' : '#dc2626'};white-space:nowrap">${isRec ? '+' : '–'} ${fmtMoney(o.montant)}</div>
       ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${o.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteBudgetOp('${o.id}')">✕</button></div>` : ''}
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune opération enregistrée</div>';
 
+  const bar = fluxTotal > 0
+    ? `<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px">${moisRecettes > 0 ? `<div style="width:${recPct}%;background:#16a34a"></div>` : ''}${moisDepenses > 0 ? `<div style="width:${depPct}%;background:#dc2626"></div>` : ''}</div>`
+    : `<div style="height:12px;border-radius:6px;background:#e5e7eb"></div>`;
+
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #d97706 12%, #fff)">
         <span class="card-title" style="color:#d97706">💰 Budget personnel</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openBudgetModal()">+ Opération</button>` : ''}
-      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div class="grid grid-3" style="gap:.75rem">
-        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:${solde < 0 ? '#fef2f2' : '#f0fdf4'};border:1px solid ${solde < 0 ? '#fecaca' : '#bbf7d0'}">
-          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Solde actuel</div>
-          <div style="font-size:1.25rem;font-weight:800;color:${solde < 0 ? '#dc2626' : '#16a34a'};line-height:1.2">${fmtMoney(solde)}</div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:1rem">
+        <div>
+          <div style="font-size:.72rem;color:var(--muted)">Solde actuel</div>
+          <div style="font-size:1.6rem;font-weight:800;line-height:1.1;color:${solde < 0 ? '#dc2626' : '#16a34a'}">${fmtMoney(solde)}</div>
         </div>
-        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--border)">
-          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Recettes (mois)</div>
-          <div style="font-size:1.05rem;font-weight:800;color:#16a34a;line-height:1.4">+ ${fmtMoney(moisRecettes)}</div>
-        </div>
-        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--border)">
-          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Dépenses (mois)</div>
-          <div style="font-size:1.05rem;font-weight:800;color:#dc2626;line-height:1.4">– ${fmtMoney(moisDepenses)}</div>
+        <div style="text-align:right">
+          <div style="font-size:.72rem;color:var(--muted)">Net du mois</div>
+          <div style="font-size:.98rem;font-weight:700;color:${net < 0 ? '#dc2626' : '#16a34a'}">${net < 0 ? '– ' : '+ '}${fmtMoney(Math.abs(net))}</div>
         </div>
       </div>
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 5 ? 'max-height:255px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+      <div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:.35rem">Flux du mois — ${moisLabel}</div>
+        ${bar}
+        <div style="display:flex;flex-wrap:wrap;gap:.15rem 1.1rem;margin-top:.5rem;font-size:.75rem">
+          <span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:#16a34a"></span>Recettes <b style="color:#16a34a">${fmtMoney(moisRecettes)}</b></span>
+          <span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:#dc2626"></span>Dépenses <b style="color:#dc2626">${fmtMoney(moisDepenses)}</b></span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 5 ? 'max-height:230px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
       ${sorted.length > 5 ? `<div class="no-print" style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:-.35rem">↕ ${sorted.length} opérations — faites défiler pour tout voir</div>` : ''}
     </div></div>`;
 }
