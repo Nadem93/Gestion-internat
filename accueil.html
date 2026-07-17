@@ -595,7 +595,7 @@ async function loadVehiculesAccueil() {
   const dl = document.getElementById('mvVehiculesListA');
   if (dl) dl.innerHTML = v.map(x => '<option value="' + escHtml(x) + '">').join('');
 }
-function reserverVehiculeAccueil() {
+async function reserverVehiculeAccueil() {
   const dateAller = document.getElementById('mvDateAllerA').value;
   const dureeVal = document.getElementById('mvDureeA').value;
   const vehicule = document.getElementById('mvVehiculeA').value.trim();
@@ -618,15 +618,26 @@ function reserverVehiculeAccueil() {
   const prenom = session?.prenom || '';
   const nom = session?.nom || '';
   const userName = [prenom, nom].filter(Boolean).join(' ') || session?.username || 'Inconnu';
+  // Persistance en base (Supabase) — comme planning.html / vehicules.js. On NE fournit PAS d'id :
+  // sbSavePlanningEvent traite un id présent comme une mise à jour (échouerait sur un id client).
+  let saved;
+  try {
+    saved = await sbSavePlanningEvent({
+      titre: 'Véhicule — ' + vehicule,
+      date: dateAller.slice(0,10), dateEnd: dateRetour.slice(0,10),
+      time: dateAller.slice(11,16), timeEnd: dateRetour.slice(11,16),
+      desc: 'Réservé par : ' + userName + (motif ? '\nMotif : ' + motif : '') + '\nVéhicule : ' + vehicule + '\nDestination : ' + destination,
+      color: '#6366f1', type: 'vehicule', vehicule, destination, reservedBy: userName, reservedPrenom: prenom
+    });
+  } catch (e) {
+    console.error('[reserverVehiculeAccueil]', e);
+    alert('Erreur lors de la réservation. Veuillez réessayer.');
+    return;
+  }
+  // Garde le store localStorage cohérent pour la détection de conflit des réservations suivantes
+  // (rechargé depuis Supabase au prochain _loadAccRhCounts).
   const planning = DB.get(DB.keys.planning) || [];
-  planning.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    titre: 'Véhicule — ' + vehicule,
-    date: dateAller.slice(0,10), dateEnd: dateRetour.slice(0,10),
-    time: dateAller.slice(11,16), timeEnd: dateRetour.slice(11,16),
-    desc: 'Réservé par : ' + userName + (motif ? '\nMotif : ' + motif : '') + '\nVéhicule : ' + vehicule + '\nDestination : ' + destination,
-    color: '#6366f1', type: 'vehicule', vehicule, destination, reservedBy: userName, reservedPrenom: prenom
-  });
+  planning.push(saved);
   DB.set(DB.keys.planning, planning);
   closeModal('modalVehiculeAccueil');
   document.getElementById('mvDateAllerA').value = '';
