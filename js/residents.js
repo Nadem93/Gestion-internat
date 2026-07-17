@@ -549,6 +549,13 @@ async function initResidents() {
   initPhotoUpload();
   initDocUpload();
   await loadDocResCache();
+  if (typeof sbGetPresencesRange === 'function') {
+    try {
+      const d = new Date(); d.setDate(d.getDate() - 3);
+      const from = d.toISOString().slice(0, 10);
+      DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
+    } catch (e) { console.error(e); }
+  }
   await loadAndRenderResidents();
 
   const searchInput = document.getElementById('searchInput');

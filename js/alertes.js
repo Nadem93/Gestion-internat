@@ -68,9 +68,9 @@ function generateAlertes() {
   // ── 2. Échéances ── dépassées ou dans les 14 jours ─────────────────────────
   const echeances = DB.get(DB.keys.echeances) || [];
   echeances.forEach(e => {
-    if (e.statut === 'termine' || e.statut === 'annule') return;
-    if (!e.dateEcheance) return;
-    const ech = new Date(e.dateEcheance); ech.setHours(0,0,0,0);
+    if (e.done) return;
+    if (!e.date) return;
+    const ech = new Date(e.date); ech.setHours(0,0,0,0);
     const diffJ = Math.round((ech - today) / 86400000);
     if (diffJ > 14) return;
     const r = e.residentId ? resMap[e.residentId] : null;
@@ -80,7 +80,7 @@ function generateAlertes() {
     if (diffJ < 0)       prio = 'critique';
     else if (diffJ <= 3) prio = 'urgent';
     const label = diffJ < 0 ? `En retard de ${-diffJ}j` : diffJ === 0 ? 'Aujourd\'hui' : `Dans ${diffJ}j`;
-    alerts.push({ id, type:'echeance', prio, residentId:e.residentId||null, resName, titre: e.titre||'Échéance', msg:`${label}${resName?' — '+resName:''}`, date:e.dateEcheance, link:'echeances.html', diffJ });
+    alerts.push({ id, type:'echeance', prio, residentId:e.residentId||null, resName, titre: e.libelle||'Échéance', msg:`${label}${resName?' — '+resName:''}`, date:e.date, link:'echeances.html', diffJ });
   });
 
   // ── 3. Planning — événements aujourd'hui ou demain ────────────────────────
@@ -343,6 +343,21 @@ async function initAlertes() {
   if (typeof sbGetMedDistribForDate === 'function') {
     try { _alMedRecords = await sbGetMedDistribForDate(today()); } catch (e) { console.error('[initAlertes] médicaments', e); }
   }
+  // Hydrate les stores migrés lus par generateAlertes (sinon localStorage mort → alertes muettes)
+  try {
+    const _hy = await Promise.all([
+      (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null)),
+      (typeof sbGetEcheances === 'function' ? sbGetEcheances() : Promise.resolve(null)),
+      (typeof sbGetPlanningEvents === 'function' ? sbGetPlanningEvents() : Promise.resolve(null)),
+      (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null)),
+      (typeof sbGetSatisfaction === 'function' ? sbGetSatisfaction() : Promise.resolve(null)),
+    ]);
+    if (_hy[0] != null) DB.set(DB.keys.ppe, _hy[0]);
+    if (_hy[1] != null) DB.set(DB.keys.echeances, _hy[1]);
+    if (_hy[2] != null) DB.set(DB.keys.planning, _hy[2]);
+    if (_hy[3] != null) DB.set(DB.keys.incidents, _hy[3]);
+    if (_hy[4] != null) DB.set(DB.keys.satisfaction, _hy[4]);
+  } catch (e) { console.error('[initAlertes] hydratation', e); }
   renderAlertes();
 }
 

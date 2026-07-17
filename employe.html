@@ -1845,6 +1845,7 @@ function initPageTabs() {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const _id = new URLSearchParams(window.location.search).get('id');
+    if (typeof sbLoadResidentsCache === 'function') { try { await sbLoadResidentsCache(); DB.set(DB.keys.residents, sbResidents()); } catch(e){ console.error(e); } }
     [_empCache, _empArretsCache, _empCongesCache, _empPlanningCache, _empFormationsCache, _empEntretiensCache, _empFichesPaieCache, _empDocsCache, _empMsgCache] = await Promise.all([sbGetEmployes(), sbGetAbsences().catch(() => []), sbGetConges().catch(() => []), sbGetPeShifts().catch(() => []), sbGetFormations().catch(() => []), sbGetEntretiens().catch(() => []), sbGetFichesPaie().catch(() => []), _id ? sbGetDocsEmploye(_id).catch(() => []) : [], sbGetMessages().catch(() => [])]);
     loadEmploye();
   } catch (err) {

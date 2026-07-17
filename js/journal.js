@@ -777,6 +777,9 @@ async function initJournal() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   _journalResidentsCache = await sbGetResidents();
   await loadJournalEntries();
+  if (typeof sbGetAppConfig === 'function') {
+    try { const cfg = await sbGetAppConfig(); if (cfg && cfg.categories) DB.set(DB.keys.categories, cfg.categories); } catch (e) { console.error(e); }
+  }
   populateSelects();
   renderEntries();
   ['jSearch','jFilterResident','jFilterCat','jFilterDate','jFilterDateEnd'].forEach(id => {

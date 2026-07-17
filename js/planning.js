@@ -820,6 +820,7 @@ async function populateVehiculeList() {
 async function initPlanning() {
   if (!requireModule('access_presences')) return;
   document.getElementById('evDate').value = today();
+  if (typeof sbGetActivites === 'function') { try { DB.set(DB.keys.activites, await sbGetActivites()); } catch(e){ console.error(e); } }
   await loadPlanningData();
   populateResidentSelect();
   await populateVehiculeList();

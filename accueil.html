@@ -559,6 +559,9 @@ async function _loadAccRhCounts() {
       sbGetPeShifts(), sbGetFormations(), sbGetConges(), sbGetMessages(), sbGetConversations(),
       sbGetJournalEntries(), sbGetPpe(), sbGetResidents(), sbGetPlanningEvents(), sbGetInterventions(), sbGetEcheances()
     ]);
+    // Hydrate les stores localStorage pour les lectures DB.get (modal incident, conflit véhicule, datalist chambres)
+    DB.set(DB.keys.residents, residents);
+    DB.set(DB.keys.planning, planningEv);
     window._accShiftsToday   = empFullName ? shifts.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
     window._accFormations    = formations.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
     window._accPendingConges = conges.filter(c => c.statut === 'en_attente').length;

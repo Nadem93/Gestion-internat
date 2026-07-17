@@ -16,6 +16,7 @@ let _astEditId = '';
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function initAstreintes() {
   Auth.requireAuth();
+  if (typeof sbGetEmployes === 'function') { try { DB.set(DB.keys.employes, await sbGetEmployes()); } catch(e){ console.error(e); } }
   _populateAstEmployes();
   document.getElementById('astPrev')?.addEventListener('click', () => { _astWeekOffset--; renderAstreintes(); });
   document.getElementById('astNext')?.addEventListener('click', () => { _astWeekOffset++; renderAstreintes(); });

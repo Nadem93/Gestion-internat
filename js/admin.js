@@ -703,7 +703,20 @@ async function saveCredentials() {
 // Clés DB.keys exclues du backup : état de session/navigateur, pas des données métier.
 const BACKUP_EXCLUDE_KEYS = ['session', 'etablissements', 'onboarded'];
 
-function exportData(type) {
+const _BACKUP_SB = { residents:'sbGetResidents', journal:'sbGetJournalEntries', planning:'sbGetPlanningEvents', incidents:'sbGetIncidents', ppe:'sbGetPpe', repertoire:'sbGetRepertoire', echeances:'sbGetEcheances', visites:'sbGetVisites', nuits:'sbGetNuits', activites:'sbGetActivites', chambres:'sbGetChambres', employes:'sbGetEmployes', interventions:'sbGetInterventions', contrats:'sbGetContrats', fichesPaie:'sbGetFichesPaie', satisfaction:'sbGetSatisfaction', evaluations:'sbGetEvaluations', messages:'sbGetMessages' };
+async function _hydrateBackupStores(type) {
+  const wanted = type === 'all' ? Object.keys(_BACKUP_SB) : (type === 'residents' ? ['residents'] : type === 'journal' ? ['journal'] : []);
+  await Promise.all(wanted.map(async key => {
+    const fn = window[_BACKUP_SB[key]];
+    if (typeof fn !== 'function') return;
+    try { const d = await fn(); if (d != null) DB.set(DB.keys[key], d); } catch (e) { console.error('[backup]', key, e); }
+  }));
+  if (type === 'all' && typeof sbGetPresencesRange === 'function') {
+    try { const _f = new Date(); _f.setDate(_f.getDate() - 180); DB.set(DB.keys.presences, await sbGetPresencesRange(_f.toISOString().slice(0,10), today())); } catch (e) { console.error('[backup] presences', e); }
+  }
+}
+async function exportData(type) {
+  await _hydrateBackupStores(type);
   let data = {};
   const k = DB.keys;
   if (type === 'residents' || type === 'all') data.residents = DB.get(k.residents) || [];

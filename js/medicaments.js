@@ -539,6 +539,13 @@ async function initMedicaments() {
   if (!requireModule('access_medicaments')) return;
   await sbLoadResidentsCache();
   await loadMedCache();
+  if (typeof sbGetPresencesRange === 'function') {
+    try {
+      const d = new Date(); d.setDate(d.getDate() - 3);
+      const from = d.toISOString().slice(0, 10);
+      DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
+    } catch (e) { console.error(e); }
+  }
   medCanEdit = ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : false) || Auth.isAdmin();
   const dateInput = document.getElementById('medDate');
   dateInput.value = today();

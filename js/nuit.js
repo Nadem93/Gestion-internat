@@ -296,6 +296,13 @@ async function initNuit() {
   if (!requireModule('access_journal')) return;
   await sbLoadResidentsCache();
   await loadNuitsCache();
+  if (typeof sbGetPresencesRange === 'function') {
+    try {
+      const d = new Date(); d.setDate(d.getDate() - 3);
+      const from = d.toISOString().slice(0, 10);
+      DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
+    } catch (e) { console.error(e); }
+  }
   // Avant 12 h, on est encore « sur » la nuit de la veille
   const now = new Date();
   if (now.getHours() < 12) now.setDate(now.getDate() - 1);

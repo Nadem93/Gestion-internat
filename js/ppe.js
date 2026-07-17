@@ -71,6 +71,9 @@ async function initPpe() {
   if (!requireModule('access_ppe')) return;
   await loadResidentsCache();
   await loadPpeCache();
+  if (typeof sbGetJournalEntries === 'function') {
+    try { DB.set(DB.keys.journal, await sbGetJournalEntries()); } catch(e){ console.error(e); }
+  }
   populateAvenantSelects();
   renderAvenant();
   const params = new URLSearchParams(window.location.search);

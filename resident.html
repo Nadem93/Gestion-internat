@@ -378,6 +378,11 @@
 <script src="js/activites-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/transmissions-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/nuit-supabase.js"></script>
+<script src="js/visites-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 let currentResidentId = null;
@@ -2962,6 +2967,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   ]);
   _residentTransmissionsAll = _residentTransmissionsAll || [];
   await loadDocResCache();
+  // Hydrate en localStorage les stores migrés encore lus via DB.get sur la fiche
+  // (incidents, ppe, nuits, visites, médicaments) — les sbGet* ne cachent pas d'eux-mêmes.
+  const _hy = await Promise.all([
+    (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null)),
+    (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null)),
+    (typeof sbGetNuits === 'function' ? sbGetNuits() : Promise.resolve(null)),
+    (typeof sbGetVisites === 'function' ? sbGetVisites() : Promise.resolve(null)),
+    (typeof sbGetMedDistrib === 'function' ? sbGetMedDistrib() : Promise.resolve(null)),
+  ]);
+  if (_hy[0] != null) DB.set(DB.keys.incidents, _hy[0]);
+  if (_hy[1] != null) DB.set(DB.keys.ppe, _hy[1]);
+  if (_hy[2] != null) DB.set(DB.keys.nuits, _hy[2]);
+  if (_hy[3] != null) DB.set(DB.keys.visites, _hy[3]);
+  if (_hy[4] != null) DB.set(DB.keys.medicaments, _hy[4]);
   loadResident();
 });
 

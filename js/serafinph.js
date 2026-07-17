@@ -44,6 +44,9 @@ async function initSerafinph() {
   if (!_s) return;
   if (!requireModule('access_serafinph')) return;
   await loadResidentsCache();
+  if (typeof sbGetJournalEntries === 'function') {
+    try { DB.set(DB.keys.journal, await sbGetJournalEntries()); } catch (e) { console.error(e); }
+  }
   seedSpExemples();
   renderSerafinph();
 }

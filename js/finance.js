@@ -342,6 +342,9 @@ async function initFinance() {
     return;
   }
   await sbLoadResidentsCache();
+  if (typeof sbGetFichesPaie === 'function') { try { DB.set(DB.keys.fichesPaie, await sbGetFichesPaie()); } catch(e){ console.error(e); } }
+  if (typeof sbGetContrats === 'function') { try { DB.set(DB.keys.contrats, await sbGetContrats()); } catch(e){ console.error(e); } }
+  if (typeof sbGetEmployes === 'function') { try { DB.set(DB.keys.employes, await sbGetEmployes()); } catch(e){ console.error(e); } }
   finPopulatePeriode();
   document.getElementById('finPeriode').addEventListener('change', renderFinance);
   renderFinance();

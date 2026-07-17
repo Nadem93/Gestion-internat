@@ -4,6 +4,7 @@ let _flData = {};
 async function initFicheLiaison() {
   Auth.requireAuth();
   await sbLoadResidentsCache();
+  if (typeof sbGetPlanSoins === 'function') { try { DB.set(DB.keys.planSoins, await sbGetPlanSoins()); } catch (e) { console.error('[fiche-liaison] planSoins', e); } }
   const params = new URLSearchParams(window.location.search);
   _flResidentId = params.get('residentId') || params.get('id') || '';
 
@@ -39,13 +40,12 @@ function loadFicheLiaison() {
   const r = residents.find(x => x.id === _flResidentId);
   if (!r) { document.getElementById('flContent').innerHTML = '<p class="error">Résident introuvable.</p>'; return; }
 
-  // Dernière évaluation MIF ou Barthel
-  const evals = (DB.get(DB.keys.evaluations) || []).filter(e => e.residentId === _flResidentId).sort((a,b) => b.date.localeCompare(a.date));
+  // Dernière évaluation MIF ou Barthel (les évaluations sont portées par l'objet résident)
+  const evals = (r.evaluations || []).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
   const lastEval = evals[0] || null;
 
-  // Médicaments
-  const medData = DB.get(DB.keys.medicaments) || {};
-  const meds = medData[_flResidentId] || [];
+  // Traitements en cours — source réelle : la fiche santé du résident (r.sante.traitements)
+  const meds = (r.sante && r.sante.traitements) || [];
 
   // Plan de soins
   const soins = (DB.get(DB.keys.planSoins) || []).filter(s => s.residentId === _flResidentId && s.actif !== false);
