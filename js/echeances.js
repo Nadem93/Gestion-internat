@@ -132,8 +132,14 @@ async function saveRenouvellement() {
     const t = EC_TYPES[e.type] || EC_TYPES.autre;
     const sess = Auth.getSession();
     const by = sess ? (`${sess.prenom||''} ${sess.nom||''}`.trim() || sess.username || '') : '';
-    // 1) Upload du fichier dans le bucket justificatifs
-    const path = await sbUploadJustificatif(file, e.residentId || 'echeances');
+    // 1) Upload du fichier dans le bucket justificatifs — dossier = id du compte connecté
+    //    (même convention que les justificatifs d'absence, compatible avec la RLS Storage)
+    let path;
+    try {
+      path = await sbUploadJustificatif(file, (sess && sess.userId) || e.residentId || 'ech');
+    } catch (err) {
+      throw new Error('Envoi du fichier : ' + (err?.message || err));
+    }
     // 2) Classement dans les Documents (GED) du résident
     if (e.residentId && typeof sbSaveDocumentResident === 'function') {
       try {
@@ -149,9 +155,13 @@ async function saveRenouvellement() {
     try {
       saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null, document_path: path, document_name: file.name });
     } catch (err) {
-      console.error('[renouveler] colonnes document manquantes ? report de la date seul', err);
-      saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null });
-      saved.documentPath = ''; saved.documentName = '';
+      console.error('[renouveler] maj avec document échouée, retry sans colonnes document', err);
+      try {
+        saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null });
+        saved.documentPath = ''; saved.documentName = '';
+      } catch (err2) {
+        throw new Error("Mise à jour de l'échéance : " + (err2?.message || err2));
+      }
     }
     _ecCache = _ecCache.map(x => x.id === e.id ? saved : x);
     if (typeof auditLog === 'function') auditLog('echeance_renouvellement', `${e.libelle || t.label} → ${newDate}`);
