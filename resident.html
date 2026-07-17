@@ -377,6 +377,7 @@
 <script src="js/planning-supabase.js"></script>
 <script src="js/activites-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 let currentResidentId = null;
@@ -385,6 +386,7 @@ let _residentDetailCache = [];
 let _residentJournalAll = [];
 let _residentPresencesRange = {};
 let _residentPlanningCache = [];
+let _residentTransmissionsAll = [];
 
 function getResident(id) {
   return _residentDetailCache.find(x => x.id === (id || currentResidentId));
@@ -2045,7 +2047,7 @@ function buildFilDeVie(r) {
   const _trShiftColors = { matin:'#f59e0b', aprem:'#3b82f6', soir:'#8b5cf6', nuit:'#1e293b' };
   const _trShiftLabels = { matin:'Matin', aprem:'Après-midi', soir:'Soir', nuit:'Nuit' };
   const _trCatLabels = { sante:'Santé', medicament:'Médicament', comportement:'Comportement', alimentation:'Alimentation', hygiene:'Hygiène', activite:'Activité', famille:'Famille', sortie:'Sortie / Retour', administratif:'Administratif', maintenance:'Maintenance', urgent:'Urgent' };
-  (DB.get(DB.keys.transmissions) || []).filter(t => String(t.residentId) === String(currentResidentId)).forEach(t => {
+  (_residentTransmissionsAll || []).filter(t => String(t.residentId) === String(currentResidentId)).forEach(t => {
     const isUrgent = t.priority === 'urgent' || t.cat === 'urgent';
     const shiftLabel = _trShiftLabels[t.shift] || t.shift || '';
     const catLabel = _trCatLabels[t.cat] || t.cat || '';
@@ -2099,7 +2101,7 @@ function computeSignals(r) {
   else if (abs >= 3) out.push({ level:'warn', icon:'📉', label:'Absences en hausse', detail:`${abs} absences sur 14 jours` });
   // Transmissions urgentes (7 j)
   const since7 = daysAgo(7);
-  const trUrgents = (DB.get(DB.keys.transmissions) || []).filter(t => String(t.residentId) === String(currentResidentId) && (t.date||'') >= since7 && (t.priority === 'urgent' || t.cat === 'urgent'));
+  const trUrgents = (_residentTransmissionsAll || []).filter(t => String(t.residentId) === String(currentResidentId) && (t.date||'') >= since7 && (t.priority === 'urgent' || t.cat === 'urgent'));
   if (trUrgents.length >= 3) out.push({ level:'alert', icon:'📡', label:'Transmissions urgentes répétées', detail:`${trUrgents.length} transmission${trUrgents.length>1?'s':''} urgente${trUrgents.length>1?'s':''} sur les 7 derniers jours` });
   else if (trUrgents.length >= 1) out.push({ level:'warn', icon:'📡', label:'Transmission urgente récente', detail:`${trUrgents.length} transmission${trUrgents.length>1?'s':''} urgente${trUrgents.length>1?'s':''} cette semaine` });
   // Incidents (30 j)
@@ -2305,7 +2307,7 @@ function autonomieCard(r) {
   (_residentPlanningCache||[]).forEach(e => {
     if (String(e.residentId) === String(currentResidentId) || e.residentName === fullName) push(e.date, e.niveauSoutien, 'Agenda');
   });
-  const _trAll = (typeof DB !== 'undefined' && DB.get) ? (DB.get(DB.keys.transmissions) || []) : [];
+  const _trAll = _residentTransmissionsAll || [];
   _trAll.forEach(t => {
     if (String(t.residentId) === String(currentResidentId) || t.residentName === fullName) push(t.date || t.createdAt, t.soutienNiveau, TR_CAT[t.cat] || (t.cat ? cap(t.cat) : 'Transmission'));
   });
@@ -2398,7 +2400,7 @@ function initPageTabs() {
 }
 
 function residentTransmissionsCard(r) {
-  const all = (DB.get(DB.keys.transmissions) || [])
+  const all = (_residentTransmissionsAll || [])
     .filter(t => String(t.residentId) === String(r.id))
     .sort((a, b) => (b.createdAt || b.date || '').localeCompare(a.createdAt || a.date || ''));
 
@@ -2949,14 +2951,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!requireModule('view_residents')) return;
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
   document.getElementById('residentContent').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
-  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache, _residentActCatalogue] = await Promise.all([
+  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache, _residentActCatalogue, , _residentTransmissionsAll] = await Promise.all([
     sbGetResidents(),
     sbGetJournalEntries(),
     sbGetPresencesRange(daysAgo(35), today()),
     sbGetPlanningEvents(),
     (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([])),
-    (typeof loadReferents === 'function' ? loadReferents() : Promise.resolve())
+    (typeof loadReferents === 'function' ? loadReferents() : Promise.resolve()),
+    (typeof sbGetTransmissions === 'function' ? sbGetTransmissions() : Promise.resolve([]))
   ]);
+  _residentTransmissionsAll = _residentTransmissionsAll || [];
   await loadDocResCache();
   loadResident();
 });
