@@ -89,7 +89,7 @@ function renderEcheances() {
             <span style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.libelle || t.label)}</span>
             <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.bd};flex-shrink:0">${c.label}</span>
           </div>
-          <div style="font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.label}${resHtml}${e.notes ? ` · ${escHtml(e.notes)}` : ''}</div>
+          <div style="font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.label}${resHtml}${e.notes ? ` · ${escHtml(e.notes)}` : ''}${e.documentPath ? ` · <a onclick="openEcheanceDoc('${e.id}');return false" style="color:var(--accent);cursor:pointer;text-decoration:none" title="Ouvrir le dernier document joint">📎 document</a>` : ''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
           <span style="font-size:.74rem;color:var(--muted)">${formatDate(e.date)}</span>
@@ -97,12 +97,80 @@ function renderEcheances() {
         </div>
         ${canEdit ? `<div class="no-print" style="display:flex;gap:.1rem;flex-shrink:0">
           ${!e.done ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme traité" onclick="toggleEcheanceDone('${e.id}')">✓</button>` : `<button class="btn btn-ghost btn-sm" title="Réactiver" onclick="toggleEcheanceDone('${e.id}')">↩</button>`}
+          <button class="btn btn-ghost btn-sm" style="color:var(--accent)" title="Renouveler : joindre le nouveau document et reporter la date" onclick="openRenouvelerModal('${e.id}')">📎</button>
           <button class="btn btn-ghost btn-sm" onclick="openEcheanceModal('${e.id}')">✎</button>
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEcheance('${e.id}')">✕</button>
         </div>` : ''}
       </div>
     </div>`;
   }).join('');
+}
+
+// ── RENOUVELLEMENT (pièce jointe + report de la date) ──
+let renEcId = null;
+function openRenouvelerModal(id) {
+  renEcId = id;
+  const e = getEcheances().find(x => x.id === id);
+  if (!e) return;
+  const t = EC_TYPES[e.type] || EC_TYPES.autre;
+  document.getElementById('renEcTitle').textContent = `${e.libelle || t.label}${e.residentName ? ' — ' + e.residentName : ''}`;
+  document.getElementById('renFile').value = '';
+  document.getElementById('renDate').value = '';
+  openModal('modalRenouveler');
+}
+
+async function saveRenouvellement() {
+  const e = getEcheances().find(x => x.id === renEcId);
+  if (!e) return;
+  const file = document.getElementById('renFile').files[0];
+  const newDate = document.getElementById('renDate').value;
+  if (!file) { toast('Joignez le document renouvelé', 'error'); return; }
+  if (!newDate) { toast("Indiquez la nouvelle date d'échéance", 'error'); return; }
+  const btn = document.getElementById('renSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Envoi…'; }
+  try {
+    const t = EC_TYPES[e.type] || EC_TYPES.autre;
+    const sess = Auth.getSession();
+    const by = sess ? (`${sess.prenom||''} ${sess.nom||''}`.trim() || sess.username || '') : '';
+    // 1) Upload du fichier dans le bucket justificatifs
+    const path = await sbUploadJustificatif(file, e.residentId || 'echeances');
+    // 2) Classement dans les Documents (GED) du résident
+    if (e.residentId && typeof sbSaveDocumentResident === 'function') {
+      try {
+        await sbSaveDocumentResident({
+          residentId: e.residentId, name: e.libelle || t.label, fileName: file.name,
+          size: file.size, mimeType: file.type, category: t.label, docDate: today(),
+          dueDate: newDate, fichierPath: path, type: 'resident', uploadedBy: by
+        });
+      } catch (err) { console.error('[renouveler] GED', err); }
+    }
+    // 3) Renouvellement de l'échéance : report de la date + document + repasse active
+    let saved;
+    try {
+      saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null, document_path: path, document_name: file.name });
+    } catch (err) {
+      console.error('[renouveler] colonnes document manquantes ? report de la date seul', err);
+      saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null });
+      saved.documentPath = ''; saved.documentName = '';
+    }
+    _ecCache = _ecCache.map(x => x.id === e.id ? saved : x);
+    if (typeof auditLog === 'function') auditLog('echeance_renouvellement', `${e.libelle || t.label} → ${newDate}`);
+    closeModal('modalRenouveler');
+    renderEcheances();
+    toast('Échéance renouvelée ✓');
+  } catch (err) {
+    console.error('[saveRenouvellement]', err);
+    toast('Erreur : ' + (err?.message || err), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✔ Renouveler'; }
+  }
+}
+
+async function openEcheanceDoc(id) {
+  const e = getEcheances().find(x => x.id === id);
+  if (!e || !e.documentPath) return;
+  const url = (typeof sbJustificatifUrl === 'function') ? await sbJustificatifUrl(e.documentPath) : null;
+  if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
 }
 
 function openEcheanceModal(id) {

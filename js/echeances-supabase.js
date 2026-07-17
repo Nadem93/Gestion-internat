@@ -32,6 +32,8 @@ function _ecFromRow(r) {
     doneAt:       r.done_at       || null,
     author:       r.author        || '',
     sourceId:     r.source_id     || null,
+    documentPath: r.document_path || '',
+    documentName: r.document_name || '',
     createdAt:    r.created_at
   };
 }
