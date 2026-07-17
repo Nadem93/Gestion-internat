@@ -14,6 +14,11 @@ const EC_TYPES = {
   autre: { label: 'Autre', icon: '📌' }
 };
 
+// Type d'échéance → clé de catégorie GED (documents_resident.category), pour que le
+// document créé au renouvellement soit classé sous le bon onglet de la fiche résident
+// (la clé, pas le libellé — sinon l'onglet se dédouble).
+const EC_DOCCAT = { mdph: 'mdph', jugement: 'jugement', identite: 'identite', css: 'cmu', contrat: 'contrat', medical: 'medical' };
+
 // Source = Supabase. Cache mémoire chargé au démarrage.
 let _ecCache = [];
 function getEcheances() { return _ecCache; }
@@ -145,7 +150,7 @@ async function saveRenouvellement() {
       try {
         await sbSaveDocumentResident({
           residentId: e.residentId, name: e.libelle || t.label, fileName: file.name,
-          size: file.size, mimeType: file.type, category: t.label, docDate: today(),
+          size: file.size, mimeType: file.type, category: EC_DOCCAT[e.type] || 'autre', docDate: today(),
           dueDate: newDate, fichierPath: path, type: 'resident', uploadedBy: by
         });
       } catch (err) { console.error('[renouveler] GED', err); }

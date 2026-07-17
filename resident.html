@@ -1811,16 +1811,32 @@ function docExpiryStatus(d) {
   return { color: '#16a34a', label: 'valide → ' + formatDate(d.dueDate), dot: '#16a34a' };
 }
 
+// Normalise une catégorie de document vers une clé canonique.
+// Les documents ajoutés à la main stockent une clé (ex. 'identite') ; ceux créés par un
+// renouvellement d'échéance stockaient le LIBELLÉ du type (ex. "Pièce d'identité").
+// On ramène tout à la clé pour que les onglets ne se dédoublent pas.
+function normDocCat(c) {
+  if (!c) return 'autre';
+  if (DOC_CAT_LABELS[c]) return c; // déjà une clé connue
+  const s = String(c).trim().toLowerCase();
+  const byLabel = Object.keys(DOC_CAT_LABELS).find(k => DOC_CAT_LABELS[k].toLowerCase() === s);
+  if (byLabel) return byLabel;
+  // libellés des types d'échéance qui diffèrent des libellés de catégorie
+  const ec = { "pièce d'identité": 'identite', "notification mdph": 'mdph', "jugement / mesure": 'jugement', "css / mutuelle": 'cmu', "contrat de séjour": 'contrat', "visite médicale": 'medical' };
+  return ec[s] || c; // sinon on conserve la valeur brute (catégorie libre)
+}
+
 function docsHtml(docs) {
   const list = docs.map(d => {
     const s = docExpiryStatus(d);
-    return `<div data-doccat="${escHtml(d.category||'autre')}" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column">
+    const cat = normDocCat(d.category);
+    return `<div data-doccat="${escHtml(cat)}" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column">
       <div style="height:76px;background:color-mix(in srgb, var(--accent) 10%, #fff);display:flex;align-items:center;justify-content:center;position:relative">
         <span style="font-size:2rem">${docTypeIcon(d.mimeType)}</span>
         <span title="${s.label}" style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${s.dot};box-shadow:0 0 0 2px #fff"></span>
       </div>
       <div style="padding:.6rem .7rem;flex:1;display:flex;flex-direction:column;gap:.3rem">
-        <span style="align-self:flex-start;font-size:.63rem;background:color-mix(in srgb, var(--accent) 12%, #fff);color:var(--accent);padding:1px 8px;border-radius:20px">${DOC_CAT_LABELS[d.category]||d.category||'Autre'}</span>
+        <span style="align-self:flex-start;font-size:.63rem;background:color-mix(in srgb, var(--accent) 12%, #fff);color:var(--accent);padding:1px 8px;border-radius:20px">${escHtml(docCatLabel(cat))}</span>
         <div style="font-weight:600;font-size:.82rem;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="${escHtml(d.name)}">${escHtml(d.name)}</div>
         <div style="font-size:.68rem;color:${s.color};margin-top:auto">⏰ ${s.label}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:.4rem;margin-top:.15rem">
@@ -1874,11 +1890,11 @@ function docCatLabel(c) {
   return (typeof DOC_CAT_LABELS !== 'undefined' && DOC_CAT_LABELS[c]) || extra[c] || (c ? c.charAt(0).toUpperCase() + c.slice(1) : 'Autre');
 }
 function docCatTabsHtml(docs) {
-  const cats = [...new Set((docs || []).map(d => d.category || 'autre'))].sort((a, b) => docCatLabel(a).localeCompare(docCatLabel(b)));
+  const cats = [...new Set((docs || []).map(d => normDocCat(d.category)))].sort((a, b) => docCatLabel(a).localeCompare(docCatLabel(b)));
   const bdg = n => `<span class="badge badge-gray" style="margin-left:.35rem">${n}</span>`;
   const all = `<button class="tab active" onclick="filterDocCat(this,'')">📎 Tous${docs && docs.length ? bdg(docs.length) : ''}</button>`;
   if (cats.length <= 1) return all; // une seule catégorie → pas besoin d'onglets
-  return all + cats.map(c => `<button class="tab" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => (d.category || 'autre') === c).length)}</button>`).join('');
+  return all + cats.map(c => `<button class="tab" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => normDocCat(d.category) === c).length)}</button>`).join('');
 }
 function filterDocCat(btn, cat) {
   const bar = btn.closest('#docCatTabs');
