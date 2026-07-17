@@ -548,9 +548,7 @@ function renderViewMode(r) {
     <div class="no-print">${residentTransmissionsCard(r)}</div>
     <div class="no-print">${renderDataCards(r)}</div>
     ${autonomieCard(r)}
-    <div class="no-print tabs" style="margin-bottom:1rem">
-      <button class="tab active" data-tab="documents">📎 Documents ${docs.length ? `<span class="badge badge-gray" style="margin-left:.3rem">${docs.length}</span>` : ''}</button>
-    </div>
+    <div class="no-print tabs" id="docCatTabs" style="margin-bottom:1rem">${docCatTabsHtml(docs)}</div>
     <div class="no-print" id="tab-documents">${docsHtml(docs)}</div>`;
   initPageTabs();
 }
@@ -1806,7 +1804,7 @@ function deleteEvaluation(id) {
 function docsHtml(docs) {
   const list = docs.map(d => {
     const overdue = d.dueDate && d.dueDate < today() && !d.done;
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
+    return `<div data-doccat="${escHtml(d.category||'autre')}" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
       <span style="font-size:1.3rem">${docTypeIcon(d.mimeType)}</span>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(d.name)}</div>
@@ -1821,7 +1819,29 @@ function docsHtml(docs) {
       <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocFromPage('${d.id}','${currentResidentId}')">✕</button>
     </div>`;
   }).join('');
-  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span class="card-title" style="color:var(--accent)">Fichiers joints</span></div><div class="card-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>`;
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span class="card-title" style="color:var(--accent)">Fichiers joints</span></div><div class="card-body" style="padding:0"><div id="docList">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div></div>`;
+}
+
+// Onglets de catégorie des documents (dynamiques : uniquement les catégories présentes)
+function docCatLabel(c) {
+  const extra = { administratif:'Administratif', medical:'Médical', scolaire:'Scolaire', judiciaire:'Judiciaire', ressource:'Ressource' };
+  return (typeof DOC_CAT_LABELS !== 'undefined' && DOC_CAT_LABELS[c]) || extra[c] || (c ? c.charAt(0).toUpperCase() + c.slice(1) : 'Autre');
+}
+function docCatTabsHtml(docs) {
+  const cats = [...new Set((docs || []).map(d => d.category || 'autre'))].sort((a, b) => docCatLabel(a).localeCompare(docCatLabel(b)));
+  const bdg = n => `<span class="badge badge-gray" style="margin-left:.35rem">${n}</span>`;
+  const all = `<button class="tab active" onclick="filterDocCat(this,'')">📎 Tous${docs && docs.length ? bdg(docs.length) : ''}</button>`;
+  if (cats.length <= 1) return all; // une seule catégorie → pas besoin d'onglets
+  return all + cats.map(c => `<button class="tab" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => (d.category || 'autre') === c).length)}</button>`).join('');
+}
+function filterDocCat(btn, cat) {
+  const bar = btn.closest('#docCatTabs');
+  if (bar) bar.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+  const list = document.getElementById('docList');
+  if (!list) return;
+  list.querySelectorAll('[data-doccat]').forEach(row => {
+    row.style.display = (!cat || row.getAttribute('data-doccat') === cat) ? '' : 'none';
+  });
 }
 
 function inputField(id, label, value, type) {
