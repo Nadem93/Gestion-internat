@@ -527,6 +527,7 @@ function renderViewMode(r) {
       ${planningResidentCard(r)}
       ${planningHebdoCard(r)}
       ${santeCard(r)}
+      <div class="no-print">${filDeVieCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${trousseauCard(r)}${activitesCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${objectifsCard(r)}${evaluationsCard(r)}</div>
@@ -544,7 +545,6 @@ function renderViewMode(r) {
       <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap">TABLEAU DE BORD DU RÉSIDENT</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
-    <div class="no-print">${filDeVieCard(r)}</div>
     <div class="no-print">${residentTransmissionsCard(r)}</div>
     <div class="no-print">${renderDataCards(r)}</div>
     ${autonomieCard(r)}
