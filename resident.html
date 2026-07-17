@@ -551,6 +551,7 @@ function renderViewMode(r) {
     <div class="no-print tabs" id="docCatTabs" style="margin-bottom:1rem">${docCatTabsHtml(docs)}</div>
     <div class="no-print" id="tab-documents">${docsHtml(docs)}</div>`;
   initPageTabs();
+  initPageDocUpload(currentResidentId);
 }
 
 // ── SANTÉ (intégré à la carte Médical) ──
@@ -1819,7 +1820,39 @@ function docsHtml(docs) {
       <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocFromPage('${d.id}','${currentResidentId}')">✕</button>
     </div>`;
   }).join('');
-  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span class="card-title" style="color:var(--accent)">Fichiers joints</span></div><div class="card-body" style="padding:0"><div id="docList">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div></div>`;
+  const catOpts = Object.entries(DOC_CAT_LABELS).map(([k, v]) => `<option value="${k}"${k === 'autre' ? ' selected' : ''}>${escHtml(v)}</option>`).join('');
+  return `<div class="card" style="overflow:hidden">
+    <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff);display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <span class="card-title" style="color:var(--accent)">Fichiers joints</span>
+      <label class="btn btn-accent btn-sm no-print" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:.35rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter un document
+        <input type="file" id="pageDocFileInput" accept="application/pdf,image/*" style="display:none"/>
+      </label>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="pageDocPending" class="no-print" style="display:none;flex-direction:column;gap:.7rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:color-mix(in srgb, var(--accent) 6%, #fff)">
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;min-width:0">
+          <span style="font-size:1.1rem">📎</span>
+          <strong id="pageDocPendingName" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></strong>
+          <span style="color:var(--muted);flex-shrink:0" id="pageDocPendingSize"></span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Nom du document</label><input type="text" id="pageDocName" class="form-input" placeholder="Nom du fichier par défaut"/></div>
+          <div class="form-group"><label>Catégorie</label><select id="pageDocCategory" class="form-input">${catOpts}</select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Date du document</label><input type="date" id="pageDocDate" class="form-input"/></div>
+          <div class="form-group"><label>Échéance / renouvellement <span style="color:var(--muted);font-weight:400">(facultatif)</span></label><input type="date" id="pageDocDueDate" class="form-input"/></div>
+        </div>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="cancelPageDoc()">Annuler</button>
+          <button class="btn btn-accent btn-sm" onclick="uploadDocFromPage()">💾 Enregistrer</button>
+        </div>
+      </div>
+      <div id="docList">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div>
+    </div>
+  </div>`;
 }
 
 // Onglets de catégorie des documents (dynamiques : uniquement les catégories présentes)
