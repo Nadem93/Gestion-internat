@@ -79,24 +79,23 @@ function renderEcheances() {
   }
   el.innerHTML = list.map(e => {
     const u = ecUrgency(e), c = EC_URG[u], t = EC_TYPES[e.type] || EC_TYPES.autre;
-    return `<div class="card" style="border-left:3px solid ${c.color};${e.done ? 'opacity:.65' : ''}">
-      <div class="card-body" style="padding:.8rem 1rem;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap">
-        <span style="font-size:1.3rem;flex-shrink:0">${t.icon}</span>
-        <div style="flex:1;min-width:200px">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            <span style="font-weight:700;font-size:.88rem">${escHtml(e.libelle || t.label)}</span>
-            <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.bd}">${c.label}</span>
+    const resHtml = e.residentName ? ` · <a href="resident.html?id=${e.residentId}" style="color:var(--accent);text-decoration:none">${escHtml(e.residentName)}</a>` : '';
+    return `<div class="card" style="overflow:hidden;${e.done ? 'opacity:.6' : ''}">
+      <div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem">
+        <span style="width:4px;align-self:stretch;background:${c.color};border-radius:3px;flex-shrink:0"></span>
+        <span style="width:32px;height:32px;border-radius:9px;background:${c.bg};display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0">${t.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <span style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.libelle || t.label)}</span>
+            <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.bd};flex-shrink:0">${c.label}</span>
           </div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">
-            ${t.label}${e.residentName ? ` · <a href="resident.html?id=${e.residentId}" style="color:var(--accent);text-decoration:none">${escHtml(e.residentName)}</a>` : ''}
-            ${e.notes ? ` · ${escHtml(e.notes)}` : ''}
-          </div>
+          <div style="font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.label}${resHtml}${e.notes ? ` · ${escHtml(e.notes)}` : ''}</div>
         </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:var(--display);font-weight:700;color:${c.color}">${formatDate(e.date)}</div>
-          <div style="font-size:.7rem;color:var(--muted)">${ecDaysLabel(e)}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
+          <span style="font-size:.74rem;color:var(--muted)">${formatDate(e.date)}</span>
+          <span style="font-size:.7rem;font-weight:700;color:${c.color};background:${c.bg};border:1px solid ${c.bd};padding:0 8px;border-radius:20px;white-space:nowrap;line-height:1.55">${ecDaysLabel(e)}</span>
         </div>
-        ${canEdit ? `<div class="no-print" style="display:flex;gap:.25rem;flex-shrink:0">
+        ${canEdit ? `<div class="no-print" style="display:flex;gap:.1rem;flex-shrink:0">
           ${!e.done ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme traité" onclick="toggleEcheanceDone('${e.id}')">✓</button>` : `<button class="btn btn-ghost btn-sm" title="Réactiver" onclick="toggleEcheanceDone('${e.id}')">↩</button>`}
           <button class="btn btn-ghost btn-sm" onclick="openEcheanceModal('${e.id}')">✎</button>
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEcheance('${e.id}')">✕</button>
