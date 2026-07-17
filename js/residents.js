@@ -106,7 +106,9 @@ async function uploadDocument() {
   const session = Auth.getSession();
   const uploader = session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : '—';
   try {
-    const path = await sbUploadJustificatif(pendingDocFile, residentId);
+    // 1er dossier du chemin = uid du compte connecté (RLS bucket justificatifs), pas residentId.
+    const uid = await sbAuthUid();
+    const path = await sbUploadJustificatif(pendingDocFile, uid || residentId);
     const saved = await sbSaveDocumentResident({
       residentId, name: pendingDocFile.name, category,
       size: pendingDocFile.size, mimeType: pendingDocFile.type,

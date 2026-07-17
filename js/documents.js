@@ -206,7 +206,9 @@ async function saveDocument() {
     } else {
       if (!window._pendingDocFile) { toast('Veuillez sélectionner un fichier', 'error'); return; }
       const file = window._pendingDocFile;
-      const path = await sbUploadJustificatif(file, residentId);
+      // 1er dossier du chemin = uid du compte connecté (RLS bucket justificatifs), pas residentId.
+      const uid = await sbAuthUid();
+      const path = await sbUploadJustificatif(file, uid || residentId);
       const saved = await sbSaveDocumentResident({
         residentId, name: name || file.name, fileName: file.name,
         size: file.size, mimeType: file.type, category, docDate, dueDate,

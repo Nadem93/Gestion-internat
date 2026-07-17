@@ -2553,11 +2553,14 @@ async function uploadDocFromPage() {
   const dueDate = document.getElementById('pageDocDueDate').value;
   const category = document.getElementById('pageDocCategory').value;
   try {
-    const path = await sbUploadJustificatif(pageDocFile, currentResidentId);
+    // Le 1er dossier du chemin Storage doit être l'uid du compte connecté (RLS bucket justificatifs).
+    const uid = await sbAuthUid();
+    const path = await sbUploadJustificatif(pageDocFile, uid || currentResidentId);
     const saved = await sbSaveDocumentResident({
       residentId: currentResidentId, name, fileName: pageDocFile.name,
       size: pageDocFile.size, mimeType: pageDocFile.type,
-      category, docDate, dueDate, fichierPath: path, type: 'resident'
+      category, docDate, dueDate, fichierPath: path, type: 'resident',
+      uploadedBy: uid || ''
     });
     _docResCache.unshift(saved);
     toast('Document ajouté', 'success');
@@ -2568,8 +2571,13 @@ async function uploadDocFromPage() {
     document.getElementById('pageDocCategory').value = '';
     document.getElementById('pageDocFileInput').value = '';
     document.getElementById('pageDocPending').style.display = 'none';
-    loadResident();
-  } catch { toast('Erreur lors de l\'ajout', 'error'); }
+  } catch (e) {
+    console.error('[uploadDocFromPage]', e);
+    toast('Erreur : ' + (e?.message || e), 'error');
+    return;
+  }
+  // Hors du try : une erreur de rechargement ne doit pas afficher un faux échec après un enregistrement réussi.
+  try { loadResident(); } catch (e) { console.error('[uploadDocFromPage/loadResident]', e); }
 }
 
 function cancelPageDoc() {
