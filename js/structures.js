@@ -8,8 +8,6 @@
 const STRUCTURES = {
   // slug (= sous-domaine)      nom affiché          sous-titre                          logo (image)   couleur d'accent
   tissa: { nom: 'TISSA', sous: 'Accompagnement médico-social', logo: '', couleur: '' },
-  btc:   { nom: 'BTC',   sous: 'Accompagnement médico-social', logo: '', couleur: '' },
-  demo:  { nom: 'INTERNALIS', sous: 'Démonstration', logo: '', couleur: '' },
 };
 
 // Slug courant : ?s=... prioritaire (prévisualisation), sinon 1er label du sous-domaine.
