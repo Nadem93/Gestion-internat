@@ -1876,7 +1876,7 @@ function docsHtml(docs) {
           <button class="btn btn-accent btn-sm" onclick="uploadDocFromPage()">💾 Enregistrer</button>
         </div>
       </div>
-      <div id="docList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem;padding:1rem 1.25rem">${docs.length ? list : '<div class="empty" style="grid-column:1/-1;padding:2rem"><p>Aucun document joint.</p></div>'}</div>
+      <div id="docList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem;padding:1rem 1.25rem;max-height:454px;overflow-y:auto">${docs.length ? list : '<div class="empty" style="grid-column:1/-1;padding:2rem"><p>Aucun document joint.</p></div>'}</div>
     </div>
   </div>`;
 }
