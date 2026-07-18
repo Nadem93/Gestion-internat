@@ -886,6 +886,15 @@
       <div class="umx-section">
         <div class="umx-sec-head"><span>🔑</span> Compte de connexion</div>
         <div class="form-group"><label>Rôle du compte</label><select id="empRole"><option value="educateur">Éducateur — accès de base</option><option value="rh">Encadrement / RH — accès aux données RH</option><option value="admin">Administrateur — accès complet</option></select><div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">Utilisé seulement si vous cliquez sur « Créer un compte ».</div></div>
+        <div class="form-group" id="empLinkBox" style="display:none">
+          <label>Compte relié (espace personnel)</label>
+          <div id="empLinkStatus" style="font-size:.8rem"></div>
+          <div id="empLinkPicker" style="display:none;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
+            <select id="empLinkSelect" style="flex:1;min-width:180px"></select>
+            <button type="button" class="btn btn-outline btn-sm" onclick="linkEmpToAccount()">🔗 Lier à cette fiche</button>
+          </div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Relie une fiche à un compte déjà créé, pour débloquer « Mes absences / congés / formations / fiches de paie ».</div>
+        </div>
       </div>
 
       <div class="form-group"><label>Notes</label><textarea id="empNotes" rows="2" placeholder="Observations…"></textarea></div>
@@ -911,6 +920,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
+<script src="js/profiles-supabase.js"></script>
 <script src="js/contrats-supabase.js"></script>
 <script src="js/config-supabase.js"></script>
 <!-- Tableau de bord Stats : sources de données migrées -->
@@ -1036,7 +1046,7 @@ function resetEmployeForm() {
   const pp = document.getElementById('empPhotoPreview');
   pp.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
   pp.style.border = '2px dashed #cbd5e1';
-  umxLiveName(); umxTauxHoraire();
+  umxLiveName(); umxTauxHoraire(); renderEmpLink();
 }
 function genPassword(len = 12) {
   // Garantit la politique du serveur (create-user) : ≥8 car., majuscule,
@@ -1075,6 +1085,7 @@ async function createUserFromEmploye() {
         const saved = await sbUpdateEmployeField(id, { profile_id: data.userId });
         const idx = _empCache.findIndex(e => String(e.id) === String(id));
         if (idx >= 0) _empCache[idx] = saved;
+        _empProfilesCache = null; renderEmpLink();   // rafraîchit l'état « relié »
       } catch (e) { console.warn('Lien profile_id', e); }
     }
     info.innerHTML = `✅ Compte créé — <strong>${escHtml(email)}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(notez-le, masqué à la fermeture)</span>`;
@@ -1206,6 +1217,79 @@ async function deleteEmployeCard(id, nom) {
     toast('Employé supprimé');
   } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[deleteEmployeCard]', e); }
 }
+// ── Lier / délier une fiche employé à un compte de connexion existant ──
+// Le lien profile_id conditionne l'accès à l'espace personnel du salarié
+// (Mes absences, Mes congés, Mes formations, Mes fiches de paie). Ce lien n'était
+// posé qu'à la création d'un compte ; ici on peut relier un compte DÉJÀ existant.
+let _empProfilesCache = null;
+async function _empLoadProfiles(force) {
+  if (_empProfilesCache && !force) return _empProfilesCache;
+  try { _empProfilesCache = (typeof sbGetProfiles === 'function') ? await sbGetProfiles() : []; }
+  catch (e) { _empProfilesCache = []; }
+  return _empProfilesCache;
+}
+function _empProfileName(pid) {
+  const p = (_empProfilesCache || []).find(x => String(x.id) === String(pid));
+  return p ? ([p.prenom, p.nom].filter(Boolean).join(' ') || p.fonction || 'compte') : null;
+}
+async function renderEmpLink() {
+  const box = document.getElementById('empLinkBox');
+  if (!box) return;
+  const statusEl = document.getElementById('empLinkStatus');
+  const picker = document.getElementById('empLinkPicker');
+  const id = document.getElementById('empId').value;
+  box.style.display = '';
+  if (!id) {   // fiche pas encore enregistrée
+    picker.style.display = 'none';
+    statusEl.innerHTML = '<span style="color:var(--muted)">Enregistrez d\'abord la fiche, puis créez ou reliez un compte.</span>';
+    return;
+  }
+  await _empLoadProfiles();
+  const emp = getEmployes().find(e => String(e.id) === String(id));
+  if (emp && emp.profileId) {
+    picker.style.display = 'none';
+    const nm = _empProfileName(emp.profileId);
+    statusEl.innerHTML = `<span style="color:#16a34a;font-weight:600">✅ Relié au compte${nm ? ' de ' + escHtml(nm) : ''}</span>`
+      + ` <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);padding:.15rem .5rem" onclick="unlinkEmpAccount()">Délier</button>`;
+    return;
+  }
+  statusEl.innerHTML = '<span style="color:#b45309">⚠️ Aucun compte relié — l\'espace personnel (Mes absences, congés…) est inaccessible pour ce salarié.</span>';
+  picker.style.display = 'flex';
+  const usedByOthers = new Set(getEmployes().filter(e => String(e.id) !== String(id) && e.profileId).map(e => String(e.profileId)));
+  const opts = (_empProfilesCache || [])
+    .filter(p => !usedByOthers.has(String(p.id)))
+    .map(p => `<option value="${escHtml(p.id)}">${escHtml([p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom')}${p.fonction ? ' · ' + escHtml(p.fonction) : ''}</option>`)
+    .join('');
+  document.getElementById('empLinkSelect').innerHTML = opts
+    ? '<option value="">— Choisir un compte —</option>' + opts
+    : '<option value="">Aucun compte disponible (créez-en un)</option>';
+}
+async function linkEmpToAccount() {
+  const id = document.getElementById('empId').value;
+  const pid = document.getElementById('empLinkSelect').value;
+  if (!id) { toast('Enregistrez d\'abord la fiche', 'error'); return; }
+  if (!pid) { toast('Choisissez un compte à relier', 'error'); return; }
+  try {
+    const saved = await sbUpdateEmployeField(id, { profile_id: pid });
+    const idx = _empCache.findIndex(e => String(e.id) === String(id));
+    if (idx >= 0) _empCache[idx] = saved;
+    toast('Compte relié à la fiche', 'success');
+    renderEmpLink();
+  } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[linkEmpToAccount]', e); }
+}
+async function unlinkEmpAccount() {
+  const id = document.getElementById('empId').value;
+  if (!id) return;
+  if (!confirm('Délier ce compte de la fiche ? Le salarié perdra l\'accès à son espace personnel (Mes absences, congés…).')) return;
+  try {
+    const saved = await sbUpdateEmployeField(id, { profile_id: null });
+    const idx = _empCache.findIndex(e => String(e.id) === String(id));
+    if (idx >= 0) _empCache[idx] = saved;
+    toast('Compte délié', 'info');
+    renderEmpLink();
+  } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[unlinkEmpAccount]', e); }
+}
+
 function editEmploye(id) {
   const emp = getEmployes().find(x => String(x.id) === String(id));
   if (!emp) return;
@@ -1240,7 +1324,7 @@ function editEmploye(id) {
     pp.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:24px;height:24px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
     pp.style.border = '2px dashed #cbd5e1';
   }
-  umxLiveName(); umxTauxHoraire();
+  umxLiveName(); umxTauxHoraire(); renderEmpLink();
   openModal('modalEmploye');
 }
 const EMP_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
