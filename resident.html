@@ -543,14 +543,14 @@ function renderViewMode(r) {
       })()}
       ${planningResidentCard(r)}
       ${planningHebdoCard(r)}
+      ${santeCard(r)}
       <div class="grid grid-2" style="gap:1rem;align-items:start">
-        ${santeCard(r)}
+        <div class="no-print">${filDeVieCard(r)}</div>
         <div class="no-print">
           <div class="tabs" id="docCatTabs" style="margin-bottom:1rem">${docCatTabsHtml(docs)}</div>
           <div id="tab-documents">${docsHtml(docs)}</div>
         </div>
       </div>
-      <div class="no-print">${filDeVieCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${trousseauCard(r)}${activitesCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:stretch">${objectifsCard(r)}${evaluationsCard(r)}</div>
@@ -727,7 +727,7 @@ function santeCard(r) {
         <span class="card-title" style="color:#16a34a">🏥 Médical</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSanteModal('medical')">✎ Modifier</button>` : ''}
       </div><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
-      <div class="grid grid-2" style="gap:.55rem">
+      <div class="grid grid-4" style="gap:.75rem">
         ${medRow('Groupe sanguin', s.groupeSanguin)}
         ${medRow('Médecin traitant', r.medecin)}
         ${medRow('Tél. médecin', r.medecinTel)}
@@ -2666,30 +2666,28 @@ function planningHebdoCard(r) {
   const canEdit = canEditResident();
   const actifs = PH_JOURS.filter(j => ph[j] && ph[j].actif);
 
-  const pills = PH_JOURS.map(j => {
+  // Bande horizontale : chaque jour est une colonne ; l'absence s'affiche sous son jour.
+  const cols = PH_JOURS.map(j => {
     const on = !!(ph[j] && ph[j].actif);
-    return `<div style="flex:1;text-align:center;padding:.35rem 0;border-radius:8px;font-size:.72rem;font-weight:700;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:var(--g50, #f8fafc);color:var(--g400);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</div>`;
+    const d = ph[j] || {};
+    const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:var(--g50, #f8fafc);color:var(--g400);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</div>`;
+    const body = on
+      ? `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;text-align:center">
+          <div style="font-weight:600;font-size:.7rem;line-height:1.2;color:#0369a1">📅 ${escHtml(d.label || 'Absence')}</div>
+          ${d.debut ? `<div style="font-size:.63rem;color:var(--muted);margin-top:2px">départ ${d.debut}</div>` : ''}
+          ${d.fin ? `<div style="font-size:.63rem;color:var(--muted)">retour ${d.fin}</div>` : ''}
+        </div>`
+      : `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:var(--g300, #cbd5e1)">·</div>`;
+    return `<div style="min-width:0">${head}${body}</div>`;
   }).join('');
-
-  const rows = actifs.length ? actifs.map((j, i) => {
-    const d = ph[j];
-    const horaires = [d.debut ? 'départ ' + d.debut : '', d.fin ? 'retour ' + d.fin : ''].filter(Boolean).join(' · ');
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
-      <span style="width:34px;flex-shrink:0;font-size:.72rem;font-weight:800;color:#0369a1;text-transform:uppercase">${PH_JOURS_COURT[j]}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem">📅 ${escHtml(d.label || 'Absence planifiée')}</div>
-        ${horaires ? `<div style="font-size:.73rem;color:var(--muted);margin-top:1px">${horaires}</div>` : ''}
-      </div>
-    </div>`;
-  }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune absence récurrente — le résident est attendu chaque jour.</div>';
 
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #0369a1 12%, #fff)">
       <span class="card-title" style="color:#0369a1">🗓 Semaine type${actifs.length ? ` <span class="badge" style="margin-left:.3rem;background:#e0f2fe;color:#0369a1">${actifs.length} jour${actifs.length > 1 ? 's' : ''} d'absence</span>` : ''}</span>
       ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openPlanningHebdoModal()">✎ Modifier</button>` : ''}
     </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
     <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (retour en famille, travail, activité extérieure…). Les jours cochés sont présumés « sortie » au pointage et filtrables dans Médicaments.</div>
-    <div style="display:flex;gap:.35rem">${pills}</div>
-    <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">${rows}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;min-width:0;align-items:start">${cols}</div>
+    ${!actifs.length ? '<div style="font-size:.78rem;color:var(--g400);text-align:center">Aucune absence récurrente — le résident est attendu chaque jour.</div>' : ''}
   </div></div>`;
 }
 
