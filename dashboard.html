@@ -1504,6 +1504,7 @@
   // Semaine type — référés : ajouter/éditer les absences récurrentes d'un résident
   const _DPH_J=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
   const _DPH_JC={lundi:'Lun',mardi:'Mar',mercredi:'Mer',jeudi:'Jeu',vendredi:'Ven',samedi:'Sam',dimanche:'Dim'};
+  const _DPH_NIV=[{v:'',l:'Niveau de soutien — non précisé'},{v:'autonomie',l:'🟢 Autonomie — présence simple'},{v:'supervision',l:'🔵 Supervision / veille'},{v:'verbal',l:'🟡 Incitation / guidance verbale'},{v:'partiel',l:'🟠 Aide partielle'},{v:'total',l:'🔴 Aide totale'}];
   let _dphAbs=[], _dphRid=null;
   function openAddSemaineModal(){
     if(!_dResidents().length){ toast('Aucun résident','error'); return; }
@@ -1527,11 +1528,11 @@
     const map=new Map();
     _DPH_J.forEach(j=>(typeof phDayAbsences==='function'?phDayAbsences(ph[j]):[]).forEach(a=>{
       const key=(a.label||'')+'|'+(a.debut||'')+'|'+(a.fin||'');
-      if(!map.has(key))map.set(key,{label:a.label||'',debut:a.debut||'',fin:a.fin||'',jours:[]});
+      if(!map.has(key))map.set(key,{label:a.label||'',debut:a.debut||'',fin:a.fin||'',accompagnement:a.accompagnement||'',niveauSoutien:a.niveauSoutien||'',jours:[]});
       map.get(key).jours.push(j);
     }));
     _dphAbs=[...map.values()];
-    if(!_dphAbs.length)_dphAbs=[{label:'',jours:[],debut:'',fin:''}];
+    if(!_dphAbs.length)_dphAbs=[{label:'',jours:[],debut:'',fin:'',accompagnement:'',niveauSoutien:''}];
     dphRenderAbs();
   }
   function dphRenderAbs(){
@@ -1544,17 +1545,18 @@
         <button type="button" class="x" style="color:#dc2626;font-size:1.05rem;cursor:pointer;background:none;border:none" onclick="dphRemoveAbs(${i})" title="Supprimer">&times;</button>
       </div>
       <div style="display:flex;gap:.3rem;flex-wrap:wrap">${_DPH_J.map(j=>{const on=(a.jours||[]).includes(j);return `<button type="button" class="dm-jour" onclick="dphToggleJour(${i},'${j}')" style="${on?'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd':'background:#fff;color:#94a3b8;border:1px solid var(--border)'}">${_DPH_JC[j]}</button>`;}).join('')}</div>
+      <div style="margin-top:.6rem"><label style="display:block;font-size:.72rem;font-weight:600;color:#0f2b4a;margin-bottom:.3rem">🤝 Accompagnement apporté <span style="font-weight:400;color:var(--muted)">(facultatif)</span></label><textarea class="dm-fi" rows="2" placeholder="Ex : incitation verbale, médiation, présence rassurante…" oninput="_dphSet(${i},'accompagnement',this.value)" style="resize:vertical">${escHtml(a.accompagnement||'')}</textarea><select class="dm-fi" onchange="_dphSet(${i},'niveauSoutien',this.value)" style="margin-top:.4rem">${_DPH_NIV.map(n=>`<option value="${n.v}"${(a.niveauSoutien||'')===n.v?' selected':''}>${n.l}</option>`).join('')}</select></div>
     </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:.3rem 0">Aucune absence. Ajoutez-en une.</div>';
   }
   function _dphSet(i,k,v){ if(_dphAbs[i])_dphAbs[i][k]=v; }
-  function dphAddAbs(){ _dphAbs.push({label:'',jours:[],debut:'',fin:''}); dphRenderAbs(); }
+  function dphAddAbs(){ _dphAbs.push({label:'',jours:[],debut:'',fin:'',accompagnement:'',niveauSoutien:''}); dphRenderAbs(); }
   function dphRemoveAbs(i){ _dphAbs.splice(i,1); dphRenderAbs(); }
   function dphToggleJour(i,j){ const s=new Set(_dphAbs[i].jours||[]); s.has(j)?s.delete(j):s.add(j); _dphAbs[i].jours=_DPH_J.filter(x=>s.has(x)); dphRenderAbs(); }
   async function saveAddSemaine(){
     const rid=_dphRid; const cache=(typeof sbResidents==='function'?sbResidents():[]); const r=cache.find(x=>String(x.id)===String(rid));
     if(!r){ toast('Choisissez un résident','error'); return; }
     const ph={};
-    _dphAbs.forEach(a=>{ const label=(a.label||'').trim(), jours=a.jours||[]; if(!jours.length)return; if(!label&&!a.debut&&!a.fin)return; jours.forEach(j=>{ if(!ph[j])ph[j]=[]; ph[j].push({label,debut:a.debut||'',fin:a.fin||''}); }); });
+    _dphAbs.forEach(a=>{ const label=(a.label||'').trim(), jours=a.jours||[]; if(!jours.length)return; if(!label&&!a.debut&&!a.fin)return; jours.forEach(j=>{ if(!ph[j])ph[j]=[]; ph[j].push({label,debut:a.debut||'',fin:a.fin||'',accompagnement:(a.accompagnement||'').trim(),niveauSoutien:a.niveauSoutien||''}); }); });
     Object.keys(ph).forEach(j=>ph[j].sort((x,y)=>(x.debut||'').localeCompare(y.debut||'')));
     try{
       const updated=await sbSaveResident({...r, planningHebdo:ph});
