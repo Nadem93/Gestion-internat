@@ -25,19 +25,24 @@
     .nivc-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.3rem .65rem;border-radius:999px;border:1px solid var(--border);color:#334155}
     .nivc-chip .d{width:9px;height:9px;border-radius:50%;flex-shrink:0}
     .nivc-chip.zero{opacity:.45}
-    /* Mes référés — mini-fiches par résident */
+    /* Mes référés — mini-fiches par résident (en-tête coloré + sections) */
     .refgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-top:.75rem}
-    .refcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem 1rem;cursor:pointer;transition:box-shadow .15s,transform .15s}
+    .refcard{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s}
     .refcard:hover{box-shadow:0 6px 18px rgba(15,43,74,.10);transform:translateY(-2px)}
     .refcard:focus-visible{outline:2px solid #6366f1;outline-offset:2px}
-    .refcard-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem}
-    .refcard-name{font-weight:700;font-size:.92rem;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .refcard-meta{font-size:.72rem;color:var(--muted)}
-    .refcard-body{display:flex;flex-direction:column;gap:.4rem}
-    .refrow{display:flex;gap:.5rem;align-items:flex-start;font-size:.78rem}
-    .refrow-ic{flex-shrink:0;font-size:.85rem;line-height:1.35}
-    .refrow-lbl{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8}
-    .refrow-txt{color:#334155;line-height:1.45}
+    .rc-head{display:flex;align-items:center;gap:.6rem;padding:.7rem .9rem;border-bottom:1px solid var(--border)}
+    .rc-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0;overflow:hidden}
+    .rc-av img{width:100%;height:100%;object-fit:cover}
+    .rc-name{font-weight:700;font-size:.92rem;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+    .rc-sub{font-size:.72rem;color:var(--muted)}
+    .rc-niv{font-size:.68rem;font-weight:600;padding:.14rem .5rem;border-radius:999px;white-space:nowrap;flex-shrink:0}
+    .rc-body{padding:.75rem .9rem;display:flex;flex-direction:column;gap:.55rem}
+    .rc-hi{display:flex;gap:.45rem;align-items:center;font-size:.8rem;padding:.5rem .65rem;border-radius:8px;line-height:1.4}
+    .rc-hi svg{width:16px;height:16px;flex-shrink:0}
+    .rc-row{display:flex;gap:.55rem;font-size:.8rem;color:#334155;align-items:flex-start;line-height:1.5}
+    .rc-row svg{width:15px;height:15px;color:#94a3b8;flex-shrink:0;margin-top:2px}
+    .rc-k{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8}
+    .rc-empty{font-size:.76rem;color:#94a3b8;padding:.2rem 0}
     .me-banner{background:#fff;border:1px solid rgba(15,43,74,.08);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(15,43,74,.05)}
     .me-prof{display:flex;align-items:center;gap:11px;flex-shrink:0}
     .me-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
@@ -1068,7 +1073,13 @@
     (_dashLive.transmissions || []).forEach(t => considerNiv(t.residentId, t.residentName, t.date || t.createdAt, t.soutienNiveau));
 
     const daysUntil = d => Math.ceil((new Date(d + 'T00:00:00') - new Date(todayStr + 'T00:00:00')) / 86400000);
-    const section = (icon, label, content) => `<div class="refrow"><span class="refrow-ic">${icon}</span><div style="min-width:0"><span class="refrow-lbl">${label}</span><div class="refrow-txt">${content}</div></div></div>`;
+    const ICON = {
+      cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>',
+      door:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M3 12h12M11 8l4 4-4 4"/></svg>',
+      alarm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg>',
+      health:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 4 4-8 2 4h6"/></svg>',
+      target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>'
+    };
 
     grid.innerHTML = residents.map(r => {
       const nom = `${r.prenom||''} ${r.nom||''}`.trim();
@@ -1076,64 +1087,65 @@
       const accent = safeColor(r.color) || '#6366f1';
       const initials = (((r.prenom||' ')[0]||'') + ((r.nom||' ')[0]||'')).toUpperCase();
       const avatar = r.photo
-        ? `<img src="${escHtml(r.photo)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-        : `<span style="width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;background:${accent};flex-shrink:0">${escHtml(initials)}</span>`;
+        ? `<span class="rc-av" style="background:${accent}"><img src="${escHtml(r.photo)}" alt=""></span>`
+        : `<span class="rc-av" style="background:${accent}">${escHtml(initials)}</span>`;
       const age = r.dob ? Math.floor((Date.now() - new Date(r.dob)) / (365.25 * 86400000)) : null;
+      const sub = [r.chambre ? 'Ch. ' + escHtml(r.chambre) : '', age != null ? age + ' ans' : ''].filter(Boolean).join(' · ') || 'Chambre non renseignée';
 
-      // Autonomie
+      // Autonomie (niveau) — badge dans l'en-tête coloré
       const rec = latestNiv[rid] || latestNiv['name:' + nom];
       const niv = rec ? NIV[rec.niv] : null;
       const nivBadge = niv
-        ? `<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:600;padding:.15rem .5rem;border-radius:999px;color:${niv.color};background:color-mix(in srgb, ${niv.color} 13%, #fff)"><span style="width:7px;height:7px;border-radius:50%;background:${niv.color}"></span>${niv.label}</span>`
-        : `<span style="font-size:.72rem;color:#94a3b8">Niveau non renseigné</span>`;
+        ? `<span class="rc-niv" style="color:${niv.color};background:color-mix(in srgb, ${niv.color} 15%, #fff)">${niv.label}</span>`
+        : `<span class="rc-niv" style="color:#94a3b8;background:#f1f5f9">Niveau —</span>`;
+
+      // Données
       const objIds = r.objectifs || [], suivi = r.objectifsSuivi || {};
       const objAtteint = objIds.filter(id => (suivi[id] && suivi[id].statut) === 'atteint').length;
-      const objTxt = objIds.length ? `🎯 ${objAtteint}/${objIds.length} objectif${objIds.length>1?'s':''} atteint${objAtteint>1?'s':''}` : '';
-
-      const rows = [];
-      // Agenda — prochains événements datés
       const evs = (_dashLive.planning || []).filter(e => String(e.residentId) === rid && (e.date||'') >= todayStr)
         .sort((a, b) => (a.date||'').localeCompare(b.date||'') || (a.heure||a.time||'').localeCompare(b.heure||b.time||'')).slice(0, 2);
-      if (evs.length) rows.push(section('📅', 'Agenda', evs.map(e => {
-        const c = safeColor(e.color) || EV_COLOR[e.type] || '#94a3b8';
-        return `<span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></span>${formatDate(e.date)} — ${escHtml(e.titre || e.title || 'Événement')}</span>`;
-      }).join('<br>')));
-      // Sorties
       const sortieEnCours = (r.sorties || []).find(s => !s.retourEffectif && s.date && s.date <= todayStr);
       const sortiesFut = (r.sorties || []).filter(s => s.date && s.date > todayStr && !s.retourEffectif).sort((a, b) => (a.date||'').localeCompare(b.date||''));
-      if (sortieEnCours) rows.push(section('🚪', 'Sortie', `<span style="color:#c2410c;font-weight:600">Actuellement sorti(e)</span>${sortieEnCours.destination ? ' · ' + escHtml(sortieEnCours.destination) : ''}${sortieEnCours.retourPrevuDate ? ' · retour ' + formatDate(sortieEnCours.retourPrevuDate) : ''}`));
-      else if (sortiesFut.length) rows.push(section('🚪', 'Sortie prévue', `${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}`));
-      // Échéances (retard + sous 30 j)
       const echSoon = (_dashLive.echeances || []).filter(e => String(e.residentId) === rid && !e.done && e.date && daysUntil(e.date) <= 30).sort((a, b) => (a.date||'').localeCompare(b.date||''));
-      if (echSoon.length) {
-        const e0 = echSoon[0], dN = daysUntil(e0.date), late = dN < 0;
-        rows.push(section('⏰', 'Échéance', `<span style="color:${late ? '#dc2626' : '#d97706'};font-weight:600">${escHtml(EC_LBL[e0.type] || e0.libelle || 'Échéance')}</span> · ${late ? 'en retard' : 'J‑' + dN}${echSoon.length > 1 ? ` <span style="color:#94a3b8">+${echSoon.length - 1}</span>` : ''}`));
-      }
-      // Santé
       const s = r.sante || {};
       const traitActifs = (s.traitements || []).filter(t => !t.fin || t.fin >= todayStr).length;
       const nextRdv = (s.rdv || []).filter(v => v.date && v.date >= todayStr && !v.fait).sort((a, b) => (a.date||'').localeCompare(b.date||''))[0];
+
+      // Encart prioritaire (« à suivre ») : 1 seul item, par ordre d'urgence
+      let hi = null, hiCat = null;
+      if (sortieEnCours) { hi = { c:'#f97316', tc:'#c2410c', ic:ICON.door, t:`Actuellement sorti(e)${sortieEnCours.retourPrevuDate ? ' — retour ' + formatDate(sortieEnCours.retourPrevuDate) : ''}` }; hiCat = 'sortie'; }
+      else if (echSoon.length) {
+        const e0 = echSoon[0], dN = daysUntil(e0.date), late = dN < 0, lbl = escHtml(EC_LBL[e0.type] || e0.libelle || 'Échéance');
+        hi = late ? { c:'#ef4444', tc:'#dc2626', ic:ICON.alarm, t:`Échéance ${lbl} en retard` } : { c:'#f59e0b', tc:'#b45309', ic:ICON.alarm, t:`Échéance ${lbl} · J‑${dN}` };
+        hiCat = 'echeance';
+      }
+      else if (evs.length) { hi = { c:'#3b82f6', tc:'#1d4ed8', ic:ICON.cal, t:`Prochain · ${formatDate(evs[0].date)} ${escHtml(evs[0].titre || evs[0].title || 'Événement')}` }; hiCat = 'agenda'; }
+      else if (sortiesFut.length) { hi = { c:'#0d9488', tc:'#0f766e', ic:ICON.door, t:`Sortie prévue ${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}` }; hiCat = 'sortie'; }
+      const hiHtml = hi ? `<div class="rc-hi" style="color:${hi.tc};background:color-mix(in srgb, ${hi.c} 12%, transparent)">${hi.ic}<span>${hi.t}</span></div>` : '';
+
+      // Sections détaillées (on saute la catégorie déjà dans l'encart, sauf l'agenda qui reste complet)
+      const rows = [];
+      if (evs.length) rows.push(`<div class="rc-row">${ICON.cal}<div><span class="rc-k">Agenda</span><br>${evs.map(e => `${formatDate(e.date)} — ${escHtml(e.titre || e.title || 'Événement')}`).join('<br>')}</div></div>`);
+      if (hiCat !== 'sortie' && sortiesFut.length) rows.push(`<div class="rc-row">${ICON.door}<div><span class="rc-k">Sortie prévue</span><br>${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}</div></div>`);
+      if (hiCat !== 'echeance' && echSoon.length) {
+        const e0 = echSoon[0], dN = daysUntil(e0.date), late = dN < 0;
+        rows.push(`<div class="rc-row">${ICON.alarm}<div><span class="rc-k">Échéance</span><br><span style="color:${late ? '#dc2626' : '#b45309'}">${escHtml(EC_LBL[e0.type] || e0.libelle || 'Échéance')} · ${late ? 'en retard' : 'J‑' + dN}</span></div></div>`);
+      }
       const santeParts = [];
       if (traitActifs) santeParts.push(`${traitActifs} traitement${traitActifs>1?'s':''} en cours`);
       if (nextRdv) santeParts.push(`RDV ${escHtml(nextRdv.type || 'médical')} ${formatDate(nextRdv.date)}`);
-      if (santeParts.length) rows.push(section('🏥', 'Santé', santeParts.join(' · ')));
+      if (santeParts.length) rows.push(`<div class="rc-row">${ICON.health}<div><span class="rc-k">Santé</span><br>${santeParts.join(' · ')}</div></div>`);
+      if (objIds.length) rows.push(`<div class="rc-row">${ICON.target}<div><span class="rc-k">Objectifs</span><br>${objAtteint}/${objIds.length} atteint${objAtteint>1?'s':''}</div></div>`);
 
-      const body = rows.length ? rows.join('') : `<div style="font-size:.76rem;color:#94a3b8;padding:.2rem 0">Aucune alerte ni événement à venir</div>`;
+      const body = (hiHtml || rows.length) ? (hiHtml + rows.join('')) : `<div class="rc-empty">Aucune alerte ni événement à venir</div>`;
 
-      return `<div class="refcard" role="link" tabindex="0" onclick="location.href='resident.html?id=${rid}'" onkeydown="if(event.key==='Enter')location.href='resident.html?id=${rid}'" style="border-top:3px solid ${accent}">
-        <div class="refcard-head">
+      return `<div class="refcard" role="link" tabindex="0" onclick="location.href='resident.html?id=${rid}'" onkeydown="if(event.key==='Enter')location.href='resident.html?id=${rid}'">
+        <div class="rc-head" style="background:color-mix(in srgb, ${accent} 9%, #fff)">
           ${avatar}
-          <div style="min-width:0;flex:1">
-            <div class="refcard-name">${escHtml(nom || 'Résident')}</div>
-            <div class="refcard-meta">${[r.chambre ? 'Ch. ' + escHtml(r.chambre) : '', age != null ? age + ' ans' : ''].filter(Boolean).join(' · ') || '—'}</div>
-          </div>
-          <span style="font-size:1.1rem;color:#cbd5e1;flex-shrink:0">›</span>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:0 0 .6rem">
+          <div style="flex:1;min-width:0"><div class="rc-name">${escHtml(nom || 'Résident')}</div><div class="rc-sub">${sub}</div></div>
           ${nivBadge}
-          ${objTxt ? `<span style="font-size:.72rem;color:var(--muted)">${objTxt}</span>` : ''}
         </div>
-        <div class="refcard-body">${body}</div>
+        <div class="rc-body">${body}</div>
       </div>`;
     }).join('');
   }
