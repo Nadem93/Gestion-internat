@@ -395,6 +395,7 @@
 <script src="js/nuit-supabase.js"></script>
 <script src="js/visites-supabase.js"></script>
 <script src="js/medicaments-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script>
 let currentResidentId = null;
@@ -521,7 +522,7 @@ function renderViewMode(r) {
       })()}
       ${planningResidentCard(r)}
       ${planningHebdoCard(r)}
-      ${santeCard(r)}
+      <div class="grid grid-2" style="gap:1rem;align-items:start">${santeCard(r)}${planSoinsCard(r)}</div>
       <div class="grid grid-2" style="gap:1rem;align-items:start">
         <div class="no-print">${filDeVieCard(r)}</div>
         <div class="no-print">
@@ -650,6 +651,29 @@ function rgpdCard(r) {
   </div></div>`;
 }
 
+// Carte Plan de soins (lecture) — édition sur plan-soins.html. Données hydratées au bootstrap.
+const _PS_CATS = { hygiene:{label:'Hygiène corporelle',color:'#0ea5e9',icon:'🚿'}, medication:{label:'Médicaments',color:'#ef4444',icon:'💊'}, mobilite:{label:'Mobilité & posture',color:'#f97316',icon:'🦽'}, alimentation:{label:'Alimentation & repas',color:'#f59e0b',icon:'🍽️'}, soins_infirm:{label:'Soins infirmiers',color:'#8b5cf6',icon:'🩺'}, psy:{label:'Accompagnement psy',color:'#6366f1',icon:'🧠'}, social:{label:'Accompagnement social',color:'#10b981',icon:'🤝'}, autre:{label:'Autre',color:'#64748b',icon:'📋'} };
+const _PS_FREQ = { quotidien:'Quotidien', matin:'Matin', midi:'Midi', soir:'Soir', nuit:'Nuit', semaine:'Hebdomadaire', mensuel:'Mensuel', si_besoin:'Si besoin' };
+function planSoinsCard(r) {
+  const canEdit = canEditResident();
+  const all = (DB.get(DB.keys.planSoins) || []).filter(s => String(s.residentId) === String(r.id) && s.actif !== false);
+  const rows = all.length ? all.map(s => {
+    const c = _PS_CATS[s.cat] || _PS_CATS.autre;
+    return `<div style="display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .8rem;border-radius:var(--r-sm);background:${c.color}0f;border:1px solid ${c.color}30">
+      <span style="font-size:1.05rem;flex-shrink:0;line-height:1.3">${c.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem">${escHtml(s.libelle || 'Soin')}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:1px"><span style="color:${c.color};font-weight:600">${escHtml(c.label)}</span> · ${escHtml(_PS_FREQ[s.freq] || s.freq || '')}${s.intervenant ? ' · ' + escHtml(s.intervenant) : ''}</div>
+        ${s.detail ? `<div style="font-size:.72rem;color:var(--g700);margin-top:2px">${escHtml(s.detail)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.8rem;color:var(--g400)">Aucun soin planifié pour ce résident.</div>';
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #8b5cf6 12%, #fff)">
+      <span class="card-title" style="color:#8b5cf6">🩹 Plan de soins${all.length ? ` <span class="badge" style="margin-left:.3rem;background:#ede9fe;color:#8b5cf6">${all.length}</span>` : ''}</span>
+      <a href="plan-soins.html?residentId=${currentResidentId}" class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)">${canEdit ? '✎ Gérer' : 'Voir tout'} →</a>
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">${rows}</div></div>`;
+}
+
 function santeCard(r) {
   const s = getSante(r);
   const canEdit = canEditResident();
@@ -704,7 +728,7 @@ function santeCard(r) {
         <span class="card-title" style="color:#16a34a">🏥 Médical</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSanteModal('medical')">✎ Modifier</button>` : ''}
       </div><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
-      <div class="grid grid-4" style="gap:.75rem">
+      <div class="grid grid-2" style="gap:.55rem">
         ${medRow('Groupe sanguin', s.groupeSanguin)}
         ${medRow('Médecin traitant', r.medecin)}
         ${medRow('Tél. médecin', r.medecinTel)}
@@ -3215,12 +3239,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     (typeof sbGetNuits === 'function' ? sbGetNuits() : Promise.resolve(null)),
     (typeof sbGetVisites === 'function' ? sbGetVisites() : Promise.resolve(null)),
     (typeof sbGetMedDistrib === 'function' ? sbGetMedDistrib() : Promise.resolve(null)),
+    (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null)),
   ]);
   if (_hy[0] != null) DB.set(DB.keys.incidents, _hy[0]);
   if (_hy[1] != null) DB.set(DB.keys.ppe, _hy[1]);
   if (_hy[2] != null) DB.set(DB.keys.nuits, _hy[2]);
   if (_hy[3] != null) DB.set(DB.keys.visites, _hy[3]);
   if (_hy[4] != null) DB.set(DB.keys.medicaments, _hy[4]);
+  if (_hy[5] != null) DB.set(DB.keys.planSoins, _hy[5]);
   loadResident();
 });
 
