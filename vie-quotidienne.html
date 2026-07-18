@@ -24,6 +24,24 @@
       cursor:pointer;transition:background .15s,color .15s}
     .rh-dock-home:hover{background:rgba(15,23,42,.1);color:#334155}
     .rh-dock-home svg{width:17px;height:17px}
+
+    /* ── Accueil = tutoriel des modules ── */
+    .vqt-intro-t{font-size:1.5rem;font-weight:800;color:var(--primary);letter-spacing:-.02em}
+    .vqt-intro-s{font-size:.9rem;color:var(--muted);margin:.35rem 0 1.4rem;line-height:1.5;max-width:720px}
+    .vqt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem}
+    .vqt-card{text-align:left;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.1rem 1.15rem;cursor:pointer;font-family:inherit;color:inherit;display:flex;flex-direction:column;gap:.6rem;transition:box-shadow .15s,transform .15s,border-color .15s}
+    .vqt-card:hover,.vqt-card:focus-visible{box-shadow:0 10px 26px rgba(40,50,110,.13);transform:translateY(-2px);border-color:var(--vqc);outline:none}
+    .vqt-head{display:flex;align-items:center;gap:.7rem}
+    .vqt-ic{width:38px;height:38px;border-radius:11px;flex-shrink:0;color:#fff;display:flex;align-items:center;justify-content:center}
+    .vqt-ic svg{width:20px;height:20px}
+    .vqt-grp{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--vqc)}
+    .vqt-nm{font-size:1rem;font-weight:800;color:#0f2b4a;line-height:1.15;margin-top:1px}
+    .vqt-role{font-size:.83rem;color:#334155;line-height:1.5}
+    .vqt-sync{font-size:.74rem;color:#475569;background:#f4f6fb;border-radius:9px;padding:.45rem .6rem;display:flex;gap:.45rem;align-items:flex-start;line-height:1.4}
+    .vqt-sync b{color:#0f2b4a;font-weight:700}
+    .vqt-ex{font-size:.78rem;color:#3730a3;background:color-mix(in srgb,var(--vqc) 8%,#fff);border-left:3px solid var(--vqc);border-radius:8px;padding:.5rem .65rem;line-height:1.5}
+    .vqt-ex b{color:var(--vqc)}
+    .vqt-open{margin-top:auto;font-size:.75rem;font-weight:700;color:var(--vqc);display:flex;align-items:center;gap:.3rem}
   </style>
 </head>
 <body>
@@ -37,7 +55,7 @@
 <div class="rh-layout">
   <div class="rh-main">
     <main class="content" id="vqHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
-      <div style="max-width:640px;margin:0 auto">
+      <div style="max-width:1060px;margin:0 auto">
         <div id="vqWelcome"></div>
       </div>
     </main>
@@ -146,15 +164,83 @@
   const lastEntry = lastPage && entryOf(lastPage);
   if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
 
-  // ── Accueil de la rubrique ──
+  // ── Accueil = tutoriel des modules (rôle · synchro · exemple) ──
+  // Une entrée par page de VQ_NAV ; le texte est écrit ici, les icônes/couleurs
+  // sont réutilisées depuis VQ_NAV pour rester cohérent avec le dock.
+  const VQ_TUTO = {
+    'journee.html': {
+      role: "Le fil de la journée, quart par quart : chaque geste d'accompagnement prévu au projet personnalisé (🎯) se coche d'un tap, horodaté, avec le niveau de soutien apporté.",
+      sync: "Projet personnalisé (objectifs) · Tableau de bord éducateur (carte « Journée des référés » et répartition des niveaux de soutien).",
+      ex:   "Ce matin, vous cochez « Préparer son petit-déjeuner » en « aide partielle » : la tâche passe en vert et le niveau remonte au tableau de bord."
+    },
+    'transmissions.html': {
+      role: "Raconter l'essentiel d'un moment — ce qui a été observé, dit, fait — en une note courte reliée au résident, au fil de la journée.",
+      sync: "Fil de vie du tableau de bord · Fiche du résident · Niveau de soutien indiqué (répartition du tableau de bord).",
+      ex:   "« Sieste agitée, s'est apaisé en musique » : la transmission apparaît aussitôt dans le fil de vie de ses référents."
+    },
+    'presences.html': {
+      role: "Pointer qui est présent, absent ou sorti, jour par jour — la photographie de qui est là.",
+      sync: "Planning / Semaine type : les absences récurrentes saisies s'y répercutent automatiquement.",
+      ex:   "Vous notez M. B. « absent — hôpital » : l'absence apparaît sur son planning de la semaine."
+    },
+    'nuit.html': {
+      role: "Le relais du veilleur : levers, observations et incidents de la nuit, consignés pour l'équipe de jour.",
+      sync: "Relais nuit → équipe de jour · Fiche du résident.",
+      ex:   "« Réveil à 3 h, a demandé un verre d'eau, s'est rendormi » : l'équipe du matin lit la nuit en un coup d'œil."
+    },
+    'repas.html': {
+      role: "Le régime, la texture et les précautions alimentaires de chaque résident — la référence à table et en cuisine.",
+      sync: "Fiche du résident (données de santé) · Service des repas.",
+      ex:   "M. R. : « texture mixée, sans porc » — l'information suit le résident à chaque service."
+    },
+    'activites.html': {
+      role: "Les activités proposées et réalisées, reliées aux objectifs du projet — la vie sociale et les apprentissages.",
+      sync: "Projet personnalisé (objectifs) · Suivi du résident.",
+      ex:   "Atelier cuisine du jeudi : vous notez la participation de Mme L., reliée à son objectif « gagner en autonomie »."
+    },
+    'medicaments.html': {
+      role: "Le circuit du médicament : tracer chaque distribution — qui, quoi, quand — pour sécuriser la prise.",
+      sync: "Prescriptions · Fiche de santé · Traçabilité horodatée de la distribution.",
+      ex:   "Distribution de 12 h validée pour M. T. : l'heure et l'intervenant sont enregistrés, la case ne peut plus être oubliée."
+    },
+    'plan-soins.html': {
+      role: "Les soins récurrents planifiés (pansement, surveillance, hygiène) — le fil conducteur soignant.",
+      sync: "Fiche de santé du résident · Équipe soignante.",
+      ex:   "Réfection de pansement programmée tous les 2 jours : le plan rappelle l'échéance à l'équipe."
+    }
+  };
+
   (function () {
     const s = Auth.getSession();
     const el = document.getElementById('vqWelcome');
     if (!el) return;
     const prenom = (s && (s.prenom || s.username) || '').trim();
+
+    const cards = VQ_NAV.filter(allowed).map(e => {
+      const t = VQ_TUTO[e.page] || { role: '', sync: '', ex: '' };
+      return `<div class="vqt-card" role="button" tabindex="0" data-page="${escHtml(e.page)}" data-label="${escHtml(e.label)}" style="--vqc:${escHtml(e.c1)}" aria-label="Ouvrir ${escHtml(e.label)}">
+        <div class="vqt-head">
+          <span class="vqt-ic" style="background:${escHtml(e.c1)}">${e.icon}</span>
+          <div><div class="vqt-grp">${escHtml(e.g)}</div><div class="vqt-nm">${escHtml(e.label)}</div></div>
+        </div>
+        <div class="vqt-role">${t.role}</div>
+        <div class="vqt-sync"><span aria-hidden="true">🔗</span><span><b>Synchronisé avec :</b> ${t.sync}</span></div>
+        <div class="vqt-ex"><b>Exemple —</b> ${t.ex}</div>
+        <div class="vqt-open">Ouvrir le module <span aria-hidden="true">→</span></div>
+      </div>`;
+    }).join('');
+
     el.innerHTML = `
-      <div style="font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:-.02em">🏠 Vie quotidienne</div>
-      <div style="font-size:.86rem;color:var(--muted);margin-top:.25rem">${prenom ? 'Bonjour ' + escHtml(prenom) + ' — c' : 'C'}hoisissez une rubrique dans le dock en bas de l'écran — elle s'ouvre ici, sans quitter la page.</div>`;
+      <div class="vqt-intro-t">🏠 Vie quotidienne${prenom ? ' — bonjour ' + escHtml(prenom) : ''}</div>
+      <div class="vqt-intro-s">Cette page réunit tous les modules du quotidien : chaque rubrique s'ouvre ici même, sans quitter la page (dock en bas de l'écran). Voici à quoi sert chaque module, ce avec quoi il se synchronise, et un exemple concret. Cliquez une carte pour l'ouvrir.</div>
+      <div class="vqt-grid">${cards}</div>`;
+
+    // Ouvrir le module au clic ou au clavier (Entrée / Espace)
+    const open = card => { if (card && card.dataset.page) loadPage(card.dataset.page, card.dataset.label); };
+    el.addEventListener('click', ev => open(ev.target.closest('.vqt-card')));
+    el.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' || ev.key === ' ') { const c = ev.target.closest('.vqt-card'); if (c) { ev.preventDefault(); open(c); } }
+    });
   })();
 </script>
 </body></html>
