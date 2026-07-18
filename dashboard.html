@@ -37,6 +37,22 @@
     .atr-cta{font-size:.78rem;font-weight:700;white-space:nowrap;flex-shrink:0}
     .atr-ok{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:#15803d;background:color-mix(in srgb,#16a34a 8%,#fff);border:1px solid color-mix(in srgb,#16a34a 25%,#fff);border-radius:12px;padding:.7rem .95rem}
     .atr-ok svg{width:18px;height:18px}
+    /* Fil de vie combiné (dashboard) */
+    .fv-chips{display:flex;flex-wrap:wrap;gap:.35rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--border)}
+    .fv-chip{font-size:.74rem;font-weight:600;color:#475569;background:#f1f5f9;border:1px solid transparent;border-radius:999px;padding:.25rem .6rem;cursor:pointer;transition:.15s}
+    .fv-chip:hover{background:#e2e8f0}
+    .fv-chip.active{background:color-mix(in srgb,var(--accent) 14%,#fff);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,#fff)}
+    .fv-cn{font-size:.66rem;opacity:.7}
+    .fv-item{display:flex;gap:.7rem;padding:.7rem 1.1rem;border-top:1px solid var(--border)}
+    .fv-item:first-child{border-top:none}
+    .fv-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+    .fv-b{flex:1;min-width:0}
+    .fv-h{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+    .fv-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .fv-res{font-weight:700;font-size:.82rem;color:#0f2b4a}
+    .fv-ttl{font-size:.82rem;color:#334155}
+    .fv-det{font-size:.78rem;color:var(--muted);margin-top:2px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .fv-dt{font-size:.7rem;color:#94a3b8;margin-top:2px}
     /* Répartition des niveaux de soutien — continuum de population */
     .nivc-meta{font-size:.8rem;color:var(--muted);margin-bottom:.85rem;line-height:1.5}
     .nivc-band{display:flex;height:30px;border-radius:8px;overflow:hidden;background:#f1f5f9}
@@ -233,34 +249,18 @@
       </div>
 
       <!-- JOURNAL + AVENANTS -->
-      <div class="grid grid-2" style="gap:1.5rem;margin-top:1.5rem">
-
-        <!-- DERNIÈRES ENTRÉES JOURNAL -->
-        <div class="card" id="dashCardJournal" style="overflow:hidden">
-          <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span class="card-title" style="color:var(--accent)">Journal de bord</span>
-            <a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:var(--accent)">Voir tout</a>
-          </div>
-          <div class="card-body" style="padding:0">
-            <div id="recentJournal">
-              <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>Aucune entrée aujourd'hui</p><a href="journal.html" class="btn btn-outline btn-sm" style="border-color:var(--accent);color:var(--accent)">Ajouter une entrée</a></div>
-            </div>
-          </div>
+      <!-- FIL DE VIE combiné des référés (journal, transmissions, incidents, RDV, sorties, budget, avenants…) -->
+      <div class="card" id="dashCardFilVie" style="overflow:hidden;margin-top:1.5rem">
+        <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg>
+          <span class="card-title" style="color:var(--accent)">Fil de vie</span>
+          <span class="badge badge-gray" id="dashFvCount" style="margin-left:.5rem;display:none">0</span>
+          <span id="dashFvScope" style="margin-left:auto;font-size:.75rem;color:var(--muted)"></span>
         </div>
-
-        <!-- AVENANTS RÉCENTS -->
-        <div class="card" id="dashCardAvenants" style="overflow:hidden">
-          <div class="card-header" style="background:#E2F5E8">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <span class="card-title" style="color:#0F6B39">Avenants récents</span>
-            <a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#0F6B39">Voir tout</a>
-          </div>
-          <div class="card-body" style="padding:0" id="dashboardAvenants">
-            <div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div><p>Aucun avenant</p><a href="ppe.html" class="btn btn-outline btn-sm" style="border-color:#16a34a;color:#0F6B39">Créer un avenant</a></div>
-          </div>
+        <div class="fv-chips" id="dashFvChips"></div>
+        <div class="card-body" style="padding:0;max-height:520px;overflow-y:auto" id="dashFilVieList">
+          <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
         </div>
-
       </div>
 
       <!-- SUIVI RÉSIDENTS (données des fiches) -->
@@ -607,18 +607,19 @@
   }
 
   // ── Données live Supabase pour les cartes du haut (le localStorage n'est plus alimenté) ──
-  var _dashLive = { planning: [], presences: {}, echeances: [], repas: {}, satisfaction: [], ppe: [], incidents: [], journal: [], repertoire: [], cats: [] };
+  var _dashLive = { planning: [], presences: {}, echeances: [], repas: {}, satisfaction: [], ppe: [], incidents: [], journal: [], repertoire: [], cats: [], transmissions: [] };
   async function _dashLoadLive(){
     const SBF = async (name, ...args) => { try { return (typeof window[name] === 'function') ? await window[name](...args) : null; } catch (e) { console.error(name, e); return null; } };
     const t = new Date(), f = new Date(); f.setDate(f.getDate() - 8);
     const iso = d => d.toISOString().slice(0, 10);
-    const [pl, pr, ec, rp, sa, pe, inc, jo, re, cfg] = await Promise.all([
+    const [pl, pr, ec, rp, sa, pe, inc, jo, re, cfg, tr] = await Promise.all([
       SBF('sbGetPlanningEvents'), SBF('sbGetPresencesRange', iso(f), iso(t)),
       SBF('sbGetEcheances'), SBF('sbGetRepasAll'), SBF('sbGetSatisfaction'),
-      SBF('sbGetPpe'), SBF('sbGetIncidents'), SBF('sbGetJournalEntries'), SBF('sbGetRepertoire'), SBF('sbGetAppConfig')
+      SBF('sbGetPpe'), SBF('sbGetIncidents'), SBF('sbGetJournalEntries'), SBF('sbGetRepertoire'), SBF('sbGetAppConfig'),
+      SBF('sbGetTransmissions')
     ]);
     _dashLive = { planning: pl || [], presences: pr || {}, echeances: ec || [], repas: rp || {}, satisfaction: sa || [],
-      ppe: pe || [], incidents: inc || [], journal: jo || [], repertoire: re || [], cats: (cfg && cfg.categories) || [] };
+      ppe: pe || [], incidents: inc || [], journal: jo || [], repertoire: re || [], cats: (cfg && cfg.categories) || [], transmissions: tr || [] };
   }
 
   function renderDashboard() {
@@ -787,7 +788,7 @@
     // Avenants récents (dashboard cards)
     const avenants = (_dashLive.ppe||[]).filter(p => p.statut !== 'termine' && (!_scoped || _mine(p.residentId, p.residentName))).slice(-4).reverse();
     const da = document.getElementById('dashboardAvenants');
-    if (avenants.length) {
+    if (da && avenants.length) {
       da.innerHTML = avenants.map(p => {
         const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0);
         return `<div class="avenant-row" style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s ease" onclick="window.location='ppe.html?residentId=${p.residentId}'">
@@ -807,7 +808,7 @@
     const journal = (_dashLive.journal||[]).filter(e => (e.visibilite !== 'confidentiel' || _js?.role === 'admin' || String(e.authorId) === String(_js?.userId)) && (!_scoped || _myIds.has(String(e.residentId)) || _myNames.has(e.resident))).slice(-5).reverse();
     const jEl = document.getElementById('recentJournal');
     const cats = _dashLive.cats||[];
-    if (journal.length) {
+    if (jEl && journal.length) {
       jEl.innerHTML = journal.map(e=>{
         const cat = cats.find(c=>c.id==e.categorie);
         return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
@@ -1188,6 +1189,102 @@
     }).join('');
   }
 
+  // ── Fil de vie combiné des référés : frise chronologique de tout leur historique ──
+  // Recrée la logique de buildFilDeVie() de la fiche, mais agrégée sur tous les référés et
+  // à partir des données du dashboard (_dashLive + cache résidents). Médicaments/nuits/visites
+  // ne sont pas chargés ici → omis. Périmètre = _dashScope. Remplace Journal + Avenants.
+  function renderFilDeVie(){
+    const host = document.getElementById('dashCardFilVie');
+    const list = document.getElementById('dashFilVieList');
+    if (!host || !list) return;
+    const chipsEl = document.getElementById('dashFvChips');
+    const countEl = document.getElementById('dashFvCount');
+    const scopeEl = document.getElementById('dashFvScope');
+
+    const sess = Auth.getSession();
+    const canView = sess?.role === 'admin' || (typeof hasPermission === 'function' && hasPermission(sess?.userId, 'view_residents'));
+    if (!canView) { host.style.display = 'none'; return; }
+
+    const todayS = today();
+    const scoped = !_dashSeesAll() && !!_dashMyName();
+    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!residents.length) { host.style.display = 'none'; return; }
+    host.style.display = '';
+    if (scopeEl) scopeEl.textContent = scoped ? `vos ${residents.length} référé${residents.length>1?'s':''}` : `${residents.length} résident${residents.length>1?'s':''}`;
+
+    const byId = {}, nameMap = {};
+    residents.forEach(r => { byId[String(r.id)] = r; nameMap[`${r.prenom||''} ${r.nom||''}`.trim()] = r; });
+    const canConf = e => e.visibilite !== 'confidentiel' || sess?.role === 'admin' || String(e.authorId) === String(sess?.userId);
+    const cats = _dashLive.cats || [];
+    const _money = m => (typeof fmtMoney === 'function' ? fmtMoney(m) : ((m||0) + ' €'));
+    const _ppeLbl = st => (typeof STATUT_PPE_LABEL !== 'undefined' ? (STATUT_PPE_LABEL[st] || st) : st) || '';
+    const fvDate = ts => { const p = n => String(n).padStart(2,'0'); const d = `${ts.getFullYear()}-${p(ts.getMonth()+1)}-${p(ts.getDate())}`; const hm = `${p(ts.getHours())}:${p(ts.getMinutes())}`; return formatDate(d) + (hm !== '00:00' ? ' · ' + hm : ''); };
+
+    const ev = [];
+    const push = (r, ts, type, icon, color, title, detail) => { if (!r || !ts || isNaN(ts.getTime())) return; ev.push({ ts, type, icon, color, title, detail: detail||'', resName: `${r.prenom||''} ${r.nom||''}`.trim(), resColor: safeColor(r.color) || '#6366f1' }); };
+
+    (_dashLive.journal||[]).forEach(e => {
+      const r = byId[String(e.residentId)] || nameMap[e.resident];
+      if (!r || !canConf(e)) return;
+      const cat = cats.find(c => String(c.id) === String(e.categorie));
+      push(r, new Date(e.date), 'journal', '📔', cat ? safeColor(cat.color,'#059669') : '#059669', cat ? cat.name : 'Journal', e.contenu);
+    });
+    const trIcons = { matin:'🌅', aprem:'☀️', soir:'🌆', nuit:'🌙' };
+    const trColors = { matin:'#f59e0b', aprem:'#3b82f6', soir:'#8b5cf6', nuit:'#1e293b' };
+    const trShift = { matin:'Matin', aprem:'Après-midi', soir:'Soir', nuit:'Nuit' };
+    const trCat = { sante:'Santé', medicament:'Médicament', comportement:'Comportement', alimentation:'Alimentation', hygiene:'Hygiène', activite:'Activité', famille:'Famille', sortie:'Sortie / Retour', administratif:'Administratif', maintenance:'Maintenance', urgent:'Urgent' };
+    (_dashLive.transmissions||[]).forEach(t => {
+      const r = byId[String(t.residentId)] || nameMap[t.residentName]; if (!r) return;
+      const urgent = t.priority === 'urgent' || t.cat === 'urgent';
+      const cl = trCat[t.cat] || t.cat || '';
+      push(r, new Date(t.createdAt || (t.date + 'T12:00')), 'transmission', urgent ? '⚡' : (trIcons[t.shift]||'📡'), urgent ? '#dc2626' : (trColors[t.shift]||'#3b82f6'), `Transmission ${trShift[t.shift]||t.shift||''}${cl ? ' · ' + cl : ''}`.trim(), [t.authorName ? 'Par ' + t.authorName : '', t.content||''].filter(Boolean).join(' — '));
+    });
+    (_dashLive.incidents||[]).forEach(e => {
+      const r = byId[String(e.residentId)] || nameMap[e.residentName]; if (!r) return;
+      push(r, new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `${e.eig?.declarable ? '🚨 EIG — ' : 'Incident — '}${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
+    });
+    (_dashLive.ppe||[]).forEach(p => {
+      const r = byId[String(p.residentId)] || nameMap[p.residentName]; if (!r) return;
+      push(r, new Date((p.dateRedaction||'') + 'T00:00'), 'avenant', '📄', '#8b5cf6', 'Avenant PPE', _ppeLbl(p.statut));
+    });
+    residents.forEach(r => {
+      const s = r.sante || {};
+      (s.rdv||[]).forEach(v => push(r, new Date((v.date||'') + 'T' + (v.heure||'00:00')), 'rdv', '🏥', '#16a34a', `RDV — ${v.type||'médical'}`, [v.praticien, v.lieu, v.fait ? 'effectué' : (v.date && v.date < todayS ? 'non honoré' : 'à venir')].filter(Boolean).join(' · ')));
+      (s.vaccins||[]).forEach(vc => { if (vc.date) push(r, new Date(vc.date + 'T00:00'), 'vaccin', '💉', '#0891b2', `Vaccin — ${vc.nom||''}`, vc.rappel ? 'Rappel : ' + formatDate(vc.rappel) : ''); });
+      (s.traitements||[]).forEach(t => { if (t.debut) push(r, new Date(t.debut + 'T00:00'), 'traitement', '💊', '#ef4444', `Traitement — ${t.nom||''}`, [t.posologie, t.frequence].filter(Boolean).join(' · ')); });
+      (r.sorties||[]).forEach(so => push(r, new Date((so.date||'') + 'T' + (so.heure||'00:00')), 'sortie', '🚪', '#0d9488', `Sortie — ${so.destination||''}`, [so.motif, so.accompagnement].filter(Boolean).join(' · ')));
+      ((r.budget && r.budget.operations)||[]).forEach(o => push(r, new Date((o.date||'') + 'T00:00'), 'budget', '💰', '#d97706', `${o.type==='recette'?'Recette':'Dépense'} — ${o.libelle||o.categorie||''}`, `${o.type==='recette'?'+':'–'} ${_money(o.montant)}`));
+      (r.evaluations||[]).forEach(e => { if (e.date) push(r, new Date(e.date + 'T00:00'), 'evaluation', '📊', '#6366f1', "Grille d'évaluation", e.grille || e.nom || e.titre || ''); });
+    });
+
+    ev.sort((a, b) => b.ts - a.ts);
+    const shown = ev.slice(0, 60);
+    if (countEl) { countEl.textContent = shown.length; countEl.style.display = shown.length ? '' : 'none'; }
+
+    const FV_LBL = { journal:'Journal', transmission:'Transmissions', incident:'Incidents', rdv:'RDV', vaccin:'Vaccins', traitement:'Traitements', sortie:'Sorties', budget:'Budget', avenant:'Avenants', evaluation:'Évaluations' };
+    const tc = {}; shown.forEach(e => { tc[e.type] = (tc[e.type]||0)+1; });
+    if (chipsEl) {
+      const chips = Object.keys(FV_LBL).filter(t => tc[t]).map(t => `<button class="fv-chip" onclick="dashFvFilter('${t}',this)">${FV_LBL[t]} <span class="fv-cn">${tc[t]}</span></button>`).join('');
+      chipsEl.innerHTML = shown.length ? `<button class="fv-chip active" onclick="dashFvFilter('all',this)">Tout <span class="fv-cn">${shown.length}</span></button>${chips}` : '';
+      chipsEl.style.display = shown.length ? '' : 'none';
+    }
+
+    list.innerHTML = shown.length ? shown.map(e => `<div class="fv-item" data-fvtype="${e.type}">
+        <span class="fv-ic" style="background:color-mix(in srgb, ${e.color} 15%, #fff);color:${e.color}">${e.icon}</span>
+        <div class="fv-b">
+          <div class="fv-h"><span class="fv-dot" style="background:${e.resColor}"></span><span class="fv-res">${escHtml(e.resName||'?')}</span><span class="fv-ttl">${escHtml(e.title)}</span></div>
+          ${e.detail ? `<div class="fv-det">${escHtml(e.detail)}</div>` : ''}
+          <div class="fv-dt">${fvDate(e.ts)}</div>
+        </div>
+      </div>`).join('') : `<div class="empty" style="padding:2rem"><p>Aucun événement récent pour vos référés</p></div>`;
+  }
+
+  window.dashFvFilter = function(type, btn){
+    document.querySelectorAll('#dashFvChips .fv-chip').forEach(c => c.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.querySelectorAll('#dashFilVieList .fv-item').forEach(it => { it.style.display = (type === 'all' || it.dataset.fvtype === type) ? '' : 'none'; });
+  };
+
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
   (async () => {
     try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
@@ -1195,6 +1292,7 @@
     renderDashboard();
     renderNiveauxSoutien().catch(e => console.error(e));
     try { renderReferesFiches(); } catch (e) { console.error(e); }
+    try { renderFilDeVie(); } catch (e) { console.error(e); }
   })();
 </script>
 </body>
