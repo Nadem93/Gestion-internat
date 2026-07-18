@@ -2432,14 +2432,14 @@ function hdrCloseMenu() { const m = document.getElementById('hdrMenu'); if (m) m
 function _hdrSpark(color, d) {
   return `<svg viewBox="0 0 80 28" preserveAspectRatio="none" style="width:100%;height:22px;display:block"><path d="${d} L80,28 L0,28 Z" fill="${color}" opacity="0.09"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
-function _hdrStat(label, num, sub, color, d, href) {
+function _hdrStat(label, num, sub, color, d, onclick) {
   const inner = `<div style="font-size:.72rem;color:var(--muted)">${label}</div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:.5rem;margin-top:.15rem">
       <div><div style="font-size:1.5rem;font-weight:800;line-height:1.05">${num}</div><div style="font-size:.66rem;color:var(--muted)">${sub}</div></div>
       <div style="width:58px;flex-shrink:0">${_hdrSpark(color, d)}</div>
     </div>`;
-  return href
-    ? `<a href="${href}" style="text-decoration:none;color:inherit;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem;display:block;position:relative">${inner}<span style="position:absolute;top:.55rem;right:.6rem;color:var(--muted)">›</span></a>`
+  return onclick
+    ? `<div onclick="${onclick}" style="cursor:pointer;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem;position:relative">${inner}<span style="position:absolute;top:.55rem;right:.6rem;color:var(--muted)">›</span></div>`
     : `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem">${inner}</div>`;
 }
 
@@ -2521,7 +2521,7 @@ function residentHeaderCard(r) {
       ${_hdrStat('Absences (mois)', monthAbsences, pct + '%', '#ef4444', 'M0,14 C10,8 18,20 28,14 C38,8 46,18 56,10 C66,4 74,14 80,8')}
       ${_hdrStat('Événements à venir', upcomingCount, 'Sur le planning', '#3b82f6', 'M0,22 C12,18 20,20 32,12 C44,8 54,10 66,6 C72,5 76,6 80,4')}
       ${_hdrStat('Avenants actifs', rPpe.length, 'En cours', '#16a34a', 'M0,16 C10,22 18,8 28,16 C38,22 46,9 56,16 C66,22 74,10 80,13')}
-      ${_hdrStat('Documents', docCount, 'Fichiers attachés', '#8b5cf6', 'M0,20 C12,18 22,16 34,14 C46,12 56,11 68,8 C74,7 78,6 80,5', 'documents.html?residentId=' + currentResidentId)}
+      ${_hdrStat('Documents', docCount, 'Fichiers attachés', '#8b5cf6', 'M0,20 C12,18 22,16 34,14 C46,12 56,11 68,8 C74,7 78,6 80,5', "document.getElementById('tab-documents') && document.getElementById('tab-documents').scrollIntoView({behavior:'smooth',block:'center'})")}
     </div>
   </div>`;
   const grouped = `<div class="card" style="margin-top:-14px;position:relative;z-index:2;padding:1.2rem 0;border-radius:14px">
