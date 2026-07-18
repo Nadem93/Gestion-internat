@@ -74,6 +74,11 @@
       // La barre n'a plus besoin de défiler (≈6 cibles) : overflow visible pour laisser
       // les popovers déborder vers le haut sans être découpés.
       '.rh-dock{overflow:visible!important}',
+      // Le dock est fixé dans le PARENT (z-index:60). Un modal ouvert DANS l'iframe de
+      // contenu vit dans un contexte d'empilement isolé : il passerait donc DERRIÈRE le
+      // dock quel que soit son z-index. On efface le dock tant qu'un modal y est ouvert
+      // (cf. watchFrame) — il repasse ainsi en arrière-plan du modal.
+      '.rh-dock.pdk-behind-modal{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .16s ease,visibility .16s ease}',
       '.pdk-grp{position:relative;display:inline-flex;flex-direction:column;align-items:center;flex-shrink:0}',
       '.pdk-grp-btn{width:66px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px 4px;border-radius:13px;border:none;background:none;color:inherit;cursor:pointer;font-family:inherit;position:relative;transition:background .15s}',
       '.pdk-grp-btn:hover{background:rgba(15,23,42,.05)}',
@@ -284,8 +289,55 @@
     });
   }
 
+  // ── Dock en arrière-plan quand un modal s'ouvre dans l'iframe de contenu ──
+  // Les portails (RH, Pilotage, Vie quotidienne, Dossiers) affichent leurs modules
+  // dans une iframe même origine. Un modal qui s'y ouvre (.modal-overlay.open) est
+  // isolé dans son propre contexte d'empilement et passerait sous le dock parent.
+  // On surveille l'iframe et on bascule .pdk-behind-modal sur le dock en conséquence.
+  var _frameMO = null;
+  function frameDoc(frame) {
+    try { return frame.contentDocument || (frame.contentWindow && frame.contentWindow.document) || null; }
+    catch (e) { return null; }   // origine différente : on laisse le dock visible
+  }
+  function syncBehindModal(frame) {
+    if (!cfg || !cfg.dock) return;
+    var doc = frameDoc(frame);
+    var open = false;
+    try { open = !!(doc && doc.querySelector('.modal-overlay.open')); } catch (e) { open = false; }
+    cfg.dock.classList.toggle('pdk-behind-modal', open);
+  }
+  function attachFrameObserver(frame) {
+    if (_frameMO) { _frameMO.disconnect(); _frameMO = null; }
+    var doc = frameDoc(frame);
+    if (!doc || !doc.body || typeof MutationObserver === 'undefined') return;
+    _frameMO = new MutationObserver(function () { syncBehindModal(frame); });
+    _frameMO.observe(doc.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style'] });
+    syncBehindModal(frame);
+  }
+  function watchFrame(frame) {
+    if (!frame) return;
+    // À chaque navigation de l'iframe : nouveau document → on ré-observe, dock réaffiché
+    frame.addEventListener('load', function () {
+      if (cfg && cfg.dock) cfg.dock.classList.remove('pdk-behind-modal');
+      attachFrameObserver(frame);
+    });
+    // Le document peut déjà être chargé (event « load » émis avant cet abonnement) : on
+    // tente d'attacher tout de suite, en réessayant tant que le body n'est pas prêt.
+    (function tryAttach(n) {
+      var doc = frameDoc(frame);
+      if (doc && doc.body) { attachFrameObserver(frame); return; }
+      if (n > 0) setTimeout(function () { tryAttach(n - 1); }, 60);
+    })(40);
+  }
+  function setupFrameWatch() {
+    // cfg.frame (élément ou id) prioritaire, sinon l'unique iframe de contenu du portail
+    var f = cfg && cfg.frame;
+    if (typeof f === 'string') f = document.getElementById(f);
+    watchFrame(f || document.querySelector('iframe'));
+  }
+
   global.PortalDock = {
-    init: function (config) { cfg = config; render(); },
+    init: function (config) { cfg = config; render(); setupFrameWatch(); },
     setActive: setActive,
     closeAll: closeAll,
     render: render
