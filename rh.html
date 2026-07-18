@@ -19,6 +19,9 @@
       max-width:calc(100vw - 24px);overflow-x:auto}
     .rh-dock::-webkit-scrollbar{height:0}
     .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
+    .rh-dock-home{width:36px;height:36px;flex-shrink:0;border-radius:14px;border:none;background:rgba(15,23,42,.05);color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
+    .rh-dock-home:hover{background:rgba(15,23,42,.1);color:#334155}
+    .rh-dock-home svg{width:17px;height:17px}
   </style>
 </head>
 <body>
@@ -29,7 +32,10 @@
 <div class="rh-layout">
   <div class="rh-main">
     <span id="rhTopTitle" style="display:none">Tableau de bord RH</span>
-    <iframe id="rhFrame" src="rh-dashboard.html?embed=1"></iframe>
+    <main class="content" id="rhHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
+      <div style="max-width:1060px;margin:0 auto"><div id="rhWelcome"></div></div>
+    </main>
+    <iframe id="rhFrame" title="Contenu RH" style="display:none"></iframe>
   </div>
 </div>
 
@@ -48,6 +54,8 @@
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
 <script src="js/portal-dock.js"></script>
+<script src="js/portal-tuto-data.js"></script>
+<script src="js/portal-tuto.js"></script>
 <script>
   Auth.requireAuth();
   if (!Auth.isRH()) {
@@ -84,11 +92,23 @@
     const entryOf = page => RH_NAV.find(e => e.page === page);
 
     const frame = document.getElementById('rhFrame');
+    const rhHome = document.getElementById('rhHome');
     const title = document.getElementById('rhTopTitle');
 
+    // Accueil (tutoriel) : l'iframe se referme, le panneau d'accueil réapparaît
+    function showHome() {
+      frame.style.display = 'none';
+      frame.src = 'about:blank';
+      rhHome.style.display = '';
+      if (window.PortalDock) PortalDock.setActive(null);
+      if (title) title.textContent = '';
+      sessionStorage.removeItem('rh_last_page');
+    }
     function loadPage(page, label) {
       // embed=1 : la page embarquée masque son titre et réserve elle-même l'espace du dock
       // (l'iframe descend jusqu'en bas de l'écran — aucune ligne de coupe au-dessus du dock)
+      rhHome.style.display = 'none';
+      frame.style.display = '';
       frame.src = page + (page.includes('?') ? '&' : '?') + 'embed=1';
       if (title) title.textContent = label || '';
       if (window.PortalDock) PortalDock.setActive(page);
@@ -96,6 +116,7 @@
     }
 
     // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
+    const homeBtn = `<button class="rh-dock-home" id="rhHomeBtn" title="Accueil RH" aria-label="Accueil RH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
     const GROUP_META = {
       "Vue d'ensemble":       { short: 'Équipe',      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>' },
       'Contrats & absences':  { short: 'Contrats',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>' },
@@ -108,9 +129,12 @@
     PortalDock.init({
       dock: document.getElementById('rhDock'),
       nav: RH_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
-      allowed, onNavigate: e => loadPage(e.page, e.label),
-      current: (_rhLastE && allowed(_rhLastE)) ? _rhLastE.page : RH_NAV[0].page
+      allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
+      current: (_rhLastE && allowed(_rhLastE)) ? _rhLastE.page : null
     });
+
+    // Bouton maison du dock → accueil (tutoriel)
+    document.getElementById('rhHomeBtn').addEventListener('click', showHome);
 
     // Si une page chargée navigue vers l'accueil (clic maison), on sort de l'iframe
     frame.addEventListener('load', () => {
@@ -120,11 +144,21 @@
       } catch (e) { /* origine différente */ }
     });
 
-    // Reprend la page affichée avant un rafraîchissement, sinon le tableau de bord
+    // Accueil = tutoriel des rubriques (rôle · mode d'emploi · synchro · exemple)
+    (function () {
+      const s = Auth.getSession();
+      const prenom = (s && (s.prenom || s.username) || '').trim();
+      PortalTuto.render({
+        mount: 'rhWelcome', nav: RH_NAV, allowed,
+        onOpen: loadPage, title: '👥 Ressources humaines', greetingName: prenom
+      });
+    })();
+
+    // Par défaut : accueil (tutoriel). On reprend la rubrique visitée avant un rafraîchissement.
     const lastPage = sessionStorage.getItem('rh_last_page');
     const lastEntry = lastPage && entryOf(lastPage);
     if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
-    else loadPage(RH_NAV[0].page, RH_NAV[0].label);
+    else showHome();
   }
 </script>
 </body></html>

@@ -36,7 +36,7 @@
 <div class="rh-layout">
   <div class="rh-main">
     <main class="content" id="dsHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
-      <div style="max-width:640px;margin:0 auto">
+      <div style="max-width:1060px;margin:0 auto">
         <div id="dsWelcome"></div>
       </div>
     </main>
@@ -60,6 +60,8 @@
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
 <script src="js/portal-dock.js"></script>
+<script src="js/portal-tuto-data.js"></script>
+<script src="js/portal-tuto.js"></script>
 <script>
   Auth.requireAuth();
 
@@ -149,15 +151,14 @@
   const lastEntry = lastPage && entryOf(lastPage);
   if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
 
-  // ── Accueil de la rubrique ──
+  // ── Accueil = tutoriel des rubriques (rôle · mode d'emploi · synchro · exemple) ──
   (function () {
     const s = Auth.getSession();
-    const el = document.getElementById('dsWelcome');
-    if (!el) return;
     const prenom = (s && (s.prenom || s.username) || '').trim();
-    el.innerHTML = `
-      <div style="font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:-.02em">📂 Dossiers & suivi</div>
-      <div style="font-size:.86rem;color:var(--muted);margin-top:.25rem">${prenom ? 'Bonjour ' + escHtml(prenom) + ' — c' : 'C'}hoisissez une rubrique dans le dock en bas de l'écran — elle s'ouvre ici, sans quitter la page.</div>`;
+    PortalTuto.render({
+      mount: 'dsWelcome', nav: DS_NAV, allowed,
+      onOpen: loadPage, title: '📂 Dossiers & suivi', greetingName: prenom
+    });
   })();
 </script>
 </body></html>

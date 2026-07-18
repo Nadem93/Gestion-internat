@@ -37,7 +37,7 @@
 <div class="rh-layout">
   <div class="rh-main">
     <main class="content" id="plHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
-      <div style="max-width:640px;margin:0 auto">
+      <div style="max-width:1060px;margin:0 auto">
         <div id="plWelcome" style="margin-bottom:1.5rem"></div>
         <div id="mesDocsSection"></div>
       </div>
@@ -65,6 +65,8 @@
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
 <script src="js/portal-dock.js"></script>
+<script src="js/portal-tuto-data.js"></script>
+<script src="js/portal-tuto.js"></script>
 <script>
   Auth.requireAuth();
 
@@ -156,15 +158,14 @@
   const lastEntry = lastPage && entryOf(lastPage);
   if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
 
-  // ── Accueil personnalisé ──
+  // ── Accueil = tutoriel des modules (rôle · mode d'emploi · synchro · exemple) ──
   (function () {
     const s = Auth.getSession();
-    const el = document.getElementById('plWelcome');
-    if (!s || !el) return;
-    const prenom = (s.prenom || s.username || '').trim();
-    el.innerHTML = `
-      <div style="font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:-.02em">Bonjour${prenom ? ' ' + escHtml(prenom) : ''} 👋</div>
-      <div style="font-size:.86rem;color:var(--muted);margin-top:.25rem">Choisissez une rubrique dans le dock en bas de l'écran — elle s'ouvre ici, sans quitter le portail.</div>`;
+    const prenom = (s && (s.prenom || s.username) || '').trim();
+    PortalTuto.render({
+      mount: 'plWelcome', nav: PL_NAV, allowed,
+      onOpen: loadPage, title: '🧭 Portail', greetingName: prenom
+    });
   })();
 
   // ── Badge messages non lus (sur l'icône de la rubrique) — source Supabase ──
