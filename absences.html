@@ -6,8 +6,10 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
-    /* Toujours 4 cartes par ligne sur cette page */
+    /* 4 cartes par ligne sur grand écran… */
     #abStats{ grid-template-columns:repeat(4,1fr) !important; }
+    /* …et 2 par ligne sur mobile (au lieu de 4 trop serrées) */
+    @media(max-width:768px){ #abStats{ grid-template-columns:repeat(2,1fr) !important; gap:.75rem; } }
 
     /* ─────────────────────────────────────────────
        Cartes « dossier » uniques à la page Absences
