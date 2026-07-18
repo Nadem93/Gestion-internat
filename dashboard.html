@@ -655,9 +655,9 @@
     const pAlert = document.getElementById('miniPresenceAlert');
     if (pAlert) pAlert.style.display = incomplete ? '' : 'none';
     setText('miniPresentsSub', incomplete ? (markedCount + '/' + myResidents.length + ' pointés') : 'Présences enregistrées');
-    // Anniversaires du mois
+    // Anniversaires du mois — TOUS les résidents (pas seulement les référés), voulu pour ne rien manquer
     const thisMonth = now.getMonth();
-    const annivRes = myResidents.filter(r => r.dob && new Date(r.dob).getMonth() === thisMonth);
+    const annivRes = allResidents.filter(r => r.dob && new Date(r.dob).getMonth() === thisMonth);
     if (annivRes.length === 1) {
       const f = annivRes[0];
       setText('miniAnnivVal', f.prenom || '');
