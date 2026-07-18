@@ -351,12 +351,18 @@ async function initAlertes() {
       (typeof sbGetPlanningEvents === 'function' ? sbGetPlanningEvents() : Promise.resolve(null)),
       (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null)),
       (typeof sbGetSatisfaction === 'function' ? sbGetSatisfaction() : Promise.resolve(null)),
+      (typeof sbGetAdmissions === 'function' ? sbGetAdmissions() : Promise.resolve(null)),
+      (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null)),
+      (typeof sbGetBudgetDemandes === 'function' ? sbGetBudgetDemandes() : Promise.resolve(null)),
     ]);
     if (_hy[0] != null) DB.set(DB.keys.ppe, _hy[0]);
     if (_hy[1] != null) DB.set(DB.keys.echeances, _hy[1]);
     if (_hy[2] != null) DB.set(DB.keys.planning, _hy[2]);
     if (_hy[3] != null) DB.set(DB.keys.incidents, _hy[3]);
     if (_hy[4] != null) DB.set(DB.keys.satisfaction, _hy[4]);
+    if (_hy[5] != null) DB.set(DB.keys.admissions, _hy[5]);
+    if (_hy[6] != null) DB.set(DB.keys.planSoins, _hy[6]);
+    if (_hy[7] != null) DB.set(DB.keys.budgetDemandes, _hy[7]);
   } catch (e) { console.error('[initAlertes] hydratation', e); }
   renderAlertes();
 }

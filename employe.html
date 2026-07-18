@@ -36,7 +36,6 @@
 <script src="js/documents-employe-supabase.js"></script>
 <script src="js/messages-supabase.js"></script>
 <script>
-const EMP_DOCS_KEY = 'ftr_employes_docs';
 let _empCache = [];
 let _empArretsCache = [];  // arrêts/absences de l'établissement (table Supabase absences_at)
 function _empArretsFor(id) { return _empArretsCache.filter(a => String(a.employeId) === String(id)); }
@@ -118,12 +117,9 @@ function getPosteColor(poste) {
   return _EMP_COLORS[h % _EMP_COLORS.length];
 }
 
-function getPosteOptions() {
-  const fonctions = DB.get(DB.keys.fonctionColors) || {};
-  const opts = [['', '— Sélectionner —']];
-  Object.keys(fonctions).forEach(f => opts.push([f, f]));
-  return opts;
-}
+// getPosteOptions() est défini dans js/app.js (traite fonctionColors comme un TABLEAU
+// d'objets {fonction,…}). Ne pas le redéfinir ici : l'ancienne version locale le traitait
+// comme un objet → options « 0,1,2… » et effacement silencieux du poste à l'enregistrement.
 
 function getEmploye(id) {
   const targetId = id || currentEmployeId;
@@ -579,14 +575,11 @@ function empJournalCounterHtml(e) {
   </div>`;
 }
 
-const PAIE_KEY        = 'ftr_fiches_paie';
 const FORM_KEY        = 'ftr_emp_formations';
-const ENTRETIEN_KEY   = 'ftr_emp_entretiens';
 const HISTO_KEY       = 'ftr_emp_historique';
 const SANCTION_KEY    = 'ftr_emp_sanctions';
 const NOTES_ADM_KEY   = 'ftr_emp_notes_admin';
 const ALERTES_KEY     = 'ftr_emp_alertes';
-const ARRET_KEY       = 'ftr_emp_arrets';
 const DIPLOME_KEY     = 'ftr_emp_diplomes';
 const DEPART_KEY      = 'ftr_emp_depart';
 const DEPART_ITEMS = [

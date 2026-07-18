@@ -342,6 +342,8 @@ async function initFinance() {
     return;
   }
   await sbLoadResidentsCache();
+  if (typeof sbGetBudgetEnveloppes === 'function') { try { DB.set(DB.keys.budgetEnveloppes, await sbGetBudgetEnveloppes()); } catch(e){ console.error(e); } }
+  if (typeof sbGetBudgetDemandes === 'function') { try { DB.set(DB.keys.budgetDemandes, await sbGetBudgetDemandes()); } catch(e){ console.error(e); } }
   if (typeof sbGetFichesPaie === 'function') { try { DB.set(DB.keys.fichesPaie, await sbGetFichesPaie()); } catch(e){ console.error(e); } }
   if (typeof sbGetContrats === 'function') { try { DB.set(DB.keys.contrats, await sbGetContrats()); } catch(e){ console.error(e); } }
   if (typeof sbGetEmployes === 'function') { try { DB.set(DB.keys.employes, await sbGetEmployes()); } catch(e){ console.error(e); } }

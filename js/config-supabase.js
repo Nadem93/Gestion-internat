@@ -44,8 +44,8 @@ function _hydrateLocalAllEtabs(baseKey, value) {
 async function hydrateConfigFromCloud() {
   try {
     const cfg = await sbGetAppConfig();
-    if (cfg.fonction_colors) localStorage.setItem('ftr_fonction_colors', JSON.stringify(cfg.fonction_colors));
-    if (cfg.paie_majoration) localStorage.setItem('ftr_paie_majoration', JSON.stringify(cfg.paie_majoration));
+    if (cfg.fonction_colors) _hydrateLocalAllEtabs(DB.keys.fonctionColors, cfg.fonction_colors);
+    if (cfg.paie_majoration) localStorage.setItem('ftr_paie_majoration', JSON.stringify(cfg.paie_majoration)); // lu en brut (paie.js) → pas de suffixe
     if (cfg.settings)   _hydrateLocalAllEtabs(DB.keys.settings,   cfg.settings);
     if (cfg.categories) _hydrateLocalAllEtabs(DB.keys.categories, cfg.categories);
     // Amorçage : si le cloud ne connaît pas encore settings/categories, on y pousse la valeur locale.

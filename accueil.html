@@ -96,6 +96,9 @@
 <script src="js/planning-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
+<script src="js/admissions-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/budget-supabase.js"></script>
 <script src="js/config-supabase.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
@@ -378,15 +381,20 @@ async function saveIntervention() {
   document.getElementById('intUrgence').value = 'normale';
   alert('Demande d\'intervention envoyée ✓');
 }
+// Remplit le select résident du modal incident (idempotent : retire ses propres options avant).
+function fillResidentSelect() {
+  const rSel = document.getElementById('fResident');
+  if (!rSel) return;
+  rSel.querySelectorAll('option[data-res]').forEach(o => o.remove());
+  (DB.get(DB.keys.residents) || []).forEach(r => {
+    const o = document.createElement('option'); o.value = r.id; o.dataset.res = '1';
+    o.textContent = `${r.prenom||''} ${r.nom||''}`.trim();
+    rSel.appendChild(o);
+  });
+}
 document.addEventListener('DOMContentLoaded', () => {
   loadChambres();
-  const rSel = document.getElementById('fResident');
-  if (rSel) {
-    (DB.get(DB.keys.residents) || []).forEach(r => {
-      const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.prenom||''} ${r.nom||''}`.trim();
-      rSel.appendChild(o);
-    });
-  }
+  fillResidentSelect();
   const fd = document.getElementById('fDate');
   if (fd) fd.value = new Date().toISOString().slice(0,10);
   const fh = document.getElementById('fHeure');
@@ -562,6 +570,9 @@ async function _loadAccRhCounts() {
     // Hydrate les stores localStorage pour les lectures DB.get (modal incident, conflit véhicule, datalist chambres)
     DB.set(DB.keys.residents, residents);
     DB.set(DB.keys.planning, planningEv);
+    // Résidents hydratés (async) : re-remplir datalist chambres + select résident du modal incident (course résolue)
+    loadChambres();
+    fillResidentSelect();
     window._accShiftsToday   = empFullName ? shifts.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
     window._accFormations    = formations.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
     window._accPendingConges = conges.filter(c => c.statut === 'en_attente').length;
