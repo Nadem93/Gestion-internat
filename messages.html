@@ -149,6 +149,26 @@
     .chat-overlay-user-role{font-size:.68rem;color:#9e9e9e}
     .chat-overlay-btn{padding:.6rem .85rem;border-top:1px solid #f0f0f0}
     .chat-overlay-btn button{width:100%}
+
+    /* ══════════════════════════════════════
+       MOBILE — bascule liste ↔ conversation
+    ══════════════════════════════════════ */
+    /* Bouton retour dans l'en-tête de conversation (masqué sur desktop) */
+    .msg-back-btn{display:none;width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:#5b5fc7;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin:0 -.15rem 0 -.35rem;transition:background .1s}
+    .msg-back-btn:hover{background:#f3f3fb}
+    .msg-back-btn svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none}
+    @media(max-width:768px){
+      /* Une seule colonne : liste OU conversation, jamais les deux */
+      .msg-wrap{grid-template-columns:1fr;height:calc(100dvh - var(--header-h) - 1rem);min-height:0;border-radius:12px}
+      .msg-left{border-right:none}
+      .msg-wrap .msg-right{display:none}
+      .msg-wrap.show-chat .msg-left{display:none}
+      .msg-wrap.show-chat .msg-right{display:flex}
+      .msg-back-btn{display:flex}
+      .chat-msg-content{max-width:82%}
+      /* Overlay compose plein cadre */
+      .chat-overlay{left:8px;right:8px;width:auto;max-height:70vh}
+    }
   </style>
 </head>
 <body>
@@ -196,6 +216,9 @@
 
           <!-- Header conversation -->
           <div class="chat-main-header" id="chatMainHeader">
+            <button class="msg-back-btn" onclick="backToList()" title="Retour à la liste" aria-label="Retour à la liste">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
             <div class="chat-main-hav" id="chatMainAvatar">?</div>
             <div class="chat-main-hinfo">
               <div class="chat-main-hname" id="chatMainName">—</div>
@@ -234,22 +257,22 @@
               <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
+        </div>
 
-          <!-- Overlay compose -->
-          <div class="chat-overlay-backdrop" id="composeBackdrop" style="display:none" onclick="closeCompose()"></div>
-          <div class="chat-overlay" id="composeOverlay" style="display:none">
-            <div class="chat-overlay-header">
-              <button class="btn btn-ghost btn-sm" onclick="closeCompose()">Annuler</button>
-              <h3>Nouveau message</h3>
-              <div style="width:64px"></div>
-            </div>
-            <div class="chat-overlay-search">
-              <input type="text" id="composeSearch" placeholder="Rechercher un utilisateur…" oninput="renderComposeUsers()"/>
-            </div>
-            <div class="chat-overlay-list" id="composeList"></div>
-            <div class="chat-overlay-btn">
-              <button class="btn btn-primary" id="composeStartBtn" disabled onclick="startComposeConv()">Démarrer</button>
-            </div>
+        <!-- Overlay compose — hors de .msg-right pour rester accessible en vue liste (mobile) -->
+        <div class="chat-overlay-backdrop" id="composeBackdrop" style="display:none" onclick="closeCompose()"></div>
+        <div class="chat-overlay" id="composeOverlay" style="display:none">
+          <div class="chat-overlay-header">
+            <button class="btn btn-ghost btn-sm" onclick="closeCompose()">Annuler</button>
+            <h3>Nouveau message</h3>
+            <div style="width:64px"></div>
+          </div>
+          <div class="chat-overlay-search">
+            <input type="text" id="composeSearch" placeholder="Rechercher un utilisateur…" oninput="renderComposeUsers()"/>
+          </div>
+          <div class="chat-overlay-list" id="composeList"></div>
+          <div class="chat-overlay-btn">
+            <button class="btn btn-primary" id="composeStartBtn" disabled onclick="startComposeConv()">Démarrer</button>
           </div>
         </div>
 

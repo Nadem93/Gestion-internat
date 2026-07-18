@@ -293,8 +293,18 @@ async function addUsersToConv(targetConvId, newUserIds) {
 }
 
 // ── RENDER CHAT ──
+// Mobile : bascule liste ↔ conversation (retour à la liste)
+function backToList() {
+  currentConvId = null;
+  renderConvs();
+  renderChat();
+}
+
 function renderChat() {
   const session = Auth.getSession();
+  // Mobile (master/detail) : affiche le panneau conversation dès qu'une conv est ouverte
+  const wrap = document.querySelector('.msg-wrap');
+  if (wrap) wrap.classList.toggle('show-chat', !!currentConvId);
   const msgsEl = document.getElementById('chatMsgs');
   const headerEl = document.getElementById('chatMainHeader');
   const headerAvatar = document.getElementById('chatMainAvatar');
