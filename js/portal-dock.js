@@ -74,6 +74,12 @@
       // La barre n'a plus besoin de défiler (≈6 cibles) : overflow visible pour laisser
       // les popovers déborder vers le haut sans être découpés.
       '.rh-dock{overflow:visible!important}',
+      // Halo « néon » autour du dock pour le rendre plus visible (pulsation douce).
+      // box-shadow SANS !important : l\'animation doit pouvoir le piloter, et la règle
+      // (injectée après le <style> inline) gagne déjà la cascade à spécificité égale.
+      '@keyframes rhDockNeon{0%,100%{box-shadow:0 0 0 1.5px rgba(124,92,255,.75),0 0 9px rgba(124,92,255,.6),0 0 20px rgba(139,92,246,.42),0 12px 34px rgba(80,90,160,.22)}50%{box-shadow:0 0 0 2px rgba(139,92,246,.95),0 0 16px rgba(124,92,255,.85),0 0 34px rgba(139,92,246,.6),0 0 56px rgba(168,85,247,.35),0 12px 34px rgba(80,90,160,.22)}}',
+      '.rh-dock{box-shadow:0 0 0 1.5px rgba(124,92,255,.75),0 0 9px rgba(124,92,255,.6),0 0 20px rgba(139,92,246,.42),0 12px 34px rgba(80,90,160,.22);animation:rhDockNeon 2.4s ease-in-out infinite}',
+      '@media (prefers-reduced-motion:reduce){.rh-dock{animation:none}}',
       // Le dock est fixé dans le PARENT (z-index:60). Un modal ouvert DANS l'iframe de
       // contenu vit dans un contexte d'empilement isolé : il passerait donc DERRIÈRE le
       // dock quel que soit son z-index. On efface le dock tant qu'un modal y est ouvert
