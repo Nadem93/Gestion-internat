@@ -703,7 +703,8 @@ async function saveCredentials() {
 // Clés DB.keys exclues du backup : état de session/navigateur, pas des données métier.
 const BACKUP_EXCLUDE_KEYS = ['session', 'etablissements', 'onboarded'];
 
-const _BACKUP_SB = { residents:'sbGetResidents', journal:'sbGetJournalEntries', planning:'sbGetPlanningEvents', incidents:'sbGetIncidents', ppe:'sbGetPpe', repertoire:'sbGetRepertoire', echeances:'sbGetEcheances', visites:'sbGetVisites', nuits:'sbGetNuits', activites:'sbGetActivites', chambres:'sbGetChambres', employes:'sbGetEmployes', interventions:'sbGetInterventions', contrats:'sbGetContrats', fichesPaie:'sbGetFichesPaie', satisfaction:'sbGetSatisfaction', evaluations:'sbGetEvaluations', messages:'sbGetMessages' };
+const _BACKUP_SB = { residents:'sbGetResidents', journal:'sbGetJournalEntries', planning:'sbGetPlanningEvents', incidents:'sbGetIncidents', ppe:'sbGetPpe', repertoire:'sbGetRepertoire', echeances:'sbGetEcheances', visites:'sbGetVisites', nuits:'sbGetNuits', activites:'sbGetActivites', chambres:'sbGetChambres', employes:'sbGetEmployes', interventions:'sbGetInterventions', contrats:'sbGetContrats', fichesPaie:'sbGetFichesPaie', satisfaction:'sbGetSatisfaction', evaluations:'sbGetEvaluations', messages:'sbGetMessages',
+  documents:'sbGetDocumentsResident', vehicules:'sbGetVehiculesListe', edl:'sbGetEdl', repas:'sbGetRepasAll', cvs:'sbGetCvs', medicaments:'sbGetMedDistrib', planningEquipe:'sbGetPeShifts', viatrajectoire:'sbGetViaTrajectoire', budgetEnveloppes:'sbGetBudgetEnveloppes', budgetDemandes:'sbGetBudgetDemandes', entretiens:'sbGetEntretiens', documentation:'sbGetDocumentation', admissions:'sbGetAdmissions', tarifs:'sbGetTarifs', factures:'sbGetFactures', formations:'sbGetFormations', transmissions:'sbGetTransmissions', planSoins:'sbGetPlanSoins', astreintes:'sbGetAstreintes', inventaire:'sbGetInventaire', satQuestions:'sbGetSatQuestions', absencesAT:'sbGetAbsences', pointages:'sbGetPointages', candidats:'sbGetCandidats', rapportContributions:'sbGetRapportContributions', contactsExternes:'sbGetContactsExternes' };
 async function _hydrateBackupStores(type) {
   const wanted = type === 'all' ? Object.keys(_BACKUP_SB) : (type === 'residents' ? ['residents'] : type === 'journal' ? ['journal'] : []);
   await Promise.all(wanted.map(async key => {
@@ -727,7 +728,7 @@ async function exportData(type) {
       const val = DB.get(k[name]);
       if (val !== null) data[name] = val;
     });
-    data.conversations = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
+    data.conversations = (typeof sbGetConversations === 'function') ? await sbGetConversations() : {};
     data._exportedAt   = new Date().toISOString();
     data._version      = '2.0';
   }
