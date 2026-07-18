@@ -263,16 +263,32 @@
         </div>
       </div>
 
-      <!-- JOURNÉE DES RÉFÉRÉS : aperçu (lecture seule) des tâches du jour -->
-      <div class="card" id="dashCardJourneeRef" style="overflow:hidden;margin-top:1.5rem;margin-bottom:1.5rem;display:none">
-        <div class="card-header" style="background:color-mix(in srgb, #0d9488 12%, #fff)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0d9488"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          <span class="card-title" style="color:#0d9488">Journée des référés</span>
-          <span class="badge badge-gray" id="dashJourneeRefCount" style="margin-left:.5rem;display:none">0</span>
+      <!-- JOURNÉE DES RÉFÉRÉS + FIL DE VIE (côte à côte ; si l'une est masquée, l'autre prend toute la largeur) -->
+      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.5rem;margin-bottom:1.5rem;align-items:flex-start">
+        <div class="card" id="dashCardJourneeRef" style="overflow:hidden;flex:1 1 380px;min-width:0;display:none">
+          <div class="card-header" style="background:color-mix(in srgb, #0d9488 12%, #fff)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0d9488"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span class="card-title" style="color:#0d9488">Journée des référés</span>
+            <span class="badge badge-gray" id="dashJourneeRefCount" style="margin-left:.5rem;display:none">0</span>
+          </div>
+          <div class="card-body">
+            <div style="font-size:.73rem;color:var(--muted);margin-bottom:.1rem">Tâches du jour de chaque référé (aperçu). Cliquez une carte pour ouvrir sa tournée et pointer.</div>
+            <div class="jrr-grid" id="dashJourneeRefGrid" style="grid-template-columns:1fr"></div>
+          </div>
         </div>
-        <div class="card-body">
-          <div style="font-size:.73rem;color:var(--muted);margin-bottom:.1rem">Tâches du jour de chaque référé (aperçu). Cliquez une carte pour ouvrir sa tournée et pointer.</div>
-          <div class="jrr-grid" id="dashJourneeRefGrid"></div>
+
+        <!-- FIL DE VIE combiné des référés (journal, transmissions, incidents, RDV, sorties, budget, avenants…) -->
+        <div class="card" id="dashCardFilVie" style="overflow:hidden;flex:1 1 380px;min-width:0">
+          <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg>
+            <span class="card-title" style="color:var(--accent)">Fil de vie</span>
+            <span class="badge badge-gray" id="dashFvCount" style="margin-left:.5rem;display:none">0</span>
+            <span id="dashFvScope" style="margin-left:auto;font-size:.75rem;color:var(--muted)"></span>
+          </div>
+          <div class="fv-chips" id="dashFvChips"></div>
+          <div class="card-body" style="padding:0;max-height:520px;overflow-y:auto" id="dashFilVieList">
+            <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
+          </div>
         </div>
       </div>
 
@@ -326,20 +342,6 @@
           </div>
         </div>
 
-      </div>
-
-      <!-- FIL DE VIE combiné des référés (journal, transmissions, incidents, RDV, sorties, budget, avenants…) -->
-      <div class="card" id="dashCardFilVie" style="overflow:hidden;margin-top:1.5rem">
-        <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg>
-          <span class="card-title" style="color:var(--accent)">Fil de vie</span>
-          <span class="badge badge-gray" id="dashFvCount" style="margin-left:.5rem;display:none">0</span>
-          <span id="dashFvScope" style="margin-left:auto;font-size:.75rem;color:var(--muted)"></span>
-        </div>
-        <div class="fv-chips" id="dashFvChips"></div>
-        <div class="card-body" style="padding:0;max-height:520px;overflow-y:auto" id="dashFilVieList">
-          <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
-        </div>
       </div>
 
       <!-- SUIVI RÉSIDENTS (données des fiches) -->
