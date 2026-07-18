@@ -1017,20 +1017,32 @@ function sortiesCard(r) {
   const sorted = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.heure || '').localeCompare(a.heure || ''));
   const enCours = list.filter(s => !s.retourEffectif).length;
 
+  const _durTxt = (d1, d2) => { if (!d1 || !d2) return ''; const n = Math.round((new Date(d2) - new Date(d1)) / 86400000); return n <= 0 ? 'même jour' : n === 1 ? '1 jour' : n + ' jours'; };
   const rows = sorted.length ? sorted.map((s, i) => {
     const st = sortieStatut(s);
-    const retourTxt = s.retourEffectif
-      ? 'Rentré(e) le ' + formatDateTime(s.retourEffectif)
-      : (s.retourPrevuDate ? 'Retour prévu : ' + formatDate(s.retourPrevuDate) + (s.retourPrevuHeure ? ' à ' + s.retourPrevuHeure : '') : '');
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(s.destination || 'Sortie')} <span class="badge ${st.cls}">${st.label}</span>${s.motif ? `<span class="badge badge-gray">${escHtml(s.motif)}</span>` : ''}</div>
-        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">Départ ${formatDate(s.date)}${s.heure ? ' à ' + s.heure : ''}${s.accompagnement ? ' · ' + escHtml(s.accompagnement) : ''}</div>
-        ${retourTxt ? `<div style="font-size:.73rem;color:${st.key === 'retard' ? '#ef4444' : 'var(--muted)'};margin-top:1px">${retourTxt}</div>` : ''}
-        ${s.autorisePar ? `<div style="font-size:.72rem;color:var(--g400);margin-top:1px">Autorisé par ${escHtml(s.autorisePar)}</div>` : ''}
-        ${s.notes ? `<div style="font-size:.73rem;color:var(--g700);margin-top:2px">${escHtml(s.notes)}</div>` : ''}
+    const retDate = s.retourEffectif ? String(s.retourEffectif).slice(0, 10) : s.retourPrevuDate;
+    const retTime = s.retourEffectif ? String(s.retourEffectif).slice(11, 16) : (s.retourPrevuHeure || '');
+    const retDotColor = s.retourEffectif ? '#16a34a' : (st.key === 'retard' ? '#ef4444' : '#f59e0b');
+    const midTxt = [_durTxt(s.date, retDate), s.accompagnement].filter(Boolean).map(escHtml).join(' · ');
+    return `<div style="padding:.7rem .9rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.6rem;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:.85rem">${escHtml(s.destination || 'Sortie')}</span>
+        <span style="display:flex;gap:.35rem;align-items:center">${s.motif ? `<span class="badge badge-gray">${escHtml(s.motif)}</span>` : ''}<span class="badge ${st.cls}">${st.label}</span></span>
       </div>
-      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">${!s.retourEffectif ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer le retour" onclick="marquerRetour('${s.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="openSortieModal('${s.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSortie('${s.id}')">✕</button></div>` : ''}
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="text-align:center;flex-shrink:0;min-width:66px"><div style="font-size:.64rem;color:var(--muted)">Départ</div><div style="font-weight:600;font-size:.78rem">${s.date ? formatDate(s.date) : '—'}</div>${s.heure ? `<div style="font-size:.68rem;color:var(--muted)">${s.heure}</div>` : ''}</div>
+        <div style="flex:1;display:flex;align-items:center;gap:.25rem;min-width:0">
+          <span style="width:9px;height:9px;border-radius:50%;background:#0d9488;flex-shrink:0"></span>
+          <div style="flex:1;height:2px;background:var(--border);position:relative">${midTxt ? `<span style="position:absolute;left:50%;top:-9px;transform:translateX(-50%);white-space:nowrap;font-size:.64rem;color:var(--muted);background:#fff;padding:0 .4rem">${midTxt}</span>` : ''}</div>
+          <span style="width:9px;height:9px;border-radius:50%;background:${retDotColor};flex-shrink:0"></span>
+        </div>
+        <div style="text-align:center;flex-shrink:0;min-width:66px"><div style="font-size:.64rem;color:var(--muted)">${s.retourEffectif ? 'Rentré(e)' : 'Retour prévu'}</div><div style="font-weight:600;font-size:.78rem">${retDate ? formatDate(retDate) : '—'}</div>${retTime ? `<div style="font-size:.68rem;color:var(--muted)">${retTime}</div>` : ''}</div>
+      </div>
+      ${s.notes ? `<div style="font-size:.72rem;color:var(--g700);margin-top:.55rem">📝 ${escHtml(s.notes)}</div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.5rem">
+        <span style="font-size:.7rem;color:var(--g400)">${s.autorisePar ? 'Autorisé par ' + escHtml(s.autorisePar) : ''}</span>
+        ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">${!s.retourEffectif ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer le retour" onclick="marquerRetour('${s.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="openSortieModal('${s.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSortie('${s.id}')">✕</button></div>` : ''}
+      </div>
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune sortie enregistrée</div>';
 
@@ -1038,7 +1050,7 @@ function sortiesCard(r) {
         <span class="card-title" style="color:#0d9488">🚪 Sorties & permissions${enCours ? ` <span class="badge badge-amber" style="margin-left:.3rem">${enCours} en cours</span>` : ''}</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSortieModal()">+ Nouvelle sortie</button>` : ''}
       </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:${sorted.length > 3 ? 'calc(3 * 72px)' : 'none'};overflow-y:${sorted.length > 3 ? 'auto' : 'visible'};scrollbar-width:thin;scrollbar-color:#0d948866 transparent">${rows}</div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:${sorted.length > 2 ? '380px' : 'none'};overflow-y:${sorted.length > 2 ? 'auto' : 'visible'};scrollbar-width:thin;scrollbar-color:#0d948866 transparent">${rows}</div>
     </div></div>`;
 }
 
