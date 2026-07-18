@@ -25,7 +25,8 @@ function _repFromRow(r) {
     fonction:  r.fonction  || '',
     adresse:   r.adresse   || '',
     notes:     r.notes     || '',
-    createdAt: r.created_at
+    createdAt: r.created_at,
+    updatedAt: r.updated_at || r.created_at
   };
 }
 
