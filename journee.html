@@ -53,35 +53,6 @@
     .jr-pill.attendu{border:2px solid #d97706;background:#fffbeb;color:#b45309;font-weight:800}
     .jr-pill.on{background:#0f766e;border-color:#0f766e;color:#fff}
     .jr-footnote{text-align:center;font-size:.74rem;color:var(--muted);margin:1.2rem 0 .4rem}
-    /* ── Commutateur de vue (Ma tournée / La journée d'un résident) ── */
-    .jr-vues{display:flex;gap:4px;padding:4px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.7)}
-    .jr-vuebtn{min-height:44px;padding:0 14px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:.8rem;cursor:pointer;font-family:inherit}
-    .jr-vuebtn.on{background:#4f46e5;color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.3)}
-    /* ── Vue « Ma journée » (résident) : timeline co-validée, lisibilité FALC ── */
-    .jrr-head{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1rem}
-    .jrr-title{font-size:1.25rem;font-weight:800;color:#0f2b4a;line-height:1.2}
-    .jrr-sub{font-size:.86rem;color:var(--muted);margin-top:2px}
-    .jrr-tl{position:relative;padding-left:30px}
-    .jrr-tl::before{content:"";position:absolute;left:11px;top:8px;bottom:8px;width:2px;background:#e2e8f0;border-radius:2px}
-    .jrr-mom{position:relative;margin:1rem 0 .5rem;font-size:.82rem;font-weight:800;color:#475569}
-    .jrr-mom::before{content:"";position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:#cbd5e1;border:2px solid #fff}
-    .jrr-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1rem 1.1rem;margin-bottom:.7rem}
-    .jrr-card::before{content:"";position:absolute;left:-24px;top:22px;width:9px;height:9px;border-radius:50%;background:#cbd5e1;border:2px solid #fff}
-    .jrr-card.encours{border:2px solid #4f46e5}
-    .jrr-card.encours::before{background:#4f46e5}
-    .jrr-card.fait{border-color:#bbe7c9}
-    .jrr-card.fait::before{background:#16a34a}
-    .jrr-card.reporte{border-color:#f5d9a8}
-    .jrr-card.reporte::before{background:#d97706}
-    .jrr-lib{font-size:1.05rem;font-weight:700;color:#0f2b4a;line-height:1.35}
-    .jrr-card.fait .jrr-lib{color:#334155}
-    .jrr-obj{display:inline-block;font-size:.78rem;color:#6d28d9;background:#faf5ff;border:1px solid #ede9fe;border-radius:999px;padding:.2rem .65rem;margin-top:.45rem}
-    .jrr-btn{width:100%;min-height:56px;margin-top:.7rem;border:none;border-radius:14px;background:#16a34a;color:#fff;font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit}
-    .jrr-btn:hover{background:#15803d}
-    .jrr-refus{width:100%;min-height:44px;margin-top:.45rem;border:1px solid var(--border);border-radius:12px;background:#fff;color:#64748b;font-size:.84rem;font-weight:600;cursor:pointer;font-family:inherit}
-    .jrr-note{font-size:.86rem;font-weight:700;margin-top:.5rem}
-    .jrr-recap{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #bbe7c9;border-radius:16px;padding:1rem 1.2rem;text-align:center;font-size:1rem;color:#15803d;font-weight:700;margin-top:1rem}
-    .jrr-propill{font-size:.66rem;color:#94a3b8;border:1px solid var(--border);border-radius:999px;padding:2px 8px;background:#fff;cursor:pointer;font-family:inherit}
     .jr-footnote a{color:#0f766e;font-weight:700}
     /* ── Tri de la tournée : par résident / par heure ── */
     .jr-tri{display:flex;gap:3px;padding:3px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.7)}
@@ -111,15 +82,10 @@
       <div id="jrCharge" style="font-size:.8rem;color:var(--muted);margin-top:2px"></div>
     </div>
     <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
-      <div class="jr-vues" role="group" aria-label="Choix de la vue">
-        <button type="button" class="jr-vuebtn on" id="jrVueBtnTournee" aria-pressed="true" onclick="jrSetVue('tournee')">👥 Ma tournée</button>
-        <button type="button" class="jr-vuebtn" id="jrVueBtnResident" aria-pressed="false" onclick="jrSetVue('resident')">🧑 La journée d'un résident</button>
-      </div>
       <button class="btn btn-accent btn-sm" id="jrAddBtn" onclick="openTacheModal()" style="display:none">+ Nouvelle tâche</button>
     </div>
   </div>
 
-  <div id="jrVueTournee">
   <div class="jr-cockpit">
     <div class="jr-cockq" id="jrQuarts" role="group" aria-label="Choix du quart"></div>
     <div style="flex:1;min-width:130px">
@@ -132,12 +98,6 @@
   </div>
   <div class="jr-rail" id="jrRail"></div>
   <div id="jrList"><div class="empty" style="padding:3rem;text-align:center"><p>Chargement…</p></div></div>
-  </div><!-- /jrVueTournee -->
-
-  <div id="jrVueResident" style="display:none">
-    <div class="jr-rail" id="jrResRail"></div>
-    <div id="jrResBody"></div>
-  </div>
 
   <div class="jr-footnote">Ces moments sont des <strong>supports d'accompagnement</strong>, pas une cadence : l'équipe ajuste avec la personne, et son refus est un droit.</div>
 </main>

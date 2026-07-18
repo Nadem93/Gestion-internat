@@ -1663,7 +1663,7 @@
         const s = STAT[st] || STAT[''];
         return `<div class="jrr-row"><span class="jrr-ic" style="color:${s.col}">${s.ic}</span>${t.heure ? `<span class="jrr-h">${escHtml(t.heure)}</span>` : ''}<span class="jrr-t${st === 'fait' ? ' done' : ''}">${escHtml(t.libelle)}</span></div>`;
       }).join('') + (list.length > 6 ? `<div class="jrr-more">+${list.length - 6} autre${list.length - 6 > 1 ? 's' : ''}</div>` : '');
-      return `<a class="jrr-card" href="journee.html?vue=resident&resident=${encodeURIComponent(rid)}">
+      return `<a class="jrr-card" href="journee.html">
         <div class="jrr-head">
           <span class="jrr-av" style="background:${accent}">${escHtml(initials)}</span>
           <div style="flex:1;min-width:0"><div class="jrr-nm">${escHtml(`${r.prenom||''} ${r.nom||''}`.trim())}</div><div class="jrr-sub">${faits}/${list.length} tâche${list.length > 1 ? 's' : ''} faite${list.length > 1 ? 's' : ''}</div></div>

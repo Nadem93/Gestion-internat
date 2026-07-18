@@ -25,9 +25,7 @@ let _jrCoches = {};          // tacheId → coche du jour
 let _jrResidents = [];
 let _jrPpe = [];
 let _jrQuart = 'matin';
-let _jrVue = 'tournee';      // 'tournee' (équipe) | 'resident' (timeline co-validée avec la personne)
 let _jrTri = (typeof localStorage !== 'undefined' && localStorage.getItem('jr_tri')) || 'resident';   // tri de la tournée : 'resident' | 'heure'
-let _jrResSel = '';          // résident affiché dans la vue « Ma journée »
 let _jrCanEdit = false;
 const _jrOpenMode = new Set();   // modes d'emploi dépliés
 const _jrOpenStrip = new Set();  // bandelettes « soutien apporté » ouvertes après coche
@@ -73,11 +71,6 @@ async function initJournee() {
   const dateEl = document.getElementById('jrDateLabel');
   if (dateEl) dateEl.textContent = new Date(_jrDate + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  // Liens profonds : ?vue=resident&resident=<id>
-  const params = new URLSearchParams(location.search);
-  if (params.get('vue') === 'resident') _jrVue = 'resident';
-  if (params.get('resident')) _jrResSel = params.get('resident');
-
   try {
     const jobs = [sbGetResidents(), sbGetTaches(), sbGetCoches(_jrDate)];
     const [residents, taches, coches] = await Promise.all(jobs);
@@ -90,8 +83,6 @@ async function initJournee() {
     _jrLoadError = true;
     const errHtml = '<div class="empty" style="padding:2.5rem;text-align:center"><p>Impossible de charger la journée.<br><span style="font-size:.78rem">Si la page vient d\'être installée, exécutez <strong>migration-taches-ppa.sql</strong> dans Supabase.</span></p></div>';
     document.getElementById('jrList').innerHTML = errHtml;
-    const rb = document.getElementById('jrResBody');
-    if (rb) rb.innerHTML = errHtml;
     return;
   }
   // Avenants pour relier les objectifs (facultatif : la page vit sans)
@@ -117,23 +108,9 @@ function jrEtat(t) {
 }
 
 function renderJournee() {
-  if (_jrLoadError) return;   // l'écran d'erreur reste affiché, le commutateur ne le remplace pas
-  const tourneeEl = document.getElementById('jrVueTournee');
-  const residentEl = document.getElementById('jrVueResident');
-  if (tourneeEl) tourneeEl.style.display = _jrVue === 'tournee' ? '' : 'none';
-  if (residentEl) residentEl.style.display = _jrVue === 'resident' ? '' : 'none';
-  const bt = document.getElementById('jrVueBtnTournee'), br = document.getElementById('jrVueBtnResident');
-  if (bt) { bt.classList.toggle('on', _jrVue === 'tournee'); bt.setAttribute('aria-pressed', _jrVue === 'tournee'); }
-  if (br) { br.classList.toggle('on', _jrVue === 'resident'); br.setAttribute('aria-pressed', _jrVue === 'resident'); }
-  const chargeWrap = document.getElementById('jrCharge');
-  if (_jrVue === 'resident') { if (chargeWrap) chargeWrap.textContent = 'La journée se regarde et se coche AVEC la personne.'; renderJourneeResident(); return; }
+  if (_jrLoadError) return;   // l'écran d'erreur reste affiché
   renderTournee();
 }
-
-function jrSetVue(v) { _jrVue = v; renderJournee(); }
-
-// Depuis la tournée : ouvrir la journée d'un résident précis
-function jrOpenResident(rid) { _jrResSel = String(rid); _jrVue = 'resident'; renderJournee(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 function renderTournee() {
   const jour = jrTachesDuJour();
@@ -222,7 +199,6 @@ function renderTournee() {
         <span class="jr-av" style="background:${_jrAvColor(rid)};width:42px;height:42px;font-size:.85rem">${escHtml(_jrInitiales(nom))}</span>
         <div><div class="jr-gname">${escHtml(nom)}</div>
         <div class="jr-gmeta">${ts.length} moment${ts.length > 1 ? 's' : ''} sur ce quart</div></div>
-        <button type="button" class="jr-btn-sec" style="margin-left:auto" onclick="jrOpenResident('${rid}')">🧑 Sa journée →</button>
       </div>
       <div class="jr-cards">${ts.map(t => jrCardHtml(t)).join('')}</div>
     </section>`;
@@ -318,7 +294,7 @@ async function jrFait(id) {
   if (!t) return;
   const local = { tacheId: id, date: _jrDate, statut: 'fait', motif: '', soutien: '', par: u.nom, parId: u.id, doneAt: new Date().toISOString() };
   _jrCoches[id] = local;                          // optimiste : l'écran répond tout de suite
-  if (_jrVue === 'tournee') _jrOpenStrip.add(id); // le niveau de soutien est un vocabulaire d'équipe
+  _jrOpenStrip.add(id);                           // le niveau de soutien est un vocabulaire d'équipe
   _jrOpenStrip.delete('rep_' + id);               // referme un éventuel choix de motif en cours
   renderJournee();
   try {
@@ -381,109 +357,6 @@ async function jrAnnule(id) {
 
 function jrToggleMode(id) {
   if (_jrOpenMode.has(id)) _jrOpenMode.delete(id); else _jrOpenMode.add(id);
-  renderJournee();
-}
-
-// ── VUE « MA JOURNÉE » — timeline co-validée avec la personne (design B) ──
-// La tablette se pose entre le professionnel et la personne : gros bouton vert
-// pressé par le résident lui-même, refus en première personne, récap positif
-// sans aucun pourcentage. Mêmes données, même coche que la tournée.
-
-// Pictogramme simple déduit du libellé (repère visuel type FALC)
-const JRR_PICTOS = [
-  [/repas|petit.dej|cuisin|manger|table/i, '🍳'], [/linge|machine|lessive|vêtement|habill/i, '🧺'],
-  [/douche|toilette|hygiène|dents/i, '🚿'], [/traitement|médicament/i, '💊'],
-  [/courses|magasin|achat|budget/i, '🛒'], [/appel|téléphon|famille|sœur|frère|parent/i, '📞'],
-  [/rendez|médecin|kiné|dentiste|cmp|consult/i, '🩺'], [/atelier|activité|musique|dessin|jeu/i, '🎨'],
-  [/chambre|rangement|ménage|lit/i, '🛏'], [/bus|transport|déplac|trajet/i, '🚌'],
-  [/sport|marche|piscine|vélo/i, '⚽'], [/.*/, '⭐']
-];
-function jrPicto(libelle) { return (JRR_PICTOS.find(([re]) => re.test(libelle || '')) || [null, '⭐'])[1]; }
-
-function renderJourneeResident() {
-  const jour = jrTachesDuJour();
-  const parResident = {};
-  jour.forEach(t => { (parResident[t.residentId] = parResident[t.residentId] || []).push(t); });
-  const rids = Object.keys(parResident).sort((a, b) => (parResident[a][0].residentName || '').localeCompare(parResident[b][0].residentName || ''));
-  const rail = document.getElementById('jrResRail');
-  const body = document.getElementById('jrResBody');
-  if (!rids.length) {
-    rail.innerHTML = '';
-    body.innerHTML = '<div class="empty" style="padding:2.5rem;text-align:center"><p>Aucun moment prévu aujourd\'hui.</p></div>';
-    return;
-  }
-  if (!_jrResSel || !parResident[_jrResSel]) _jrResSel = rids[0];
-
-  // Rail de sélection : badge « n à faire » → coche verte quand tout est fait
-  rail.innerHTML = rids.map(rid => {
-    const ts = parResident[rid];
-    const nom = ts[0].residentName || 'Résident';
-    const todo = ts.filter(t => !jrEtat(t)).length;
-    const on = String(rid) === String(_jrResSel);
-    return `<button type="button" class="jr-chip" style="${on ? 'border:2px solid #4f46e5' : ''}" aria-pressed="${on}" onclick="jrSelectResident('${rid}')">
-      <span class="jr-av" style="background:${_jrAvColor(rid)}">${escHtml(_jrInitiales(nom))}</span>${escHtml(nom.split(' ')[0])}
-      ${todo ? `<small class="todo">${todo} à faire</small>` : '<small style="color:#16a34a">✓</small>'}
-    </button>`;
-  }).join('');
-
-  const ts = parResident[_jrResSel];
-  const nom = ts[0].residentName || 'Résident';
-  const prenom = nom.split(' ')[0];
-  const faits = ts.filter(t => jrEtat(t) === 'fait').length;
-  const prochaine = ts.slice().sort((a, b) => {
-    const ma = JR_MOMENTS.findIndex(m => m.id === a.moment), mb = JR_MOMENTS.findIndex(m => m.id === b.moment);
-    return (ma - mb) || (a.heure || '99').localeCompare(b.heure || '99');
-  }).find(t => !jrEtat(t));
-
-  const tlHtml = JR_MOMENTS.map(m => {
-    const mts = ts.filter(t => t.moment === m.id).sort((a, b) => (a.heure || '99').localeCompare(b.heure || '99'));
-    if (!mts.length) return '';
-    return `<div class="jrr-mom">${m.ico} ${m.label}</div>` + mts.map(t => {
-      const etat = jrEtat(t);
-      const c = _jrCoches[t.id];
-      const encours = !etat && prochaine && prochaine.id === t.id;
-      const modeOpen = _jrOpenMode.has('res_' + t.id);
-      let etatHtml = '';
-      if (etat === 'fait') {
-        const heure = c.doneAt ? new Date(c.doneAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-        etatHtml = `<div class="jrr-note" style="color:#15803d">✓ C'est fait${heure ? ' à ' + heure : ''} — bravo !</div>
-          <button type="button" class="jrr-propill" style="margin-top:.4rem" onclick="jrAnnule('${t.id}')">↩ je me suis trompé</button>`;
-      } else if (etat === 'reporte') {
-        etatHtml = `<div class="jrr-note" style="color:#b45309">⏭ ${c.motif === JR_MOTIFS[0] ? 'Je n\'ai pas voulu — c\'est mon droit' : 'Reporté' + (c.motif ? ' — ' + escHtml(c.motif) : '')}</div>
-          <button type="button" class="jrr-propill" style="margin-top:.4rem" onclick="jrAnnule('${t.id}')">↩ finalement je le fais</button>`;
-      } else {
-        etatHtml = `<button type="button" class="jrr-btn" onclick="jrFait('${t.id}')">✓ C'est fait !</button>
-          <button type="button" class="jrr-refus" onclick="jrRefus('${t.id}')">Je ne veux pas (c'est mon droit)</button>`;
-      }
-      const mode = (t.consigne || t.soutienAttendu) && _jrCanEditVoir()
-        ? `<div style="margin-top:.45rem"><button type="button" class="jrr-propill" onclick="jrToggleModeRes('${t.id}')" aria-expanded="${modeOpen}">📖 pro</button>
-           ${modeOpen ? `<div class="jr-mode" style="margin-top:.35rem">📖 <span>${escHtml(t.consigne || '')}${t.soutienAttendu && JR_SOUTIEN[t.soutienAttendu] ? ` — <strong>soutien attendu : ${JR_SOUTIEN[t.soutienAttendu].l}</strong>` : ''}</span></div>` : ''}</div>`
-        : '';
-      return `<article class="jrr-card ${etat || (encours ? 'encours' : '')}">
-        <div class="jrr-lib">${jrPicto(t.libelle)} ${escHtml(t.libelle)}${t.heure ? ` <span style="font-size:.78rem;color:#94a3b8;font-weight:600">· ${escHtml(t.heure)}</span>` : ''}</div>
-        ${t.objectif ? `<span class="jrr-obj">🎯 Mon projet : ${escHtml(t.objectif)}</span>` : ''}
-        ${etatHtml}${mode}
-      </article>`;
-    }).join('');
-  }).join('');
-
-  const recap = faits > 0
-    ? `<div class="jrr-recap">🌟 Aujourd'hui, ${escHtml(prenom)} a fait ${faits} chose${faits > 1 ? 's' : ''} de son projet — bravo !</div>`
-    : '';
-
-  body.innerHTML = `<div class="jrr-head">
-      <span class="jr-av" style="background:${_jrAvColor(_jrResSel)};width:56px;height:56px;font-size:1.1rem">${escHtml(_jrInitiales(nom))}</span>
-      <div><div class="jrr-title">La journée de ${escHtml(prenom)}</div>
-      <div class="jrr-sub">On la regarde ensemble — chaque geste fait avancer son projet.</div></div>
-    </div>
-    <div class="jrr-tl">${tlHtml}</div>${recap}`;
-}
-
-function jrSelectResident(rid) { _jrResSel = String(rid); renderJournee(); }
-function _jrCanEditVoir() { return true; }   // le mode d'emploi pro reste accessible discrètement à l'équipe
-function jrToggleModeRes(id) {
-  const k = 'res_' + id;
-  if (_jrOpenMode.has(k)) _jrOpenMode.delete(k); else _jrOpenMode.add(k);
   renderJournee();
 }
 
