@@ -191,7 +191,6 @@
       <div id="dashAtraiter" style="display:none;margin-bottom:1.1rem"></div>
 
       <!-- APERÇU DU JOUR (indicateurs informatifs) -->
-      <div class="dash-slabel" id="dashApercuLabel">Aperçu du jour</div>
       <div class="apercu-row" id="miniCards">
         <a href="planning.html" class="apercu-chip" id="miniEventCard" title="Voir le planning" style="--mc:#ef4444">
           <span class="ac-ic" style="color:#ef4444;background:color-mix(in srgb,#ef4444 12%,#fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg></span>
@@ -989,7 +988,7 @@
         cards.push(`<a class="atr-card" href="echeances.html" style="border-color:color-mix(in srgb,${c} 32%,#fff);background:color-mix(in srgb,${c} 7%,#fff)"><span class="atr-ic" style="color:${tc};background:color-mix(in srgb,${c} 16%,#fff)">${IC_ALARM}</span><span style="flex:1;min-width:0"><span class="atr-t">${title}</span><span class="atr-s">${subT}</span></span><span class="atr-cta" style="color:${tc}">Voir &rarr;</span></a>`);
       }
       if (cards.length) {
-        atr.innerHTML = `<div class="dash-slabel">À traiter</div><div class="atr-row">${cards.join('')}</div>`;
+        atr.innerHTML = `<div class="atr-row">${cards.join('')}</div>`;
         atr.style.display = '';
       } else if (canSee('access_presences') || canSee('view_residents')) {
         atr.innerHTML = `<div class="atr-ok"><span style="color:#16a34a;display:flex">${IC_OK}</span>Tout est à jour — rien à traiter dans l'immédiat</div>`;
