@@ -1143,23 +1143,24 @@ function trousseauCard(r) {
   const restitues = items.filter(i => i.restitue);
   const sorted = [...items].sort((a, b) => (a.restitue ? 1 : 0) - (b.restitue ? 1 : 0) || (b.dateAjout || '').localeCompare(a.dateAjout || ''));
 
-  const rows = sorted.length ? sorted.map((it, i) => `
-    <div style="display:flex;align-items:center;gap:.75rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''};${it.restitue ? 'opacity:.55' : ''}">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-          ${escHtml(it.designation || 'Article')}${(it.quantite || 1) > 1 ? ` <span class="badge badge-gray">× ${it.quantite}</span>` : ''}
-          ${it.categorie ? `<span class="badge badge-gray">${escHtml(it.categorie)}</span>` : ''}
-          ${it.etat ? `<span class="badge" style="background:${it.etat === 'Abîmé' ? '#fee2e2' : it.etat === 'Usé' ? '#fef9c3' : '#dcfce7'};color:${it.etat === 'Abîmé' ? '#dc2626' : it.etat === 'Usé' ? '#a16207' : '#16a34a'}">${it.etat}</span>` : ''}
-          ${it.restitue ? '<span class="badge badge-gray">↩ Restitué</span>' : ''}
-        </div>
-        <div style="font-size:.72rem;color:var(--muted);margin-top:1px">Déposé le ${formatDate(it.dateAjout)}${it.restitue && it.dateRestitution ? ' · restitué le ' + formatDate(it.dateRestitution) : ''}${it.notes ? ' · ' + escHtml(it.notes) : ''}</div>
+  const _trIcon = { 'Vêtements':'👕', 'Linge de maison':'🛏️', 'Hygiène':'🧴', 'Multimédia':'📺', 'Papiers':'📄', 'Objets de valeur':'💎', 'Mobilier personnel':'🛋️', 'Autre':'📦' };
+  const _trEtat = { 'Neuf':{ bg:'#dcfce7', color:'#16a34a' }, 'Bon':{ bg:'#dbeafe', color:'#2563eb' }, 'Usé':{ bg:'#fef9c3', color:'#a16207' }, 'Abîmé':{ bg:'#fee2e2', color:'#dc2626' } };
+  const tiles = sorted.map(it => {
+    const et = _trEtat[it.etat] || { bg:'#dcfce7', color:'#16a34a' };
+    return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column;${it.restitue ? 'opacity:.6' : ''}">
+      <div style="height:54px;background:#7c3aed12;display:flex;align-items:center;justify-content:center;position:relative">
+        <span style="font-size:1.55rem">${_trIcon[it.categorie] || '📦'}</span>
+        ${it.etat ? `<span style="position:absolute;top:6px;right:6px;font-size:.6rem;font-weight:600;background:${et.bg};color:${et.color};padding:1px 7px;border-radius:20px">${it.etat}</span>` : ''}
+        ${it.restitue ? `<span style="position:absolute;top:6px;left:6px;font-size:.58rem;background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:20px">↩ Restitué</span>` : ''}
       </div>
-      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">
-        ${!it.restitue ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme restitué" onclick="restituerTrousseauItem('${it.id}')">↩</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="openTrousseauModal('${it.id}')">✎</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTrousseauItem('${it.id}')">✕</button>
-      </div>` : ''}
-    </div>`).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun article inventorié</div>';
+      <div style="padding:.5rem .65rem;flex:1;display:flex;flex-direction:column;gap:.12rem">
+        <div style="font-weight:600;font-size:.82rem;line-height:1.2">${escHtml(it.designation || 'Article')}${(it.quantite || 1) > 1 ? ` <span style="font-size:.66rem;color:var(--muted)">× ${it.quantite}</span>` : ''}</div>
+        <div style="font-size:.68rem;color:var(--muted)">${escHtml(it.categorie || '—')} · ${formatDate(it.dateAjout)}</div>
+        ${it.notes ? `<div style="font-size:.66rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(it.notes)}">${escHtml(it.notes)}</div>` : ''}
+        ${canEdit ? `<div class="no-print" style="display:flex;gap:.1rem;justify-content:flex-end;margin-top:auto;padding-top:.3rem">${!it.restitue ? `<button class="btn btn-ghost btn-sm" style="padding:2px 6px;color:var(--green)" title="Marquer comme restitué" onclick="restituerTrousseauItem('${it.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" style="padding:2px 6px" onclick="openTrousseauModal('${it.id}')">✎</button><button class="btn btn-ghost btn-sm" style="padding:2px 6px;color:var(--red)" onclick="deleteTrousseauItem('${it.id}')">✕</button></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #7c3aed 12%, #fff)">
         <span class="card-title" style="color:#7c3aed">🧳 Trousseau & effets personnels${enDepot.length ? ` <span class="badge" style="background:#7c3aed1a;color:#7c3aed;margin-left:.3rem">${enDepot.length} en dépôt</span>` : ''}${restitues.length ? ` <span class="badge badge-gray">${restitues.length} restitué(s)</span>` : ''}</span>
@@ -1168,7 +1169,7 @@ function trousseauCard(r) {
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openTrousseauModal()">+ Article</button>` : ''}
         </span>
       </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+      ${sorted.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;${sorted.length > 8 ? 'max-height:360px;overflow-y:auto;padding-right:.2rem' : ''}">${tiles}</div>` : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun article inventorié</div>'}
     </div></div>`;
 }
 
