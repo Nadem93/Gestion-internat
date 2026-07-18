@@ -53,6 +53,27 @@
     .fv-ttl{font-size:.82rem;color:#334155}
     .fv-det{font-size:.78rem;color:var(--muted);margin-top:2px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .fv-dt{font-size:.7rem;color:#94a3b8;margin-top:2px}
+    /* Modale d'ajout (dashboard) — en-tête coloré + sections (design Option 2) */
+    .dmov{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+    .dmov.open{display:flex}
+    .dmodal{background:#fff;border-radius:16px;width:100%;max-width:470px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px -12px rgba(15,23,42,.5)}
+    .dm-head{padding:.95rem 1.15rem;border-bottom:1px solid var(--border)}
+    .dm-title{display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;margin-bottom:.65rem}
+    .dm-title .x{margin-left:auto;cursor:pointer;color:var(--muted);background:none;border:none;font-size:1.4rem;line-height:1;padding:0 .1rem}
+    .dm-sel{display:flex;align-items:center;gap:.5rem;background:#fff;border:1px solid var(--border);border-radius:9px;padding:.35rem .6rem}
+    .dm-sel select{border:none;background:none;flex:1;font-size:.9rem;color:#0f2b4a;font-weight:600;outline:none;cursor:pointer;font-family:inherit}
+    .dm-body{padding:1.05rem 1.15rem;display:flex;flex-direction:column;gap:1rem}
+    .dm-sk{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.45rem}
+    .dm-fi{width:100%;border:1px solid var(--border);border-radius:8px;padding:.5rem .65rem;font-size:.9rem;background:#fff;color:#0f2b4a;box-sizing:border-box;font-family:inherit}
+    .dm-fi:focus{outline:none;border-color:var(--accent)}
+    .dm-row{display:flex;gap:.6rem}
+    .dm-tc{font:inherit;font-size:.78rem;padding:.32rem .65rem;border-radius:999px;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;background:#fff}
+    .dm-tc .d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .dm-jour{font:inherit;font-size:.72rem;font-weight:600;padding:.28rem .55rem;border-radius:999px;cursor:pointer}
+    .dm-abs{border:1px solid var(--border);border-radius:10px;padding:.7rem .75rem;margin-bottom:.6rem;background:#f8fafc}
+    .dm-foot{display:flex;gap:.6rem;justify-content:flex-end;padding:.85rem 1.15rem;border-top:1px solid var(--border)}
+    .dm-bs{font:inherit;font-size:.85rem;font-weight:600;color:#475569;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:.5rem .9rem;cursor:pointer}
+    .dm-bp{font:inherit;font-size:.85rem;font-weight:600;color:#fff;border:none;border-radius:8px;padding:.5rem 1.1rem;cursor:pointer}
     /* Répartition des niveaux de soutien — continuum de population */
     .nivc-meta{font-size:.8rem;color:var(--muted);margin-bottom:.85rem;line-height:1.5}
     .nivc-band{display:flex;height:30px;border-radius:8px;overflow:hidden;background:#f1f5f9}
@@ -202,7 +223,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span class="card-title" style="color:var(--accent)">Planning référé</span>
           <span class="badge badge-gray" id="dashPlanningRefCount" style="margin-left:.5rem;display:none">0</span>
-          <a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:var(--accent)">Voir tout</a>
+          <button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openAddPlanningModal()">+ Ajouter</button>
+          <a href="planning.html" class="btn btn-ghost btn-sm" style="color:var(--accent)">Voir tout</a>
         </div>
         <div class="card-body">
           <div style="font-size:.73rem;color:var(--muted);margin-bottom:.6rem">Événements des 7 prochains jours pour vos référés.</div>
@@ -216,6 +238,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0369a1"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
           <span class="card-title" style="color:#0369a1">Semaine type — référés</span>
           <span class="badge badge-gray" id="dashSemaineRefCount" style="margin-left:.5rem;display:none">0</span>
+          <button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:#0369a1" onclick="openAddSemaineModal()">+ Ajouter</button>
         </div>
         <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
           <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (travail, ESAT, activité, retour famille…) de vos référés — jours présumés « sortie » au pointage.</div>
@@ -462,6 +485,11 @@
 </div>
 
 <div id="toast-container" class="toast-container"></div>
+<!-- Modale d'ajout (planning / semaine type) — remplie par JS -->
+<div class="dmov" id="dashModalOv" onclick="if(event.target===this)dashCloseModal()">
+  <div class="dmodal" id="dashModal" role="dialog" aria-modal="true"></div>
+</div>
+
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1417,6 +1445,124 @@
       return `<div style="min-width:0">${head}${body}</div>`;
     }).join('');
   }
+
+  // ── Modales d'ajout (dashboard) — en-tête coloré + sections (design Option 2) ──
+  function dashOpenModal(html){ const ov=document.getElementById('dashModalOv'), box=document.getElementById('dashModal'); if(!ov||!box)return; box.innerHTML=html; ov.classList.add('open'); }
+  function dashCloseModal(){ const ov=document.getElementById('dashModalOv'); if(ov)ov.classList.remove('open'); }
+  const _dGenId = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  const _dResidents = () => _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r=>r.statut!=='sorti'));
+  const _dResOpts = () => _dResidents().map(r=>`<option value="${escHtml(String(r.id))}">${escHtml(`${r.prenom||''} ${r.nom||''}`.trim()||'Résident')}</option>`).join('');
+  const _dv = id => { const el=document.getElementById(id); return el?el.value:''; };
+  const _USER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--muted);flex-shrink:0"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>';
+
+  // Planning référé : ajouter un événement (avec récurrence hebdo)
+  const _D_TYPES = [{k:'activite',l:'Activité',c:'#3b82f6'},{k:'rdv',l:'RDV',c:'#ef4444'},{k:'sortie',l:'Sortie',c:'#10b981'},{k:'reunion',l:'Réunion',c:'#8b5cf6'},{k:'projet',l:'Projet',c:'#06b6d4'},{k:'evaluation',l:'Évaluation',c:'#9333ea'},{k:'autre',l:'Autre',c:'#94a3b8'}];
+  function openAddPlanningModal(){
+    if(!_dResidents().length){ toast('Aucun résident','error'); return; }
+    const chips=_D_TYPES.map((t,i)=>`<button type="button" class="dm-tc" onclick="dpSelectType('${t.k}','${t.c}',this)"${i===0?` style="color:${t.c};background:color-mix(in srgb,${t.c} 14%,#fff);border-color:color-mix(in srgb,${t.c} 40%,#fff)"`:''}><span class="d" style="background:${t.c}"></span>${t.l}</button>`).join('');
+    dashOpenModal(`
+      <div class="dm-head" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
+        <div class="dm-title" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg> Ajouter au planning <button class="x" onclick="dashCloseModal()" aria-label="Fermer">&times;</button></div>
+        <div class="dm-sel">${_USER_SVG}<select id="dpResident">${_dResOpts()}</select></div>
+      </div>
+      <div class="dm-body">
+        <div><div class="dm-sk">Quand</div><div class="dm-row"><input type="date" id="dpDate" class="dm-fi" style="flex:1.4" value="${today()}"><input type="time" id="dpHeure" class="dm-fi" style="flex:1" title="Début"><input type="time" id="dpFin" class="dm-fi" style="flex:1" title="Fin"></div></div>
+        <div><div class="dm-sk">Quoi</div><input type="text" id="dpTitre" class="dm-fi" placeholder="Titre de l'événement" style="margin-bottom:.5rem"><input type="hidden" id="dpType" value="activite"><div style="display:flex;flex-wrap:wrap;gap:.35rem">${chips}</div></div>
+        <div><div class="dm-sk">Répétition</div><label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#475569;cursor:pointer"><input type="checkbox" id="dpRecur" onchange="dpToggleRecur()"> Répéter chaque semaine</label><div id="dpRecurWrap" style="display:none;margin-top:.55rem"><div class="dm-sk">Jusqu'au</div><input type="date" id="dpRecurUntil" class="dm-fi"></div></div>
+      </div>
+      <div class="dm-foot"><button class="dm-bs" onclick="dashCloseModal()">Annuler</button><button class="dm-bp" style="background:var(--accent)" onclick="saveAddPlanning()">Enregistrer</button></div>`);
+  }
+  function dpSelectType(k,c,el){ const t=document.getElementById('dpType'); if(t)t.value=k; document.querySelectorAll('#dashModal .dm-tc').forEach(b=>{b.style.color='';b.style.background='#fff';b.style.borderColor='';}); if(el){el.style.color=c;el.style.background='color-mix(in srgb,'+c+' 14%,#fff)';el.style.borderColor='color-mix(in srgb,'+c+' 40%,#fff)';} }
+  function dpToggleRecur(){ const w=document.getElementById('dpRecurWrap'), c=document.getElementById('dpRecur'); if(w)w.style.display=(c&&c.checked)?'':'none'; }
+  async function saveAddPlanning(){
+    const rid=_dv('dpResident'); const r=(typeof sbResidents==='function'?sbResidents():[]).find(x=>String(x.id)===String(rid));
+    const titre=_dv('dpTitre').trim(), date=_dv('dpDate'), type=_dv('dpType')||'activite', heure=_dv('dpHeure'), fin=_dv('dpFin');
+    if(!rid){ toast('Choisissez un résident','error'); return; }
+    if(!titre){ toast('Le titre est requis','error'); return; }
+    if(!date){ toast('La date est requise','error'); return; }
+    const base={ titre, residentId:rid, residentName:r?`${r.prenom||''} ${r.nom||''}`.trim():'', type, date, heure, time:heure, timeEnd:fin||'', color:'' };
+    const recur=document.getElementById('dpRecur')?.checked; const until=_dv('dpRecurUntil');
+    try{
+      if(recur && until && until>=date){
+        const dates=[]; let cur=new Date(date+'T12:00:00'); const end=new Date(until+'T12:00:00'); let g=0;
+        const isod=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        while(cur<=end && g++<200){ dates.push(isod(cur)); cur.setDate(cur.getDate()+7); }
+        const recurId=_dGenId();
+        const saved=await sbSavePlanningEventsBulk(dates.map(d=>({...base,date:d,recurId,recurFreq:'weekly',recurUntil:until})));
+        (_dashLive.planning=_dashLive.planning||[]).push(...saved);
+        toast(`${dates.length} événement${dates.length>1?'s créés':' créé'}`,'success');
+      } else {
+        const saved=await sbSavePlanningEvent(base);
+        (_dashLive.planning=_dashLive.planning||[]).push(saved);
+        toast('Événement ajouté','success');
+      }
+      dashCloseModal(); renderPlanningReferes();
+    } catch(e){ console.error(e); toast('Erreur lors de l\'enregistrement','error'); }
+  }
+
+  // Semaine type — référés : ajouter/éditer les absences récurrentes d'un résident
+  const _DPH_J=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+  const _DPH_JC={lundi:'Lun',mardi:'Mar',mercredi:'Mer',jeudi:'Jeu',vendredi:'Ven',samedi:'Sam',dimanche:'Dim'};
+  let _dphAbs=[], _dphRid=null;
+  function openAddSemaineModal(){
+    if(!_dResidents().length){ toast('Aucun résident','error'); return; }
+    dashOpenModal(`
+      <div class="dm-head" style="background:color-mix(in srgb, #0369a1 12%, #fff)">
+        <div class="dm-title" style="color:#0369a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Semaine type — absences <button class="x" onclick="dashCloseModal()" aria-label="Fermer">&times;</button></div>
+        <div class="dm-sel">${_USER_SVG}<select id="dsResident" onchange="dphLoadResident(this.value)">${_dResOpts()}</select></div>
+      </div>
+      <div class="dm-body">
+        <div style="font-size:.78rem;color:var(--muted)">Absences récurrentes du résident (travail, ESAT, activité extérieure, retour famille…). Une même journée peut en comporter plusieurs. Ces jours sont présumés « sortie » au pointage.</div>
+        <div id="dphList"></div>
+        <button type="button" class="dm-bs" style="align-self:flex-start;color:#0369a1;background:#e0f2fe;border-color:#bae6fd" onclick="dphAddAbs()">+ Ajouter une absence</button>
+      </div>
+      <div class="dm-foot"><button class="dm-bs" onclick="dashCloseModal()">Annuler</button><button class="dm-bp" style="background:#0369a1" onclick="saveAddSemaine()">Enregistrer</button></div>`);
+    dphLoadResident(_dResidents()[0].id);
+  }
+  function dphLoadResident(rid){
+    _dphRid=rid;
+    const r=(typeof sbResidents==='function'?sbResidents():[]).find(x=>String(x.id)===String(rid));
+    const ph=(r&&r.planningHebdo)||{};
+    const map=new Map();
+    _DPH_J.forEach(j=>(typeof phDayAbsences==='function'?phDayAbsences(ph[j]):[]).forEach(a=>{
+      const key=(a.label||'')+'|'+(a.debut||'')+'|'+(a.fin||'');
+      if(!map.has(key))map.set(key,{label:a.label||'',debut:a.debut||'',fin:a.fin||'',jours:[]});
+      map.get(key).jours.push(j);
+    }));
+    _dphAbs=[...map.values()];
+    if(!_dphAbs.length)_dphAbs=[{label:'',jours:[],debut:'',fin:''}];
+    dphRenderAbs();
+  }
+  function dphRenderAbs(){
+    const el=document.getElementById('dphList'); if(!el)return;
+    el.innerHTML=_dphAbs.map((a,i)=>`<div class="dm-abs">
+      <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.5rem">
+        <input type="text" class="dm-fi" placeholder="Motif (Travail, ESAT, Sport…)" value="${escHtml(a.label||'')}" oninput="_dphSet(${i},'label',this.value)" style="flex:1">
+        <input type="time" class="dm-fi" value="${escHtml(a.debut||'')}" onchange="_dphSet(${i},'debut',this.value)" style="width:88px" title="Départ">
+        <input type="time" class="dm-fi" value="${escHtml(a.fin||'')}" onchange="_dphSet(${i},'fin',this.value)" style="width:88px" title="Retour">
+        <button type="button" class="x" style="color:#dc2626;font-size:1.05rem;cursor:pointer;background:none;border:none" onclick="dphRemoveAbs(${i})" title="Supprimer">&times;</button>
+      </div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap">${_DPH_J.map(j=>{const on=(a.jours||[]).includes(j);return `<button type="button" class="dm-jour" onclick="dphToggleJour(${i},'${j}')" style="${on?'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd':'background:#fff;color:#94a3b8;border:1px solid var(--border)'}">${_DPH_JC[j]}</button>`;}).join('')}</div>
+    </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:.3rem 0">Aucune absence. Ajoutez-en une.</div>';
+  }
+  function _dphSet(i,k,v){ if(_dphAbs[i])_dphAbs[i][k]=v; }
+  function dphAddAbs(){ _dphAbs.push({label:'',jours:[],debut:'',fin:''}); dphRenderAbs(); }
+  function dphRemoveAbs(i){ _dphAbs.splice(i,1); dphRenderAbs(); }
+  function dphToggleJour(i,j){ const s=new Set(_dphAbs[i].jours||[]); s.has(j)?s.delete(j):s.add(j); _dphAbs[i].jours=_DPH_J.filter(x=>s.has(x)); dphRenderAbs(); }
+  async function saveAddSemaine(){
+    const rid=_dphRid; const cache=(typeof sbResidents==='function'?sbResidents():[]); const r=cache.find(x=>String(x.id)===String(rid));
+    if(!r){ toast('Choisissez un résident','error'); return; }
+    const ph={};
+    _dphAbs.forEach(a=>{ const label=(a.label||'').trim(), jours=a.jours||[]; if(!jours.length)return; if(!label&&!a.debut&&!a.fin)return; jours.forEach(j=>{ if(!ph[j])ph[j]=[]; ph[j].push({label,debut:a.debut||'',fin:a.fin||''}); }); });
+    Object.keys(ph).forEach(j=>ph[j].sort((x,y)=>(x.debut||'').localeCompare(y.debut||'')));
+    try{
+      const updated=await sbSaveResident({...r, planningHebdo:ph});
+      const idx=cache.findIndex(x=>String(x.id)===String(rid)); if(idx>=0)cache[idx]=updated||{...r,planningHebdo:ph};
+      dashCloseModal(); toast('Semaine type enregistrée','success');
+      renderSemaineTypeReferes();
+    } catch(e){ console.error(e); toast('Erreur lors de l\'enregistrement','error'); }
+  }
+  Object.assign(window, { openAddPlanningModal, saveAddPlanning, dpSelectType, dpToggleRecur, openAddSemaineModal, dphLoadResident, dphAddAbs, dphRemoveAbs, dphToggleJour, _dphSet, saveAddSemaine, dashCloseModal });
 
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
   (async () => {
