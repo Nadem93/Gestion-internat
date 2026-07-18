@@ -751,15 +751,27 @@
         if (diff >= 7) alertes.push({ type: 'incident', label: `Incident non traité : ${i.residentName||'?'}`, date: i.date, jours: -diff, gravite: i.gravite });
       }
     });
-    alertes.sort((a,b) => a.type === 'avenant' ? a.jours - b.jours : b.jours - a.jours);
+    // Prochaines échéances administratives des référés (en retard + à venir sous 60 j)
+    const EC_ALERT_LABELS = { mdph:'Notification MDPH', jugement:'Jugement / mesure', identite:"Pièce d'identité", css:'CSS / mutuelle', contrat:'Contrat de séjour', ppe:'Révision PPE', medical:'Visite médicale', cvs_mandat:'Mandat CVS' };
+    const _aCanEch = _aSess?.role === 'admin' || hasPermission(_aSess?.userId, 'view_residents');
+    if (_aCanEch) echList.forEach(e => {
+      if (!e.date) return;
+      const diff = Math.round((new Date(e.date + 'T00:00:00') - nowDate2) / 86400000);
+      if (diff <= 60) alertes.push({ type: 'echeance', label: `${EC_ALERT_LABELS[e.type] || e.libelle || 'Échéance'} : ${e.residentName||'?'}`, date: e.date, jours: diff });
+    });
+    // Tri unifié par urgence : plus négatif (incidents anciens / échéances en retard) d'abord, puis par échéance la plus proche
+    alertes.sort((a,b) => a.jours - b.jours);
     const alEl = document.getElementById('dashboardAlertes');
     if (alertes.length) {
-      alEl.innerHTML = alertes.slice(0, 8).map(a => {
-        const isUrgent = a.type === 'avenant' ? a.jours <= 7 : a.jours <= -7;
-        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;${isUrgent?'background:#fef2f2':''}">
-          <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${a.type==='avenant'?'#f59e0b':'#dc2626'}"></span>
+      alEl.innerHTML = alertes.slice(0, 10).map(a => {
+        let dot, suffix, urgent, sufCol = 'var(--muted)';
+        if (a.type === 'avenant') { dot = '#f59e0b'; suffix = `J-${a.jours}`; urgent = a.jours <= 7; }
+        else if (a.type === 'incident') { dot = '#dc2626'; suffix = `depuis ${Math.abs(a.jours)} j`; urgent = a.jours <= -7; sufCol = '#dc2626'; }
+        else { const late = a.jours < 0; dot = late ? '#dc2626' : '#0891b2'; suffix = late ? `en retard (${Math.abs(a.jours)} j)` : `J-${a.jours}`; urgent = late || a.jours <= 7; if (late) sufCol = '#dc2626'; }
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;${urgent?'background:#fef2f2':''}">
+          <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${dot}"></span>
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(a.label)}</span>
-          <span style="font-size:.7rem;color:var(--muted);white-space:nowrap">${a.type==='avenant' ? `J-${a.jours}` : `J+${Math.abs(a.jours)}`}</span>
+          <span style="font-size:.7rem;color:${sufCol};white-space:nowrap">${suffix}</span>
         </div>`;
       }).join('');
     } else {
