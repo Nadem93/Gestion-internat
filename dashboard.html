@@ -17,6 +17,26 @@
     .mini-card .mc-sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
     .mini-card .mc-alert{margin-top:.45rem;padding:.25rem .5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:7px;font-size:.7rem;font-weight:600;text-align:center}
     @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
+    /* Entête réorganisée : « À traiter » (actions) + « Aperçu du jour » (info) */
+    .dash-slabel{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 .5rem}
+    .apercu-row{display:flex;flex-wrap:wrap;gap:.6rem}
+    .apercu-chip{display:flex;flex-direction:column;gap:.12rem;background:#fff;border:1px solid var(--border,rgba(15,43,74,.08));border-radius:12px;padding:.75rem .85rem;text-decoration:none;flex:1 1 150px;min-width:145px;transition:box-shadow .15s,transform .15s;box-shadow:0 1px 2px rgba(15,43,74,.04)}
+    .apercu-chip:hover{box-shadow:0 5px 14px rgba(15,43,74,.09);transform:translateY(-1px)}
+    .apercu-chip .ac-ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.3rem}
+    .apercu-chip .ac-ic svg{width:16px;height:16px}
+    .apercu-chip .ac-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+    .apercu-chip .ac-val{font-size:1.4rem;font-weight:800;color:#0f2b4a;line-height:1.1}
+    .apercu-chip .ac-sub{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .atr-row{display:flex;flex-wrap:wrap;gap:.75rem}
+    .atr-card{flex:1 1 260px;display:flex;align-items:center;gap:.75rem;border-radius:12px;padding:.8rem .95rem;text-decoration:none;border:1px solid}
+    .atr-card:hover{filter:brightness(.985)}
+    .atr-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .atr-ic svg{width:19px;height:19px}
+    .atr-t{display:block;font-weight:700;font-size:.9rem;color:#0f2b4a}
+    .atr-s{display:block;font-size:.75rem;color:var(--muted);margin-top:1px}
+    .atr-cta{font-size:.78rem;font-weight:700;white-space:nowrap;flex-shrink:0}
+    .atr-ok{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:#15803d;background:color-mix(in srgb,#16a34a 8%,#fff);border:1px solid color-mix(in srgb,#16a34a 25%,#fff);border-radius:12px;padding:.7rem .95rem}
+    .atr-ok svg{width:18px;height:18px}
     /* Répartition des niveaux de soutien — continuum de population */
     .nivc-meta{font-size:.8rem;color:var(--muted);margin-bottom:.85rem;line-height:1.5}
     .nivc-band{display:flex;height:30px;border-radius:8px;overflow:hidden;background:#f1f5f9}
@@ -113,51 +133,41 @@
         </div>
       </div>
 
-      <!-- MINI CARTES -->
-      <div class="mini-cards" id="miniCards">
-        <a href="planning.html" class="mini-card" id="miniEventCard" title="Voir le planning" style="--mc:#ef4444">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <div class="mc-label" style="color:#ef4444">Événements à venir</div>
-          <div class="mc-val" id="miniEventVal">0</div>
-          <div class="mc-sub" id="miniEventSub">Aujourd'hui</div>
+      <!-- À TRAITER (actions prioritaires) — rempli par renderDashboard() -->
+      <div id="dashAtraiter" style="display:none;margin-bottom:1.1rem"></div>
+
+      <!-- APERÇU DU JOUR (indicateurs informatifs) -->
+      <div class="dash-slabel" id="dashApercuLabel">Aperçu du jour</div>
+      <div class="apercu-row" id="miniCards">
+        <a href="planning.html" class="apercu-chip" id="miniEventCard" title="Voir le planning" style="--mc:#ef4444">
+          <span class="ac-ic" style="color:#ef4444;background:color-mix(in srgb,#ef4444 12%,#fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg></span>
+          <span class="ac-lbl">Événements à venir</span>
+          <span class="ac-val" id="miniEventVal">0</span>
+          <span class="ac-sub" id="miniEventSub">Aujourd'hui</span>
         </a>
-        <div class="mini-card" id="miniPresenceCard" style="--mc:#16a34a">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          <div class="mc-label" style="color:#16a34a">Présents aujourd'hui</div>
-          <div class="mc-val" id="miniPresentsVal">0</div>
-          <div class="mc-sub" id="miniPresentsSub">Présences enregistrées</div>
-          <div class="mc-alert" id="miniPresenceAlert" style="display:none;cursor:pointer" onclick="window.location='presences.html'">⚠ Présences non saisies</div>
-        </div>
-        <a href="residents.html" class="mini-card" id="miniAnnivCard" title="Anniversaires du mois" style="--mc:#ec4899">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <div class="mc-label" style="color:#ec4899">Anniversaires du mois</div>
-          <div class="mc-val" id="miniAnnivVal" style="font-size:1.25rem">—</div>
-          <div class="mc-sub" id="miniAnnivSub">Ce mois-ci</div>
+        <a href="residents.html" class="apercu-chip" id="miniAnnivCard" title="Anniversaires du mois" style="--mc:#ec4899">
+          <span class="ac-ic" style="color:#ec4899;background:color-mix(in srgb,#ec4899 12%,#fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21v-9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9M8 10V6M12 10V5M16 10V6"/></svg></span>
+          <span class="ac-lbl">Anniversaires du mois</span>
+          <span class="ac-val" id="miniAnnivVal" style="font-size:1.15rem">—</span>
+          <span class="ac-sub" id="miniAnnivSub">Ce mois-ci</span>
         </a>
-        <a href="vehicules.html" class="mini-card" id="miniVehCard" title="Réservations véhicules du jour" style="--mc:#6366f1">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg>
-          <div class="mc-label" style="color:#6366f1">Véhicules du jour</div>
-          <div class="mc-val" id="miniVehVal">0</div>
-          <div class="mc-sub" id="miniVehSub">Réservés aujourd'hui</div>
+        <a href="vehicules.html" class="apercu-chip" id="miniVehCard" title="Réservations véhicules du jour" style="--mc:#6366f1">
+          <span class="ac-ic" style="color:#6366f1;background:color-mix(in srgb,#6366f1 12%,#fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9"/></svg></span>
+          <span class="ac-lbl">Véhicules du jour</span>
+          <span class="ac-val" id="miniVehVal">0</span>
+          <span class="ac-sub" id="miniVehSub">Réservés aujourd'hui</span>
         </a>
-        <a href="echeances.html" class="mini-card" id="miniEcheanceCard" title="Échéancier administratif" style="--mc:#0369a1">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
-          <div class="mc-label" style="color:#0369a1">Échéances urgentes</div>
-          <div class="mc-val" id="miniEcheanceVal">0</div>
-          <div class="mc-sub" id="miniEcheanceSub">Sous 30 jours</div>
-          <div class="mc-alert" id="miniEcheanceAlert" style="display:none">⚠ Échéances en retard</div>
+        <a href="satisfaction.html" class="apercu-chip" id="miniSatCard" title="Satisfaction résidents" style="--mc:#8b5cf6">
+          <span class="ac-ic" style="color:#8b5cf6;background:color-mix(in srgb,#8b5cf6 12%,#fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+          <span class="ac-lbl">Satisfaction</span>
+          <span class="ac-val" id="miniSatVal" style="font-size:1.4rem">—</span>
+          <span class="ac-sub" id="miniSatSub">Score résidents</span>
         </a>
-        <a href="satisfaction.html" class="mini-card" id="miniSatCard" title="Satisfaction résidents" style="--mc:#8b5cf6">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <div class="mc-label" style="color:#8b5cf6">Satisfaction</div>
-          <div class="mc-val" id="miniSatVal" style="font-size:1.5rem">—</div>
-          <div class="mc-sub" id="miniSatSub">Score résidents</div>
-        </a>
-        <a href="repas.html" class="mini-card" id="miniRepasCard" title="Repas du jour" style="--mc:#ea580c">
-          <svg class="mc-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
-          <div class="mc-label" style="color:#ea580c">Repas du jour</div>
-          <div class="mc-val" id="miniRepasVal">0</div>
-          <div class="mc-sub" id="miniRepasSub">couverts midi / soir</div>
+        <a href="repas.html" class="apercu-chip" id="miniRepasCard" title="Repas du jour" style="--mc:#ea580c">
+          <span class="ac-ic" style="color:#ea580c;background:color-mix(in srgb,#ea580c 12%,#fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></span>
+          <span class="ac-lbl">Repas du jour</span>
+          <span class="ac-val" id="miniRepasVal">0</span>
+          <span class="ac-sub" id="miniRepasSub">couverts midi / soir</span>
         </a>
       </div>
 
@@ -860,6 +870,34 @@
     hideIf('miniAnnivCard', 'view_residents');
     hideIf('miniEcheanceCard', 'view_residents');
     hideIf('miniRepasCard', 'view_residents');
+
+    // ── Zone « À traiter » : actions prioritaires (présences non saisies, échéances urgentes) ──
+    (function(){
+      const atr = document.getElementById('dashAtraiter');
+      if (!atr) return;
+      const IC_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>';
+      const IC_ALARM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg>';
+      const IC_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      const cards = [];
+      if (canSee('access_presences') && incomplete) {
+        cards.push(`<a class="atr-card" href="presences.html" style="border-color:color-mix(in srgb,#f59e0b 32%,#fff);background:color-mix(in srgb,#f59e0b 7%,#fff)"><span class="atr-ic" style="color:#b45309;background:color-mix(in srgb,#f59e0b 16%,#fff)">${IC_CHECK}</span><span style="flex:1;min-width:0"><span class="atr-t">Présences non saisies</span><span class="atr-s">${markedCount}/${myResidents.length} résident${myResidents.length>1?'s':''} pointé${markedCount>1?'s':''} aujourd'hui</span></span><span class="atr-cta" style="color:#b45309">Pointer &rarr;</span></a>`);
+      }
+      if (canSee('view_residents') && (echLate + echSoon) > 0) {
+        const c = echLate ? '#ef4444' : '#0891b2', tc = echLate ? '#dc2626' : '#0e7490';
+        const title = echLate ? `${echLate} échéance${echLate>1?'s':''} en retard` : `${echSoon} échéance${echSoon>1?'s':''} sous 30 jours`;
+        const subT = echLate ? (echSoon ? `+ ${echSoon} sous 30 jours` : 'À régulariser') : 'À renouveler prochainement';
+        cards.push(`<a class="atr-card" href="echeances.html" style="border-color:color-mix(in srgb,${c} 32%,#fff);background:color-mix(in srgb,${c} 7%,#fff)"><span class="atr-ic" style="color:${tc};background:color-mix(in srgb,${c} 16%,#fff)">${IC_ALARM}</span><span style="flex:1;min-width:0"><span class="atr-t">${title}</span><span class="atr-s">${subT}</span></span><span class="atr-cta" style="color:${tc}">Voir &rarr;</span></a>`);
+      }
+      if (cards.length) {
+        atr.innerHTML = `<div class="dash-slabel">À traiter</div><div class="atr-row">${cards.join('')}</div>`;
+        atr.style.display = '';
+      } else if (canSee('access_presences') || canSee('view_residents')) {
+        atr.innerHTML = `<div class="atr-ok"><span style="color:#16a34a;display:flex">${IC_OK}</span>Tout est à jour — rien à traiter dans l'immédiat</div>`;
+        atr.style.display = '';
+      } else {
+        atr.style.display = 'none';
+      }
+    })();
     hideIf('dashCardJournal', 'access_journal');
     hideIf('dashCardAvenants', 'access_ppe');
     hideIf('dashCardSansAvenant', 'access_ppe');
