@@ -74,6 +74,23 @@
     .dm-foot{display:flex;gap:.6rem;justify-content:flex-end;padding:.85rem 1.15rem;border-top:1px solid var(--border)}
     .dm-bs{font:inherit;font-size:.85rem;font-weight:600;color:#475569;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:.5rem .9rem;cursor:pointer}
     .dm-bp{font:inherit;font-size:.85rem;font-weight:600;color:#fff;border:none;border-radius:8px;padding:.5rem 1.1rem;cursor:pointer}
+    /* Journée des référés — aperçu lecture seule des tâches du jour */
+    .jrr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:.75rem}
+    .jrr-card{display:block;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.85rem .95rem;text-decoration:none;color:inherit;transition:box-shadow .15s,transform .15s}
+    .jrr-card:hover{box-shadow:0 6px 18px rgba(15,43,74,.10);transform:translateY(-2px)}
+    .jrr-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem}
+    .jrr-av{width:34px;height:34px;border-radius:50%;color:#fff;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .jrr-nm{font-weight:700;font-size:.9rem;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .jrr-sub{font-size:.72rem;color:var(--muted)}
+    .jrr-bar{height:6px;border-radius:4px;background:#eef2f7;overflow:hidden;margin-bottom:.6rem}
+    .jrr-bar>span{display:block;height:100%;border-radius:4px;transition:width .3s}
+    .jrr-list{display:flex;flex-direction:column;gap:.3rem}
+    .jrr-row{display:flex;align-items:center;gap:.45rem;font-size:.78rem;color:#334155}
+    .jrr-ic{width:14px;text-align:center;flex-shrink:0;font-weight:700}
+    .jrr-h{font-size:.68rem;color:var(--muted);font-weight:700;flex-shrink:0}
+    .jrr-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .jrr-t.done{text-decoration:line-through;color:#94a3b8}
+    .jrr-more{font-size:.72rem;color:var(--muted);margin-top:.1rem}
     /* Répartition des niveaux de soutien — continuum de population */
     .nivc-meta{font-size:.8rem;color:var(--muted);margin-bottom:.85rem;line-height:1.5}
     .nivc-band{display:flex;height:30px;border-radius:8px;overflow:hidden;background:#f1f5f9}
@@ -243,6 +260,19 @@
         <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
           <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (travail, ESAT, activité, retour famille…) de vos référés — jours présumés « sortie » au pointage.</div>
           <div id="dashSemaineRefGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0"></div>
+        </div>
+      </div>
+
+      <!-- JOURNÉE DES RÉFÉRÉS : aperçu (lecture seule) des tâches du jour -->
+      <div class="card" id="dashCardJourneeRef" style="overflow:hidden;margin-top:1.5rem;margin-bottom:1.5rem;display:none">
+        <div class="card-header" style="background:color-mix(in srgb, #0d9488 12%, #fff)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0d9488"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="card-title" style="color:#0d9488">Journée des référés</span>
+          <span class="badge badge-gray" id="dashJourneeRefCount" style="margin-left:.5rem;display:none">0</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:.73rem;color:var(--muted);margin-bottom:.1rem">Tâches du jour de chaque référé (aperçu). Cliquez une carte pour ouvrir sa tournée et pointer.</div>
+          <div class="jrr-grid" id="dashJourneeRefGrid"></div>
         </div>
       </div>
 
@@ -1590,6 +1620,59 @@
   }
   Object.assign(window, { openAddPlanningModal, saveAddPlanning, dpSelectType, dpToggleRecur, openAddSemaineModal, dphLoadResident, dphAddAbs, dphRemoveAbs, dphToggleJour, _dphSet, saveAddSemaine, dashCloseModal });
 
+  // ── Journée des référés : aperçu (lecture seule) des tâches du jour de chaque référé ──
+  async function renderJourneeReferes(){
+    const host = document.getElementById('dashCardJourneeRef');
+    const grid = document.getElementById('dashJourneeRefGrid');
+    if (!host || !grid) return;
+    const cntEl = document.getElementById('dashJourneeRefCount');
+    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!residents.length) { host.style.display = 'none'; return; }
+    const todayStr = today();
+    const dow = new Date(todayStr + 'T12:00:00').getDay();
+    const [taches, coches] = await Promise.all([
+      (typeof sbGetTaches === 'function' ? sbGetTaches() : Promise.resolve([])).catch(() => []),
+      (typeof sbGetCoches === 'function' ? sbGetCoches(todayStr) : Promise.resolve([])).catch(() => [])
+    ]);
+    const cocheByTache = {}; (coches || []).forEach(c => { cocheByTache[String(c.tacheId)] = c; });
+    const byRes = {}; residents.forEach(r => byRes[String(r.id)] = []);
+    (taches || []).forEach(t => {
+      if (t.actif === false) return;
+      const rec = t.recurrence || {};
+      if (rec.type === 'jours' && !(Array.isArray(rec.jours) && rec.jours.includes(dow))) return;   // même filtre que la tournée
+      const rid = String(t.residentId);
+      if (byRes[rid]) byRes[rid].push(t);
+    });
+    const withTasks = residents.filter(r => byRes[String(r.id)].length)
+      .sort((a, b) => (`${a.prenom||''} ${a.nom||''}`).localeCompare(`${b.prenom||''} ${b.nom||''}`));
+    if (!withTasks.length) { host.style.display = 'none'; return; }
+    host.style.display = '';
+    if (cntEl) { cntEl.textContent = withTasks.length; cntEl.style.display = ''; }
+
+    const STAT = { fait: { ic:'✓', col:'#16a34a' }, reporte: { ic:'⏭', col:'#d97706' }, '': { ic:'○', col:'#cbd5e1' } };
+    grid.innerHTML = withTasks.map(r => {
+      const rid = String(r.id);
+      const list = byRes[rid].slice().sort((a, b) => (a.heure||'').localeCompare(b.heure||''));
+      const faits = list.filter(t => (cocheByTache[String(t.id)] || {}).statut === 'fait').length;
+      const pct = list.length ? Math.round(faits / list.length * 100) : 0;
+      const accent = safeColor(r.color) || '#6366f1';
+      const initials = (((r.prenom||' ')[0]||'') + ((r.nom||' ')[0]||'')).toUpperCase();
+      const rows = list.slice(0, 6).map(t => {
+        const st = (cocheByTache[String(t.id)] || {}).statut || '';
+        const s = STAT[st] || STAT[''];
+        return `<div class="jrr-row"><span class="jrr-ic" style="color:${s.col}">${s.ic}</span>${t.heure ? `<span class="jrr-h">${escHtml(t.heure)}</span>` : ''}<span class="jrr-t${st === 'fait' ? ' done' : ''}">${escHtml(t.libelle)}</span></div>`;
+      }).join('') + (list.length > 6 ? `<div class="jrr-more">+${list.length - 6} autre${list.length - 6 > 1 ? 's' : ''}</div>` : '');
+      return `<a class="jrr-card" href="journee.html?vue=resident&resident=${encodeURIComponent(rid)}">
+        <div class="jrr-head">
+          <span class="jrr-av" style="background:${accent}">${escHtml(initials)}</span>
+          <div style="flex:1;min-width:0"><div class="jrr-nm">${escHtml(`${r.prenom||''} ${r.nom||''}`.trim())}</div><div class="jrr-sub">${faits}/${list.length} tâche${list.length > 1 ? 's' : ''} faite${list.length > 1 ? 's' : ''}</div></div>
+        </div>
+        <div class="jrr-bar"><span style="width:${pct}%;background:${pct === 100 ? '#16a34a' : accent}"></span></div>
+        <div class="jrr-list">${rows}</div>
+      </a>`;
+    }).join('');
+  }
+
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
   (async () => {
     try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
@@ -1599,6 +1682,7 @@
     try { renderReferesFiches(); } catch (e) { console.error(e); }
     try { renderPlanningReferes(); } catch (e) { console.error(e); }
     try { renderSemaineTypeReferes(); } catch (e) { console.error(e); }
+    renderJourneeReferes().catch(e => console.error(e));
     try { renderFilDeVie(); } catch (e) { console.error(e); }
   })();
 </script>
