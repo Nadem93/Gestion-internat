@@ -553,7 +553,6 @@ function renderViewMode(r) {
       <div class="grid grid-2" style="gap:1rem;align-items:start">
         <div class="no-print">${filDeVieCard(r)}</div>
         <div class="no-print">
-          <div class="docnav-bar" id="docCatTabs">${docCatTabsHtml(docs)}</div>
           <div id="tab-documents">${docsHtml(docs)}</div>
         </div>
       </div>
@@ -1885,6 +1884,7 @@ function docsHtml(docs) {
       </label>
     </div>
     <div class="card-body" style="padding:0">
+      <div class="docnav-bar no-print" id="docCatTabs" style="padding:.85rem 1.25rem .1rem;margin-bottom:0">${docCatTabsHtml(docs)}</div>
       <div id="pageDocPending" class="no-print" style="display:none;flex-direction:column;gap:.7rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:color-mix(in srgb, var(--accent) 6%, #fff)">
         <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;min-width:0">
           <span style="font-size:1.1rem">📎</span>
