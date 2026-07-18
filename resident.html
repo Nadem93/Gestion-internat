@@ -6,6 +6,12 @@
   <link rel="stylesheet" href="css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
+    /* Boutons de navigation par catégorie (carte Documents) */
+    .docnav-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+    .docnav{display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .9rem;border-radius:999px;border:1px solid var(--border);background:var(--white,#fff);color:var(--muted);font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .docnav:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,#fff)}
+    .docnav.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 32%,transparent)}
+    .docnav.active .badge{background:rgba(255,255,255,.28);color:#fff}
     /* Chips de filtre du Fil de vie */
     .fv-chip{font:inherit;font-size:.74rem;font-weight:600;padding:.28rem .7rem;border-radius:999px;border:1px solid var(--border);background:var(--white,#fff);color:var(--muted);cursor:pointer;transition:all .15s}
     .fv-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -547,7 +553,7 @@ function renderViewMode(r) {
       <div class="grid grid-2" style="gap:1rem;align-items:start">
         <div class="no-print">${filDeVieCard(r)}</div>
         <div class="no-print">
-          <div class="tabs" id="docCatTabs" style="margin-bottom:1rem">${docCatTabsHtml(docs)}</div>
+          <div class="docnav-bar" id="docCatTabs">${docCatTabsHtml(docs)}</div>
           <div id="tab-documents">${docsHtml(docs)}</div>
         </div>
       </div>
@@ -1911,13 +1917,13 @@ function docCatLabel(c) {
 function docCatTabsHtml(docs) {
   const cats = [...new Set((docs || []).map(d => normDocCat(d.category)))].sort((a, b) => docCatLabel(a).localeCompare(docCatLabel(b)));
   const bdg = n => `<span class="badge badge-gray" style="margin-left:.35rem">${n}</span>`;
-  const all = `<button class="tab active" onclick="filterDocCat(this,'')">📎 Tous${docs && docs.length ? bdg(docs.length) : ''}</button>`;
+  const all = `<button class="docnav active" onclick="filterDocCat(this,'')">📎 Tous${docs && docs.length ? bdg(docs.length) : ''}</button>`;
   if (cats.length <= 1) return all; // une seule catégorie → pas besoin d'onglets
-  return all + cats.map(c => `<button class="tab" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => normDocCat(d.category) === c).length)}</button>`).join('');
+  return all + cats.map(c => `<button class="docnav" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => normDocCat(d.category) === c).length)}</button>`).join('');
 }
 function filterDocCat(btn, cat) {
   const bar = btn.closest('#docCatTabs');
-  if (bar) bar.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+  if (bar) bar.querySelectorAll('.docnav').forEach(b => b.classList.toggle('active', b === btn));
   const list = document.getElementById('docList');
   if (!list) return;
   list.querySelectorAll('[data-doccat]').forEach(row => {
