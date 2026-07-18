@@ -17,18 +17,27 @@
     .mini-card .mc-sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
     .mini-card .mc-alert{margin-top:.45rem;padding:.25rem .5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:7px;font-size:.7rem;font-weight:600;text-align:center}
     @media(max-width:680px){.mini-cards{grid-template-columns:repeat(2,1fr)}}
-    .niv-row{display:flex;align-items:center;gap:.7rem;padding:.45rem 0}
-    .niv-label{width:158px;flex-shrink:0;font-size:.82rem;color:#334155;display:flex;align-items:center;gap:.45rem}
-    .niv-label .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
-    .niv-bar{flex:1;min-width:40px;background:#f1f5f9;border-radius:8px;height:20px;overflow:hidden}
-    .niv-bar>span{display:block;height:100%;border-radius:8px;transition:width .4s}
-    .niv-val{width:118px;flex-shrink:0;text-align:right;font-size:.82rem;color:#475569;white-space:nowrap}
-    @media(max-width:560px){
-      .niv-row{flex-wrap:wrap;gap:.35rem .6rem;padding:.55rem 0}
-      .niv-label{width:auto;flex:1 1 auto;min-width:0}
-      .niv-val{width:auto}
-      .niv-bar{order:3;flex:1 1 100%;min-width:0}
-    }
+    /* Répartition des niveaux de soutien — continuum de population */
+    .nivc-meta{font-size:.8rem;color:var(--muted);margin-bottom:.85rem;line-height:1.5}
+    .nivc-band{display:flex;height:30px;border-radius:8px;overflow:hidden;background:#f1f5f9}
+    .nivc-axis{display:flex;justify-content:space-between;margin-top:.45rem;font-size:.72rem;color:var(--muted)}
+    .nivc-legend{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.95rem}
+    .nivc-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.3rem .65rem;border-radius:999px;border:1px solid var(--border);color:#334155}
+    .nivc-chip .d{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .nivc-chip.zero{opacity:.45}
+    /* Mes référés — mini-fiches par résident */
+    .refgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-top:.75rem}
+    .refcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem 1rem;cursor:pointer;transition:box-shadow .15s,transform .15s}
+    .refcard:hover{box-shadow:0 6px 18px rgba(15,43,74,.10);transform:translateY(-2px)}
+    .refcard:focus-visible{outline:2px solid #6366f1;outline-offset:2px}
+    .refcard-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem}
+    .refcard-name{font-weight:700;font-size:.92rem;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .refcard-meta{font-size:.72rem;color:var(--muted)}
+    .refcard-body{display:flex;flex-direction:column;gap:.4rem}
+    .refrow{display:flex;gap:.5rem;align-items:flex-start;font-size:.78rem}
+    .refrow-ic{flex-shrink:0;font-size:.85rem;line-height:1.35}
+    .refrow-lbl{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8}
+    .refrow-txt{color:#334155;line-height:1.45}
     .me-banner{background:#fff;border:1px solid rgba(15,43,74,.08);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(15,43,74,.05)}
     .me-prof{display:flex;align-items:center;gap:11px;flex-shrink:0}
     .me-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
@@ -145,6 +154,15 @@
           <div class="mc-val" id="miniRepasVal">0</div>
           <div class="mc-sub" id="miniRepasSub">couverts midi / soir</div>
         </a>
+      </div>
+
+      <!-- MES RÉFÉRÉS : mini-fiches par résident (vue globale de mes référés) -->
+      <div id="dashReferes" style="margin-top:1.5rem;display:none">
+        <div class="section-label" style="margin:0 0 .25rem;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;align-items:center;gap:.5rem">
+          <span id="dashReferesTitle">Mes référés</span>
+          <span class="badge badge-gray" id="dashReferesCount" style="display:none">0</span>
+        </div>
+        <div class="refgrid" id="dashReferesGrid"></div>
       </div>
 
       <!-- CARTES SUPPLÉMENTAIRES -->
@@ -988,22 +1006,136 @@
                    + (transmissions||[]).filter(t => VALID.has(t.soutienNiveau)).length;
     const maxCount = Math.max(...LEVELS.map(l => counts[l.k]), 1);
 
-    const rows = LEVELS.map(l => {
+    // Continuum de population : une seule bande empilée (vert → rouge) + légende par niveau
+    const nz = LEVELS.filter(l => counts[l.k] > 0);
+    const band = evalues
+      ? nz.map((l, i) => {
+          const w = counts[l.k] / evalues * 100;
+          const r0 = i === 0 ? '8px' : '2px', r1 = i === nz.length - 1 ? '8px' : '2px';
+          const sep = i < nz.length - 1 ? ';box-shadow:inset -2px 0 0 0 #fff' : '';
+          return `<div title="${l.label} : ${counts[l.k]} · ${Math.round(w)}%" style="width:${w}%;background:${l.color};border-radius:${r0} ${r1} ${r1} ${r0}${sep}"></div>`;
+        }).join('')
+      : '';
+    const chips = LEVELS.map(l => {
       const n = counts[l.k];
-      const pct = evalues ? Math.round(n/evalues*100) : 0;
-      const w = Math.round(n/maxCount*100);
-      return `<div class="niv-row">
-        <div class="niv-label"><span class="dot" style="background:${l.color}"></span>${l.label}</div>
-        <div class="niv-bar"><span style="width:${w}%;background:${l.color};min-width:${n?'8px':'0'}"></span></div>
-        <div class="niv-val"><b style="color:#1e293b">${n}</b> résident${n>1?'s':''} · ${pct}%</div>
-      </div>`;
+      const pct = evalues ? Math.round(n / evalues * 100) : 0;
+      return `<span class="nivc-chip${n ? '' : ' zero'}"${n ? ` style="background:color-mix(in srgb, ${l.color} 11%, #fff)"` : ''}><span class="d" style="background:${l.color}"></span>${l.label} <b style="color:#1e293b">${n}${n ? ` · ${pct}%` : ''}</b></span>`;
     }).join('');
 
     el.innerHTML = `<div style="padding:1.05rem 1.35rem 1.2rem">
-      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (transmissions, journal, agenda) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
-      ${rows}
-      ${nonEval ? `<div style="margin-top:.75rem;padding-top:.7rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)">⚪ ${nonEval} résident${nonEval>1?'s':''} sans niveau de soutien renseigné</div>` : ''}
+      <div class="nivc-meta">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (transmissions, journal, agenda) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
+      <div class="nivc-band">${band}</div>
+      <div class="nivc-axis"><span>↗ Plus autonome</span><span>Plus dépendant ↘</span></div>
+      <div class="nivc-legend">${chips}</div>
+      ${nonEval ? `<div style="margin-top:.85rem;padding-top:.7rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)">⚪ ${nonEval} résident${nonEval>1?'s':''} sans niveau de soutien renseigné</div>` : ''}
     </div>`;
+  }
+
+  // ── Mes référés : une mini-fiche par résident référé (vue globale de tous ses référés) ──
+  // Reprend l'essentiel de la fiche résident en condensé : autonomie, agenda, sorties,
+  // échéances, santé. Clic → ouvre la fiche complète. Périmètre = _dashScope (comme le reste).
+  function renderReferesFiches(){
+    const host = document.getElementById('dashReferes');
+    const grid = document.getElementById('dashReferesGrid');
+    if (!host || !grid) return;
+    const titleEl = document.getElementById('dashReferesTitle');
+    const countEl = document.getElementById('dashReferesCount');
+
+    const todayStr = today();
+    const scoped = !_dashSeesAll() && !!_dashMyName();
+    let residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (titleEl) titleEl.textContent = scoped ? 'Mes référés' : 'Vue résidents';
+    if (!residents.length) { host.style.display = 'none'; return; }
+    host.style.display = '';
+    if (countEl) { countEl.textContent = residents.length; countEl.style.display = ''; }
+    residents = residents.slice().sort((a, b) => (`${a.prenom||''} ${a.nom||''}`).localeCompare(`${b.prenom||''} ${b.nom||''}`));
+
+    const NIV = { autonomie:{label:'Autonomie',color:'#10b981'}, supervision:{label:'Supervision',color:'#3b82f6'}, verbal:{label:'Guidance verbale',color:'#f59e0b'}, partiel:{label:'Aide partielle',color:'#f97316'}, total:{label:'Aide totale',color:'#ef4444'} };
+    const VALIDNIV = new Set(Object.keys(NIV));
+    const EC_LBL = { mdph:'Notification MDPH', jugement:'Jugement / mesure', identite:"Pièce d'identité", css:'CSS / mutuelle', contrat:'Contrat de séjour', ppe:'Révision PPE', medical:'Visite médicale', cvs_mandat:'Fin de mandat CVS', autre:'Échéance' };
+    const EV_COLOR = { activite:'#3b82f6', rdv:'#ef4444', sortie:'#10b981', reunion:'#8b5cf6', avenant:'#f59e0b', projet:'#06b6d4', evaluation:'#9333ea', autre:'#94a3b8' };
+
+    // Dernier niveau de soutien saisi par résident (journal + agenda + transmissions)
+    const latestNiv = {};
+    const considerNiv = (rid, name, date, niv) => {
+      if (!VALIDNIV.has(niv) || !date) return;
+      const key = (rid != null && rid !== '') ? String(rid) : ('name:' + name);
+      const d = String(date).slice(0, 10);
+      if (!latestNiv[key] || d > latestNiv[key].date) latestNiv[key] = { date: d, niv };
+    };
+    (_dashLive.journal || []).forEach(e => considerNiv(e.residentId, e.resident, e.date || e.createdAt, e.niveauSoutien));
+    (_dashLive.planning || []).forEach(e => considerNiv(e.residentId, e.residentName, e.date, e.niveauSoutien));
+    (_dashLive.transmissions || []).forEach(t => considerNiv(t.residentId, t.residentName, t.date || t.createdAt, t.soutienNiveau));
+
+    const daysUntil = d => Math.ceil((new Date(d + 'T00:00:00') - new Date(todayStr + 'T00:00:00')) / 86400000);
+    const section = (icon, label, content) => `<div class="refrow"><span class="refrow-ic">${icon}</span><div style="min-width:0"><span class="refrow-lbl">${label}</span><div class="refrow-txt">${content}</div></div></div>`;
+
+    grid.innerHTML = residents.map(r => {
+      const nom = `${r.prenom||''} ${r.nom||''}`.trim();
+      const rid = String(r.id);
+      const accent = safeColor(r.color) || '#6366f1';
+      const initials = (((r.prenom||' ')[0]||'') + ((r.nom||' ')[0]||'')).toUpperCase();
+      const avatar = r.photo
+        ? `<img src="${escHtml(r.photo)}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+        : `<span style="width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;background:${accent};flex-shrink:0">${escHtml(initials)}</span>`;
+      const age = r.dob ? Math.floor((Date.now() - new Date(r.dob)) / (365.25 * 86400000)) : null;
+
+      // Autonomie
+      const rec = latestNiv[rid] || latestNiv['name:' + nom];
+      const niv = rec ? NIV[rec.niv] : null;
+      const nivBadge = niv
+        ? `<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:600;padding:.15rem .5rem;border-radius:999px;color:${niv.color};background:color-mix(in srgb, ${niv.color} 13%, #fff)"><span style="width:7px;height:7px;border-radius:50%;background:${niv.color}"></span>${niv.label}</span>`
+        : `<span style="font-size:.72rem;color:#94a3b8">Niveau non renseigné</span>`;
+      const objIds = r.objectifs || [], suivi = r.objectifsSuivi || {};
+      const objAtteint = objIds.filter(id => (suivi[id] && suivi[id].statut) === 'atteint').length;
+      const objTxt = objIds.length ? `🎯 ${objAtteint}/${objIds.length} objectif${objIds.length>1?'s':''} atteint${objAtteint>1?'s':''}` : '';
+
+      const rows = [];
+      // Agenda — prochains événements datés
+      const evs = (_dashLive.planning || []).filter(e => String(e.residentId) === rid && (e.date||'') >= todayStr)
+        .sort((a, b) => (a.date||'').localeCompare(b.date||'') || (a.heure||a.time||'').localeCompare(b.heure||b.time||'')).slice(0, 2);
+      if (evs.length) rows.push(section('📅', 'Agenda', evs.map(e => {
+        const c = safeColor(e.color) || EV_COLOR[e.type] || '#94a3b8';
+        return `<span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></span>${formatDate(e.date)} — ${escHtml(e.titre || e.title || 'Événement')}</span>`;
+      }).join('<br>')));
+      // Sorties
+      const sortieEnCours = (r.sorties || []).find(s => !s.retourEffectif && s.date && s.date <= todayStr);
+      const sortiesFut = (r.sorties || []).filter(s => s.date && s.date > todayStr && !s.retourEffectif).sort((a, b) => (a.date||'').localeCompare(b.date||''));
+      if (sortieEnCours) rows.push(section('🚪', 'Sortie', `<span style="color:#c2410c;font-weight:600">Actuellement sorti(e)</span>${sortieEnCours.destination ? ' · ' + escHtml(sortieEnCours.destination) : ''}${sortieEnCours.retourPrevuDate ? ' · retour ' + formatDate(sortieEnCours.retourPrevuDate) : ''}`));
+      else if (sortiesFut.length) rows.push(section('🚪', 'Sortie prévue', `${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}`));
+      // Échéances (retard + sous 30 j)
+      const echSoon = (_dashLive.echeances || []).filter(e => String(e.residentId) === rid && !e.done && e.date && daysUntil(e.date) <= 30).sort((a, b) => (a.date||'').localeCompare(b.date||''));
+      if (echSoon.length) {
+        const e0 = echSoon[0], dN = daysUntil(e0.date), late = dN < 0;
+        rows.push(section('⏰', 'Échéance', `<span style="color:${late ? '#dc2626' : '#d97706'};font-weight:600">${escHtml(EC_LBL[e0.type] || e0.libelle || 'Échéance')}</span> · ${late ? 'en retard' : 'J‑' + dN}${echSoon.length > 1 ? ` <span style="color:#94a3b8">+${echSoon.length - 1}</span>` : ''}`));
+      }
+      // Santé
+      const s = r.sante || {};
+      const traitActifs = (s.traitements || []).filter(t => !t.fin || t.fin >= todayStr).length;
+      const nextRdv = (s.rdv || []).filter(v => v.date && v.date >= todayStr && !v.fait).sort((a, b) => (a.date||'').localeCompare(b.date||''))[0];
+      const santeParts = [];
+      if (traitActifs) santeParts.push(`${traitActifs} traitement${traitActifs>1?'s':''} en cours`);
+      if (nextRdv) santeParts.push(`RDV ${escHtml(nextRdv.type || 'médical')} ${formatDate(nextRdv.date)}`);
+      if (santeParts.length) rows.push(section('🏥', 'Santé', santeParts.join(' · ')));
+
+      const body = rows.length ? rows.join('') : `<div style="font-size:.76rem;color:#94a3b8;padding:.2rem 0">Aucune alerte ni événement à venir</div>`;
+
+      return `<div class="refcard" role="link" tabindex="0" onclick="location.href='resident.html?id=${rid}'" onkeydown="if(event.key==='Enter')location.href='resident.html?id=${rid}'" style="border-top:3px solid ${accent}">
+        <div class="refcard-head">
+          ${avatar}
+          <div style="min-width:0;flex:1">
+            <div class="refcard-name">${escHtml(nom || 'Résident')}</div>
+            <div class="refcard-meta">${[r.chambre ? 'Ch. ' + escHtml(r.chambre) : '', age != null ? age + ' ans' : ''].filter(Boolean).join(' · ') || '—'}</div>
+          </div>
+          <span style="font-size:1.1rem;color:#cbd5e1;flex-shrink:0">›</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:0 0 .6rem">
+          ${nivBadge}
+          ${objTxt ? `<span style="font-size:.72rem;color:var(--muted)">${objTxt}</span>` : ''}
+        </div>
+        <div class="refcard-body">${body}</div>
+      </div>`;
+    }).join('');
   }
 
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
@@ -1012,6 +1144,7 @@
     try { await _dashLoadLive(); } catch (e) { console.error(e); }
     renderDashboard();
     renderNiveauxSoutien().catch(e => console.error(e));
+    try { renderReferesFiches(); } catch (e) { console.error(e); }
   })();
 </script>
 </body>
