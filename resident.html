@@ -2840,10 +2840,14 @@ function planningResidentCard(r) {
     .slice(0, 5);
   const upcomingHtml = upcoming.length ? `<div style="border-top:1px solid var(--border);padding-top:.7rem">
       <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Événements à venir</div>
-      ${upcoming.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.4rem .1rem;border-bottom:1px solid var(--border)">
+      ${upcoming.map(e => {
+        const col = safeColor(e.color) || PR_TYPE_COLORS[e.type] || '#94a3b8';
+        const lbl = _PR_TYPE_LABELS[e.type] || e.type || 'Événement';
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem .1rem;border-bottom:1px solid var(--border)">
+        <span style="flex-shrink:0;font-size:.66rem;font-weight:600;padding:1px 8px;border-radius:20px;background:${col}1a;color:${col};border:1px solid ${col}33">${escHtml(lbl)}</span>
         <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.82rem">${escHtml(e.titre || 'Événement')}</div><div style="font-size:.72rem;color:var(--muted)">${formatDate(e.date)}${(e.heure || e.time) ? ' · ' + (e.heure || e.time).slice(0,5) : ''}</div></div>
-        ${e.type ? `<span class="badge">${escHtml(e.type)}</span>` : ''}
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
     </div>` : '';
 
   return `<div class="card" style="overflow:hidden">
