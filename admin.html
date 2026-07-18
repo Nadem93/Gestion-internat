@@ -1273,28 +1273,6 @@ function getPosteCardVars(hex) {
   return { vars:`--accent:${hex};--accent-text:${hex};--accent-hover:rgba(${r},${g},${b},.06);--watermark:rgba(${r},${g},${b},.08);--avatar-a:rgba(${r},${g},${b},.45);--avatar-b:${hex};--avatar-shadow:rgba(${r},${g},${b},.35)`, r, g, b, hex };
 }
 
-function patchUsersFromEmployes() {
-  const users = DB.get(DB.keys.users) || [];
-  const empStore = getEmployes();
-  let changed = false;
-  const patched = users.map(u => {
-    if (u.telephone && u.email && u.dateEmbauche) return u;
-    const emp = empStore.find(e =>
-      (String(e.id) === String(u.id)) ||
-      (e.prenom && e.nom && e.prenom === u.prenom && e.nom === u.nom)
-    );
-    if (!emp) return u;
-    const update = { ...u };
-    if (!u.telephone && emp.telephone) { update.telephone = emp.telephone; changed = true; }
-    if (!u.email && emp.email)         { update.email = emp.email;         changed = true; }
-    if (!u.dateEmbauche && emp.dateEmbauche) { update.dateEmbauche = emp.dateEmbauche; changed = true; }
-    if (!u.fonction && (emp.poste || emp.fonction)) { update.fonction = emp.poste || emp.fonction; changed = true; }
-    return update;
-  });
-  if (changed) DB.set(DB.keys.users, patched);
-  return patched;
-}
-
 function renderEmployes() {
   const el = document.getElementById('employesList');
   if (!el) return;
@@ -2014,7 +1992,6 @@ function refreshSidebarUser() {
   const ini = initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || 'A';
   const els = { asbUserName: name, asbAvatar: ini, atbAv: ini };
   Object.entries(els).forEach(([id, val]) => { const e = document.getElementById(id); if (e) e.textContent = val; });
-  const b = DB.get(DB.keys.branding) || {};
   const s = DB.get(DB.keys.settings) || {};
   if (s.etablissement) { const e = document.getElementById('asbBrandName'); if (e) e.textContent = s.etablissement; }
 }

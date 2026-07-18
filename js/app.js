@@ -333,7 +333,6 @@ function initDefaults() {
   if (!DB.get(DB.keys.documents)) DB.set(DB.keys.documents, {});
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
-  if (!localStorage.getItem('ftr_conges')) localStorage.setItem('ftr_conges', '[]');
   if (!DB.get(DB.keys.viatrajectoire)) DB.set(DB.keys.viatrajectoire, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
   else migrateFonctionColors();
@@ -517,11 +516,6 @@ const Auth = {
   }
 };
 
-// Lit les données d'un établissement précis (clé suffixée), pour la console groupe
-function getEtabData(etabId, key) {
-  return JSON.parse(localStorage.getItem(`${key}__${etabId}`) || 'null');
-}
-
 // S'assure qu'au moins un super administrateur existe (drapeau super:true sur l'admin par défaut)
 function migrateSuperAdmin() {
   const users = DB.get(DB.keys.users) || [];
@@ -674,15 +668,6 @@ function safeColor(c, fallback) {
   return /^#[0-9a-fA-F]{3,8}$/.test(c || '') ? c : (fallback || '');
 }
 
-// ── CATEGORY BADGE ──
-function categoryBadge(catId) {
-  const cats = DB.get(DB.keys.categories) || [];
-  const cat = cats.find(c => c.id == catId);
-  if (!cat) return '<span class="badge badge-gray">—</span>';
-  const catColor = safeColor(cat.color, '#6366f1');
-  return `<span class="badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">${escHtml(cat.name)}</span>`;
-}
-
 // ── CONFIRM DIALOG ──
 function confirmDialog(msg, cb) {
   if (confirm(msg)) cb();
@@ -691,7 +676,6 @@ function confirmDialog(msg, cb) {
 // ── RENDER USER INFO ──
 function renderUserInfo() {
   const session = Auth.getSession();
-  const settings = DB.get(DB.keys.settings) || {};
   const nameEl = document.getElementById('headerUserName');
   const avEl = document.getElementById('headerUserAvatar');
   const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';

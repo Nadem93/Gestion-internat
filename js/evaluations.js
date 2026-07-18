@@ -135,7 +135,7 @@ const EV_GRILLES = {
 // Source = Supabase. Cache mémoire chargé au démarrage.
 let _evCache = [];
 function getEv()       { return _evCache; }
-async function loadEvCache() { _evCache = await sbGetEvaluations(); }
+async function loadEvCache() { _evCache = (typeof sbGetEvaluations === 'function') ? await sbGetEvaluations() : []; }
 
 let _evResidentId = '';
 let _evGrille     = 'mif';

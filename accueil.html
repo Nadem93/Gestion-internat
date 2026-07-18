@@ -597,7 +597,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) upda
 window.addEventListener('focus', updateNotifs);
 window.addEventListener('pageshow', updateNotifs);
 window.addEventListener('storage', e => {
-  if (e.key && (e.key.startsWith('ftr_messages') || e.key.startsWith('ftr_journal') || e.key.startsWith('ftr_ppe') || e.key.startsWith('ftr_incidents') || e.key.startsWith('ftr_interventions') || e.key.startsWith('ftr_residents') || e.key.startsWith('ftr_planning') || e.key.startsWith('ftr_formations') || e.key === 'ftr_conges')) updateNotifs();
+  if (e.key && (e.key.startsWith('ftr_messages') || e.key.startsWith('ftr_journal') || e.key.startsWith('ftr_ppe') || e.key.startsWith('ftr_incidents') || e.key.startsWith('ftr_interventions') || e.key.startsWith('ftr_residents') || e.key.startsWith('ftr_planning') || e.key.startsWith('ftr_formations'))) updateNotifs();
 });
 setInterval(updateNotifs, 10000);
 

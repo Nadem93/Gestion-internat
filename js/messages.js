@@ -419,11 +419,6 @@ function renderChat() {
   msgsEl.innerHTML = html;
   msgsEl.scrollTop = msgsEl.scrollHeight;
   updateChips();
-  // Store unread count for accueil
-  const sessionId = session?.userId;
-  const allM = getMessages();
-  const unreadTotal = allM.filter(m => String(m.from) !== String(sessionId) && !(m.readBy || []).map(String).includes(String(sessionId))).length;
-  localStorage.setItem('ftr_notif_msg_unread_' + sessionId, unreadTotal);
   updateConvCount();
 }
 
@@ -432,7 +427,6 @@ function updateConvCount() {
   const allMsgs = getMessages();
   const unread = allMsgs.filter(m => m.from !== session.userId && !m.readBy?.includes(session.userId)).length;
   document.getElementById('convCount').textContent = unread ? `${unread} non lu${unread>1?'s':''}` : '';
-  localStorage.setItem('ftr_notif_msg_unread_' + session.userId, unread);
   // Mise à jour compteur onglet
   const convMsgs = currentConvId ? getConvMessages(currentConvId) : [];
   const ctEl = document.getElementById('tabAllCt');
