@@ -196,6 +196,33 @@
         <div class="refgrid" id="dashReferesGrid"></div>
       </div>
 
+      <!-- PLANNING RÉFÉRÉ : agenda 7 jours de tous les référés (comme le Planning individuel de la fiche) -->
+      <div class="card" id="dashCardPlanningRef" style="overflow:hidden;margin-top:1.5rem;display:none">
+        <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="card-title" style="color:var(--accent)">Planning référé</span>
+          <span class="badge badge-gray" id="dashPlanningRefCount" style="margin-left:.5rem;display:none">0</span>
+          <a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:var(--accent)">Voir tout</a>
+        </div>
+        <div class="card-body">
+          <div style="font-size:.73rem;color:var(--muted);margin-bottom:.6rem">Événements des 7 prochains jours pour vos référés.</div>
+          <div id="dashPlanningRefGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0"></div>
+        </div>
+      </div>
+
+      <!-- SEMAINE TYPE — RÉFÉRÉS : absences récurrentes agrégées (comme la Semaine type de la fiche) -->
+      <div class="card" id="dashCardSemaineRef" style="overflow:hidden;margin-top:1.5rem;margin-bottom:1.5rem;display:none">
+        <div class="card-header" style="background:color-mix(in srgb, #0369a1 12%, #fff)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0369a1"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
+          <span class="card-title" style="color:#0369a1">Semaine type — référés</span>
+          <span class="badge badge-gray" id="dashSemaineRefCount" style="margin-left:.5rem;display:none">0</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+          <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (travail, ESAT, activité, retour famille…) de vos référés — jours présumés « sortie » au pointage.</div>
+          <div id="dashSemaineRefGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0"></div>
+        </div>
+      </div>
+
       <!-- RÉPARTITION DES NIVEAUX DE SOUTIEN (remontée au-dessus du bloc de cartes) -->
       <div class="card" id="dashCardNiveaux" style="overflow:hidden;margin-top:1.5rem">
         <div class="card-header" style="background:#EEF2FF">
@@ -1308,6 +1335,89 @@
     document.querySelectorAll('#dashFilVieList .fv-item').forEach(it => { it.style.display = (type === 'all' || it.dataset.fvtype === type) ? '' : 'none'; });
   };
 
+  // ── Planning référé : agenda des 7 prochains jours, tous les référés (comme le Planning individuel de la fiche) ──
+  function renderPlanningReferes(){
+    const host = document.getElementById('dashCardPlanningRef');
+    const grid = document.getElementById('dashPlanningRefGrid');
+    if (!host || !grid) return;
+    const cntEl = document.getElementById('dashPlanningRefCount');
+    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!residents.length) { host.style.display = 'none'; return; }
+    host.style.display = '';
+    const rById = {}; residents.forEach(r => rById[String(r.id)] = r);
+    const PR_JC = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const PR_COLORS = { activite:'#3b82f6', rdv:'#ef4444', sortie:'#10b981', reunion:'#8b5cf6', avenant:'#f59e0b', projet:'#06b6d4', evaluation:'#9333ea', autre:'#94a3b8' };
+    const todayStr = today();
+    const _loc = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const days = []; const t0 = new Date(todayStr + 'T00:00:00');
+    for (let i = 0; i < 7; i++) { const d = new Date(t0); d.setDate(d.getDate() + i); days.push({ str: _loc(d), d }); }
+    const endStr = days[6].str;
+    const byDay = {}; days.forEach(({str}) => byDay[str] = []);
+    let total = 0;
+    (_dashLive.planning || []).forEach(e => {
+      const r = rById[String(e.residentId)];
+      if (!r || !(e.date >= todayStr && e.date <= endStr) || !byDay[e.date]) return;
+      byDay[e.date].push({
+        resName: `${r.prenom||''} ${r.nom||''}`.trim(),
+        resColor: safeColor(r.color) || '#6366f1',
+        titre: e.titre || e.title || 'Événement',
+        heure: (e.heure || e.time || '').slice(0,5),
+        color: safeColor(e.color) || PR_COLORS[e.type] || '#94a3b8'
+      });
+      total++;
+    });
+    days.forEach(({str}) => byDay[str].sort((a,b) => (a.heure||'').localeCompare(b.heure||'')));
+    if (cntEl) { cntEl.textContent = total; cntEl.style.display = total ? '' : 'none'; }
+    grid.innerHTML = days.map(({str,d}, idx) => {
+      const isToday = str === todayStr;
+      const chips = byDay[str].map(ev => `<div style="font-size:.68rem;padding:3px 5px;border-radius:5px;background:${ev.color}1a;border:1px solid ${ev.color}33;margin-bottom:3px;line-height:1.25;overflow:hidden">
+        <div style="font-weight:700;color:${ev.resColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.resName)}</div>
+        <div style="color:${ev.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.heure?ev.heure+' ':''}${escHtml(ev.titre)}</div>
+      </div>`).join('');
+      return `<div style="display:flex;flex-direction:column;gap:.25rem;min-width:0;${idx>0?'border-left:1px solid var(--border);padding-left:.4rem':''}">
+        <div style="text-align:center;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${isToday?'#2563eb':'var(--muted)'}">${PR_JC[d.getDay()]}</div>
+        <div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:${isToday?'800':'600'};color:${isToday?'#fff':'#1e293b'};background:${isToday?'#2563eb':'transparent'};margin:0 auto">${d.getDate()}</div>
+        <div style="min-width:0">${chips || '<div style="text-align:center;font-size:.75rem;color:#cbd5e1">·</div>'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Semaine type — référés : absences récurrentes agrégées par jour (comme la Semaine type de la fiche) ──
+  function renderSemaineTypeReferes(){
+    const host = document.getElementById('dashCardSemaineRef');
+    const grid = document.getElementById('dashSemaineRefGrid');
+    if (!host || !grid) return;
+    const cntEl = document.getElementById('dashSemaineRefCount');
+    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!residents.length) { host.style.display = 'none'; return; }
+    host.style.display = '';
+    const PH_J = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+    const PH_JC = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', vendredi:'Ven', samedi:'Sam', dimanche:'Dim' };
+    const byJour = {}; PH_J.forEach(j => byJour[j] = []);
+    let total = 0;
+    residents.forEach(r => {
+      const ph = r.planningHebdo || {};
+      PH_J.forEach(j => {
+        (typeof phDayAbsences === 'function' ? phDayAbsences(ph[j]) : []).forEach(a => {
+          byJour[j].push({ resName: `${r.prenom||''} ${r.nom||''}`.trim(), resColor: safeColor(r.color) || '#6366f1', label: a.label || 'Absence', debut: a.debut || '', fin: a.fin || '' });
+          total++;
+        });
+      });
+    });
+    PH_J.forEach(j => byJour[j].sort((a,b) => (a.debut||'').localeCompare(b.debut||'')));
+    if (cntEl) { cntEl.textContent = total; cntEl.style.display = total ? '' : 'none'; }
+    grid.innerHTML = PH_J.map(j => {
+      const list = byJour[j], on = list.length > 0;
+      const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on?'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd':'background:#f8fafc;color:#94a3b8;border:1px solid var(--border)'}">${PH_JC[j]}</div>`;
+      const body = on ? list.map(a => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px">
+        <div style="font-weight:700;font-size:.65rem;color:${a.resColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.resName)}</div>
+        <div style="font-weight:600;font-size:.68rem;line-height:1.2;color:#0369a1">${escHtml(a.label)}</div>
+        ${(a.debut||a.fin) ? `<div style="font-size:.6rem;color:var(--muted);margin-top:1px">${escHtml(a.debut)}${a.fin?(a.debut?'–':'')+escHtml(a.fin):''}</div>` : ''}
+      </div>`).join('') : `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:#cbd5e1">·</div>`;
+      return `<div style="min-width:0">${head}${body}</div>`;
+    }).join('');
+  }
+
   // Charge les résidents depuis Supabase avant le 1er rendu, puis affiche le tableau de bord.
   (async () => {
     try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
@@ -1315,6 +1425,8 @@
     renderDashboard();
     renderNiveauxSoutien().catch(e => console.error(e));
     try { renderReferesFiches(); } catch (e) { console.error(e); }
+    try { renderPlanningReferes(); } catch (e) { console.error(e); }
+    try { renderSemaineTypeReferes(); } catch (e) { console.error(e); }
     try { renderFilDeVie(); } catch (e) { console.error(e); }
   })();
 </script>
