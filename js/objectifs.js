@@ -620,7 +620,7 @@ function saveObjTemplate(name, description) {
   const objs = objTemplates();
   const newId = Math.max(0, ...objs.map(o => +o.id || 0)) + 1;
   const obj = { id: newId, name, description };
-  DB.set(DB.keys.objectives, [...objs, obj]);
+  (typeof persistObjectives === 'function' ? persistObjectives([...objs, obj]) : DB.set(DB.keys.objectives, [...objs, obj]));
   return obj;
 }
 // Ensemble des objectifs assignés au résident affiché, autorité en mémoire du modal

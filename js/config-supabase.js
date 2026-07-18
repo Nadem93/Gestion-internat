@@ -48,12 +48,14 @@ async function hydrateConfigFromCloud() {
     if (cfg.paie_majoration) localStorage.setItem('ftr_paie_majoration', JSON.stringify(cfg.paie_majoration)); // lu en brut (paie.js) → pas de suffixe
     if (cfg.settings)   _hydrateLocalAllEtabs(DB.keys.settings,   cfg.settings);
     if (cfg.categories) _hydrateLocalAllEtabs(DB.keys.categories, cfg.categories);
+    if (cfg.objectives) _hydrateLocalAllEtabs(DB.keys.objectives, cfg.objectives);
     // Amorçage : si le cloud ne connaît pas encore settings/categories, on y pousse la valeur locale.
     // Uniquement là où l'écriture est possible (sbGetEtablissementId chargé, ex. page admin).
     if (typeof sbGetEtablissementId === 'function') {
       try {
         if (!cfg.settings)   { const s = DB.get(DB.keys.settings);   if (s) await sbSaveAppConfig('settings', s); }
         if (!cfg.categories) { const c = DB.get(DB.keys.categories); if (Array.isArray(c) && c.length) await sbSaveAppConfig('categories', c); }
+        if (!cfg.objectives) { const o = DB.get(DB.keys.objectives); if (Array.isArray(o) && o.length) await sbSaveAppConfig('objectives', o); }
       } catch (e) { console.error('[hydrateConfigFromCloud] amorçage', e); }
     }
     return cfg;
@@ -70,4 +72,10 @@ function persistCategories(arr) {
   DB.set(DB.keys.categories, arr);
   if (typeof sbSaveAppConfig === 'function')
     Promise.resolve(sbSaveAppConfig('categories', arr)).catch(e => console.error('[persistCategories]', e));
+}
+// Objectifs types (liste partagée entre postes via app_config)
+function persistObjectives(arr) {
+  DB.set(DB.keys.objectives, arr);
+  if (typeof sbSaveAppConfig === 'function')
+    Promise.resolve(sbSaveAppConfig('objectives', arr)).catch(e => console.error('[persistObjectives]', e));
 }

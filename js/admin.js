@@ -247,7 +247,7 @@ function saveObj() {
     objs.push({ id: newId, name, description });
     toast('Objectif ajouté');
   }
-  DB.set(DB.keys.objectives, objs);
+  (typeof persistObjectives === 'function' ? persistObjectives(objs) : DB.set(DB.keys.objectives, objs));
   closeAllModals();
   resetObjForm();
   renderObjs();
@@ -258,7 +258,7 @@ function deleteObj() {
   confirmDialog('Supprimer cet objectif ?', () => {
     let objs = DB.get(DB.keys.objectives) || [];
     objs = objs.filter(o => String(o.id) !== String(id));
-    DB.set(DB.keys.objectives, objs);
+    (typeof persistObjectives === 'function' ? persistObjectives(objs) : DB.set(DB.keys.objectives, objs));
     closeAllModals();
     resetObjForm();
     renderObjs();
