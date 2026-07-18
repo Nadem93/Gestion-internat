@@ -42,6 +42,12 @@
     .vqt-ex{font-size:.78rem;color:#3730a3;background:color-mix(in srgb,var(--vqc) 8%,#fff);border-left:3px solid var(--vqc);border-radius:8px;padding:.5rem .65rem;line-height:1.5}
     .vqt-ex b{color:var(--vqc)}
     .vqt-open{margin-top:auto;font-size:.75rem;font-weight:700;color:var(--vqc);display:flex;align-items:center;gap:.3rem}
+    /* Mode d'emploi : comment fonctionne le module, étape par étape */
+    .vqt-how{background:#fbfcfe;border:1px dashed color-mix(in srgb,var(--vqc) 35%,var(--border));border-radius:11px;padding:.55rem .7rem .6rem}
+    .vqt-how-h{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--vqc);margin-bottom:.45rem;display:flex;align-items:center;gap:.35rem}
+    .vqt-how-list{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:.32rem}
+    .vqt-how-list li{font-size:.78rem;color:#334155;line-height:1.45}
+    .vqt-how-list li::marker{color:var(--vqc);font-weight:800}
   </style>
 </head>
 <body>
@@ -170,41 +176,97 @@
   const VQ_TUTO = {
     'journee.html': {
       role: "Le fil de la journée, quart par quart : chaque geste d'accompagnement prévu au projet personnalisé (🎯) se coche d'un tap, horodaté, avec le niveau de soutien apporté.",
+      mode: [
+        "Choisissez le quart en haut : « ☀️ Matin », « 🌤 Après-midi » ou « 🌙 Soir & nuit ».",
+        "Repérez un résident dans le bandeau de pastilles (badge « n à faire ») ou faites défiler la liste.",
+        "Touchez le grand cercle « ✓ » à gauche d'un moment pour le marquer fait ; re-touchez pour annuler.",
+        "Après la coche, précisez le soutien apporté (Autonomie, Supervision, Aide partielle…).",
+        "Si le moment n'a pas lieu, touchez « ⏭ Reporter » et choisissez un motif."
+      ],
       sync: "Projet personnalisé (objectifs) · Tableau de bord éducateur (carte « Journée des référés » et répartition des niveaux de soutien).",
       ex:   "Ce matin, vous cochez « Préparer son petit-déjeuner » en « aide partielle » : la tâche passe en vert et le niveau remonte au tableau de bord."
     },
     'transmissions.html': {
       role: "Raconter l'essentiel d'un moment — ce qui a été observé, dit, fait — en une note courte reliée au résident, au fil de la journée.",
+      mode: [
+        "Parcourez le tableau du jour, réparti en colonnes « Matin », « Après-midi » et « Nuit ».",
+        "Cliquez une carte floutée « Cliquer pour lire » pour l'afficher et la marquer comme lue.",
+        "Pour écrire : « Nouvelle transmission », choisissez catégorie, résident et priorité, rédigez l'observation, puis « Enregistrer ».",
+        "Sur une carte lue, répondez avec « 💬 » ou classez-la en « Journal » ou « Incident ».",
+        "Ouvrez une journée passée via « 🗂 Jours précédents »."
+      ],
       sync: "Fil de vie du tableau de bord · Fiche du résident · Niveau de soutien indiqué (répartition du tableau de bord).",
       ex:   "« Sieste agitée, s'est apaisé en musique » : la transmission apparaît aussitôt dans le fil de vie de ses référents."
     },
     'presences.html': {
       role: "Pointer qui est présent, absent ou sorti, jour par jour — la photographie de qui est là.",
+      mode: [
+        "Vérifiez la date en haut ; changez de jour avec « ← » « → », le champ date ou « Aujourd'hui ».",
+        "Touchez la tuile d'un résident pour faire défiler son état : présent → absent → sortie → non pointé.",
+        "Pour un motif, faites un appui long sur la tuile (ou « ✎ »), choisissez le statut, puis « Enregistrer ».",
+        "Cliquez « ✓ Tous présents » pour pointer d'un coup ceux encore non pointés.",
+        "« 📥 Export » : renseignez la période puis « 📥 Exporter PDF »."
+      ],
       sync: "Planning / Semaine type : les absences récurrentes saisies s'y répercutent automatiquement.",
       ex:   "Vous notez M. B. « absent — hôpital » : l'absence apparaît sur son planning de la semaine."
     },
     'nuit.html': {
       role: "Le relais du veilleur : levers, observations et incidents de la nuit, consignés pour l'équipe de jour.",
+      mode: [
+        "Choisissez la nuit puis cliquez « 🌙 Ouvrir le cahier de cette nuit ».",
+        "Ajustez l'« Effectif » présent et l'« Ambiance » (calme, agitée, très agitée).",
+        "Pour chaque ronde : saisissez l'heure, cochez « RAS » ou ajoutez une observation, puis « + Ronde ».",
+        "Signalez un incident avec « + Événement » ; notez un appel avec « + Appel astreinte ».",
+        "Rédigez « Transmission pour l'équipe du matin » : elle s'enregistre toute seule."
+      ],
       sync: "Relais nuit → équipe de jour · Fiche du résident.",
       ex:   "« Réveil à 3 h, a demandé un verre d'eau, s'est rendormi » : l'équipe du matin lit la nuit en un coup d'œil."
     },
     'repas.html': {
       role: "Le régime, la texture et les précautions alimentaires de chaque résident — la référence à table et en cuisine.",
+      mode: [
+        "Choisissez le jour (champ date, flèches ou frise) ; « Aujourd'hui » revient au jour même.",
+        "Dans « 🍽 Menus du jour », saisissez « Menu 1 » et « Menu 2 » du midi et du soir.",
+        "Tous sont inscrits par défaut : cliquez la case d'un repas pour retirer (ou réinscrire) un absent.",
+        "Réglez le régime d'un présent via « 🍽 » puis « 💾 Enregistrer ».",
+        "« 🖨 Feuille cuisine » imprime le récapitulatif pour la cuisine."
+      ],
       sync: "Fiche du résident (données de santé) · Service des repas.",
       ex:   "M. R. : « texture mixée, sans porc » — l'information suit le résident à chaque service."
     },
     'activites.html': {
       role: "Les activités proposées et réalisées, reliées aux objectifs du projet — la vie sociale et les apprentissages.",
+      mode: [
+        "« Nouvelle activité » : renseignez nom, catégorie, jour, horaires, lieu et « Places maximum », puis « 💾 Enregistrer ».",
+        "Filtrez avec « Toutes catégories » et « Tous les jours ».",
+        "« 👥 Participants » : choisissez un résident puis « + Inscrire » (ou « ↩ Désinscrire »).",
+        "« 📝 » : choisissez l'année, rédigez le bilan puis « 💾 Enregistrer le bilan ».",
+        "Gérez la carte : « ⏸ Suspendre » / « ▶ Réactiver », « ✎ » modifier, « ✕ » supprimer."
+      ],
       sync: "Projet personnalisé (objectifs) · Suivi du résident.",
       ex:   "Atelier cuisine du jeudi : vous notez la participation de Mme L., reliée à son objectif « gagner en autonomie »."
     },
     'medicaments.html': {
       role: "Le circuit du médicament : tracer chaque distribution — qui, quoi, quand — pour sécuriser la prise.",
+      mode: [
+        "La date du jour s'affiche en haut à droite par défaut.",
+        "Choisissez le moment : « Matin », « Midi », « Soir » ou « Coucher ».",
+        "Tapez la tuile d'un résident pour marquer « Donné » ; re-tapez pour annuler.",
+        "Autre cas : « ✎ » (ou appui long) → « Confié », « Refusé », « Absent » ou « Reporté » + observation.",
+        "Filtrez « Présents seulement » ou imprimez « 🖨 Feuille du jour »."
+      ],
       sync: "Prescriptions · Fiche de santé · Traçabilité horodatée de la distribution.",
       ex:   "Distribution de 12 h validée pour M. T. : l'heure et l'intervenant sont enregistrés, la case ne peut plus être oubliée."
     },
     'plan-soins.html': {
       role: "Les soins récurrents planifiés (pansement, surveillance, hygiène) — le fil conducteur soignant.",
+      mode: [
+        "« Nouveau soin » (en haut à droite) ouvre la fiche.",
+        "Choisissez le « Résident concerné », la « Catégorie » et la « Fréquence ».",
+        "Saisissez le « Libellé du soin » (obligatoire), puis détail, intervenant et note.",
+        "« Enregistrer » : le soin apparaît dans la frise du résident.",
+        "Filtrez par résident/catégorie ; sur chaque soin : « ✎ » modifier, « ⏸ » suspendre, « ✕ » supprimer."
+      ],
       sync: "Fiche de santé du résident · Équipe soignante.",
       ex:   "Réfection de pansement programmée tous les 2 jours : le plan rappelle l'échéance à l'équipe."
     }
@@ -224,6 +286,7 @@
           <div><div class="vqt-grp">${escHtml(e.g)}</div><div class="vqt-nm">${escHtml(e.label)}</div></div>
         </div>
         <div class="vqt-role">${t.role}</div>
+        ${t.mode && t.mode.length ? `<div class="vqt-how"><div class="vqt-how-h"><span aria-hidden="true">🛠️</span> Mode d'emploi</div><ol class="vqt-how-list">${t.mode.map(st => `<li>${escHtml(st)}</li>`).join('')}</ol></div>` : ''}
         <div class="vqt-sync"><span aria-hidden="true">🔗</span><span><b>Synchronisé avec :</b> ${t.sync}</span></div>
         <div class="vqt-ex"><b>Exemple —</b> ${t.ex}</div>
         <div class="vqt-open">Ouvrir le module <span aria-hidden="true">→</span></div>
