@@ -278,36 +278,34 @@ function jrCardHtml(t, avecResident) {
       JR_MOTIFS.map(m => `<button type="button" class="jr-pill" onclick="jrMotif('${t.id}',this.textContent)">${m}</button>`).join('') + `</div>`;
   }
 
-  let actions = '';
-  if (!etat) {
-    actions = `<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:stretch">
-      <button type="button" class="jr-btn-fait" onclick="jrFait('${t.id}')">✓ Fait</button>
-      <button type="button" class="jr-btn-sec" onclick="jrOpenReport('${t.id}')">Reporter</button>
-    </div>`;
-  } else {
-    actions = `<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">
-      ${etat === 'fait' && !c.soutien ? `<button type="button" class="jr-btn-sec" onclick="jrOpenStrip('${t.id}')">🤝 Préciser le soutien</button>` : ''}
-      <button type="button" class="jr-btn-sec" onclick="jrAnnule('${t.id}')">↩ Annuler</button>
-      ${_jrCanEdit ? `<button type="button" class="jr-btn-sec" onclick="openTacheModal('${t.id}')">✎</button>` : ''}
-    </div>`;
-  }
-  const edit = (!etat && _jrCanEdit) ? `<button type="button" class="jr-btn-sec" style="min-height:28px;padding:0 8px;font-size:.68rem" onclick="openTacheModal('${t.id}')">✎</button>` : '';
+  // Option 3 — checklist tactile : grand cercle de validation à gauche = Fait (bascule)
+  const circleInner = etat === 'reporte' ? '⏭' : '✓';
+  const circleCls = etat === 'fait' ? 'jr-check done' : etat === 'reporte' ? 'jr-check rep' : 'jr-check';
+  const circleTitle = etat === 'fait' ? 'Fait — toucher pour annuler' : etat === 'reporte' ? 'Reporté — toucher pour annuler' : 'Marquer comme fait';
+  const check = `<button type="button" class="${circleCls}" onclick="${etat ? `jrAnnule('${t.id}')` : `jrFait('${t.id}')`}" title="${circleTitle}" aria-label="${circleTitle}">${circleInner}</button>`;
+
+  // Actions secondaires (le « Fait » est le cercle ; « Annuler » = re-toucher le cercle)
+  const sec = [];
+  if (!etat) sec.push(`<button type="button" class="jr-btn-sec" onclick="jrOpenReport('${t.id}')">⏭ Reporter</button>`);
+  if (etat === 'fait' && !c.soutien) sec.push(`<button type="button" class="jr-btn-sec" onclick="jrOpenStrip('${t.id}')">🤝 Préciser le soutien</button>`);
+  if (_jrCanEdit) sec.push(`<button type="button" class="jr-btn-sec" onclick="openTacheModal('${t.id}')" title="Modifier la tâche">✎ Modifier</button>`);
+  const secRow = sec.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${sec.join('')}</div>` : '';
 
   const resLine = avecResident
     ? `<div class="jr-resline"><span class="jr-av" style="background:${_jrAvColor(t.residentId)}">${escHtml(_jrInitiales(t.residentName))}</span><b>${escHtml((t.residentName || '').split(' ')[0])}</b></div>`
     : '';
   return `<article class="jr-task ${etat}">
-    <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
-      <div style="flex:1;min-width:220px">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      ${check}
+      <div style="flex:1;min-width:0">
         ${resLine}
         <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           ${t.heure ? `<span style="font-size:.68rem;color:var(--muted);font-weight:700">${escHtml(t.heure)}</span>` : ''}
-          <span class="jr-lib">${escHtml(t.libelle)}</span>${edit}
+          <span class="jr-lib">${escHtml(t.libelle)}</span>
         </div>
         ${t.objectif ? `<div class="jr-obj">🎯 ${escHtml(t.objectif)}</div>` : ''}
-        ${note}${mode}${strip}${motifs}
+        ${note}${mode}${strip}${motifs}${secRow}
       </div>
-      ${actions}
     </div>
   </article>`;
 }
