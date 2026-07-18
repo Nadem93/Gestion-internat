@@ -1468,6 +1468,7 @@
       <div class="dm-body">
         <div><div class="dm-sk">Quand</div><div class="dm-row"><input type="date" id="dpDate" class="dm-fi" style="flex:1.4" value="${today()}"><input type="time" id="dpHeure" class="dm-fi" style="flex:1" title="Début"><input type="time" id="dpFin" class="dm-fi" style="flex:1" title="Fin"></div></div>
         <div><div class="dm-sk">Quoi</div><input type="text" id="dpTitre" class="dm-fi" placeholder="Titre de l'événement" style="margin-bottom:.5rem"><input type="hidden" id="dpType" value="activite"><div style="display:flex;flex-wrap:wrap;gap:.35rem">${chips}</div></div>
+        <div><label style="display:block;font-size:.82rem;font-weight:600;color:#0f2b4a;margin-bottom:.4rem">🤝 Accompagnement apporté <span style="font-weight:400;color:var(--muted)">— ce que vous avez fait pour aider (facultatif)</span></label><textarea id="dpAccompagnement" class="dm-fi" rows="2" placeholder="Ex : incitation verbale, médiation avec un pair, reformulation des consignes, présence rassurante…" style="resize:vertical"></textarea><select id="dpNiveauSoutien" class="dm-fi" style="margin-top:.5rem"><option value="">Niveau de soutien — non précisé</option><option value="autonomie">🟢 Autonomie — présence simple</option><option value="supervision">🔵 Supervision / veille</option><option value="verbal">🟡 Incitation / guidance verbale</option><option value="partiel">🟠 Aide partielle</option><option value="total">🔴 Aide totale</option></select></div>
         <div><div class="dm-sk">Répétition</div><label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#475569;cursor:pointer"><input type="checkbox" id="dpRecur" onchange="dpToggleRecur()"> Répéter chaque semaine</label><div id="dpRecurWrap" style="display:none;margin-top:.55rem"><div class="dm-sk">Jusqu'au</div><input type="date" id="dpRecurUntil" class="dm-fi"></div></div>
       </div>
       <div class="dm-foot"><button class="dm-bs" onclick="dashCloseModal()">Annuler</button><button class="dm-bp" style="background:var(--accent)" onclick="saveAddPlanning()">Enregistrer</button></div>`);
@@ -1480,7 +1481,7 @@
     if(!rid){ toast('Choisissez un résident','error'); return; }
     if(!titre){ toast('Le titre est requis','error'); return; }
     if(!date){ toast('La date est requise','error'); return; }
-    const base={ titre, residentId:rid, residentName:r?`${r.prenom||''} ${r.nom||''}`.trim():'', type, date, heure, time:heure, timeEnd:fin||'', color:'' };
+    const base={ titre, residentId:rid, residentName:r?`${r.prenom||''} ${r.nom||''}`.trim():'', type, date, heure, time:heure, timeEnd:fin||'', color:'', accompagnement:_dv('dpAccompagnement').trim(), niveauSoutien:_dv('dpNiveauSoutien'), serafin:_dv('dpNiveauSoutien')?'directe':'indirecte' };
     const recur=document.getElementById('dpRecur')?.checked; const until=_dv('dpRecurUntil');
     try{
       if(recur && until && until>=date){
