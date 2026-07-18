@@ -511,6 +511,7 @@
 <script src="js/incidents-supabase.js"></script>
 <script src="js/repertoire-supabase.js"></script>
 <script src="js/config-supabase.js"></script>
+<script src="js/taches-supabase.js"></script>
 <script>
   // Carte « Mon espace » : congés + heures de récup du salarié connecté
   (async function loadMonEspace() {
@@ -1101,7 +1102,12 @@
     const jP = (typeof sbGetJournalEntries === 'function') ? sbGetJournalEntries() : Promise.resolve([]);
     const pP = (typeof sbGetPlanningEvents === 'function') ? sbGetPlanningEvents() : Promise.resolve([]);
     const tP = (typeof sbGetTransmissions === 'function') ? sbGetTransmissions() : Promise.resolve([]);
-    const [journal, planning, transmissions] = await Promise.all([jP.catch(() => []), pP.catch(() => []), tP.catch(() => [])]);
+    // 4e source : tournée (taches_coches.soutien) sur les 30 derniers jours
+    const _d30 = new Date(); _d30.setDate(_d30.getDate() - 30);
+    const _cocheStart = `${_d30.getFullYear()}-${String(_d30.getMonth()+1).padStart(2,'0')}-${String(_d30.getDate()).padStart(2,'0')}`;
+    const cP = (typeof sbGetCochesRange === 'function') ? sbGetCochesRange(_cocheStart, today()) : Promise.resolve([]);
+    const tmP = (typeof sbGetTacheResidentMap === 'function') ? sbGetTacheResidentMap() : Promise.resolve({});
+    const [journal, planning, transmissions, coches, tacheResMap] = await Promise.all([jP.catch(() => []), pP.catch(() => []), tP.catch(() => []), cP.catch(() => []), tmP.catch(() => ({}))]);
 
     // Dernier niveau saisi par résident (transmissions + journal + agenda confondus)
     const latest = {};
@@ -1115,6 +1121,22 @@
     (planning || []).forEach(e => consider(e.residentId, e.residentName, e.date, e.niveauSoutien));
     (transmissions || []).forEach(t => consider(t.residentId, t.residentName, t.date || t.createdAt, t.soutienNiveau));
 
+    // Tournée : par (résident, jour), on retient le niveau LE PLUS FRÉQUENT, puis on l'injecte comme les autres sources
+    const _cocheRD = {}; let cocheObs = 0;
+    (coches || []).forEach(c => {
+      const _rid = tacheResMap[String(c.tacheId)] || '';   // la coche pointe une tâche → on remonte au résident
+      if (!VALID.has(c.soutien) || !c.date || !_rid) return;
+      cocheObs++;
+      const k = _rid + '|' + String(c.date).slice(0, 10);
+      (_cocheRD[k] = _cocheRD[k] || {})[c.soutien] = (_cocheRD[k][c.soutien] || 0) + 1;
+    });
+    Object.keys(_cocheRD).forEach(k => {
+      const i = k.indexOf('|'), rid = k.slice(0, i), date = k.slice(i + 1), cts = _cocheRD[k];
+      let best = null, bestN = -1;
+      LEVELS.forEach(l => { const n = cts[l.k] || 0; if (n >= bestN) { bestN = n; best = l.k; } }); // égalité → niveau le plus soutenu (fin de LEVELS)
+      if (best) consider(rid, null, date, best);
+    });
+
     const counts = { autonomie:0, supervision:0, verbal:0, partiel:0, total:0 };
     let evalues = 0;
     residents.forEach(r => {
@@ -1125,7 +1147,8 @@
     const nonEval = residents.length - evalues;
     const totalObs = (journal||[]).filter(e => VALID.has(e.niveauSoutien)).length
                    + (planning||[]).filter(e => VALID.has(e.niveauSoutien)).length
-                   + (transmissions||[]).filter(t => VALID.has(t.soutienNiveau)).length;
+                   + (transmissions||[]).filter(t => VALID.has(t.soutienNiveau)).length
+                   + cocheObs;
     const maxCount = Math.max(...LEVELS.map(l => counts[l.k]), 1);
 
     // Continuum de population : une seule bande empilée (vert → rouge) + légende par niveau
@@ -1145,7 +1168,7 @@
     }).join('');
 
     el.innerHTML = `<div style="padding:1.05rem 1.35rem 1.2rem">
-      <div class="nivc-meta">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (transmissions, journal, agenda) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
+      <div class="nivc-meta">Chaque résident classé selon son <b>dernier niveau de soutien saisi</b> (transmissions, journal, agenda, tournée) · ${evalues}/${residents.length} évalués · ${totalObs} observation${totalObs>1?'s':''}</div>
       <div class="nivc-band">${band}</div>
       <div class="nivc-axis"><span>↗ Plus autonome</span><span>Plus dépendant ↘</span></div>
       <div class="nivc-legend">${chips}</div>

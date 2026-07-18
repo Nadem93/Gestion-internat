@@ -96,6 +96,29 @@ async function sbGetCoches(date) {
   return data.map(_tcFromRow);
 }
 
+// Coches sur une plage de dates — pour agréger le niveau de soutien récent (ex. tableau de bord).
+// Lecture non critique : renvoie [] en cas d'erreur (contrairement à sbGetCoches qui lève).
+async function sbGetCochesRange(startDate, endDate) {
+  const { data, error } = await supabaseClient
+    .from('taches_coches')
+    .select('*')
+    .gte('date', startDate).lte('date', endDate);
+  if (error) { console.error(error); return []; }
+  return data.map(_tcFromRow);
+}
+
+// Map { tacheId : residentId } de TOUTES les tâches (actives ou non) — une coche ne porte pas
+// le résident (seulement tache_id), il faut donc passer par sa tâche pour le retrouver.
+async function sbGetTacheResidentMap() {
+  const { data, error } = await supabaseClient
+    .from('taches_ppa')
+    .select('id, resident_id');
+  if (error) { console.error(error); return {}; }
+  const map = {};
+  (data || []).forEach(t => { map[String(t.id)] = t.resident_id || ''; });
+  return map;
+}
+
 // Pose/actualise la coche du jour (unicité tache_id+date garantie côté SQL)
 async function sbSetCoche(c) {
   const etablissementId = await sbGetEtablissementId();
