@@ -709,8 +709,8 @@
       const diff = Math.round((d - nowDate2) / 86400000);
       if (diff >= 0 && diff <= 30) alertes.push({ type: 'avenant', label: `Révision avenant : ${p.residentName||'?'}`, date: p.dateRevision, jours: diff });
     });
-    // Incidents non validés depuis > 7j (réservé aux droits incidents)
-    if (_aCanInc) (_dashLive.incidents||[]).filter(i => (i.statut === 'declare' || i.statut === 'cours') && (!_scoped || _mine(i.residentId, i.residentName))).forEach(i => {
+    // Incidents non validés depuis > 7j : droits incidents (tous) OU référent (limité à ses référés via _mine)
+    if (_aCanInc || _scoped) (_dashLive.incidents||[]).filter(i => (i.statut === 'declare' || i.statut === 'cours') && (!_scoped || _mine(i.residentId, i.residentName))).forEach(i => {
       if (i.date) {
         const d = new Date(i.date + (i.heure ? 'T'+i.heure : 'T00:00:00'));
         const diff = Math.round((nowDate2 - d) / 86400000);
