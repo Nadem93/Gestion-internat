@@ -295,32 +295,57 @@
     });
   }
 
-  // ── Dock en arrière-plan quand un modal s'ouvre dans l'iframe de contenu ──
-  // Les portails (RH, Pilotage, Vie quotidienne, Dossiers) affichent leurs modules
-  // dans une iframe même origine. Un modal qui s'y ouvre (.modal-overlay.open) est
-  // isolé dans son propre contexte d'empilement et passerait sous le dock parent.
-  // On surveille l'iframe et on bascule .pdk-behind-modal sur le dock en conséquence.
-  var _frameMO = null;
+  // ── Dock TOUJOURS en arrière-plan quand un modal s'ouvre ──
+  // Deux cas : (1) modal ouvert dans le DOCUMENT du dock (ex. Administration, en onglets) —
+  // z-index + fond du modal le couvrent, mais on le masque quand même pour qu'il ne
+  // transparaisse pas (halo néon) ; (2) modal ouvert dans l'IFRAME de contenu (RH, Pilotage,
+  // Dossiers, Vie quotidienne) — contexte d'empilement isolé, le dock passerait DEVANT.
+  // On surveille les deux documents et on bascule .pdk-behind-modal en conséquence.
+  var _frameMO = null, _parentMO = null, _contentFrame = null;
   function frameDoc(frame) {
-    try { return frame.contentDocument || (frame.contentWindow && frame.contentWindow.document) || null; }
+    try { return frame && (frame.contentDocument || (frame.contentWindow && frame.contentWindow.document)) || null; }
     catch (e) { return null; }   // origine différente : on laisse le dock visible
   }
-  function syncBehindModal(frame) {
+  // Un overlay est « ouvert » s'il est RÉELLEMENT visible, quel que soit le mécanisme.
+  // Les .modal-overlay ne sont visibles que via .open (voie rapide) ; on ne teste en
+  // détail (getComputedStyle) que les overlays plein écran custom, peu nombreux :
+  // assistant (wizard) et fond du sélecteur de messages.
+  var _OVERLAY_SEL = '.wizard-overlay,.chat-overlay-backdrop';
+  function _docOverlayOpen(doc) {
+    if (!doc) return false;
+    try {
+      if (doc.querySelector('.modal-overlay.open')) return true;   // voie rapide (cas courant)
+      var win = doc.defaultView || global;
+      var nodes = doc.querySelectorAll(_OVERLAY_SEL);
+      for (var i = 0; i < nodes.length; i++) {
+        var cs = win.getComputedStyle(nodes[i]);
+        if (cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0.01) return true;
+      }
+    } catch (e) { /* origine différente ou nœud détaché : ignoré */ }
+    return false;
+  }
+  function syncBehindModal() {
     if (!cfg || !cfg.dock) return;
-    var doc = frameDoc(frame);
-    var open = false;
-    try { open = !!(doc && doc.querySelector('.modal-overlay.open')); } catch (e) { open = false; }
+    var open = _docOverlayOpen(document) || _docOverlayOpen(frameDoc(_contentFrame));
     cfg.dock.classList.toggle('pdk-behind-modal', open);
   }
   function attachFrameObserver(frame) {
     if (_frameMO) { _frameMO.disconnect(); _frameMO = null; }
     var doc = frameDoc(frame);
     if (!doc || !doc.body || typeof MutationObserver === 'undefined') return;
-    _frameMO = new MutationObserver(function () { syncBehindModal(frame); });
+    _frameMO = new MutationObserver(syncBehindModal);
     _frameMO.observe(doc.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style'] });
-    syncBehindModal(frame);
+    syncBehindModal();
+  }
+  function attachParentObserver() {
+    // Surveille le document du dock (modals même-document, ex. Administration)
+    if (_parentMO || !document.body || typeof MutationObserver === 'undefined') return;
+    _parentMO = new MutationObserver(syncBehindModal);
+    _parentMO.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style'] });
+    syncBehindModal();
   }
   function watchFrame(frame) {
+    _contentFrame = frame || null;
     if (!frame) return;
     // À chaque navigation de l'iframe : nouveau document → on ré-observe, dock réaffiché
     frame.addEventListener('load', function () {
@@ -336,6 +361,7 @@
     })(40);
   }
   function setupFrameWatch() {
+    attachParentObserver();   // modals du document du dock (ex. Administration)
     // cfg.frame (élément ou id) prioritaire, sinon l'unique iframe de contenu du portail
     var f = cfg && cfg.frame;
     if (typeof f === 'string') f = document.getElementById(f);
