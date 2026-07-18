@@ -2670,19 +2670,20 @@ const PH_JOURS_COURT = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', 
 function planningHebdoCard(r) {
   const ph = r.planningHebdo || {};
   const canEdit = canEditResident();
-  const actifs = PH_JOURS.filter(j => ph[j] && ph[j].actif);
+  const actifs = PH_JOURS.filter(j => phDayAbsences(ph[j]).length);
 
-  // Bande horizontale : chaque jour est une colonne ; l'absence s'affiche sous son jour.
+  // Bande horizontale : chaque jour est une colonne ; les absences s'affichent sous leur jour
+  // (plusieurs possibles le même jour : ex. Sport après le Travail).
   const cols = PH_JOURS.map(j => {
-    const on = !!(ph[j] && ph[j].actif);
-    const d = ph[j] || {};
+    const list = phDayAbsences(ph[j]).slice().sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+    const on = list.length > 0;
     const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:var(--g50, #f8fafc);color:var(--g400);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</div>`;
     const body = on
-      ? `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;text-align:center">
+      ? list.map(d => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;text-align:center">
           <div style="font-weight:600;font-size:.7rem;line-height:1.2;color:#0369a1">📅 ${escHtml(d.label || 'Absence')}</div>
           ${d.debut ? `<div style="font-size:.63rem;color:var(--muted);margin-top:2px">départ ${d.debut}</div>` : ''}
           ${d.fin ? `<div style="font-size:.63rem;color:var(--muted)">retour ${d.fin}</div>` : ''}
-        </div>`
+        </div>`).join('')
       : `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:var(--g300, #cbd5e1)">·</div>`;
     return `<div style="min-width:0">${head}${body}</div>`;
   }).join('');
@@ -2697,51 +2698,75 @@ function planningHebdoCard(r) {
   </div></div>`;
 }
 
+// Éditeur « liste d'absences » : chaque absence = motif + jours concernés + départ/retour.
+// Plusieurs absences peuvent tomber le même jour (ex. Sport après le Travail).
+let _phAbs = [];
+
+function phRenderAbs() {
+  const el = document.getElementById('phAbsList');
+  if (!el) return;
+  el.innerHTML = _phAbs.map((a, i) => `
+    <div style="border:1px solid var(--border);border-radius:var(--r-sm);padding:.7rem .8rem;margin-bottom:.6rem;background:var(--g50,#f8fafc)">
+      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.55rem">
+        <input type="text" class="form-input" placeholder="Motif (Travail, Sport, Retour famille…)" value="${escAttr(a.label || '')}" oninput="_phAbs[${i}].label=this.value" style="flex:1"/>
+        <input type="time" class="form-input" value="${escAttr(a.debut || '')}" onchange="_phAbs[${i}].debut=this.value" style="width:92px" title="Heure de départ"/>
+        <input type="time" class="form-input" value="${escAttr(a.fin || '')}" onchange="_phAbs[${i}].fin=this.value" style="width:92px" title="Heure de retour"/>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="phRemoveAbs(${i})" title="Supprimer cette absence">✕</button>
+      </div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+        ${PH_JOURS.map(j => {
+          const on = (a.jours || []).includes(j);
+          return `<button type="button" onclick="phToggleAbsJour(${i},'${j}')" style="font:inherit;font-size:.72rem;font-weight:600;padding:.28rem .6rem;border-radius:999px;cursor:pointer;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:#fff;color:var(--muted);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</button>`;
+        }).join('')}
+      </div>
+    </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:.4rem 0">Aucune absence. Ajoutez-en une ci-dessous.</div>';
+}
+
+function phAddAbs() { _phAbs.push({ label: '', jours: [], debut: '', fin: '' }); phRenderAbs(); }
+function phRemoveAbs(i) { _phAbs.splice(i, 1); phRenderAbs(); }
+function phToggleAbsJour(i, j) {
+  const s = new Set(_phAbs[i].jours || []);
+  s.has(j) ? s.delete(j) : s.add(j);
+  _phAbs[i].jours = PH_JOURS.filter(x => s.has(x)); // conserve l'ordre Lun→Dim
+  phRenderAbs();
+}
+
 function openPlanningHebdoModal() {
   if (!canEditResident()) return;
   const r = getResident();
   if (!r) return;
   const ph = r.planningHebdo || {};
-  document.getElementById('phModalBody').innerHTML = `
-    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">Cochez les jours où le résident est habituellement absent de l'internat. Le pointage et la distribution des médicaments en tiennent compte automatiquement.</div>
-    <div style="display:grid;grid-template-columns:118px 1fr 96px 96px;gap:.5rem;align-items:center;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-bottom:.25rem">
-      <span>Jour</span><span>Motif</span><span>Départ</span><span>Retour</span>
-    </div>
-    ${PH_JOURS.map(j => {
-      const d = ph[j] || {};
-      return `<div style="display:grid;grid-template-columns:118px 1fr 96px 96px;gap:.5rem;align-items:center;padding:.3rem 0;border-top:1px solid var(--border)">
-        <label style="display:flex;align-items:center;gap:.45rem;font-weight:600;font-size:.83rem;cursor:pointer;text-transform:capitalize;user-select:none"><input type="checkbox" id="ph_actif_${j}"${d.actif ? ' checked' : ''} onchange="phToggleJour('${j}')" style="width:auto"/> ${j}</label>
-        <input type="text" id="ph_label_${j}" class="form-input" placeholder="Retour en famille, travail…" value="${escAttr(d.label || '')}"/>
-        <input type="time" id="ph_debut_${j}" class="form-input" value="${escAttr(d.debut || '')}" title="Heure de départ"/>
-        <input type="time" id="ph_fin_${j}" class="form-input" value="${escAttr(d.fin || '')}" title="Heure de retour"/>
-      </div>`;
-    }).join('')}`;
-  PH_JOURS.forEach(phToggleJour);
-  openModal('planningHebdoModal');
-}
-
-function phToggleJour(j) {
-  const on = document.getElementById('ph_actif_' + j).checked;
-  ['label', 'debut', 'fin'].forEach(k => {
-    const el = document.getElementById(`ph_${k}_${j}`);
-    if (!el) return;
-    el.disabled = !on;
-    el.style.opacity = on ? '' : '.45';
+  // Regroupe les absences existantes par (motif, départ, retour) → jours concernés.
+  const map = new Map();
+  PH_JOURS.forEach(j => {
+    phDayAbsences(ph[j]).forEach(a => {
+      const key = (a.label || '') + '|' + (a.debut || '') + '|' + (a.fin || '');
+      if (!map.has(key)) map.set(key, { label: a.label || '', debut: a.debut || '', fin: a.fin || '', jours: [] });
+      map.get(key).jours.push(j);
+    });
   });
+  _phAbs = [...map.values()];
+  if (!_phAbs.length) _phAbs = [{ label: '', jours: [], debut: '', fin: '' }];
+  document.getElementById('phModalBody').innerHTML = `
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.7rem">Absences récurrentes du résident. Ajoutez-en autant que nécessaire ; une même journée peut en comporter plusieurs (ex. Sport après le Travail). Le pointage et la distribution des médicaments en tiennent compte automatiquement.</div>
+    <div id="phAbsList"></div>
+    <button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="phAddAbs()">+ Ajouter une absence</button>`;
+  phRenderAbs();
+  openModal('planningHebdoModal');
 }
 
 async function savePlanningHebdo() {
   const r = getResident();
   if (!r) return;
   const ph = {};
-  PH_JOURS.forEach(j => {
-    const actif = document.getElementById('ph_actif_' + j).checked;
-    const label = document.getElementById('ph_label_' + j).value.trim();
-    const debut = document.getElementById('ph_debut_' + j).value;
-    const fin   = document.getElementById('ph_fin_' + j).value;
-    // Un jour décoché garde son motif/horaires : on peut le réactiver sans tout resaisir
-    if (actif || label || debut || fin) ph[j] = { actif, label, debut, fin };
+  (_phAbs || []).forEach(a => {
+    const label = (a.label || '').trim();
+    const jours = a.jours || [];
+    if (!jours.length) return;                // absence sans jour → ignorée
+    if (!label && !a.debut && !a.fin) return; // ligne vide → ignorée
+    jours.forEach(j => { if (!ph[j]) ph[j] = []; ph[j].push({ label, debut: a.debut || '', fin: a.fin || '' }); });
   });
+  Object.keys(ph).forEach(j => ph[j].sort((x, y) => (x.debut || '').localeCompare(y.debut || '')));
   await persistResident({ ...r, planningHebdo: ph, updatedAt: new Date().toISOString() });
   closeModal('planningHebdoModal');
   toast('Semaine type enregistrée', 'success');

@@ -208,8 +208,14 @@ function getPlanningAbsenceJour(r, date) {
   if (!r.planningHebdo) return null;
   const dow = new Date(date + 'T00:00:00').getDay();
   const jour = JOURS_SEMAINE[dow];
-  const d = r.planningHebdo[jour];
-  return (d && d.actif) ? d : null;
+  const list = (typeof phDayAbsences === 'function') ? phDayAbsences(r.planningHebdo[jour]) : [];
+  if (!list.length) return null;
+  // Objet synthétique du jour (peut regrouper plusieurs absences : « Travail + Sport »)
+  return {
+    label: list.map(a => a.label).filter(Boolean).join(' + ') || 'Absence planifiée',
+    debut: list[0].debut || '',
+    fin: list[list.length - 1].fin || ''
+  };
 }
 
 function renderPresenceTable() {

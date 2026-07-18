@@ -2,6 +2,16 @@
 // Fait le pont entre le format utilisé par residents.js (camelCase, comme avant)
 // et les colonnes de la table Postgres (snake_case).
 
+// Semaine type : un jour peut contenir PLUSIEURS absences récurrentes (ex. Sport après
+// le Travail). Retourne toujours un tableau normalisé [{label,debut,fin}, …].
+// Compatible avec l'ancien format d'un jour : { actif, label, debut, fin }.
+function phDayAbsences(dayVal) {
+  if (!dayVal) return [];
+  if (Array.isArray(dayVal)) return dayVal.filter(a => a && (a.label || a.debut || a.fin));
+  if (dayVal.actif) return [{ label: dayVal.label || '', debut: dayVal.debut || '', fin: dayVal.fin || '' }];
+  return [];
+}
+
 let _sbEtablissementId = null;
 
 async function sbGetEtablissementId() {

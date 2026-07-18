@@ -292,7 +292,7 @@ function renderMedicaments() {
     const manual = presencesAujourdhui[residentId];
     if (manual) return manual === 'present';
     const r = resMap[residentId];
-    if (r?.planningHebdo?.[jourMed]?.actif) return false;
+    if ((typeof phDayAbsences === 'function' ? phDayAbsences(r?.planningHebdo?.[jourMed]) : []).length) return false;
     return true;
   }
 
