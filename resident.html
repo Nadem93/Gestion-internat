@@ -399,7 +399,8 @@ function getResident(id) {
 
 function canEditResident() {
   const session = Auth.getSession();
-  return session && (session.role === 'admin' || session.role === 'moderator');
+  // Tout le personnel peut éditer la fiche ; la famille reste en lecture seule.
+  return !!session && session.role !== 'famille';
 }
 
 function exportResidentData() {
@@ -561,7 +562,6 @@ function renderViewMode(r) {
       <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap">TABLEAU DE BORD DU RÉSIDENT</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
-    <div class="no-print">${renderDataCards(r)}</div>
     ${autonomieCard(r)}
     <div class="no-print tabs" id="docCatTabs" style="margin-bottom:1rem">${docCatTabsHtml(docs)}</div>
     <div class="no-print" id="tab-documents">${docsHtml(docs)}</div>`;
@@ -2829,6 +2829,21 @@ function planningResidentCard(r) {
     ? `<div style="font-size:.75rem;color:var(--muted);text-align:center;padding:.3rem 0">Aucun événement cette semaine</div>`
     : '';
 
+  // « Événements à venir » (intégré ici) : prochains événements datés, chronologiques,
+  // au-delà de la semaine affichée par la grille ci-dessus.
+  const _now = new Date();
+  const upcoming = _residentPlanningCache
+    .filter(e => String(e.residentId) === String(r.id) && new Date(e.date + 'T' + (e.heure || e.time || '09:00').slice(0,5)).getTime() > _now.getTime() - 3600000)
+    .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.heure || a.time || '').localeCompare(b.heure || b.time || ''))
+    .slice(0, 5);
+  const upcomingHtml = upcoming.length ? `<div style="border-top:1px solid var(--border);padding-top:.7rem">
+      <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Événements à venir</div>
+      ${upcoming.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.4rem .1rem;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.82rem">${escHtml(e.titre || 'Événement')}</div><div style="font-size:.72rem;color:var(--muted)">${formatDate(e.date)}${(e.heure || e.time) ? ' · ' + (e.heure || e.time).slice(0,5) : ''}</div></div>
+        ${e.type ? `<span class="badge">${escHtml(e.type)}</span>` : ''}
+      </div>`).join('')}
+    </div>` : '';
+
   return `<div class="card" style="overflow:hidden">
     <div class="card-header" style="background:color-mix(in srgb, #2563eb 12%, #fff)">
         <span class="card-title" style="color:#2563eb">📅 Planning individuel</span>
@@ -2841,6 +2856,7 @@ function planningResidentCard(r) {
     <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;min-width:0">${cols}</div>
       ${emptyMsg}
+      ${upcomingHtml}
     </div>
   </div>`;
 }
