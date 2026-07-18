@@ -422,7 +422,7 @@ async function runSeed(){
         const niv = spec._assessed ? niveauAt(spec, off<=0?1:0.9) : '';
         planEvents.push({ titre:pick(PLAN_TITRES[type]), residentId:r.id, residentName:full, type, date:dDay(off),
           heure:`${9+rnd(8)}:${Math.random()<.5?'00':'30'}`, duree:pick(['30','60','90','120']), color:r._spec.color||'#2563eb',
-          desc:`Activité de démonstration ${DEMO_TAG}`, accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv, serafin: niv?'directe':'indirecte' });
+          desc:`Activité de démonstration ${DEMO_TAG}`, accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv, serafin: isSerafinDirect(niv)?'directe':'indirecte' });
       });
     });
     for(let i=0;i<planEvents.length;i+=100){ await sbSavePlanningEventsBulk(planEvents.slice(i,i+100)); setProgress(54 + (i/planEvents.length)*6); }

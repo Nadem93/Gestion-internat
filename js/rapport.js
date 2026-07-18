@@ -452,9 +452,9 @@ async function genererRapportPDF(previewIframe) {
   const nivMoy = nivEntries.length ? nivEntries.reduce((a,e)=>a+NIV_SCORE[e.niv],0)/nivEntries.length : null;
   const autoMoyLabel = nivMoy != null ? NIV_LABEL[NIV_ORDER[Math.min(4, Math.max(0, Math.round(nivMoy)-1))]].replace(/^\S+\s/,'') : '—';
   let serafinDir = 0, serafinIndir = 0;
-  journal.forEach(e => { if (!inRange(e.date)) return; if (NIV_SCORE[e.niveauSoutien]) serafinDir++; else if (e.accompagnement) serafinIndir++; });
-  transmissions.forEach(t => { if (!(t.date >= startStr && t.date <= endStr)) return; if (NIV_SCORE[t.soutienNiveau]) serafinDir++; else if (t.soutien) serafinIndir++; });
-  planning.forEach(e => { if (!inRange(e.date)) return; if (NIV_SCORE[e.niveauSoutien]) serafinDir++; else if (e.accompagnement) serafinIndir++; });
+  journal.forEach(e => { if (!inRange(e.date)) return; if (isSerafinDirect(e.niveauSoutien)) serafinDir++; else if (e.niveauSoutien || e.accompagnement) serafinIndir++; });
+  transmissions.forEach(t => { if (!(t.date >= startStr && t.date <= endStr)) return; if (isSerafinDirect(t.soutienNiveau)) serafinDir++; else if (t.soutienNiveau || t.soutien) serafinIndir++; });
+  planning.forEach(e => { if (!inRange(e.date)) return; if (isSerafinDirect(e.niveauSoutien)) serafinDir++; else if (e.niveauSoutien || e.accompagnement) serafinIndir++; });
   const autoEvol = [];
   for (let i = 11; i >= 0; i--) { const d = new Date(endStr + 'T00:00:00'); d.setDate(1); d.setMonth(d.getMonth() - i); const yy2 = d.getFullYear(), mm2 = String(d.getMonth() + 1).padStart(2, '0'); const lb = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }); const mo = nivEntries.filter(e => e.date.slice(0, 7) === `${yy2}-${mm2}`); autoEvol.push({ label: lb, value: mo.length ? Math.round(mo.reduce((a, e) => a + NIV_SCORE[e.niv], 0) / mo.length * 20) : null }); }
   const autoEvolData = autoEvol.filter((p, i, arr) => { const f = arr.findIndex(x => x.value != null); const l = arr.length - 1 - [...arr].reverse().findIndex(x => x.value != null); return i >= f && i <= l; }).filter(p => p.value != null);

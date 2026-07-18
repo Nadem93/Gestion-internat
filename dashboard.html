@@ -1481,7 +1481,7 @@
     if(!rid){ toast('Choisissez un résident','error'); return; }
     if(!titre){ toast('Le titre est requis','error'); return; }
     if(!date){ toast('La date est requise','error'); return; }
-    const base={ titre, residentId:rid, residentName:r?`${r.prenom||''} ${r.nom||''}`.trim():'', type, date, heure, time:heure, timeEnd:fin||'', color:'', accompagnement:_dv('dpAccompagnement').trim(), niveauSoutien:_dv('dpNiveauSoutien'), serafin:_dv('dpNiveauSoutien')?'directe':'indirecte' };
+    const base={ titre, residentId:rid, residentName:r?`${r.prenom||''} ${r.nom||''}`.trim():'', type, date, heure, time:heure, timeEnd:fin||'', color:'', accompagnement:_dv('dpAccompagnement').trim(), niveauSoutien:_dv('dpNiveauSoutien'), serafin:isSerafinDirect(_dv('dpNiveauSoutien'))?'directe':'indirecte' };
     const recur=document.getElementById('dpRecur')?.checked; const until=_dv('dpRecurUntil');
     try{
       if(recur && until && until>=date){

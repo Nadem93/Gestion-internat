@@ -639,6 +639,11 @@ function shortName(fullName) {
 
 // ── DATE HELPERS ──
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// SERAFIN-PH — un niveau de soutien avec intervention active de l'accompagnant
+// (incitation/guidance verbale, aide partielle, aide totale) = prestation DIRECTE ;
+// présence simple (autonomie) et supervision/veille = INDIRECTE ; non renseigné = indirecte.
+const SERAFIN_DIRECT_NIVEAUX = ['verbal', 'partiel', 'total'];
+function isSerafinDirect(niveau) { return SERAFIN_DIRECT_NIVEAUX.includes(niveau); }
 function formatDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });

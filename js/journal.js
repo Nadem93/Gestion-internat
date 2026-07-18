@@ -390,7 +390,7 @@ async function saveInlineEntry() {
         date: document.getElementById('iDate').value || new Date().toISOString(),
         objectif: document.getElementById('iObjectif').value,
         contenu, visibilite: visEl?.value || 'equipe',
-        serafinphType: (document.getElementById('iNiveauSoutien')?.value ? 'direct' : 'indirect'),
+        serafinphType: (isSerafinDirect(document.getElementById('iNiveauSoutien')?.value) ? 'direct' : 'indirect'),
         accompagnement: (document.getElementById('iAccompagnement')?.value || '').trim(),
         niveauSoutien: document.getElementById('iNiveauSoutien')?.value || '',
         attachments: inlineAttachments.slice(),
@@ -692,7 +692,7 @@ async function saveEntry() {
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
-    serafinphType: (document.getElementById('eNiveauSoutien')?.value ? 'direct' : 'indirect'),
+    serafinphType: (isSerafinDirect(document.getElementById('eNiveauSoutien')?.value) ? 'direct' : 'indirect'),
     accompagnement: (document.getElementById('eAccompagnement')?.value || '').trim(),
     niveauSoutien: document.getElementById('eNiveauSoutien')?.value || '',
     updatedAt: new Date().toISOString()
