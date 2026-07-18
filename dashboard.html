@@ -196,8 +196,20 @@
         <div class="refgrid" id="dashReferesGrid"></div>
       </div>
 
+      <!-- RÉPARTITION DES NIVEAUX DE SOUTIEN (remontée au-dessus du bloc de cartes) -->
+      <div class="card" id="dashCardNiveaux" style="overflow:hidden;margin-top:1.5rem">
+        <div class="card-header" style="background:#EEF2FF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#6366f1"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="card-title" style="color:#4338ca">Répartition des niveaux de soutien</span>
+          <a href="residents.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#4338ca">Résidents</a>
+        </div>
+        <div class="card-body" id="dashNiveauxSoutien">
+          <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
+        </div>
+      </div>
+
       <!-- CARTES SUPPLÉMENTAIRES -->
-      <div class="grid grid-3" style="gap:1.5rem">
+      <div class="grid grid-3" style="gap:1.5rem;margin-top:1.5rem">
 
         <!-- RÉSIDENTS SANS AVENANT -->
         <div class="card" id="dashCardSansAvenant" style="overflow:hidden">
@@ -236,19 +248,6 @@
 
       </div>
 
-      <!-- RÉPARTITION DES NIVEAUX DE SOUTIEN -->
-      <div class="card" id="dashCardNiveaux" style="overflow:hidden;margin-top:1.5rem">
-        <div class="card-header" style="background:#EEF2FF">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#6366f1"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span class="card-title" style="color:#4338ca">Répartition des niveaux de soutien</span>
-          <a href="residents.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#4338ca">Résidents</a>
-        </div>
-        <div class="card-body" id="dashNiveauxSoutien">
-          <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
-        </div>
-      </div>
-
-      <!-- JOURNAL + AVENANTS -->
       <!-- FIL DE VIE combiné des référés (journal, transmissions, incidents, RDV, sorties, budget, avenants…) -->
       <div class="card" id="dashCardFilVie" style="overflow:hidden;margin-top:1.5rem">
         <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
