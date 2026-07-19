@@ -39,6 +39,35 @@ function populateDocResidentSelect() {
   ).join('');
 }
 
+// ── Enrichissement de la liste (design 1) : pastille catégorie, avatar résident, statut d'échéance ──
+const DOC_CAT_STYLE = {
+  administratif: ['#E6F1FB', '#0C447C'], rapport: ['#E6F1FB', '#0C447C'],
+  medical: ['#E1F5EE', '#0F6E56'], 'médical': ['#E1F5EE', '#0F6E56'], attestation: ['#E1F5EE', '#0F6E56'], cmu: ['#E1F5EE', '#0F6E56'],
+  scolaire: ['#EAF3DE', '#27500A'], 'scolarité': ['#EAF3DE', '#27500A'],
+  judiciaire: ['#FAEEDA', '#633806'], jugement: ['#FAEEDA', '#633806'],
+  contrat: ['#EEEDFE', '#3C3489'], avenant: ['#EEEDFE', '#3C3489'],
+  identite: ['#F1EFE8', '#2C2C2A'], "pièce d'identité": ['#F1EFE8', '#2C2C2A'], autre: ['#F1EFE8', '#2C2C2A']
+};
+function docCatPill(cat, label) {
+  const s = DOC_CAT_STYLE[(cat || 'autre').toLowerCase().trim()] || ['#F1EFE8', '#2C2C2A'];
+  return `<span style="display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;background:${s[0]};color:${s[1]};white-space:nowrap">${escHtml(label || cat || '—')}</span>`;
+}
+function docAvatarCell(name) {
+  const n = (name || '').trim();
+  const ini = n ? n.split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '?';
+  return `<span style="display:inline-flex;align-items:center;gap:.45rem;min-width:0"><span style="width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#64748b;display:inline-flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:700;flex-shrink:0">${escHtml(ini)}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(n || '—')}</span></span>`;
+}
+function docEcheanceChip(d) {
+  if (!d.dueDate) return '<span style="color:var(--muted)">—</span>';
+  if (d.done) return `<span style="display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;background:#F1EFE8;color:#5F5E5A;white-space:nowrap">Traité</span>`;
+  const days = Math.round((new Date(d.dueDate) - new Date(today())) / 86400000);
+  let bg, fg, txt;
+  if (days < 0) { bg = '#FCEBEB'; fg = '#A32D2D'; txt = 'En retard'; }
+  else if (days === 0) { bg = '#FAEEDA'; fg = '#854F0B'; txt = "Aujourd'hui"; }
+  else if (days <= 30) { bg = '#FAEEDA'; fg = '#854F0B'; txt = 'Dans ' + days + ' j'; }
+  else { bg = '#EAF3DE'; fg = '#27500A'; txt = 'Dans ' + days + ' j'; }
+  return `<span style="display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;background:${bg};color:${fg};white-space:nowrap">${txt}</span>`;
+}
 function renderDocuments() {
   const container = document.getElementById('documentList');
   if (!container) return;
@@ -97,10 +126,10 @@ function renderDocuments() {
             <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
           </div>
         </td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${escHtml(d.residentName)}</td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${catLabels[cat]||d.category||'—'}</td>
+        <td style="padding:.35rem .75rem;color:var(--muted)">${docAvatarCell(d.residentName)}</td>
+        <td style="padding:.35rem .75rem">${docCatPill(cat, catLabels[cat]||d.category)}</td>
         <td style="padding:.35rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
-        <td style="padding:.35rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
+        <td style="padding:.35rem .75rem">${docEcheanceChip(d)}</td>
         <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
           <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
           ${d.type !== 'resource' && Auth.isAdmin() ? `<button class="btn btn-ghost btn-sm" style="margin-left:.25rem;color:${d.partageFamille ? '#16a34a' : 'var(--muted)'}" onclick="toggleDocPartageFamille('${d.id}')" title="${d.partageFamille ? 'Partagé avec la famille — cliquer pour retirer' : 'Partager ce document avec la famille'}">👪</button>` : ''}
@@ -119,10 +148,10 @@ function renderDocuments() {
             <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
           </div>
         </td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${escHtml(d.residentName)}</td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${d.category ? escHtml(d.category.charAt(0).toUpperCase()+d.category.slice(1)) : '—'}</td>
+        <td style="padding:.35rem .75rem;color:var(--muted)">${docAvatarCell(d.residentName)}</td>
+        <td style="padding:.35rem .75rem">${d.category ? docCatPill(d.category, d.category.charAt(0).toUpperCase()+d.category.slice(1)) : '<span style="color:var(--muted)">—</span>'}</td>
         <td style="padding:.35rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
-        <td style="padding:.35rem .75rem;color:${overdue?'#ef4444':'var(--muted)'};font-weight:${overdue?'600':'400'}">${d.dueDate ? formatDate(d.dueDate)+(overdue ? ' ⚠️' : '') : '—'}</td>
+        <td style="padding:.35rem .75rem">${docEcheanceChip(d)}</td>
         <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
           <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
           ${d.type !== 'resource' && Auth.isAdmin() ? `<button class="btn btn-ghost btn-sm" style="margin-left:.25rem;color:${d.partageFamille ? '#16a34a' : 'var(--muted)'}" onclick="toggleDocPartageFamille('${d.id}')" title="${d.partageFamille ? 'Partagé avec la famille — cliquer pour retirer' : 'Partager ce document avec la famille'}">👪</button>` : ''}

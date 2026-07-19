@@ -219,6 +219,20 @@ function hexSvg(pct, id, size, aurora) {
   </div>`;
 }
 
+// Anneau circulaire de progression (design 3 de la vue d'ensemble)
+function ringSvg(pct, color, size) {
+  const s = size || 56, r = (s / 2) - 5, circ = 2 * Math.PI * r;
+  const known = pct != null;
+  const p = known ? clampPct(pct) : 0;
+  const col = known ? color : '#cbd5e1';
+  const dash = (p / 100 * circ).toFixed(1);
+  return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" style="flex-shrink:0" role="img" aria-label="Progression ${known ? p + ' %' : 'non mesurée'}">
+    <circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="6"/>
+    ${known ? `<circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 ${s / 2} ${s / 2})"/>` : ''}
+    <text x="${s / 2}" y="${s / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.round(s / 3.7)}" font-weight="900" fill="${known ? col : '#94a3b8'}" font-family="inherit" style="font-variant-numeric:tabular-nums">${known ? p + '%' : '—'}</text>
+  </svg>`;
+}
+
 // Mini-courbe d'évolution d'un axe (historique des progressions)
 function sparkSvg(histo) {
   const h = (Array.isArray(histo) ? histo : []).slice(-20);
@@ -324,9 +338,10 @@ function renderOverview(residents, tpl) {
     let gauge = '';
     if (global != null) {
       const rg = rangOf(global);
+      const segTrack = fill => `<span style="display:inline-flex;gap:3px;width:56px">${[0, 1, 2, 3].map(i => `<span style="flex:1;height:5px;border-radius:2px;background:${i < fill ? (rg === 'S' ? '#16a34a' : pctColor(global)) : '#e5e7eb'}"></span>`).join('')}</span>`;
       gauge = rg === 'S'
-        ? `<span class="ob-rgauge"><b>S</b><span class="ob-rtrack"><span class="ob-rdot" style="left:100%"></span></span><b>★</b></span>`
-        : `<span class="ob-rgauge"><b>${rg}</b><span class="ob-rtrack"><span class="ob-rdot" style="left:${Math.round((global % 25) / 25 * 100)}%"></span></span><b style="color:#c7c5e0">${rangOf(global + 25)}</b></span>`;
+        ? `<span class="ob-rgauge"><b style="color:#16a34a">S</b>${segTrack(4)}<b style="color:#16a34a">★</b></span>`
+        : `<span class="ob-rgauge"><b>${rg}</b>${segTrack(Math.round((global % 25) / 25 * 4))}<b style="color:#c7c5e0">${rangOf(global + 25)}</b></span>`;
     }
     let majTxt = '';
     if (lastMaj) {
@@ -337,7 +352,7 @@ function renderOverview(residents, tpl) {
     return `<button class="ob-res-card" onclick="obSelectResident('${r.id}')" aria-label="Voir les objectifs de ${escAttr(resNom(r))}">
       <span class="ob-res-hair" aria-hidden="true" style="background:linear-gradient(90deg,${hairColor} ${global || 0}%,#ece9ff ${global || 0}%)"></span>
       <div class="ob-res-top">
-        ${hexSvg(global, 'res-' + r.id, 56, true)}
+        ${ringSvg(global, hairColor, 56)}
         <div class="ob-res-info">
           <div class="ob-eyebrow" style="${EYEBROW_STYLE};color:#6366f1;font-size:.55rem">Résident · Niveau ${global != null ? rangOf(global) : '—'}</div>
           <div class="ob-res-nom">${escHtml(resNom(r))}</div>
