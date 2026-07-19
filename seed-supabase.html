@@ -294,6 +294,64 @@ const ACTIVITES = [
   {nom:'Piscine',categorie:'sportive',jour:'Samedi',heureDebut:'10:00',heureFin:'12:00',lieu:'Piscine municipale',placesMax:8},
 ];
 
+// ── Bilans annuels COMPLETS par activité (alimentent la section « Activités éducatives » du rapport) ──
+// Le rapport lit act.bilansAnnuels[année] = { texte, auteur, date }. On seede les 2 années couvertes.
+const BILAN_ACT = {
+  'Atelier cuisine': {
+    objectifs: `développer l'autonomie alimentaire, la lecture d'une recette simple, le respect des règles d'hygiène et la coopération autour d'un repas partagé`,
+    acquis: `La plupart des participants réalisent désormais une recette simple avec un étayage verbal léger. Les gestes techniques — épluchage, dosage, utilisation sécurisée des appareils — se sont nettement affinés, et le rangement du poste de travail est mieux intégré.` },
+  'Groupe sportif': {
+    objectifs: `entretenir la condition physique, canaliser les tensions, respecter les règles collectives et renforcer l'estime de soi`,
+    acquis: `On note une meilleure endurance et une acceptation plus sereine de la victoire comme de la défaite. Le respect des consignes et de l'arbitrage a progressé, avec moins de sorties de cadre.` },
+  'Atelier créatif': {
+    objectifs: `favoriser l'expression personnelle, la motricité fine, la concentration et la valorisation des réalisations`,
+    acquis: `Les productions gagnent en soin et en originalité. Plusieurs résidents osent davantage proposer leurs idées et mènent un projet créatif à son terme sans se décourager.` },
+  'Médiation animale': {
+    objectifs: `apaiser les angoisses, stimuler la relation et la communication non verbale, et responsabiliser autour du soin à l'animal`,
+    acquis: `Le contact avec l'animal a un effet apaisant marqué chez les résidents les plus anxieux. On observe une attention et une douceur accrues, ainsi qu'un sens des responsabilités dans les gestes de soin.` },
+  'Groupe de parole': {
+    objectifs: `favoriser l'expression des ressentis, l'écoute mutuelle, la gestion des conflits et la participation à la vie collective`,
+    acquis: `La parole circule plus librement et le tour de parole est mieux respecté. Les résidents verbalisent davantage leurs émotions et sollicitent le groupe pour dénouer des désaccords.` },
+  'Sortie culturelle': {
+    objectifs: `ouvrir sur l'extérieur, travailler les codes sociaux, l'utilisation des transports et l'accès à la culture`,
+    acquis: `Les déplacements en extérieur se déroulent plus sereinement, avec un meilleur repérage dans l'espace public. La curiosité culturelle s'éveille et les échanges au retour d'activité sont riches.` },
+  'Atelier informatique': {
+    objectifs: `développer les compétences numériques de base, l'autonomie dans les démarches en ligne et un usage responsable des outils`,
+    acquis: `Les participants maîtrisent mieux la navigation, la messagerie et la recherche d'information. La vigilance face aux risques du numérique s'est renforcée grâce aux mises en situation.` },
+  'Piscine': {
+    objectifs: `favoriser l'aisance aquatique, la détente corporelle, le respect des règles de sécurité et le dépassement de soi`,
+    acquis: `L'appréhension de l'eau a diminué pour la plupart des participants. Les progrès en flottaison et en déplacement sont notables, dans un cadre sécurisé et valorisant.` },
+  _default: {
+    objectifs: `favoriser l'autonomie, la socialisation et l'épanouissement des résidents à travers une activité régulière`,
+    acquis: `La participation et l'implication du groupe ont progressé au fil des séances, avec des acquis concrets sur les plans relationnel et personnel.` }
+};
+function genBilansAnnuels(act){
+  const now = new Date(); const y2 = now.getFullYear(), y1 = y2 - 1;
+  const b = BILAN_ACT[act.nom] || BILAN_ACT._default;
+  const auteur = act.animateur || 'Équipe éducative';
+  const PHASE = {
+    [y1]: { part: 'progressive, en montée au fil des séances', date: `${y1}-12-15`,
+      persp: 'consolider les acquis de base, stabiliser le groupe et enrichir la palette des supports proposés.' },
+    [y2]: { part: 'soutenue et de plus en plus autonome', date: `${y2}-06-30`,
+      persp: `viser une autonomie accrue et une ouverture vers l'extérieur (valorisation des réalisations, échanges inter-établissements).` }
+  };
+  const mk = (annee) => { const ph = PHASE[annee]; return {
+    texte:
+`Bilan annuel de l'activité « ${act.nom} » — ${annee}
+
+Objectifs : ${b.objectifs}.
+
+Déroulement : l'activité s'est tenue de façon régulière sur l'année, animée par ${auteur}. La participation du groupe a été ${ph.part}, avec une assiduité globalement bonne et un cadre bien identifié par les résidents.
+
+Acquis observés : ${b.acquis}
+
+Dynamique de groupe : les échanges entre pairs se sont enrichis ; l'entraide et le respect mutuel constituent de solides points d'appui pour l'accompagnement individualisé.
+
+Perspectives : ${ph.persp}`,
+    auteur, date: ph.date }; };
+  return { [String(y1)]: mk(y1), [String(y2)]: mk(y2) };
+}
+
 // -- objectifs / PPE / documents / évaluations --
 const OBJ_IDS=['1','2','3','4','5','6'];
 const OBJ_STATUTS=['non_commence','en_cours','en_cours','atteint'];
@@ -1054,7 +1112,7 @@ async function runSeed(){
 
     // ── 0. Catalogue d'activités (d'abord : les inscriptions le référencent) ──
     log('Création du catalogue d\'activités…','info');
-    const savedAct = await pool(ACTIVITES, a=>sbSaveActivite({...a, animateur:'Animateur (démo)'}), 4, (d,t)=>setProgress(1+d/t*3));
+    const savedAct = await pool(ACTIVITES, a=>{ const act={...a, animateur:'Animateur (démo)'}; return sbSaveActivite({...act, bilansAnnuels: genBilansAnnuels(act)}); }, 4, (d,t)=>setProgress(1+d/t*3));
     const actCatalog = savedAct.filter(Boolean).map(a=>({ id:a.id, nom:a.nom, categorie:a.categorie }));
     log(`✓ ${actCatalog.length} activités créées`,'ok');
 
