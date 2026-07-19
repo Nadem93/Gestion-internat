@@ -233,46 +233,55 @@ function renderRepas() {
       <p style="font-size:.72rem;color:var(--muted);margin-top:.65rem">Renseignez les deux menus proposés par la cuisine pour ce jour — les résidents/équipes choisissent ensuite via les boutons Menu1/Menu2 sur chaque fiche.</p>`;
   }
 
-  // Synthèse cuisine par régime (sur les inscrits du jour)
-  const cuisine = { matin: {}, midi: {}, soir: {} };
+  // ── Synthèse cuisine (design 2) : barre de répartition des régimes + panneaux par service ──
+  const dayReg = {};
   residents.forEach(r => {
-    const rg = rgOf(r);
-    const key = (rg.type && rg.type !== 'normal') ? rg.type : 'normal';
-    ['matin', 'midi', 'soir'].forEach(m => { if (isInscrit(day, m, r.id)) cuisine[m][key] = (cuisine[m][key] || 0) + 1; });
+    if (!['matin', 'midi', 'soir'].some(m => isInscrit(day, m, r.id))) return;
+    const key = (rgOf(r).type && rgOf(r).type !== 'normal') ? rgOf(r).type : 'normal';
+    dayReg[key] = (dayReg[key] || 0) + 1;
   });
-  const cuisineRow = m => Object.entries(cuisine[m]).sort((a, b) => b[1] - a[1]).map(([k, n]) => {
-    const t = REGIME_TYPES[k] || REGIME_TYPES.autre;
-    return `<span style="font-size:.78rem;color:${t.color};font-weight:600">${t.label} × ${n}</span>`;
-  }).join(' · ') || '<span style="color:var(--g400);font-size:.78rem">aucun inscrit</span>';
+  const regEntries = Object.entries(dayReg).sort((a, b) => b[1] - a[1]);
+  const dayTotal = regEntries.reduce((s, [, n]) => s + n, 0);
+  const regBar = regEntries.map(([k, n]) => { const t = REGIME_TYPES[k] || REGIME_TYPES.autre; return `<div title="${escAttr(t.label + ' × ' + n)}" style="flex:${n};background:${t.color};min-width:3px"></div>`; }).join('') || '<div style="flex:1;background:#e5e7eb"></div>';
+  const regLegend = regEntries.map(([k, n]) => { const t = REGIME_TYPES[k] || REGIME_TYPES.autre; return `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:${t.color}"></span>${t.label} <b style="font-weight:700;color:#0f2b4a">${n}</b></span>`; }).join('') || '<span style="color:var(--g400)">Aucun inscrit</span>';
 
-  // Compteurs de choix de menus par repas
+  // Choix de menu par repas (midi / soir)
   const choixMenu = (day['choixMenu'] || {});
   const menuCount = { midi: { '1': 0, '2': 0, none: 0 }, soir: { '1': 0, '2': 0, none: 0 } };
   residents.forEach(r => {
     ['midi', 'soir'].forEach(m => {
       if (!isInscrit(day, m, r.id)) return;
       const c = choixMenu[r.id]?.[m];
-      if (c === '1') menuCount[m]['1']++;
-      else if (c === '2') menuCount[m]['2']++;
-      else menuCount[m].none++;
+      if (c === '1') menuCount[m]['1']++; else if (c === '2') menuCount[m]['2']++; else menuCount[m].none++;
     });
   });
-  const menuTag = (m) => {
-    const t = menuCount[m];
-    const total = t['1'] + t['2'] + t.none;
-    if (!total) return '';
-    const txt1 = getMenuTexte(repasDate, m, '1');
-    const txt2 = getMenuTexte(repasDate, m, '2');
-    return `<span style="font-size:.78rem;color:#16a34a;font-weight:600" title="${escAttr(txt1)}">Menu1${txt1 ? ' — ' + escHtml(txt1) : ''} × ${t['1']}</span>
-            <span style="font-size:.78rem;color:#2563eb;font-weight:600" title="${escAttr(txt2)}"> · Menu2${txt2 ? ' — ' + escHtml(txt2) : ''} × ${t['2']}</span>
-            ${t.none ? `<span style="font-size:.78rem;color:var(--muted)"> · sans choix × ${t.none}</span>` : ''}`;
+  const countInscrit = m => residents.filter(r => isInscrit(day, m, r.id)).length;
+  const servicePanel = (m, label, color) => {
+    const t = menuCount[m], total = t['1'] + t['2'] + t.none;
+    const txt1 = getMenuTexte(repasDate, m, '1'), txt2 = getMenuTexte(repasDate, m, '2');
+    const line = (nm, txt, c, n) => `<div style="display:flex;justify-content:space-between;gap:.6rem;font-size:.78rem;padding:2px 0"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:${c};font-weight:600">${nm}</span>${txt ? ' — ' + escHtml(txt) : ' <span style="color:var(--g400)">à renseigner</span>'}</span><span style="color:var(--muted);flex-shrink:0;font-weight:600">${n}</span></div>`;
+    return `<div style="background:#f8fafc;border:1px solid var(--border);border-radius:9px;padding:.55rem .75rem">
+      <div style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;color:${color};margin-bottom:.35rem">${label}<span style="margin-left:auto;font-weight:400;color:var(--muted);font-size:.72rem">${total} couvert${total > 1 ? 's' : ''}</span></div>
+      ${line('Menu 1', txt1, '#16a34a', t['1'])}
+      ${line('Menu 2', txt2, '#2563eb', t['2'])}
+      ${t.none ? `<div style="font-size:.72rem;color:var(--muted);margin-top:3px">Sans choix · ${t.none}</div>` : ''}
+    </div>`;
   };
 
   document.getElementById('rpCuisine').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:.5rem">
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><strong style="font-size:.8rem;width:52px">🌅 Matin</strong>${cuisineRow('matin')}</div>
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><strong style="font-size:.8rem;width:52px">☀️ Midi</strong>${cuisineRow('midi')} ${menuTag('midi')}</div>
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><strong style="font-size:.8rem;width:52px">🌙 Soir</strong>${cuisineRow('soir')} ${menuTag('soir')}</div>
+    <div style="display:flex;flex-direction:column;gap:.85rem">
+      <div>
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.4rem">Répartition des régimes · ${dayTotal}</div>
+        <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px">${regBar}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px 14px;font-size:.72rem;color:var(--muted);margin-top:.45rem">${regLegend}</div>
+      </div>
+      <div style="display:flex;gap:1.3rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+        <span>🌅 Matin <b style="color:#0f2b4a;font-weight:700">${countInscrit('matin')}</b></span>
+        <span>☀️ Midi <b style="color:#0f2b4a;font-weight:700">${countInscrit('midi')}</b></span>
+        <span>🌙 Soir <b style="color:#0f2b4a;font-weight:700">${countInscrit('soir')}</b></span>
+      </div>
+      ${servicePanel('midi', '☀️ Midi', '#d97706')}
+      ${servicePanel('soir', '🌙 Soir', '#7c3aed')}
     </div>`;
 
   // Sync toggle buttons
