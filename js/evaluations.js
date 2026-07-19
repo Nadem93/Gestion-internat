@@ -257,6 +257,28 @@ function _evNiveau(grille, score) {
   return g.niveaux.find(n => score >= n.min && score <= n.max) || g.niveaux[0];
 }
 
+// Libellé court d'un niveau pour l'échelle du design (ex. « Besoins modérés » → « Modérés »)
+function _evShort(label) {
+  if (/^Indépendance/i.test(label || '')) return 'Autonome';
+  let s = (label || '').replace(/^Besoins\s+/i, '').replace(/^Dépendance\s+/i, '');
+  s = s.replace(/très importants?/i, 'Très imp.');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Échelle de niveau segmentée : une case par bande de la grille, remplies jusqu'à
+// la bande courante (avec la couleur de chaque bande), les suivantes en gris.
+function _evScale(g, niveau) {
+  const nivs = (g && g.niveaux) || [];
+  if (!nivs.length) return '';
+  const cur = nivs.indexOf(niveau);
+  const segs = nivs.map((n, i) => `<span style="flex:1;height:8px;border-radius:3px;background:${i <= cur ? n.color : 'var(--g100)'}"></span>`).join('');
+  const lbls = nivs.map((n, i) => `<span style="flex:1;text-align:center;line-height:1.2;${i === cur ? `color:${n.color};font-weight:700` : ''}">${escHtml(_evShort(n.label))}</span>`).join('');
+  return `<div style="margin-top:.55rem">
+    <div style="display:flex;gap:3px">${segs}</div>
+    <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--muted);margin-top:.3rem">${lbls}</div>
+  </div>`;
+}
+
 function _evCard(e, resColor) {
   const g   = EV_GRILLES[e.grille];
   const col = g?.color || resColor;
@@ -264,19 +286,11 @@ function _evCard(e, resColor) {
   const score   = _evScore(e);
   const scoreMax = g?.scoreMax || 100;
   const niveau  = _evNiveau(e.grille, score);
-  const pct     = Math.round(score / scoreMax * 100);
   const dateStr = e.date ? new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '—';
   const sessRole = Auth.getSession()?.role;
   const canEdit = ['admin', 'moderator', 'superadmin'].includes(sessRole)
     || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
   const ringCol = niveau?.color || col;
-  const R = 26, C = 2 * Math.PI * R;
-  const donut = `<svg width="64" height="64" viewBox="0 0 64 64" style="flex-shrink:0;transform:rotate(-90deg)">
-    <circle cx="32" cy="32" r="${R}" fill="none" stroke="var(--g100)" stroke-width="6"/>
-    <circle cx="32" cy="32" r="${R}" fill="none" stroke="${ringCol}" stroke-width="6" stroke-linecap="round"
-            stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"
-            style="transition:stroke-dashoffset .5s ease"/>
-  </svg>`;
   return `<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .12s" onmouseover="this.style.boxShadow='0 6px 20px rgba(15,23,42,.1)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(15,23,42,.06)'">
     <div style="background:linear-gradient(135deg,${col}22,${col}08);border-bottom:1px solid ${col}22;padding:.9rem 1rem .75rem;display:flex;align-items:center;gap:.65rem">
       <div style="width:38px;height:38px;border-radius:10px;background:${col}18;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${icon}</div>
@@ -286,18 +300,12 @@ function _evCard(e, resColor) {
       </div>
     </div>
     <div style="padding:.85rem 1rem;flex:1;display:flex;flex-direction:column;gap:.4rem">
-      <div style="display:flex;align-items:center;gap:.85rem">
-        <div style="position:relative;width:64px;height:64px;flex-shrink:0">
-          ${donut}
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-            <span style="font-size:1.05rem;font-weight:800;color:${ringCol};line-height:1">${pct}%</span>
-          </div>
-        </div>
-        <div style="min-width:0;flex:1">
-          <div><span style="font-size:1.25rem;font-weight:800;color:${ringCol}">${score}</span><span style="font-size:.76rem;color:var(--muted)"> / ${scoreMax}</span></div>
-          <div style="font-size:.72rem;font-weight:600;color:${ringCol};margin-top:1px">${niveau?.label||''}</div>
-        </div>
+      <div style="display:flex;align-items:baseline;gap:.5rem">
+        <span style="font-size:1.5rem;font-weight:800;color:${ringCol};line-height:1">${score}</span>
+        <span style="font-size:.76rem;color:var(--muted)">/ ${scoreMax}</span>
+        <span style="margin-left:auto;font-size:.68rem;font-weight:700;padding:.14rem .5rem;border-radius:999px;background:${ringCol}1a;color:${ringCol};white-space:nowrap">${niveau?.label||''}</span>
       </div>
+      ${_evScale(g, niveau)}
       ${e.note ? `<div style="font-size:.73rem;color:var(--muted);line-height:1.5;margin-top:.1rem;font-style:italic">${escHtml(e.note.slice(0,80))}${e.note.length>80?'…':''}</div>` : ''}
       <div style="margin-top:auto;padding-top:.5rem;display:flex">
         <button class="btn btn-ghost btn-sm" onclick="openEvDetail('${e.id}')">👁 Détail</button>
