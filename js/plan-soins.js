@@ -27,6 +27,26 @@ let _psCache = [];
 function getPs()       { return _psCache; }
 async function loadPsCache() { _psCache = await sbGetPlanSoins(); }
 
+// ── Coches « fait » (traçabilité : qui, à quelle heure, historique par jour) ──
+let _psCoches = {};              // { soinId : coche } pour la date affichée (_psDate)
+let _psCochesLoaded = false;
+let _psDate = _psToday();        // date affichée (checklist du jour ou historique passé)
+function _psUser() {
+  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+  return s ? { id: String(s.userId || ''), nom: [s.prenom, s.nom].filter(Boolean).join(' ') || s.username || '' } : { id: '', nom: '' };
+}
+async function _psLoadCoches() {
+  try {
+    const list = (typeof sbGetPsCoches === 'function') ? await sbGetPsCoches(_psDate || _psToday()) : [];
+    _psCoches = {}; list.forEach(c => { _psCoches[String(c.soinId)] = c; });
+  } catch (e) { console.error('[_psLoadCoches]', e); _psCoches = {}; }
+  _psCochesLoaded = true;
+}
+function _psCocheTime(c) {
+  if (!c || !c.doneAt) return '';
+  try { return ' · ' + new Date(c.doneAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+}
+
 function _psCat(id)    { return PS_CATS.find(c => c.id === id) || PS_CATS[7]; }
 function _psFreq(id)   { return PS_FREQS.find(f => f.id === id) || PS_FREQS[0]; }
 
@@ -38,6 +58,8 @@ async function initPlanSoins() {
   if (!s) return;
   await sbLoadResidentsCache();
   await loadPsCache();
+  _psDate = _psToday();
+  await _psLoadCoches();
   _populatePsResidents();
   const params = new URLSearchParams(window.location.search);
   const rid = params.get('residentId') || params.get('id');
@@ -99,6 +121,13 @@ function ensurePsUI() {
     .ps-card:hover .ps-card-acts{opacity:1}
     .ps-card-acts button{width:22px;height:22px;border:none;background:#f1f5f9;border-radius:6px;cursor:pointer;color:#94a3b8;font-size:.72rem;display:flex;align-items:center;justify-content:center;padding:0}
     .ps-card-acts button:hover{background:#e2e8f0;color:#334155}
+    .ps-doneby{font-size:.66rem;color:#15803d;margin-top:.5rem;padding-top:.45rem;border-top:0.5px dashed #bbf7d0;display:flex;align-items:center;gap:.3rem;line-height:1.3}
+    .ps-datebar{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+    .ps-datebar-nav{width:32px;height:32px;border:1px solid var(--border);background:#fff;border-radius:9px;cursor:pointer;color:#475569;display:flex;align-items:center;justify-content:center;font-size:1rem;font-family:inherit;flex-shrink:0}
+    .ps-datebar-nav:hover{background:#f1f5f9}
+    .ps-datebar-lbl{font-weight:700;font-size:.9rem;color:#0f2b4a}
+    .ps-datebar-today{font-size:.72rem;color:#0891b2;background:#ecfeff;border:1px solid #a5f3fc;border-radius:999px;padding:.25rem .7rem;cursor:pointer;font-weight:700;font-family:inherit}
+    .ps-datebar-hist{font-size:.68rem;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:.2rem .6rem;font-weight:700}
     @media(max-width:768px){.ps-card-acts{opacity:1}.ps-card-head{padding-right:76px}}`;
   document.head.appendChild(s);
 }
@@ -146,7 +175,9 @@ function renderPlanSoins() {
     byResident[key].push(p);
   });
 
-  const today = _psToday();
+  _psRenderDateBar();
+  const isTodayView = _psDate === _psToday();
+  const faitWhen = isTodayView ? "aujourd'hui" : 'ce jour-là';
 
   container.innerHTML = Object.entries(byResident).map(([rid, soins]) => {
     const r = residents.find(x => x.id === rid);
@@ -155,7 +186,7 @@ function renderPlanSoins() {
     const initiales = (resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase();
     const nbActif = soins.filter(s=>s.actif!==false).length;
     const nbInterv = new Set(soins.map(s=>s.intervenant).filter(Boolean)).size;
-    const nbFait = soins.filter(s => s.actif!==false && s.faitLe === today).length;
+    const nbFait = soins.filter(s => s.actif!==false && _psCoches[String(s.id)]).length;
 
     // Tri : soins actifs d'abord, puis dans l'ordre des moments (PS_FREQS)
     const fi = f => { const i = PS_FREQS.findIndex(x=>x.id===f); return i < 0 ? 99 : i; };
@@ -167,7 +198,7 @@ function renderPlanSoins() {
         <div class="ps-res-ava" style="background:${resColor}">${initiales}</div>
         <div style="min-width:0">
           <div style="font-weight:800;font-size:.95rem;color:${resColor}">${escHtml(resName)}</div>
-          <div style="font-size:.72rem;color:var(--muted)">${nbActif} soin${nbActif>1?'s':''} actif${nbActif>1?'s':''}${nbInterv?` · ${nbInterv} intervenant${nbInterv>1?'s':''}`:''}${nbActif?` · <span style="color:#16a34a;font-weight:700">${nbFait}/${nbActif} fait${nbFait>1?'s':''} aujourd'hui</span>`:''}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${nbActif} soin${nbActif>1?'s':''} actif${nbActif>1?'s':''}${nbInterv?` · ${nbInterv} intervenant${nbInterv>1?'s':''}`:''}${nbActif?` · <span style="color:#16a34a;font-weight:700">${nbFait}/${nbActif} fait${nbFait>1?'s':''} ${faitWhen}</span>`:''}</div>
         </div>
         <button class="btn btn-accent btn-sm" style="margin-left:auto" onclick="openPsModal('','${rid}')">+ Ajouter</button>
       </div>
@@ -181,7 +212,9 @@ function _psCard(s, hideActions) {
   const cat = _psCat(s.cat);
   const freq = _psFreq(s.freq);
   const isActif = s.actif !== false;
-  const done = isActif && !!s.faitLe && s.faitLe === _psToday();
+  const coche = _psCoches[String(s.id)];
+  const done = isActif && !!coche;
+  const isTodayView = _psDate === _psToday();
   const ini = _psIntervInitiales(s.intervenant);
   return `<article class="ps-card${isActif ? '' : ' susp'}${done ? ' done' : ''}" style="--cc:${cat.color}">
     ${hideActions ? '' : `<div class="ps-card-acts">
@@ -201,29 +234,61 @@ function _psCard(s, hideActions) {
       ${s.intervenant
         ? `<span class="ps-who2"><span class="ps-av2" style="background:${cat.color}">${escHtml(ini)}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.intervenant)}</span></span>`
         : `<span class="ps-who2" style="color:#cbd5e1">Sans intervenant</span>`}
-      ${isActif
-        ? `<button class="ps-fait${done ? ' on' : ''}" onclick="togglePsFait('${s.id}')" title="${done ? 'Fait aujourd’hui — cliquer pour annuler' : 'Marquer comme fait aujourd’hui'}"><span class="ck">${done ? '✓' : ''}</span>${done ? 'Fait' : 'Fait ?'}</button>`
-        : `<span class="ps-susp-tag2">Suspendu</span>`}
+      ${!isActif
+        ? `<span class="ps-susp-tag2">Suspendu</span>`
+        : isTodayView
+          ? `<button class="ps-fait${done ? ' on' : ''}" onclick="togglePsFait('${s.id}')" title="${done ? 'Fait — cliquer pour annuler' : 'Marquer comme fait'}"><span class="ck">${done ? '✓' : ''}</span>${done ? 'Fait' : 'Fait ?'}</button>`
+          : done
+            ? `<span class="ps-fait on" style="cursor:default"><span class="ck">✓</span>Fait</span>`
+            : `<span class="ps-fait" style="cursor:default;opacity:.5"><span class="ck"></span>Non fait</span>`}
     </div>
+    ${done ? `<div class="ps-doneby">✓ Fait par ${escHtml(coche.par || '?')}${_psCocheTime(coche)}</div>` : ''}
   </article>`;
 }
 
-// Coche « fait aujourd'hui » (checklist du jour) : stocke la date sur le soin.
+// Coche « fait » du jour affiché — enregistre QUI et QUAND (table plan_soins_coches).
 async function togglePsFait(id) {
   const s = _psCache.find(x => x.id === id);
   if (!s || s.actif === false) return;
-  const t = _psToday();
-  const newFait = (s.faitLe === t) ? '' : t;   // bascule fait / non fait aujourd'hui
+  if (_psDate !== _psToday()) { toast('On ne coche que la journée en cours', 'info'); return; }
+  const key = String(id);
+  const wasDone = !!_psCoches[key];
+  const u = _psUser();
   try {
-    const saved = await sbSavePlanSoins({ ...s, faitLe: newFait, id });
-    _psCache = _psCache.map(x => x.id === id ? saved : x);
-    if (newFait && saved.faitLe !== newFait) {
-      toast('Coche non enregistrée — exécutez la migration « fait_le » (voir SQL)', 'error');
-    }
+    if (wasDone) { await sbClearPsCoche(id, _psDate); delete _psCoches[key]; }
+    else { const c = await sbSetPsCoche({ soinId: id, date: _psDate, par: u.nom, parId: u.id }); _psCoches[key] = c; }
   } catch (e) { console.error('[togglePsFait]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   renderPlanSoins();
   // Si la carte « Plan de soins — référés » du tableau de bord est présente, on la rafraîchit aussi
   if (typeof renderPlanSoinsReferes === 'function') { try { renderPlanSoinsReferes(); } catch (e) {} }
+}
+
+// ── Barre de date / navigation historique (page Plan de soins) ──
+function _psRenderDateBar() {
+  const bar = document.getElementById('psDateBar');
+  if (!bar) return;
+  const t = _psToday();
+  const isToday = _psDate === t;
+  const lbl = new Date((_psDate || t) + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  bar.innerHTML = `<button class="ps-datebar-nav" onclick="psSetDate(-1)" title="Jour précédent" aria-label="Jour précédent">‹</button>
+    <button class="ps-datebar-nav" onclick="psSetDate(1)" title="Jour suivant" aria-label="Jour suivant"${isToday ? ' disabled style="opacity:.4;cursor:default"' : ''}>›</button>
+    <span class="ps-datebar-lbl">${escHtml(lbl)}</span>
+    ${isToday ? '' : `<button class="ps-datebar-today" onclick="psGoToday()">Aujourd’hui</button><span class="ps-datebar-hist">Historique — lecture seule</span>`}`;
+}
+async function psSetDate(delta) {
+  const d = new Date((_psDate || _psToday()) + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const p = n => String(n).padStart(2, '0');
+  const next = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  if (next > _psToday()) return;               // pas de navigation dans le futur
+  _psDate = next;
+  await _psLoadCoches();
+  renderPlanSoins();
+}
+async function psGoToday() {
+  _psDate = _psToday();
+  await _psLoadCoches();
+  renderPlanSoins();
 }
 
 function openPsModal(id, presetResidentId) {

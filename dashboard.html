@@ -1578,6 +1578,9 @@
     if (typeof loadPsCache === 'function' && (typeof _psCache === 'undefined' || !Array.isArray(_psCache) || !_psCache.length)) {
       try { await loadPsCache(); } catch(e){ console.error('[renderPlanSoinsReferes]', e); }
     }
+    if (typeof _psLoadCoches === 'function' && typeof _psCochesLoaded !== 'undefined' && !_psCochesLoaded) {
+      try { await _psLoadCoches(); } catch(e){ console.error('[renderPlanSoinsReferes coches]', e); }
+    }
     const residents = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
     const rIds = new Set(residents.map(r => String(r.id)));
     const all = (typeof getPs==='function'?getPs():[]).filter(p => rIds.has(String(p.residentId)));
@@ -1594,7 +1597,7 @@
       const resName = `${r.prenom||''} ${r.nom||''}`.trim() || 'Résident';
       const ini = (resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase();
       const nbActif = soins.filter(s=>s.actif!==false).length;
-      const nbFait = soins.filter(s=>s.actif!==false && s.faitLe===today).length;
+      const nbFait = soins.filter(s=>s.actif!==false && (typeof _psCoches!=='undefined' && _psCoches[String(s.id)])).length;
       const sorted = soins.slice().sort((a,b)=>((a.actif!==false?0:1)-(b.actif!==false?0:1))||(fi(a.freq)-fi(b.freq)));
       return `<div class="ps-res" style="border-color:${resColor}22;margin-bottom:1rem">
         <div class="ps-res-head">
