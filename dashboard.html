@@ -1403,7 +1403,7 @@
 
     if (_dashIsMobile()) {
       // Mobile : une ligne par jour AYANT des absences (jour à gauche, absences pleine largeur)
-      grid.style.cssText = 'display:flex;flex-direction:column;min-width:0';
+      grid.style.cssText = 'display:flex;flex-direction:column;min-width:0;max-height:340px;overflow-y:auto';
       const rows = PH_J.filter(j => byJour[j].length).map((j, idx) => {
         const list = byJour[j];
         const items = list.map(a => `<div style="padding:.4rem .55rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px">
@@ -1418,17 +1418,22 @@
       return;
     }
 
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0';
-    grid.innerHTML = PH_J.map(j => {
+    // Grille : ligne d'en-tête des 7 jours FIGÉE (sticky, pleine largeur) + colonnes d'absences défilantes
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:0 .4rem;align-items:start;min-width:0;max-height:340px;overflow-y:auto';
+    const _stHead = PH_J.map(j => {
+      const on = byJour[j].length > 0;
+      return `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on?'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd':'background:#f8fafc;color:#94a3b8;border:1px solid var(--border)'}">${PH_JC[j]}</div>`;
+    }).join('');
+    const _stCols = PH_J.map(j => {
       const list = byJour[j], on = list.length > 0;
-      const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on?'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd':'background:#f8fafc;color:#94a3b8;border:1px solid var(--border)'}">${PH_JC[j]}</div>`;
       const body = on ? list.map(a => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px">
         <div style="font-weight:700;font-size:.65rem;color:${a.resColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.resName)}</div>
         <div style="font-weight:600;font-size:.68rem;line-height:1.2;color:#0369a1">${escHtml(a.label)}</div>
         ${(a.debut||a.fin) ? `<div style="font-size:.6rem;color:var(--muted);margin-top:1px">${escHtml(a.debut)}${a.fin?(a.debut?'–':'')+escHtml(a.fin):''}</div>` : ''}
       </div>`).join('') : `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:#cbd5e1">·</div>`;
-      return `<div style="min-width:0">${head}${body}</div>`;
+      return `<div style="min-width:0">${body}</div>`;
     }).join('');
+    grid.innerHTML = `<div style="grid-column:1/-1;position:sticky;top:0;z-index:3;background:#fff;padding-bottom:.2rem;display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem">${_stHead}</div>${_stCols}`;
   }
 
   // ── Plan de soins — référés : mêmes fiches que la page Plan de soins, cochables « fait » ──
