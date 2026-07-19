@@ -1472,11 +1472,11 @@ function budgetCard(r) {
     return `<div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
       <span style="width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isRec ? '#dcfce7' : '#fee2e2'};color:${isRec ? '#16a34a' : '#dc2626'};font-size:.95rem;font-weight:700">${isRec ? '↑' : '↓'}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.libelle || (isRec ? 'Recette' : 'Dépense'))}${o.categorie ? ` <span class="badge badge-gray">${escHtml(o.categorie)}</span>` : ''}</div>
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.libelle || (isRec ? 'Recette' : 'Dépense'))}${o.categorie ? ` <span class="badge badge-gray">${escHtml(o.categorie)}</span>` : ''}${o.recurrence ? ` <span class="badge" style="background:#e0e7ff;color:#4338ca" title="Opération récurrente ${o.recurrence === 'mensuelle' ? 'mensuelle' : 'hebdomadaire'}">🔁 ${o.recurrence === 'mensuelle' ? 'mensuel' : 'hebdo'}</span>` : ''}</div>
         <div style="font-size:.72rem;color:var(--muted);margin-top:1px">${formatDate(o.date)}${o.notes ? ' · ' + escHtml(o.notes) : ''}</div>
       </div>
       <div style="font-weight:700;font-size:.85rem;color:${isRec ? '#16a34a' : '#dc2626'};white-space:nowrap">${isRec ? '+' : '–'} ${fmtMoney(o.montant)}</div>
-      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${o.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteBudgetOp('${o.id}')">✕</button></div>` : ''}
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${o.id}')">✎</button>${o.serie ? `<button class="btn btn-ghost btn-sm" style="color:#dc2626" title="Supprimer toute la série récurrente" onclick="deleteBudgetSerie('${o.serie}')">🔁✕</button>` : ''}<button class="btn btn-ghost btn-sm" style="color:var(--red)" title="${o.serie ? 'Supprimer seulement cette échéance' : 'Supprimer'}" onclick="deleteBudgetOp('${o.id}')">✕</button></div>` : ''}
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune opération enregistrée</div>';
 
@@ -1513,6 +1513,7 @@ function budgetCard(r) {
 
 function budgetFormHtml(item) {
   const type = item.type || 'depense';
+  const isNew = !item.id;
   const cats = type === 'recette' ? BUDGET_CAT_RECETTE : BUDGET_CAT_DEPENSE;
   const catOpts = ['<option value="">—</option>'].concat(cats.map(c => `<option value="${c}"${item.categorie === c ? ' selected' : ''}>${c}</option>`)).join('');
   return `
@@ -1524,11 +1525,54 @@ function budgetFormHtml(item) {
       <div class="form-group"><label>Montant (€) *</label><input type="number" step="0.01" min="0" id="buMontant" value="${item.montant != null ? item.montant : ''}" class="form-input"/></div>
     </div>
     <div class="grid grid-2" style="gap:.75rem">
-      ${santeField('buDate', 'Date *', item.date || today(), 'date')}
+      ${santeField('buDate', isNew ? 'Date de début *' : 'Date *', item.date || today(), 'date')}
       <div class="form-group"><label>Catégorie</label><select id="buCategorie" class="form-input">${catOpts}</select></div>
     </div>
+    ${isNew ? `
+    <div class="grid grid-2" style="gap:.75rem">
+      <div class="form-group"><label>Récurrence</label><select id="buRecurrence" class="form-input" onchange="refreshBudgetRecur()">
+        <option value="ponctuelle">Ponctuelle (une seule fois)</option>
+        <option value="hebdomadaire">Chaque semaine</option>
+        <option value="mensuelle">Chaque mois</option>
+      </select></div>
+      <div class="form-group" id="buRecurFinWrap" style="display:none"><label>Jusqu'au *</label><input type="date" id="buRecurrenceFin" class="form-input"/></div>
+    </div>
+    <div id="buRecurHint" style="display:none;font-size:.72rem;color:var(--muted);margin:-.35rem 0 .2rem;line-height:1.4">🔁 Une opération identique sera générée à chaque période, de la date de début jusqu'au « Jusqu'au » inclus — ex. <b>salaire</b> chaque mois, <b>argent de poche</b> chaque semaine.</div>` : ''}
     ${santeField('buLibelle', 'Libellé', item.libelle)}
     ${santeTextarea('buNotes', 'Notes', item.notes)}`;
+}
+
+// Récurrence : affiche/masque la date de fin + amorce une valeur par défaut sensée
+function refreshBudgetRecur() {
+  const rec = document.getElementById('buRecurrence');
+  if (!rec) return;
+  const on = rec.value !== 'ponctuelle';
+  const wrap = document.getElementById('buRecurFinWrap');
+  const hint = document.getElementById('buRecurHint');
+  if (wrap) wrap.style.display = on ? '' : 'none';
+  if (hint) hint.style.display = on ? '' : 'none';
+  const fin = document.getElementById('buRecurrenceFin');
+  const deb = document.getElementById('buDate');
+  if (on && fin && !fin.value && deb && deb.value) {
+    const d = new Date(deb.value + 'T00:00');
+    d.setMonth(d.getMonth() + (rec.value === 'mensuelle' ? 12 : 3));   // 12 mois / ~3 mois par défaut
+    fin.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+}
+
+// Liste des dates (YYYY-MM-DD) d'une récurrence, de début à fin inclus (borne de sécurité 200)
+function _budgetRecurDates(startStr, endStr, freq) {
+  const out = [];
+  const start = new Date(startStr + 'T00:00'), end = new Date(endStr + 'T00:00');
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return out;
+  const d = new Date(start);
+  let guard = 0;
+  while (d <= end && guard < 200) {
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    if (freq === 'hebdomadaire') d.setDate(d.getDate() + 7); else d.setMonth(d.getMonth() + 1);
+    guard++;
+  }
+  return out;
 }
 
 function refreshBudgetCats() {
@@ -1562,20 +1606,52 @@ async function saveBudgetOp() {
     date: g('buDate'), categorie: g('buCategorie'), libelle: g('buLibelle'), notes: g('buNotes')
   };
   const ops = [...getBudgetOps(r)];
-  if (budgetEditId) { const idx = ops.findIndex(x => x.id === budgetEditId); if (idx >= 0) ops[idx] = { ...ops[idx], ...item }; }
-  else { item.id = genId(); ops.push(item); }
+  if (budgetEditId) {
+    const idx = ops.findIndex(x => x.id === budgetEditId); if (idx >= 0) ops[idx] = { ...ops[idx], ...item };
+  } else {
+    const rec = (document.getElementById('buRecurrence') || {}).value || 'ponctuelle';
+    if (rec === 'ponctuelle') {
+      ops.push({ ...item, id: genId() });
+    } else {
+      const finStr = g('buRecurrenceFin');
+      if (!finStr) { toast('Indiquez la date « Jusqu\'au » pour la récurrence', 'error'); return; }
+      const dates = _budgetRecurDates(item.date, finStr, rec);
+      if (!dates.length) { toast('« Jusqu\'au » doit être postérieur (ou égal) à la date de début', 'error'); return; }
+      const serie = genId();
+      dates.forEach(dt => ops.push({ ...item, id: genId(), date: dt, serie, recurrence: rec }));
+      toast(`${dates.length} échéance${dates.length > 1 ? 's' : ''} générée${dates.length > 1 ? 's' : ''} 🔁`, 'success');
+    }
+  }
   await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
   closeModal('budgetModal');
-  toast('Enregistré', 'success');
+  if (budgetEditId) toast('Enregistré', 'success');
   loadResident();
 }
 
 function deleteBudgetOp(id) {
-  confirmDialog('Supprimer cette opération ?', async () => {
+  const r0 = getResident();
+  const op = getBudgetOps(r0).find(o => o.id === id);
+  const msg = (op && op.serie) ? 'Supprimer seulement cette échéance ? (les autres échéances de la série sont conservées)' : 'Supprimer cette opération ?';
+  confirmDialog(msg, async () => {
     const r = getResident();
     const ops = getBudgetOps(r).filter(o => o.id !== id);
     await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
     toast('Supprimé', 'success');
+    loadResident();
+  });
+}
+
+// Supprime TOUTE une série récurrente (toutes les échéances partageant le même identifiant de série)
+function deleteBudgetSerie(serie) {
+  const r0 = getResident();
+  const serieOps = getBudgetOps(r0).filter(o => o.serie === serie);
+  if (!serieOps.length) return;
+  const lib = serieOps[0].libelle || (serieOps[0].type === 'recette' ? 'Recette' : 'Dépense');
+  confirmDialog(`Supprimer les ${serieOps.length} échéances de la série récurrente « ${lib} » ?`, async () => {
+    const r = getResident();
+    const ops = getBudgetOps(r).filter(o => o.serie !== serie);
+    await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
+    toast('Série récurrente supprimée', 'info');
     loadResident();
   });
 }
