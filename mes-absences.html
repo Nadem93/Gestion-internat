@@ -109,18 +109,36 @@ function renderMesAbs() {
     const color = MA_TYPE_C[a.type] || '#64748b';
     const jours = maDays(a.debut, a.fin);
     const enCours = !a.fin || a.fin >= new Date().toISOString().slice(0, 10);
-    return `<div style="display:flex;align-items:flex-start;gap:.85rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:3px solid ${color}">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:.85rem">${escHtml(MA_TYPE_L[a.type] || a.type)}</span>
-          <span style="font-size:.7rem;color:#fff;background:${color};padding:1px 8px;border-radius:99px">${jours}j</span>
-          ${enCours ? `<span style="font-size:.68rem;font-weight:700;background:#fef9c3;color:#b45309;padding:1px 8px;border-radius:99px">En cours</span>` : ''}
-        </div>
-        <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">${formatDate(a.debut)}${a.fin ? ' → ' + formatDate(a.fin) : ' (en cours)'}</div>
-        ${a.notes ? `<div style="font-size:.78rem;margin-top:.2rem;font-style:italic">${escHtml(a.notes)}</div>` : ''}
-        ${a.justificatifPath ? `<button class="btn btn-ghost btn-sm" style="margin-top:.35rem;padding:.2rem .5rem" onclick="openJustificatif('${a.id}')">📎 Voir le justificatif</button>` : '<div style="font-size:.72rem;color:#dc2626;margin-top:.3rem">⚠️ Aucun justificatif joint</div>'}
+    // Frise de période : point de début plein, ligne pointillée si l'arrêt court encore, point de fin creux (en cours) ou plein (terminé)
+    const line = enCours
+      ? `<span style="flex:1;height:3px;border-radius:2px;background:repeating-linear-gradient(90deg,${color} 0 6px,transparent 6px 10px)"></span>`
+      : `<span style="flex:1;height:3px;border-radius:2px;background:${color}"></span>`;
+    const endDot = enCours
+      ? `<span style="width:9px;height:9px;border-radius:50%;border:2px solid ${color};flex-shrink:0"></span>`
+      : `<span style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></span>`;
+    const justif = a.justificatifPath
+      ? `<div style="font-size:.75rem;color:#16a34a;margin-top:8px;cursor:pointer" onclick="openJustificatif('${a.id}')">📎 Justificatif joint · <span style="text-decoration:underline">voir</span></div>`
+      : `<div style="font-size:.75rem;color:#dc2626;margin-top:8px">⚠️ Aucun justificatif joint</div>`;
+    return `<div style="display:flex;align-items:center;gap:14px;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)">
+      <div style="text-align:center;flex-shrink:0;min-width:44px">
+        <div style="font-size:1.6rem;font-weight:800;color:${color};line-height:1">${jours}</div>
+        <div style="font-size:.66rem;color:var(--muted)">jour${jours > 1 ? 's' : ''}</div>
       </div>
-      <div style="display:flex;gap:.25rem;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-weight:600;font-size:.85rem">${escHtml(MA_TYPE_L[a.type] || a.type)}</span>
+          ${enCours
+            ? `<span style="font-size:.66rem;font-weight:700;background:#fef9c3;color:#b45309;padding:1px 8px;border-radius:99px">En cours</span>`
+            : `<span style="font-size:.66rem;font-weight:700;background:var(--g100);color:var(--muted);padding:1px 8px;border-radius:99px">Terminé</span>`}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></span>${line}${endDot}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:4px"><span>${formatDate(a.debut)}</span><span>${a.fin ? formatDate(a.fin) : 'en cours'}</span></div>
+        ${a.notes ? `<div style="font-size:.76rem;margin-top:6px;font-style:italic;color:var(--muted)">${escHtml(a.notes)}</div>` : ''}
+        ${justif}
+      </div>
+      <div style="display:flex;gap:.25rem;flex-shrink:0;align-self:flex-start">
         <button class="btn btn-ghost btn-sm" onclick="openMesAbsModal('${a.id}')" title="Modifier / ajouter un justificatif">✎</button>
         <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteMesAbs('${a.id}')" title="Supprimer">✕</button>
       </div>
