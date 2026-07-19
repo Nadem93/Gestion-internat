@@ -262,8 +262,8 @@
         </div>
       </div>
 
-      <!-- PLAN DE SOINS RÉFÉRÉS + FICHE MÉDICALE RÉFÉRÉS (côte à côte ; si l'une est masquée, l'autre prend toute la largeur) -->
-      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.5rem;margin-bottom:1.5rem;align-items:flex-start">
+      <!-- PLAN DE SOINS RÉFÉRÉS + FICHE MÉDICALE RÉFÉRÉS (côte à côte, même hauteur ; si l'une est masquée, l'autre prend toute la largeur) -->
+      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.5rem;margin-bottom:1.5rem;align-items:stretch">
         <div class="card" id="dashCardPlanSoinsRef" style="overflow:hidden;flex:1 1 380px;min-width:0;display:none">
           <div class="card-header" style="background:color-mix(in srgb, #0891b2 12%, #fff)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0891b2"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
@@ -1647,7 +1647,12 @@
       .dmed-pill{font-size:.68rem;background:#f0fdfa;border:1px solid #99f6e4;color:#0f766e;border-radius:999px;padding:1px 8px}
       .dmed-pill.more{background:#f1f5f9;border-color:#e2e8f0;color:#64748b}
       .dmed-none{font-size:.72rem;color:#94a3b8}
-      .dmed-rdv{font-size:.72rem;color:#7c3aed;margin-top:.5rem}`;
+      .dmed-rdv{font-size:.72rem;color:#7c3aed;margin-top:.5rem}
+      @media(min-width:681px){
+        #dashCardPlanSoinsRef,#dashCardMedicalRef{max-height:500px;display:flex;flex-direction:column}
+        #dashCardPlanSoinsRef>.card-body,#dashCardMedicalRef>.card-body{flex:1;min-height:0;display:flex;flex-direction:column}
+        #dashPlanSoinsRefGrid,#dashMedicalRefBody{flex:1;min-height:0;overflow-y:auto;padding-right:.2rem}
+      }`;
     document.head.appendChild(s);
   }
   function _dmedField(label, value, extra){
