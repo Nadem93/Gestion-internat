@@ -1253,8 +1253,14 @@ async function runSeed(){
     if(typeof sbSaveFacture==='function'){ const x=genFactures(residents); await pool(x, f=>sbSaveFacture(f), 10); log(`✓ ${x.length} factures créées`,'ok'); } npTick();
     // ── Repas (menus + choix) ──
     if(typeof sbSaveRepasJour==='function'){ const x=genRepasDays(residents); await pool(x, r=>sbSaveRepasJour(r.date, r.dayData), 6); log(`✓ ${x.length} jours de repas créés`,'ok'); } npTick();
-    // ── Cahier de nuit ──
-    if(typeof sbSaveNuit==='function' && employes.length){ const x=genNuits(employes, residents); await pool(x, n=>sbSaveNuit(n), 6); log(`✓ ${x.length} nuits consignées`,'ok'); } npTick();
+    // ── Cahier de nuit ── (nuits : contrainte unique etab+date, pas d'upsert dans la couche →
+    //    on récupère les dates déjà présentes pour les METTRE À JOUR au lieu d'insérer en double)
+    if(typeof sbSaveNuit==='function' && employes.length){
+      let nuitByDate={};
+      try{ if(typeof sbGetNuits==='function'){ (await sbGetNuits()||[]).forEach(n=>{ if(n && n.date) nuitByDate[n.date]=n.id; }); } }catch(_){}
+      const x=genNuits(employes, residents).map(n=> nuitByDate[n.date] ? {...n, id:nuitByDate[n.date]} : n);
+      await pool(x, n=>sbSaveNuit(n), 6); log(`✓ ${x.length} nuits consignées`,'ok');
+    } npTick();
 
     // ── Satisfaction (questions + questionnaires) ──
     if(typeof sbSaveSatQuestion==='function' && typeof sbSaveSatisfaction==='function'){
@@ -1404,6 +1410,14 @@ async function deleteDemo(){
     await _delBy('sbGetAstreintes','sbDeleteAstreinte',e=>_tag(e.note),'astreintes');
     await _delBy('sbGetFormations','sbDeleteFormation',e=>_tag(e.notes),'formations');
     await _delBy('sbGetChambres','sbDeleteChambre',e=>_tag(e.notes),'chambres');
+    // Nuits : pas de fonction de suppression dans la couche → suppression directe des nuits [démo]
+    if(typeof sbGetNuits==='function' && typeof supabaseClient!=='undefined'){
+      try{
+        const ns=(await sbGetNuits()||[]).filter(n=>_tag(n.transmission));
+        await pool(ns, n=>supabaseClient.from('nuits').delete().eq('id', n.id), 8);
+        if(ns.length) log(`✓ ${ns.length} nuits [démo] supprimées`,'ok');
+      }catch(e){ log('Nettoyage nuits ignoré : '+(e.message||e),'warn'); }
+    }
     // Salariés en dernier (après leurs tables liées)
     if(demoEmp.length && typeof sbDeleteEmploye==='function'){
       await pool(demoEmp, e=>sbDeleteEmploye(e.id), 6); log(`✓ ${demoEmp.length} salariés [démo] supprimés`,'ok');
