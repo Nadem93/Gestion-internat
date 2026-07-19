@@ -93,7 +93,7 @@ async function initMesConges() {
     const employes = await sbGetEmployes();
     _mcFiche = employes.find(e => String(e.profileId) === String(s.userId)) || null;
     if (!_mcFiche) {
-      document.getElementById('btnAddConge').style.display = 'none';
+      // Le bouton reste visible : le message d'explication apparaît au clic (voir openMesCongeModal).
       info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--muted)">Votre compte n'est pas encore relié à une fiche salarié.<br>Contactez votre administrateur pour pouvoir faire une demande de congés.</div>`;
       return;
     }
@@ -138,6 +138,10 @@ function mcModalSync() {
 }
 
 function openMesCongeModal() {
+  if (!_mcFiche) {
+    toast("Votre compte n'est pas encore relié à une fiche salarié. Contactez votre administrateur pour pouvoir faire une demande de congés.", 'error');
+    return;
+  }
   document.getElementById('mcType').value = 'cp';
   document.getElementById('mcDebut').value = '';
   document.getElementById('mcFin').value = '';
