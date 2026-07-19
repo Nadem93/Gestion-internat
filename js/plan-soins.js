@@ -176,18 +176,19 @@ function renderPlanSoins() {
   }).join('');
 }
 
-function _psCard(s) {
+// hideActions : masque ✎/⏸/✕ (ex. carte du tableau de bord — lecture + coche « fait »)
+function _psCard(s, hideActions) {
   const cat = _psCat(s.cat);
   const freq = _psFreq(s.freq);
   const isActif = s.actif !== false;
   const done = isActif && !!s.faitLe && s.faitLe === _psToday();
   const ini = _psIntervInitiales(s.intervenant);
   return `<article class="ps-card${isActif ? '' : ' susp'}${done ? ' done' : ''}" style="--cc:${cat.color}">
-    <div class="ps-card-acts">
+    ${hideActions ? '' : `<div class="ps-card-acts">
       <button onclick="openPsModal('${s.id}')" title="Modifier">✎</button>
       <button onclick="togglePsActif('${s.id}')" title="${isActif ? 'Suspendre' : 'Réactiver'}">${isActif ? '⏸' : '▶'}</button>
       <button onclick="deletePs('${s.id}')" title="Supprimer" style="color:#dc2626">✕</button>
-    </div>
+    </div>`}
     <div class="ps-card-head">
       <span class="ps-card-ic" style="background:${cat.color}1a;color:${cat.color}">${cat.icon}</span>
       <div style="min-width:0">
@@ -221,6 +222,8 @@ async function togglePsFait(id) {
     }
   } catch (e) { console.error('[togglePsFait]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
   renderPlanSoins();
+  // Si la carte « Plan de soins — référés » du tableau de bord est présente, on la rafraîchit aussi
+  if (typeof renderPlanSoinsReferes === 'function') { try { renderPlanSoinsReferes(); } catch (e) {} }
 }
 
 function openPsModal(id, presetResidentId) {

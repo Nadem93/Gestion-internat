@@ -262,6 +262,20 @@
         </div>
       </div>
 
+      <!-- PLAN DE SOINS — RÉFÉRÉS : mêmes fiches que la page Plan de soins, cochables « fait » -->
+      <div class="card" id="dashCardPlanSoinsRef" style="overflow:hidden;margin-top:1.5rem;margin-bottom:1.5rem;display:none">
+        <div class="card-header" style="background:color-mix(in srgb, #0891b2 12%, #fff)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0891b2"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+          <span class="card-title" style="color:#0891b2">Plan de soins — référés</span>
+          <span class="badge badge-gray" id="dashPlanSoinsRefCount" style="margin-left:.5rem;display:none">0</span>
+          <a href="plan-soins.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#0891b2">Gérer</a>
+        </div>
+        <div class="card-body">
+          <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Soins récurrents de vos référés — cochez ceux réalisés aujourd'hui.</div>
+          <div id="dashPlanSoinsRefGrid"></div>
+        </div>
+      </div>
+
       <!-- JOURNÉE DES RÉFÉRÉS + FIL DE VIE (côte à côte ; si l'une est masquée, l'autre prend toute la largeur) -->
       <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.5rem;margin-bottom:1.5rem;align-items:flex-start">
         <div class="card" id="dashCardJourneeRef" style="overflow:hidden;flex:1 1 380px;min-width:0;order:1;display:none">
@@ -543,6 +557,8 @@
 <script src="js/repertoire-supabase.js"></script>
 <script src="js/config-supabase.js"></script>
 <script src="js/taches-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/plan-soins.js"></script>
 <script>
   // Carte « Mon espace » : congés + heures de récup du salarié connecté
   (async function loadMonEspace() {
@@ -1553,6 +1569,44 @@
     }).join('');
   }
 
+  // ── Plan de soins — référés : mêmes fiches que la page Plan de soins, cochables « fait » ──
+  async function renderPlanSoinsReferes(){
+    const host = document.getElementById('dashCardPlanSoinsRef');
+    const grid = document.getElementById('dashPlanSoinsRefGrid');
+    if (!host || !grid) return;
+    if (typeof ensurePsUI === 'function') ensurePsUI();
+    if (typeof loadPsCache === 'function' && (typeof _psCache === 'undefined' || !Array.isArray(_psCache) || !_psCache.length)) {
+      try { await loadPsCache(); } catch(e){ console.error('[renderPlanSoinsReferes]', e); }
+    }
+    const residents = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
+    const rIds = new Set(residents.map(r => String(r.id)));
+    const all = (typeof getPs==='function'?getPs():[]).filter(p => rIds.has(String(p.residentId)));
+    if (!residents.length || !all.length || typeof _psCard !== 'function') { host.style.display='none'; return; }
+    host.style.display='';
+    const cntEl = document.getElementById('dashPlanSoinsRefCount');
+    if (cntEl){ const n = all.filter(p=>p.actif!==false).length; cntEl.textContent = n; cntEl.style.display = n ? '' : 'none'; }
+    const today = (typeof _psToday==='function') ? _psToday() : new Date().toISOString().slice(0,10);
+    const fi = f => { const i = (typeof PS_FREQS!=='undefined') ? PS_FREQS.findIndex(x=>x.id===f) : -1; return i<0?99:i; };
+    const byRes = {}; all.forEach(p => { const k=String(p.residentId); (byRes[k]=byRes[k]||[]).push(p); });
+    grid.innerHTML = residents.filter(r => byRes[String(r.id)]).map(r => {
+      const soins = byRes[String(r.id)];
+      const resColor = safeColor(r.color) || '#0f2b4a';
+      const resName = `${r.prenom||''} ${r.nom||''}`.trim() || 'Résident';
+      const ini = (resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase();
+      const nbActif = soins.filter(s=>s.actif!==false).length;
+      const nbFait = soins.filter(s=>s.actif!==false && s.faitLe===today).length;
+      const sorted = soins.slice().sort((a,b)=>((a.actif!==false?0:1)-(b.actif!==false?0:1))||(fi(a.freq)-fi(b.freq)));
+      return `<div class="ps-res" style="border-color:${resColor}22;margin-bottom:1rem">
+        <div class="ps-res-head">
+          <div class="ps-res-ava" style="background:${resColor}">${escHtml(ini)}</div>
+          <div style="min-width:0"><div style="font-weight:800;font-size:.95rem;color:${resColor}">${escHtml(resName)}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${nbActif} soin${nbActif>1?'s':''} actif${nbActif>1?'s':''}${nbActif?` · <span style="color:#16a34a;font-weight:700">${nbFait}/${nbActif} fait${nbFait>1?'s':''} aujourd'hui</span>`:''}</div></div>
+        </div>
+        <div class="ps-grid">${sorted.map(s => _psCard(s, true)).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
   // ── Modales d'ajout (dashboard) — en-tête coloré + sections (design Option 2) ──
   function dashOpenModal(html){ const ov=document.getElementById('dashModalOv'), box=document.getElementById('dashModal'); if(!ov||!box)return; box.innerHTML=html; ov.classList.add('open'); }
   function dashCloseModal(){ const ov=document.getElementById('dashModalOv'); if(ov)ov.classList.remove('open'); }
@@ -1738,6 +1792,7 @@
     try { renderSemaineTypeReferes(); } catch (e) { console.error(e); }
     _bindDashRefMq();
     renderJourneeReferes().catch(e => console.error(e));
+    renderPlanSoinsReferes().catch(e => console.error(e));
     try { renderFilDeVie(); } catch (e) { console.error(e); }
   })();
 </script>
