@@ -1339,7 +1339,7 @@
 
     if (_dashIsMobile()) {
       // Mobile : une ligne par jour (jour à gauche, événements pleine largeur à droite)
-      grid.style.cssText = 'display:flex;flex-direction:column;min-width:0';
+      grid.style.cssText = 'display:flex;flex-direction:column;min-width:0;max-height:340px;overflow-y:auto';
       grid.innerHTML = days.map(({str,d}, idx) => {
         const isToday = str === todayStr;
         const evs = byDay[str];
@@ -1357,7 +1357,7 @@
       return;
     }
 
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0';
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0;max-height:340px;overflow-y:auto';
     grid.innerHTML = days.map(({str,d}, idx) => {
       const isToday = str === todayStr;
       const chips = byDay[str].map(ev => `<div style="font-size:.68rem;padding:3px 5px;border-radius:5px;background:${ev.color}1a;border:1px solid ${ev.color}33;margin-bottom:3px;line-height:1.25;overflow:hidden">
