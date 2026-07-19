@@ -1417,6 +1417,18 @@
     document.querySelectorAll('#dashFilVieList .fv-item').forEach(it => { it.style.display = (type === 'all' || it.dataset.fvtype === type) ? '' : 'none'; });
   };
 
+  // Mobile : la grille 7 colonnes des cartes « référés » devient une liste verticale par jour.
+  function _dashIsMobile(){ try { return window.matchMedia('(max-width:680px)').matches; } catch(e){ return (window.innerWidth||999) <= 680; } }
+  let _dashRefMqBound = false;
+  function _bindDashRefMq(){
+    if (_dashRefMqBound) return; _dashRefMqBound = true;
+    try {
+      const mq = window.matchMedia('(max-width:680px)');
+      const h = () => { try{renderPlanningReferes();}catch(e){} try{renderSemaineTypeReferes();}catch(e){} };
+      if (mq.addEventListener) mq.addEventListener('change', h); else if (mq.addListener) mq.addListener(h);
+    } catch(e){}
+  }
+
   // ── Planning référé : agenda des 7 prochains jours, tous les référés (comme le Planning individuel de la fiche) ──
   function renderPlanningReferes(){
     const host = document.getElementById('dashCardPlanningRef');
@@ -1450,6 +1462,28 @@
     });
     days.forEach(({str}) => byDay[str].sort((a,b) => (a.heure||'').localeCompare(b.heure||'')));
     if (cntEl) { cntEl.textContent = total; cntEl.style.display = total ? '' : 'none'; }
+
+    if (_dashIsMobile()) {
+      // Mobile : une ligne par jour (jour à gauche, événements pleine largeur à droite)
+      grid.style.cssText = 'display:flex;flex-direction:column;min-width:0';
+      grid.innerHTML = days.map(({str,d}, idx) => {
+        const isToday = str === todayStr;
+        const evs = byDay[str];
+        const body = evs.length ? evs.map(ev => `<div style="font-size:.74rem;padding:4px 8px;border-radius:6px;background:${ev.color}1a;border:1px solid ${ev.color}33;margin-bottom:4px;line-height:1.3">
+          <span style="font-weight:700;color:${ev.resColor}">${escHtml(ev.resName)}</span><span style="color:${ev.color}"> · ${ev.heure?ev.heure+' ':''}${escHtml(ev.titre)}</span>
+        </div>`).join('') : '<div style="font-size:.74rem;color:#cbd5e1;padding-top:.2rem">—</div>';
+        return `<div style="display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;${idx>0?'border-top:1px solid var(--border)':''}">
+          <div style="width:50px;flex-shrink:0;text-align:center">
+            <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${isToday?'#2563eb':'var(--muted)'}">${PR_JC[d.getDay()]}</div>
+            <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:${isToday?'800':'600'};color:${isToday?'#fff':'#1e293b'};background:${isToday?'#2563eb':'transparent'};margin:.15rem auto 0">${d.getDate()}</div>
+          </div>
+          <div style="flex:1;min-width:0;padding-top:.15rem">${body}</div>
+        </div>`;
+      }).join('');
+      return;
+    }
+
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0';
     grid.innerHTML = days.map(({str,d}, idx) => {
       const isToday = str === todayStr;
       const chips = byDay[str].map(ev => `<div style="font-size:.68rem;padding:3px 5px;border-radius:5px;background:${ev.color}1a;border:1px solid ${ev.color}33;margin-bottom:3px;line-height:1.25;overflow:hidden">
@@ -1488,6 +1522,25 @@
     });
     PH_J.forEach(j => byJour[j].sort((a,b) => (a.debut||'').localeCompare(b.debut||'')));
     if (cntEl) { cntEl.textContent = total; cntEl.style.display = total ? '' : 'none'; }
+
+    if (_dashIsMobile()) {
+      // Mobile : une ligne par jour AYANT des absences (jour à gauche, absences pleine largeur)
+      grid.style.cssText = 'display:flex;flex-direction:column;min-width:0';
+      const rows = PH_J.filter(j => byJour[j].length).map((j, idx) => {
+        const list = byJour[j];
+        const items = list.map(a => `<div style="padding:.4rem .55rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px">
+          <span style="font-weight:700;font-size:.72rem;color:${a.resColor}">${escHtml(a.resName)}</span><span style="font-weight:600;font-size:.72rem;color:#0369a1"> — ${escHtml(a.label)}</span>${(a.debut||a.fin)?`<span style="font-size:.66rem;color:var(--muted)"> (${escHtml(a.debut)}${a.fin?(a.debut?'–':'')+escHtml(a.fin):''})</span>`:''}
+        </div>`).join('');
+        return `<div style="display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;${idx>0?'border-top:1px solid var(--border)':''}">
+          <div style="width:46px;flex-shrink:0;text-align:center;padding:.28rem 0;border-radius:8px;font-size:.7rem;font-weight:700;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">${PH_JC[j]}</div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:.35rem">${items}</div>
+        </div>`;
+      }).join('');
+      grid.innerHTML = rows || '<div style="text-align:center;color:#cbd5e1;font-size:.85rem;padding:1rem 0">Aucune absence récurrente</div>';
+      return;
+    }
+
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0';
     grid.innerHTML = PH_J.map(j => {
       const list = byJour[j], on = list.length > 0;
       const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on?'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd':'background:#f8fafc;color:#94a3b8;border:1px solid var(--border)'}">${PH_JC[j]}</div>`;
@@ -1683,6 +1736,7 @@
     try { renderReferesFiches(); } catch (e) { console.error(e); }
     try { renderPlanningReferes(); } catch (e) { console.error(e); }
     try { renderSemaineTypeReferes(); } catch (e) { console.error(e); }
+    _bindDashRefMq();
     renderJourneeReferes().catch(e => console.error(e));
     try { renderFilDeVie(); } catch (e) { console.error(e); }
   })();
