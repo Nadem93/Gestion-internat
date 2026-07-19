@@ -67,36 +67,50 @@ function _populatePsResidents() {
   });
 }
 
-// Injecte le CSS de la frise depuis le JS (solidaire du rendu, cache-proof).
+// Injecte le CSS des fiches depuis le JS (solidaire du rendu, cache-proof).
 function ensurePsUI() {
-  if (typeof document === 'undefined' || document.getElementById('ps-frise-styles')) return;
+  if (typeof document === 'undefined' || document.getElementById('ps-card-styles')) return;
   const s = document.createElement('style');
-  s.id = 'ps-frise-styles';
+  s.id = 'ps-card-styles';
   s.textContent = `
     .ps-res{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:1rem 1.15rem 1.15rem;margin-bottom:1.25rem}
     .ps-res-head{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
     .ps-res-ava{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;flex-shrink:0}
-    .ps-frise{display:flex;flex-direction:column}
-    .ps-rail{display:flex;gap:.85rem}
-    .ps-rail-lbl{width:84px;flex-shrink:0;text-align:right;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#64748b;padding-top:.65rem}
-    .ps-rail-body{flex:1;min-width:0;border-left:2px solid #e2e8f0;padding:0 0 .85rem 1.1rem;display:flex;flex-direction:column;gap:.5rem}
-    .ps-rail:last-child .ps-rail-body{padding-bottom:.15rem}
-    .ps-soin{position:relative;background:#f8fafc;border:0.5px solid #e2e8f0;border-left:3px solid var(--cc,#64748b);border-radius:0 10px 10px 0;padding:.55rem .7rem;display:flex;align-items:flex-start;gap:.55rem;transition:background .12s}
-    .ps-soin:hover{background:#f1f5f9}
-    .ps-soin::before{content:'';position:absolute;left:calc(-1.1rem - 6px);top:.7rem;width:10px;height:10px;border-radius:50%;background:var(--cc,#64748b);border:2px solid #fff}
-    .ps-soin.susp{opacity:.55}
-    .ps-soin-ic{font-size:1rem;line-height:1.2;flex-shrink:0}
-    .ps-soin-body{flex:1;min-width:0}
-    .ps-soin-t{font-size:.83rem;font-weight:700;color:#1e293b}
-    .ps-soin-d{font-size:.72rem;color:#64748b;margin-top:1px;line-height:1.45}
-    .ps-soin-meta{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;align-items:center}
-    .ps-cat{font-size:.66rem;padding:1px 7px;border-radius:999px;font-weight:600}
-    .ps-who{font-size:.66rem;background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:999px}
-    .ps-susp-tag{font-size:.66rem;background:#f1f5f9;color:#94a3b8;padding:1px 7px;border-radius:999px}
-    .ps-acts{display:flex;gap:.1rem;flex-shrink:0}
-    .ps-acts button{width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:#94a3b8;font-size:.8rem;display:flex;align-items:center;justify-content:center;padding:0}
-    .ps-acts button:hover{background:#e2e8f0;color:#334155}`;
+    .ps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.85rem}
+    .ps-card{position:relative;background:#fff;border:1px solid #e2e8f0;border-top:3px solid var(--cc,#64748b);border-radius:0 0 14px 14px;padding:.8rem .9rem;display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s}
+    .ps-card:hover{box-shadow:0 8px 22px rgba(15,43,74,.09);transform:translateY(-2px)}
+    .ps-card.susp{opacity:.6}
+    .ps-card.done{border-color:#bbf7d0;border-top-color:#16a34a;background:#f6fef9}
+    .ps-card-head{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.5rem}
+    .ps-card-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+    .ps-card-t{font-size:.86rem;font-weight:700;color:#1e293b;line-height:1.25}
+    .ps-card-freq{font-size:.63rem;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;font-weight:800;margin-top:2px}
+    .ps-card-d{font-size:.74rem;color:#64748b;line-height:1.5;margin-bottom:.6rem}
+    .ps-card-foot{display:flex;align-items:center;gap:.5rem;margin-top:auto;padding-top:.55rem;border-top:0.5px solid #eef2f7}
+    .ps-who2{display:inline-flex;align-items:center;gap:.35rem;font-size:.7rem;color:#475569;min-width:0}
+    .ps-av2{width:20px;height:20px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;flex-shrink:0}
+    .ps-susp-tag2{font-size:.66rem;background:#f1f5f9;color:#94a3b8;padding:1px 8px;border-radius:999px;margin-left:auto}
+    .ps-fait{margin-left:auto;display:inline-flex;align-items:center;gap:.35rem;border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:.22rem .6rem;font-size:.7rem;font-weight:700;color:#64748b;cursor:pointer;flex-shrink:0;transition:all .12s;font-family:inherit}
+    .ps-fait:hover{border-color:#16a34a;color:#15803d}
+    .ps-fait .ck{width:14px;height:14px;border-radius:50%;border:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:.58rem;line-height:1}
+    .ps-fait.on{border-color:#16a34a;background:#dcfce7;color:#15803d}
+    .ps-fait.on .ck{background:#16a34a;border-color:#16a34a;color:#fff}
+    .ps-card-acts{position:absolute;top:.5rem;right:.5rem;display:flex;gap:.15rem;opacity:0;transition:opacity .12s}
+    .ps-card:hover .ps-card-acts{opacity:1}
+    .ps-card-acts button{width:22px;height:22px;border:none;background:#f1f5f9;border-radius:6px;cursor:pointer;color:#94a3b8;font-size:.72rem;display:flex;align-items:center;justify-content:center;padding:0}
+    .ps-card-acts button:hover{background:#e2e8f0;color:#334155}
+    @media(max-width:768px){.ps-card-acts{opacity:1}.ps-card-head{padding-right:76px}}`;
   document.head.appendChild(s);
+}
+function _psToday() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function _psIntervInitiales(name) {
+  if (!name) return '?';
+  const base = String(name).replace(/\(.*$/, '').trim();   // retire un éventuel « (IDE) »
+  const parts = base.split(/\s+/).filter(Boolean);
+  return ((parts.map(w => w[0] || '').join('').slice(0, 2)) || base.slice(0, 2) || '?').toUpperCase();
 }
 
 function renderPlanSoins() {
@@ -132,8 +146,7 @@ function renderPlanSoins() {
     byResident[key].push(p);
   });
 
-  const h = new Date().getHours();
-  const momentNow = h < 11 ? 'matin' : h < 14 ? 'midi' : h < 20 ? 'soir' : 'nuit';
+  const today = _psToday();
 
   container.innerHTML = Object.entries(byResident).map(([rid, soins]) => {
     const r = residents.find(x => x.id === rid);
@@ -142,52 +155,72 @@ function renderPlanSoins() {
     const initiales = (resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase();
     const nbActif = soins.filter(s=>s.actif!==false).length;
     const nbInterv = new Set(soins.map(s=>s.intervenant).filter(Boolean)).size;
+    const nbFait = soins.filter(s => s.actif!==false && s.faitLe === today).length;
 
-    // Frise : un rail par moment (fréquence), dans l'ordre PS_FREQS
-    const rails = PS_FREQS.map(f => {
-      const items = soins.filter(s => s.freq === f.id);
-      if (!items.length) return '';
-      const isNow = f.id === momentNow;
-      return `<div class="ps-rail">
-        <div class="ps-rail-lbl"${isNow ? ' style="color:#4f46e5"' : ''}>${escHtml(f.label)}${isNow ? ' <span style="color:#f59e0b" title="Moment en cours">●</span>' : ''}</div>
-        <div class="ps-rail-body">${items.map(s => _psRow(s)).join('')}</div>
-      </div>`;
-    }).join('');
+    // Tri : soins actifs d'abord, puis dans l'ordre des moments (PS_FREQS)
+    const fi = f => { const i = PS_FREQS.findIndex(x=>x.id===f); return i < 0 ? 99 : i; };
+    const sorted = soins.slice().sort((a,b) =>
+      ((a.actif!==false?0:1) - (b.actif!==false?0:1)) || (fi(a.freq) - fi(b.freq)));
 
     return `<div class="ps-res" style="border-color:${resColor}22">
       <div class="ps-res-head">
         <div class="ps-res-ava" style="background:${resColor}">${initiales}</div>
         <div style="min-width:0">
           <div style="font-weight:800;font-size:.95rem;color:${resColor}">${escHtml(resName)}</div>
-          <div style="font-size:.72rem;color:var(--muted)">${nbActif} soin${nbActif>1?'s':''} actif${nbActif>1?'s':''}${nbInterv?` · ${nbInterv} intervenant${nbInterv>1?'s':''}`:''}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${nbActif} soin${nbActif>1?'s':''} actif${nbActif>1?'s':''}${nbInterv?` · ${nbInterv} intervenant${nbInterv>1?'s':''}`:''}${nbActif?` · <span style="color:#16a34a;font-weight:700">${nbFait}/${nbActif} fait${nbFait>1?'s':''} aujourd'hui</span>`:''}</div>
         </div>
         <button class="btn btn-accent btn-sm" style="margin-left:auto" onclick="openPsModal('','${rid}')">+ Ajouter</button>
       </div>
-      <div class="ps-frise">${rails}</div>
+      <div class="ps-grid">${sorted.map(s => _psCard(s)).join('')}</div>
     </div>`;
   }).join('');
 }
 
-function _psRow(s) {
+function _psCard(s) {
   const cat = _psCat(s.cat);
+  const freq = _psFreq(s.freq);
   const isActif = s.actif !== false;
-  return `<div class="ps-soin${isActif ? '' : ' susp'}" style="--cc:${cat.color}">
-    <span class="ps-soin-ic">${cat.icon}</span>
-    <div class="ps-soin-body">
-      <div class="ps-soin-t">${escHtml(s.libelle||'—')}</div>
-      ${s.detail ? `<div class="ps-soin-d">${escHtml(s.detail)}</div>` : ''}
-      <div class="ps-soin-meta">
-        <span class="ps-cat" style="background:${cat.color}18;color:${cat.color}">${escHtml(cat.label)}</span>
-        ${s.intervenant ? `<span class="ps-who">${escHtml(s.intervenant)}</span>` : ''}
-        ${!isActif ? '<span class="ps-susp-tag">Suspendu</span>' : ''}
-      </div>
-    </div>
-    <div class="ps-acts">
+  const done = isActif && !!s.faitLe && s.faitLe === _psToday();
+  const ini = _psIntervInitiales(s.intervenant);
+  return `<article class="ps-card${isActif ? '' : ' susp'}${done ? ' done' : ''}" style="--cc:${cat.color}">
+    <div class="ps-card-acts">
       <button onclick="openPsModal('${s.id}')" title="Modifier">✎</button>
       <button onclick="togglePsActif('${s.id}')" title="${isActif ? 'Suspendre' : 'Réactiver'}">${isActif ? '⏸' : '▶'}</button>
       <button onclick="deletePs('${s.id}')" title="Supprimer" style="color:#dc2626">✕</button>
     </div>
-  </div>`;
+    <div class="ps-card-head">
+      <span class="ps-card-ic" style="background:${cat.color}1a;color:${cat.color}">${cat.icon}</span>
+      <div style="min-width:0">
+        <div class="ps-card-t">${escHtml(s.libelle||'—')}</div>
+        <div class="ps-card-freq">${escHtml(freq.label)}</div>
+      </div>
+    </div>
+    ${s.detail ? `<div class="ps-card-d">${escHtml(s.detail)}</div>` : ''}
+    <div class="ps-card-foot">
+      ${s.intervenant
+        ? `<span class="ps-who2"><span class="ps-av2" style="background:${cat.color}">${escHtml(ini)}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.intervenant)}</span></span>`
+        : `<span class="ps-who2" style="color:#cbd5e1">Sans intervenant</span>`}
+      ${isActif
+        ? `<button class="ps-fait${done ? ' on' : ''}" onclick="togglePsFait('${s.id}')" title="${done ? 'Fait aujourd’hui — cliquer pour annuler' : 'Marquer comme fait aujourd’hui'}"><span class="ck">${done ? '✓' : ''}</span>${done ? 'Fait' : 'Fait ?'}</button>`
+        : `<span class="ps-susp-tag2">Suspendu</span>`}
+    </div>
+  </article>`;
+}
+
+// Coche « fait aujourd'hui » (checklist du jour) : stocke la date sur le soin.
+async function togglePsFait(id) {
+  const s = _psCache.find(x => x.id === id);
+  if (!s || s.actif === false) return;
+  const t = _psToday();
+  const newFait = (s.faitLe === t) ? '' : t;   // bascule fait / non fait aujourd'hui
+  try {
+    const saved = await sbSavePlanSoins({ ...s, faitLe: newFait, id });
+    _psCache = _psCache.map(x => x.id === id ? saved : x);
+    if (newFait && saved.faitLe !== newFait) {
+      toast('Coche non enregistrée — exécutez la migration « fait_le » (voir SQL)', 'error');
+    }
+  } catch (e) { console.error('[togglePsFait]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  renderPlanSoins();
 }
 
 function openPsModal(id, presetResidentId) {
