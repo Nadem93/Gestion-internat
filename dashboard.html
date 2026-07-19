@@ -262,6 +262,7 @@
         </div>
         <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
           <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (travail, ESAT, activité, retour famille…) de vos référés — jours présumés « sortie » au pointage.</div>
+          <div id="dashSemaineFilter"></div>
           <div id="dashSemaineRefGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0"></div>
         </div>
       </div>
@@ -277,6 +278,7 @@
           </div>
           <div class="card-body">
             <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Soins récurrents de vos référés — cochez ceux réalisés aujourd'hui.</div>
+            <div id="dashPlanSoinsFilter"></div>
             <div id="dashPlanSoinsRefGrid"></div>
           </div>
         </div>
@@ -291,6 +293,7 @@
           </div>
           <div class="card-body">
             <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Infos médicales clés de vos référés — allergies, médecin, traitements.</div>
+            <div id="dashMedicalFilter"></div>
             <div id="dashMedicalRefBody"></div>
           </div>
         </div>
@@ -306,6 +309,7 @@
           </div>
           <div class="card-body">
             <div style="font-size:.73rem;color:var(--muted);margin-bottom:.1rem">Tâches du jour de chaque référé (aperçu). Cliquez une carte pour ouvrir sa tournée et pointer.</div>
+            <div id="dashJourneeFilter"></div>
             <div class="jrr-grid" id="dashJourneeRefGrid" style="grid-template-columns:1fr"></div>
           </div>
         </div>
@@ -319,6 +323,7 @@
             <span id="dashFvScope" style="margin-left:auto;font-size:.75rem;color:var(--muted)"></span>
           </div>
           <div class="fv-chips" id="dashFvChips"></div>
+          <div id="dashFvResFilter" style="padding:.15rem 1rem 0"></div>
           <div class="card-body" style="padding:0;max-height:520px;overflow-y:auto" id="dashFilVieList">
             <div class="empty" style="padding:1.5rem"><p>Chargement…</p></div>
           </div>
@@ -1200,6 +1205,35 @@
   // Recrée la logique de buildFilDeVie() de la fiche, mais agrégée sur tous les référés et
   // à partir des données du dashboard (_dashLive + cache résidents). Médicaments/nuits/visites
   // ne sont pas chargés ici → omis. Périmètre = _dashScope. Remplace Journal + Avenants.
+  // ── Filtre par résident (barre de boutons « Prénom N. ») partagé par les cartes référés ──
+  function _ensureFilterUI(){
+    if(document.getElementById('dfl-styles')) return;
+    const s=document.createElement('style'); s.id='dfl-styles';
+    s.textContent=`
+      .dfl-bar{display:flex;flex-wrap:wrap;gap:.3rem;margin:.15rem 0 .35rem}
+      .dfl-b{font:inherit;font-size:.71rem;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:999px;padding:.2rem .6rem;cursor:pointer;white-space:nowrap;transition:.12s}
+      .dfl-b:hover{border-color:#94a3b8;color:var(--text)}
+      .dfl-b.on{background:#0f2b4a;border-color:#0f2b4a;color:#fff}`;
+    document.head.appendChild(s);
+  }
+  const _dashFilters={};
+  function _dashShort(r){ const p=(r.prenom||'').trim(), n=(r.nom||'').trim(); return (p+(n?' '+n[0].toUpperCase()+'.':'')).trim()||'Résident'; }
+  function _dashFilterBar(key, allRef){
+    if(!allRef || allRef.length<2) return '';
+    _ensureFilterUI();
+    const cur=_dashFilters[key]||'';
+    const b=(id,label,on)=>`<button type="button" class="dfl-b${on?' on':''}" onclick="_dashSetFilter('${key}','${id}')">${label}</button>`;
+    const list=[...allRef].sort((a,b2)=>_dashShort(a).localeCompare(_dashShort(b2)));
+    return `<div class="dfl-bar">${b('','Tous',!cur)}${list.map(r=>b(String(r.id),escHtml(_dashShort(r)),cur===String(r.id))).join('')}</div>`;
+  }
+  function _dashApply(key, allRef){ const cur=_dashFilters[key]; return cur?allRef.filter(r=>String(r.id)===String(cur)):allRef; }
+  function _dashHasFilter(key){ return !!_dashFilters[key]; }
+  function _dashSetFilter(key, id){
+    _dashFilters[key]=id||'';
+    const RE={ filvie:renderFilDeVie, semaine:renderSemaineTypeReferes, plansoins:renderPlanSoinsReferes, medical:renderMedicalReferes, journee:renderJourneeReferes };
+    const fn=RE[key]; if(typeof fn==='function'){ try{ fn(); }catch(e){ console.error('[dashFilter '+key+']',e); } }
+  }
+
   function renderFilDeVie(){
     const host = document.getElementById('dashCardFilVie');
     const list = document.getElementById('dashFilVieList');
@@ -1214,10 +1248,12 @@
 
     const todayS = today();
     const scoped = !_dashSeesAll() && !!_dashMyName();
-    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
-    if (!residents.length) { host.style.display = 'none'; return; }
+    const _allRef = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!_allRef.length) { host.style.display = 'none'; return; }
     host.style.display = '';
-    if (scopeEl) scopeEl.textContent = scoped ? `vos ${residents.length} référé${residents.length>1?'s':''}` : `${residents.length} résident${residents.length>1?'s':''}`;
+    if (scopeEl) scopeEl.textContent = scoped ? `vos ${_allRef.length} référé${_allRef.length>1?'s':''}` : `${_allRef.length} résident${_allRef.length>1?'s':''}`;
+    { const _fb=document.getElementById('dashFvResFilter'); if(_fb) _fb.innerHTML=_dashFilterBar('filvie', _allRef); }
+    const residents = _dashApply('filvie', _allRef);
 
     const byId = {}, nameMap = {};
     residents.forEach(r => { byId[String(r.id)] = r; nameMap[`${r.prenom||''} ${r.nom||''}`.trim()] = r; });
@@ -1383,9 +1419,11 @@
     const grid = document.getElementById('dashSemaineRefGrid');
     if (!host || !grid) return;
     const cntEl = document.getElementById('dashSemaineRefCount');
-    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
-    if (!residents.length) { host.style.display = 'none'; return; }
+    const _allRef = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!_allRef.length) { host.style.display = 'none'; return; }
     host.style.display = '';
+    { const _fb=document.getElementById('dashSemaineFilter'); if(_fb) _fb.innerHTML=_dashFilterBar('semaine', _allRef); }
+    const residents = _dashApply('semaine', _allRef);
     const PH_J = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
     const PH_JC = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', vendredi:'Ven', samedi:'Sam', dimanche:'Dim' };
     const byJour = {}; PH_J.forEach(j => byJour[j] = []);
@@ -1449,16 +1487,19 @@
     if (typeof _psLoadCoches === 'function' && typeof _psCochesLoaded !== 'undefined' && !_psCochesLoaded) {
       try { await _psLoadCoches(); } catch(e){ console.error('[renderPlanSoinsReferes coches]', e); }
     }
-    const residents = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
-    const rIds = new Set(residents.map(r => String(r.id)));
+    const _allRef = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
+    const rIds = new Set(_allRef.map(r => String(r.id)));
     const all = (typeof getPs==='function'?getPs():[]).filter(p => rIds.has(String(p.residentId)));
-    if (!residents.length || !all.length || typeof _psCard !== 'function') { host.style.display='none'; return; }
+    if (!_allRef.length || !all.length || typeof _psCard !== 'function') { host.style.display='none'; return; }
     host.style.display='';
     const cntEl = document.getElementById('dashPlanSoinsRefCount');
     if (cntEl){ const n = all.filter(p=>p.actif!==false).length; cntEl.textContent = n; cntEl.style.display = n ? '' : 'none'; }
     const today = (typeof _psToday==='function') ? _psToday() : new Date().toISOString().slice(0,10);
     const fi = f => { const i = (typeof PS_FREQS!=='undefined') ? PS_FREQS.findIndex(x=>x.id===f) : -1; return i<0?99:i; };
     const byRes = {}; all.forEach(p => { const k=String(p.residentId); (byRes[k]=byRes[k]||[]).push(p); });
+    const _refWithSoins = _allRef.filter(r => byRes[String(r.id)]);
+    { const _fb=document.getElementById('dashPlanSoinsFilter'); if(_fb) _fb.innerHTML=_dashFilterBar('plansoins', _refWithSoins); }
+    const residents = _dashApply('plansoins', _refWithSoins);
     grid.innerHTML = residents.filter(r => byRes[String(r.id)]).map(r => {
       const soins = byRes[String(r.id)];
       const resColor = safeColor(r.color) || '#0f2b4a';
@@ -1530,11 +1571,13 @@
     const body = document.getElementById('dashMedicalRefBody');
     if (!host || !body) return;
     _ensureMedUI();
-    const residents = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
-    if (!residents.length) { host.style.display='none'; return; }
+    const _allRef = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
+    if (!_allRef.length) { host.style.display='none'; return; }
     host.style.display='';
+    { const _fb=document.getElementById('dashMedicalFilter'); if(_fb) _fb.innerHTML=_dashFilterBar('medical', _allRef); }
+    const residents = _dashApply('medical', _allRef);
     const cntEl = document.getElementById('dashMedicalRefCount');
-    if (cntEl){ cntEl.textContent = residents.length; cntEl.style.display=''; }
+    if (cntEl){ cntEl.textContent = _allRef.length; cntEl.style.display=''; }
     const t = today();
     const MOM = { matin:'Matin', midi:'Midi', soir:'Soir', coucher:'Coucher' };
 
@@ -1759,7 +1802,7 @@
       try{ renderReferesFiches(); }catch(e){ console.error(e); }
     } catch(e){ console.error(e); toast('Erreur lors de l\'enregistrement','error'); }
   }
-  Object.assign(window, { openAddPlanningModal, saveAddPlanning, dpSelectType, dpToggleRecur, openAddSemaineModal, dphLoadResident, dphAddAbs, dphRemoveAbs, dphToggleJour, _dphSet, saveAddSemaine, openAddTraitementModal, saveAddTraitement, dmedTab, dashCloseModal });
+  Object.assign(window, { openAddPlanningModal, saveAddPlanning, dpSelectType, dpToggleRecur, openAddSemaineModal, dphLoadResident, dphAddAbs, dphRemoveAbs, dphToggleJour, _dphSet, saveAddSemaine, openAddTraitementModal, saveAddTraitement, dmedTab, _dashSetFilter, dashCloseModal });
 
   // ── Journée des référés : aperçu (lecture seule) des tâches du jour de chaque référé ──
   async function renderJourneeReferes(){
@@ -1767,8 +1810,8 @@
     const grid = document.getElementById('dashJourneeRefGrid');
     if (!host || !grid) return;
     const cntEl = document.getElementById('dashJourneeRefCount');
-    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
-    if (!residents.length) { host.style.display = 'none'; return; }
+    const _allRef = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!_allRef.length) { host.style.display = 'none'; return; }
     const todayStr = today();
     const dow = new Date(todayStr + 'T12:00:00').getDay();
     const [taches, coches] = await Promise.all([
@@ -1776,7 +1819,7 @@
       (typeof sbGetCoches === 'function' ? sbGetCoches(todayStr) : Promise.resolve([])).catch(() => [])
     ]);
     const cocheByTache = {}; (coches || []).forEach(c => { cocheByTache[String(c.tacheId)] = c; });
-    const byRes = {}; residents.forEach(r => byRes[String(r.id)] = []);
+    const byRes = {}; _allRef.forEach(r => byRes[String(r.id)] = []);
     (taches || []).forEach(t => {
       if (t.actif === false) return;
       const rec = t.recurrence || {};
@@ -1784,14 +1827,16 @@
       const rid = String(t.residentId);
       if (byRes[rid]) byRes[rid].push(t);
     });
-    const withTasks = residents.filter(r => byRes[String(r.id)].length)
+    const withTasks = _allRef.filter(r => byRes[String(r.id)].length)
       .sort((a, b) => (`${a.prenom||''} ${a.nom||''}`).localeCompare(`${b.prenom||''} ${b.nom||''}`));
     if (!withTasks.length) { host.style.display = 'none'; return; }
     host.style.display = '';
+    { const _fb=document.getElementById('dashJourneeFilter'); if(_fb) _fb.innerHTML=_dashFilterBar('journee', withTasks); }
+    const shown = _dashApply('journee', withTasks);
     if (cntEl) { cntEl.textContent = withTasks.length; cntEl.style.display = ''; }
 
     const STAT = { fait: { ic:'✓', col:'#16a34a' }, reporte: { ic:'⏭', col:'#d97706' }, '': { ic:'○', col:'#cbd5e1' } };
-    grid.innerHTML = withTasks.map(r => {
+    grid.innerHTML = shown.map(r => {
       const rid = String(r.id);
       const list = byRes[rid].slice().sort((a, b) => (a.heure||'').localeCompare(b.heure||''));
       const faits = list.filter(t => (cocheByTache[String(t.id)] || {}).statut === 'fait').length;
