@@ -262,17 +262,32 @@
         </div>
       </div>
 
-      <!-- PLAN DE SOINS — RÉFÉRÉS : mêmes fiches que la page Plan de soins, cochables « fait » -->
-      <div class="card" id="dashCardPlanSoinsRef" style="overflow:hidden;margin-top:1.5rem;margin-bottom:1.5rem;display:none">
-        <div class="card-header" style="background:color-mix(in srgb, #0891b2 12%, #fff)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0891b2"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-          <span class="card-title" style="color:#0891b2">Plan de soins — référés</span>
-          <span class="badge badge-gray" id="dashPlanSoinsRefCount" style="margin-left:.5rem;display:none">0</span>
-          <a href="plan-soins.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#0891b2">Gérer</a>
+      <!-- PLAN DE SOINS RÉFÉRÉS + FICHE MÉDICALE RÉFÉRÉS (côte à côte ; si l'une est masquée, l'autre prend toute la largeur) -->
+      <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.5rem;margin-bottom:1.5rem;align-items:flex-start">
+        <div class="card" id="dashCardPlanSoinsRef" style="overflow:hidden;flex:1 1 380px;min-width:0;display:none">
+          <div class="card-header" style="background:color-mix(in srgb, #0891b2 12%, #fff)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0891b2"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            <span class="card-title" style="color:#0891b2">Plan de soins — référés</span>
+            <span class="badge badge-gray" id="dashPlanSoinsRefCount" style="margin-left:.5rem;display:none">0</span>
+            <a href="plan-soins.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#0891b2">Gérer</a>
+          </div>
+          <div class="card-body">
+            <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Soins récurrents de vos référés — cochez ceux réalisés aujourd'hui.</div>
+            <div id="dashPlanSoinsRefGrid"></div>
+          </div>
         </div>
-        <div class="card-body">
-          <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Soins récurrents de vos référés — cochez ceux réalisés aujourd'hui.</div>
-          <div id="dashPlanSoinsRefGrid"></div>
+
+        <div class="card" id="dashCardMedicalRef" style="overflow:hidden;flex:1 1 380px;min-width:0;display:none">
+          <div class="card-header" style="background:color-mix(in srgb, #16a34a 12%, #fff)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span class="card-title" style="color:#16a34a">Fiche médicale — référés</span>
+            <span class="badge badge-gray" id="dashMedicalRefCount" style="margin-left:.5rem;display:none">0</span>
+            <a href="residents.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#16a34a">Fiches</a>
+          </div>
+          <div class="card-body">
+            <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Infos médicales clés de vos référés — allergies, médecin, traitements.</div>
+            <div id="dashMedicalRefBody"></div>
+          </div>
         </div>
       </div>
 
@@ -1610,6 +1625,77 @@
     }).join('');
   }
 
+  // ── Fiche médicale — référés : infos médicales clés (allergies, médecin, traitements) ──
+  function _ensureMedUI(){
+    if (document.getElementById('dmed-styles')) return;
+    const s = document.createElement('style'); s.id = 'dmed-styles';
+    s.textContent = `
+      #dashMedicalRefBody{display:flex;flex-direction:column;gap:.9rem}
+      .dmed-res{border:1px solid var(--border);border-radius:12px;padding:.75rem .85rem;background:#fff}
+      .dmed-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem}
+      .dmed-ava{width:30px;height:30px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.72rem;flex-shrink:0}
+      .dmed-name{font-weight:800;font-size:.9rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .dmed-link{margin-left:auto;font-size:.72rem;color:#16a34a;text-decoration:none;font-weight:700;flex-shrink:0}
+      .dmed-allerg{font-size:.76rem;color:#64748b;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:.4rem .55rem;line-height:1.4;margin-bottom:.5rem}
+      .dmed-allerg.on{color:#b91c1c;background:#fef2f2;border-color:#fecaca}
+      .dmed-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.5rem}
+      .dmed-fl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#94a3b8}
+      .dmed-fv{font-size:.8rem;color:#1e293b;line-height:1.3}
+      .dmed-tt{display:flex;align-items:flex-start;gap:.5rem;flex-wrap:wrap}
+      .dmed-lbl{font-size:.72rem;font-weight:700;color:#0f766e;flex-shrink:0}
+      .dmed-tt-list{display:flex;flex-wrap:wrap;gap:.3rem}
+      .dmed-pill{font-size:.68rem;background:#f0fdfa;border:1px solid #99f6e4;color:#0f766e;border-radius:999px;padding:1px 8px}
+      .dmed-pill.more{background:#f1f5f9;border-color:#e2e8f0;color:#64748b}
+      .dmed-none{font-size:.72rem;color:#94a3b8}
+      .dmed-rdv{font-size:.72rem;color:#7c3aed;margin-top:.5rem}`;
+    document.head.appendChild(s);
+  }
+  function _dmedField(label, value, extra){
+    const v = (value == null ? '' : String(value)).trim();
+    const e = (extra == null ? '' : String(extra)).trim();
+    return `<div style="min-width:0"><div class="dmed-fl">${label}</div><div class="dmed-fv">${v ? escHtml(v) : '—'}${e ? ` · ${escHtml(e)}` : ''}</div></div>`;
+  }
+  function renderMedicalReferes(){
+    const host = document.getElementById('dashCardMedicalRef');
+    const body = document.getElementById('dashMedicalRefBody');
+    if (!host || !body) return;
+    _ensureMedUI();
+    const residents = _dashScope((typeof sbResidents==='function'?sbResidents():[]).filter(r => r.statut !== 'sorti'));
+    if (!residents.length) { host.style.display='none'; return; }
+    host.style.display='';
+    const cntEl = document.getElementById('dashMedicalRefCount');
+    if (cntEl){ cntEl.textContent = residents.length; cntEl.style.display=''; }
+    const t = today();
+    body.innerHTML = residents.map(r => {
+      const resColor = safeColor(r.color) || '#0f2b4a';
+      const resName = `${r.prenom||''} ${r.nom||''}`.trim() || 'Résident';
+      const ini = (resName.split(' ').map(w=>w[0]||'').join('').slice(0,2)).toUpperCase();
+      const sante = r.sante || {};
+      const traits = (sante.traitements || []).filter(x => !x.fin || x.fin >= t);
+      const allergies = (r.allergies || '').trim();
+      const rdvNext = (sante.rdv || []).filter(v => v.date >= t && !v.fait).sort((a,b)=>(a.date||'').localeCompare(b.date||''))[0];
+      return `<div class="dmed-res">
+        <div class="dmed-head">
+          <div class="dmed-ava" style="background:${resColor}">${escHtml(ini)}</div>
+          <div class="dmed-name" style="color:${resColor}">${escHtml(resName)}</div>
+          <a href="resident.html?id=${encodeURIComponent(r.id)}" class="dmed-link no-print" title="Ouvrir la fiche">Fiche →</a>
+        </div>
+        <div class="dmed-allerg ${allergies ? 'on' : ''}">${allergies ? `⚠️ <b>Allergies / CI :</b> ${escHtml(allergies)}` : 'Aucune allergie / contre-indication connue'}</div>
+        <div class="dmed-grid">
+          ${_dmedField('Médecin traitant', r.medecin, r.medecinTel)}
+          ${_dmedField('Groupe sanguin', sante.groupeSanguin)}
+        </div>
+        <div class="dmed-tt">
+          <span class="dmed-lbl">💊 Traitements actifs</span>
+          ${traits.length
+            ? `<div class="dmed-tt-list">${traits.slice(0,4).map(x=>`<span class="dmed-pill">${escHtml(x.nom||'—')}</span>`).join('')}${traits.length>4?`<span class="dmed-pill more">+${traits.length-4}</span>`:''}</div>`
+            : '<span class="dmed-none">Aucun</span>'}
+        </div>
+        ${rdvNext ? `<div class="dmed-rdv">📅 Prochain RDV : ${escHtml(rdvNext.type||'Rendez-vous')} le ${formatDate(rdvNext.date)}${rdvNext.heure?' à '+escHtml(rdvNext.heure):''}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
   // ── Modales d'ajout (dashboard) — en-tête coloré + sections (design Option 2) ──
   function dashOpenModal(html){ const ov=document.getElementById('dashModalOv'), box=document.getElementById('dashModal'); if(!ov||!box)return; box.innerHTML=html; ov.classList.add('open'); }
   function dashCloseModal(){ const ov=document.getElementById('dashModalOv'); if(ov)ov.classList.remove('open'); }
@@ -1796,6 +1882,7 @@
     _bindDashRefMq();
     renderJourneeReferes().catch(e => console.error(e));
     renderPlanSoinsReferes().catch(e => console.error(e));
+    try { renderMedicalReferes(); } catch (e) { console.error(e); }
     try { renderFilDeVie(); } catch (e) { console.error(e); }
   })();
 </script>
