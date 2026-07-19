@@ -1059,6 +1059,23 @@ function genPassword(len = 12) {
   for (let i = pw.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pw[i], pw[j]] = [pw[j], pw[i]]; }
   return pw.join('');
 }
+// À la création d'un compte : lui assigner 6 résidents référés + 6 co-référés.
+// On prend des créneaux LIBRES (on n'écrase pas un référent/co-référent déjà posé).
+async function _assignReferesToUser(name){
+  name = (name || '').trim();
+  if (!name || typeof sbGetResidents !== 'function' || typeof sbSaveResident !== 'function') return;
+  try {
+    const residents = (await sbGetResidents()).filter(r => r.statut !== 'sorti');
+    const nlow = s => (s || '').trim().toLowerCase();
+    const refPick = residents.filter(r => !nlow(r.referent)).slice(0, 6);
+    const refIds = new Set(refPick.map(r => String(r.id)));
+    const coPick = residents.filter(r => !nlow(r.coReferent) && !refIds.has(String(r.id))).slice(0, 6);
+    for (const r of refPick) { try { await sbSaveResident({ ...r, referent: name }); } catch (e) { console.warn(e); } }
+    for (const r of coPick)  { try { await sbSaveResident({ ...r, coReferent: name }); } catch (e) { console.warn(e); } }
+    if (refPick.length || coPick.length) toast(`${refPick.length} référé(s) + ${coPick.length} co-référé(s) assignés à ${name}`, 'success');
+    else toast('Aucun résident libre à assigner (créneaux référent/co-référent déjà pris)', 'info');
+  } catch (e) { console.error('[assignReferes]', e); }
+}
 // Crée un VRAI compte de connexion via l'Edge Function "create-user" (clé service_role côté serveur)
 async function createUserFromEmploye() {
   const id     = document.getElementById('empId').value;
@@ -1090,6 +1107,7 @@ async function createUserFromEmploye() {
     }
     info.innerHTML = `✅ Compte créé — <strong>${escHtml(email)}</strong> / <strong>${pw}</strong> <span style="opacity:.6">(notez-le, masqué à la fermeture)</span>`;
     toast('Compte de connexion créé');
+    await _assignReferesToUser(`${prenom} ${nom}`);   // 6 référés + 6 co-référés au nouveau compte
   } catch (e) {
     let msg = e?.message || e?.error || JSON.stringify(e) || 'Erreur inconnue';
     if (/already been registered|already registered|already exists/i.test(msg)) {
