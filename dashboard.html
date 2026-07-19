@@ -248,6 +248,7 @@
         </div>
         <div class="card-body">
           <div style="font-size:.73rem;color:var(--muted);margin-bottom:.6rem">Événements des 7 prochains jours pour vos référés.</div>
+          <div id="dashPlanningFilter"></div>
           <div id="dashPlanningRefGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;align-items:start;min-width:0"></div>
         </div>
       </div>
@@ -1230,7 +1231,7 @@
   function _dashHasFilter(key){ return !!_dashFilters[key]; }
   function _dashSetFilter(key, id){
     _dashFilters[key]=id||'';
-    const RE={ filvie:renderFilDeVie, semaine:renderSemaineTypeReferes, plansoins:renderPlanSoinsReferes, medical:renderMedicalReferes, journee:renderJourneeReferes };
+    const RE={ planning:renderPlanningReferes, filvie:renderFilDeVie, semaine:renderSemaineTypeReferes, plansoins:renderPlanSoinsReferes, medical:renderMedicalReferes, journee:renderJourneeReferes };
     const fn=RE[key]; if(typeof fn==='function'){ try{ fn(); }catch(e){ console.error('[dashFilter '+key+']',e); } }
   }
 
@@ -1346,9 +1347,11 @@
     const grid = document.getElementById('dashPlanningRefGrid');
     if (!host || !grid) return;
     const cntEl = document.getElementById('dashPlanningRefCount');
-    const residents = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
-    if (!residents.length) { host.style.display = 'none'; return; }
+    const _allRef = _dashScope((typeof sbResidents === 'function' ? sbResidents() : []).filter(r => r.statut !== 'sorti'));
+    if (!_allRef.length) { host.style.display = 'none'; return; }
     host.style.display = '';
+    { const _fb=document.getElementById('dashPlanningFilter'); if(_fb) _fb.innerHTML=_dashFilterBar('planning', _allRef); }
+    const residents = _dashApply('planning', _allRef);
     const rById = {}; residents.forEach(r => rById[String(r.id)] = r);
     const PR_JC = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
     const PR_COLORS = { activite:'#3b82f6', rdv:'#ef4444', sortie:'#10b981', reunion:'#8b5cf6', avenant:'#f59e0b', projet:'#06b6d4', evaluation:'#9333ea', autre:'#94a3b8' };
