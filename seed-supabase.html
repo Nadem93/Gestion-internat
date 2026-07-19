@@ -98,6 +98,7 @@
     </div>
     <button class="btn btn-go" id="btnRun" onclick="runSeed()" disabled>▶ Générer les données</button>
     <button class="btn btn-del" id="btnDel" onclick="deleteDemo()" disabled>🗑 Supprimer les données de démonstration</button>
+    <button class="btn" id="btnRedis" onclick="redistribuerReferes()" style="background:#e0f2fe;color:#0369a1;margin-left:.5rem" disabled>👥 Réattribuer les référés (6 + 6 par éducateur)</button>
     <progress id="prog" value="0" max="100" style="display:none"></progress>
     <div id="logBox" class="log" style="display:none"></div>
   </div>
@@ -1016,6 +1017,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const chk = document.getElementById('chkConfirm');
   const btn = document.getElementById('btnRun');
   const btnDel = document.getElementById('btnDel');
+  const btnRedis = document.getElementById('btnRedis');
 
   const sess = (typeof Auth!=='undefined' && Auth.getSession) ? Auth.getSession() : null;
   if(sess){ AUTHOR.id = sess.userId || null; AUTHOR.name = [sess.prenom, sess.nom].filter(Boolean).join(' ') || sess.username || 'Démo'; }
@@ -1036,6 +1038,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       + `<br>👤 Auteur des écritures : <b>${esc(AUTHOR.name)}</b>`;
     chk.addEventListener('change', () => { btn.disabled = !chk.checked; });
     btnDel.disabled = false;
+    if(btnRedis) btnRedis.disabled = false;
   }catch(e){
     info.innerHTML = `⚠️ Impossible de déterminer l'établissement : ${e.message}.<br>Connectez-vous à l'application (même onglet/domaine) avant d'ouvrir cette page.`;
   }
@@ -1373,6 +1376,54 @@ async function runSeed(){
   }finally{
     btn.disabled=false; btnDel.disabled=false;
   }
+}
+
+// ═══════════════════════ Réattribution des référés (6 + 6 par éducateur) ═══════════════════════
+// Corrige une accumulation (relances multiples) sans rien supprimer : recalcule referent/co_referent
+// des résidents [démo] pour que chaque compte éducateur ait EXACTEMENT 6 référés + 6 co-référés.
+async function redistribuerReferes(){
+  if(!confirm('Réattribuer les référents des résidents [démo] : exactement 6 référés + 6 co-référés par compte éducateur existant.\n\nAucun résident n\'est supprimé — seuls les champs référent / co-référent des résidents [démo] sont recalculés. Vos vrais résidents (non [démo]) ne sont pas touchés.')) return;
+  const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel'), btnRedis=document.getElementById('btnRedis');
+  btn.disabled=true; btnDel.disabled=true; if(btnRedis) btnRedis.disabled=true; logEl.innerHTML=''; setProgress(1);
+  try{
+    // 1. Comptes éducateurs (connexion)
+    let userNames=[];
+    if(typeof sbGetProfiles==='function'){ const p=await sbGetProfiles(); userNames=(p||[]).map(x=>`${x.prenom||''} ${x.nom||''}`.trim()).filter(Boolean); }
+    if(!userNames.length){ log('Aucun compte de connexion trouvé — rien à réattribuer.','warn'); return; }
+    log(`${userNames.length} compte(s) éducateur.`,'info');
+    // 2. Résidents [démo] actifs
+    const all=await sbGetResidents();
+    const demo=all.filter(r => (r.notes||'').includes(DEMO_TAG) && r.statut!=='sorti');
+    if(!demo.length){ log('Aucun résident [démo] trouvé.','warn'); return; }
+    log(`${demo.length} résidents [démo] — remise à 6 référés + 6 co-référés par éducateur…`,'info');
+    // 3. Cible recalculée (par défaut : plus aucun référent → on repart de zéro pour la démo)
+    const target=new Map(); demo.forEach(r=>target.set(String(r.id), { referent:'', coReferent:'' }));
+    const REF_PER=6, CO_PER=6;
+    const ids=demo.map(r=>String(r.id));
+    // référents : 6 par éducateur
+    let cursor=0; const order=shuffle(ids);
+    userNames.forEach(name=>{ for(let k=0;k<REF_PER && cursor<order.length;k++,cursor++){ target.get(order[cursor]).referent=name; } });
+    // co-référents : 6 par éducateur (résident dont le référent n'est pas ce compte et sans co-réf)
+    userNames.forEach(name=>{ let n=0; for(const id of shuffle(ids)){ if(n>=CO_PER) break; const t=target.get(id); if(!t.coReferent && t.referent!==name){ t.coReferent=name; n++; } } });
+    // 4. N'écrire QUE les résidents dont référent/co-référent change réellement (update ciblé 2 colonnes)
+    const _n=s=>(s||'').trim();
+    const changed=demo.filter(r=>{ const t=target.get(String(r.id)); return _n(r.referent)!==_n(t.referent) || _n(r.coReferent)!==_n(t.coReferent); });
+    if(!changed.length){ setProgress(100); log('✅ Rien à changer : la répartition est déjà à 6 + 6 par éducateur.','ok'); return; }
+    log(`${changed.length} résident(s) à mettre à jour…`,'info');
+    await pool(changed, async r=>{
+      const t=target.get(String(r.id));
+      const { error } = await supabaseClient.from('residents')
+        .update({ referent: t.referent||null, co_referent: t.coReferent||null, updated_at: new Date().toISOString() })
+        .eq('id', r.id);
+      if(error) throw error;
+    }, 8, (d,tot)=>setProgress(1+d/tot*98));
+    setProgress(100);
+    const perEdu = Math.min(REF_PER, Math.floor(demo.length/Math.max(1,userNames.length)));
+    log(`✅ Terminé — chaque éducateur a désormais 6 référés + 6 co-référés (12 au total).`,'ok');
+    log(`   ${changed.length} fiche(s) mise(s) à jour · ${demo.length - REF_PER*userNames.length > 0 ? (demo.length - REF_PER*userNames.length) : 0} résident(s) [démo] laissés sans référent (surplus des relances).`,'info');
+    log('   Rechargez le tableau de bord de l\'éducateur pour voir « Mes référés · 12 ».','info');
+  }catch(e){ log('ERREUR : '+(e&&e.message||e),'err'); console.error(e); }
+  finally{ btn.disabled=false; btnDel.disabled=false; if(btnRedis) btnRedis.disabled=false; }
 }
 
 // ═══════════════════════ Suppression des données démo ═══════════════════════
