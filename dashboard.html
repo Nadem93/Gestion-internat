@@ -376,60 +376,6 @@
 
       </div>
 
-      <!-- SUIVI RÉSIDENTS (données des fiches) -->
-      <div class="section-label" style="margin:1.75rem 0 .25rem;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)" id="dashSuiviLabel">Suivi des résidents</div>
-      <div class="grid grid-2" style="gap:1.5rem;margin-top:.75rem" id="dashSuiviSection">
-
-        <!-- RDV MÉDICAUX À VENIR -->
-        <div class="card" id="dashCardRdv" style="overflow:hidden">
-          <div class="card-header" style="background:#E2F5E8">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-            <span class="card-title" style="color:#0F6B39">RDV médicaux à venir</span>
-            <span class="badge badge-gray" id="dashRdvCount" style="margin-left:auto;display:none">0</span>
-          </div>
-          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashRdvMedicaux">
-            <div class="empty" style="padding:1.5rem"><p>Aucun RDV à venir</p></div>
-          </div>
-        </div>
-
-        <!-- RÉSIDENTS ACTUELLEMENT SORTIS -->
-        <div class="card" id="dashCardSorties" style="overflow:hidden">
-          <div class="card-header" style="background:#DAF0ED">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#0d9488"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-            <span class="card-title" style="color:#0A6B62">Résidents actuellement sortis</span>
-            <span class="badge badge-gray" id="dashSortiesCount" style="margin-left:auto;display:none">0</span>
-          </div>
-          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSorties">
-            <div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>
-          </div>
-        </div>
-
-        <!-- SOLDES BUDGET NÉGATIFS -->
-        <div class="card" id="dashCardSoldes" style="overflow:hidden">
-          <div class="card-header" style="background:#FEF4E3">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#d97706"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span class="card-title" style="color:#B45309">Soldes à surveiller</span>
-            <span class="badge badge-gray" id="dashSoldesCount" style="margin-left:auto;display:none">0</span>
-          </div>
-          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashSoldes">
-            <div class="empty" style="padding:1.5rem"><p>Aucun résident référé</p></div>
-          </div>
-        </div>
-
-        <!-- RAPPELS VACCINS -->
-        <div class="card" id="dashCardVaccins" style="overflow:hidden">
-          <div class="card-header" style="background:#F3E8FD">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#9333ea"><path d="M18 2l4 4M17 7l-9 9-4 1 1-4 9-9zM13.5 6.5l4 4"/></svg>
-            <span class="card-title" style="color:#6B21A8">Rappels de vaccins à faire</span>
-            <span class="badge badge-gray" id="dashVaccinsCount" style="margin-left:auto;display:none">0</span>
-          </div>
-          <div class="card-body" style="padding:0;max-height:260px;overflow-y:auto" id="dashVaccins">
-            <div class="empty" style="padding:1.5rem"><p>Aucun rappel en retard</p></div>
-          </div>
-        </div>
-
-      </div>
-
       <!-- STATISTIQUES VISUELLES -->
       <div class="grid" style="gap:1.5rem;margin-top:1.5rem;grid-template-columns:1fr" id="dashStatsSection">
 
@@ -987,18 +933,11 @@
       if (legEl) legEl.textContent = `Moyenne sur 7 jours : ${avgPct}% · ${total} résidents actifs`;
     }
 
-    renderResidentTracking();
-
     // ── Filtrer les cartes selon les permissions ──
     const _session = Auth.getSession();
     const _userId = _session?.userId;
     const canSee = (perm) => _session?.role === 'admin' || hasPermission(_userId, perm);
     const hideIf = (id, perm) => { const el = document.getElementById(id); if (el && !canSee(perm)) el.style.display = 'none'; };
-    // Section suivi résidents
-    if (!canSee('view_residents')) {
-      const _sl = document.getElementById('dashSuiviLabel'); if (_sl) _sl.style.display = 'none';
-      const _ss = document.getElementById('dashSuiviSection'); if (_ss) _ss.style.display = 'none';
-    }
     hideIf('miniPresenceCard', 'access_presences');
     hideIf('miniVehCard', 'access_vehicules');
     hideIf('miniAnnivCard', 'view_residents');
@@ -1039,108 +978,8 @@
     if (_alCard && !canSee('access_ppe') && !canSee('view_incidents')) _alCard.style.display = 'none';
     hideIf('dashCardRepertoire', 'access_repertoire');
     hideIf('dashCardPresenceChart', 'access_presences');
-    hideIf('dashCardRdv', 'access_sante');
-    hideIf('dashCardVaccins', 'access_sante');
     const _statsEl = document.getElementById('dashStatsSection');
     if (_statsEl && !canSee('access_presences') && !canSee('view_incidents')) _statsEl.style.display = 'none';
-  }
-
-  // ── SUIVI DES RÉSIDENTS (agrège les données des fiches) ──
-  function renderResidentTracking() {
-    const residents = _dashScope(sbResidents());
-    const todayStr = new Date().toISOString().slice(0,10);
-    const nowMs = Date.now();
-    const resName = r => `${r.prenom||''} ${r.nom||''}`.trim() || '—';
-    const avatar = r => r.photo
-      ? `<img src="${sanitizeUrl(r.photo)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
-      : `<div class="avatar sm" style="background:${safeColor(r.color,'var(--blue)')};flex-shrink:0;width:26px;height:26px;font-size:.6rem">${(r.prenom||'?')[0].toUpperCase()}</div>`;
-    const rowOpen = r => `<a href="resident.html?id=${r.id}" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;text-decoration:none;color:inherit">`;
-
-    // Helpers Option 1 : pastille-date + état positif vert
-    const _MONTHS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
-    const datePastille = (dstr, color) => {
-      const d = new Date((dstr||'') + 'T00:00:00');
-      const day = isNaN(d.getTime()) ? '—' : d.getDate();
-      const mon = isNaN(d.getTime()) ? '' : _MONTHS[d.getMonth()];
-      return `<span style="width:44px;flex-shrink:0;text-align:center;font-size:.72rem;font-weight:700;color:${color};background:color-mix(in srgb,${color} 11%,#fff);border-radius:8px;padding:.22rem 0;line-height:1.15">${day}<br><span style="font-weight:600;font-size:.62rem">${mon}</span></span>`;
-    };
-    const okState = txt => `<div style="display:flex;align-items:center;gap:.5rem;padding:1.1rem 1.25rem;font-size:.82rem;color:#15803d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px;flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg>${escHtml(txt)}</div>`;
-
-    // 1) RDV médicaux à venir — pastille-date à gauche
-    const rdvs = [];
-    residents.forEach(r => (r.sante?.rdv || []).forEach(v => {
-      if (!v.fait && v.date >= todayStr) rdvs.push({ r, v });
-    }));
-    rdvs.sort((a,b) => (a.v.date+'T'+(a.v.heure||'')).localeCompare(b.v.date+'T'+(b.v.heure||'')));
-    const rdvEl = document.getElementById('dashRdvMedicaux');
-    setCount('dashRdvCount', rdvs.length);
-    if (rdvs.length) {
-      rdvEl.innerHTML = rdvs.slice(0,10).map(({r,v}) => `${rowOpen(r)}
-        ${datePastille(v.date, '#16a34a')}
-        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(v.type||'Rendez-vous')}${v.lieu?' · '+escHtml(v.lieu):''}${v.heure?' · '+v.heure:''}</div></div>
-      </a>`).join('');
-    } else { rdvEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun RDV à venir</p></div>'; }
-
-    // 2) Résidents actuellement sortis — retour à droite (rouge si dépassé)
-    const sorties = [];
-    residents.forEach(r => (r.sorties || []).forEach(s => {
-      if (!s.retourEffectif) {
-        const prevu = s.retourPrevuDate ? new Date(s.retourPrevuDate+'T'+(s.retourPrevuHeure||'23:59')).getTime() : null;
-        const dep = s.date ? new Date(s.date+'T'+(s.heure||'00:00')).getTime() : 0;
-        const enCours = dep <= nowMs;
-        const retard = prevu && prevu < nowMs;
-        sorties.push({ r, s, enCours, retard, sortKey: prevu || dep });
-      }
-    }));
-    sorties.sort((a,b) => a.sortKey - b.sortKey);
-    const soEl = document.getElementById('dashSorties');
-    setCount('dashSortiesCount', sorties.length);
-    if (sorties.length) {
-      soEl.innerHTML = sorties.slice(0,10).map(({r,s,retard}) => {
-        const ret = s.retourPrevuDate ? `${formatDate(s.retourPrevuDate)}${s.retourPrevuHeure?' '+s.retourPrevuHeure:''}` : '—';
-        return `${rowOpen(r)}
-        ${avatar(r)}
-        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(s.destination||'Sortie')}</div></div>
-        <span style="text-align:right;white-space:nowrap;flex-shrink:0"><span style="font-size:.62rem;color:${retard?'#dc2626':'var(--muted)'};display:block">${retard?'retour dépassé':'retour prévu'}</span><span style="font-size:.72rem;font-weight:600;color:${retard?'#dc2626':'#0f2b4a'}">${ret}</span></span>
-      </a>`;
-      }).join('');
-    } else { soEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident sorti</p></div>'; }
-
-    // 3) Soldes à surveiller — uniquement les soldes négatifs (0,00 € = pas d'alerte)
-    const soldes = residents.map(r => {
-      const ops = (r.budget && r.budget.operations) || [];
-      const solde = ops.reduce((a,o) => a + (o.type==='recette' ? Number(o.montant||0) : -Number(o.montant||0)), 0);
-      return { r, solde };
-    });
-    soldes.sort((a,b) => a.solde - b.solde);   // plus négatif en tête
-    const negs = soldes.filter(s => s.solde < 0);
-    const sdEl = document.getElementById('dashSoldes');
-    setCount('dashSoldesCount', negs.length);
-    if (negs.length) {
-      sdEl.innerHTML = negs.slice(0,12).map(({r,solde}) => `${rowOpen(r)}
-        ${avatar(r)}
-        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:#dc2626">Solde négatif</div></div>
-        <span style="font-weight:700;color:#dc2626;white-space:nowrap">${solde.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} €</span>
-      </a>`).join('');
-    } else if (soldes.length) {
-      sdEl.innerHTML = okState(`Aucun solde négatif · ${soldes.length} résident${soldes.length>1?'s':''} suivi${soldes.length>1?'s':''}`);
-    } else { sdEl.innerHTML = '<div class="empty" style="padding:1.5rem"><p>Aucun résident</p></div>'; }
-
-    // 4) Rappels de vaccins en retard
-    const vaccins = [];
-    residents.forEach(r => (r.sante?.vaccins || []).forEach(vc => {
-      if (vc.rappel && vc.rappel < todayStr) vaccins.push({ r, vc });
-    }));
-    vaccins.sort((a,b) => (a.vc.rappel||'').localeCompare(b.vc.rappel||''));
-    const vcEl = document.getElementById('dashVaccins');
-    setCount('dashVaccinsCount', vaccins.length);
-    if (vaccins.length) {
-      vcEl.innerHTML = vaccins.slice(0,10).map(({r,vc}) => `${rowOpen(r)}
-        ${avatar(r)}
-        <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(resName(r))}</div><div style="font-size:.7rem;color:var(--muted)">${escHtml(vc.nom||'Vaccin')}</div></div>
-        <span style="font-size:.72rem;color:#dc2626;font-weight:600;white-space:nowrap">${formatDate(vc.rappel)}</span>
-      </a>`).join('');
-    } else { vcEl.innerHTML = okState('Aucun rappel en retard'); }
   }
 
   function setCount(id, n) {
