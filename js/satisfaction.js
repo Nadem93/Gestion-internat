@@ -128,21 +128,22 @@ function renderSatResultats() {
 
     ${cats.map(cat => {
       const qs = allQ.filter(q => q.cat === cat);
+      const scale = `<div style="display:grid;grid-template-columns:34% 1fr 34px;align-items:center;margin-bottom:.55rem"><span></span><div style="display:flex;justify-content:space-between;font-size:.58rem;color:var(--muted)">${SAT_LABELS.map(l => `<span style="white-space:nowrap">${l}</span>`).join('')}</div><span></span></div>`;
       return `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:.75rem">
         <div style="padding:.5rem .85rem;background:var(--g50);border-bottom:1px solid var(--border);font-size:.78rem;font-weight:700;color:var(--text)">${cat}</div>
-        <div style="padding:.5rem .85rem;display:flex;flex-direction:column;gap:.4rem">
+        <div style="padding:.7rem .95rem .5rem">
+          ${scale}
           ${qs.map(q => {
             const avg = avgQ[q.id];
-            const pct = avg !== null ? Math.round(avg/4*100) : 0;
             const col = _satColor(avg);
-            return `<div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-                <span style="font-size:.79rem;color:var(--text)">${q.label}</span>
-                <span style="font-size:.78rem;font-weight:700;color:${col};min-width:32px;text-align:right">${avg!==null?avg.toFixed(1):'-'}</span>
-              </div>
-              <div style="height:6px;background:var(--border);border-radius:999px;overflow:hidden">
-                <div style="height:100%;width:${pct}%;background:${col};border-radius:999px"></div>
-              </div>
+            const pos = avg !== null ? Math.max(2, Math.min(98, avg / 4 * 100)) : 0;
+            const track = avg !== null
+              ? `<span style="position:absolute;left:25%;top:-3px;width:1px;height:12px;background:#cbd5e1"></span><span style="position:absolute;left:50%;top:-3px;width:1px;height:12px;background:#cbd5e1"></span><span style="position:absolute;left:75%;top:-3px;width:1px;height:12px;background:#cbd5e1"></span><span style="position:absolute;top:50%;left:${pos}%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:${col};border:2px solid #fff;box-shadow:0 1px 3px rgba(15,43,74,.2)"></span>`
+              : '';
+            return `<div style="display:grid;grid-template-columns:34% 1fr 34px;align-items:center;gap:0 12px;margin-bottom:.75rem">
+              <span style="font-size:.79rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${q.label}">${q.label}</span>
+              <div style="position:relative;height:6px;border-radius:999px;background:var(--border)">${track}</div>
+              <span style="font-size:.78rem;font-weight:700;color:${col};text-align:right">${avg!==null?avg.toFixed(1):'-'}</span>
             </div>`;
           }).join('')}
         </div>
