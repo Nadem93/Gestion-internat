@@ -51,6 +51,22 @@ function ecDaysLabel(e) {
   return `dans ${diff} j`;
 }
 
+// Compte à rebours (gros chiffre + libellé) pour la pastille de gauche (design 1)
+function ecCountdown(e) {
+  if (e.done) return { n: '✓', u: 'traité' };
+  const diff = Math.ceil((new Date(e.date) - new Date(today())) / 86400000);
+  if (diff < 0) return { n: Math.abs(diff), u: 'j retard' };
+  if (diff === 0) return { n: 0, u: "auj." };
+  return { n: diff, u: diff > 1 ? 'jours' : 'jour' };
+}
+// Remplissage de la barre d'échéance : plus l'échéance est lointaine, plus la barre est pleine (horizon 90 j)
+function ecBarPct(e) {
+  if (e.done) return 100;
+  const diff = Math.ceil((new Date(e.date) - new Date(today())) / 86400000);
+  if (diff < 0) return 5;
+  return Math.max(8, Math.min(100, Math.round(diff / 90 * 100)));
+}
+
 function renderEcheances() {
   const all = getEcheances();
   const showDone = document.getElementById('ecShowDone')?.checked;
@@ -85,20 +101,17 @@ function renderEcheances() {
   el.innerHTML = list.map(e => {
     const u = ecUrgency(e), c = EC_URG[u], t = EC_TYPES[e.type] || EC_TYPES.autre;
     const resHtml = e.residentName ? ` · <a href="resident.html?id=${e.residentId}" style="color:var(--accent);text-decoration:none">${escHtml(e.residentName)}</a>` : '';
+    const cd = ecCountdown(e), pct = ecBarPct(e);
     return `<div class="card" style="overflow:hidden;${e.done ? 'opacity:.6' : ''}">
       <div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem">
-        <span style="width:4px;align-self:stretch;background:${c.color};border-radius:3px;flex-shrink:0"></span>
-        <span style="width:32px;height:32px;border-radius:9px;background:${c.bg};display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0">${t.icon}</span>
+        <span style="width:52px;height:46px;border-radius:10px;background:${c.bg};border:1px solid ${c.bd};color:${c.color};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1;font-variant-numeric:tabular-nums" title="${escAttr(ecDaysLabel(e))}">
+          <span style="font-size:1.1rem;font-weight:800">${cd.n}</span>
+          <span style="font-size:.58rem;font-weight:700;margin-top:2px">${cd.u}</span>
+        </span>
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:.4rem">
-            <span style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.libelle || t.label)}</span>
-            <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.bd};flex-shrink:0">${c.label}</span>
-          </div>
-          <div style="font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.label}${resHtml}${e.notes ? ` · ${escHtml(e.notes)}` : ''}${e.documentPath ? ` · <a onclick="openEcheanceDoc('${e.id}');return false" style="color:var(--accent);cursor:pointer;text-decoration:none" title="Ouvrir le dernier document joint">📎 document</a>` : ''}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
-          <span style="font-size:.74rem;color:var(--muted)">${formatDate(e.date)}</span>
-          <span style="font-size:.7rem;font-weight:700;color:${c.color};background:${c.bg};border:1px solid ${c.bd};padding:0 8px;border-radius:20px;white-space:nowrap;line-height:1.55">${ecDaysLabel(e)}</span>
+          <div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.libelle || t.label)}</div>
+          <div style="font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:1px 0 5px">${t.icon} ${t.label}${resHtml} · <span style="white-space:nowrap">${formatDate(e.date)}</span>${e.notes ? ` · ${escHtml(e.notes)}` : ''}${e.documentPath ? ` · <a onclick="openEcheanceDoc('${e.id}');return false" style="color:var(--accent);cursor:pointer;text-decoration:none" title="Ouvrir le dernier document joint">📎 document</a>` : ''}</div>
+          <div style="height:5px;border-radius:3px;background:#f1f5f9;position:relative" title="${escAttr(c.label)}"><span style="position:absolute;left:0;top:0;height:5px;border-radius:3px;width:${pct}%;background:${c.color}"></span></div>
         </div>
         ${canEdit ? `<div class="no-print" style="display:flex;gap:.1rem;flex-shrink:0">
           ${!e.done ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme traité" onclick="toggleEcheanceDone('${e.id}')">✓</button>` : `<button class="btn btn-ghost btn-sm" title="Réactiver" onclick="toggleEcheanceDone('${e.id}')">↩</button>`}
