@@ -469,8 +469,13 @@ function loadResident() {
     else { editBtn.style.display = ''; editBtn.textContent = pageEditMode ? '✕ Annuler' : '✎ Modifier'; }
   }
 
-  if (pageEditMode) { renderEditMode(r); return; }
-  renderViewMode(r);
+  try {
+    if (pageEditMode) { renderEditMode(r); return; }
+    renderViewMode(r);
+  } catch (e) {
+    console.error('[loadResident] erreur de rendu de la fiche', e);
+    document.getElementById('residentContent').innerHTML = '<div class="empty"><h3>⚠️ Erreur d\'affichage de la fiche</h3><p style="white-space:pre-wrap;text-align:left;font-size:.8rem;color:#dc2626">' + escHtml((e && (e.stack || e.message)) || String(e)) + '</p><a href="residents.html" class="btn btn-accent">← Retour aux résidents</a></div>';
+  }
 }
 
 function renderViewMode(r) {
@@ -3338,33 +3343,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!requireModule('view_residents')) return;
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
   document.getElementById('residentContent').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
-  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache, _residentActCatalogue, , _residentTransmissionsAll] = await Promise.all([
-    sbGetResidents(),
-    sbGetJournalEntries(),
-    sbGetPresencesRange(daysAgo(35), today()),
-    sbGetPlanningEvents(),
-    (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([])),
-    (typeof loadReferents === 'function' ? loadReferents() : Promise.resolve()),
-    (typeof sbGetTransmissions === 'function' ? sbGetTransmissions() : Promise.resolve([]))
-  ]);
-  _residentTransmissionsAll = _residentTransmissionsAll || [];
-  await loadDocResCache();
-  // Hydrate en localStorage les stores migrés encore lus via DB.get sur la fiche
-  // (incidents, ppe, nuits, visites, médicaments) — les sbGet* ne cachent pas d'eux-mêmes.
-  const _hy = await Promise.all([
-    (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null)),
-    (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null)),
-    (typeof sbGetNuits === 'function' ? sbGetNuits() : Promise.resolve(null)),
-    (typeof sbGetVisites === 'function' ? sbGetVisites() : Promise.resolve(null)),
-    (typeof sbGetMedDistrib === 'function' ? sbGetMedDistrib() : Promise.resolve(null)),
-    (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null)),
-  ]);
-  if (_hy[0] != null) DB.set(DB.keys.incidents, _hy[0]);
-  if (_hy[1] != null) DB.set(DB.keys.ppe, _hy[1]);
-  if (_hy[2] != null) DB.set(DB.keys.nuits, _hy[2]);
-  if (_hy[3] != null) DB.set(DB.keys.visites, _hy[3]);
-  if (_hy[4] != null) DB.set(DB.keys.medicaments, _hy[4]);
-  if (_hy[5] != null) DB.set(DB.keys.planSoins, _hy[5]);
+  // Une seule lecture qui échoue (ou dépasse le quota localStorage à l'hydratation) ne doit JAMAIS
+  // laisser la fiche figée sur « Chargement… » : chaque lecture est isolée, et le rendu a toujours lieu.
+  const _safe = (label, p) => Promise.resolve().then(() => p).catch(e => { console.error('[fiche résident] échec chargement ' + label, e); return null; });
+  const _dbset = (k, v) => { if (v != null) { try { DB.set(k, v); } catch (e) { console.warn('[fiche résident] cache local ignoré (quota ?) — ' + k, e); } } };
+  try {
+    [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache, _residentActCatalogue, , _residentTransmissionsAll] = await Promise.all([
+      _safe('résidents', sbGetResidents()),
+      _safe('journal', sbGetJournalEntries()),
+      _safe('présences', sbGetPresencesRange(daysAgo(35), today())),
+      _safe('planning', sbGetPlanningEvents()),
+      _safe('activités', (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([]))),
+      _safe('référents', (typeof loadReferents === 'function' ? loadReferents() : Promise.resolve())),
+      _safe('transmissions', (typeof sbGetTransmissions === 'function' ? sbGetTransmissions() : Promise.resolve([])))
+    ]);
+    _residentDetailCache      = _residentDetailCache      || [];
+    _residentJournalAll       = _residentJournalAll       || [];
+    _residentPresencesRange   = _residentPresencesRange   || {};
+    _residentPlanningCache    = _residentPlanningCache    || [];
+    _residentActCatalogue     = _residentActCatalogue     || [];
+    _residentTransmissionsAll = _residentTransmissionsAll || [];
+    await _safe('documents', loadDocResCache());
+    // Hydrate en localStorage les stores migrés encore lus via DB.get sur la fiche
+    // (incidents, ppe, nuits, visites, médicaments) — les sbGet* ne cachent pas d'eux-mêmes.
+    const _hy = await Promise.all([
+      _safe('incidents', (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null))),
+      _safe('ppe', (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null))),
+      _safe('nuits', (typeof sbGetNuits === 'function' ? sbGetNuits() : Promise.resolve(null))),
+      _safe('visites', (typeof sbGetVisites === 'function' ? sbGetVisites() : Promise.resolve(null))),
+      _safe('médicaments', (typeof sbGetMedDistrib === 'function' ? sbGetMedDistrib() : Promise.resolve(null))),
+      _safe('plan de soins', (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null))),
+    ]);
+    _dbset(DB.keys.incidents,   _hy[0]);
+    _dbset(DB.keys.ppe,         _hy[1]);
+    _dbset(DB.keys.nuits,       _hy[2]);
+    _dbset(DB.keys.visites,     _hy[3]);
+    _dbset(DB.keys.medicaments, _hy[4]);
+    _dbset(DB.keys.planSoins,   _hy[5]);
+  } catch (e) {
+    console.error('[fiche résident] erreur de chargement des données (rendu quand même)', e);
+  }
   loadResident();
 });
 
