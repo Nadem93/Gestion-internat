@@ -1309,14 +1309,19 @@ async function runSeed(){
     // ── Facturation ──
     if(typeof sbSaveFacture==='function'){ const x=genFactures(residents); await pool(x, f=>sbSaveFacture(f), 10); log(`✓ ${x.length} factures créées`,'ok'); } npTick();
     // ── Repas (menus + choix) ──
-    if(typeof sbSaveRepasJour==='function'){ const x=genRepasDays(residents); await pool(x, r=>sbSaveRepasJour(r.date, r.dayData), 6); log(`✓ ${x.length} jours de repas créés`,'ok'); } npTick();
+    if(typeof sbSaveRepasJour==='function'){
+      let repasDates=new Set();
+      try{ if(typeof sbGetRepasAll==='function'){ repasDates=new Set(Object.keys(await sbGetRepasAll()||{})); } }catch(_){}
+      const x=genRepasDays(residents).filter(r=> !repasDates.has(r.date)); // ne pas écraser un jour de repas déjà renseigné
+      await pool(x, r=>sbSaveRepasJour(r.date, r.dayData), 6); log(`✓ ${x.length} jours de repas créés${repasDates.size?` (${repasDates.size} jour(s) existant(s) conservé(s))`:''}`,'ok');
+    } npTick();
     // ── Cahier de nuit ── (nuits : contrainte unique etab+date, pas d'upsert dans la couche →
     //    on récupère les dates déjà présentes pour les METTRE À JOUR au lieu d'insérer en double)
     if(typeof sbSaveNuit==='function' && employes.length){
-      let nuitByDate={};
-      try{ if(typeof sbGetNuits==='function'){ (await sbGetNuits()||[]).forEach(n=>{ if(n && n.date) nuitByDate[n.date]=n.id; }); } }catch(_){}
-      const x=genNuits(employes, residents).map(n=> nuitByDate[n.date] ? {...n, id:nuitByDate[n.date]} : n);
-      await pool(x, n=>sbSaveNuit(n), 6); log(`✓ ${x.length} nuits consignées`,'ok');
+      let nuitDates=new Set();
+      try{ if(typeof sbGetNuits==='function'){ (await sbGetNuits()||[]).forEach(n=>{ if(n && n.date) nuitDates.add(n.date); }); } }catch(_){}
+      const x=genNuits(employes, residents).filter(n=> !nuitDates.has(n.date)); // ne JAMAIS écraser une nuit déjà saisie
+      await pool(x, n=>sbSaveNuit(n), 6); log(`✓ ${x.length} nuits consignées${nuitDates.size?` (${nuitDates.size} date(s) existante(s) conservée(s))`:''}`,'ok');
     } npTick();
 
     // ── Satisfaction (questions + questionnaires) ──
@@ -1327,7 +1332,12 @@ async function runSeed(){
     } npTick();
 
     // ── CVS (membres, séances, thématiques) ──
-    if(typeof sbSaveCvs==='function'){ await sbSaveCvs(genCvsData(residents)); log('✓ CVS renseigné (membres, séances, thématiques)','ok'); } npTick();
+    if(typeof sbSaveCvs==='function'){
+      let cvsExiste=false;
+      try{ if(typeof sbGetCvs==='function'){ const c=await sbGetCvs(); cvsExiste = !!(c && ((c.membres&&c.membres.length)||(c.seances&&c.seances.length))); } }catch(_){}
+      if(cvsExiste){ log('CVS déjà renseigné → conservé (non écrasé)','warn'); }
+      else { await sbSaveCvs(genCvsData(residents)); log('✓ CVS renseigné (membres, séances, thématiques)','ok'); }
+    } npTick();
     // ── Répertoire partenaires ──
     if(typeof sbSaveRepertoire==='function'){ const x=genRepertoire(); await pool(x, c=>sbSaveRepertoire(c), 6); log(`✓ ${x.length} contacts répertoire créés`,'ok'); } npTick();
     // ── Contacts externes / intervenants ──
