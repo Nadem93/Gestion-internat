@@ -27,12 +27,14 @@ function _peFromRow(r) {
 }
 
 async function sbGetPeShifts() {
-  const { data, error } = await supabaseClient
-    .from('planning_equipe')
-    .select('*')
-    .order('date', { ascending: true });
-  if (error) { console.error(error); toast('Erreur chargement planning', 'error'); return []; }
-  return data.map(_peFromRow);
+  // Lecture paginée : un an de créneaux dépasse le plafond PostgREST de 1000 lignes
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('planning_equipe')
+      .select('*')
+      .order('date', { ascending: true }).order('id'));
+    return data.map(_peFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement planning', 'error'); return []; }
 }
 
 async function sbSavePeShift(s) {

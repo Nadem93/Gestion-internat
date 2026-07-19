@@ -34,7 +34,7 @@
 <body>
 <div class="wrap">
   <h1>🧪 Données de démonstration</h1>
-  <p class="sub">Peuple <b>Supabase</b> de façon <b>intégrale</b> : 50 résidents à la fiche entièrement remplie, une douzaine de salariés avec toute leur RH, les finances, les soins, la vie institutionnelle — <b>toutes les pages du site reçoivent des données</b>. Les référés sont répartis sur les comptes existants (6 référés + 6 co-référés chacun).</p>
+  <p class="sub">Peuple <b>Supabase</b> de façon <b>intégrale</b> avec <b>un an d'historique</b> (365 jours jusqu'à aujourd'hui), comme si l'établissement tournait depuis un an : 50 résidents à la fiche entièrement remplie, une douzaine de salariés avec toute leur RH (paie et facturation sur 12 mois), les soins, la vie institutionnelle — <b>toutes les pages du site reçoivent des données</b>. Rien n'est créé avant l'entrée d'un résident ni l'embauche d'un salarié. Les référés sont répartis sur les comptes existants (6 référés + 6 co-référés chacun). ⏱ Comptez plusieurs minutes.</p>
 
   <div class="warn-banner">
     ⚠️ <b>À utiliser sur un établissement de démonstration.</b> Ce générateur ajoute de vraies lignes dans votre base Supabase (établissement de la session connectée). Toutes les données créées sont marquées <b>[démo]</b> et peuvent être retirées avec le bouton « Supprimer les données de démonstration ».
@@ -57,11 +57,11 @@
       <div class="stat"><div class="stat-n">50</div><div class="stat-l">Évaluations</div></div>
     </div>
     <div class="stat-row" style="margin-top:.55rem">
-      <div class="stat"><div class="stat-n">~250</div><div class="stat-l">Journal</div></div>
-      <div class="stat"><div class="stat-n">~200</div><div class="stat-l">Transmissions</div></div>
-      <div class="stat"><div class="stat-n">~150</div><div class="stat-l">Agenda</div></div>
-      <div class="stat"><div class="stat-n">21 j</div><div class="stat-l">Présences</div></div>
-      <div class="stat"><div class="stat-n">~14</div><div class="stat-l">Incidents</div></div>
+      <div class="stat"><div class="stat-n">~650</div><div class="stat-l">Journal</div></div>
+      <div class="stat"><div class="stat-n">~500</div><div class="stat-l">Transmissions</div></div>
+      <div class="stat"><div class="stat-n">~400</div><div class="stat-l">Agenda</div></div>
+      <div class="stat"><div class="stat-n">365 j</div><div class="stat-l">Présences</div></div>
+      <div class="stat"><div class="stat-n">~30</div><div class="stat-l">Incidents</div></div>
       <div class="stat"><div class="stat-n">8</div><div class="stat-l">Activités</div></div>
     </div>
     <div class="stat-row" style="margin-top:.55rem">
@@ -163,7 +163,7 @@ function shuffle(a){ const s=[...a]; for(let i=s.length-1;i>0;i--){ const j=rnd(
 function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function phone(){ return '0'+pick(['6','7'])+' '+Array.from({length:4},()=>String(10+rnd(90))).join(' '); }
 function dISO(daysAgo,h,m){ const d=new Date(); d.setDate(d.getDate()-daysAgo); d.setHours(h==null?9+rnd(9):h, m==null?(Math.random()<.5?0:30):m, 0, 0); return d.toISOString(); }
-function dDay(daysAgo){ const d=new Date(); d.setDate(d.getDate()-daysAgo); return d.toISOString().slice(0,10); }
+function dDay(daysAgo){ const d=new Date(); d.setDate(d.getDate()-daysAgo); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; } // date LOCALE (toISOString ferait reculer d'un jour entre minuit et ~2 h)
 async function pool(items, worker, size, onTick){
   size = size || 6; let i=0, done=0; const results=new Array(items.length);
   async function run(){ while(i<items.length){ const idx=i++; try{ results[idx]=await worker(items[idx],idx); }catch(e){ results[idx]=null; log('Erreur sur un élément : '+(e&&e.message||e),'err'); } done++; if(onTick) onTick(done,items.length); } }
@@ -180,6 +180,17 @@ function niveauAt(spec, f){
   const s = spec._start + (spec._end - spec._start)*f + (Math.random()-0.5)*0.7;
   return scoreKey(s);
 }
+
+// ═══════════════════════ Fenêtre de simulation : 1 an ═══════════════════════
+// Tout l'historique généré couvre les 365 jours précédant aujourd'hui, comme si
+// l'établissement tournait depuis un an. Rien n'est créé avant l'entrée d'un
+// résident ni avant l'embauche d'un salarié (cohérence de la simulation).
+const SIM_DAYS = 365;
+// Fenêtre réellement couverte par un résident (bornée par sa date d'entrée)
+function windowOf(spec){ return Math.min(SIM_DAYS, (spec && spec._entreeOff != null) ? spec._entreeOff : SIM_DAYS); }
+// Tire n offsets (en jours passés) dans un pool, en ne gardant que ceux situés
+// APRÈS l'entrée du résident ; les offsets négatifs (futur) passent toujours.
+function offsWithin(spec, poolOffs, n){ const w = windowOf(spec); return pickN(poolOffs.filter(o => o <= Math.max(1, w - 1)), n); }
 
 // ═══════════════════════ Pools de contenu ═══════════════════════
 const PRENOMS_M = ['Antoine','Rayan','Kevin','Dylan','Mathieu','Samir','Lucas','Hugo','Théo','Nathan','Enzo','Yanis','Mehdi','Bilal','Adrien','Quentin','Maxime','Florian','Jordan','Killian','Bastien','Anthony','Jérémy','Sofiane','Alexandre'];
@@ -301,35 +312,45 @@ function genNss(spec){
   const y = spec.dob.slice(2,4), m = spec.dob.slice(5,7);
   return `${spec.genre==='F'?2:1} ${y} ${m} 34 ${100+rnd(900)} ${10+rnd(90)}`;
 }
-function santeFor(){
+function santeFor(spec){
+  const w = windowOf(spec||{});
+  // les traitements en cours peuvent précéder l'admission (prescription antérieure) — réaliste
   const traitements = pickN(TRAIT_POOL, 1+rnd(2)).map(t=>({ id:gid(), nom:t.nom, posologie:t.posologie, frequence:t.frequence, debut:dDay(120+rnd(400)), fin:'', moments:t.moments }));
   const rdv=[]; const nr=1+rnd(2);
-  for(let i=0;i<nr;i++){ const off = i===0 ? (5+rnd(60)) : -(5+rnd(50)); rdv.push({ id:gid(), date:dDay(off), heure:`${9+rnd(8)}:${pick(['00','30'])}`, type:pick(RDV_TYPES), praticien:pick(PRATICIENS), lieu:pick(LIEUX_MED), notes:'', fait: off>0 }); }
-  const vaccins = pickN(VACCINS, 1+rnd(2)).map(v=>({ id:gid(), nom:v.nom, date:dDay(200+rnd(2000)), rappel: v.rappelY ? dDay(-(v.rappelY*365 - rnd(300))) : '' }));
+  // RDV « fait » forcément pendant le séjour ; les autres à venir
+  for(let i=0;i<nr;i++){ const off = i===0 ? Math.max(2, Math.min(w-2, 5+rnd(320))) : -(5+rnd(50)); rdv.push({ id:gid(), date:dDay(off), heure:`${9+rnd(8)}:${pick(['00','30'])}`, type:pick(RDV_TYPES), praticien:pick(PRATICIENS), lieu:pick(LIEUX_MED), notes:'', fait: off>0 }); }
+  // rappel calculé depuis la date du vaccin (négatif = à venir, positif = en retard)
+  const vaccins = pickN(VACCINS, 1+rnd(2)).map(v=>{ const offV=200+rnd(2000); return { id:gid(), nom:v.nom, date:dDay(offV), rappel: v.rappelY ? dDay(offV - v.rappelY*365) : '' }; });
   return { groupeSanguin:pick(BLOOD), notesMedicales:pick(NOTES_MED), traitements, rdv, vaccins };
 }
-function objectifsFor(){
+function objectifsFor(spec){
+  const w = windowOf(spec||{});
   const ids = pickN(OBJ_IDS, 3+rnd(2));
   const objectifsSuivi = {};
-  ids.forEach(id=>{ objectifsSuivi[id] = { statut:pick(OBJ_STATUTS), note:pick(OBJ_NOTES), dateMaj:dISO(20+rnd(60)), axes:[], evaluations:[] }; });
+  ids.forEach(id=>{ objectifsSuivi[id] = { statut:pick(OBJ_STATUTS), note:pick(OBJ_NOTES), dateMaj:dISO(Math.max(1, Math.min(w-1, 10+rnd(200)))), axes:[], evaluations:[] }; });
   return { objectifs:ids, objectifsSuivi };
 }
 function evalScores(base){ const s={}; EVAL_KEYS.forEach(k=>{ s[k]=clamp(Math.round(base + (Math.random()-0.5)*2), 0, 4); }); return s; }
 function evaluationsFor(spec){
-  const base = clamp((spec._end||3)-1, 0, 4);
-  const n=1+rnd(2), out=[];
-  for(let i=0;i<n;i++){ out.push({ id:gid(), date:dDay(30 + i*60 + rnd(20)), evaluateur:spec.referent, note:pick(['Autonomie en progression sur l\'hygiène.','Accompagnement maintenu pour la gestion du budget.','Bonne évolution globale ce semestre.','Étayage encore nécessaire sur les démarches.']), scores:evalScores(base - i*0.4) }); }
-  return out;
+  // 1 à 3 évaluations réparties sur l'année de présence (progression _start → _end)
+  const w = windowOf(spec);
+  const endB = clamp((spec._end||3)-1, 0, 4), startB = clamp((spec._start||3)-1, 0, 4);
+  const offs = [20+rnd(35), 150+rnd(45), 290+rnd(50)].filter(o=>o<=w-5);
+  return offs.map(off=>({ id:gid(), date:dDay(off), evaluateur:spec.referent||'Équipe éducative',
+    note:pick(['Autonomie en progression sur l\'hygiène.','Accompagnement maintenu pour la gestion du budget.','Bonne évolution globale ce semestre.','Étayage encore nécessaire sur les démarches.']),
+    scores:evalScores(endB + (startB-endB)*(off/SIM_DAYS)) }));
 }
 function mifScores(end){ const b=clamp(3 + ((end||3)-3)*1.1, 1, 7); const s={}; MIF_KEYS.forEach(k=>s[k]=clamp(Math.round(b + (Math.random()-0.5)*2),1,7)); return s; }
-function activitesFor(actCatalog){
+function activitesFor(actCatalog, spec){
   if(!actCatalog.length) return [];
+  const w = windowOf(spec||{});
   const chosen = pickN(actCatalog, 1+rnd(2));
   return chosen.map((a,i)=>{
     const active = i===0 || Math.random()<0.6;
-    const enr = { id:gid(), activiteId:a.id, dateInscription:dDay(60+rnd(120)), statut: active?'active':'terminee',
-      bilans:[ { id:gid(), date:dDay(20+rnd(30)), texte:pick(['Bonne participation, intégré au groupe.','Progrès sur le respect des consignes.','Investissement variable selon les séances.','Autonomie grandissante dans l\'activité.']), auteur:'Équipe éducative' } ] };
-    if(!active) enr.dateFin = dDay(5+rnd(20));
+    // inscription et bilans forcément APRÈS l'admission
+    const enr = { id:gid(), activiteId:a.id, dateInscription:dDay(Math.max(2, Math.min(w-2, 60+rnd(120)))), statut: active?'active':'terminee',
+      bilans:[ { id:gid(), date:dDay(Math.max(1, Math.min(w-3, 20+rnd(30)))), texte:pick(['Bonne participation, intégré au groupe.','Progrès sur le respect des consignes.','Investissement variable selon les séances.','Autonomie grandissante dans l\'activité.']), auteur:'Équipe éducative' } ] };
+    if(!active) enr.dateFin = dDay(Math.max(0, Math.min(w-3, 5+rnd(20))));
     return enr;
   });
 }
@@ -341,14 +362,18 @@ function ppeFor(r){
       objectifs: pickN(PPE_OBJ[d], 1+rnd(2)).map(o=>({ objectif:o, moyens:pick(PPE_MOYENS), echeance:dDay(-(90+rnd(200))), evaluation:pick(['En cours','Partiellement atteint','Non commencé']) })),
       expression:'' };
   });
-  return { residentId:r.id, residentName:`${r.prenom} ${r.nom}`, dateRedaction:dDay(120+rnd(120)), dateRevision:dDay(-(200+rnd(60))),
-    referent:r._spec.referent, protection:r._spec.protection||'', statut:'actif', sections,
+  // PPE rédigé peu après l'admission (dans la limite de l'année simulée), révision à venir
+  const w = windowOf(r._spec);
+  const drOff = Math.max(3, w - 12 - rnd(15));
+  const refName = r._spec.referent || 'Équipe éducative';
+  return { residentId:r.id, residentName:`${r.prenom} ${r.nom}`, dateRedaction:dDay(drOff), dateRevision:dDay(-(200+rnd(60))),
+    referent:refName, protection:r._spec.protection||'', statut:'actif', sections,
     conclusion:`Projet co-construit avec le résident. ${DEMO_TAG}`, serafin:{},
-    signatures:{ resident:r.prenom, referent:r._spec.referent, direction:'Direction', representant:'', date:dDay(120) } };
+    signatures:{ resident:r.prenom, referent:refName, direction:'Direction', representant:'', date:dDay(drOff) } };
 }
 function docsFor(r){
   return pickN(DOCS, 2+rnd(2)).map(d=>({ residentId:r.id, name:`${d.name} ${DEMO_TAG}`, fileName:d.fileName, size:d.size, mimeType:d.mime,
-    category:d.category, docDate:dDay(60+rnd(300)), dueDate: d.due?dDay(-(30+rnd(200))):null, fichierPath:null, type:'resident', uploadedBy:'Secrétariat', partageFamille:false }));
+    category:d.category, docDate:dDay(Math.max(1, Math.min(windowOf(r._spec)-1, 15+rnd(340)))), dueDate: d.due?dDay(-(30+rnd(200))):null, fichierPath:null, type:'resident', uploadedBy:'Secrétariat', partageFamille:false }));
 }
 function weightedStatut(){ const bag=[]; STATUTS.forEach(([v,w])=>{ for(let i=0;i<w;i++) bag.push(v); }); return pick(bag); }
 
@@ -359,8 +384,8 @@ function weightedStatut(){ const bag=[]; STATUTS.forEach(([v,w])=>{ for(let i=0;
 const POSTES=['Éducateur spécialisé','Moniteur-éducateur','Accompagnant éducatif et social','Aide médico-psychologique','Aide-soignant','Infirmier','Psychologue','Conseillère en économie sociale','Maîtresse de maison','Surveillant de nuit','Chef de service éducatif','Agent de service intérieur'];
 const CONTRAT_TYPES=['cdi','cdi','cdi','cdi','cdd','cdd'];
 const ABS_TYPES=['maladie','maladie','accident_travail','maladie','enfant_malade'];
-const CONGE_TYPES=['cp','cp','cp','rtt','sans_solde','ancien'];
-const CONGE_STATUTS=['approuve','approuve','approuve','en_attente','refuse'];
+const CONGE_TYPES=['cp','cp','cp','rtt','formation','autre']; // types connus de conges-card.js
+const CONGE_STATUTS=['accepte','accepte','accepte','en_attente','refuse']; // vocabulaire de conges.js
 const FORM_DOMAINES=['Bientraitance','Handicap psychique','Premiers secours','Autisme / TSA','Manutention','Gestion des conflits','Droits des usagers','Snoezelen'];
 const FORM_TITRES={
   'Bientraitance':'Prévention de la maltraitance et bientraitance',
@@ -403,7 +428,7 @@ const SOINS_POOL=[
   {cat:'social',libelle:'Accompagnement aux démarches',detail:'Étayage pour le courrier et les rendez-vous',freq:'semaine',intervenant:'Éducateur / CESF'},
 ];
 // -- Médicaments (distribution) --
-const MED_STATUTS=['donné','donné','donné','donné','refusé','reporté'];
+const MED_STATUTS=['donne','donne','donne','donne','refuse','report']; // slugs de js/medicaments.js (pas d'accents)
 const MED_MOMENTS=['matin','midi','soir'];
 // -- Tâches (projet d'accompagnement) --
 const TACHES_POOL=[
@@ -436,7 +461,7 @@ const MENUS_MIDI_2=['Omelette, ratatouille','Gratin de courgettes','Quiche aux l
 const MENUS_SOIR_1=['Soupe de légumes, jambon','Velouté de potiron, fromage','Potage, œufs durs','Bouillon, gratin de pâtes','Soupe, croque-monsieur'];
 const MENUS_SOIR_2=['Salade composée','Taboulé, yaourt','Assiette de crudités','Purée, compote','Riz au lait, fruit'];
 // -- Nuit --
-const NUIT_AMB=['calme','calme','calme','agitee','difficile'];
+const NUIT_AMB=['calme','calme','calme','agitee','tres_agitee']; // ambiances connues de js/nuit.js
 const NUIT_RONDE_NOTES=['RAS, tout le monde dort.','Couloir calme, portes fermées.','Vérification des présences OK.','Un résident réveillé, rapidement rendormi.'];
 const NUIT_EVT=[
   {type:'reveil',description:'Réveil nocturne, accompagné pour se rendormir.'},
@@ -486,7 +511,7 @@ const INTERV_POOL=[
   {lieu:'Chambre 205',desc:'Chasse d\'eau qui fuit',urgence:'normale'},
   {lieu:'Buanderie',desc:'Sèche-linge en panne',urgence:'haute'},
 ];
-const INTERV_STATUTS=['ouverte','ouverte','en_cours','traitee','traitee'];
+const INTERV_STATUTS=['ouverte','ouverte','ouverte','traitee','traitee']; // interventions.html ne connaît que ouverte/traitee
 // -- Inventaire --
 const INV_POOL=[
   {cat:'mobilier',nom:'Lit médicalisé',etat:'bon'},
@@ -530,8 +555,8 @@ const FACT_ORGANISMES=['Conseil Départemental 34','Conseil Départemental 30','
 const FACT_CATS=[{id:'hebergement',label:'Hébergement permanent'},{id:'accueil_jour',label:'Accueil de jour'},{id:'temporaire',label:'Accueil temporaire'}];
 // -- Admissions / candidats --
 const ADM_ORIGINES=['Domicile','IME','Foyer d\'hébergement','Hôpital psychiatrique','Autre établissement','ESAT'];
-const ADM_STATUTS=['en_attente','en_attente','etude','accepte','liste_attente','refuse'];
-const CAND_STATUTS=['recu','recu','entretien','retenu','ecarte'];
+const ADM_STATUTS=['en_attente','en_attente','etude','admis','abandon','refuse']; // vocabulaire de js/admissions.js
+const CAND_STATUTS=['recu','recu','entretien_planifie','accepte','refuse']; // colonnes du kanban js/recrutement.js
 
 // ========== Générateurs ==========
 function genChambres(){
@@ -550,25 +575,28 @@ function genEmployes(){
     do{ prenom=pick(isF?PRENOMS_F:PRENOMS_M); nom=pick(NOMS); full=prenom+' '+nom; g++; }while(used.has(full)&&g<40);
     used.add(full);
     const heures=pick([35,35,35,28,20,17.5]);
+    const embOff=200+rnd(2500); // certains embauchés au cours de l'année simulée
     out.push({ prenom, nom, poste:POSTES[i%POSTES.length], telephone:phone(), email:`${prenom}.${nom}`.toLowerCase().normalize('NFD').replace(/[^a-z.]/g,'')+'@foyer-demo.fr',
-      statut:'actif', dateEmbauche:dDay(200+rnd(2500)), color:pick(COLORS), heuresContrat:heures, salaireBase:1800+rnd(1400),
-      notes:`Salarié de démonstration ${DEMO_TAG}.` });
+      statut:'actif', dateEmbauche:dDay(embOff), color:pick(COLORS), heuresContrat:heures, salaireBase:1800+rnd(1400),
+      notes:`Salarié de démonstration ${DEMO_TAG}.`, _embOff:embOff });
   }
   return out;
 }
 function genContrats(employes){
   return employes.map(e=>{
-    const type=pick(CONTRAT_TYPES); const debut=e.dateEmbauche;
+    const embOff=(e._embOff!=null?e._embOff:9999);
+    const type= embOff<=540 ? pick(CONTRAT_TYPES) : 'cdi'; // pas de CDD de plusieurs années
+    const debut=e.dateEmbauche;
     return { employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type, debut,
       fin: type==='cdd'? dDay(-(30+rnd(300))) : '', temps: e.heuresContrat>=35?'plein':'partiel',
-      heures:e.heuresContrat, essai: type==='cdi'?dDay(0) : '', poste:e.poste, statut:'actif',
+      heures:e.heuresContrat, essai: type==='cdi'?dDay(Math.max(0, embOff-60-rnd(45))) : '', poste:e.poste, statut:'actif', // fin d'essai ~2-3 mois après l'embauche
       notes:`Contrat de démonstration ${DEMO_TAG}`, avenants:[] };
   });
 }
 function genAbsences(employes){
-  const out=[]; const sample=pickN(employes, Math.min(5,employes.length));
+  const out=[]; const sample=pickN(employes, Math.min(8,employes.length));
   sample.forEach(e=>{
-    const start=5+rnd(60); const dur=2+rnd(20);
+    const start=5+rnd(Math.max(6, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))); const dur=2+rnd(20);
     out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type:pick(ABS_TYPES),
       debut:dDay(start), fin:dDay(Math.max(0,start-dur)), prolongation:Math.random()<0.2,
       visiteDate: Math.random()<0.4?dDay(start-1):'', visiteFaite:Math.random()<0.5,
@@ -579,26 +607,27 @@ function genAbsences(employes){
 function genConges(employes){
   const out=[];
   employes.forEach(e=>{
-    const n=1+rnd(2);
+    const n=2+rnd(3); // une année de demandes
     for(let i=0;i<n;i++){
-      const fut=Math.random()<0.5; const base= fut? -(10+rnd(60)) : (10+rnd(90));
+      const fut=Math.random()<0.4; const base= fut? -(10+rnd(60)) : (10+rnd(Math.max(11, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))));
       const st=pick(CONGE_STATUTS);
       out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type:pick(CONGE_TYPES),
         debut:dDay(base), fin:dDay(base-(2+rnd(10))), statut:st,
         motif:`Congés de démonstration ${DEMO_TAG}`,
         reponseMotif: st==='refuse'?'Effectif insuffisant sur la période':'',
         traitePar: st==='en_attente'?'':'Chef de service', traiteParId:null,
-        dateTraitement: st==='en_attente'?null:dISO(base+3) });
+        dateTraitement: st==='en_attente'?null:dISO(Math.max(0,base+3)) });
     }
   });
   return out;
 }
 function genPointages(employes){
   const out=[];
-  for(let d=13; d>=0; d--){
+  for(let d=SIM_DAYS-1; d>=0; d--){ // un an de badgeage
     const day=dDay(d); const dow=new Date(day+'T12:00:00').getDay();
     if(dow===0) continue; // dimanche : peu de monde
     employes.forEach(e=>{
+      if((e._embOff!=null?e._embOff:9999) < d) return; // pas encore embauché ce jour-là
       if(Math.random()<0.25) return; // pas tout le monde chaque jour (temps partiels, repos)
       const ah=6+rnd(4), am=pick([0,15,30]);
       const dur=e.heuresContrat>=35? 7+rnd(2) : 4+rnd(3);
@@ -613,18 +642,21 @@ function genPointages(employes){
 }
 function genAstreintes(employes){
   const out=[]; const cadres=employes.filter(e=>/chef|infirmier|éduc/i.test(e.poste)); const src=cadres.length?cadres:employes;
-  for(let i=0;i<10;i++){
-    const e=pick(src);
-    out.push({ type:pick(['semaine','week-end','nuit','ferie']), date:dDay(20-i*2), nom:`${e.prenom} ${e.nom}`, tel:e.telephone, note:`Astreinte de démonstration ${DEMO_TAG}` });
+  for(let i=0;i<52;i++){ // une astreinte par semaine sur l'année
+    const cand=src.filter(x=>(x._embOff!=null?x._embOff:9999)>=3+i*7);
+    const dispo=cand.length?cand:employes.filter(x=>(x._embOff!=null?x._embOff:9999)>=3+i*7);
+    if(!dispo.length) continue;
+    const e=pick(dispo);
+    out.push({ type:pick(['semaine','week-end','nuit','ferie']), date:dDay(3+i*7), nom:`${e.prenom} ${e.nom}`, tel:e.telephone, note:`Astreinte de démonstration ${DEMO_TAG}` });
   }
   return out;
 }
 function genEntretiens(employes){
   // Entretien annuel/professionnel : positionnement qualitatif, JAMAIS de note chiffrée.
-  const out=[]; const sample=pickN(employes, Math.min(8,employes.length));
+  const out=[]; const sample=[...employes]; // campagne annuelle : tout le monde
   sample.forEach((e,i)=>{
     const done=i<Math.ceil(sample.length*0.6);
-    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(120)):dDay(-(20+rnd(90))),
+    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(Math.max(31, Math.min(300,(e._embOff!=null?e._embOff:9999)-30)))):dDay(-(20+rnd(90))),
       type:pick(ENTRETIEN_TYPES), statut: done?'realise':'planifie', evaluateur:'Chef de service éducatif',
       bilan: done?pick(ENTRETIEN_BILANS):'', objectifs: done?pickN(ENTRETIEN_OBJECTIFS,2).join(' • '):'',
       formations: done?'Souhait exprimé : formation sur le handicap psychique.':'', grille:{} });
@@ -632,10 +664,12 @@ function genEntretiens(employes){
   return out;
 }
 function genFormations(employes){
-  const doms=pickN(FORM_DOMAINES, 6);
+  const doms=pickN(FORM_DOMAINES, 8); // plan de formation sur l'année
   return doms.map((dom,i)=>{
-    const past=i<3; const base= past? (30+i*30) : -(20+i*25);
-    const parts=pickN(employes, 2+rnd(4)).map(e=>({ id:String(e.id), nom:`${e.prenom} ${e.nom}` }));
+    const past=i<5; const base= past? (30+i*65) : -(15+(i-5)*30);
+    // participants d'une formation passée : uniquement des salariés déjà embauchés à sa date
+    const eligibles = past ? employes.filter(e=>(e._embOff!=null?e._embOff:9999)>=base+2) : employes;
+    const parts=pickN(eligibles, Math.min(eligibles.length, 2+rnd(4))).map(e=>({ id:String(e.id), nom:`${e.prenom} ${e.nom}` }));
     return { titre:FORM_TITRES[dom], organisme:pick(FORM_ORG), domaine:dom,
       dateDebut:dDay(base), dateFin:dDay(base-1-rnd(2)), dureeHeures:pick([7,14,21]), cout:400+rnd(1600),
       maxParticipants:pick([8,10,12]), statut: past?'terminee':'planifiee', participants:parts,
@@ -644,10 +678,12 @@ function genFormations(employes){
 }
 function genFichesPaie(employes){
   const out=[]; const now=new Date();
-  for(let mo=1;mo<=2;mo++){
+  for(let mo=1;mo<=12;mo++){ // 12 mois de bulletins
     const d=new Date(now.getFullYear(), now.getMonth()-mo, 1);
     const periode=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const offDays=Math.round((now.getTime()-d.getTime())/86400000);
     employes.forEach(e=>{
+      if((e._embOff!=null?e._embOff:9999) < offDays) return; // pas encore embauché sur cette période
       const brut=Math.round(e.salaireBase*(e.heuresContrat/35));
       const primes=Math.random()<0.4?pick([50,80,120]):0;
       const hsup=Math.random()<0.3?pick([1,2,4]):0;
@@ -662,10 +698,11 @@ function genFichesPaie(employes){
 }
 function genPeShifts(employes){
   const out=[]; const shifts=[['07:00','14:30'],['14:00','21:30'],['09:00','17:00'],['21:00','07:00']];
-  for(let d=6; d>=0; d--){
-    const day=dDay(d - 3); // semaine autour d'aujourd'hui (passé + futur)
+  for(let d=SIM_DAYS-1; d>=-7; d--){ // un an d'historique + la semaine à venir
+    const day=dDay(d);
     employes.forEach(e=>{
-      if(Math.random()<0.4) return;
+      if(d>0 && (e._embOff!=null?e._embOff:9999) < d) return; // pas encore embauché
+      if(Math.random()<0.45) return; // repos / rotation
       const s=pick(shifts);
       out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date:day, debut:s[0], fin:s[1] });
     });
@@ -678,7 +715,7 @@ function genDocsEmploye(employes){
   employes.forEach(e=>{
     pickN(cats, 2+rnd(2)).forEach(c=>{
       out.push({ employeId:e.id, name:`${c[0]} — ${e.prenom} ${e.nom}`, fileName:c[1], size:80000+rnd(300000),
-        mimeType:'application/pdf', category:c[0], docDate:dDay(60+rnd(600)), fichierPath:null });
+        mimeType:'application/pdf', category:c[0], docDate:dDay(Math.max(1, Math.min((e._embOff!=null?e._embOff:9999)-1, 60+rnd(600)))), fichierPath:null });
     });
   });
   return out;
@@ -701,14 +738,14 @@ function genMedicaments(residents, author){
     const full=`${r.prenom} ${r.nom}`;
     const traits=(r.sante&&r.sante.traitements)||[];
     if(!traits.length) return;
-    for(let d=4; d>=0; d--){
+    for(let d=Math.min(20, windowOf(r._spec)-1); d>=0; d--){ // 3 semaines de distribution tracée
       traits.forEach(t=>{
-        (t.moments&&t.moments.length?t.moments:[pick(MED_MOMENTS)]).forEach(mom0=>{
-          const mom = mom0==='coucher' ? 'soir' : mom0;
+        if(!(t.moments||[]).length) return; // « si besoin » : pas de prise prévue, donc rien à tracer
+        t.moments.forEach(mom=>{
           const st=pick(MED_STATUTS);
           out.push({ date:dDay(d), residentId:r.id, residentName:full, traitementId:t.id, medicament:t.nom,
-            posologie:t.posologie, moment:mom, statut:st, heure: mom==='matin'?'08:00':mom==='midi'?'12:30':'19:30',
-            auteur:author, observation: st==='refusé'?'A refusé la prise, retenté plus tard.':'' });
+            posologie:t.posologie, moment:mom, statut:st, heure: mom==='matin'?'08:00':mom==='midi'?'12:30':mom==='coucher'?'21:30':'19:30',
+            auteur:author, observation: st==='refuse'?'A refusé la prise, retenté plus tard.':'' });
         });
       });
     }
@@ -733,9 +770,9 @@ function genVisites(residents){
   const out=[];
   residents.forEach(r=>{
     if(Math.random()<0.35) return;
-    const full=`${r.prenom} ${r.nom}`; const n=1+rnd(2);
+    const full=`${r.prenom} ${r.nom}`; const n=3+rnd(3); const w=windowOf(r._spec);
     for(let i=0;i<n;i++){
-      const fut=Math.random()<0.5; const base= fut? -(3+rnd(20)) : (3+rnd(40));
+      const fut=Math.random()<0.35; const base= fut? -(3+rnd(20)) : (3+rnd(Math.max(4, w-4)));
       const type=pick(VISITE_TYPES);
       out.push({ residentId:r.id, residentName:full, type, personne:`${pick(PRENOMS_M.concat(PRENOMS_F))} ${r.nom}`,
         lien:pick(VISITE_LIENS), date:dDay(base), heure:`${13+rnd(5)}:00`,
@@ -751,9 +788,9 @@ function genEcheances(residents){
   const out=[];
   residents.forEach(r=>{
     if(Math.random()<0.4) return;
-    const full=`${r.prenom} ${r.nom}`;
+    const full=`${r.prenom} ${r.nom}`; const w=windowOf(r._spec);
     pickN(ECHEANCE_TYPES, 1+rnd(2)).forEach(e=>{
-      const fut=Math.random()<0.7; const base= fut? -(15+rnd(180)) : (10+rnd(90));
+      const fut=Math.random()<0.7; const base= fut? -(15+rnd(180)) : Math.max(1, Math.min(w-2, 10+rnd(300)));
       const done=!fut && Math.random()<0.6;
       out.push({ type:e.type, libelle:e.libelle, date:dDay(base), residentId:r.id, residentName:full,
         notes:`Échéance de démonstration ${DEMO_TAG}`, done, doneAt: done?dISO(base-1):null,
@@ -764,15 +801,18 @@ function genEcheances(residents){
 }
 function genViaTrajectoire(residents){
   const sample=pickN(residents, Math.min(15, residents.length));
-  return sample.map(r=>({ residentId:r.id, type:pick(VT_TYPES), mdph:pick(MDPH_LIST), date:dDay(20+rnd(300)),
+  return sample.map(r=>({ residentId:r.id, type:pick(VT_TYPES), mdph:pick(MDPH_LIST), date:dDay(Math.max(1, Math.min(windowOf(r._spec)-2, 10+rnd(340)))),
     statut:pick(VT_STATUTS), commentaire:`Dossier ViaTrajectoire de démonstration ${DEMO_TAG}` }));
 }
 function genFactures(residents){
   const now=new Date(); const out=[];
-  for(let mo=1;mo<=2;mo++){
+  for(let mo=1;mo<=12;mo++){ // 12 mois de facturation
     const d=new Date(now.getFullYear(), now.getMonth()-mo, 1);
     const periode=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const offDays=Math.round((now.getTime()-d.getTime())/86400000);
     residents.forEach(r=>{
+      // offset d'entrée BRUT (pas windowOf, plafonné à 365 : le 12e mois serait vide pour tous)
+      if((r._spec && r._spec._entreeOff!=null ? r._spec._entreeOff : Infinity) < offDays) return; // pas encore admis sur cette période
       const cat=pick(FACT_CATS); const prix= cat.id==='hebergement'?pick([180,195,210]):pick([90,110,130]);
       const nb= cat.id==='accueil_jour'?pick([18,20,22]):pick([28,29,30]);
       const st=pick(['brouillon','envoyee','envoyee','payee','payee']);
@@ -787,11 +827,12 @@ function genFactures(residents){
 // ---- Institution : repas / nuit / satisfaction / cvs / répertoire / contacts / admissions / candidats / interventions / inventaire / documentation / budget ----
 function genRepasDays(residents){
   const out=[];
-  for(let d=13; d>=0; d--){
+  for(let d=SIM_DAYS-1; d>=0; d--){ // un an de menus et de choix
     const date=dDay(d);
     const menus={ midi:{ '1':pick(MENUS_MIDI_1), '2':pick(MENUS_MIDI_2) }, soir:{ '1':pick(MENUS_SOIR_1), '2':pick(MENUS_SOIR_2) } };
     const choixMenu={};
-    pickN(residents, Math.ceil(residents.length*0.7)).forEach(r=>{
+    const present=residents.filter(r=>windowOf(r._spec)>=d+1); // seuls les résidents déjà admis choisissent
+    pickN(present, Math.ceil(present.length*0.7)).forEach(r=>{
       choixMenu[r.id]={ midi:pick(['1','2']), soir:pick(['1','2']) };
     });
     out.push({ date, dayData:{ menus, choixMenu, _demo:true } });
@@ -801,13 +842,17 @@ function genRepasDays(residents){
 function genNuits(employes, residents){
   const veilleurs=employes.filter(e=>/nuit/i.test(e.poste)); const src=veilleurs.length?veilleurs:employes;
   const out=[];
-  for(let d=13; d>=0; d--){
-    const e=pick(src); const nbR=3+rnd(3);
+  for(let d=SIM_DAYS-1; d>=0; d--){ // un an de cahier de nuit
+    const cand=src.filter(x=>(x._embOff!=null?x._embOff:9999)>=d);
+    const dispo=cand.length?cand:employes.filter(x=>(x._embOff!=null?x._embOff:9999)>=d);
+    if(!dispo.length) continue; // personne d'embauché à cette date : pas de cahier antidaté
+    const e=pick(dispo); const nbR=3+rnd(3);
     const rondes=[]; const heures=['22:30','00:30','02:30','04:30','06:00'];
     pickN(heures,nbR).sort().forEach(h=>rondes.push({ id:gid(), heure:h, ras:Math.random()<0.8, note:pick(NUIT_RONDE_NOTES) }));
     const evenements=[];
-    if(Math.random()<0.5){ const ev=pick(NUIT_EVT); const r=pick(residents);
-      evenements.push({ id:gid(), type:ev.type, heure:`0${1+rnd(4)}:${pick(['00','15','30','45'])}`, residentId:r.id, residentName:`${r.prenom} ${r.nom}`, description:ev.description }); }
+    if(Math.random()<0.5){ const adm=residents.filter(x=>windowOf(x._spec)>=d+1); // seulement des résidents déjà admis cette nuit-là
+      if(adm.length){ const ev=pick(NUIT_EVT); const r=pick(adm);
+        evenements.push({ id:gid(), type:ev.type, heure:`0${1+rnd(4)}:${pick(['00','15','30','45'])}`, residentId:r.id, residentName:`${r.prenom} ${r.nom}`, description:ev.description }); } }
     const astreintes=[];
     if(Math.random()<0.15){ astreintes.push({ id:gid(), heure:'03:10', cadre:'Cadre d\'astreinte', motif:'Avis médical', decision:'Surveillance simple, RAS au matin.' }); }
     out.push({ date:dDay(d), veilleur:`${e.prenom} ${e.nom}`, veilleurId:e.id, ambiance:pick(NUIT_AMB), effectif:1+rnd(2),
@@ -822,8 +867,12 @@ function genAdmissions(){
   for(let i=0;i<8;i++){
     const isF=Math.random()<0.5; const prenom=pick(isF?PRENOMS_F:PRENOMS_M), nom=pick(NOMS);
     const st=pick(ADM_STATUTS);
-    out.push({ prenom, nom, dateNaissance:dDay((20+rnd(30))*365), dateDemande:dDay(20+rnd(200)),
-      dateEntree: st==='accepte'?dDay(-(10+rnd(60))):'', dateDecision: /accepte|refuse/.test(st)?dDay(10+rnd(60)):'',
+    // chronologie : demande → décision → entrée (offsets dérivés, jamais inversés)
+    const offDem=30+rnd(320);
+    const offDec=Math.max(2, offDem-10-rnd(40));
+    const offEnt=Math.max(1, offDec-10-rnd(30));
+    out.push({ prenom, nom, dateNaissance:dDay((20+rnd(30))*365), dateDemande:dDay(offDem),
+      dateEntree: st==='admis'?dDay(offEnt):'', dateDecision: /admis|refuse/.test(st)?dDay(offDec):'',
       dossier:'complet', origine:pick(ADM_ORIGINES), statut:st, contactNom:`${pick(PRENOMS_F)} ${nom}`, contactTel:phone(),
       notes:`Admission de démonstration ${DEMO_TAG}`, residentId:null });
   }
@@ -833,8 +882,9 @@ function genCandidats(){
   const out=[];
   for(let i=0;i<8;i++){
     const isF=Math.random()<0.5; const prenom=pick(isF?PRENOMS_F:PRENOMS_M), nom=pick(NOMS); const st=pick(CAND_STATUTS);
+    const offC=5+rnd(330); // entretien forcément APRÈS la candidature
     out.push({ prenom, nom, poste:pick(POSTES), tel:phone(), email:`${prenom}.${nom}`.toLowerCase()+'@candidat-demo.fr',
-      date:dDay(5+rnd(60)), dateEntretien: /entretien|retenu|ecarte/.test(st)?dDay(2+rnd(20)):'',
+      date:dDay(offC), dateEntretien: /entretien_planifie|entretien_fait|accepte|refuse/.test(st)?dDay(Math.max(1, offC-5-rnd(15))):'',
       notes:`Candidature de démonstration ${DEMO_TAG}`, statut:st });
   }
   return out;
@@ -844,7 +894,7 @@ function genInterventions(employes){
     const st=INTERV_STATUTS[i%INTERV_STATUTS.length]; const done=/traitee/.test(st);
     const e=pick(employes);
     return { lieu:it.lieu, desc:`${it.desc} ${DEMO_TAG}`, urgence:it.urgence, statut:st,
-      demandePar:`${e.prenom} ${e.nom}`, traitePar: done?'Agent technique':'', dateTraitement: done?dDay(2+rnd(10)):null,
+      demandePar:`${e.prenom} ${e.nom}`, traitePar: done?'Agent technique':'', dateTraitement: done?dDay(2+rnd(200)):null,
       photoTravaux:null, commentaireTravaux: done?'Réparation effectuée, testée et fonctionnelle.':'' };
   });
 }
@@ -859,25 +909,29 @@ function genDocumentation(){
 }
 function genBudgetDemandes(enveloppes, employes, residents){
   const out=[];
-  for(let i=0;i<14;i++){
-    const env=pick(enveloppes); const e=pick(employes); const st=pick(['en_attente','en_attente','approuve','approuve','refuse','paye']);
+  for(let i=0;i<24;i++){ // dépenses réparties sur l'année
+    const env=pick(enveloppes); const e=pick(employes); const st=pick(['en_attente','en_attente','accepte','accepte','refuse','justifie']); // vocabulaire de js/budget.js
     const rs=pickN(residents, 1+rnd(2));
+    // borné par l'embauche du demandeur ET l'admission des résidents bénéficiaires
+    const lim = Math.min((e._embOff!=null?e._embOff:9999), ...rs.map(r=>windowOf(r._spec))) - 2;
+    const off = Math.max(1, Math.min(lim, st==='en_attente' ? (1+rnd(15)) : (5+rnd(335)))); // les demandes en attente sont récentes
     out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, enveloppeId:env.id, enveloppeNom:env.nom,
-      montant:20+rnd(280), motif:`${pick(BUDGET_MOTIFS)} ${DEMO_TAG}`, dateDepense:dDay(5+rnd(90)),
+      montant:20+rnd(280), motif:`${pick(BUDGET_MOTIFS)} ${DEMO_TAG}`, dateDepense:dDay(off), dateDemande:dISO(off+2),
       residentIds:rs.map(r=>r.id), residentNoms:rs.map(r=>`${r.prenom} ${r.nom}`), partage50:false, partFoyer:0, partResident:0,
       remboursements:[], projetDocuments:[], justificatifs:[], statut:st,
       reponseMotif: st==='refuse'?'Hors enveloppe disponible':'', traitePar: st==='en_attente'?'':'Chef de service',
-      dateTraitement: st==='en_attente'?null:dISO(3+rnd(20)), dateJustifie: st==='paye'?dISO(1+rnd(10)):null });
+      dateTraitement: st==='en_attente'?null:dISO(Math.max(0,off-1)), dateJustifie: st==='justifie'?dISO(Math.max(0,off-3)):null });
   }
   return out;
 }
 function genSatReponses(questions, residents){
   const out=[]; const qids=questions.map(q=>q.id);
-  for(let i=0;i<22;i++){
+  for(let i=0;i<30;i++){ // questionnaires répartis sur l'année
     const r=Math.random()<0.6?pick(residents):null;
     const reponses={}; qids.forEach(id=>{ reponses[id]=1+rnd(5); });
+    const date = r ? dDay(5+rnd(Math.max(6, windowOf(r._spec)-5))) : dDay(5+rnd(350));
     out.push({ repondant: r?`${r.prenom} ${r.nom}`:`Famille ${pick(NOMS)}`, lienResident:pick(SAT_LIENS),
-      residentId: r?r.id:null, date:dDay(10+rnd(180)), commentaire:`${pick(SAT_COMMENTS)} ${DEMO_TAG}`, reponses });
+      residentId: r?r.id:null, date, commentaire:`${pick(SAT_COMMENTS)} ${DEMO_TAG}`, reponses });
   }
   return out;
 }
@@ -888,11 +942,11 @@ function genCvsData(residents){
     let nom, rid=null;
     if(col==='residents'){ const r=pick(residents); nom=`${r.prenom} ${r.nom}`; rid=r.id; }
     else nom=`${pick(PRENOMS_F.concat(PRENOMS_M))} ${pick(NOMS)}`;
-    membres.push({ id:gid(), college:col, nom, residentId:rid, mandatDebut:dDay(300+rnd(200)), mandatFin:dDay(-(100+rnd(300))), statut:'actif', createdAt:dISO(300) });
+    membres.push({ id:gid(), college:col, nom, residentId:rid, mandatDebut:dDay(380+rnd(250)), mandatFin:dDay(-(100+rnd(300))), statut:'actif', createdAt:dISO(300) });
   });
   const seances=[];
-  for(let i=0;i<4;i++){
-    const fut=i===0; const base= fut? -(20+rnd(30)) : (30+i*80);
+  for(let i=0;i<5;i++){ // 4 séances trimestrielles passées + 1 à venir
+    const fut=i===0; const base= fut? -(20+rnd(30)) : (i*88 - 40 + rnd(20));
     seances.push({ id:gid(), date:dDay(base), heure:'14:00',
       ordreDuJour:'Vie quotidienne · Repas · Activités · Questions diverses',
       presents: fut?'':'Membres du CVS, direction, équipe éducative',
@@ -937,7 +991,7 @@ async function runSeed(){
   btn.disabled=true; btnDel.disabled=true; logEl.innerHTML=''; setProgress(1);
   const t0=Date.now();
   try{
-    log('Démarrage de la génération…','info');
+    log('Démarrage de la génération — 1 an d\'historique, comptez plusieurs minutes…','info');
 
     // ── 0. Catalogue d'activités (d'abord : les inscriptions le référencent) ──
     log('Création du catalogue d\'activités…','info');
@@ -956,9 +1010,11 @@ async function runSeed(){
       const y=1972+rnd(34), mo=1+rnd(12), da=1+rnd(28);
       const rgT=pick(['normal','normal','normal','sans_sel','diabetique','sans_porc','hypocalorique']);
       const rgX=pick(['normale','normale','normale','hachee','mixee']);
+      // ~2/3 présents depuis plus d'un an, ~1/3 admis au fil de l'année simulée
+      const entreeOff = Math.random()<0.65 ? (SIM_DAYS+30+rnd(1200)) : (15+rnd(SIM_DAYS-20));
       specs.push({ prenom, nom, genre:isF?'F':'M', dob:`${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}`,
         chambre:'', referent:'', coReferent:'', color:pick(COLORS), protection:pick(PROTECTIONS),
-        regime:{ type:rgT, texture:rgX } });
+        regime:{ type:rgT, texture:rgX }, _entreeOff:entreeOff, entree:dDay(entreeOff) });
     }
     specs.forEach((s,i)=>{ s.chambre = String(100 + Math.floor(i/12)*100 + (i%12) + 1); });
     // trajectoires d'autonomie variées
@@ -996,21 +1052,21 @@ async function runSeed(){
     log('Création de 50 résidents (fiche complète)…','info');
     const savedRes = await pool(specs, async (s) => {
       const prot = s.protection;
-      const { objectifs, objectifsSuivi } = objectifsFor();
+      const { objectifs, objectifsSuivi } = objectifsFor(s);
       const saved = await sbSaveResident({
-        prenom:s.prenom, nom:s.nom, genre:s.genre, dob:s.dob, entree:dDay(30+rnd(900)), statut:weightedStatut(),
+        prenom:s.prenom, nom:s.nom, genre:s.genre, dob:s.dob, entree:s.entree, statut:weightedStatut(),
         chambre:s.chambre, referent:s.referent, coReferent:s.coReferent, regime:s.regime, color:s.color, notes:`Résident de démonstration ${DEMO_TAG}.`,
         contacts:`Mère : ${phone()} · Frère/Sœur : ${phone()}`,
         medecin:pick(MEDECINS), medecinTel:phone().replace(/^0[67]/,'04'), allergies:pick(ALLERGIES), nss:genNss(s), ins:'',
-        dmp:pick(['actif','en_attente','non_ouvert']), consent:pick(['oui','oui','en_attente']), consentDate:dDay(100+rnd(300)),
+        dmp:pick(['actif','en_attente','non_ouvert']), consent:pick(['oui','oui','en_attente']), consentDate:dDay(Math.max(1, s._entreeOff - rnd(8))), // consentement signé à l'admission
         tuteur: prot ? `Me ${pick(NOMS)}` : '', tuteurTel: prot ? phone() : '',
         protection:prot, protectionNom: prot ? pick(PROT_ORG) : '', protectionTel: prot ? phone() : '',
         situationPro:pick(SIT_PRO), situationAdmin:pick(SIT_ADMIN),
         ressources: pickN(RESSOURCES, 1+rnd(2)).join(', '), organismeA:pick(ORG_A), dossierA:`D-${1000+rnd(9000)}`,
         objectifs, objectifsSuivi,
-        sante: santeFor(),
+        sante: santeFor(s),
         evaluations: evaluationsFor(s),
-        activites: activitesFor(actCatalog)
+        activites: activitesFor(actCatalog, s)
       });
       return saved ? { ...saved, _spec:s } : null;
     }, 6, (d,t)=>setProgress(4 + d/t*20));
@@ -1021,12 +1077,12 @@ async function runSeed(){
     // ── 2. Journal de bord ──
     log('Génération du journal de bord…','info');
     const journalTasks=[];
-    const OFFS_J=[128,100,74,50,30,12];
+    const OFFS_J=[360,335,310,285,260,235,210,185,160,140,120,100,85,70,56,42,30,21,14,10,7,4,2];
     residents.forEach(r=>{
-      const spec=r._spec, full=`${r.prenom} ${r.nom}`;
-      const offs=pickN(OFFS_J,4+rnd(3)).sort((a,b)=>b-a);
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
+      const offs=offsWithin(spec, OFFS_J, 10+rnd(6)).sort((a,b)=>b-a);
       offs.forEach(off=>{
-        const niv=niveauAt(spec, 1-off/135);
+        const niv=niveauAt(spec, 1-off/w);
         journalTasks.push({ residentId:r.id, resident:full, residentColor:r._spec.color||'',
           categorie:pick(JOURNAL_CATS), date:dISO(off), contenu:pick(JOURNAL_TXT)(full),
           accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv, visibilite:'equipe',
@@ -1040,12 +1096,12 @@ async function runSeed(){
     // ── 3. Transmissions ──
     log('Génération des transmissions…','info');
     const trTasks=[];
-    const OFFS_T=[85,58,32,14,6];
+    const OFFS_T=[350,320,290,255,225,195,165,135,105,80,60,45,32,21,14,9,6,3,1];
     residents.forEach(r=>{
-      const spec=r._spec, full=`${r.prenom} ${r.nom}`;
-      const offs=pickN(OFFS_T,3+rnd(3)).sort((a,b)=>b-a);
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
+      const offs=offsWithin(spec, OFFS_T, 8+rnd(5)).sort((a,b)=>b-a);
       offs.forEach(off=>{
-        const niv=niveauAt(spec, 1-off/135);
+        const niv=niveauAt(spec, 1-off/w);
         trTasks.push({ date:dDay(off), shift:pick(TR_SHIFTS), cat:pick(TR_CATS), priority: Math.random()<.12?'urgent':'normal',
           content:pick(TR_TXT), residentId:r.id, residentName:full, authorId:AUTHOR.id, authorName:AUTHOR.name,
           readBy: AUTHOR.id?[String(AUTHOR.id)]:[], soutien: niv?pick(ACCOMP_TXT):'', soutienNiveau:niv, createdAt:dISO(off) });
@@ -1057,11 +1113,12 @@ async function runSeed(){
     // ── 4. Agenda ──
     log('Génération de l\'agenda…','info');
     const planEvents=[];
+    const OFFS_P=[340,300,265,230,195,160,125,95,65,40,22,10,-3,-8,-15];
     residents.forEach(r=>{
-      const spec=r._spec, full=`${r.prenom} ${r.nom}`;
-      [8,-4,-12].forEach(off=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
+      offsWithin(spec, OFFS_P, 6+rnd(4)).forEach(off=>{
         const type=pick(PLAN_TYPES);
-        const niv = spec._assessed ? niveauAt(spec, off<=0?1:0.9) : '';
+        const niv = spec._assessed ? niveauAt(spec, off<=0?1:1-off/w) : '';
         planEvents.push({ titre:pick(PLAN_TITRES[type]), residentId:r.id, residentName:full, type, date:dDay(off),
           heure:`${9+rnd(8)}:${Math.random()<.5?'00':'30'}`, duree:pick(['30','60','90','120']), color:r._spec.color||'#2563eb',
           desc:`Activité de démonstration ${DEMO_TAG}`, accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv, serafin: isSerafinDirect(niv)?'directe':'indirecte' });
@@ -1070,23 +1127,24 @@ async function runSeed(){
     for(let i=0;i<planEvents.length;i+=100){ await sbSavePlanningEventsBulk(planEvents.slice(i,i+100)); setProgress(54 + (i/planEvents.length)*6); }
     log(`✓ ${planEvents.length} événements d'agenda créés`,'ok');
 
-    // ── 5. Présences (21 j) ──
-    log('Génération des présences…','info');
-    const ids=residents.map(r=>r.id);
-    for(let d=20; d>=0; d--){
+    // ── 5. Présences (365 j — un an d'historique) ──
+    log('Génération des présences (365 jours, cela peut prendre une minute)…','info');
+    const dayOffs=[]; for(let d=SIM_DAYS-1; d>=0; d--) dayOffs.push(d);
+    await pool(dayOffs, async (d)=>{
+      const pids=residents.filter(r=>windowOf(r._spec)>=d+1).map(r=>r.id); // présent seulement après son entrée
+      if(!pids.length) return;
       const day=dDay(d);
-      await sbSetPresencesBulk(ids, day, 'present');
-      const absents=pickN(ids, 1+rnd(3));
+      await sbSetPresencesBulk(pids, day, 'present');
+      const absents=pickN(pids, Math.min(pids.length, 1+rnd(3)));
       for(const rid of absents){ const st = Math.random()<.5?'absent':'sortie'; await sbSetPresence(rid, day, st, st==='absent'?'Motif familial':'Sortie encadrée'); }
-      setProgress(60 + (20-d)/21*10);
-    }
-    log('✓ Présences des 21 derniers jours créées','ok');
+    }, 5, (done,tot)=>setProgress(60 + done/tot*10));
+    log(`✓ Présences de l'année écoulée créées (${SIM_DAYS} jours)`,'ok');
 
     // ── 6. Incidents ──
     log('Génération des incidents…','info');
     const incTasks=[];
-    for(let i=0;i<14;i++){
-      const r=pick(residents), full=`${r.prenom} ${r.nom}`, type=pick(INCIDENT_TYPES), off=2+rnd(60);
+    for(let i=0;i<30;i++){ // ~30 incidents répartis sur l'année
+      const r=pick(residents), full=`${r.prenom} ${r.nom}`, type=pick(INCIDENT_TYPES), off=2+rnd(Math.max(3, windowOf(r._spec)-2));
       incTasks.push({ titre:`${type[0].toUpperCase()+type.slice(1)} — ${full}`, type, gravite:pick(INCIDENT_GRAV),
         date:dDay(off), heure:`${9+rnd(11)}:${Math.random()<.5?'00':'30'}`, residentId:r.id, residentName:full,
         lieu:pick(['Salle commune','Chambre','Couloir','Extérieur','Réfectoire']), description:`${INCIDENT_DESC[type]||''} ${DEMO_TAG}`,
@@ -1108,8 +1166,16 @@ async function runSeed(){
 
     // ── 9. Évaluations (table + page bilan/IA) ──
     log('Génération des évaluations (grille MIF)…','info');
-    const evalTasks = residents.map(r=>({ residentId:r.id, grille:'mif', date:dDay(40+rnd(40)),
-      note:`Évaluation de démonstration ${DEMO_TAG}`, scores:mifScores(r._spec._end) }));
+    // Jusqu'à 3 points de mesure sur l'année : progression _start → _end visible sur les courbes
+    const evalTasks=[];
+    residents.forEach(r=>{
+      const w=windowOf(r._spec);
+      const pts=[{off:Math.max(2, Math.min(w-2, 15+rnd(35))), lvl:r._spec._end}];
+      if(w>225) pts.push({off:170+rnd(50), lvl:(r._spec._start+r._spec._end)/2});
+      if(w>350) pts.push({off:300+rnd(45), lvl:r._spec._start});
+      pts.forEach(p=>evalTasks.push({ residentId:r.id, grille:'mif', date:dDay(p.off),
+        note:`Évaluation de démonstration ${DEMO_TAG}`, scores:mifScores(p.lvl) }));
+    });
     await pool(evalTasks, e=>sbSaveEvaluation(e), 6, (d,tot)=>setProgress(80 + d/tot*3));
     log(`✓ ${evalTasks.length} évaluations créées`,'ok');
 
@@ -1127,7 +1193,7 @@ async function runSeed(){
     let employes=[];
     if(typeof sbSaveEmploye==='function'){
       log('Création des salariés…','info');
-      employes=(await pool(genEmployes(), e=>sbSaveEmploye(e), 6)).filter(Boolean);
+      employes=(await pool(genEmployes(), async e=>{ const saved=await sbSaveEmploye(e); return saved?{...saved,_embOff:e._embOff}:null; }, 6)).filter(Boolean);
       log(`✓ ${employes.length} salariés créés`,'ok');
     } npTick();
 
@@ -1140,7 +1206,11 @@ async function runSeed(){
       if(typeof sbSaveEntretien==='function'){ const x=genEntretiens(employes); await pool(x, e=>sbSaveEntretien(e), 6); log(`✓ ${x.length} entretiens professionnels créés`,'ok'); } npTick();
       if(typeof sbSaveFormation==='function'){ const x=genFormations(employes); await pool(x, f=>sbSaveFormation(f), 4); log(`✓ ${x.length} formations créées`,'ok'); } npTick();
       if(typeof sbSaveFichePaie==='function'){ const x=genFichesPaie(employes); await pool(x, f=>sbSaveFichePaie(f), 8); log(`✓ ${x.length} fiches de paie créées`,'ok'); } npTick();
-      if(typeof sbSavePeShift==='function'){ const x=genPeShifts(employes); await pool(x, s=>sbSavePeShift(s), 8); log(`✓ ${x.length} créneaux de planning équipe créés`,'ok'); } npTick();
+      if(typeof sbBulkInsertPeShifts==='function'){
+        const x=genPeShifts(employes);
+        for(let i=0;i<x.length;i+=200){ await sbBulkInsertPeShifts(x.slice(i,i+200)); }
+        log(`✓ ${x.length} créneaux de planning équipe créés (1 an)`,'ok');
+      } else if(typeof sbSavePeShift==='function'){ const x=genPeShifts(employes); await pool(x, s=>sbSavePeShift(s), 8); log(`✓ ${x.length} créneaux de planning équipe créés`,'ok'); } npTick();
       if(typeof sbSaveDocEmploye==='function'){ const x=genDocsEmploye(employes); await pool(x, d=>sbSaveDocEmploye(d), 8); log(`✓ ${x.length} documents salariés créés`,'ok'); } npTick();
     } else { log('Aucun salarié créé → sections RH ignorées.','warn'); }
 
@@ -1150,7 +1220,7 @@ async function runSeed(){
       const savedSoins=(await pool(genPlanSoins(residents), s=>sbSavePlanSoins(s), 8)).filter(Boolean);
       log(`✓ ${savedSoins.length} soins créés`,'ok');
       if(typeof sbSetPsCoche==='function'){
-        const cc=[]; savedSoins.forEach(s=>{ if(Math.random()<0.6) [0,1,2].forEach(d=>{ if(Math.random()<0.7) cc.push({soinId:s.id, date:dDay(d)}); }); });
+        const cc=[]; savedSoins.forEach(s=>{ if(Math.random()<0.7) for(let d=0;d<14;d++){ if(Math.random()<0.65) cc.push({soinId:s.id, date:dDay(d)}); } });
         await pool(cc, c=>sbSetPsCoche({soinId:c.soinId, date:c.date, par:AUTHOR.name, parId:AUTHOR.id}), 8);
         log(`✓ ${cc.length} coches de soins « fait » créées`,'ok');
       }
@@ -1167,8 +1237,8 @@ async function runSeed(){
       const savedT=(await pool(genTaches(residents), t=>sbSaveTache(t), 8)).filter(Boolean);
       log(`✓ ${savedT.length} tâches d'accompagnement créées`,'ok');
       if(typeof sbSetCoche==='function'){
-        const cc=[]; savedT.forEach(t=>{ [0,1].forEach(d=>{ if(Math.random()<0.6) cc.push({tacheId:t.id, date:dDay(d), statut:Math.random()<0.85?'fait':'a_refaire'}); }); });
-        await pool(cc, c=>sbSetCoche({tacheId:c.tacheId, date:c.date, statut:c.statut, par:AUTHOR.name, parId:AUTHOR.id}), 8);
+        const cc=[]; savedT.forEach(t=>{ for(let d=0;d<14;d++){ if(Math.random()<0.6) cc.push({tacheId:t.id, date:dDay(d), statut:Math.random()<0.85?'fait':'reporte'}); } });
+        await pool(cc, c=>sbSetCoche({tacheId:c.tacheId, date:c.date, statut:c.statut, motif: c.statut==='reporte'?pick(['Fatigue','Refus','Absent du foyer']):'', par:AUTHOR.name, parId:AUTHOR.id}), 8);
         log(`✓ ${cc.length} coches de tâches créées`,'ok');
       }
     } npTick();
@@ -1223,7 +1293,7 @@ async function runSeed(){
     log('','info');
     log('═══════════════════════════════════════','info');
     log(`✅ Terminé en ${Math.round((Date.now()-t0)/1000)} s — rechargez l'application.`,'ok');
-    log(`   50 résidents (fiche complète) · ${employes.length} salariés · référés répartis · RH, finances, soins, vie institutionnelle remplis`,'info');
+    log(`   1 an d'historique · 50 résidents (fiche complète) · ${employes.length} salariés · référés répartis · RH, finances, soins, vie institutionnelle remplis`,'info');
     log('═══════════════════════════════════════','info');
   }catch(e){
     log('ERREUR : '+(e&&e.message||e),'err'); console.error(e);

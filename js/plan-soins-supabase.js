@@ -81,10 +81,13 @@ async function sbGetPsCoches(date) {
 
 // Plage de dates — pour l'historique / les agrégats.
 async function sbGetPsCochesRange(startDate, endDate) {
-  const { data, error } = await supabaseClient
-    .from('plan_soins_coches').select('*').gte('date', startDate).lte('date', endDate);
-  if (error) { console.error('[sbGetPsCochesRange]', error); return []; }
-  return (data || []).map(_pscFromRow);
+  // Lecture paginée : une plage annuelle atteint le plafond PostgREST de 1000 lignes
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('plan_soins_coches').select('*').gte('date', startDate).lte('date', endDate)
+      .order('date').order('soin_id'));
+    return (data || []).map(_pscFromRow);
+  } catch (error) { console.error('[sbGetPsCochesRange]', error); return []; }
 }
 
 // Marque un soin « fait » un jour donné (avec l'auteur), unicité soin_id+date garantie côté SQL.

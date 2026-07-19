@@ -39,12 +39,14 @@ function _medFromRow(r) {
 }
 
 async function sbGetMedDistrib() {
-  const { data, error } = await supabaseClient
-    .from('med_distrib')
-    .select('*')
-    .order('date', { ascending: false });
-  if (error) { console.error(error); toast('Erreur chargement distribution médicaments', 'error'); return []; }
-  return data.map(_medFromRow);
+  // Lecture paginée : l'historique complet de traçabilité dépasse 1000 lignes sur l'année
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('med_distrib')
+      .select('*')
+      .order('date', { ascending: false }).order('id'));
+    return data.map(_medFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement distribution médicaments', 'error'); return []; }
 }
 
 // Variante restreinte à une seule date (utilisée par alertes.html, pour éviter de
