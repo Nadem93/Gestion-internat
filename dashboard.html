@@ -121,6 +121,13 @@
     .rc-row svg{width:15px;height:15px;color:#94a3b8;flex-shrink:0;margin-top:2px}
     .rc-k{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8}
     .rc-empty{font-size:.76rem;color:#94a3b8;padding:.2rem 0}
+    .rc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .rc-kpi{background:#f8fafc;border:1px solid var(--border);border-radius:9px;padding:.45rem .3rem;text-align:center}
+    .rc-kpi-l{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#94a3b8}
+    .rc-kpi-v{font-size:1.1rem;font-weight:800;color:#0f2b4a;line-height:1.15;margin-top:1px}
+    .rc-ag{display:flex;flex-direction:column;gap:3px}
+    .rc-ag-item{display:flex;gap:.45rem;font-size:.77rem;color:#334155;align-items:flex-start;line-height:1.35}
+    .rc-ag-item svg{width:14px;height:14px;color:#94a3b8;flex-shrink:0;margin-top:2px}
     .me-banner{background:#fff;border:1px solid rgba(15,43,74,.08);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(15,43,74,.05)}
     .me-prof{display:flex;align-items:center;gap:11px;flex-shrink:0}
     .me-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
@@ -1171,25 +1178,22 @@
         hi = late ? { c:'#ef4444', tc:'#dc2626', ic:ICON.alarm, t:`Échéance ${lbl} en retard` } : { c:'#f59e0b', tc:'#b45309', ic:ICON.alarm, t:`Échéance ${lbl} · J‑${dN}` };
         hiCat = 'echeance';
       }
-      else if (evs.length) { hi = { c:'#3b82f6', tc:'#1d4ed8', ic:ICON.cal, t:`Prochain · ${formatDate(evs[0].date)} ${escHtml(evs[0].titre || evs[0].title || 'Événement')}` }; hiCat = 'agenda'; }
       else if (sortiesFut.length) { hi = { c:'#0d9488', tc:'#0f766e', ic:ICON.door, t:`Sortie prévue ${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}` }; hiCat = 'sortie'; }
       const hiHtml = hi ? `<div class="rc-hi" style="color:${hi.tc};background:color-mix(in srgb, ${hi.c} 12%, transparent)">${hi.ic}<span>${hi.t}</span></div>` : '';
 
-      // Sections détaillées (on saute la catégorie déjà dans l'encart, sauf l'agenda qui reste complet)
-      const rows = [];
-      if (evs.length) rows.push(`<div class="rc-row">${ICON.cal}<div><span class="rc-k">Agenda</span><br>${evs.map(e => `${formatDate(e.date)} — ${escHtml(e.titre || e.title || 'Événement')}`).join('<br>')}</div></div>`);
-      if (hiCat !== 'sortie' && sortiesFut.length) rows.push(`<div class="rc-row">${ICON.door}<div><span class="rc-k">Sortie prévue</span><br>${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}</div></div>`);
-      if (hiCat !== 'echeance' && echSoon.length) {
-        const e0 = echSoon[0], dN = daysUntil(e0.date), late = dN < 0;
-        rows.push(`<div class="rc-row">${ICON.alarm}<div><span class="rc-k">Échéance</span><br><span style="color:${late ? '#dc2626' : '#b45309'}">${escHtml(EC_LBL[e0.type] || e0.libelle || 'Échéance')} · ${late ? 'en retard' : 'J‑' + dN}</span></div></div>`);
-      }
-      const santeParts = [];
-      if (traitActifs) santeParts.push(`${traitActifs} traitement${traitActifs>1?'s':''} en cours`);
-      if (nextRdv) santeParts.push(`RDV ${escHtml(nextRdv.type || 'médical')} ${formatDate(nextRdv.date)}`);
-      if (santeParts.length) rows.push(`<div class="rc-row">${ICON.health}<div><span class="rc-k">Santé</span><br>${santeParts.join(' · ')}</div></div>`);
-      if (objIds.length) rows.push(`<div class="rc-row">${ICON.target}<div><span class="rc-k">Objectifs</span><br>${objAtteint}/${objIds.length} atteint${objAtteint>1?'s':''}</div></div>`);
-
-      const body = (hiHtml || rows.length) ? (hiHtml + rows.join('')) : `<div class="rc-empty">Aucune alerte ni événement à venir</div>`;
+      // Design 2 — tuiles chiffrées (Objectifs · Traitements · Prochain) + agenda détaillé
+      const proTxt = evs.length ? formatDate(evs[0].date) : (nextRdv ? formatDate(nextRdv.date) : '—');
+      const kpis = `<div class="rc-kpis">
+        <div class="rc-kpi"><div class="rc-kpi-l">Objectifs</div><div class="rc-kpi-v">${objIds.length ? objAtteint + '/' + objIds.length : '—'}</div></div>
+        <div class="rc-kpi"><div class="rc-kpi-l">Traitements</div><div class="rc-kpi-v">${traitActifs || '—'}</div></div>
+        <div class="rc-kpi"><div class="rc-kpi-l">Prochain</div><div class="rc-kpi-v"${(evs.length||nextRdv)?' style="font-size:.92rem"':''}>${proTxt}</div></div>
+      </div>`;
+      const details = [];
+      evs.forEach(e => details.push(`<div class="rc-ag-item">${ICON.cal}<span>${formatDate(e.date)} — ${escHtml(e.titre || e.title || 'Événement')}</span></div>`));
+      if (hiCat !== 'echeance' && echSoon.length) { const e0 = echSoon[0], dN = daysUntil(e0.date), late = dN < 0; details.push(`<div class="rc-ag-item">${ICON.alarm}<span>Échéance ${escHtml(EC_LBL[e0.type] || e0.libelle || 'à suivre')} · <span style="color:${late ? '#dc2626' : '#b45309'};font-weight:600">${late ? 'en retard' : 'J‑' + dN}</span></span></div>`); }
+      if (hiCat !== 'sortie' && sortiesFut.length) details.push(`<div class="rc-ag-item">${ICON.door}<span>Sortie prévue ${formatDate(sortiesFut[0].date)}${sortiesFut[0].destination ? ' — ' + escHtml(sortiesFut[0].destination) : ''}</span></div>`);
+      if (nextRdv) details.push(`<div class="rc-ag-item">${ICON.health}<span>RDV ${escHtml(nextRdv.type || 'médical')} · ${formatDate(nextRdv.date)}</span></div>`);
+      const body = hiHtml + kpis + (details.length ? `<div class="rc-ag">${details.join('')}</div>` : '');
 
       return `<div class="refcard" role="link" tabindex="0" onclick="location.href='resident.html?id=${rid}'" onkeydown="if(event.key==='Enter')location.href='resident.html?id=${rid}'">
         <div class="rc-head" style="background:color-mix(in srgb, ${accent} 9%, #fff)">
