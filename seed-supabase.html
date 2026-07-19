@@ -226,6 +226,15 @@ const SIT_PRO=['emploi','formation','recherche','inactif'];
 const SIT_ADMIN=['francais','francais','francais','ue','titre_sejour'];
 const RESSOURCES=['aah','rsa','salaire','apl'];
 const ORG_A=['siao','mdph','ccas',''];
+// Semaine type « travailleur ESAT » : tous les résidents travaillent du lundi au vendredi 8h30–16h.
+// Format attendu par r.planningHebdo : { jour: [{label,debut,fin}, …] } (absences récurrentes = « sortie »).
+const WORK_HEBDO = {
+  lundi:    [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  mardi:    [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  mercredi: [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  jeudi:    [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  vendredi: [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+};
 
 // -- contenu quotidien --
 const JOURNAL_TXT = [
@@ -314,8 +323,13 @@ function genNss(spec){
 }
 function santeFor(spec){
   const w = windowOf(spec||{});
-  // les traitements en cours peuvent précéder l'admission (prescription antérieure) — réaliste
-  const traitements = pickN(TRAIT_POOL, 1+rnd(2)).map(t=>({ id:gid(), nom:t.nom, posologie:t.posologie, frequence:t.frequence, debut:dDay(120+rnd(400)), fin:'', moments:t.moments }));
+  // TOUS les résidents prennent un traitement : au moins un traitement PLANIFIÉ (avec des moments,
+  // donc visible au pilulier / suivi médicaments), + éventuellement 0-1 traitement « si besoin ».
+  const planifies = TRAIT_POOL.filter(t=>t.moments && t.moments.length);
+  const seen = new Set();
+  const traitements = [pick(planifies), ...pickN(TRAIT_POOL, rnd(2))]
+    .filter(t=>t && !seen.has(t.nom) && seen.add(t.nom))
+    .map(t=>({ id:gid(), nom:t.nom, posologie:t.posologie, frequence:t.frequence, debut:dDay(120+rnd(400)), fin:'', moments:t.moments }));
   const rdv=[]; const nr=1+rnd(2);
   // RDV « fait » forcément pendant le séjour ; les autres à venir
   for(let i=0;i<nr;i++){ const off = i===0 ? Math.max(2, Math.min(w-2, 5+rnd(320))) : -(5+rnd(50)); rdv.push({ id:gid(), date:dDay(off), heure:`${9+rnd(8)}:${pick(['00','30'])}`, type:pick(RDV_TYPES), praticien:pick(PRATICIENS), lieu:pick(LIEUX_MED), notes:'', fait: off>0 }); }
@@ -376,6 +390,39 @@ function docsFor(r){
     category:d.category, docDate:dDay(Math.max(1, Math.min(windowOf(r._spec)-1, 15+rnd(340)))), dueDate: d.due?dDay(-(30+rnd(200))):null, fichierPath:null, type:'resident', uploadedBy:'Secrétariat', partageFamille:false }));
 }
 function weightedStatut(){ const bag=[]; STATUTS.forEach(([v,w])=>{ for(let i=0;i<w;i++) bag.push(v); }); return pick(bag); }
+
+// Budget personnel du résident (travailleur ESAT) : salaire ~600 € + AAH ~500 € (MDPH) mensuels,
+// retrait d'argent de poche chaque semaine, remboursements d'activités. Stocké dans r.budget.operations.
+function budgetFor(spec){
+  const p = n => String(n).padStart(2,'0');
+  const now = new Date();
+  const eo = (spec && spec._entreeOff!=null) ? spec._entreeOff : SIM_DAYS; // offset d'entrée BRUT
+  const w  = windowOf(spec);
+  const ops = [];
+  const op = (type, montant, date, categorie, libelle) => ops.push({ id:gid(), type, montant:Math.round(montant*100)/100, date, categorie, libelle, notes:'' });
+  // Salaire ESAT (~600 €) + AAH perçue via la MDPH (~500 €), une fois par mois de présence
+  for(let mo=1; mo<=12; mo++){
+    const d = new Date(now.getFullYear(), now.getMonth()-mo, 1);
+    const off = Math.round((now.getTime()-d.getTime())/86400000);
+    if(eo < off) continue; // pas encore admis ce mois-là
+    op('recette', 580+rnd(50), `${d.getFullYear()}-${p(d.getMonth()+1)}-03`, 'Salaire', 'Salaire ESAT');
+    op('recette', 490+rnd(25), `${d.getFullYear()}-${p(d.getMonth()+1)}-06`, 'AAH', 'AAH (MDPH)');
+  }
+  // Filet de sécurité : un résident admis très récemment (aucun mois plein révolu) reçoit quand même
+  // son premier salaire + AAH, datés juste après son entrée.
+  if(!ops.some(o=>o.categorie==='Salaire')){
+    const off = Math.max(1, Math.min(w-1, 8+rnd(12)));
+    op('recette', 580+rnd(50), dDay(off), 'Salaire', 'Salaire ESAT');
+    op('recette', 490+rnd(25), dDay(Math.max(1, off-2)), 'AAH', 'AAH (MDPH)');
+  }
+  // Retrait d'argent de poche, une fois par semaine (sortie de caisse gérée)
+  for(let k=0; k*7+3 < w; k++){ op('depense', 20+rnd(15), dDay(3+k*7), 'Autre', 'Retrait argent de poche'); }
+  // Remboursements d'activités (sorties avancées puis remboursées au résident)
+  const nRemb = 3 + rnd(4);
+  for(let i=0;i<nRemb;i++){ const off = Math.max(1, Math.min(w-2, 15+rnd(320)));
+    op('recette', 8+rnd(32), dDay(off), 'Autre', `Remboursement activité — ${pick(['sortie piscine','cinéma','sortie mer','bowling','médiathèque','sortie culturelle','parc animalier'])}`); }
+  return { operations: ops };
+}
 
 // ═══════════════════════ Pools & générateurs — remplissage intégral ═══════════════════════
 // (Ces sections complètent le seed : RH, finances, soins, vie institutionnelle.)
@@ -977,7 +1024,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(typeof supabaseClient==='undefined') throw new Error('Client Supabase non chargé.');
     try{ const { data:{ user } } = await supabaseClient.auth.getUser(); if(user && user.id) AUTHOR.id = user.id; }catch(_){}
     const etabId = await sbGetEtablissementId();
-    info.innerHTML = `📍 Établissement (session) : <b>${etabId}</b><br>👤 Auteur des écritures : <b>${AUTHOR.name}</b>`;
+    // Nom convivial (renommable depuis Admin → Paramètres) ≠ identifiant technique (etablissement_id, permanent).
+    let etabNom = '';
+    try {
+      if(typeof sbGetAppConfig==='function'){ const cfg = await sbGetAppConfig(); etabNom = (cfg && cfg.settings && cfg.settings.etablissement) || ''; }
+      if(!etabNom && typeof DB!=='undefined' && DB.keys && DB.keys.settings){ etabNom = (DB.get(DB.keys.settings)||{}).etablissement || ''; }
+    } catch(_){}
+    const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    info.innerHTML = `📍 Établissement (session) : <b>${etabNom ? esc(etabNom) : etabId}</b>`
+      + (etabNom ? `<br><span style="opacity:.7;font-size:.78rem">Identifiant technique : <code>${etabId}</code> — permanent, ne change pas quand vous renommez le foyer</span>` : '')
+      + `<br>👤 Auteur des écritures : <b>${esc(AUTHOR.name)}</b>`;
     chk.addEventListener('change', () => { btn.disabled = !chk.checked; });
     btnDel.disabled = false;
   }catch(e){
@@ -1061,10 +1117,11 @@ async function runSeed(){
         dmp:pick(['actif','en_attente','non_ouvert']), consent:pick(['oui','oui','en_attente']), consentDate:dDay(Math.max(1, s._entreeOff - rnd(8))), // consentement signé à l'admission
         tuteur: prot ? `Me ${pick(NOMS)}` : '', tuteurTel: prot ? phone() : '',
         protection:prot, protectionNom: prot ? pick(PROT_ORG) : '', protectionTel: prot ? phone() : '',
-        situationPro:pick(SIT_PRO), situationAdmin:pick(SIT_ADMIN),
-        ressources: pickN(RESSOURCES, 1+rnd(2)).join(', '), organismeA:pick(ORG_A), dossierA:`D-${1000+rnd(9000)}`,
+        situationPro:'emploi', situationAdmin:pick(SIT_ADMIN), planningHebdo:WORK_HEBDO,
+        ressources: 'salaire, aah', organismeA:pick(ORG_A), dossierA:`D-${1000+rnd(9000)}`,
         objectifs, objectifsSuivi,
         sante: santeFor(s),
+        budget: budgetFor(s),
         evaluations: evaluationsFor(s),
         activites: activitesFor(actCatalog, s)
       });
