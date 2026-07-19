@@ -286,7 +286,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#16a34a"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             <span class="card-title" style="color:#16a34a">Fiche médicale — référés</span>
             <span class="badge badge-gray" id="dashMedicalRefCount" style="margin-left:.5rem;display:none">0</span>
-            <a href="residents.html" class="btn btn-ghost btn-sm" style="margin-left:auto;color:#16a34a">Fiches</a>
+            <button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:#16a34a" onclick="openAddTraitementModal()">+ Traitement</button>
+            <a href="residents.html" class="btn btn-ghost btn-sm" style="color:#16a34a">Fiches</a>
           </div>
           <div class="card-body">
             <div style="font-size:.73rem;color:var(--muted);margin-bottom:.75rem">Infos médicales clés de vos référés — allergies, médecin, traitements.</div>
@@ -1672,7 +1673,43 @@
       renderSemaineTypeReferes();
     } catch(e){ console.error(e); toast('Erreur lors de l\'enregistrement','error'); }
   }
-  Object.assign(window, { openAddPlanningModal, saveAddPlanning, dpSelectType, dpToggleRecur, openAddSemaineModal, dphLoadResident, dphAddAbs, dphRemoveAbs, dphToggleJour, _dphSet, saveAddSemaine, dashCloseModal });
+  // ── Ajouter un traitement (carte « Fiche médicale — référés ») : même modal que l'agenda ──
+  function openAddTraitementModal(){
+    if(!_dResidents().length){ toast('Aucun résident','error'); return; }
+    const MOMS=[['matin','Matin'],['midi','Midi'],['soir','Soir'],['coucher','Coucher']];
+    dashOpenModal(`
+      <div class="dm-head" style="background:color-mix(in srgb, #16a34a 12%, #fff)">
+        <div class="dm-title" style="color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Ajouter un traitement <button class="x" onclick="dashCloseModal()" aria-label="Fermer">&times;</button></div>
+        <div class="dm-sel">${_USER_SVG}<select id="dtResident">${_dResOpts()}</select></div>
+      </div>
+      <div class="dm-body">
+        <div><div class="dm-sk">Médicament *</div><input type="text" id="dtNom" class="dm-fi" placeholder="Nom du médicament (ex : Rispéridone 1mg)"></div>
+        <div class="dm-row"><div style="flex:1"><div class="dm-sk">Posologie</div><input type="text" id="dtPosologie" class="dm-fi" placeholder="ex : 1 cp"></div><div style="flex:1"><div class="dm-sk">Fréquence</div><input type="text" id="dtFrequence" class="dm-fi" placeholder="ex : matin et soir"></div></div>
+        <div><div class="dm-sk">Moments de prise</div><div style="display:flex;flex-wrap:wrap;gap:.4rem .9rem">${MOMS.map(([k,l])=>`<label style="display:flex;align-items:center;gap:.35rem;font-size:.85rem;color:#475569;cursor:pointer"><input type="checkbox" id="dtM_${k}" value="${k}"> ${l}</label>`).join('')}</div></div>
+        <div class="dm-row"><div style="flex:1"><div class="dm-sk">Début</div><input type="date" id="dtDebut" class="dm-fi" value="${today()}"></div><div style="flex:1"><div class="dm-sk">Fin <span style="font-weight:400;color:var(--muted)">(si arrêt prévu)</span></div><input type="date" id="dtFin" class="dm-fi"></div></div>
+      </div>
+      <div class="dm-foot"><button class="dm-bs" onclick="dashCloseModal()">Annuler</button><button class="dm-bp" style="background:#16a34a" onclick="saveAddTraitement()">Enregistrer</button></div>`);
+  }
+  async function saveAddTraitement(){
+    const rid=_dv('dtResident');
+    const cache=(typeof sbResidents==='function'?sbResidents():[]);
+    const r=cache.find(x=>String(x.id)===String(rid));
+    if(!r){ toast('Choisissez un résident','error'); return; }
+    const nom=_dv('dtNom').trim();
+    if(!nom){ toast('Le nom du médicament est requis','error'); return; }
+    const moments=['matin','midi','soir','coucher'].filter(k=>document.getElementById('dtM_'+k)?.checked);
+    const trait={ id:_dGenId(), nom, posologie:_dv('dtPosologie').trim(), frequence:_dv('dtFrequence').trim(), debut:_dv('dtDebut'), fin:_dv('dtFin'), moments };
+    const sante=r.sante||{};
+    const traitements=[...(sante.traitements||[]), trait];
+    try{
+      const updated=await sbSaveResident({...r, sante:{...sante, traitements}});
+      const idx=cache.findIndex(x=>String(x.id)===String(rid)); if(idx>=0)cache[idx]=updated||{...r, sante:{...sante, traitements}};
+      dashCloseModal(); toast('Traitement ajouté','success');
+      try{ renderMedicalReferes(); }catch(e){ console.error(e); }
+      try{ renderReferesFiches(); }catch(e){ console.error(e); }
+    } catch(e){ console.error(e); toast('Erreur lors de l\'enregistrement','error'); }
+  }
+  Object.assign(window, { openAddPlanningModal, saveAddPlanning, dpSelectType, dpToggleRecur, openAddSemaineModal, dphLoadResident, dphAddAbs, dphRemoveAbs, dphToggleJour, _dphSet, saveAddSemaine, openAddTraitementModal, saveAddTraitement, dashCloseModal });
 
   // ── Journée des référés : aperçu (lecture seule) des tâches du jour de chaque référé ──
   async function renderJourneeReferes(){
