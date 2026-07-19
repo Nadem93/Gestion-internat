@@ -54,6 +54,19 @@ function initialsOrg(name) {
   return (name||'?').split(' ').map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase() || '?';
 }
 
+// Droits sur le répertoire : tout compte ayant accès peut AJOUTER ; seul un
+// administrateur peut SUPPRIMER ; l'ÉDITION est réservée à l'admin ou à l'auteur du contact.
+function repCanDelete() { return Auth.isAdmin(); }
+function repCanEdit(c) {
+  if (Auth.isAdmin()) return true;
+  const uid = Auth.getSession()?.userId;
+  return !!(c && c.createdBy != null && String(c.createdBy) === String(uid));
+}
+function repSetFormDisabled(ro) {
+  ['cOrganisme', 'cNom', 'cTel', 'cEmail', 'cFonction', 'cAdresse', 'cNotes']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.disabled = ro; });
+}
+
 function openAddContact() {
   editingContactId = null;
   document.getElementById('modalContactTitle').textContent = 'Nouveau contact';
@@ -65,6 +78,9 @@ function openAddContact() {
   document.getElementById('cFonction').value = '';
   document.getElementById('cAdresse').value = '';
   document.getElementById('cNotes').value = '';
+  repSetFormDisabled(false);
+  document.getElementById('contactReadonlyHint').style.display = 'none';
+  document.getElementById('btnSaveContact').style.display = '';
   document.getElementById('btnDeleteContact').style.display = 'none';
   openModal('modalContact');
 }
@@ -74,7 +90,6 @@ function openEditContact(id) {
   const c = contacts.find(x => x.id === id);
   if (!c) return;
   editingContactId = id;
-  document.getElementById('modalContactTitle').textContent = 'Modifier le contact';
   document.getElementById('contactId').value = id;
   document.getElementById('cOrganisme').value = c.organisme || '';
   document.getElementById('cNom').value = c.nom || '';
@@ -83,7 +98,12 @@ function openEditContact(id) {
   document.getElementById('cFonction').value = c.fonction || '';
   document.getElementById('cAdresse').value = c.adresse || '';
   document.getElementById('cNotes').value = c.notes || '';
-  document.getElementById('btnDeleteContact').style.display = '';
+  const canEdit = repCanEdit(c);
+  document.getElementById('modalContactTitle').textContent = canEdit ? 'Modifier le contact' : 'Contact — lecture seule';
+  document.getElementById('contactReadonlyHint').style.display = canEdit ? 'none' : 'flex';
+  repSetFormDisabled(!canEdit);
+  document.getElementById('btnSaveContact').style.display = canEdit ? '' : 'none';
+  document.getElementById('btnDeleteContact').style.display = repCanDelete() ? '' : 'none';
   openModal('modalContact');
 }
 
@@ -105,10 +125,12 @@ async function saveContact() {
   try {
     if (editingContactId) {
       const old = _repCache.find(x => x.id === editingContactId) || {};
+      if (!repCanEdit(old)) { toast('Vous ne pouvez modifier que les contacts que vous avez ajoutés', 'error'); return; }
       const saved = await sbSaveRepertoire({ ...old, ...data, id: editingContactId });
       _repCache = _repCache.map(x => x.id === editingContactId ? saved : x);
       toast('Contact modifié', 'success');
     } else {
+      data.createdBy = Auth.getSession()?.userId ?? null;
       const saved = await sbSaveRepertoire(data);
       _repCache.push(saved);
       toast('Contact ajouté', 'success');
@@ -119,6 +141,7 @@ async function saveContact() {
 }
 
 function deleteContact() {
+  if (!repCanDelete()) { toast('Seul un administrateur peut supprimer un contact', 'error'); return; }
   if (!editingContactId || !confirm('Supprimer ce contact ?')) return;
   const id = editingContactId;
   (async () => {
