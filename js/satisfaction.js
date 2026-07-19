@@ -91,21 +91,39 @@ function renderSatResultats() {
   const cats = [...new Set(allQ.map(q => q.cat))];
   document.getElementById('satStatScore').textContent = scoreGlobal !== null ? (scoreGlobal*25).toFixed(0)+'%' : '—';
 
+  // Synthèse (design 3) : anneau du score global + points forts / à améliorer
+  const _ranked = allQ.map(q => ({ q, avg: avgQ[q.id] })).filter(x => x.avg !== null).sort((a, b) => b.avg - a.avg);
+  const _nF = Math.min(3, Math.ceil(_ranked.length / 2)), _nW = Math.min(3, Math.floor(_ranked.length / 2));
+  const _forts = _ranked.slice(0, _nF), _faibles = _ranked.slice(_ranked.length - _nW).reverse();
+  const _satItem = x => `<div style="display:flex;justify-content:space-between;gap:.6rem;font-size:.79rem;padding:2px 0"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.q.label}</span><span style="font-weight:700;color:${_satColor(x.avg)};flex-shrink:0">${x.avg.toFixed(1)}</span></div>`;
+  const _circ = 226.2, _frac = scoreGlobal !== null ? scoreGlobal / 4 : 0;
+  const _dash = (_frac * _circ).toFixed(1), _gap = (_circ - _frac * _circ).toFixed(1), _gcol = _satColor(scoreGlobal);
+
   container.innerHTML = `
-    <div style="margin-bottom:1.25rem;padding:.85rem 1rem;background:#fff;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
-      <div style="text-align:center;min-width:90px">
-        <div style="font-size:2rem;font-weight:800;color:${_satColor(scoreGlobal)}">${scoreGlobal !== null ? scoreGlobal.toFixed(1)+'/4' : '—'}</div>
-        <div style="font-size:.72rem;color:var(--muted)">Score global</div>
-        <div style="font-size:.75rem;font-weight:600;color:${_satColor(scoreGlobal)};margin-top:2px">${scoreGlobal !== null ? SAT_LABELS[Math.round(scoreGlobal)] : ''}</div>
-      </div>
-      <div style="flex:1;min-width:200px">
-        <div style="height:10px;background:var(--border);border-radius:999px;overflow:hidden">
-          <div style="height:100%;width:${scoreGlobal!==null?scoreGlobal/4*100:0}%;background:${_satColor(scoreGlobal)};border-radius:999px;transition:width .4s"></div>
+    <div style="margin-bottom:1.25rem;padding:1rem 1.15rem;background:#fff;border-radius:12px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap">
+        <svg width="88" height="88" viewBox="0 0 88 88" style="flex-shrink:0" role="img" aria-label="Score global ${scoreGlobal !== null ? scoreGlobal.toFixed(1) : 'indisponible'} sur 4">
+          <circle cx="44" cy="44" r="36" fill="none" stroke="var(--border)" stroke-width="9"/>
+          <circle cx="44" cy="44" r="36" fill="none" stroke="${_gcol}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${_dash} ${_gap}" transform="rotate(-90 44 44)"/>
+          <text x="44" y="41" text-anchor="middle" style="font-size:20px;font-weight:800;fill:#0f2b4a">${scoreGlobal !== null ? scoreGlobal.toFixed(1) : '—'}</text>
+          <text x="44" y="57" text-anchor="middle" style="font-size:10px;fill:var(--muted)">/ 4</text>
+        </svg>
+        <div style="flex:1;min-width:160px">
+          <div style="font-size:.72rem;color:var(--muted)">Score global</div>
+          <div style="font-size:1.05rem;font-weight:700;color:${_gcol}">${scoreGlobal !== null ? SAT_LABELS[Math.round(scoreGlobal)] : '—'}</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:1px">${list.length} questionnaire${list.length > 1 ? 's' : ''} · ${scoreGlobal !== null ? Math.round(scoreGlobal * 25) : 0}% de satisfaction</div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:.3rem">
-          ${SAT_LABELS.map(l => `<span style="font-size:.6rem;color:var(--muted)">${l}</span>`).join('')}
-        </div>
       </div>
+      ${(_forts.length || _faibles.length) ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem 1.4rem;margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--border)">
+        <div>
+          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#16a34a;margin-bottom:.35rem">👍 Points forts</div>
+          ${_forts.map(_satItem).join('') || '<div style="font-size:.76rem;color:var(--g400)">—</div>'}
+        </div>
+        <div>
+          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#d97706;margin-bottom:.35rem">⚠️ À améliorer</div>
+          ${_faibles.map(_satItem).join('') || '<div style="font-size:.76rem;color:var(--g400)">—</div>'}
+        </div>
+      </div>` : ''}
     </div>
 
     ${cats.map(cat => {
