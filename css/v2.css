@@ -335,6 +335,51 @@ body.v2 {
   --accent-h: #a5b4fc;
 }
 
+/* 1 bis) Surfaces de mise en page — c'est ce qui laissait la page en clair.
+          style.css pose un dégradé bleu pâle sur body, un bandeau blanc semi-
+          opaque sur .header et des halos décoratifs en pseudo-éléments. */
+body.v2 {
+  background: var(--v2-bg) !important;
+  background-attachment: initial !important;
+}
+body.v2::before, body.v2::after { display: none !important; }
+
+body.v2 .app-layout, body.v2 .main, body.v2 .content { background: transparent; }
+
+body.v2 .header {
+  background: rgba(255,255,255,.03) !important;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  border-bottom: 1px solid var(--v2-b);
+  color: var(--v2-t2);
+}
+body.v2 .header-title, body.v2 .header-info { color: var(--v2-t1); }
+body.v2 .header-btn {
+  background: var(--v2-s-ctrl) !important;
+  border-color: var(--v2-b-ctrl) !important;
+  color: var(--v2-t4);
+  box-shadow: none;
+}
+body.v2 .header-btn:hover { background: var(--v2-s-hover) !important; border-color: var(--v2-b-active) !important; }
+
+/* Cartes « verre » (fond blanc à 78 %) et autres surfaces claires */
+body.v2 .card-glass, body.v2 .wizard-card, body.v2 .stat-card, body.v2 .chx-stat {
+  background: var(--v2-s-card) !important;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  border-color: var(--v2-b) !important;
+  box-shadow: none;
+  color: var(--v2-t4);
+}
+body.v2 .card-glass .card-header { background: transparent !important; }
+body.v2 .stat-num, body.v2 .chx-stat-num { color: var(--v2-t1); }
+body.v2 .stat-label, body.v2 .chx-stat-lbl { color: var(--v2-t6); }
+
+/* Modales */
+body.v2 .modal { background: #101f36 !important; border: 1px solid var(--v2-b); color: var(--v2-t3); }
+body.v2 .modal-overlay { background: rgba(4,10,20,.72); }
+body.v2 .modal-header, body.v2 .modal-footer { border-color: var(--v2-b); background: transparent; }
+body.v2 .modal-title { color: var(--v2-t1); }
+body.v2 label, body.v2 .form-group label { color: var(--v2-t5); }
+
 /* 2) Composants hérités */
 body.v2 .card {
   background: var(--v2-s-card);
