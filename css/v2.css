@@ -106,8 +106,7 @@ body.v2 .v2-shell {
   border: 1px solid var(--v2-b);
   box-shadow: var(--v2-sh-shell);
   overflow: hidden;
-  max-width: 1400px;
-  margin: 0 auto;
+  /* largeur définie plus bas, en un seul endroit */
 }
 
 /* ── Top bar ──────────────────────────────────────────────────────────── */
@@ -527,7 +526,10 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
    sur la largeur du canvas de la maquette (1400 px). */
 body.v2 .accueil-home { background: transparent !important; display: block; min-height: 0; }
 body.v2 .acc-aurora { display: none !important; }
-body.v2 .v2-shell { max-width: 1400px; margin: 22px auto; }
+/* LARGEUR DE PAGE — source unique pour tout le site.
+   Les maquettes sont dessinées sur un canevas de 1400 px, mais les pages
+   doivent occuper toute la fenêtre. Ne pas remettre de max-width en inline. */
+body.v2 .v2-shell { max-width: none; margin: 22px 24px; }
 
 /* Pages migrées « design seul » : le <main class="content"> hérité vit
    désormais dans .v2-body, qui porte déjà la gouttière. */
