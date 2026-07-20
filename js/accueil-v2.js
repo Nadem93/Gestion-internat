@@ -43,9 +43,8 @@ const AV2_MODULES = [
   { label: 'Vie sociale (CVS)', c: '#16a34a', ic: 'users', href: 'cvs.html', perm: 'access_cvs', module: 'ppe' },
   { label: 'Dossiers & suivi', c: '#b45309', ic: 'folder', href: 'dossiers.html', perm: 'access_ppe,view_residents,access_documents,access_repertoire,view_incidents,access_cvs,access_admissions', module: 'ppe', badge: true },
   { label: 'Portail', c: '#818cf8', ic: 'gear', href: 'pilotage.html', perm: 'access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations', module: 'portail', badge: true },
-  { label: 'Recherche', c: '#0ea5e9', ic: 'search', href: 'residents.html' },
-  { label: 'Interventions', c: '#14b8a6', ic: 'wrench', href: 'interventions.html' },
-  { label: 'RH', c: '#a855f7', ic: 'users', href: 'rh.html', only: 'rh-only' },
+  { label: 'Interventions', c: '#14b8a6', ic: 'wrench', href: 'interventions.html', perm: 'access_interventions' },
+  { label: 'RH', c: '#a855f7', ic: 'users', href: 'rh.html', perm: 'access_paie,access_employes,manage_users,access_entretiens' },
   { label: 'Finance', c: '#22c55e', ic: 'dollar', href: 'finance.html', only: 'admin-only' },
   { label: 'Administration', c: '#94a3b8', ic: 'gear', href: 'admin.html', only: 'admin-only' },
   // Absente de la maquette mais indispensable : bascule d'établissement (admin)
