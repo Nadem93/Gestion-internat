@@ -1176,3 +1176,20 @@ body.v2 .pl-week-head, body.v2 .pl-days {
 body.v2 #planningSidebar .mini-cal-head,
 body.v2 #planningSidebar [class*="mc-"] { background: transparent !important; }
 body.v2 #planningSidebar .mc-title { color: var(--v2-t2) !important; }
+
+/* Surfaces claires héritées de l'agenda (vues jour/mois/liste, numéros de
+   semaine des mini-calendriers, panneau du jour sélectionné). */
+body.v2 .table-wrap { background: var(--v2-s-card) !important; border: 1px solid var(--v2-b); border-radius: 14px; }
+body.v2 .mg-cell.mg-wk { background: var(--v2-s-alt) !important; color: var(--v2-t9) !important; }
+body.v2 .plm-ev, body.v2 .plm-dl-ev { background: var(--v2-s-sub) !important;
+  border: 1px solid var(--v2-b-soft); color: var(--v2-t3) !important; }
+body.v2 .plm-cell { background: transparent !important; border-color: var(--v2-b-soft) !important; }
+body.v2 .plm-cell.today { background: color-mix(in srgb, var(--v2-indigo) 14%, transparent) !important; }
+body.v2 .plm-daylist, body.v2 .plm-dl-body { background: var(--v2-s-card) !important;
+  border: 1px solid var(--v2-b) !important; border-radius: 16px; }
+body.v2 .plm-dl-head { background: transparent !important; color: var(--v2-t2) !important;
+  border-bottom: 1px solid var(--v2-b); }
+body.v2 .plm-dl-t { color: var(--v2-t2) !important; }
+body.v2 .plm-dl-s, body.v2 .plm-dl-empty { color: var(--v2-t7) !important; }
+body.v2 .pl-day.today, body.v2 .plh-day.today {
+  background-color: color-mix(in srgb, var(--v2-indigo) 8%, transparent) !important; }
