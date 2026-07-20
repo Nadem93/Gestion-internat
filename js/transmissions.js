@@ -109,6 +109,8 @@ async function initTransmissions() {
   const autoShift = (h >= 7 && (h < 13 || (h === 13 && new Date().getMinutes() < 30))) ? 'matin' : (h >= 13 && h < 22) ? 'aprem' : 'nuit';
   const shiftEl = document.getElementById('trShift');
   if (shiftEl) shiftEl.value = autoShift;
+  // Consignes permanentes (nouveauté de la maquette) — chargées sans bloquer le rendu.
+  if (typeof tv2ChargerConsignes === 'function') tv2ChargerConsignes();
 }
 
 function _populateTrResidents() {
@@ -136,7 +138,9 @@ function _renderTrDateNav() {
   if (_trCurrentDate === today) shortLabel = "Aujourd'hui";
   else if (_trCurrentDate === yesterday) shortLabel = 'Hier';
   else shortLabel = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
-  if (el) el.textContent = _trCurrentDate === today ? `Aujourd'hui — ${fullDate}` : fullDate;
+  // Format court de la maquette : « Lun. 20 juil. 2026 ».
+  const court = d.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+  if (el) el.textContent = _trCurrentDate === today ? "Aujourd'hui" : court;
   const titleEl = document.getElementById('trTodayLabel');
   if (titleEl) titleEl.textContent = shortLabel;
   const dateEl = document.getElementById('trTodayDate');
@@ -213,40 +217,14 @@ function _renderTransmissions() {
     unreadCountEl.style.color = unreadCount ? '#ef4444' : '#16a34a';
   }
 
-  const grouped = {};
-  TR_SHIFTS.forEach(s => { grouped[s.id] = []; });
-  list.forEach(t => { if (grouped[t.shift]) grouped[t.shift].push(t); });
-
-  const SHIFT_HOURS = { matin: '07h–13h30', aprem: '13h30–22h', nuit: '22h–07h' };
-  const SHIFT_ICONS = { matin: '🌅', aprem: '☀️', nuit: '🌙' };
-
-  container.innerHTML = `<div class="kb-board">${
-    TR_SHIFTS.map(shift => {
-      const items = grouped[shift.id];
-      return `<div class="kb-col" style="--sc:${shift.color}">
-        <div class="kb-col-hdr">
-          <div class="kb-col-hdr-top">
-            <div class="kb-col-name">
-              ${SHIFT_ICONS[shift.id]} ${shift.label}
-              <span class="kb-col-hours">${SHIFT_HOURS[shift.id]}</span>
-            </div>
-            <span class="kb-col-count" style="background:${shift.bg};color:${shift.color}">${items.length}</span>
-          </div>
-          ${_trDotsHtml(shift.id)}
-        </div>
-        <div class="kb-cards">
-          ${items.length
-            ? items.map(t => _trCard(t, residents, userId)).join('<div class="kb-sep"></div>')
-            : `<div class="kb-empty-col"><span class="ei">${SHIFT_ICONS[shift.id]}</span><span>Aucune transmission</span></div>`
-          }
-        </div>
-        <button class="kb-add-btn" onclick="resetTrModal();document.getElementById('trShift').value='${shift.id}';openModal('modalTr')">+ Ajouter</button>
-      </div>`;
-    }).join('')
-  }</div>`;
-
-  _renderTrHisto();
+  // Rendu V2 (maquette « Transmissions - refonte (bento) »).
+  tv2RenderFilters(allDay, userId);
+  tv2RenderBoard(list, residents, userId);
+  tv2RenderSynthese(allDay);
+  tv2RenderConsignes();
+  tv2RenderHisto();
 }
+
 
 function _trCard(t, residents, userId) {
   const r        = residents.find(x => x.id === t.residentId);
