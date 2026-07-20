@@ -1,99 +1,127 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Chambres — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-chambres.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Plan des chambres</div></div>
-      <div class="header-right">
-        <button id="btnAddChambre" class="btn btn-accent btn-sm btn-add-resident" onclick="openChambreModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="btn-add-label">Nouvelle chambre</span>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell ch2-shell" style="max-width:none;margin:22px 24px">
+
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="vie-quotidienne.html" style="background:linear-gradient(135deg,#be185d,#f472b6)" aria-label="Vie quotidienne">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+        <div class="v2-top-title">Plan des chambres</div>
+      </div>
+      <div class="ch2-top-act">
+        <button type="button" id="btnAddChambre" class="ch2-new" onclick="openChambreModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle chambre
         </button>
       </div>
-    </header>
+    </div>
 
-    <main class="content">
-      <div id="chStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
-      <div id="chGrid" class="grid" style="gap:0"></div>
-    </main>
-  </div>
-</div>
+    <div class="v2-body">
 
-<!-- MODAL CHAMBRE -->
-<div class="modal-overlay" id="modalChambre">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="chModalTitle">Nouvelle chambre</span>
-      <button class="modal-close" onclick="closeModal('modalChambre')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label class="required">Numéro / nom</label><input type="text" id="chNom" placeholder="Ex : 12, A3…"/></div>
-        <div class="form-group"><label>Unité / étage</label><input type="text" id="chUnite" placeholder="Ex : Rez-de-chaussée, Unité B…"/></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Capacité (lits)</label><input type="number" id="chCapacite" min="1" max="10" value="1"/></div>
-        <div class="form-group"><label>Notes</label><input type="text" id="chNotes" placeholder="PMR, proche sanitaires…"/></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalChambre')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveChambre()">💾 Enregistrer</button>
-    </div>
-  </div>
-</div>
+      <!-- STATISTIQUES -->
+      <div class="ch2-stats" id="chStats"></div>
 
-<!-- MODAL ATTRIBUTION -->
-<div class="modal-overlay" id="modalAssign">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="asTitle">Attribuer un lit</span>
-      <button class="modal-close" onclick="closeModal('modalAssign')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Occupants actuels</label>
-        <div id="asOccupants" style="display:flex;flex-direction:column;gap:.4rem"></div>
-      </div>
-      <div class="form-group">
-        <label>Ajouter un résident</label>
-        <div style="display:flex;gap:.5rem">
-          <select id="asResident" style="flex:1"></select>
-          <button class="btn btn-accent" onclick="assignResident()">Attribuer</button>
+      <!-- FILTRES -->
+      <div class="ch2-filters" id="chFilters"></div>
+
+      <!-- GRILLE + RAIL -->
+      <div class="ch2-body">
+        <div class="ch2-grid" id="chGrid"></div>
+
+        <div class="ch2-rail">
+          <div class="ch2-rblk">
+            <div class="ch2-rblk-t">Occupation par unité</div>
+            <div class="ch2-occs" id="chOccupation"></div>
+          </div>
+          <div class="ch2-rblk">
+            <div class="ch2-rblk-t">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+              États des lieux
+            </div>
+            <div id="edlHistory"></div>
+          </div>
         </div>
-        <span class="form-hint">Le champ « chambre » de la fiche résident est mis à jour automatiquement.</span>
       </div>
+
+      <!-- ÉTAT DES LIEUX INTERACTIF -->
+      <div class="ch2-panel" id="chEdlPanel"></div>
+
+    </div>
+  </div>
+</div></div>
+
+<!-- MODALE CHAMBRE -->
+<div class="v2-ov" id="modalChambre">
+  <div class="v2-md" style="--mc:#f472b6">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></span>
+      <div><div class="v2-md-t" id="chModalTitle">Nouvelle chambre</div><div class="v2-md-s">Numéro, unité et capacité d'accueil</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalChambre')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="chNom">Numéro / nom</label><input type="text" id="chNom" class="v2-fld" placeholder="Ex : 12, A3…"/></div>
+        <div><label class="v2-fld-l" for="chUnite">Unité / étage</label><input type="text" id="chUnite" class="v2-fld" placeholder="Ex : Unité B, rez-de-chaussée…"/></div>
+      </div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="chCapacite">Capacité (lits)</label><input type="number" id="chCapacite" class="v2-fld" min="1" max="10" value="1"/></div>
+        <div><label class="v2-fld-l" for="chNotes">Notes</label><input type="text" id="chNotes" class="v2-fld" placeholder="PMR, proche sanitaires…"/></div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Renommer une chambre met à jour la fiche des résidents qui y sont affectés.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalChambre')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveChambre()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL ÉTATS DES LIEUX -->
-<div class="modal-overlay" id="modalEdl">
-  <div class="modal lg">
-    <div class="modal-header">
-      <span class="modal-title" id="edlTitle">États des lieux</span>
-      <button class="modal-close" onclick="closeModal('modalEdl')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- MODALE ATTRIBUTION -->
+<div class="v2-ov" id="modalAssign">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
+      <div><div class="v2-md-t" id="asTitle">Attribuer un lit</div><div class="v2-md-s">Occupants de la chambre</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAssign')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="section-label">Nouvel état des lieux</div>
-      <div class="form-row-3">
-        <div class="form-group"><label>Type</label><select id="edlType"><option value="entree">Entrée</option><option value="sortie">Sortie</option></select></div>
-        <div class="form-group"><label>Date</label><input type="date" id="edlDate"/></div>
-        <div class="form-group"><label>Résident</label><select id="edlResident"></select></div>
+    <div class="v2-md-b">
+      <div>
+        <span class="v2-fld-l">Occupants actuels</span>
+        <div id="asOccupants" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
-      <div id="edlItems" style="display:flex;flex-direction:column;gap:.45rem"></div>
-      <div class="form-group"><label>Observations</label><textarea id="edlObs" rows="2" placeholder="Dégradations constatées, mobilier manquant…"></textarea></div>
-      <div style="text-align:right"><button class="btn btn-primary btn-sm" onclick="saveEdlEntry()">💾 Enregistrer l'état des lieux</button></div>
-      <div class="divider"></div>
-      <div class="section-label">Historique</div>
-      <div id="edlHistory" style="display:flex;flex-direction:column;gap:.45rem"></div>
+      <div>
+        <label class="v2-fld-l" for="asResident">Ajouter un résident</label>
+        <div style="display:flex;gap:10px">
+          <select id="asResident" class="v2-fld" style="flex:1"></select>
+          <button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="assignResident()">Attribuer</button>
+        </div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Le champ « chambre » de la fiche résident est mis à jour automatiquement.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAssign')">Fermer</button>
     </div>
   </div>
 </div>
@@ -104,6 +132,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/chambres-supabase.js"></script>
-<script src="js/chambres.js?v=2"></script>
+<script src="js/chambres.js?v=3"></script>
+<script src="js/chambres-v2.js?v=1"></script>
 </body>
 </html>

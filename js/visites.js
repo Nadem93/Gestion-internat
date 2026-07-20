@@ -38,7 +38,14 @@ function visResidents() {
 }
 
 // ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/visites-v2.js (design V2). La version historique
+// reste disponible ci-dessous pour les contextes où le module n'est pas chargé.
 function renderVisites() {
+  if (typeof vis2Render === 'function') return vis2Render();
+  return renderVisitesLegacy();
+}
+
+function renderVisitesLegacy() {
   const all = getVisites();
   const td = today();
   const fRes = document.getElementById('vFilterResident')?.value || '';
@@ -147,10 +154,16 @@ function openVisiteModal(id) {
 function vmTypeChanged() {
   const heb = document.getElementById('vmType').value === 'hebergement';
   document.getElementById('vmRetourWrap').style.display = heb ? '' : 'none';
+  if (typeof vis2SegSync === 'function') vis2SegSync('vmType');
 }
 
 // Affiche le cadre des droits du résident sélectionné dans le modal
 function vmShowDroits() {
+  if (typeof vis2ShowDroits === 'function') return vis2ShowDroits();
+  return vmShowDroitsLegacy();
+}
+
+function vmShowDroitsLegacy() {
   const rid = document.getElementById('vmResident').value;
   const box = document.getElementById('vmDroitsInfo');
   const r = residentsList().find(x => String(x.id) === String(rid));
@@ -254,10 +267,16 @@ function openDroitsModal() {
     visResidents().map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   if (droitsResidentId) sel.value = droitsResidentId;
   renderDroitsList();
+  if (typeof vis2SegSync === 'function') vis2SegSync('drType');
   openModal('modalDroits');
 }
 
 function renderDroitsList() {
+  if (typeof vis2DroitsList === 'function') return vis2DroitsList();
+  return renderDroitsListLegacy();
+}
+
+function renderDroitsListLegacy() {
   droitsResidentId = document.getElementById('drResident').value || null;
   const box = document.getElementById('drList');
   if (!droitsResidentId) { box.innerHTML = '<div style="font-size:.8rem;color:var(--g400);padding:.5rem 0">Sélectionnez un résident pour gérer son cadre de visites.</div>'; return; }

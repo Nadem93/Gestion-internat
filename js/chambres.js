@@ -40,6 +40,9 @@ function chOccupants(room) {
 }
 
 function renderChambres() {
+  // Design V2 : js/chambres-v2.js prend le rendu en charge. Tous les appelants
+  // existants continuent d'appeler renderChambres().
+  if (typeof ch2Render === 'function') { ch2Render(); return; }
   const rooms = getChambres();
   const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
     || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
@@ -208,10 +211,10 @@ function openAssignModal(id) {
   // Liste des occupants avec retrait
   const occList = chOccupants(c);
   document.getElementById('asOccupants').innerHTML = occList.length ? occList.map(r => `
-    <div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .7rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm)">
-      <span style="flex:1;font-size:.85rem;font-weight:600">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</span>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="unassignResident('${r.id}')">Retirer</button>
-    </div>`).join('') : '<div style="font-size:.8rem;color:var(--g400);padding:.4rem 0">Aucun occupant</div>';
+    <div class="v2-line">
+      <span class="v2-line-n" style="flex:1">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</span>
+      <button type="button" class="ch2-act danger" onclick="unassignResident('${r.id}')">Retirer</button>
+    </div>`).join('') : '<div class="v2-blk-vide">Aucun occupant</div>';
   openModal('modalAssign');
 }
 

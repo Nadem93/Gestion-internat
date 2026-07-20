@@ -237,6 +237,10 @@ function ensureMedUI() {
 
 // ── RENDU PRINCIPAL ──
 function renderMedicaments() {
+  // Design V2 : le rendu est repris par js/medicaments-v2.js (med2Render).
+  // Tous les appelants existants (init, changement de date, écritures…)
+  // continuent d'appeler renderMedicaments().
+  if (typeof med2Render === 'function') { med2Render(); return; }
   ensureMedUI();
   const date = document.getElementById('medDate').value || today();
   const prevues = medPrevues(date);

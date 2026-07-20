@@ -1,104 +1,231 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Visites & famille — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-visites.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Visites & hébergements famille</div></div>
-      <div class="header-right">
-        <button id="btnDroits" class="btn btn-outline btn-sm" onclick="openDroitsModal()">⚖️ Droits de visite</button>
-        <button id="btnAddVisite" class="btn btn-accent btn-sm btn-add-resident" onclick="openVisiteModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="btn-add-label">Nouvelle visite</span>
-        </button>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="max-width:none;margin:22px 24px;--v2-halo:rgba(101,163,13,.18)">
 
-    <main class="content" style="max-width:980px">
-      <div id="vStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
-      <div class="toolbar" style="margin-bottom:1.25rem">
-        <select id="vFilterResident" style="width:auto"></select>
-        <select id="vFilterType" style="width:auto"></select>
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#65a30d,#a3e635)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+      <div class="v2-top-title">Visites &amp; famille</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <button id="btnDroits" type="button" class="v2-btn" onclick="openDroitsModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg>
+        Droits de visite
+      </button>
+      <button id="btnAddVisite" type="button" class="v2-btn v2-btn-primary" onclick="openVisiteModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle visite
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <!-- KPI -->
+    <div id="vStats" class="vs2-stats"></div>
+
+    <!-- Filtres : chips de type (le select hérité reste le contrat du JS) -->
+    <div class="vs2-filters">
+      <div id="vChips" class="v2-chips"></div>
+      <select id="vFilterType" hidden aria-hidden="true" tabindex="-1"></select>
+      <select id="vFilterResident" class="vs2-sel" aria-label="Filtrer par résident"></select>
+    </div>
+
+    <!-- Liste + rail -->
+    <div class="vs2-body">
+      <div id="vList" class="vs2-list"></div>
+      <div class="vs2-rail">
+        <div class="vs2-droits">
+          <div class="vs2-droits-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg>
+            <span class="vs2-droits-t">Droits de visite</span>
+          </div>
+          <div id="vDroits" class="vs2-droits-l"></div>
+        </div>
+        <div class="v2-blk">
+          <div class="vs2-droits-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="v2-blk-t">Créneaux du jour</span>
+          </div>
+          <div id="vCreneaux" class="vs2-cr-l"></div>
+        </div>
       </div>
-      <div id="vList"></div>
-    </main>
+    </div>
+
+    <!-- Registre des visiteurs -->
+    <div class="vs2-reg">
+      <div class="vs2-reg-h">
+        <span class="vs2-reg-t">Registre des visiteurs</span>
+        <span class="vs2-reg-s">horaires prévus — pas d'émargement enregistré</span>
+      </div>
+      <div id="vRegistre"></div>
+    </div>
+
   </div>
 </div>
 
-<!-- MODAL VISITE -->
-<div class="modal-overlay" id="modalVisite">
-  <div class="modal lg">
-    <div class="modal-header">
-      <span class="modal-title" id="vmTitle">Nouvelle visite</span>
-      <button class="modal-close" onclick="closeModal('modalVisite')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- MODALE VISITE -->
+<div class="v2-ov" id="modalVisite">
+  <div class="v2-md v2-md-lg" style="--mc:#a3e635">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+      </span>
+      <div>
+        <div class="v2-md-t" id="vmTitle">Nouvelle visite</div>
+        <div class="v2-md-s">Visite, hébergement famille ou appel téléphonique</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalVisite')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label class="required">Résident</label><select id="vmResident"></select></div>
-        <div class="form-group"><label>Type</label><select id="vmType">
-          <option value="libre">👪 Visite libre</option>
-          <option value="mediatisee">🛡️ Visite médiatisée</option>
-          <option value="hebergement">🏠 Hébergement famille</option>
-          <option value="telephone">📞 Appel téléphonique</option>
-        </select></div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="vmResident">Résident *</label>
+        <select id="vmResident" class="v2-fld"></select>
+      </div>
+      <div>
+        <span class="v2-fld-l">Type</span>
+        <div class="v2-seg" data-seg="vmType">
+          <button type="button" class="v2-seg-o on" data-val="libre" onclick="vis2Seg('vmType','libre')">Visite libre</button>
+          <button type="button" class="v2-seg-o" data-val="mediatisee" onclick="vis2Seg('vmType','mediatisee')">Médiatisée</button>
+          <button type="button" class="v2-seg-o" data-val="hebergement" onclick="vis2Seg('vmType','hebergement')">Hébergement</button>
+          <button type="button" class="v2-seg-o" data-val="telephone" onclick="vis2Seg('vmType','telephone')">Appel</button>
+        </div>
+        <select id="vmType" hidden aria-hidden="true" tabindex="-1">
+          <option value="libre">Visite libre</option>
+          <option value="mediatisee">Visite médiatisée</option>
+          <option value="hebergement">Hébergement famille</option>
+          <option value="telephone">Appel téléphonique</option>
+        </select>
       </div>
       <div id="vmDroitsInfo"></div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Visiteur / famille</label><input type="text" id="vmPersonne" placeholder="Ex : Mme Dupont"/></div>
-        <div class="form-group"><label>Lien</label><input type="text" id="vmLien" placeholder="Ex : Mère, Père, Grand-mère…"/></div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="vmPersonne">Visiteur / famille *</label>
+          <input type="text" id="vmPersonne" class="v2-fld" placeholder="Ex : Mme Dupont"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="vmLien">Lien</label>
+          <input type="text" id="vmLien" class="v2-fld" placeholder="Ex : Mère, Père, Grand-mère…"/>
+        </div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Date</label><input type="date" id="vmDate"/></div>
-        <div class="form-group"><label>Heure</label><input type="time" id="vmHeure"/></div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="vmDate">Date *</label>
+          <input type="date" id="vmDate" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="vmHeure">Heure</label>
+          <input type="time" id="vmHeure" class="v2-fld"/>
+        </div>
       </div>
-      <div class="form-row" id="vmRetourWrap" style="display:none">
-        <div class="form-group"><label>Date de retour</label><input type="date" id="vmDateRetour"/></div>
-        <div class="form-group"><label>Heure de retour</label><input type="time" id="vmHeureRetour"/></div>
+      <div class="v2-grid2" id="vmRetourWrap" style="display:none">
+        <div>
+          <label class="v2-fld-l" for="vmDateRetour">Date de retour</label>
+          <input type="date" id="vmDateRetour" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="vmHeureRetour">Heure de retour</label>
+          <input type="time" id="vmHeureRetour" class="v2-fld"/>
+        </div>
       </div>
-      <div class="form-group"><label>Lieu</label><input type="text" id="vmLieu" placeholder="Établissement, point rencontre, domicile familial…"/></div>
-      <div class="form-group"><label>Notes / observations</label><textarea id="vmNotes" rows="2" placeholder="Consignes, déroulement de la visite…"></textarea></div>
+      <div>
+        <label class="v2-fld-l" for="vmLieu">Lieu</label>
+        <input type="text" id="vmLieu" class="v2-fld" placeholder="Établissement, point rencontre, domicile familial…"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="vmNotes">Notes / observations</label>
+        <textarea id="vmNotes" class="v2-fld" rows="2" placeholder="Consignes, déroulement de la visite…"></textarea>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalVisite')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveVisite()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalVisite')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveVisite()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL DROITS DE VISITE -->
-<div class="modal-overlay" id="modalDroits">
-  <div class="modal lg">
-    <div class="modal-header">
-      <span class="modal-title">⚖️ Droits de visite — cadre par résident</span>
-      <button class="modal-close" onclick="closeModal('modalDroits')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- MODALE DROITS DE VISITE -->
+<div class="v2-ov" id="modalDroits">
+  <div class="v2-md v2-md-lg" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg>
+      </span>
+      <div>
+        <div class="v2-md-t">Droits de visite</div>
+        <div class="v2-md-s">Cadre par résident — décisions et modalités</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalDroits')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body">
-      <div class="form-group"><label>Résident</label><select id="drResident"></select></div>
-      <div class="section-label">Personnes autorisées</div>
-      <div id="drList" style="display:flex;flex-direction:column;gap:.45rem"></div>
-      <div class="divider"></div>
-      <div class="section-label">Ajouter une autorisation</div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Personne</label><input type="text" id="drPersonne" placeholder="Nom de la personne autorisée"/></div>
-        <div class="form-group"><label>Lien</label><select id="drLien"></select></div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="drResident">Résident</label>
+        <select id="drResident" class="v2-fld"></select>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label>Type autorisé</label><select id="drType">
-          <option value="libre">👪 Visite libre</option>
-          <option value="mediatisee">🛡️ Visite médiatisée</option>
-          <option value="hebergement">🏠 Hébergement famille</option>
-          <option value="telephone">📞 Appel téléphonique</option>
-        </select></div>
-        <div class="form-group"><label>Modalités</label><input type="text" id="drModalites" placeholder="Ex : 1 week-end sur 2, 1 h en présence d'un tiers…"/></div>
+      <div>
+        <div class="v2-blk-sub">Personnes autorisées</div>
+        <div id="drList" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
-      <div class="form-group"><label>Décision / référence</label><input type="text" id="drDecision" placeholder="Ex : Ordonnance JE du 12/03/2026, accord ASE…"/></div>
-      <div style="text-align:right"><button class="btn btn-accent btn-sm" onclick="addDroit()">+ Ajouter l'autorisation</button></div>
+      <div class="v2-blk-sub" style="margin-bottom:0">Ajouter une autorisation</div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="drPersonne">Personne *</label>
+          <input type="text" id="drPersonne" class="v2-fld" placeholder="Nom de la personne autorisée"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="drLien">Lien</label>
+          <select id="drLien" class="v2-fld"></select>
+        </div>
+      </div>
+      <div>
+        <span class="v2-fld-l">Type autorisé</span>
+        <div class="v2-seg" data-seg="drType">
+          <button type="button" class="v2-seg-o on" data-val="libre" onclick="vis2Seg('drType','libre')">Visite libre</button>
+          <button type="button" class="v2-seg-o" data-val="mediatisee" onclick="vis2Seg('drType','mediatisee')">Médiatisée</button>
+          <button type="button" class="v2-seg-o" data-val="hebergement" onclick="vis2Seg('drType','hebergement')">Hébergement</button>
+          <button type="button" class="v2-seg-o" data-val="telephone" onclick="vis2Seg('drType','telephone')">Appel</button>
+        </div>
+        <select id="drType" hidden aria-hidden="true" tabindex="-1">
+          <option value="libre">Visite libre</option>
+          <option value="mediatisee">Visite médiatisée</option>
+          <option value="hebergement">Hébergement famille</option>
+          <option value="telephone">Appel téléphonique</option>
+        </select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="drModalites">Modalités</label>
+        <input type="text" id="drModalites" class="v2-fld" placeholder="Ex : 1 week-end sur 2, 1 h en présence d'un tiers…"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="drDecision">Décision / référence</label>
+        <input type="text" id="drDecision" class="v2-fld" placeholder="Ex : Ordonnance JE du 12/03/2026, accord ASE…"/>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalDroits')">Fermer</button>
+      <button type="button" class="v2-btn-pri" onclick="addDroit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter l'autorisation
+      </button>
     </div>
   </div>
 </div>
@@ -109,6 +236,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/visites-supabase.js"></script>
-<script src="js/visites.js"></script>
+<script src="js/visites.js?v=2"></script>
+<script src="js/visites-v2.js?v=1"></script>
 </body>
 </html>

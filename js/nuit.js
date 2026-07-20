@@ -76,127 +76,13 @@ function nuitShift(days) {
 }
 
 // ── RENDU ──
+// Le rendu est assuré par js/nuit-v2.js (design V2). On conserve renderNuit()
+// et renderNuitHisto() : tous les appelants existants passent par elles.
 function renderNuit() {
-  const dEl = document.getElementById('ntDate');
-  if (dEl && dEl.value !== nuitDate) dEl.value = nuitDate;
-  document.getElementById('ntLabel').textContent = nuitLabel(nuitDate);
-  const n = getNuit(nuitDate);
-  const body = document.getElementById('ntBody');
-  const canWrite = !!Auth.getSession();
-
-  if (!n) {
-    body.innerHTML = `<div class="empty" style="padding:2.5rem">
-      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
-      <h3>Cahier non ouvert pour cette nuit</h3><p>Ouvrez le cahier pour consigner rondes, événements et appels.</p>
-      ${canWrite ? '<button class="btn btn-accent" onclick="ouvrirNuit()">🌙 Ouvrir le cahier de cette nuit</button>' : ''}
-    </div>`;
-    renderNuitHisto();
-    return;
-  }
-
-  const amb = NUIT_AMBIANCES[n.ambiance] || NUIT_AMBIANCES.calme;
-  const rondes = [...(n.rondes || [])].sort((a, b) => (a.heure || '').localeCompare(b.heure || ''));
-  const evts = [...(n.evenements || [])].sort((a, b) => (a.heure || '').localeCompare(b.heure || ''));
-  const astr = [...(n.astreintes || [])].sort((a, b) => (a.heure || '').localeCompare(b.heure || ''));
-
-  body.innerHTML = `
-    <!-- En-tête de nuit -->
-    <div class="card" style="margin-bottom:1.25rem;border-left:3px solid ${amb.color}">
-      <div class="card-body" style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;padding:1rem 1.25rem">
-        <div><div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--muted)">Veilleur</div><div style="font-weight:700">${escHtml(n.veilleur || '?')}</div></div>
-        <div><div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--muted)">Effectif</div>
-          <input type="number" value="${n.effectif || 0}" min="0" style="width:70px;padding:.25rem .5rem" onchange="updateNuit({effectif:parseInt(this.value)||0})"/></div>
-        <div><div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--muted)">Ambiance</div>
-          <select style="width:auto;padding:.25rem .5rem" onchange="updateNuit({ambiance:this.value});renderNuit()">
-            ${Object.entries(NUIT_AMBIANCES).map(([k, a]) => `<option value="${k}"${n.ambiance === k ? ' selected' : ''}>${a.label}</option>`).join('')}
-          </select></div>
-        <div style="margin-left:auto;display:flex;gap:1.25rem;text-align:center">
-          <div><div style="font-family:var(--display);font-size:1.4rem;font-weight:700;color:var(--primary)">${rondes.length}</div><div style="font-size:.66rem;color:var(--muted);text-transform:uppercase">Rondes</div></div>
-          <div><div style="font-family:var(--display);font-size:1.4rem;font-weight:700;color:${evts.length ? '#d97706' : 'var(--primary)'}">${evts.length}</div><div style="font-size:.66rem;color:var(--muted);text-transform:uppercase">Événements</div></div>
-          <div><div style="font-family:var(--display);font-size:1.4rem;font-weight:700;color:${astr.length ? '#dc2626' : 'var(--primary)'}">${astr.length}</div><div style="font-size:.66rem;color:var(--muted);text-transform:uppercase">Astreinte</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-2" style="gap:1.25rem;align-items:start">
-      <!-- RONDES -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">🚶 Rondes</span></div>
-        <div class="card-body" style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.5rem">
-          ${rondes.length ? rondes.map(rd => `
-            <div style="display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm)">
-              <strong style="font-family:var(--display)">${escHtml(rd.heure || '—')}</strong>
-              ${rd.ras ? '<span class="badge badge-green">RAS</span>' : '<span class="badge badge-amber">À noter</span>'}
-              <span style="flex:1;font-size:.8rem;color:var(--g700)">${escHtml(rd.note || '')}</span>
-              <button class="btn btn-ghost btn-sm no-print" style="color:var(--red)" onclick="delRonde('${rd.id}')">✕</button>
-            </div>`).join('') : '<div style="font-size:.78rem;color:var(--g400)">Aucune ronde consignée</div>'}
-          <div class="no-print" style="display:flex;gap:.5rem;align-items:center;border-top:1px solid var(--border);padding-top:.65rem;flex-wrap:wrap">
-            <input type="time" id="rdHeure" style="width:110px"/>
-            <label style="display:flex;align-items:center;gap:.3rem;font-size:.78rem;text-transform:none;letter-spacing:0;margin:0"><input type="checkbox" id="rdRas" checked style="width:auto"/> RAS</label>
-            <input type="text" id="rdNote" placeholder="Observation…" style="flex:1;min-width:120px"/>
-            <button class="btn btn-accent btn-sm" onclick="addRonde()">+ Ronde</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ASTREINTE -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">📞 Appels à l'astreinte</span></div>
-        <div class="card-body" style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.5rem">
-          ${astr.length ? astr.map(a => `
-            <div style="padding:.55rem .75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r-sm)">
-              <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-                <strong style="font-family:var(--display)">${escHtml(a.heure || '—')}</strong>
-                <span style="font-weight:600;font-size:.82rem">${escHtml(a.cadre || 'Cadre')}</span>
-                <button class="btn btn-ghost btn-sm no-print" style="color:var(--red);margin-left:auto" onclick="delAstreinte('${a.id}')">✕</button>
-              </div>
-              <div style="font-size:.78rem;color:var(--g700)">Motif : ${escHtml(a.motif || '—')}</div>
-              ${a.decision ? `<div style="font-size:.78rem;color:#0f2b4a;margin-top:2px"><strong>Consigne :</strong> ${escHtml(a.decision)}</div>` : ''}
-            </div>`).join('') : '<div style="font-size:.78rem;color:var(--g400)">Aucun appel cette nuit</div>'}
-          <div class="no-print" style="display:flex;flex-direction:column;gap:.4rem;border-top:1px solid var(--border);padding-top:.65rem">
-            <div style="display:flex;gap:.5rem"><input type="time" id="asHeure" style="width:110px"/><input type="text" id="asCadre" placeholder="Cadre contacté" style="flex:1"/></div>
-            <input type="text" id="asMotif" placeholder="Motif de l'appel"/>
-            <input type="text" id="asDecision" placeholder="Décision / consigne donnée"/>
-            <div style="text-align:right"><button class="btn btn-danger btn-sm" onclick="addAstreinte()">+ Appel astreinte</button></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ÉVÉNEMENTS -->
-    <div class="card" style="margin-top:1.25rem">
-      <div class="card-header"><span class="card-title">⚡ Événements de la nuit</span>
-        <button class="btn btn-accent btn-sm no-print" style="margin-left:auto" onclick="openNuitEvtModal()">+ Événement</button></div>
-      <div class="card-body" style="padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.5rem">
-        ${evts.length ? evts.map(e => {
-          const t = NUIT_EVT_TYPES[e.type] || NUIT_EVT_TYPES.autre;
-          return `<div style="display:flex;gap:.7rem;align-items:flex-start;padding:.55rem .75rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm)">
-            <span style="font-size:1.1rem">${t.icon}</span>
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-                <strong style="font-family:var(--display)">${escHtml(e.heure || '—')}</strong>
-                <span class="badge badge-gray">${t.label}</span>
-                ${e.residentName ? `<a href="resident.html?id=${e.residentId}" style="font-weight:600;font-size:.82rem;color:var(--accent);text-decoration:none">${escHtml(e.residentName)}</a>` : ''}
-              </div>
-              <div style="font-size:.8rem;color:var(--g700);margin-top:2px">${escHtml(e.description || '')}</div>
-            </div>
-            <span class="no-print" style="display:flex;gap:.2rem">
-              <button class="btn btn-ghost btn-sm" onclick="openNuitEvtModal('${e.id}')">✎</button>
-              <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delNuitEvt('${e.id}')">✕</button>
-            </span>
-          </div>`;
-        }).join('') : '<div style="font-size:.78rem;color:var(--g400)">Rien à signaler — nuit sans événement particulier</div>'}
-      </div>
-    </div>
-
-    <!-- TRANSMISSION DU MATIN -->
-    <div class="card" style="margin-top:1.25rem">
-      <div class="card-header"><span class="card-title">🌅 Transmission pour l'équipe du matin</span><span id="ntSaved" style="margin-left:auto;font-size:.72rem;color:#16a34a"></span></div>
-      <div class="card-body" style="padding:1rem 1.25rem">
-        <textarea id="ntTransmission" rows="3" placeholder="Synthèse de la nuit, points de vigilance pour la journée…" oninput="saveTransmission()">${escHtml(n.transmission || '')}</textarea>
-      </div>
-    </div>`;
-  renderNuitHisto();
+  if (typeof nt2Render === 'function') nt2Render();
+}
+function renderNuitHisto() {
+  if (typeof nt2RenderHisto === 'function') nt2RenderHisto();
 }
 
 // ── ACTIONS ──
@@ -271,22 +157,6 @@ function delNuitEvt(id) {
     updateNuit({ evenements: (n.evenements || []).filter(e => e.id !== id) });
     renderNuit();
   });
-}
-
-// ── HISTORIQUE ──
-function renderNuitHisto() {
-  const list = getNuits().filter(n => n.date !== nuitDate).sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 20);
-  const el = document.getElementById('ntHisto');
-  el.innerHTML = list.length ? list.map(n => {
-    const amb = NUIT_AMBIANCES[n.ambiance] || NUIT_AMBIANCES.calme;
-    return `<div class="card" style="cursor:pointer" onclick="nuitDate='${n.date}';renderNuit();window.scrollTo({top:0,behavior:'smooth'})">
-      <div class="card-body" style="padding:.6rem 1rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
-        <strong style="font-size:.84rem">${nuitLabel(n.date)}</strong>
-        <span class="badge" style="background:${amb.color}1a;color:${amb.color}">${amb.label}</span>
-        <span style="font-size:.74rem;color:var(--muted);margin-left:auto">${escHtml(n.veilleur || '?')} · ${(n.rondes || []).length} rondes · ${(n.evenements || []).length} évén. · ${(n.astreintes || []).length} astreinte</span>
-      </div>
-    </div>`;
-  }).join('') : '<div style="font-size:.78rem;color:var(--g400);padding:.5rem 0">Aucune nuit dans l\'historique</div>';
 }
 
 // ── INIT ──

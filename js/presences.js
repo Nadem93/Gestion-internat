@@ -167,6 +167,7 @@ function presOpenMotif(residentId) {
 }
 
 function presRenderMotifSeg() {
+  if (typeof prv2MotifSeg === 'function') { prv2MotifSeg(); return; }
   document.getElementById('motifSeg').innerHTML = Object.entries(PRES_STATUTS).map(([k, st]) => {
     const on = _presMotifSel === k;
     return `<button type="button" aria-pressed="${on}" onclick="presPickMotifStatut('${k}')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.5rem .25rem;border-radius:10px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:all .15s;${on ? `background:${st.color};color:#fff;border-color:${st.color}` : `background:${st.bg};color:${st.color};border-color:${st.ring}`}">
@@ -185,6 +186,7 @@ async function presSaveMotif() {
 }
 
 function renderStats() {
+  if (typeof prv2Stats === 'function') { prv2Stats(); return; }
   const residents = _presResidentsCache.filter(r => r.statut !== 'sorti');
   const presences = getPresencesForDate(getDateStr());
   let present=0, absent=0, sortie=0, unknown=0;
@@ -219,6 +221,7 @@ function getPlanningAbsenceJour(r, date) {
 }
 
 function renderPresenceTable() {
+  if (typeof prv2RenderTable === 'function') { prv2RenderTable(); return; }
   const residents = _presResidentsCache.filter(r => r.statut !== 'sorti');
   const presences = getPresencesForDate(getDateStr());
   const el = document.getElementById('presenceTable');
@@ -285,6 +288,7 @@ function renderPresenceTable() {
 }
 
 function updateDateLabel() {
+  if (typeof prv2Dates === 'function') { prv2Dates(); return; }
   const d = new Date(getDateStr() + 'T00:00:00');
   document.getElementById('presenceDateLabel').textContent = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
 }

@@ -54,7 +54,14 @@ function actBilansCeMois() {
 }
 
 // ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/activites-v2.js (design V2). La version
+// historique reste ci-dessous comme repli si le module n'est pas chargé.
 function renderActivites() {
+  if (typeof ac2Render === 'function') return ac2Render();
+  return renderActivitesLegacy();
+}
+
+function renderActivitesLegacy() {
   const all = getActivites();
   const fCat = document.getElementById('aFilterCat')?.value || '';
   const fJour = document.getElementById('aFilterJour')?.value || '';
@@ -188,7 +195,7 @@ function openBilanAnnuelModal(activiteId) {
   annee.innerHTML = Array.from({ length: 6 }, (_, i) => nowY - 4 + i).map(y => `<option value="${y}">${y}</option>`).join('');
   annee.value = nowY;
   const a = getActivites().find(x => x.id === activiteId);
-  document.getElementById('baTitle').textContent = '📝 Bilan annuel — ' + (a?.nom || 'Activité');
+  document.getElementById('baTitle').textContent = 'Bilan annuel — ' + (a?.nom || 'Activité');
   renderBilanAnnuelForm();
   openModal('modalBilanAnnuel');
 }
@@ -248,6 +255,11 @@ function openParticipantsModal(id) {
 }
 
 function renderParticipantsList(inscrits, activite) {
+  if (typeof ac2ParticipantsList === 'function') return ac2ParticipantsList(inscrits, activite);
+  return renderParticipantsListLegacy(inscrits, activite);
+}
+
+function renderParticipantsListLegacy(inscrits, activite) {
   const box = document.getElementById('pmList');
   const stats = document.getElementById('pmStats');
 

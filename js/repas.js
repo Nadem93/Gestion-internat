@@ -12,8 +12,11 @@ function rpSetView(v) {
   renderRepas();
 }
 
+// Midi (T12:00) et non minuit : toISOString() bascule en UTC et, à l'est de
+// Greenwich, minuit local retombait sur la veille — la semaine affichée était
+// décalée d'un jour (lundi 20 → semaine du 18).
 function rpWeekStart(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(dateStr + 'T12:00:00');
   const dow = d.getDay();
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
   return d.toISOString().slice(0, 10);
@@ -22,7 +25,7 @@ function rpWeekStart(dateStr) {
 function rpWeekDays(dateStr) {
   const start = rpWeekStart(dateStr);
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start + 'T00:00:00');
+    const d = new Date(start + 'T12:00:00');
     d.setDate(d.getDate() + i);
     return d.toISOString().slice(0, 10);
   });
@@ -186,7 +189,14 @@ function rpResidentCard(r, day, canEdit) {
   </div>`;
 }
 
+// Rendu : délégué au module V2 (js/repas-v2.js) chargé après ce fichier.
+// renderRepasV1 reste en secours si le module n'est pas présent.
 function renderRepas() {
+  if (typeof rp2Render === 'function') return rp2Render();
+  return renderRepasV1();
+}
+
+function renderRepasV1() {
   const residents = repasResidents();
   const all = getRepas();
   const day = all[repasDate] || {};
@@ -374,11 +384,11 @@ function toggleRepas(rid, meal, checked, dateOverride) {
 function rpCopyWeek(fromStart, toStart) {
   const all  = getRepas();
   const fromDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(fromStart + 'T00:00:00'); d.setDate(d.getDate() + i);
+    const d = new Date(fromStart + 'T12:00:00'); d.setDate(d.getDate() + i);
     return d.toISOString().slice(0, 10);
   });
   const toDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(toStart + 'T00:00:00'); d.setDate(d.getDate() + i);
+    const d = new Date(toStart + 'T12:00:00'); d.setDate(d.getDate() + i);
     return d.toISOString().slice(0, 10);
   });
   fromDays.forEach((fd, i) => {
@@ -418,6 +428,7 @@ function rpGoToday() {
 
 // Frise de dates sur 1 mois (commande des repas à l'avance)
 function renderDateStrip() {
+  if (typeof rp2DateStrip === 'function') return rp2DateStrip();
   const el = document.getElementById('rpDateStrip');
   if (!el) return;
   const todayS = today();

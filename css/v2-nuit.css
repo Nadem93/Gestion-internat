@@ -1,0 +1,240 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   CAHIER DE NUIT & ASTREINTE — design V2
+   D'après la maquette « Cahier de nuit (vie quotidienne).dc.html ».
+
+   Ne contient QUE le style propre à cette page : les composants communs
+   (.v2-shell, .v2-top, .v2-body, .v2-blk, .v2-datenav, .v2-ov/.v2-md/.v2-fld,
+   .v2-btn…) viennent de css/v2.css, qui n'est jamais modifié ici.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Halo de la coque : indigo profond de la maquette (nuit). */
+body.v2 .nt2-shell { --v2-halo: rgba(49,46,129,.4); }
+
+/* ── Barre du haut ───────────────────────────────────────────────────── */
+.nt2-topact { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.nt2-veilleur {
+  display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 14px 0 8px;
+  border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.nt2-veilleur[hidden] { display: none; }
+.nt2-veilleur-av {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #818cf8, #22d3ee);
+  color: #0a1728; font-size: 10.5px; font-weight: 800;
+}
+.nt2-veilleur-t { line-height: 1.2; min-width: 0; }
+.nt2-veilleur-n { display: block; font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.nt2-veilleur-r { display: block; font-size: 10.5px; color: var(--v2-t6); }
+
+/* Navigation de nuit : le <input type="date"> reste le contrat avec
+   js/nuit.js — on le garde dans le flux mais invisible (jamais display:none,
+   sinon showPicker() est refusé par le navigateur). */
+.nt2-datenav { position: relative; height: 42px; }
+.nt2-datenav .v2-datenav-l { min-width: 178px; text-align: center; }
+body.v2 input.nt2-datepick {
+  position: absolute; left: 50%; bottom: 0; width: 1px; height: 1px;
+  padding: 0; border: none; background: none; opacity: 0; pointer-events: none;
+}
+
+body.v2 a.nt2-lien { text-decoration: none; }
+
+.nt2-new {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px;
+  border: none; border-radius: var(--v2-r-ctrl); cursor: pointer; font: inherit;
+  font-size: 13.5px; font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  box-shadow: var(--v2-sh-primary);
+}
+.nt2-new:hover { filter: brightness(1.08); }
+.nt2-new svg { width: 16px; height: 16px; }
+
+/* ── Tuiles statistiques ─────────────────────────────────────────────── */
+.nt2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 1000px) { .nt2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .nt2-stats { grid-template-columns: 1fr; } }
+
+.nt2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.nt2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.nt2-stat-ico svg { width: 21px; height: 21px; }
+.nt2-stat-n {
+  font-family: var(--v2-display); font-size: 24px; font-weight: 800;
+  line-height: 1; color: var(--pc, #818cf8);
+}
+.nt2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* Effectif éditable : le nombre EST le champ */
+body.v2 input.nt2-stat-in {
+  width: 72px; height: auto; padding: 0; border: none; border-bottom: 1px dashed var(--v2-b-active);
+  border-radius: 0; background: none; box-shadow: none;
+  font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1;
+  color: var(--pc, #22d3ee); -moz-appearance: textfield;
+}
+body.v2 input.nt2-stat-in:focus { outline: none; border-bottom-color: var(--pc, #22d3ee); }
+body.v2 input.nt2-stat-in::-webkit-outer-spin-button,
+body.v2 input.nt2-stat-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── Corps : timeline + rail ─────────────────────────────────────────── */
+.nt2-body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .nt2-body { grid-template-columns: 1fr; } }
+.nt2-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Sélecteur d'ambiance, dans l'en-tête du bloc « Événements de la nuit » */
+body.v2 select.nt2-amb {
+  height: 32px; width: auto; padding: 0 34px 0 12px; border-radius: var(--v2-r-chip);
+  font: inherit; font-size: 11.5px; font-weight: 600; color: var(--v2-t4);
+  background-color: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f93b3' stroke-width='2.2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center; background-size: 14px; cursor: pointer;
+}
+body.v2 select.nt2-amb option { background: #101d31; color: var(--v2-t2); }
+
+/* ── Timeline des événements ─────────────────────────────────────────── */
+.nt2-ev { display: flex; gap: 14px; }
+.nt2-ev-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 52px; }
+.nt2-ev-h {
+  font-family: var(--v2-display); font-size: 12px; font-weight: 800; color: var(--pc, #818cf8);
+}
+.nt2-ev-line { flex: 1; width: 2px; background: rgba(255,255,255,.08); margin-top: 4px; }
+.nt2-ev-b { flex: 1; min-width: 0; padding-bottom: 16px; }
+.nt2-ev-card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-left: 3px solid var(--pc, #818cf8); border-radius: var(--v2-r-sub);
+  padding: 13px 15px;
+}
+.nt2-ev-top { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; flex-wrap: wrap; }
+.nt2-ev-ico {
+  width: 26px; height: 26px; border-radius: var(--v2-r-badge); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.nt2-ev-ico svg { width: 14px; height: 14px; }
+.nt2-ev-t { font-size: 12.5px; font-weight: 700; color: var(--v2-t2); }
+.nt2-ev-res { font-size: 11px; color: var(--v2-t6); }
+body.v2 a.nt2-ev-res:hover { color: var(--v2-indigo-pale); }
+.nt2-ev-x { font-size: 12.5px; color: var(--v2-t4); line-height: 1.55; white-space: pre-wrap; }
+.nt2-ev-act { margin-left: auto; display: flex; gap: 4px; flex-shrink: 0; }
+.nt2-ico-btn {
+  width: 26px; height: 26px; border-radius: var(--v2-r-badge); flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t6);
+  font: inherit; font-size: 12px; padding: 0;
+}
+.nt2-ico-btn:hover { background: var(--v2-s-hover); color: #fff; }
+.nt2-ico-btn svg { width: 13px; height: 13px; }
+.nt2-ico-btn.danger:hover { color: var(--v2-danger-text); border-color: rgba(239,68,68,.4); }
+
+/* ── Rondes ──────────────────────────────────────────────────────────── */
+.nt2-ronde { display: flex; align-items: center; gap: 11px; }
+.nt2-ronde-box {
+  width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-ok); border: 1.5px solid var(--v2-ok); color: #0a1728;
+}
+.nt2-ronde-box.todo { background: transparent; border-color: rgba(255,255,255,.2); }
+.nt2-ronde-box svg { width: 13px; height: 13px; }
+.nt2-ronde-h { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); }
+.nt2-ronde-n { font-size: 10.5px; color: var(--v2-t6); margin-left: auto; text-align: right;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+
+/* ── Formulaires en pied de bloc (ronde, astreinte) ──────────────────── */
+.nt2-form {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--v2-b);
+}
+/* En colonne, `flex:1` s'applique à la HAUTEUR et écrasait le height des
+   champs : on neutralise la flexibilité des enfants directs. */
+.nt2-form.col { flex-direction: column; align-items: stretch; }
+.nt2-form.col > * { flex: none; }
+body.v2 .nt2-form.col > input[type="text"] { flex: none; width: 100%; }
+body.v2 .nt2-form input[type="time"],
+body.v2 .nt2-form input[type="text"] {
+  height: 34px; padding: 0 11px; border-radius: var(--v2-r-chip);
+  font: inherit; font-size: 12px; color: var(--v2-t2);
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); box-shadow: none;
+}
+body.v2 .nt2-form input[type="time"] { width: 104px; flex-shrink: 0; }
+body.v2 .nt2-form input[type="text"] { flex: 1; min-width: 100px; }
+body.v2 .nt2-form input::-webkit-calendar-picker-indicator { filter: invert(.72); }
+.nt2-check {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0;
+  font-size: 12px; font-weight: 600; color: var(--v2-t5);
+  text-transform: none; letter-spacing: normal; cursor: pointer;
+}
+body.v2 .nt2-check input { width: 15px; height: 15px; accent-color: var(--v2-ok); box-shadow: none; }
+.nt2-add {
+  height: 34px; padding: 0 13px; border-radius: var(--v2-r-chip); cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 600; color: var(--v2-t3);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
+}
+.nt2-add svg { width: 14px; height: 14px; flex-shrink: 0; }
+.nt2-add:hover { background: var(--v2-s-hover); color: #fff; }
+.nt2-add.warn { color: var(--v2-warn-text); border-color: rgba(245,158,11,.35);
+  background: rgba(245,158,11,.12); }
+.nt2-add.warn:hover { background: rgba(245,158,11,.2); }
+.nt2-form-row { display: flex; gap: 8px; }
+
+/* ── Bloc teinté « Appels à l'astreinte » ────────────────────────────── */
+.nt2-blk-warn {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(239,68,68,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22);
+  border-radius: var(--v2-r-card2); padding: 18px 20px;
+}
+.nt2-blk-warn .v2-blk-t { color: var(--v2-warn-text); }
+.nt2-blk-warn .nt2-form { border-top-color: rgba(245,158,11,.2); }
+
+.nt2-astr {
+  background: var(--v2-s-sub); border: 1px solid rgba(239,68,68,.22);
+  border-radius: var(--v2-r-ctrl); padding: 10px 12px;
+}
+.nt2-astr-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.nt2-astr-h { font-family: var(--v2-display); font-size: 12px; font-weight: 800; color: var(--v2-danger-text); }
+.nt2-astr-c { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.nt2-astr-m { font-size: 11.5px; color: var(--v2-t5); line-height: 1.45; margin-top: 4px; }
+.nt2-astr-d { font-size: 11.5px; color: var(--v2-t3); line-height: 1.45; margin-top: 3px; }
+
+/* ── Transmission du matin ───────────────────────────────────────────── */
+body.v2 textarea.nt2-trans {
+  width: 100%; min-height: 96px; padding: 11px 13px; border-radius: var(--v2-r-ctrl);
+  font: inherit; font-size: 12.5px; line-height: 1.55; color: var(--v2-t2);
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); box-shadow: none;
+  resize: vertical;
+}
+.nt2-saved { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--v2-ok-light); }
+
+/* ── Nuits précédentes ───────────────────────────────────────────────── */
+.nt2-histo-r {
+  display: flex; align-items: center; gap: 12px; padding: 9px 0; cursor: pointer;
+  border-bottom: 1px solid var(--v2-b-list);
+}
+.nt2-histo-r:last-child { border-bottom: none; }
+.nt2-histo-d { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.nt2-histo-r:hover .nt2-histo-d { color: #fff; }
+.nt2-histo-b { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+.nt2-histo-t {
+  margin-left: auto; flex-shrink: 0; white-space: nowrap;
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  color: var(--pc, #10b981); background: color-mix(in srgb, var(--pc, #10b981) 12%, transparent);
+}
+
+/* ── État vide (cahier non ouvert) ───────────────────────────────────── */
+.nt2-vide { text-align: center; padding: 48px 24px; }
+.nt2-vide-ico {
+  width: 62px; height: 62px; border-radius: 18px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(99,102,241,.13); color: var(--v2-indigo-light);
+}
+.nt2-vide-ico svg { width: 28px; height: 28px; }
+.nt2-vide-t { font-size: 15px; font-weight: 700; color: var(--v2-t2); }
+.nt2-vide-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 5px; }

@@ -143,6 +143,10 @@ function _psIntervInitiales(name) {
 }
 
 function renderPlanSoins() {
+  // Design V2 : le rendu de la page est délégué à js/plan-soins-v2.js.
+  // Tous les appelants existants (toggles, sauvegarde, navigation de date)
+  // continuent d'appeler renderPlanSoins().
+  if (typeof ps2Render === 'function') { ps2Render(); return; }
   ensurePsUI();
   const container = document.getElementById('psList');
   if (!container) return;

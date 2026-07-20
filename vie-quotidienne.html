@@ -3,74 +3,62 @@
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Vie quotidienne — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    html,body{margin:0;height:100%}
-    .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:transparent}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
-    #vqFrame{flex:1;width:100%;border:none;background:#fff}
-
-    /* ── Dock flottant ── */
-    .rh-dock{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:60;
-      display:flex;align-items:center;gap:5px;
-      background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(12px);
-      border-radius:17px;padding:6px 9px;
-      border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(80,90,160,.18);
-      max-width:calc(100vw - 24px);overflow-x:auto}
-    .rh-dock::-webkit-scrollbar{height:0}
-    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
-    .rh-dock-home{width:36px;height:36px;flex-shrink:0;border-radius:14px;border:none;
-      background:rgba(15,23,42,.05);color:#64748b;display:flex;align-items:center;justify-content:center;
-      cursor:pointer;transition:background .15s,color .15s}
-    .rh-dock-home:hover{background:rgba(15,23,42,.1);color:#334155}
-    .rh-dock-home svg{width:17px;height:17px}
-
-    /* ── Accueil = tutoriel des modules ── */
-    .vqt-intro-t{font-size:1.5rem;font-weight:800;color:var(--primary);letter-spacing:-.02em}
-    .vqt-intro-s{font-size:.9rem;color:var(--muted);margin:.35rem 0 1.4rem;line-height:1.5;max-width:720px}
-    .vqt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem}
-    .vqt-card{text-align:left;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.1rem 1.15rem;cursor:pointer;font-family:inherit;color:inherit;display:flex;flex-direction:column;gap:.6rem;transition:box-shadow .15s,transform .15s,border-color .15s}
-    .vqt-card:hover,.vqt-card:focus-visible{box-shadow:0 10px 26px rgba(40,50,110,.13);transform:translateY(-2px);border-color:var(--vqc);outline:none}
-    .vqt-head{display:flex;align-items:center;gap:.7rem}
-    .vqt-ic{width:38px;height:38px;border-radius:11px;flex-shrink:0;color:#fff;display:flex;align-items:center;justify-content:center}
-    .vqt-ic svg{width:20px;height:20px}
-    .vqt-grp{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--vqc)}
-    .vqt-nm{font-size:1rem;font-weight:800;color:#0f2b4a;line-height:1.15;margin-top:1px}
-    .vqt-role{font-size:.83rem;color:#334155;line-height:1.5}
-    .vqt-sync{font-size:.74rem;color:#475569;background:#f4f6fb;border-radius:9px;padding:.45rem .6rem;display:flex;gap:.45rem;align-items:flex-start;line-height:1.4}
-    .vqt-sync b{color:#0f2b4a;font-weight:700}
-    .vqt-ex{font-size:.78rem;color:#3730a3;background:color-mix(in srgb,var(--vqc) 8%,#fff);border-left:3px solid var(--vqc);border-radius:8px;padding:.5rem .65rem;line-height:1.5}
-    .vqt-ex b{color:var(--vqc)}
-    .vqt-open{margin-top:auto;font-size:.75rem;font-weight:700;color:var(--vqc);display:flex;align-items:center;gap:.3rem}
-    /* Mode d'emploi : comment fonctionne le module, étape par étape */
-    .vqt-how{background:#fbfcfe;border:1px dashed color-mix(in srgb,var(--vqc) 35%,var(--border));border-radius:11px;padding:.55rem .7rem .6rem}
-    .vqt-how-h{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--vqc);margin-bottom:.45rem;display:flex;align-items:center;gap:.35rem}
-    .vqt-how-list{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:.32rem}
-    .vqt-how-list li{font-size:.78rem;color:#334155;line-height:1.45}
-    .vqt-how-list li::marker{color:var(--vqc);font-weight:800}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-vie-quotidienne.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<header class="header">
-  <div class="header-info" style="display:flex;align-items:center;gap:.7rem">
-    <div class="header-title" id="vqTitle">🏠 Vie quotidienne</div>
-  </div>
-  <div class="header-right"></div>
-</header>
+<body class="v2">
 
-<div class="rh-layout">
-  <div class="rh-main">
-    <main class="content" id="vqHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
-      <div style="max-width:1060px;margin:0 auto">
-        <div id="vqWelcome"></div>
-      </div>
-    </main>
-    <iframe id="vqFrame" title="Contenu de la vie quotidienne" style="display:none"></iframe>
+<div class="v2-shell vq-shell" style="max-width:none;margin:22px 24px">
+
+  <!-- ── Navigation latérale ── -->
+  <nav class="vq-side" aria-label="Navigation vie quotidienne">
+    <a class="vq-side-brand" href="accueil.html" title="Retour à l'accueil">
+      <span class="vq-side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span style="line-height:1.2;min-width:0">
+        <span class="vq-side-brand-t" style="display:block">Vie quotidienne</span>
+        <span class="vq-side-brand-s" style="display:block">Le quotidien du résident</span>
+      </span>
+    </a>
+    <div class="vq-side-nav" id="vqSideNav"></div>
+    <div class="vq-side-user" id="vqSideUser"></div>
+  </nav>
+
+  <!-- ── Panneau principal ── -->
+  <div class="vq-main">
+    <div class="vq-topbar">
+      <button type="button" class="vq-back" id="vqBack" onclick="showHome()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Vie quotidienne
+      </button>
+      <div class="vq-topbar-t" id="vqTitle">Vie quotidienne</div>
+      <div class="vq-topbar-m" id="vqTopMeta"></div>
+    </div>
+    <div class="vq-scroll">
+      <main class="v2-body" id="vqHome"><div id="vqWelcome"></div></main>
+      <iframe id="vqFrame" title="Contenu de la vie quotidienne" style="display:none"></iframe>
+    </div>
   </div>
+
 </div>
 
-<!-- Dock flottant (rempli par le script) -->
-<nav class="rh-dock" id="vqDock" aria-label="Navigation vie quotidienne"></nav>
+<!-- ── Mode d'emploi d'un module (gabarit de modale V2) ── -->
+<div class="v2-ov" id="vqTutoOv" role="dialog" aria-modal="true" aria-labelledby="vqTutoT">
+  <div class="v2-md" style="--mc:#0d9488">
+    <div class="v2-md-h">
+      <span class="v2-md-ico" id="vqTutoIco"></span>
+      <div><div class="v2-md-t" id="vqTutoT"></div><div class="v2-md-s" id="vqTutoS"></div></div>
+      <button class="v2-md-x" type="button" onclick="vq2CloseTuto()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b" id="vqTutoB"></div>
+    <div class="v2-md-f">
+      <button class="v2-btn-sec" type="button" onclick="vq2CloseTuto()">Fermer</button>
+      <button class="v2-btn-pri" type="button" onclick="vq2OuvrirTuto()">Ouvrir le module</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
@@ -83,25 +71,26 @@
 <script src="js/incidents-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
-<script src="js/notif-bell.js"></script>
-<script src="js/portal-dock.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/repas-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
 <script>
   Auth.requireAuth();
 
-  // ── Les 10 modules de la vie quotidienne (mêmes data-page, couleurs et icônes que l'ancienne barre) ──
+  // ── Les modules de la vie quotidienne (mêmes data-page, couleurs et icônes qu'avant) ──
   const VQ_NAV = [
     { g:'Suivi quotidien', page:'journee.html', label:'Journée — Ma tournée', perm:'access_journal', c1:'#4f46e5', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2"/><path d="M9 17l2 2 4-4"/></svg>' },
     { g:'Suivi quotidien', page:'transmissions.html', label:'Transmissions', perm:'access_journal', c1:'#3b82f6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v4l.586-.586z"/></svg>' },
     { g:'Suivi quotidien', page:'presences.html', label:'Présences', perm:'access_presences', c1:'#16a34a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
-    { g:'Suivi quotidien', page:'nuit.html', label:'Cahier de nuit', perm:'access_journal', c1:'#312e81', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' },
+    { g:'Suivi quotidien', page:'nuit.html', label:'Cahier de nuit', perm:'access_journal', c1:'#6366f1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' },
     { g:'Cadre de vie', page:'repas.html', label:'Repas & régimes', perm:'view_residents', c1:'#ea580c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>' },
-    { g:'Cadre de vie', page:'activites.html', label:'Activités éducatives', perm:'access_activites', c1:'#6366f1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>' },
+    { g:'Cadre de vie', page:'activites.html', label:'Activités éducatives', perm:'access_activites', c1:'#818cf8', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>' },
     { g:'Soins', page:'medicaments.html', label:'Médicaments', perm:'access_medicaments', c1:'#dc2626', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 21 10a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg>' },
     { g:'Soins', page:'plan-soins.html', label:'Plan de soins', perm:'view_residents', c1:'#0891b2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>' }
   ];
-  // Accès rapides du dock (dans l'ordre) + libellés courts
-  const QUICK = ['transmissions.html', 'presences.html', 'medicaments.html'];
-  const SHORT = { 'transmissions.html':'Transmis.', 'presences.html':'Présences', 'medicaments.html':'Médicam.', };
   const GROUPS = ['Suivi quotidien', 'Cadre de vie', 'Soins'];
 
   const sess = Auth.getSession();
@@ -114,47 +103,29 @@
   const vqFrame = document.getElementById('vqFrame');
   const vqHome = document.getElementById('vqHome');
   const vqTitle = document.getElementById('vqTitle');
-
-  function setActive(page) {
-    if (window.PortalDock) PortalDock.setActive(page);
-  }
+  const vqBack = document.getElementById('vqBack');
 
   // ── Navigation interne : la page s'ouvre dans le panneau ──
   function showHome() {
     vqFrame.style.display = 'none';
     vqFrame.src = 'about:blank';
     vqHome.style.display = '';
-    setActive(null);
-    vqTitle.textContent = '🏠 Vie quotidienne';
+    vqBack.classList.remove('on');
+    vqTitle.textContent = 'Vie quotidienne';
+    window.vqCurrentPage = null;
     sessionStorage.removeItem('vq_last_page');
+    renderVqHome();
   }
   function loadPage(page, label) {
     vqHome.style.display = 'none';
     vqFrame.style.display = '';
     vqFrame.src = page + (page.includes('?') ? '&' : '?') + 'embed=1';
-    setActive(page);
+    vqBack.classList.add('on');
     vqTitle.textContent = label || '';
+    window.vqCurrentPage = page;
     sessionStorage.setItem('vq_last_page', page);
+    if (typeof vq2RenderSide === 'function') vq2RenderSide();
   }
-
-  // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
-  const homeBtn = `<button class="rh-dock-home" id="vqHomeBtn" title="Accueil de la vie quotidienne" aria-label="Accueil de la vie quotidienne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
-  const GROUP_META = {
-    'Suivi quotidien': { short: 'Suivi',        color: '#3b82f6', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="16" x2="13" y2="16"/></svg>' },
-    'Cadre de vie':    { short: 'Cadre de vie', color: '#ea580c', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-    'Soins':           { short: 'Soins',        color: '#dc2626', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' }
-  };
-  const _vqLast = sessionStorage.getItem('vq_last_page');
-  const _vqLastE = _vqLast && entryOf(_vqLast);
-  PortalDock.init({
-    dock: document.getElementById('vqDock'),
-    nav: VQ_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
-    allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
-    current: (_vqLastE && allowed(_vqLastE)) ? _vqLastE.page : null
-  });
-
-  // Bouton accueil du dock → showHome
-  document.getElementById('vqHomeBtn').addEventListener('click', showHome);
 
   // Si une page chargée renvoie vers l'accueil ou la vie quotidienne, on sort de l'iframe
   vqFrame.addEventListener('load', () => {
@@ -165,14 +136,9 @@
     } catch (e) { /* origine différente, on ignore */ }
   });
 
-  // Reprend la rubrique affichée avant un rafraîchissement
-  const lastPage = sessionStorage.getItem('vq_last_page');
-  const lastEntry = lastPage && entryOf(lastPage);
-  if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
-
-  // ── Accueil = tutoriel des modules (rôle · synchro · exemple) ──
-  // Une entrée par page de VQ_NAV ; le texte est écrit ici, les icônes/couleurs
-  // sont réutilisées depuis VQ_NAV pour rester cohérent avec le dock.
+  // ── Mode d'emploi des modules (rôle · mode d'emploi · synchro · exemple) ──
+  // Contenu conservé de la version précédente : il est désormais consultable
+  // depuis le « ? » de chaque tuile d'accès rapide.
   const VQ_TUTO = {
     'journee.html': {
       role: "Le fil de la journée, quart par quart : chaque geste d'accompagnement prévu au projet personnalisé (🎯) se coche d'un tap, horodaté, avec le niveau de soutien apporté.",
@@ -272,38 +238,24 @@
     }
   };
 
-  (function () {
-    const s = Auth.getSession();
-    const el = document.getElementById('vqWelcome');
-    if (!el) return;
-    const prenom = (s && (s.prenom || s.username) || '').trim();
+  // Le rendu vit dans js/vie-quotidienne-v2.js (maquette V2) : tous les
+  // appelants historiques passent par ici.
+  function renderVqHome() { if (typeof vq2Render === 'function') vq2Render(); }
 
-    const cards = VQ_NAV.filter(allowed).map(e => {
-      const t = VQ_TUTO[e.page] || { role: '', sync: '', ex: '' };
-      return `<div class="vqt-card" role="button" tabindex="0" data-page="${escHtml(e.page)}" data-label="${escHtml(e.label)}" style="--vqc:${escHtml(e.c1)}" aria-label="Ouvrir ${escHtml(e.label)}">
-        <div class="vqt-head">
-          <span class="vqt-ic" style="background:${escHtml(e.c1)}">${e.icon}</span>
-          <div><div class="vqt-grp">${escHtml(e.g)}</div><div class="vqt-nm">${escHtml(e.label)}</div></div>
-        </div>
-        <div class="vqt-role">${t.role}</div>
-        ${t.mode && t.mode.length ? `<div class="vqt-how"><div class="vqt-how-h"><span aria-hidden="true">🛠️</span> Mode d'emploi</div><ol class="vqt-how-list">${t.mode.map(st => `<li>${escHtml(st)}</li>`).join('')}</ol></div>` : ''}
-        <div class="vqt-sync"><span aria-hidden="true">🔗</span><span><b>Synchronisé avec :</b> ${t.sync}</span></div>
-        <div class="vqt-ex"><b>Exemple —</b> ${t.ex}</div>
-        <div class="vqt-open">Ouvrir le module <span aria-hidden="true">→</span></div>
-      </div>`;
-    }).join('');
+  // Contrat avec le module de rendu V2
+  window.VQ_NAV = VQ_NAV;
+  window.VQ_TUTO = VQ_TUTO;
+  window.VQ_GROUPS = GROUPS;
+  window.vqAllowed = allowed;
+  window.loadPage = loadPage;
+  window.showHome = showHome;
+  window.vqCurrentPage = null;
 
-    el.innerHTML = `
-      <div class="vqt-intro-t">🏠 Vie quotidienne${prenom ? ' — bonjour ' + escHtml(prenom) : ''}</div>
-      <div class="vqt-intro-s">Cette page réunit tous les modules du quotidien : chaque rubrique s'ouvre ici même, sans quitter la page (dock en bas de l'écran). Voici à quoi sert chaque module, ce avec quoi il se synchronise, et un exemple concret. Cliquez une carte pour l'ouvrir.</div>
-      <div class="vqt-grid">${cards}</div>`;
-
-    // Ouvrir le module au clic ou au clavier (Entrée / Espace)
-    const open = card => { if (card && card.dataset.page) loadPage(card.dataset.page, card.dataset.label); };
-    el.addEventListener('click', ev => open(ev.target.closest('.vqt-card')));
-    el.addEventListener('keydown', ev => {
-      if (ev.key === 'Enter' || ev.key === ' ') { const c = ev.target.closest('.vqt-card'); if (c) { ev.preventDefault(); open(c); } }
-    });
-  })();
+  // Reprend la rubrique affichée avant un rafraîchissement
+  const lastPage = sessionStorage.getItem('vq_last_page');
+  const lastEntry = lastPage && entryOf(lastPage);
+  if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
 </script>
+<script src="js/vie-quotidienne-v2.js"></script>
+<script>renderVqHome();</script>
 </body></html>

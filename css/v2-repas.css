@@ -1,0 +1,188 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   REPAS & RÉGIMES — style spécifique, d'après la maquette
+   « Repas & régimes (vie quotidienne) ». Complète css/v2.css (jamais modifié).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Navigation de date (bandeau haut) ────────────────────────────────── */
+.rp2-datenav { position: relative; }
+body.v2 .rp2-datenav input[type="date"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; border: none; padding: 0; background: none;
+}
+
+/* ── KPI ──────────────────────────────────────────────────────────────── */
+.rp2-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 1240px) { .rp2-stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px)  { .rp2-stats { grid-template-columns: repeat(2, 1fr); } }
+.rp2-stat {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 14px 16px;
+}
+.rp2-stat-b { width: 30px; height: 4px; border-radius: 3px; margin-bottom: 11px; }
+.rp2-stat-n { font-family: var(--v2-display); font-size: 22px; font-weight: 800; line-height: 1; color: #fff; }
+.rp2-stat-l { font-size: 11.5px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Frise « commander à l'avance » ───────────────────────────────────── */
+.rp2-strip-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 9px; }
+.rp2-strip-t {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--v2-t8);
+}
+.rp2-quick { display: flex; gap: 7px; flex-wrap: wrap; }
+.rp2-quick .v2-chip-f { height: 28px; padding: 0 12px; font-size: 11.5px; }
+/* Pas de scroll-behavior:smooth : le recentrage est recalculé à chaque rendu,
+   l'animation faisait lire/écrire scrollLeft pendant la transition. */
+.rp2-strip { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; }
+.rp2-day {
+  flex-shrink: 0; width: 58px; height: 64px; border-radius: 13px; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  cursor: pointer; font: inherit; padding: 0;
+  background: var(--v2-s-kpi); border: 1.5px solid var(--v2-b-ctrl);
+}
+.rp2-day:hover { background: var(--v2-s-hover); }
+.rp2-day .dow { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--v2-t6); }
+.rp2-day .num { font-family: var(--v2-display); font-size: 17px; font-weight: 800; line-height: 1.1; color: var(--v2-t2); }
+.rp2-day .mon { font-size: 9px; font-weight: 600; color: var(--v2-t6); }
+.rp2-day .dot { position: absolute; top: 5px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
+.rp2-day.today { border-color: rgba(34, 211, 238, .5); }
+.rp2-day.on { background: #ea580c; border-color: #ea580c; }
+.rp2-day.on .num { color: #0a1728; }
+.rp2-day.on .dow, .rp2-day.on .mon { color: #7c2d12; }
+
+/* ── Carte teintée « Menus du jour » ──────────────────────────────────── */
+.rp2-menus {
+  background: linear-gradient(135deg, rgba(234, 88, 12, .13), rgba(251, 146, 60, .05)), var(--v2-s-alt);
+  border: 1px solid rgba(234, 88, 12, .22); border-radius: 18px;
+  padding: 18px 20px; margin-bottom: 18px;
+}
+.rp2-menus-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; font-size: 13.5px; font-weight: 700; color: #fed7aa; }
+.rp2-menus-h svg { width: 16px; height: 16px; flex-shrink: 0; color: #fb923c; }
+.rp2-menus-g { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .rp2-menus-g { grid-template-columns: 1fr; } }
+.rp2-menu { background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft); border-radius: 13px; padding: 14px 16px; }
+.rp2-menu-h { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rp2-menu-t { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--mc, #fb923c); }
+.rp2-menu-c { margin-left: auto; font-size: 11px; color: var(--v2-t5); }
+.rp2-mline { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.rp2-mcat { width: 50px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--pc, #5eead4); }
+body.v2 .rp2-minput {
+  flex: 1; min-width: 0; height: 32px; padding: 0 10px; font: inherit; font-size: 12.5px;
+  color: var(--v2-t3); background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--v2-b-soft); border-radius: 9px; box-shadow: none;
+}
+body.v2 .rp2-minput:focus { outline: none; border-color: rgba(251, 146, 60, .55); }
+.rp2-mn { flex-shrink: 0; min-width: 18px; text-align: right; font-size: 11px; font-weight: 700; color: var(--v2-t5); }
+.rp2-msans { font-size: 10.5px; color: var(--v2-t7); margin-top: 8px; }
+
+/* Répartition des régimes */
+.rp2-cuisine { margin-top: 15px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .07); }
+.rp2-cui-t { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8); margin-bottom: 8px; }
+.rp2-bar { display: flex; gap: 2px; height: 10px; border-radius: 6px; overflow: hidden; background: rgba(255, 255, 255, .05); }
+.rp2-bar > span { display: block; }
+.rp2-leg { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 9px; font-size: 11.5px; color: var(--v2-t6); }
+.rp2-leg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+.rp2-leg b { color: #fff; font-weight: 700; }
+
+/* ── Bloc « Inscriptions aux repas » ──────────────────────────────────── */
+.rp2-blk { background: var(--v2-s-alt); border: 1px solid var(--v2-b); border-radius: 18px; overflow: hidden; }
+.rp2-blk-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 22px; border-bottom: 1px solid var(--v2-b); }
+.rp2-hint { font-size: 11.5px; color: var(--v2-t7); }
+.rp2-counts { font-size: 11.5px; color: var(--v2-t5); }
+.rp2-views { display: flex; gap: 7px; margin-left: auto; }
+.rp2-views .v2-chip-f { height: 30px; padding: 0 12px; font-size: 11.5px; }
+.rp2-views .v2-chip-f svg { width: 13px; height: 13px; }
+body.v2 .rp2-search {
+  height: 30px; width: 190px; padding: 0 12px; font: inherit; font-size: 12px;
+  color: var(--v2-t2); background: var(--v2-s-kpi);
+  border: 1px solid var(--v2-b-ctrl); border-radius: var(--v2-r-chip); box-shadow: none;
+}
+.rp2-list { max-height: 560px; overflow-y: auto; }
+
+.rp2-row { display: flex; align-items: center; gap: 14px; padding: 11px 22px; border-bottom: 1px solid var(--v2-b-list); }
+.rp2-row:last-child { border-bottom: none; }
+.rp2-row:hover { background: rgba(255, 255, 255, .02); }
+.rp2-av {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #0a1728;
+}
+.rp2-av img { width: 100%; height: 100%; object-fit: cover; }
+.rp2-id { flex: 1; min-width: 0; }
+.rp2-nom { font-size: 13px; font-weight: 600; color: var(--v2-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp2-ch { font-size: 10.5px; color: var(--v2-t6); }
+.rp2-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; flex-shrink: 0; max-width: 330px; }
+.rp2-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: inherit; font-size: 9.5px; font-weight: 700; padding: 3px 9px;
+  border: none; border-radius: 6px; color: var(--pc, #94a3b8);
+  background: color-mix(in srgb, var(--pc, #94a3b8) 14%, transparent);
+}
+button.rp2-tag { cursor: pointer; }
+button.rp2-tag:hover { background: color-mix(in srgb, var(--pc, #94a3b8) 26%, transparent); }
+.rp2-tag svg { width: 10px; height: 10px; flex-shrink: 0; }
+
+.rp2-acts { display: flex; gap: 6px; flex-shrink: 0; margin-left: 6px; }
+.rp2-mcell { display: flex; flex-direction: column; gap: 4px; }
+.rp2-mb {
+  height: 32px; padding: 0 13px; border-radius: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font: inherit; font-size: 11.5px; font-weight: 700; color: var(--v2-t6);
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b-ctrl);
+}
+.rp2-mb:hover:not(:disabled) { background: var(--v2-s-hover); }
+.rp2-mb.on { color: #0a1728; background: var(--mc, #fb923c); border-color: var(--mc, #fb923c); }
+.rp2-mb:disabled { cursor: default; opacity: .65; }
+.rp2-mb svg { width: 12px; height: 12px; flex-shrink: 0; }
+.rp2-pills { display: flex; gap: 4px; }
+.rp2-pill {
+  flex: 1; padding: 3px 0; border-radius: 6px; cursor: pointer;
+  font: inherit; font-size: 9.5px; font-weight: 800; line-height: 1;
+  color: var(--pc, #5eead4); background: transparent;
+  border: 1px solid color-mix(in srgb, var(--pc, #5eead4) 40%, transparent);
+}
+.rp2-pill.on { color: #0a1728; background: var(--pc, #5eead4); border-color: var(--pc, #5eead4); }
+.rp2-pill:disabled { cursor: default; opacity: .65; }
+
+.rp2-vide { padding: 36px 22px; text-align: center; font-size: 12.5px; color: var(--v2-t7); }
+.rp2-foot { font-size: 11.5px; color: var(--v2-t7); line-height: 1.55; margin: 12px 2px 0; }
+
+/* ── Vue cartes ───────────────────────────────────────────────────────── */
+.rp2-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 16px 22px; }
+@media (max-width: 1100px) { .rp2-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px)  { .rp2-cards { grid-template-columns: 1fr; } }
+.rp2-card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-card2); padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.rp2-card-h { display: flex; align-items: center; gap: 11px; }
+.rp2-card .rp2-tags { justify-content: flex-start; max-width: none; }
+.rp2-card .rp2-acts { margin-left: 0; }
+.rp2-card .rp2-mcell { flex: 1; }
+.rp2-card .rp2-mb { padding: 0 6px; }
+
+/* ── Vue semaine ──────────────────────────────────────────────────────── */
+.rp2-week { padding: 16px 22px; overflow-x: auto; }
+table.rp2-wk { min-width: 900px; }
+table.rp2-wk th, table.rp2-wk td { text-align: center; padding: 9px 8px; vertical-align: middle; }
+table.rp2-wk th.rp2-wk-h { text-align: left; }
+.rp2-wk-d { font-size: 11px; font-weight: 700; color: var(--v2-t3); text-transform: none; }
+.rp2-wk-n { font-size: 10px; font-weight: 600; color: var(--v2-t8); margin-top: 3px; }
+table.rp2-wk th.today .rp2-wk-d { color: #fff; }
+table.rp2-wk th.today, table.rp2-wk td.today { background: color-mix(in srgb, var(--v2-indigo) 12%, transparent); }
+table.rp2-wk th.past, table.rp2-wk td.past { opacity: .6; }
+table.rp2-wk td.rp2-wk-name { display: flex; align-items: center; gap: 10px; text-align: left; min-width: 190px; }
+.rp2-acts-wk { flex-direction: column; gap: 4px; margin-left: 0; align-items: stretch; }
+.rp2-acts-wk .rp2-mb { height: 26px; padding: 0 8px; font-size: 10.5px; }
+.rp2-copy { margin-top: 14px; }
+
+/* ── Impression (feuille cuisine) ─────────────────────────────────────── */
+@media print {
+  .no-print, .rp2-strip, .rp2-strip-head, .rp2-views, .rp2-search,
+  .rp2-datenav, .rp2-copy, .header, .sidebar { display: none !important; }
+  body.v2 { background: #fff !important; color: #111 !important; }
+  body.v2 .v2-shell { margin: 0 !important; border: none !important; box-shadow: none !important; background: #fff !important; }
+  body.v2 .v2-top-title, body.v2 .rp2-nom, body.v2 .rp2-stat-n { color: #111 !important; }
+  body.v2 .rp2-blk, body.v2 .rp2-menus, body.v2 .rp2-stat { border-color: #cbd5e1 !important; background: #fff !important; }
+  .rp2-list { max-height: none; overflow: visible; }
+}

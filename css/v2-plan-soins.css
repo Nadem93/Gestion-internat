@@ -1,0 +1,185 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PLAN DE SOINS — design V2, d'après la maquette
+   « Plan de soins (vie quotidienne).dc.html »
+
+   Ne contient QUE le style propre à cette page : les composants communs
+   (.v2-shell, .v2-top, .v2-body, .v2-blk, .v2-chips/.v2-chip-f, .v2-prog,
+   .v2-ov/.v2-md/.v2-fld…) viennent de css/v2.css, qui n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Halo de la coque : teinte cyan du module Vie quotidienne (maquette). */
+body.v2 .ps2-shell { --v2-halo: rgba(8,145,178,.2); }
+
+/* ── Barre du haut : sélecteur de résident + bouton ──────────────────── */
+.ps2-topact { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+/* Sur écran étroit, le groupe passe à la ligne au lieu de déborder de la coque. */
+@media (max-width: 900px) {
+  .ps2-topact { margin-left: 0; flex-shrink: 1; width: 100%; }
+  body.v2 select#psResident { flex: 1; width: auto; min-width: 140px; }
+}
+
+body.v2 select#psResident {
+  height: 42px; width: 230px; max-width: 100%; flex-shrink: 0;
+  padding: 0 40px 0 14px; border-radius: var(--v2-r-ctrl);
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--v2-t4);
+  background-color: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  cursor: pointer;
+}
+body.v2 select#psResident option { background: #101d31; color: var(--v2-t2); }
+/* Le filtre catégorie reste dans le DOM (contrat avec js/plan-soins.js),
+   mais l'interface visible est la rangée de puces. */
+#psFilterCat { position: absolute; width: 1px; height: 1px; padding: 0;
+  margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Bouton primaire de la barre du haut (maquette : dégradé indigo). */
+.ps2-new {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px;
+  border: none; border-radius: var(--v2-r-ctrl); cursor: pointer; font: inherit;
+  font-size: 13.5px; font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  box-shadow: var(--v2-sh-primary);
+}
+.ps2-new:hover { filter: brightness(1.08); }
+.ps2-new svg { width: 16px; height: 16px; }
+
+/* ── Tuiles de statistiques ──────────────────────────────────────────── */
+.ps2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.ps2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.ps2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.ps2-stat-ico svg { width: 21px; height: 21px; }
+.ps2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--pc); }
+.ps2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+@media (max-width: 900px) { .ps2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .ps2-stats { grid-template-columns: 1fr; } }
+
+/* ── Barre de date (checklist du jour / historique) ──────────────────── */
+.ps2-datebar { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 14px; }
+.ps2-dnav {
+  width: 34px; height: 34px; border-radius: 9px; cursor: pointer; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; font: inherit;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.ps2-dnav:hover { background: var(--v2-s-hover); color: #fff; }
+.ps2-dnav svg { width: 15px; height: 15px; }
+.ps2-dnav[disabled] { opacity: .35; cursor: default; }
+.ps2-dlbl { font-family: var(--v2-display); font-size: 13px; font-weight: 700;
+  color: var(--v2-t2); text-transform: capitalize; }
+.ps2-dtoday {
+  height: 30px; padding: 0 12px; border-radius: 999px; cursor: pointer; font: inherit;
+  font-size: 11.5px; font-weight: 700; color: var(--v2-cyan);
+  background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.3);
+}
+.ps2-dhist { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 999px;
+  color: var(--v2-warn-text); background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.28); }
+
+/* ── Grille des soins ────────────────────────────────────────────────── */
+.ps2-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 1000px) { .ps2-grid { grid-template-columns: 1fr; } }
+
+.ps2-card {
+  position: relative;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-left: 4px solid var(--cc, #818cf8); border-radius: var(--v2-r-kpi);
+  padding: 16px 18px;
+}
+.ps2-card.susp { opacity: .55; }
+.ps2-card.done { border-color: rgba(16,185,129,.3); border-left-color: var(--v2-ok); }
+.ps2-card-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 11px; }
+.ps2-card-ico {
+  width: 40px; height: 40px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--cc) 13%, transparent); color: var(--cc);
+}
+.ps2-card-ico svg { width: 19px; height: 19px; }
+.ps2-card-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
+.ps2-card-c { font-size: 10.5px; color: var(--v2-t6); margin-top: 3px; }
+.ps2-freq { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  color: var(--fc, #818cf8); background: color-mix(in srgb, var(--fc, #818cf8) 11%, transparent); }
+.ps2-card-d { font-size: 12px; color: var(--v2-t4); line-height: 1.5; margin-bottom: 10px; }
+.ps2-card-f { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ps2-res { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.ps2-res-av { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #0a1728; }
+.ps2-res-n { font-size: 11.5px; color: var(--v2-t5); }
+.ps2-interv { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--v2-t7); }
+
+/* Coche « fait » du jour affiché */
+.ps2-fait {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px;
+  border-radius: 999px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700;
+  color: var(--v2-t5); background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.ps2-fait:hover { color: var(--v2-ok-light); border-color: rgba(16,185,129,.4); }
+.ps2-fait .ck { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,.22); display: flex; align-items: center;
+  justify-content: center; font-size: 9px; line-height: 1; }
+.ps2-fait.on { color: var(--v2-ok-light); background: rgba(16,185,129,.13); border-color: rgba(16,185,129,.35); }
+.ps2-fait.on .ck { background: var(--v2-ok); border-color: var(--v2-ok); color: #06281f; }
+.ps2-fait.ro { cursor: default; }
+.ps2-fait.ro.off { opacity: .45; }
+.ps2-susp { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  color: var(--v2-t6); background: rgba(255,255,255,.06); }
+.ps2-doneby { margin-top: 10px; padding-top: 9px; border-top: 1px dashed rgba(16,185,129,.25);
+  font-size: 10.5px; color: var(--v2-ok-light); }
+
+/* Actions de carte (modifier / suspendre / supprimer) */
+.ps2-acts { position: absolute; top: 10px; right: 12px; display: flex; gap: 5px;
+  opacity: 0; transition: opacity .12s; }
+.ps2-card:hover .ps2-acts, .ps2-card:focus-within .ps2-acts { opacity: 1; }
+.ps2-acts button {
+  width: 26px; height: 26px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t6);
+}
+.ps2-acts button:hover { background: var(--v2-s-hover); color: #fff; }
+@media (max-width: 768px) { .ps2-acts { opacity: 1; } }
+
+/* ── Bas de page : objectifs + réévaluations ─────────────────────────── */
+.ps2-bottom { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-top: 16px; align-items: start; }
+@media (max-width: 1000px) { .ps2-bottom { grid-template-columns: 1fr; } }
+
+.ps2-blk-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.ps2-blk-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.ps2-objs { display: flex; flex-direction: column; gap: 14px; }
+.ps2-obj-h { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+.ps2-obj-av { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: #0a1728; }
+.ps2-obj-l { font-size: 12px; color: var(--v2-t3); flex: 1; min-width: 0; }
+.ps2-obj-p { font-size: 11px; font-weight: 700; }
+
+/* Carte « Réévaluations » teintée ambre (maquette) */
+.ps2-reeval {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(239,68,68,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.ps2-reeval .ps2-blk-t { color: var(--v2-warn-text); }
+.ps2-re { display: flex; align-items: center; gap: 12px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-soft); }
+.ps2-re:last-child { border-bottom: none; }
+.ps2-re-d { width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 11%, transparent); color: var(--pc); }
+.ps2-re-j { font-family: var(--v2-display); font-size: 14px; font-weight: 800; line-height: 1; }
+.ps2-re-m { font-size: 8.5px; font-weight: 700; }
+.ps2-re-n { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.ps2-re-w { font-size: 10.5px; color: var(--v2-t6); }
+.ps2-re-l { font-size: 10.5px; font-weight: 700; white-space: nowrap; color: var(--pc); }
+
+.ps2-blk-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.ps2-vide { font-size: 12px; color: var(--v2-t7); padding: 4px 0; }
+
+/* État vide de la grille */
+.ps2-empty { grid-column: 1 / -1; text-align: center; padding: 46px 20px;
+  background: var(--v2-s-alt); border: 1px dashed rgba(255,255,255,.12);
+  border-radius: var(--v2-r-card2); }
+.ps2-empty p { font-size: 13px; color: var(--v2-t6); margin: 0 0 14px; }
