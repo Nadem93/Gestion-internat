@@ -56,7 +56,10 @@ async function initDashboardV2() {
     call('sbGetInterventions'), call('sbGetChambres'), call('sbGetSatisfaction'),
     call('sbGetAnnonces', 6), call('sbGetClimat', d7, t), call('sbGetPlanningEvents')
   ]);
-  const medDistrib = await call('sbGetMedDistribForDate', t);
+  const [medDistrib, vehicules, enveloppes, depenses] = await Promise.all([
+    call('sbGetMedDistribForDate', t), call('sbGetVehiculesListe'),
+    call('sbGetBudgetEnveloppes'), call('sbGetBudgetDemandes')
+  ]);
 
   DV2.data = { residents: residents || [], presDay: presDay || {}, presRange: presRange || {},
     incidents: incidents || [], conges: conges || [], echeances: echeances || [],
@@ -64,7 +67,8 @@ async function initDashboardV2() {
     formations: formations || [], activites: activites || [], inventaire: inventaire || [],
     interventions: interventions || [], chambres: chambres || [], satisfaction: satisfaction || [],
     annonces: annonces || [], climat: climat || [], planning: planning || [],
-    medDistrib: medDistrib || {} };
+    medDistrib: medDistrib || {}, vehicules: vehicules || [],
+    enveloppes: enveloppes || [], depenses: depenses || [] };
 
   renderDashboardV2();
 }
@@ -96,25 +100,38 @@ function renderDashboardV2() {
       </div>
     </div>
 
+    <div class="v2-sep"><span class="v2-sep-txt">Résidents</span><span class="v2-sep-line"></span></div>
+    ${safe(_dv2Residents, 'Résidents')}
+    <div class="v2-g v2-g2" style="margin-top:14px">
+      ${safe(_dv2Occupation, 'Occupation')}
+      ${safe(_dv2Echeances, 'Échéances')}
+    </div>
+
     <div class="v2-sep"><span class="v2-sep-txt">Soins &amp; santé</span><span class="v2-sep-line"></span></div>
     <div class="v2-g v2-g3">
       ${safe(_dv2Medication, 'Médication')}
       ${safe(_dv2Regimes, 'Régimes')}
-      ${safe(_dv2Occupation, 'Occupation')}
+      ${safe(_dv2RdvSemaine, 'RDV médicaux')}
     </div>
     <div style="margin-top:14px">${safe(_dv2Meteo, 'Météo du foyer')}</div>
 
     <div class="v2-sep"><span class="v2-sep-txt">Équipe &amp; RH</span><span class="v2-sep-line"></span></div>
-    <div class="v2-g v2-g3">
+    ${safe(_dv2PlanningSemaine, 'Planning semaine')}
+    <div class="v2-g v2-g2" style="margin-top:14px">
       ${safe(_dv2CongesAValider, 'Congés')}
       ${safe(_dv2Formations, 'Formations')}
-      ${safe(_dv2Echeances, 'Échéances')}
     </div>
 
-    <div class="v2-sep"><span class="v2-sep-txt">Ressources &amp; vie du foyer</span><span class="v2-sep-line"></span></div>
+    <div class="v2-sep"><span class="v2-sep-txt">Ressources &amp; logistique</span><span class="v2-sep-line"></span></div>
     <div class="v2-g v2-g4">
+      ${safe(_dv2Vehicules, 'Véhicules')}
       ${safe(_dv2Stocks, 'Stocks')}
       ${safe(_dv2Maintenance, 'Maintenance')}
+      ${safe(_dv2Budget, 'Budget')}
+    </div>
+
+    <div class="v2-sep"><span class="v2-sep-txt">Vie du foyer</span><span class="v2-sep-line"></span></div>
+    <div class="v2-g v2-g2">
       ${safe(_dv2Activites, 'Activités')}
       ${safe(_dv2Annonces, 'Annonces')}
     </div>
@@ -445,6 +462,94 @@ function _dv2Annonces() {
         <div class="v2-row-meta">${_dv2Esc(a.service || a.auteur || '')} · ${_dv2Date(a.date)}</div></div></div>`).join('')
     : _dv2Empty('Aucune annonce publiée.');
   return _dv2Card({ title: 'Annonces internes', icon: '📣', color: '#6366f1', body });
+}
+
+function _dv2Residents() {
+  const list = DV2.data.residents.filter(r => r.statut !== 'sorti');
+  if (!list.length) return _dv2Card({ title: 'Résidents — aperçu', icon: '👤', color: '#10b981', body: _dv2Empty('Aucun résident.') });
+  const S = { present: ['Présent', 'v2-b-ok'], absent: ['Absent', 'v2-b-danger'], rdv: ['RDV ext.', 'v2-b-info'],
+              sortie: ['Sortie', 'v2-b-info'], hopital: ['Hôpital', 'v2-b-warn'] };
+  const body = `<div class="v2-g v2-g4" style="gap:10px">${list.map(r => {
+    const p = DV2.data.presDay[r.id]; const st = S[p?.statut] || ['Non saisi', 'v2-b-neutral'];
+    const col = r.color || '#818cf8';
+    return `<a class="v2-sub-card" href="resident.html?id=${encodeURIComponent(r.id)}" style="display:flex;align-items:center;gap:9px;text-decoration:none">
+      <span class="v2-av v2-av-sm" style="background:${col}">${_dv2Esc(_dv2Ini(r).toUpperCase())}</span>
+      <span style="flex:1;min-width:0"><span class="v2-row-title" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_dv2Esc(_dv2Nom(r))}</span>
+        <span class="v2-row-meta">${r.chambre ? 'Ch. ' + _dv2Esc(r.chambre) : '—'}</span></span>
+      <span class="v2-badge ${st[1]}">${st[0]}</span></a>`;
+  }).join('')}</div>`;
+  return _dv2Card({ title: 'Résidents — aperçu', icon: '👤', color: '#10b981', meta: `${list.length}`, body });
+}
+
+function _dv2Vehicules() {
+  const list = DV2.data.vehicules || [];
+  if (!list.length) return _dv2Card({ title: 'Flotte véhicules', icon: '🚐', color: '#6366f1', body: _dv2Empty('Aucun véhicule déclaré.') });
+  const t = _dv2Today();
+  const sortis = new Set(DV2.data.planning.filter(p => p.date === t && p.vehicule).map(p => String(p.vehicule)));
+  const body = list.map(v => {
+    const nom = typeof v === 'string' ? v : (v.nom || v.libelle || 'Véhicule');
+    const dehors = sortis.has(String(nom)) || sortis.has(String(v.id));
+    const km = (typeof v === 'object' && (v.kilometrage ?? v.km)) || null;
+    return `<div class="v2-row">
+      <div style="flex:1;min-width:0"><div class="v2-row-title">${_dv2Esc(nom)}</div>
+        <div class="v2-row-meta">${typeof v === 'object' && v.immatriculation ? _dv2Esc(v.immatriculation) + ' · ' : ''}${km ? km + ' km' : 'kilométrage non suivi'}</div></div>
+      <span class="v2-badge ${dehors ? 'v2-b-warn' : 'v2-b-ok'}">${dehors ? 'Sorti' : 'Disponible'}</span></div>`;
+  }).join('');
+  return _dv2Card({ title: 'Flotte véhicules', icon: '🚐', color: '#6366f1', meta: `${list.length}`, body });
+}
+
+function _dv2RdvSemaine() {
+  const t = _dv2Today(), fin = _dv2Shift(7), out = [];
+  DV2.data.residents.forEach(r => ((r.sante?.rdv) || []).forEach(v => {
+    if (v.date >= t && v.date <= fin && !v.fait) out.push({ r, v });
+  }));
+  out.sort((a, b) => (a.v.date || '').localeCompare(b.v.date || ''));
+  const body = out.length ? out.slice(0, 6).map(({ r, v }) => `<div class="v2-row">
+      <span class="v2-av v2-av-sm" style="background:${r.color || '#ec4899'}">${_dv2Esc(_dv2Ini(r).toUpperCase())}</span>
+      <div style="flex:1;min-width:0"><div class="v2-row-title">${_dv2Esc(v.type || 'Rendez-vous')}</div>
+        <div class="v2-row-meta">${_dv2Esc(_dv2Nom(r))} · ${_dv2Date(v.date)}${v.heure ? ' à ' + _dv2Esc(v.heure) : ''}</div></div>
+      ${v.praticien ? `<span class="v2-badge v2-b-neutral">${_dv2Esc(v.praticien)}</span>` : ''}</div>`).join('')
+    : _dv2Empty('Aucun rendez-vous médical sous 7 jours.');
+  return _dv2Card({ title: 'RDV médicaux — 7 jours', icon: '🩺', color: '#ec4899', meta: out.length ? `${out.length}` : '', body });
+}
+
+function _dv2PlanningSemaine() {
+  const days = []; for (let i = 0; i < 7; i++) days.push(_dv2Shift(i));
+  const L = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const shifts = DV2.data.shifts || [];
+  if (!shifts.length) return _dv2Card({ title: 'Planning de la semaine', icon: '📆', color: '#818cf8', body: _dv2Empty('Aucun poste planifié.') });
+  const par = d => shifts.filter(s => s.date === d);
+  const body = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
+    ${days.map(d => { const n = par(d).length;
+      return `<div style="text-align:center">
+        <div style="font-size:10.5px;color:var(--v2-t8);margin-bottom:6px">${L[new Date(d).getDay()]} ${d.slice(8)}</div>
+        <div class="v2-sub-card" style="padding:10px 4px;${n ? '' : 'border-color:rgba(239,68,68,.3)'}">
+          <div class="v2-num" style="font-size:17px;color:${n ? '#fff' : '#fca5a5'}">${n}</div>
+          <div style="font-size:10px;color:var(--v2-t7);margin-top:2px">${n ? 'poste' + (n > 1 ? 's' : '') : 'découvert'}</div>
+        </div></div>`; }).join('')}</div>`;
+  return _dv2Card({ title: 'Planning de la semaine', icon: '📆', color: '#818cf8', body });
+}
+
+function _dv2Budget() {
+  const env = DV2.data.enveloppes || [], dem = DV2.data.depenses || [];
+  if (!env.length && !dem.length) return _dv2Card({ title: 'Dépenses du mois', icon: '💶', color: '#f59e0b', body: _dv2Empty('Aucun budget renseigné.') });
+  const m = _dv2Today().slice(0, 7), parPoste = {};
+  dem.filter(d => (d.date || '').startsWith(m)).forEach(d => {
+    const c = d.categorie || d.poste || 'Autre';
+    parPoste[c] = (parPoste[c] || 0) + (Number(d.montant) || 0);
+  });
+  const budgetDe = c => { const e = env.find(x => (x.categorie || x.nom) === c); return Number(e?.montant) || 0; };
+  const entries = Object.entries(parPoste).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const body = entries.length ? entries.map(([c, v]) => {
+    const b = budgetDe(c), pct = b ? Math.round(v / b * 100) : 0;
+    const col = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#10b981';
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <span class="v2-row-title">${_dv2Esc(c)}</span>
+        <span style="margin-left:auto" class="v2-row-meta">${v.toLocaleString('fr-FR')} €${b ? ' / ' + b.toLocaleString('fr-FR') + ' €' : ''}</span></div>
+      ${b ? `<div class="v2-bar v2-bar-sm"><span style="width:${Math.min(100, pct)}%;background:${col}"></span></div>` : ''}</div>`;
+  }).join('') : _dv2Empty('Aucune dépense ce mois-ci.');
+  return _dv2Card({ title: 'Dépenses du mois', icon: '💶', color: '#f59e0b', body });
 }
 
 function _dv2Journal() {
