@@ -40,13 +40,22 @@ En-tête : « {N} résidents affichés ». Chaque carte :
 
 ---
 
-## ⚠️ Périmètre révisé — DESIGN SEUL
+## ⚠️ Périmètre — DESIGN + FONCTIONNALITÉS (une par une)
 
-Décision du 2026-07-20 : on ré-habille la page **sans ajouter de fonctionnalité**.
+Décision finale du 2026-07-20 : on intègre la maquette **et** ses nouveautés,
+en les traitant **une par une** pour valider au fur et à mesure.
 
-Concrètement pour Résidents :
-- On garde `renderResidents()` et toute la logique existante (recherche, `?q=`, filtres, modales, droits).
-- On applique la coque V2 + `css/v2.css`, et on restructure le markup des cartes selon la maquette.
-- **On n'implémente pas** le rail de détail ni les blocs « Objectifs individualisés », « Suivi médical »,
-  « Dernière transmission » s'ils n'existent pas déjà — ils viendront dans une passe ultérieure.
-- Les chips de filtre ne sont reprises que si un filtre équivalent existe déjà côté V1.
+La page a été migrée en « design seul » lors d'une parenthèse : la coque V2 est
+en place et la logique V1 intacte. **Il reste donc à ajouter les fonctionnalités**
+ci-dessous, une par une.
+
+Reste à faire sur Résidents, dans cet ordre suggéré :
+1. Cartes au format maquette (avatar, âge · chambre, badge statut, référent, objectifs, tags).
+2. Chips de filtre avec compteurs (Tous / Permanent / Temporaire / Stage / Urgence) + tri Nom A→Z.
+3. Rail de détail 372 px : identité, faits en 2 colonnes.
+4. Bloc « Objectifs individualisés » (libellé + %).
+5. Bloc « Suivi médical ».
+6. Bloc « Dernière transmission » (texte + auteur).
+
+`renderResidents()` et la logique existante (recherche, `?q=`, filtres, modales, droits)
+restent la base : on enrichit, on ne remplace pas.
