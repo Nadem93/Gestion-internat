@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Résidents — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* ── Cartes résidents : hauteur uniforme ── */
@@ -41,13 +42,18 @@
     @media(prefers-reduced-motion:reduce){.res-card::after,.res-av-ring::before{animation:none}}
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Résidents</div></div>
-      <div class="header-right">
-        <button class="btn btn-accent btn-sm admin-only btn-add-resident" onclick="openModal('modalResident')">
+    <div class="v2-shell">
+      <div class="v2-top">
+        <a class="v2-logo" href="accueil.html">I</a>
+        <div style="line-height:1.15;min-width:0">
+          <div class="v2-eyebrow">INTERNALIS · Annuaire</div>
+          <div class="v2-top-title">Résidents</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-accent btn-sm admin-only btn-add-resident" onclick="openModal('modalResident')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Ajouter un résident</span>
         </button>
@@ -55,8 +61,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Tableau de bord
         </a>
+        </div>
       </div>
-    </header>
+      <div class="v2-body">
 
     <main class="content">
       <!-- TOOLBAR -->
@@ -84,6 +91,8 @@
       <div id="residentCount" style="font-size:.8rem;color:var(--muted);margin-bottom:1rem"></div>
       <div id="residentsContainer"></div>
     </main>
+      </div>
+    </div>
   </div>
 </div>
 

@@ -528,3 +528,7 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
 body.v2 .accueil-home { background: transparent !important; display: block; min-height: 0; }
 body.v2 .acc-aurora { display: none !important; }
 body.v2 .v2-shell { max-width: 1400px; margin: 22px auto; }
+
+/* Pages migrées « design seul » : le <main class="content"> hérité vit
+   désormais dans .v2-body, qui porte déjà la gouttière. */
+body.v2 .v2-body > .content { padding: 0; max-width: none; margin: 0; }
