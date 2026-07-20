@@ -110,10 +110,13 @@ function tv2Card(t, residents, userId) {
         <div style="font-size:10px;color:var(--v2-t7);margin-top:4px">${escHtml(rp.author || rp.by || '')}</div>
       </div>`).join('')}</div>` : ''}
 
-    <div id="trReply-${t.id}" style="display:none;margin-bottom:10px">
-      <textarea class="v2-fld" id="trReplyTxt-${t.id}" rows="2" placeholder="Répondre…" style="font-size:12px"></textarea>
-      <button type="button" class="v2-btn-pri" style="height:36px;margin-top:8px;font-size:12.5px" onclick="addTrReply('${t.id}')">Envoyer</button>
-    </div>
+    ${_trOpenReplyId === t.id ? `<div style="margin-bottom:10px">
+      <textarea class="v2-fld" id="trReplyInput_${t.id}" rows="2" placeholder="Répondre…" style="font-size:12px;min-height:56px"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button type="button" class="v2-btn-pri" style="height:34px;font-size:12.5px;flex:0 0 auto;padding:0 14px" onclick="addTrReply('${t.id}')">Envoyer</button>
+        <button type="button" class="v2-btn-sec" style="height:34px;font-size:12.5px;flex:0 0 auto;padding:0 14px" onclick="toggleTrReply('${t.id}')">Annuler</button>
+      </div>
+    </div>` : ''}
 
     <div class="v2-tr-f">
       <span class="v2-tr-a">${escHtml(t.authorName || '')}</span>
