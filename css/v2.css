@@ -1,0 +1,326 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — Design System V2 « cockpit » (thème sombre)
+   Extrait des maquettes Claude Design V2.
+
+   Chargé UNIQUEMENT par les pages déjà migrées, en plus de css/style.css.
+   Toutes les classes sont préfixées « v2- » et les règles de base sont
+   portées par body.v2 : aucune page non migrée n'est impactée.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  /* Fonds */
+  --v2-bg: #0a1728;
+  --v2-inset: #0c1a2e;
+
+  /* Surfaces (voiles blancs empilés — jamais opaques) */
+  --v2-s-card: rgba(255,255,255,.035);
+  --v2-s-alt: rgba(255,255,255,.03);
+  --v2-s-kpi: rgba(255,255,255,.04);
+  --v2-s-ctrl: rgba(255,255,255,.05);
+  --v2-s-hover: rgba(255,255,255,.06);
+  --v2-s-sel: rgba(255,255,255,.07);
+  --v2-s-active: rgba(255,255,255,.1);
+  --v2-s-sub: rgba(10,23,40,.5);      /* sous-carte : assombrit, n'éclaircit pas */
+  --v2-s-sub-soft: rgba(10,23,40,.4);
+
+  /* Bordures */
+  --v2-b: rgba(255,255,255,.07);
+  --v2-b-ctrl: rgba(255,255,255,.08);
+  --v2-b-soft: rgba(255,255,255,.06);
+  --v2-b-list: rgba(255,255,255,.05);
+  --v2-b-table: rgba(255,255,255,.04);
+  --v2-b-active: rgba(255,255,255,.18);
+
+  /* Texte (8 niveaux de gris bleutés) */
+  --v2-t1: #ffffff;   /* titre fort, valeur mise en avant */
+  --v2-t2: #eef3fb;   /* nom, titre de ligne — « blanc de travail » */
+  --v2-t3: #dce6f3;   /* titre de carte */
+  --v2-t4: #c6d3e6;   /* corps secondaire */
+  --v2-t5: #9fb2ce;   /* méta accentuée */
+  --v2-t6: #8095b4;   /* sous-titre discret */
+  --v2-t7: #7f93b3;   /* méta faible, placeholder */
+  --v2-t8: #6f86ab;   /* eyebrow, en-tête de tableau */
+  --v2-t9: #5f7a9c;   /* label de groupe */
+
+  /* Accents */
+  --v2-indigo: #6366f1;
+  --v2-indigo-deep: #4f46e5;
+  --v2-indigo-light: #818cf8;
+  --v2-indigo-pale: #a5b4fc;
+  --v2-steel: #4f7fd6;
+  --v2-cyan: #22d3ee;
+  --v2-cyan-pale: #a5f3fc;
+
+  /* Statuts */
+  --v2-ok: #10b981;
+  --v2-ok-light: #5eead4;
+  --v2-warn: #f59e0b;
+  --v2-warn-icon: #fbbf24;
+  --v2-warn-text: #fde68a;
+  --v2-danger: #ef4444;
+  --v2-danger-text: #fca5a5;
+  --v2-pink: #ec4899;
+  --v2-violet: #8b5cf6;
+
+  /* Rayons */
+  --v2-r-shell: 26px;
+  --v2-r-card: 20px;
+  --v2-r-card2: 18px;
+  --v2-r-kpi: 16px;
+  --v2-r-sub: 14px;
+  --v2-r-sm: 13px;
+  --v2-r-ctrl: 12px;
+  --v2-r-chip: 10px;
+  --v2-r-badge: 8px;
+
+  /* Ombres */
+  --v2-sh-shell: 0 50px 120px -40px rgba(0,0,0,.7);
+  --v2-sh-primary: 0 8px 18px -6px rgba(79,70,229,.6);
+
+  /* Typo */
+  --v2-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --v2-display: 'Space Grotesk', 'Inter', sans-serif;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────── */
+body.v2 {
+  margin: 0;
+  font-family: var(--v2-font);
+  background: var(--v2-bg);
+  color: #e8eef7;
+  -webkit-font-smoothing: antialiased;
+}
+body.v2 * { box-sizing: border-box; }
+body.v2 a { text-decoration: none; color: inherit; }
+body.v2 ::-webkit-scrollbar { width: 8px; height: 8px; }
+body.v2 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 5px; }
+
+/* Halo radial coloré : la teinte change par module via --v2-halo */
+body.v2 .v2-shell {
+  background:
+    radial-gradient(1200px 600px at 78% -10%, var(--v2-halo, rgba(56,97,161,.28)), transparent 60%),
+    var(--v2-bg);
+  border-radius: var(--v2-r-shell);
+  border: 1px solid var(--v2-b);
+  box-shadow: var(--v2-sh-shell);
+  overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────────── */
+.v2-top { display: flex; align-items: center; gap: 18px; padding: 22px 30px 18px; flex-wrap: wrap; }
+.v2-logo {
+  width: 42px; height: 42px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  background: linear-gradient(135deg, var(--v2-steel), var(--v2-indigo));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--v2-display); font-weight: 700; font-size: 18px; color: #fff;
+}
+.v2-eyebrow {
+  font-family: var(--v2-display); font-size: 11px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--v2-t8);
+}
+.v2-top-title { font-size: 19px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.v2-sys {
+  display: flex; align-items: center; gap: 9px; padding: 7px 13px; border-radius: 999px;
+  background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
+  font-size: 12.5px; font-weight: 600; color: var(--v2-ok-light);
+}
+.v2-sys-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--v2-ok); box-shadow: 0 0 0 4px rgba(16,185,129,.18); }
+
+/* ── Contenu ──────────────────────────────────────────────────────────── */
+.v2-body { padding: 26px 30px 30px; }
+.v2-h1 { font-family: var(--v2-display); font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: #fff; margin: 0; }
+.v2-sub { font-size: 13px; color: var(--v2-t7); margin-top: 4px; }
+
+/* ── Carte bento ──────────────────────────────────────────────────────── */
+.v2-card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card); padding: 20px;
+}
+.v2-card.pad0 { padding: 0; overflow: hidden; }
+.v2-card-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.v2-card-title { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.v2-card-meta { margin-left: auto; font-size: 11.5px; color: var(--v2-t7); }
+.v2-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+
+/* Carte teintée (alerte / mise en avant) : double couche */
+.v2-card-tint {
+  background: linear-gradient(135deg, var(--v2-tint-a, rgba(245,158,11,.14)), transparent 60%), var(--v2-s-alt);
+  border: 1px solid var(--v2-tint-b, rgba(245,158,11,.22));
+  border-radius: var(--v2-r-card); padding: 20px;
+}
+
+/* Sous-carte encastrée : assombrit */
+.v2-sub-card {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sub); padding: 12px 14px;
+}
+
+/* ── Tuiles KPI ───────────────────────────────────────────────────────── */
+.v2-kpis { display: flex; gap: 12px; flex-wrap: wrap; }
+.v2-kpi {
+  flex: 1; min-width: 118px; background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 14px 16px;
+}
+.v2-kpi-val { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: #fff; }
+.v2-kpi-lbl { font-size: 11px; color: var(--v2-t6); margin-top: 5px; }
+
+/* Tuile live 2x2 */
+.v2-tile {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 15px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ── Badges & pastilles ───────────────────────────────────────────────── */
+.v2-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; padding: 3px 8px;
+  border-radius: var(--v2-r-badge); white-space: nowrap;
+}
+.v2-badge-lg { font-size: 11.5px; padding: 5px 11px; }
+.v2-b-ok { background: rgba(16,185,129,.14); color: var(--v2-ok-light); }
+.v2-b-warn { background: rgba(245,158,11,.14); color: var(--v2-warn-text); }
+.v2-b-danger { background: rgba(239,68,68,.14); color: var(--v2-danger-text); }
+.v2-b-info { background: rgba(99,102,241,.14); color: var(--v2-indigo-pale); }
+.v2-b-neutral { background: rgba(255,255,255,.06); color: var(--v2-t5); }
+
+/* ── Boutons & contrôles ──────────────────────────────────────────────── */
+.v2-btn {
+  height: 42px; padding: 0 16px; border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t4);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background .15s, transform .15s;
+}
+.v2-btn:hover { background: var(--v2-s-hover); }
+.v2-btn:active { transform: scale(.98); }
+.v2-btn-primary {
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  border: none; color: #fff; box-shadow: var(--v2-sh-primary);
+}
+.v2-btn-ico { width: 42px; padding: 0; justify-content: center; }
+.v2-btn-sm { height: 34px; padding: 0 12px; font-size: 12px; border-radius: var(--v2-r-chip); }
+
+.v2-search {
+  height: 42px; flex: 1; max-width: 340px; border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  display: flex; align-items: center; gap: 10px; padding: 0 14px;
+  color: var(--v2-t7); font-size: 13.5px;
+}
+.v2-kbd {
+  font-family: inherit; font-size: 11px; font-weight: 600; color: var(--v2-t5);
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px; padding: 2px 6px;
+}
+.v2-chip {
+  height: 34px; padding: 0 14px; border-radius: var(--v2-r-chip);
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t5); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.v2-chip.on { background: var(--v2-s-active); border-color: var(--v2-b-active); color: #fff; }
+
+/* ── Listes & tableaux ────────────────────────────────────────────────── */
+.v2-row {
+  display: flex; align-items: center; gap: 13px;
+  padding: 11px 0; border-bottom: 1px solid var(--v2-b-list);
+}
+.v2-row:last-child { border-bottom: none; }
+.v2-row-title { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.v2-row-meta { font-size: 11px; color: var(--v2-t7); margin-top: 2px; }
+
+.v2-table { width: 100%; border-collapse: collapse; }
+.v2-table th {
+  text-align: left; padding: 11px 16px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  background: var(--v2-s-alt); border-top: 1px solid var(--v2-b-soft); border-bottom: 1px solid var(--v2-b-soft);
+}
+.v2-table td {
+  padding: 11px 16px; font-size: 12.5px; color: var(--v2-t4);
+  border-bottom: 1px solid var(--v2-b-table);
+}
+.v2-table tr:last-child td { border-bottom: none; }
+
+/* ── Avatars ──────────────────────────────────────────────────────────── */
+.v2-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--v2-bg);
+}
+.v2-av-sm { width: 30px; height: 30px; font-size: 10.5px; }
+.v2-av-sq { border-radius: var(--v2-r-ctrl); }
+
+/* ── Barres de progression ────────────────────────────────────────────── */
+.v2-bar { height: 9px; border-radius: 6px; background: var(--v2-b-ctrl); overflow: hidden; }
+.v2-bar > span { display: block; height: 100%; border-radius: 6px; }
+.v2-bar-sm { height: 6px; border-radius: 4px; }
+
+/* ── Graphique en barres ──────────────────────────────────────────────── */
+.v2-chart { display: flex; align-items: flex-end; gap: 10px; height: 150px; }
+.v2-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; }
+.v2-chart-bar { width: 100%; border-radius: 6px 6px 3px 3px; background: var(--v2-indigo-light); }
+.v2-chart-lbl { font-size: 10.5px; color: var(--v2-t8); }
+
+/* ── Timeline / agenda ────────────────────────────────────────────────── */
+.v2-tl { display: flex; gap: 13px; padding: 9px 0; }
+.v2-tl-h { width: 44px; flex-shrink: 0; font-family: var(--v2-display); font-size: 12px; font-weight: 700; color: var(--v2-t5); }
+.v2-tl-body { flex: 1; border-left: 2px solid rgba(255,255,255,.09); padding-left: 14px; position: relative; }
+.v2-tl-dot {
+  position: absolute; left: -6px; top: 4px; width: 9px; height: 9px; border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--v2-inset);
+}
+
+/* ── Action rapide ────────────────────────────────────────────────────── */
+.v2-qa {
+  display: flex; align-items: center; gap: 10px; padding: 12px 13px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-sm); color: var(--v2-t3);
+  font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: background .15s, transform .15s;
+}
+.v2-qa:hover { background: var(--v2-s-hover); transform: translateY(-2px); }
+
+/* ── Séparateur de grande section ─────────────────────────────────────── */
+.v2-sep { display: flex; align-items: center; gap: 12px; margin: 26px 0 14px; }
+.v2-sep-line { flex: 1; height: 1px; background: var(--v2-b); }
+.v2-sep-txt {
+  font-family: var(--v2-display); font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--v2-t8);
+}
+
+/* ── Jauge / gros indicateur ──────────────────────────────────────────── */
+.v2-gauge-val { font-family: var(--v2-display); font-size: 44px; font-weight: 800; line-height: .9; color: #fff; }
+.v2-num { font-family: var(--v2-display); font-weight: 800; line-height: 1; }
+
+/* ── Grilles utilitaires ──────────────────────────────────────────────── */
+.v2-g { display: grid; gap: 14px; }
+.v2-g2 { grid-template-columns: 1fr 1fr; }
+.v2-g3 { grid-template-columns: repeat(3, 1fr); }
+.v2-g4 { grid-template-columns: repeat(4, 1fr); }
+.v2-g-main { grid-template-columns: 1fr 340px; }
+.v2-g-15 { grid-template-columns: 1.5fr 1fr; }
+
+/* ── Responsive (les maquettes sont figées à 1400px : on adapte) ──────── */
+@media (max-width: 1200px) {
+  .v2-g-main, .v2-g-15 { grid-template-columns: 1fr; }
+  .v2-g4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 860px) {
+  .v2-g2, .v2-g3 { grid-template-columns: 1fr; }
+  .v2-body { padding: 18px; }
+  .v2-top { padding: 16px 18px 12px; }
+  .v2-shell { border-radius: 0; border-left: none; border-right: none; }
+}
+@media (max-width: 560px) {
+  .v2-g4 { grid-template-columns: 1fr; }
+  .v2-h1 { font-size: 21px; }
+  .v2-search { max-width: none; }
+}
