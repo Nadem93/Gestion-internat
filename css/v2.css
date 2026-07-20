@@ -522,3 +522,9 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
 
 @media (max-width: 1200px) { .v2-mods { grid-template-columns: repeat(3, 1fr); } .v2-kgrid, .v2-qgrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 700px)  { .v2-mods { grid-template-columns: repeat(2, 1fr); } .v2-kgrid, .v2-qgrid { grid-template-columns: 1fr; } .v2-hero-h1 { font-size: 26px; } }
+
+/* Accueil : neutraliser le conteneur clair hérité et centrer la coque
+   sur la largeur du canvas de la maquette (1400 px). */
+body.v2 .accueil-home { background: transparent !important; display: block; min-height: 0; }
+body.v2 .acc-aurora { display: none !important; }
+body.v2 .v2-shell { max-width: 1400px; margin: 22px auto; }
