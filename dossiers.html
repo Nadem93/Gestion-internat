@@ -3,139 +3,193 @@
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Dossiers & suivi — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    html,body{margin:0;height:100%}
-    .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:transparent}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
-    #dsFrame{flex:1;width:100%;border:none;background:#fff}
-
-    /* ── Dock flottant ── */
-    .rh-dock{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:60;
-      display:flex;align-items:center;gap:5px;
-      background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(12px);
-      border-radius:17px;padding:6px 9px;
-      border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(80,90,160,.18);
-      max-width:calc(100vw - 24px);overflow-x:auto}
-    .rh-dock::-webkit-scrollbar{height:0}
-    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
-    .rh-dock-home{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;
-      border-radius:13px;border:none;background:rgba(15,23,42,.05);color:#64748b;cursor:pointer;transition:background .15s,color .15s}
-    .rh-dock-home:hover{background:rgba(15,23,42,.1);color:#334155}
-    .rh-dock-home svg{width:17px;height:17px}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-dossiers.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<header class="header">
-  <div class="header-info" style="display:flex;align-items:center;gap:.7rem">
-    <div class="header-title" id="dsTitle">📂 Dossiers &amp; suivi</div>
-  </div>
-  <div class="header-right"></div>
-</header>
+<body class="v2">
 
-<div class="rh-layout">
-  <div class="rh-main">
-    <main class="content" id="dsHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
-      <div style="max-width:1060px;margin:0 auto">
-        <div id="dsWelcome"></div>
-      </div>
-    </main>
-    <iframe id="dsFrame" title="Contenu des dossiers" style="display:none"></iframe>
+<div class="v2-shell ds-shell">
+
+  <!-- ── Navigation latérale ── -->
+  <nav class="ds-side" aria-label="Navigation dossiers">
+    <a class="ds-side-brand" href="accueil.html" title="Retour à l'accueil">
+      <span class="ds-side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+      <span style="line-height:1.2;min-width:0">
+        <span class="ds-side-brand-t" style="display:block">Dossiers &amp; suivi</span>
+        <span class="ds-side-brand-s" style="display:block">Dossier du résident</span>
+      </span>
+    </a>
+    <div class="ds-side-nav" id="dsSideNav"></div>
+    <div class="ds-side-user" id="dsSideUser"></div>
+  </nav>
+
+  <!-- ── Panneau principal ── -->
+  <div class="ds-main">
+    <div class="ds-topbar">
+      <button type="button" class="ds-back" id="dsBack" onclick="showHome()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Dossiers
+      </button>
+      <div class="ds-topbar-t" id="dsTitle">Dossiers &amp; suivi</div>
+      <div class="ds-topbar-m" id="dsTopMeta"></div>
+    </div>
+    <div class="ds-scroll">
+      <main class="v2-body" id="dsHome"><div id="dsWelcome"></div></main>
+      <iframe id="dsFrame" title="Contenu des dossiers" style="display:none"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Mode d'emploi d'un module (gabarit de modale V2) ── -->
+<div class="v2-ov" id="dsTutoOv" role="dialog" aria-modal="true" aria-labelledby="dsTutoT">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico ds-md-ico" id="dsTutoIco"></span>
+      <div><div class="v2-md-t" id="dsTutoT"></div><div class="v2-md-s" id="dsTutoS"></div></div>
+      <button class="v2-md-x" type="button" onclick="ds2CloseTuto()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b" id="dsTutoB"></div>
+    <div class="v2-md-f">
+      <button class="v2-btn-sec" type="button" onclick="ds2CloseTuto()">Fermer</button>
+      <button class="v2-btn-pri" type="button" onclick="ds2OuvrirTuto()">Ouvrir le module</button>
+    </div>
   </div>
 </div>
 
-<!-- Dock flottant (rempli par le script) -->
-<nav class="rh-dock" id="dsDock" aria-label="Navigation des dossiers"></nav>
+<!-- ── Pièces attendues au dossier (gabarit de modale V2) ── -->
+<div class="v2-ov" id="dsPiecesOv" role="dialog" aria-modal="true" aria-labelledby="dsPiecesT">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico ds-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+      <div><div class="v2-md-t" id="dsPiecesT">Pièces attendues au dossier</div>
+        <div class="v2-md-s">Sert au calcul de la complétude de chaque dossier</div></div>
+      <button class="v2-md-x" type="button" onclick="ds2ClosePieces()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="ds-pc-l" id="dsPiecesList"></div>
+      <div>
+        <label class="v2-fld-l" for="dsPieceLib">Libellé de la pièce</label>
+        <input class="v2-fld" id="dsPieceLib" type="text" placeholder="Pièce d'identité"/>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="dsPieceCat">Catégorie de document</label>
+          <select class="v2-fld" id="dsPieceCat">
+            <option value="">— Aucune —</option>
+            <option value="administratif">Administratif</option>
+            <option value="medical">Médical</option>
+            <option value="scolaire">Scolaire</option>
+            <option value="judiciaire">Judiciaire</option>
+            <option value="contrat">Contrat</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="dsPieceMots">Mots-clés (séparés par des virgules)</label>
+          <input class="v2-fld" id="dsPieceMots" type="text" placeholder="cni, identité, passeport"/>
+        </div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Une pièce est considérée fournie si le résident a un document de cette catégorie, ou dont le nom contient l'un des mots-clés.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button class="v2-btn-sec" type="button" onclick="ds2ClosePieces()">Fermer</button>
+      <button class="v2-btn-pri" type="button" id="dsPieceAdd" onclick="ds2AddPiece()">Ajouter la pièce</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
-<script src="js/messages-supabase.js"></script>
-<script src="js/journal-supabase.js"></script>
+<script src="js/admissions-supabase.js"></script>
 <script src="js/ppe-supabase.js"></script>
-<script src="js/incidents-supabase.js"></script>
-<script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
-<script src="js/notif-bell.js"></script>
-<script src="js/portal-dock.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/documents-resident-supabase.js"></script>
+<script src="js/evaluations-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/cvs-supabase.js"></script>
+<script src="js/satisfaction-supabase.js"></script>
+<script src="js/repertoire-supabase.js"></script>
 <script src="js/portal-tuto-data.js"></script>
-<script src="js/portal-tuto.js"></script>
 <script>
   Auth.requireAuth();
 
-  // ── Les 11 rubriques (mêmes data-page, permissions, 1re couleur et icônes que l'ancienne barre) ──
+  // ── Les 11 rubriques (mêmes data-page et permissions qu'avant ;
+  //    couleurs et icônes reprises de la maquette V2) ──
   const DS_NAV = [
-    { g:'Admission & parcours', page:'admissions.html', label:'Admissions', perm:'access_admissions', c1:'#4f46e5', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>' },
-    { g:'Admission & parcours', page:'ppe.html', label:'Avenants', perm:'access_ppe', c1:'#dc2626', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
-    { g:'Admission & parcours', page:'echeances.html', label:'Échéancier', perm:'view_residents', c1:'#0369a1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>' },
-    { g:'Documents & évaluations', page:'documents.html', label:'Documents', perm:'access_documents', c1:'#8b5cf6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
-    { g:'Documents & évaluations', page:'objectifs.html', label:'Objectifs & évaluations', perm:'view_residents', c1:'#d97706', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' },
-    { g:'Documents & évaluations', page:'plan-soins.html', label:'Plan de soins', perm:'view_residents', c1:'#0891b2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>' },
-    { g:'Documents & évaluations', page:'fiche-liaison.html', label:'Fiche de liaison hosp.', perm:'view_residents', c1:'#dc2626', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' },
-    { g:'Vie sociale & qualité', page:'cvs.html', label:'Vie sociale (CVS)', perm:'access_cvs', c1:'#16a34a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-    { g:'Vie sociale & qualité', page:'satisfaction.html', label:'Satisfaction résidents', perm:'view_residents', c1:'#f59e0b', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
-    { g:'Vie sociale & qualité', page:'eig.html', label:'Registre EIG', perm:'view_incidents', c1:'#b91c1c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
-    { g:'Vie sociale & qualité', page:'repertoire.html', label:'Répertoire', perm:'access_repertoire', c1:'#7c3aed', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' }
+    { g:'Admission & parcours', page:'admissions.html', label:'Admissions', perm:'access_admissions', c1:'#818cf8', icon:'<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>' },
+    { g:'Admission & parcours', page:'ppe.html', label:'Avenants (PPE)', perm:'access_ppe', c1:'#f87171', icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>' },
+    { g:'Admission & parcours', page:'echeances.html', label:'Échéancier', perm:'view_residents', c1:'#38bdf8', icon:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/>' },
+    { g:'Documents & évaluations', page:'documents.html', label:'Documents', perm:'access_documents', c1:'#a78bfa', icon:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>' },
+    { g:'Documents & évaluations', page:'objectifs.html', label:'Objectifs & évaluations', perm:'view_residents', c1:'#a5b4fc', icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
+    { g:'Documents & évaluations', page:'plan-soins.html', label:'Plan de soins', perm:'view_residents', c1:'#38bdf8', icon:'<path d="M9 12h6m-3-3v6"/><circle cx="12" cy="12" r="10"/>' },
+    { g:'Documents & évaluations', page:'fiche-liaison.html', label:'Fiche de liaison hosp.', perm:'view_residents', c1:'#f87171', icon:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>' },
+    { g:'Vie sociale & qualité', page:'cvs.html', label:'Vie sociale (CVS)', perm:'access_cvs', c1:'#4ade80', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' },
+    { g:'Vie sociale & qualité', page:'satisfaction.html', label:'Satisfaction', perm:'view_residents', c1:'#fcd34d', icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
+    { g:'Vie sociale & qualité', page:'eig.html', label:'Registre EIG', perm:'view_incidents', c1:'#ef4444', icon:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
+    { g:'Vie sociale & qualité', page:'repertoire.html', label:'Répertoire', perm:'access_repertoire', c1:'#a78bfa', icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' }
   ];
-  // Accès rapides du dock (dans l'ordre) + libellés courts
-  const QUICK = ['admissions.html', 'documents.html', 'objectifs.html', 'cvs.html', 'echeances.html'];
-  const SHORT = { 'admissions.html':'Admissions', 'documents.html':'Documents', 'objectifs.html':'Objectifs', 'cvs.html':'CVS', 'echeances.html':'Échéancier' };
-  const GROUPS = ['Admission & parcours', 'Documents & évaluations', 'Vie sociale & qualité'];
+  const DS_GROUPS = ['Admission & parcours', 'Documents & évaluations', 'Vie sociale & qualité'];
 
   const sess = Auth.getSession();
   // Masquage par permission : admin/superadmin voient tout ; sinon hasPermission
-  const allowed = e => {
+  const dsAllowed = e => {
     if (!e.perm) return true;
     return !!sess && (sess.role === 'admin' || sess.role === 'superadmin' || hasPermission(sess.userId, e.perm));
   };
   const entryOf = page => DS_NAV.find(e => e.page === page);
 
+  // `const` au premier niveau d'un script classique ne crée PAS de propriété
+  // sur window : le module de rendu (js/dossiers-v2.js) lit ces trois valeurs
+  // via window, on les y publie explicitement.
+  window.DS_NAV = DS_NAV;
+  window.DS_GROUPS = DS_GROUPS;
+  window.dsAllowed = dsAllowed;
+
   const dsFrame = document.getElementById('dsFrame');
   const dsHome = document.getElementById('dsHome');
   const dsTitle = document.getElementById('dsTitle');
+  const dsBack = document.getElementById('dsBack');
 
-  function setActive(page) {
-    if (window.PortalDock) PortalDock.setActive(page);
-  }
-
-  // ── Navigation interne : la page s'ouvre dans le panneau, le dock reste visible ──
+  // ── Navigation interne : la page s'ouvre dans le panneau ──
   function showHome() {
     dsFrame.style.display = 'none';
     dsFrame.src = 'about:blank';
     dsHome.style.display = '';
-    setActive(null);
-    dsTitle.textContent = '📂 Dossiers & suivi';
+    dsBack.classList.remove('on');
+    dsTitle.textContent = 'Dossiers & suivi';
+    window.dsCurrentPage = null;
     sessionStorage.removeItem('ds_last_page');
+    renderDsHome();
   }
   function loadPage(page, label) {
     dsHome.style.display = 'none';
     dsFrame.style.display = '';
     dsFrame.src = page + (page.includes('?') ? '&' : '?') + 'embed=1';
-    setActive(page);
+    dsBack.classList.add('on');
     dsTitle.textContent = label || '';
+    window.dsCurrentPage = page;
     sessionStorage.setItem('ds_last_page', page);
+    if (typeof ds2RenderSide === 'function') ds2RenderSide();
   }
 
-  // ── Dock « par catégories » — 1 pastille par groupe + popover (composant partagé) ──
-  const homeBtn = `<button class="rh-dock-home" id="dsHomeBtn" title="Accueil des dossiers" aria-label="Accueil des dossiers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>`;
-  const GROUP_META = {
-    'Admission & parcours':     { short: 'Admission',  color: '#4f46e5', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>' },
-    'Documents & évaluations':  { short: 'Documents',  color: '#8b5cf6', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
-    'Vie sociale & qualité':    { short: 'Vie sociale', color: '#16a34a', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' }
-  };
-  const _dsLast = sessionStorage.getItem('ds_last_page');
-  const _dsLastE = _dsLast && entryOf(_dsLast);
-  PortalDock.init({
-    dock: document.getElementById('dsDock'),
-    nav: DS_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
-    allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
-    current: (_dsLastE && allowed(_dsLastE)) ? _dsLastE.page : null
-  });
-
-  // Maison : accueil de la rubrique
-  document.getElementById('dsHomeBtn').addEventListener('click', showHome);
+  // Ancienne fonction de rendu de l'accueil : elle délègue au module V2,
+  // pour que tous les appelants existants continuent de marcher.
+  function renderDsHome() {
+    if (typeof ds2Render === 'function') ds2Render();
+  }
 
   // Si une page chargée renvoie vers l'accueil ou les dossiers, on sort de l'iframe
   dsFrame.addEventListener('load', () => {
@@ -145,20 +199,14 @@
       else if (f === 'dossiers.html') window.top.location.href = 'dossiers.html';
     } catch (e) { /* origine différente, on ignore */ }
   });
-
-  // Reprend la rubrique affichée avant un rafraîchissement
-  const lastPage = sessionStorage.getItem('ds_last_page');
-  const lastEntry = lastPage && entryOf(lastPage);
-  if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
-
-  // ── Accueil = tutoriel des rubriques (rôle · mode d'emploi · synchro · exemple) ──
-  (function () {
-    const s = Auth.getSession();
-    const prenom = (s && (s.prenom || s.username) || '').trim();
-    PortalTuto.render({
-      mount: 'dsWelcome', nav: DS_NAV, allowed,
-      onOpen: loadPage, title: '📂 Dossiers & suivi', greetingName: prenom
-    });
-  })();
+</script>
+<script src="js/dossiers-v2.js"></script>
+<script>
+  // Rendu de l'accueil, puis reprise éventuelle de la rubrique affichée
+  // avant un rafraîchissement.
+  renderDsHome();
+  const _dsLast = sessionStorage.getItem('ds_last_page');
+  const _dsLastE = _dsLast && entryOf(_dsLast);
+  if (_dsLastE && dsAllowed(_dsLastE)) loadPage(_dsLastE.page, _dsLastE.label);
 </script>
 </body></html>

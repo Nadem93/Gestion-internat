@@ -1,248 +1,213 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Objectifs &amp; évaluations — FTR</title>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Objectifs &amp; grilles d'évaluation — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-.ob-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem}
-.ob-stat{background:#fff;border:1px solid #dbeafe;border-radius:10px;padding:.65rem .85rem;text-align:center}
-.ob-stat-num{font-size:1.5rem;font-weight:800;line-height:1;color:var(--primary);font-variant-numeric:tabular-nums}
-.ob-stat-lbl{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-top:4px}
-.ob-toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1.25rem}
-.ob-toolbar select{font-size:.8rem;padding:.35rem .6rem;border:1px solid var(--border);border-radius:8px;background:#fff;max-width:100%}
-.ob-res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.85rem}
-.ob-res-card{position:relative;display:flex;flex-direction:column;gap:.6rem;padding:1rem 1rem .75rem;background:#fff;border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;font-family:inherit;transition:box-shadow .15s,transform .15s;overflow:hidden}
-.ob-res-card:hover{box-shadow:0 6px 18px rgba(15,43,74,.12);transform:translateY(-2px)}
-.ob-res-hair{position:absolute;top:0;left:0;right:0;height:3px}
-.ob-res-top{display:flex;align-items:center;gap:.85rem}
-.ob-res-nom{font-weight:800;font-size:.9rem;color:var(--text)}
-.ob-res-meta{font-size:.72rem;color:var(--muted);margin-top:2px}
-.ob-res-bdgs{display:flex;flex-wrap:wrap;gap:.3rem}
-.ob-bdg{display:inline-flex;align-items:center;gap:.25rem;font-size:.66rem;font-weight:700;padding:.18rem .5rem;border-radius:999px;background:#f8fafc;border:0.5px solid #e2e8f0;color:#64748b}
-.ob-bdg b{font-weight:800}
-.ob-bdg-ok{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}
-.ob-bdg-run{background:#fffbeb;border-color:#fde68a;color:#b45309}
-.ob-res-foot{display:flex;align-items:center;gap:.45rem;font-size:.66rem;color:#94a3b8;font-weight:600;border-top:1px dashed #eef2f7;padding-top:.55rem;margin-top:auto}
-.ob-foot-sep{color:#cbd5e1}
-.ob-rgauge{display:inline-flex;align-items:center;gap:.3rem}
-.ob-rgauge b{font-weight:900;color:#334155;font-size:.7rem}
-.ob-rtrack{position:relative;width:38px;height:2px;background:#e2e8f0;border-radius:2px}
-.ob-rdot{position:absolute;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 0 2px #fff}
-/* ── Design C « Aurora Bento » : vue d'ensemble sur panneau aurore clair, cartes premium ── */
-.ob-aurora{background:radial-gradient(90% 80% at 0% 0%,#e0e7ff 0%,transparent 55%),radial-gradient(80% 80% at 100% 15%,#fce7f3 0%,transparent 55%),radial-gradient(90% 90% at 55% 100%,#d1fae5 0%,transparent 55%),#f6f7ff;border-radius:16px;padding:1.1rem}
-.ob-aurora .ob-res-card{background:#fff;border:none;border-radius:16px;box-shadow:0 10px 30px rgba(90,80,180,.14)}
-.ob-aurora .ob-res-card:hover{box-shadow:0 16px 42px rgba(90,80,180,.24);transform:translateY(-2px)}
-.ob-aurora .ob-res-nom{color:#1e1b4b}
-.ob-aurora .ob-bdg{background:#f4f5ff;border:0.5px solid #e6e6f5;color:#5b5b78}
-.ob-aurora .ob-bdg b{color:#1e1b4b}
-.ob-aurora .ob-bdg-ok{background:linear-gradient(135deg,#d1fae5,#e0f2fe);border:none;color:#0f766e}
-.ob-aurora .ob-bdg-run{background:linear-gradient(135deg,#ede9fe,#f5d0fe);border:none;color:#5b21b6}
-.ob-aurora .ob-res-foot{border-top-color:#eef0fb}
-.ob-aurora .ob-rgauge b{color:#4f46e5}
-.ob-aurora .ob-rtrack{background:#ece9ff}
-.ob-aurora .ob-rdot{background:#6366f1;box-shadow:0 2px 6px rgba(99,102,241,.5)}
-.ob-card{margin-bottom:1rem;overflow:hidden;border:1.5px solid #dbeafe}
-.ob-card-head{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.15rem;flex-wrap:wrap}
-.ob-card-title{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-.ob-statut-sel{width:auto;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.24rem .55rem;border-radius:5px;border:1.5px solid;background:#fff;cursor:pointer;font-family:inherit}
-.ob-hex{clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-.ob-eyebrow{font-size:.6rem;font-weight:800;letter-spacing:.14em;color:#0284c7;text-transform:uppercase}
-.ob-chip{display:inline-flex;align-items:center;font-size:.62rem;font-weight:800;letter-spacing:.08em;padding:.22rem .55rem;border-radius:5px;border:1px solid;text-transform:uppercase;white-space:nowrap}
-.ob-axes{border-top:1.5px solid #dbeafe;padding:.85rem 1.15rem 1rem;background:#f8fafc}
-.ob-axe{background:#fff;border:1px solid #dbeafe;border-radius:10px;padding:.6rem .8rem}
-.ob-axe-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.ob-axe-nom{font-weight:600;font-size:.83rem;flex:1;min-width:140px}
-.ob-axe-meta{font-size:.7rem;color:var(--muted)}
-.ob-axe-pct{font-weight:800;font-size:.85rem;min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
-.ob-axe-note{font-size:.74rem;color:var(--g700);margin-top:.25rem}
-.ob-guide{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.6rem .9rem;margin-bottom:1.25rem}
-.ob-guide summary{cursor:pointer;font-weight:700;font-size:.83rem;color:var(--primary);list-style:none}
-.ob-guide summary::-webkit-details-marker{display:none}
-.ob-guide-steps{display:flex;flex-direction:column;gap:.55rem;margin-top:.7rem;font-size:.8rem;color:var(--g700);line-height:1.45}
-.ob-guide-step{display:flex;gap:.6rem;align-items:flex-start}
-.ob-step-num{width:20px;height:20px;border-radius:50%;color:#fff;font-weight:800;font-size:.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.ax-chip{font-size:.72rem;padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:var(--g50);cursor:pointer;font-family:inherit;color:var(--g700);transition:all .12s}
-.ax-chip:hover{background:#eef2ff;border-color:#c7d2fe;color:#4338ca}
-.cat-item{display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .7rem;border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:background .12s}
-.cat-item:hover{background:var(--g50)}
-.cat-item input{margin-top:2px}
-.ob-tabs{display:flex;gap:.35rem;margin-bottom:1.25rem;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.3rem;width:fit-content;max-width:100%}
-.ob-tab{font-size:.82rem;font-weight:600;padding:.45rem .9rem;border-radius:9px;border:none;background:none;cursor:pointer;color:var(--g600);font-family:inherit;transition:all .15s;white-space:nowrap}
-.ob-tab:hover{background:var(--g50);color:var(--text)}
-.ob-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(15,43,74,.25)}
-.ob-step{transition:transform .2s cubic-bezier(.34,1.56,.64,1),background .3s}
-.ob-step[role=radio]{cursor:pointer}
-.ob-step[role=radio]:hover{transform:scale(1.13)}
-.ob-step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@keyframes obStepPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
-.eo-axe{background:var(--g50);border:1px solid var(--border);border-radius:9px;padding:.6rem .8rem}
-.eo-axe-nom{font-weight:600;font-size:.83rem;margin-bottom:.45rem}
-.eo-levels{display:flex;gap:.3rem;flex-wrap:wrap}
-.eo-level{position:relative;font-size:.7rem;font-weight:600;padding:.3rem .55rem;border-radius:999px;border:1.5px solid var(--border);background:#fff;color:var(--g600);cursor:pointer;transition:all .12s;user-select:none}
-.eo-level:hover{border-color:var(--g400)}
-.eo-level input{position:absolute;opacity:0;pointer-events:none}
-.eo-level:has(input:checked){border-color:var(--lc,#6366f1);background:var(--lc,#6366f1);color:#fff}
-.eo-level:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
-.eo-histo{background:#fff;border:1px solid var(--border);border-radius:9px;padding:.45rem .7rem}
-.eo-histo summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;font-size:.78rem}
-.eo-histo summary::-webkit-details-marker{display:none}
-.eo-histo-body{margin-top:.55rem;padding-top:.55rem;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:.3rem;font-size:.76rem}
-@media(max-width:640px){
-  .ob-stats{grid-template-columns:repeat(2,1fr)}
-  .ob-toolbar{flex-direction:column;align-items:stretch}
-  .ob-card-head{gap:.75rem}
-}
-</style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-objectifs.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">🎯 Objectifs &amp; évaluations</div>
-    </div>
-    <div class="header-right"></div>
-  </header>
+  <div class="v2-shell ob2-shell">
 
-  <main class="content">
-    <div style="max-width:980px;margin:0 auto">
-
-      <!-- Onglets -->
-      <div class="ob-tabs" role="tablist" aria-label="Sections">
-        <button id="obTabBtnObjectifs" class="ob-tab active" role="tab" onclick="obSwitchTab('objectifs')">🎯 Objectifs &amp; axes</button>
-        <button id="obTabBtnEvals" class="ob-tab" role="tab" onclick="obSwitchTab('evaluations')">📊 Grilles d'évaluation</button>
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#6366f1,#a5b4fc)" aria-label="Accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Dossiers &amp; suivi</div>
+        <div class="v2-top-title" id="ob2Title">Objectifs &amp; axes</div>
       </div>
-
-      <section id="obTabObjectifs">
-
-      <!-- Stats -->
-      <div class="ob-stats">
-        <div class="ob-stat"><div class="ob-stat-num" id="obStatObjectifs">—</div><div class="ob-stat-lbl">Objectifs suivis</div></div>
-        <div class="ob-stat"><div class="ob-stat-num" id="obStatProgression" style="color:#6366f1">—</div><div class="ob-stat-lbl">Progression moyenne</div></div>
-        <div class="ob-stat"><div class="ob-stat-num" id="obStatAxes" style="color:#d97706">—</div><div class="ob-stat-lbl">Axes de travail</div></div>
-        <div class="ob-stat"><div class="ob-stat-num" id="obStatAtteints" style="color:#16a34a">—</div><div class="ob-stat-lbl">Objectifs atteints</div></div>
-      </div>
-
-      <!-- Filtres -->
-      <div class="ob-toolbar">
-        <select id="obResident" aria-label="Choisir un résident">
-          <option value="">Tous les résidents — vue d'ensemble</option>
-        </select>
-        <select id="obFilterStatut" aria-label="Filtrer par statut">
-          <option value="">Tous les statuts</option>
-          <option value="non_commence">Non commencés</option>
-          <option value="en_cours">En cours</option>
-          <option value="atteint">Atteints</option>
-          <option value="abandonne">Abandonnés</option>
-        </select>
-      </div>
-
-      <!-- Guide -->
-      <details class="ob-guide" id="obGuide">
-        <summary>💡 Comment fonctionne cette page ?</summary>
-        <div class="ob-guide-steps">
-          <div class="ob-guide-step"><span class="ob-step-num" style="background:#6366f1">1</span><div><strong>Assignez des objectifs</strong> au résident : choisissez-le dans la liste ci-dessus puis cliquez sur « Gérer les objectifs ». Les modèles d'objectifs (Autonomie, Santé, Logement…) se créent dans Administration → Objectifs.</div></div>
-          <div class="ob-guide-step"><span class="ob-step-num" style="background:#d97706">2</span><div><strong>Découpez chaque objectif en axes de travail</strong> : des étapes concrètes et mesurables (ex. « Préparer un repas simple en autonomie »), avec une échéance et un responsable si besoin. Des suggestions vous sont proposées.</div></div>
-          <div class="ob-guide-step"><span class="ob-step-num" style="background:#16a34a">3</span><div><strong>Pointez la progression</strong> au fil des semaines en faisant glisser le curseur de chaque axe : l'anneau, les couleurs et la courbe d'évolution se mettent à jour automatiquement. Quand tous les axes sont à 100 %, l'objectif peut être marqué « atteint » 🎉.</div></div>
-        </div>
-      </details>
-
-      <!-- Contenu -->
-      <div id="obList" aria-live="polite"></div>
-
-      </section>
-
-      <!-- Onglet Grilles d'évaluation (MIF / Barthel) -->
-      <section id="obTabEvals" style="display:none">
-        <div id="evStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
-        <div class="toolbar" style="margin-bottom:1.25rem">
-          <select id="evResident" style="width:auto">
-            <option value="">Tous les résidents</option>
-          </select>
-          <select id="evGrille" style="width:auto">
-            <option value="">Toutes les grilles</option>
-            <option value="mif">🧠 MIF</option>
-            <option value="barthel">🚶 Barthel</option>
-            <option value="serafin">🧩 SERAFIN-PH</option>
-          </select>
-          <button id="btnAddEv" class="btn btn-accent btn-sm" onclick="openEvModal()" style="margin-left:auto">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0;vertical-align:-2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <div class="ob2-topact">
+        <span id="ob2ActObj">
+          <button type="button" id="btnGererObj" class="v2-btn v2-btn-primary" onclick="openCatalogue()" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvel objectif
+          </button>
+        </span>
+        <span id="ob2ActEv" style="display:none">
+          <button type="button" id="btnAddEv" class="v2-btn v2-btn-primary" onclick="openEvModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nouvelle évaluation
           </button>
-        </div>
-        <div id="evList"></div>
-      </section>
+        </span>
+      </div>
     </div>
-  </main>
+
+    <div class="v2-body">
+      <main class="content">
+
+        <!-- ONGLETS -->
+        <div class="v2-chips ob2-tabs" role="tablist" aria-label="Sections">
+          <button type="button" id="obTabBtnObjectifs" class="v2-chip-f on" role="tab" aria-selected="true" onclick="obSwitchTab('objectifs')">
+            <span class="dot" style="background:#818cf8"></span>Objectifs &amp; axes
+          </button>
+          <button type="button" id="obTabBtnEvals" class="v2-chip-f" role="tab" aria-selected="false" onclick="obSwitchTab('evaluations')">
+            <span class="dot" style="background:#22d3ee"></span>Grilles d'évaluation
+          </button>
+        </div>
+
+        <!-- ════ ONGLET OBJECTIFS & AXES ════ -->
+        <section id="obTabObjectifs">
+
+          <div class="ob2-kpis">
+            <div class="ob2-kpi" style="--c:#a5b4fc">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatObjectifs">—</div><div class="ob2-kpi-l">Objectifs suivis</div></div>
+            </div>
+            <div class="ob2-kpi" style="--c:#818cf8">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatProgression">—</div><div class="ob2-kpi-l">Progression moyenne</div></div>
+            </div>
+            <div class="ob2-kpi" style="--c:#f59e0b">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatAxes">—</div><div class="ob2-kpi-l">Axes de travail</div></div>
+            </div>
+            <div class="ob2-kpi" style="--c:#10b981">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0z"/><line x1="12" y1="15" x2="12" y2="19"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatAtteints">—</div><div class="ob2-kpi-l">Objectifs atteints</div></div>
+            </div>
+          </div>
+
+          <div class="ob2-filters">
+            <select id="obResident" class="v2-fld" aria-label="Choisir un résident">
+              <option value="">Tous les résidents — vue d'ensemble</option>
+            </select>
+            <select id="obFilterStatut" class="v2-fld" aria-label="Filtrer par statut">
+              <option value="">Tous les statuts</option>
+              <option value="non_commence">Non commencés</option>
+              <option value="en_cours">En cours</option>
+              <option value="atteint">Atteints</option>
+              <option value="abandonne">Abandonnés</option>
+            </select>
+          </div>
+
+          <details class="v2-blk ob2-guide" id="obGuide">
+            <summary>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Comment fonctionne cette page ?
+            </summary>
+            <div class="ob2-guide-steps">
+              <div class="ob2-guide-step"><span class="ob2-guide-n" style="background:#a5b4fc">1</span><div><strong>Assignez des objectifs</strong> au résident : choisissez-le dans la liste ci-dessus puis cliquez sur « Nouvel objectif ». Les modèles d'objectifs (Autonomie, Santé, Logement…) se créent aussi dans Administration → Objectifs.</div></div>
+              <div class="ob2-guide-step"><span class="ob2-guide-n" style="background:#fbbf24">2</span><div><strong>Découpez chaque objectif en axes de travail</strong> : des étapes concrètes et mesurables (ex. « Préparer un repas simple en autonomie »), avec une échéance et un responsable si besoin. Des suggestions vous sont proposées.</div></div>
+              <div class="ob2-guide-step"><span class="ob2-guide-n" style="background:#5eead4">3</span><div><strong>Pointez la progression</strong> au fil des semaines en cliquant sur le palier atteint : la jauge, les couleurs et la courbe d'évolution se mettent à jour automatiquement. Quand tous les axes sont à 100 %, l'objectif peut être marqué « atteint ».</div></div>
+            </div>
+          </details>
+
+          <div id="obList" aria-live="polite"></div>
+        </section>
+
+        <!-- ════ ONGLET GRILLES D'ÉVALUATION ════ -->
+        <section id="obTabEvals" style="display:none">
+          <div class="ob2-kpis" id="evStats"></div>
+
+          <div class="ob2-filters">
+            <select id="evResident" class="v2-fld" aria-label="Filtrer par résident">
+              <option value="">Tous les résidents</option>
+            </select>
+            <div class="v2-chips" id="ev2Chips"></div>
+            <!-- Contrat avec js/evaluations.js : la grille reste pilotée par ce select,
+                 masqué et actionné par les puces ci-dessus. -->
+            <select id="evGrille" class="ob2-hidden" aria-hidden="true" tabindex="-1">
+              <option value="">Toutes les grilles</option>
+              <option value="mif">MIF</option>
+              <option value="barthel">Barthel</option>
+              <option value="serafin">SERAFIN-PH</option>
+            </select>
+          </div>
+
+          <div id="evList"></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
 </div></div>
 
-<!-- MODAL AXE DE TRAVAIL -->
-<div class="modal-overlay" id="modalAxe">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <h3 id="axModalTitle">Nouvel axe de travail</h3>
-      <button class="modal-close" onclick="closeModal('modalAxe')">&times;</button>
+<!-- MODALE — AXE DE TRAVAIL -->
+<div class="modal-overlay v2-ov" id="modalAxe">
+  <div class="v2-md" style="--mc:#38bdf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="axModalTitle">Nouvel axe de travail</div>
+        <div class="v2-md-s">Une étape concrète et mesurable de l'objectif</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAxe')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-      <div id="axModalObjectif" style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm)"></div>
+    <div class="v2-md-b">
+      <div class="ob2-md-info" id="axModalObjectif"></div>
 
-      <div class="form-group">
-        <label for="axNom">Axe de travail *</label>
-        <input type="text" id="axNom" placeholder="Ex : Préparer un repas simple en autonomie"/>
+      <div>
+        <label class="v2-fld-l" for="axNom">Axe de travail *</label>
+        <input type="text" id="axNom" class="v2-fld" placeholder="Ex : Préparer un repas simple en autonomie"/>
       </div>
 
       <div id="axSuggestWrap" style="display:none">
-        <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">Suggestions pour cet objectif</div>
-        <div id="axSuggest" style="display:flex;flex-wrap:wrap;gap:.35rem"></div>
+        <span class="v2-fld-l">Suggestions pour cet objectif</span>
+        <div id="axSuggest" class="ob2-sugg"></div>
       </div>
 
-      <div class="form-group">
-        <label>Niveau d'autonomie : <output id="axProgVal" style="font-weight:800">0%</output></label>
+      <div>
+        <label class="v2-fld-l">Niveau d'autonomie : <output id="axProgVal" style="font-weight:700">0%</output></label>
         <input type="hidden" id="axProgression" value="0"/>
-        <div id="axSteps" role="radiogroup" aria-label="Niveau d'autonomie" style="display:flex;align-items:flex-start;margin-top:.4rem"></div>
+        <div id="axSteps" class="ob2-steps" role="radiogroup" aria-label="Niveau d'autonomie"></div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="form-group">
-          <label for="axEcheance">Échéance visée</label>
-          <input type="date" id="axEcheance"/>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="axEcheance">Échéance visée</label>
+          <input type="date" id="axEcheance" class="v2-fld"/>
         </div>
-        <div class="form-group">
-          <label for="axResp">Responsable</label>
-          <input type="text" id="axResp" placeholder="Ex : éducateur référent"/>
+        <div>
+          <label class="v2-fld-l" for="axResp">Responsable</label>
+          <input type="text" id="axResp" class="v2-fld" placeholder="Ex : éducateur référent"/>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="axNote">Moyens / observations</label>
-        <textarea id="axNote" rows="2" placeholder="Ex : atelier cuisine hebdomadaire avec l'éducateur référent" style="resize:vertical"></textarea>
+      <div>
+        <label class="v2-fld-l" for="axNote">Moyens / observations</label>
+        <textarea id="axNote" class="v2-fld" rows="2" placeholder="Ex : atelier cuisine hebdomadaire avec l'éducateur référent"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalAxe')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveAxe()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAxe')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveAxe()">Enregistrer</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL SAISIE ÉVALUATION -->
-<div class="modal-overlay" id="modalEv">
-  <div class="modal" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-header">
-      <h3 id="evModalTitle">Nouvelle évaluation</h3>
-      <button class="modal-close" onclick="closeModal('modalEv')">&times;</button>
+<!-- MODALE — SAISIE D'UNE ÉVALUATION (MIF / BARTHEL / SERAFIN-PH) -->
+<div class="modal-overlay v2-ov" id="modalEv">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="evModalTitle">Nouvelle évaluation</div>
+        <div class="v2-md-s">Grille d'autonomie du résident</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalEv')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.85rem">
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="form-group">
-          <label>Résident</label>
-          <select id="evModalResidentSel"></select>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="evModalResidentSel">Résident</label>
+          <select id="evModalResidentSel" class="v2-fld"></select>
         </div>
-        <div class="form-group">
-          <label>Grille</label>
-          <select id="evModalGrille">
+        <div>
+          <label class="v2-fld-l" for="evModalGrille">Grille</label>
+          <select id="evModalGrille" class="v2-fld">
             <option value="mif">MIF (18–126)</option>
             <option value="barthel">Barthel (0–100)</option>
             <option value="serafin">SERAFIN-PH — besoins (0–44)</option>
@@ -250,108 +215,124 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Date d'évaluation *</label>
-        <input type="date" id="evModalDate"/>
+      <div>
+        <label class="v2-fld-l" for="evModalDate">Date d'évaluation *</label>
+        <input type="date" id="evModalDate" class="v2-fld"/>
       </div>
 
-      <!-- Score en temps réel -->
-      <div style="padding:.6rem .85rem;background:#f8fafc;border-radius:8px;border:1px solid var(--border);text-align:center" id="evLiveScore">
-        <span style="color:var(--muted);font-size:.85rem">Remplissez les items ci-dessous…</span>
-      </div>
+      <div class="ob2-live" id="evLiveScore">Remplissez les items ci-dessous…</div>
 
-      <!-- Corps du formulaire (MIF ou Barthel) -->
       <div id="evFormBody"></div>
 
-      <div class="form-group">
-        <label>Note clinique</label>
-        <textarea id="evModalNote" rows="2" placeholder="Observations, contexte de l'évaluation…" style="resize:vertical"></textarea>
+      <div>
+        <label class="v2-fld-l" for="evModalNote">Note clinique</label>
+        <textarea id="evModalNote" class="v2-fld" rows="2" placeholder="Observations, contexte de l'évaluation…"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalEv')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEvaluation()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalEv')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveEvaluation()">Enregistrer</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL DÉTAIL ÉVALUATION -->
-<div class="modal-overlay" id="modalEvDetail">
-  <div class="modal" style="max-width:540px;max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-header">
-      <h3>Détail de l'évaluation</h3>
-      <button class="modal-close" onclick="closeModal('modalEvDetail')">&times;</button>
+<!-- MODALE — DÉTAIL D'UNE ÉVALUATION -->
+<div class="modal-overlay v2-ov" id="modalEvDetail">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Détail de l'évaluation</div>
+        <div class="v2-md-s">Score par item et niveau atteint</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalEvDetail')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body" style="flex:1;overflow-y:auto" id="evDetailBody"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalEvDetail')">Fermer</button>
+    <div class="v2-md-b" id="evDetailBody"></div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalEvDetail')">Fermer</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL ÉVALUER UN OBJECTIF (grille 0-4 sur ses axes de travail) -->
-<div class="modal-overlay" id="modalEvalObj">
-  <div class="modal" style="max-width:640px;max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-header">
-      <h3 id="eoModalTitle">Évaluer l'objectif</h3>
-      <button class="modal-close" onclick="closeModal('modalEvalObj')">&times;</button>
+<!-- MODALE — ÉVALUER UN OBJECTIF (grille 0-4 sur ses axes de travail) -->
+<div class="modal-overlay v2-ov" id="modalEvalObj">
+  <div class="v2-md" style="--mc:#38bdf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="eoModalTitle">Évaluer l'objectif</div>
+        <div class="v2-md-s">Chaque axe de travail est noté de 0 à 4</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalEvalObj')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.85rem">
-      <div id="eoModalInfo" style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm)"></div>
+    <div class="v2-md-b">
+      <div class="ob2-md-info" id="eoModalInfo"></div>
 
-      <div class="form-group" style="max-width:220px">
-        <label for="eoDate">Date de l'évaluation *</label>
-        <input type="date" id="eoDate"/>
+      <div style="max-width:240px">
+        <label class="v2-fld-l" for="eoDate">Date de l'évaluation *</label>
+        <input type="date" id="eoDate" class="v2-fld"/>
       </div>
 
-      <!-- Score en temps réel -->
-      <div style="padding:.6rem .85rem;background:#f8fafc;border-radius:8px;border:1px solid var(--border);text-align:center" id="eoLiveScore">
-        <span style="color:var(--muted);font-size:.85rem">Notez chaque axe ci-dessous…</span>
-      </div>
+      <div class="ob2-live" id="eoLiveScore">Notez chaque axe ci-dessous…</div>
 
-      <!-- Grille : un axe = un critère noté de 0 à 4 -->
-      <div id="eoGrid" style="display:flex;flex-direction:column;gap:.6rem"></div>
+      <div id="eoGrid" style="display:flex;flex-direction:column;gap:10px"></div>
 
-      <div class="form-group">
-        <label for="eoComment">Commentaire</label>
-        <textarea id="eoComment" rows="2" placeholder="Contexte, observations de l'équipe…" style="resize:vertical"></textarea>
+      <div>
+        <label class="v2-fld-l" for="eoComment">Commentaire</label>
+        <textarea id="eoComment" class="v2-fld" rows="2" placeholder="Contexte, observations de l'équipe…"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalEvalObj')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEvalObj()">Enregistrer l'évaluation</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalEvalObj')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveEvalObj()">Enregistrer l'évaluation</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL GÉRER LES OBJECTIFS DU RÉSIDENT -->
-<div class="modal-overlay" id="modalCatalogue">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <h3 id="catModalTitle">Nouvel objectif</h3>
-      <button class="modal-close" onclick="closeModal('modalCatalogue')">&times;</button>
+<!-- MODALE — NOUVEL OBJECTIF DU RÉSIDENT -->
+<div class="modal-overlay v2-ov" id="modalCatalogue">
+  <div class="v2-md" style="--mc:#a5b4fc">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="catModalTitle">Nouvel objectif</div>
+        <div class="v2-md-s">Créé puis assigné immédiatement au résident</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCatalogue')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-      <div id="catModalInfo" style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm)"></div>
+    <div class="v2-md-b">
+      <div class="ob2-md-info" id="catModalInfo"></div>
 
-      <div class="form-group">
-        <label for="catNewName">Objectif *</label>
-        <input type="text" id="catNewName" placeholder="Ex : Développer l'autonomie au quotidien" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
+      <div>
+        <label class="v2-fld-l" for="catNewName">Objectif *</label>
+        <input type="text" id="catNewName" class="v2-fld" placeholder="Ex : Développer l'autonomie au quotidien" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
       </div>
 
       <div id="catSuggestWrap" style="display:none">
-        <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem">Suggestions</div>
-        <div id="catSuggest" style="display:flex;flex-wrap:wrap;gap:.35rem"></div>
+        <span class="v2-fld-l">Suggestions</span>
+        <div id="catSuggest" class="ob2-sugg"></div>
       </div>
 
-      <div class="form-group">
-        <label for="catNewDesc">Description</label>
-        <textarea id="catNewDesc" rows="2" placeholder="Objet de l'objectif, contexte…" style="resize:vertical"></textarea>
+      <div>
+        <label class="v2-fld-l" for="catNewDesc">Description</label>
+        <textarea id="catNewDesc" class="v2-fld" rows="2" placeholder="Objet de l'objectif, contexte…"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalCatalogue')">Annuler</button>
-      <button class="btn btn-primary" onclick="catCreateObjectif()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCatalogue')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="catCreateObjectif()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -367,5 +348,6 @@
 <script src="js/config-supabase.js"></script>
 <script src="js/objectifs.js"></script>
 <script src="js/evaluations.js"></script>
+<script src="js/objectifs-v2.js"></script>
 </body>
 </html>

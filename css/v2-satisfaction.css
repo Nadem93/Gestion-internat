@@ -1,0 +1,146 @@
+/* ══════════════════════════════════════════════════════════════════════
+   SATISFACTION RÉSIDENTS — V2
+   D'après la maquette « Satisfaction résidents (dossiers) ».
+   Ne surcharge que cette page ; css/v2.css n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Onglets (chips) : _setTab() hérité bascule la classe .active ────── */
+.v2-chip-f.active { color: #fff; background: var(--v2-s-active); border-color: var(--v2-b-active); }
+.sa2-tabs { margin-bottom: 16px; }
+
+/* ── Tuiles statistiques (4 colonnes, icône + gros chiffre coloré) ───── */
+.sa2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.sa2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.sa2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.sa2-stat-ico svg { width: 21px; height: 21px; display: block; }
+.sa2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--pc); }
+.sa2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+@media (max-width: 1000px) { .sa2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .sa2-stats { grid-template-columns: 1fr; } }
+
+/* ── Corps : deux colonnes (catégories + évolution / jauge + verbatims) ─ */
+.sa2-body { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: start; }
+.sa2-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+@media (max-width: 1080px) { .sa2-body { grid-template-columns: 1fr; } }
+
+/* Méta d'en-tête de bloc + icône de titre (le SVG doit être dimensionné) */
+.sa2-meta { margin-left: auto; font-size: 12px; color: var(--v2-t7); flex-shrink: 0; }
+.sa2-blk-ico { width: 15px; height: 15px; flex-shrink: 0; display: block; }
+.sa2-blk-ico svg { width: 15px; height: 15px; display: block; }
+
+/* ── Score par catégorie ─────────────────────────────────────────────── */
+.sa2-cats { display: flex; flex-direction: column; gap: 15px; }
+.sa2-cat-h { display: flex; align-items: baseline; margin-bottom: 6px; gap: 12px; }
+.sa2-cat-l { font-size: 12.5px; color: var(--v2-t3); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sa2-cat-p { margin-left: auto; flex-shrink: 0; font-family: var(--v2-display);
+  font-size: 12.5px; font-weight: 800; color: var(--pc); }
+.sa2-cat-n { font-size: 10.5px; color: var(--v2-t8); margin-top: 5px; }
+
+/* ── Évolution du score global (barres) ──────────────────────────────── */
+.sa2-evo { display: flex; align-items: flex-end; gap: 12px; height: 140px; }
+.sa2-evo-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 7px; height: 100%; justify-content: flex-end; min-width: 0; }
+.sa2-evo-v { font-size: 10.5px; font-weight: 700; color: var(--v2-warn-icon); }
+.sa2-evo-v.vide { color: var(--v2-t8); }
+.sa2-evo-b { width: 100%; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+.sa2-evo-b.vide { background: rgba(255,255,255,.07); }
+.sa2-evo-l { font-size: 10px; color: var(--v2-t8); white-space: nowrap; }
+
+/* ── Jauge circulaire ────────────────────────────────────────────────── */
+.sa2-gauge-card {
+  background: linear-gradient(135deg, rgba(245,158,11,.16), rgba(252,211,77,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22); border-radius: var(--v2-r-card2);
+  padding: 20px; text-align: center;
+}
+.sa2-gauge { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(#fbbf24 0 var(--p, 0%), rgba(255,255,255,.09) var(--p, 0%) 100%); }
+.sa2-gauge-in { width: 96px; height: 96px; border-radius: 50%; background: var(--v2-inset);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.sa2-gauge-n { font-family: var(--v2-display); font-size: 30px; font-weight: 800; color: #fff; line-height: 1; }
+.sa2-gauge-u { font-size: 10px; color: var(--v2-t6); margin-top: 3px; }
+.sa2-gauge-s { font-size: 12px; color: var(--v2-t4); margin-top: 14px; }
+
+/* ── Verbatims ───────────────────────────────────────────────────────── */
+.sa2-verbs { display: flex; flex-direction: column; gap: 11px; }
+.sa2-verb { background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-ctrl); padding: 12px 14px; border-left: 3px solid var(--pc, #818cf8); }
+.sa2-verb-t { font-size: 12px; color: var(--v2-t3); line-height: 1.5; font-style: italic; }
+.sa2-verb-b { font-size: 10.5px; color: var(--v2-t6); margin-top: 6px; }
+
+/* ── Vue « Questionnaires » : liste des formulaires remplis ──────────── */
+.sa2-list { display: flex; flex-direction: column; gap: 11px; }
+.sa2-f { display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-left: 3px solid var(--pc, #818cf8); border-radius: var(--v2-r-kpi); }
+.sa2-f-sc { width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--v2-display); font-size: 15px; font-weight: 800; color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pc) 28%, transparent); }
+.sa2-f-mid { flex: 1; min-width: 0; }
+.sa2-f-n { font-size: 13px; font-weight: 700; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sa2-f-m { font-size: 11.5px; color: var(--v2-t7); margin-top: 2px; }
+.sa2-f-c { font-size: 11.5px; color: var(--v2-t5); margin-top: 4px; font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sa2-acts { display: flex; gap: 7px; flex-shrink: 0; }
+.sa2-act { width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--ac) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ac) 26%, transparent); color: var(--ac); }
+.sa2-act:hover { background: color-mix(in srgb, var(--ac) 24%, transparent); }
+.sa2-act svg { width: 15px; height: 15px; display: block; }
+
+/* ── Vue « Questions » (admin) ───────────────────────────────────────── */
+.sa2-qadd { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 12px; }
+.sa2-qgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .sa2-qadd, .sa2-qgrid { grid-template-columns: 1fr; } }
+.sa2-qcat { font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--v2-t8); margin: 14px 0 8px; }
+.sa2-qi { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: 11px; margin-bottom: 7px; }
+.sa2-qi-l { flex: 1; min-width: 0; font-size: 12.5px; color: var(--v2-t3); }
+.sa2-qi-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  background: rgba(255,255,255,.06); color: var(--v2-t6); flex-shrink: 0; }
+
+/* ── État vide ───────────────────────────────────────────────────────── */
+.sa2-empty { padding: 46px 20px; text-align: center;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card2); }
+.sa2-empty svg { width: 34px; height: 34px; color: var(--v2-t8); display: block; margin: 0 auto 12px; }
+.sa2-empty-t { font-size: 14px; font-weight: 700; color: var(--v2-t3); }
+.sa2-empty-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 5px; }
+
+/* ── Modale : échelle de réponse par question ────────────────────────── */
+.sa2-qblock + .sa2-qblock { margin-top: 16px; }
+.sa2-q { margin-bottom: 12px; }
+.sa2-q-l { font-size: 12.5px; font-weight: 500; color: var(--v2-t3); margin-bottom: 7px; }
+.sa2-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+.sa2-o { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; min-height: 46px; padding: 6px 3px; border-radius: 10px; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); text-align: center;
+  /* style.css met les <label> en majuscules : la maquette les veut en casse normale */
+  text-transform: none; letter-spacing: normal; margin: 0; }
+.sa2-o input { position: absolute; opacity: 0; width: 0; height: 0; }
+.sa2-o-d { width: 9px; height: 9px; border-radius: 50%; background: var(--oc); opacity: .55; }
+.sa2-o-t { font-size: 9.5px; font-weight: 600; color: var(--v2-t7); line-height: 1.15; }
+.sa2-o:hover { background: var(--v2-s-hover); }
+.sa2-o:has(input:checked) { background: color-mix(in srgb, var(--oc) 16%, transparent);
+  border-color: color-mix(in srgb, var(--oc) 62%, transparent); }
+.sa2-o:has(input:checked) .sa2-o-d { opacity: 1; }
+.sa2-o:has(input:checked) .sa2-o-t { color: #fff; }
+.sa2-o input:focus-visible ~ .sa2-o-t { text-decoration: underline; }
+
+/* Le titre de section de la modale reprend le sous-titre de bloc V2 */
+.sa2-md-cat { font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--v2-t8); margin-bottom: 9px; }

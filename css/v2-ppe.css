@@ -1,0 +1,256 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   AVENANTS AU PROJET PERSONNALISÉ — design V2
+   D'après la maquette « Avenants PPE (dossiers) ».
+   Ne redéfinit rien de css/v2.css : uniquement le spécifique de cette page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Halo du module (rouge/indigo de la maquette) */
+body.v2 .pp2-shell { --v2-halo: rgba(99,102,241,.2); }
+
+/* ── Barre du haut ─────────────────────────────────────────────────── */
+.pp2-topact { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pp2-search {
+  height: 42px; width: 230px; border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t2); font: inherit; font-size: 13px; padding: 0 14px;
+}
+.pp2-search::placeholder { color: var(--v2-t7); }
+.pp2-search:focus { outline: none; border-color: rgba(129,140,248,.55); }
+.pp2-topact .v2-btn svg,
+.pp2-topact .v2-btn-primary svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Les contrats de filtrage de js/ppe.js restent dans le DOM, hors écran */
+.pp2-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── Tuiles de statistiques ────────────────────────────────────────── */
+.pp2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.pp2-stat {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.pp2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--sc, #818cf8) 14%, transparent);
+  color: var(--sc, #818cf8);
+}
+.pp2-stat-ico svg { width: 21px; height: 21px; display: block; }
+.pp2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--sc, #fff); }
+.pp2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Rangée de puces ───────────────────────────────────────────────── */
+#ppeChips { margin-bottom: 16px; }
+.pp2-chip-res { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Grille de cartes ──────────────────────────────────────────────── */
+.pp2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.pp2-card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: transform .15s, border-color .15s;
+}
+.pp2-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ac, #818cf8) 42%, transparent);
+}
+
+.pp2-card-h {
+  padding: 16px 18px; display: flex; align-items: center; gap: 13px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ac, #818cf8) 18%, transparent), transparent);
+}
+.pp2-av {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; color: #0a1728; object-fit: cover;
+}
+.pp2-card-id { flex: 1; min-width: 0; }
+.pp2-name {
+  font-size: 14px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pp2-st {
+  display: inline-block; margin-top: 5px; font-size: 10px; font-weight: 700;
+  padding: 2px 9px; border-radius: 20px;
+}
+.pp2-del {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent; color: var(--v2-t7);
+}
+.pp2-del svg { width: 15px; height: 15px; display: block; }
+.pp2-del:hover { background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.3); color: var(--v2-danger-text); }
+
+.pp2-rows { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; }
+.pp2-r { display: flex; gap: 8px; font-size: 11.5px; min-width: 0; }
+.pp2-r-l { color: var(--v2-t7); width: 78px; flex-shrink: 0; }
+.pp2-r-v {
+  color: var(--v2-t3); font-weight: 600; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pp2-r-v.late { color: var(--v2-danger-text); }
+
+.pp2-foot {
+  display: flex; gap: 8px; padding: 12px 18px; margin-top: auto;
+  background: var(--v2-s-alt); border-top: 1px solid var(--v2-b-soft);
+}
+.pp2-fbtn {
+  flex: 1; min-width: 0; padding: 7px 6px; border-radius: 9px; cursor: pointer;
+  font: inherit; font-size: 11.5px; font-weight: 600; text-align: center;
+  color: var(--v2-t5); background: var(--v2-s-ctrl); border: 1px solid transparent;
+}
+.pp2-fbtn:hover { background: var(--v2-s-hover); color: var(--v2-t2); }
+.pp2-fbtn-pri { color: var(--v2-indigo-pale); background: rgba(129,140,248,.12); }
+.pp2-fbtn-pri:hover { background: rgba(129,140,248,.2); color: #fff; }
+.pp2-fbtn-warn { color: var(--v2-warn-text); background: rgba(245,158,11,.14); }
+.pp2-fbtn-warn:hover { background: rgba(245,158,11,.22); color: #fff; }
+.pp2-fbtn-danger { color: var(--v2-danger-text); background: rgba(239,68,68,.14); }
+.pp2-fbtn-danger:hover { background: rgba(239,68,68,.22); color: #fff; }
+.pp2-fbtn-ico { flex: 0 0 34px; padding: 7px 0; display: flex; align-items: center; justify-content: center; }
+.pp2-fbtn-ico svg { width: 14px; height: 14px; display: block; }
+
+/* ── Liste vide ────────────────────────────────────────────────────── */
+.pp2-vide {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card); padding: 46px 24px; text-align: center;
+}
+.pp2-vide-ico {
+  width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(129,140,248,.12); color: var(--v2-indigo-pale);
+}
+.pp2-vide-ico svg { width: 24px; height: 24px; display: block; }
+.pp2-vide-t { font-size: 14.5px; font-weight: 700; color: var(--v2-t2); }
+.pp2-vide-s { font-size: 12.5px; color: var(--v2-t7); margin: 5px 0 16px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VUE DÉTAILLÉE D'UN AVENANT (#avenantFullView)
+   Le rendu vient de js/ppe.js (dossier par domaines, cycle du PPA,
+   signatures). La maquette ne couvre que la liste : on habille cette vue
+   avec les surfaces sombres du système V2.
+   ══════════════════════════════════════════════════════════════════════════ */
+body.v2 #avenantFullView { max-width: 980px; margin: 0 auto; }
+
+body.v2 .section-card {
+  --dc: #818cf8;
+  background: var(--v2-s-card);
+  border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2);
+  box-shadow: none;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+body.v2 .section-card .section-header {
+  padding: 13px 16px;
+  font-weight: 700; font-size: 13.5px;
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 10px;
+  background: transparent;
+  color: var(--v2-t2);
+  border-bottom: 1px solid color-mix(in srgb, var(--dc, #818cf8) 38%, transparent);
+}
+body.v2 .section-card .sec-ic {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 15px;
+}
+body.v2 .section-card .section-header:hover { background: rgba(255,255,255,.045); }
+body.v2 .section-card .sec-ic {
+  background: color-mix(in srgb, var(--dc, #818cf8) 28%, transparent);
+  color: #fff;
+}
+body.v2 .section-card .section-body {
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: transparent;
+  color: var(--v2-t4);
+  border-left: 3px solid color-mix(in srgb, var(--dc, #818cf8) 70%, transparent);
+}
+body.v2 .section-card .section-body label,
+body.v2 .section-card .section-header .muted-count { color: var(--v2-t6) !important; }
+body.v2 .section-card .section-body strong { color: var(--v2-t2); }
+
+body.v2 .obj-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 130px 1fr;
+  gap: 8px; padding: 8px; align-items: start;
+  background: var(--v2-s-sub);
+  border: 1px solid var(--v2-b-soft);
+  border-radius: 10px;
+}
+body.v2 .obj-row > div { font-size: 12.5px; min-width: 0; }
+body.v2 .obj-row > div label { display: block; font-size: 11px; color: var(--v2-t6); margin-bottom: 2px; }
+body.v2 .obj-row .input { width: 100%; min-width: 0; }
+
+/* Le dossier est un formulaire long : champs plats, sans relief */
+body.v2 #avenantFullView input,
+body.v2 #avenantFullView select,
+body.v2 #avenantFullView textarea {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t2); box-shadow: none; border-radius: 10px;
+}
+body.v2 #avenantFullView input:focus,
+body.v2 #avenantFullView select:focus,
+body.v2 #avenantFullView textarea:focus {
+  outline: none; border-color: rgba(129,140,248,.55);
+  box-shadow: 0 0 0 3px rgba(129,140,248,.16);
+}
+
+/* Pastilles de statut héritées (style.css) */
+body.v2 .badge-ppe.brouillon { background: rgba(245,158,11,.16); color: var(--v2-warn-text); }
+body.v2 .badge-ppe.actif { background: rgba(16,185,129,.16); color: var(--v2-ok-light); }
+body.v2 .badge-ppe.termine { background: rgba(255,255,255,.08); color: var(--v2-t5); }
+
+/* Fonds pastel écrits en dur dans js/ppe.js et non couverts par css/v2.css.
+   Styles inline → !important obligatoire, strictement sur ces valeurs. */
+body.v2 [style*="background:#faf5ff"],
+body.v2 [style*="background:#f5f3ff"],
+body.v2 [style*="background:#eff6ff"] { background: rgba(139,92,246,.14) !important; }
+body.v2 [style*="background:#f0f9ff"],
+body.v2 [style*="background:#f0fdfa"] { background: rgba(34,211,238,.12) !important; }
+body.v2 [style*="background:#fafbfd"],
+body.v2 [style*="background:#e2e8f0"] { background: var(--v2-s-sub) !important; }
+
+body.v2 [style*="#ede9fe"],
+body.v2 [style*="#e9d5ff"] { border-color: rgba(139,92,246,.32) !important; }
+body.v2 [style*="#e0f2fe"],
+body.v2 [style*="#99e5dc"] { border-color: rgba(34,211,238,.32) !important; }
+body.v2 [style*="#cbd5e1"],
+body.v2 [style*="#eef1f6"] { border-color: var(--v2-b-active) !important; }
+
+body.v2 [style*="color:#0369a1"] { color: var(--v2-cyan-pale) !important; }
+body.v2 [style*="color:#7e22ce"], body.v2 [style*="color:#6d28d9"],
+body.v2 [style*="color:#0f766e"] { color: var(--v2-indigo-pale) !important; }
+body.v2 [style*="color:#334155"], body.v2 [style*="color:#475569"],
+body.v2 [style*="color:#64748b"], body.v2 [style*="color:#94a3b8"] { color: var(--v2-t5) !important; }
+body.v2 [style*="color:#1d4ed8"] { color: var(--v2-indigo-pale) !important; }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .pp2-grid { grid-template-columns: repeat(2, 1fr); }
+  .pp2-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 860px) {
+  .pp2-topact { width: 100%; margin-left: 0; }
+  .pp2-search { flex: 1 1 100%; width: auto; min-width: 0; }
+  .pp2-topact .v2-btn { flex: 1; justify-content: center; }
+}
+@media (max-width: 768px) {
+  body.v2 .obj-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .pp2-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .pp2-topact .v2-btn { flex: 1 1 100%; white-space: nowrap; }
+}
+@media (max-width: 520px) {
+  .pp2-stats { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  body.v2 .obj-row { grid-template-columns: 1fr; }
+}

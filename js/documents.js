@@ -68,99 +68,12 @@ function docEcheanceChip(d) {
   else { bg = '#EAF3DE'; fg = '#27500A'; txt = 'Dans ' + days + ' j'; }
   return `<span style="display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;background:${bg};color:${fg};white-space:nowrap">${txt}</span>`;
 }
+// Le rendu de la page est assuré par js/documents-v2.js (design V2), qui
+// remplace cette fonction au chargement. Ce corps ne sert que de garde-fou
+// si le module V2 n'est pas chargé (fiche résident, appel isolé…).
 function renderDocuments() {
-  const container = document.getElementById('documentList');
-  if (!container) return;
-  const list = getAllDocuments();
-  const search = (document.getElementById('docSearchInput')?.value || '').toLowerCase();
-  const filterRes = document.getElementById('docFilterResident')?.value || '';
-  const filterCat = document.getElementById('docFilterCategory')?.value || '';
-  const filterType = document.getElementById('docFilterType')?.value || '';
-  renderFamilleLiensPanel(filterRes);
-
-  let filtered = list;
-  if (filterRes) filtered = filtered.filter(d => d.residentId === filterRes);
-  if (filterType) filtered = filtered.filter(d => (d.type || 'resident') === filterType);
-  if (filterCat) filtered = filtered.filter(d => d.category === filterCat);
-  if (search) filtered = filtered.filter(d =>
-    (d.residentName||'').toLowerCase().includes(search) ||
-    (d.name||'').toLowerCase().includes(search) ||
-    (d.category||'').toLowerCase().includes(search)
-  );
-
-  if (!filtered.length) {
-    container.innerHTML = '<div class="empty" style="padding:3rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><p>Aucun document trouvé</p><button class="btn btn-outline btn-sm" onclick="openDocModal()">Ajouter un document</button></div>';
-    return;
-  }
-
-  container.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.82rem">
-    <thead>
-      <tr style="text-align:left;border-bottom:2px solid var(--border);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">
-        <th style="padding:.5rem .75rem">Document</th>
-        <th style="padding:.5rem .75rem">Résident</th>
-        <th style="padding:.5rem .75rem">Catégorie</th>
-        <th style="padding:.5rem .75rem">Date</th>
-        <th style="padding:.5rem .75rem">Échéance</th>
-        <th style="padding:.5rem .75rem;text-align:center">Télécharger</th>
-      </tr>
-    </thead>
-    <tbody>${(() => {
-    const filterRes = document.getElementById('docFilterResident')?.value;
-    const groupByCat = !!filterRes;
-    let catRows = '';
-    if (groupByCat) {
-      const groups = {};
-      filtered.forEach(d => { const c = d.category || 'autre'; if(!groups[c]) groups[c] = []; groups[c].push(d); });
-      const catOrder = ['administratif','medical','scolaire','judiciaire','contrat','autre'];
-      const catLabels = {administratif:'Administratif',medical:'Médical',scolaire:'Scolaire',judiciaire:'Judiciaire',contrat:'Contrat',autre:'Autre'};
-      let idx = 0;
-      catOrder.forEach(cat => {
-        const docs = groups[cat]; if(!docs) return;
-        catRows += `<tr style="background:var(--g300);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)"><td colspan="6" style="padding:.3rem .75rem;text-align:center">${catLabels[cat]||cat}</td></tr>`;
-        docs.forEach(d => {
-          const overdue = d.dueDate && d.dueDate < today() && !d.done;
-          catRows += `<tr style="border-bottom:1px solid var(--border);background:${idx%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${idx%2===0?'var(--g50)':'var(--g100)'}'">
-        <td style="padding:.35rem .75rem">
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <span style="font-size:1.2rem">${docTypeIcon(d.mimeType)}</span>
-            <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
-          </div>
-        </td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${docAvatarCell(d.residentName)}</td>
-        <td style="padding:.35rem .75rem">${docCatPill(cat, catLabels[cat]||d.category)}</td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
-        <td style="padding:.35rem .75rem">${docEcheanceChip(d)}</td>
-        <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
-          <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
-          ${d.type !== 'resource' && Auth.isAdmin() ? `<button class="btn btn-ghost btn-sm" style="margin-left:.25rem;color:${d.partageFamille ? '#16a34a' : 'var(--muted)'}" onclick="toggleDocPartageFamille('${d.id}')" title="${d.partageFamille ? 'Partagé avec la famille — cliquer pour retirer' : 'Partager ce document avec la famille'}">👪</button>` : ''}
-        </td>
-      </tr>`;
-          idx++;
-        });
-      });
-    } else {
-      filtered.forEach((d, i) => {
-        const overdue = d.dueDate && d.dueDate < today() && !d.done;
-        catRows += `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--g50)':'var(--g100)'};transition:background .1s" onmouseover="this.style.background='var(--g200)'" onmouseout="this.style.background='${i%2===0?'var(--g50)':'var(--g100)'}'">
-        <td style="padding:.35rem .75rem">
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <span style="font-size:1.2rem">${docTypeIcon(d.mimeType)}</span>
-            <span style="font-weight:600;color:${overdue?'#ef4444':'inherit'}">${escHtml(d.name)}</span>
-          </div>
-        </td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${docAvatarCell(d.residentName)}</td>
-        <td style="padding:.35rem .75rem">${d.category ? docCatPill(d.category, d.category.charAt(0).toUpperCase()+d.category.slice(1)) : '<span style="color:var(--muted)">—</span>'}</td>
-        <td style="padding:.35rem .75rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate) : '—'}</td>
-        <td style="padding:.35rem .75rem">${docEcheanceChip(d)}</td>
-        <td style="padding:.35rem .75rem;text-align:center;white-space:nowrap">
-          <button class="btn-dl" onclick="downloadDoc('${d.id}','${d.residentId}')" title="Télécharger"><svg class="dl-svg" width="20" height="20" viewBox="0 0 40 40"><path class="dl-arrow" d="m20 4 v14 m-5 -5 l5 5 5 -5"></path><path class="dl-base" d="m10 28 v4 h 20 v-4"></path></svg></button>
-          ${d.type !== 'resource' && Auth.isAdmin() ? `<button class="btn btn-ghost btn-sm" style="margin-left:.25rem;color:${d.partageFamille ? '#16a34a' : 'var(--muted)'}" onclick="toggleDocPartageFamille('${d.id}')" title="${d.partageFamille ? 'Partagé avec la famille — cliquer pour retirer' : 'Partager ce document avec la famille'}">👪</button>` : ''}
-        </td>
-      </tr>`;
-      });
-    }
-    return catRows;
-  })()}</tbody></table>`;
+  if (typeof dg2Render === 'function') return dg2Render();
+  console.warn('[documents] module V2 absent : rien à rendre');
 }
 
 function openDocModal(residentId) {
@@ -238,10 +151,14 @@ async function saveDocument() {
       // 1er dossier du chemin = uid du compte connecté (RLS bucket justificatifs), pas residentId.
       const uid = await sbAuthUid();
       const path = await sbUploadJustificatif(file, uid || residentId);
+      // uploaded_by existe en base mais n'était jamais renseigné : sans lui,
+      // le bloc « Ajoutés récemment » ne peut pas nommer l'auteur du dépôt.
+      const sess = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
+      const auteur = sess ? `${sess.prenom || ''} ${sess.nom || ''}`.trim() || (sess.username || '') : '';
       const saved = await sbSaveDocumentResident({
         residentId, name: name || file.name, fileName: file.name,
         size: file.size, mimeType: file.type, category, docDate, dueDate,
-        fichierPath: path, type: docType
+        fichierPath: path, type: docType, uploadedBy: auteur
       });
       _docResCache.unshift(saved);
       window._pendingDocFile = null;

@@ -720,7 +720,8 @@ function openEvalObjModal(objId) {
   eoObjId = objId;
   const tplObj = objTemplates().find(o => String(o.id) === String(objId));
   const derniere = getEvalsObj(sv).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
-  document.getElementById('eoModalTitle').textContent = `📊 Évaluer — ${tplObj ? tplObj.name : 'Objectif'}`;
+  // Titre sans emoji : le design V2 s'appuie sur l'icône de la modale.
+  document.getElementById('eoModalTitle').textContent = `Évaluer — ${tplObj ? tplObj.name : 'Objectif'}`;
   document.getElementById('eoModalInfo').textContent =
     `${resNom(r)} · chaque axe de travail est noté de « Non acquis » à « Autonome ». ` +
     `L'enregistrement met à jour la progression des axes (note × 25 %).` +

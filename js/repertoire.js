@@ -12,7 +12,14 @@ function contactColor(org) {
   return CONTACT_COLORS[Math.abs(h) % CONTACT_COLORS.length];
 }
 
+// Le rendu est assuré par js/repertoire-v2.js (maquette « Répertoire »).
+// L'ancien rendu reste disponible tant que le module V2 n'est pas chargé.
 function renderContacts() {
+  if (typeof rep2Render === 'function') return rep2Render();
+  return renderContactsLegacy();
+}
+
+function renderContactsLegacy() {
   const all = getContacts().sort((a,b) => a.organisme.localeCompare(b.organisme));
   const q = (document.getElementById('searchRepertoire')?.value || '').trim().toLowerCase();
   const contacts = q
@@ -79,6 +86,7 @@ function openAddContact() {
   document.getElementById('cAdresse').value = '';
   document.getElementById('cNotes').value = '';
   repSetFormDisabled(false);
+  if (typeof rep2SyncModal === 'function') rep2SyncModal(null, false);
   document.getElementById('contactReadonlyHint').style.display = 'none';
   document.getElementById('btnSaveContact').style.display = '';
   document.getElementById('btnDeleteContact').style.display = 'none';
@@ -102,6 +110,7 @@ function openEditContact(id) {
   document.getElementById('modalContactTitle').textContent = canEdit ? 'Modifier le contact' : 'Contact — lecture seule';
   document.getElementById('contactReadonlyHint').style.display = canEdit ? 'none' : 'flex';
   repSetFormDisabled(!canEdit);
+  if (typeof rep2SyncModal === 'function') rep2SyncModal(c, !canEdit);
   document.getElementById('btnSaveContact').style.display = canEdit ? '' : 'none';
   document.getElementById('btnDeleteContact').style.display = repCanDelete() ? '' : 'none';
   openModal('modalContact');
@@ -122,17 +131,24 @@ async function saveContact() {
     notes: document.getElementById('cNotes').value.trim()
   };
 
+  // Catégorie et favori vivent dans des colonnes ajoutées par
+  // migration-repertoire.sql : elles sont enregistrées à part, et leur absence
+  // n'empêche jamais l'enregistrement du contact lui-même.
+  const extras = (typeof rep2ModalExtras === 'function') ? rep2ModalExtras() : null;
+
   try {
     if (editingContactId) {
       const old = _repCache.find(x => x.id === editingContactId) || {};
       if (!repCanEdit(old)) { toast('Vous ne pouvez modifier que les contacts que vous avez ajoutés', 'error'); return; }
       const saved = await sbSaveRepertoire({ ...old, ...data, id: editingContactId });
       _repCache = _repCache.map(x => x.id === editingContactId ? saved : x);
+      if (extras) await rep2PersistExtras(saved.id, extras);
       toast('Contact modifié', 'success');
     } else {
       data.createdBy = Auth.getSession()?.userId ?? null;
       const saved = await sbSaveRepertoire(data);
       _repCache.push(saved);
+      if (extras) await rep2PersistExtras(saved.id, extras);
       toast('Contact ajouté', 'success');
     }
   } catch (e) { console.error('[saveContact]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
@@ -153,5 +169,11 @@ function deleteContact() {
   })();
 }
 
-document.addEventListener('DOMContentLoaded', async () => { if (requireModule('access_repertoire')) { await loadRepertoireCache(); renderContacts(); } });
-if (typeof registerPageInit === 'function') registerPageInit('repertoire', async () => { await loadRepertoireCache(); renderContacts(); });
+async function loadRepertoirePage() {
+  await loadRepertoireCache();
+  if (typeof rep2Load === 'function') await rep2Load();
+  renderContacts();
+}
+
+document.addEventListener('DOMContentLoaded', async () => { if (requireModule('access_repertoire')) { await loadRepertoirePage(); } });
+if (typeof registerPageInit === 'function') registerPageInit('repertoire', loadRepertoirePage);

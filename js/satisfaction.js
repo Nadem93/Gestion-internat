@@ -56,6 +56,8 @@ function _setTab(t) {
 
 // ─── Dispatch ────────────────────────────────────────────────────────────────
 function renderSat() {
+  // Design V2 : le rendu complet est délégué à js/satisfaction-v2.js.
+  if (typeof sat2Render === 'function') return sat2Render();
   if      (_satViewMode === 'resultats')   renderSatResultats();
   else if (_satViewMode === 'formulaires') renderSatFormulaires();
   else                                     renderSatQuestions();
@@ -63,6 +65,7 @@ function renderSat() {
 
 // ─── Vue résultats ────────────────────────────────────────────────────────────
 function renderSatResultats() {
+  if (typeof sat2Render === 'function') return sat2Render();
   const list = getSat();
   const allQ = getAllQuestions();
   const container = document.getElementById('satContent');
@@ -161,6 +164,7 @@ function _satColor(v) {
 
 // ─── Vue formulaires ──────────────────────────────────────────────────────────
 function renderSatFormulaires() {
+  if (typeof sat2Render === 'function') return sat2Render();
   const list = getSat().slice().sort((a,b) => b.date.localeCompare(a.date));
   const allQ = getAllQuestions();
   const container = document.getElementById('satContent');
@@ -206,6 +210,7 @@ function renderSatFormulaires() {
 
 // ─── Vue questions (admin) ────────────────────────────────────────────────────
 function renderSatQuestions() {
+  if (typeof sat2QuestionsView === 'function') return sat2QuestionsView();
   const container = document.getElementById('satContent');
   if (!container) return;
 
@@ -322,6 +327,7 @@ function openSatModal(id) {
 
   // Générer les questions (défaut + personnalisées)
   const body = document.getElementById('satModalQuestions');
+  if (typeof sat2ModalQ === 'function') { body.innerHTML = sat2ModalQ(allQ, s); openModal('modalSat'); return; }
   const cats = [...new Set(allQ.map(q => q.cat))];
   body.innerHTML = cats.map(cat => {
     const qs = allQ.filter(q => q.cat === cat);

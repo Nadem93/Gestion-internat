@@ -1,114 +1,209 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Documents — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-.doc-card { background:var(--card-bg,#fff); border:1px solid var(--border); border-radius:var(--r); padding:1rem; display:flex; flex-direction:column; gap:.35rem; transition:box-shadow .15s; }
-.doc-card:hover { box-shadow:0 2px 8px rgba(0,0,0,.06); }
-.doc-card .doc-icon { font-size:2rem; text-align:center; margin-bottom:.35rem; }
-.doc-card .doc-name { font-weight:600; font-size:.85rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.doc-card .doc-resident { font-size:.72rem; color:var(--muted); text-align:center; }
-.doc-card .doc-meta { display:flex; flex-wrap:wrap; gap:.35rem; justify-content:center; margin-top:.35rem; font-size:.7rem; color:var(--muted); }
-.doc-card .doc-actions { display:flex; gap:.35rem; margin-top:.5rem; justify-content:center; flex-wrap:wrap; }
-.doc-card.overdue { border-color:#ef4444; }
-</style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-documents.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Documents</div></div>
-      <div class="header-right">
-        <a href="dashboard.html" class="btn btn-ghost btn-sm">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Tableau de bord
-        </a>
-        <button class="btn btn-ghost btn-sm" onclick="openDocModal()">+ Ajouter</button>
-      </div>
-    </header>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell dg2-shell">
 
-    <main class="content">
-      <div class="toolbar" style="margin-bottom:1.5rem;justify-content:center;max-width:760px;margin-left:auto;margin-right:auto">
-        <div class="search-box">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="docSearchInput" placeholder="Résident, document, catégorie…"/>
-        </div>
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="dossiers.html" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)" aria-label="Dossiers &amp; suivi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Dossiers &amp; suivi</div>
+        <div class="v2-top-title">Documents (GED)</div>
+      </div>
+      <div class="dg2-top-act">
+        <label class="dg2-search" for="docSearchInput">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="docSearchInput" placeholder="Résident, document…" aria-label="Rechercher un document"/>
+        </label>
+        <button type="button" class="dg2-new" onclick="openDocModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </button>
+      </div>
+    </div>
+
+    <div class="v2-body">
+
+      <!-- STATISTIQUES -->
+      <div class="dg2-stats" id="docStats"></div>
+
+      <!-- FILTRES PAR CATÉGORIE -->
+      <div class="dg2-filters">
+        <div class="v2-chips" id="docFilters"></div>
         <select id="docFilterType" style="display:none"><option value="">Tous les types</option><option value="resident">Résidents</option><option value="resource">Ressources</option></select>
-        <select id="docFilterResident" style="display:none"><option value="">Tous les résidents</option></select>
-        <select id="docFilterCategory" style="width:auto"><option value="">Toutes catégories</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="ressource">Ressource</option><option value="autre">Autre</option></select>
+        <select id="docFilterCategory" style="display:none"><option value="">Toutes catégories</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="ressource">Ressource</option><option value="autre">Autre</option></select>
+        <select id="docFilterResident" class="v2-fld dg2-res-sel" aria-label="Filtrer par résident"><option value="">Tous les résidents</option></select>
       </div>
-      <div id="famLiensPanel"></div>
-      <div id="documentList"></div>
-    </main>
-  </div>
-</div>
 
-<div class="modal-overlay" id="docModal">
-  <div class="modal modal-sm">
-    <div class="modal-header"><span id="docModalTitle">Ajouter un document</span></div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <!-- COMPTES FAMILLE LIÉS (visible quand un résident est sélectionné) -->
+      <div id="famLiensPanel"></div>
+
+      <!-- GRILLE DES DOCUMENTS -->
+      <div id="documentList"></div>
+
+      <!-- RÉCENTS + MODÈLES -->
+      <div class="dg2-bottom">
+        <div class="v2-blk">
+          <div class="dg2-blk-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="v2-blk-t">Ajoutés récemment</span>
+          </div>
+          <div id="docRecents"></div>
+        </div>
+        <div class="v2-blk">
+          <div class="dg2-blk-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="v2-blk-t">Modèles réutilisables</span>
+          </div>
+          <div id="docModeles"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div></div>
+
+<!-- ══ MODALE : AJOUTER / MODIFIER UN DOCUMENT ══ -->
+<div class="v2-ov" id="docModal">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="docModalTitle">Ajouter un document</div>
+        <div class="v2-md-s">Résident, catégorie et fichier</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('docModal')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
       <input type="hidden" id="docFormId"/>
-      <div class="form-group"><label>Type de document</label><div style="display:flex;gap:.75rem;padding:.25rem 0"><label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="docType" value="resident" checked onchange="toggleDocType('resident')"/> Résident</label><label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="docType" value="resource" onchange="toggleDocType('resource')"/> Ressource</label></div></div>
-      <div class="form-group" id="docFormResidentGroup"><label>Résident *</label><select id="docFormResident" class="form-input"></select></div>
-      <div class="form-group"><label>Nom du document</label><input type="text" id="docFormName" class="form-input" placeholder="ex: Contrat de séjour"/></div>
-      <div class="form-group"><label>Date du document</label><input type="date" id="docFormDate" class="form-input"/></div>
-      <div class="form-group"><label>Date d'échéance</label><input type="date" id="docFormDueDate" class="form-input"/></div>
-      <div class="form-group"><label>Catégorie</label><select id="docFormCategory" class="form-input"><option value="">—</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="autre">Autre</option></select></div>
-      <div class="form-group">
-        <label>Fichier</label>
-        <div class="doc-upload-zone" onclick="document.getElementById('docFileInput').click()" style="cursor:pointer;padding:1.25rem;text-align:center;border:2px dashed var(--border);border-radius:var(--r);background:var(--g50)">
-          <div style="font-size:1.8rem;margin-bottom:.35rem">📎</div>
-          <div style="font-weight:600;font-size:.85rem">Cliquez pour sélectionner</div>
-          <div style="font-size:.75rem;color:var(--muted)">PDF, Word, image — max 3 Mo</div>
+      <div>
+        <span class="v2-fld-l">Type de document</span>
+        <div class="dg2-seg">
+          <label class="dg2-seg-o"><input type="radio" name="docType" value="resident" checked onchange="toggleDocType('resident')"/>Résident</label>
+          <label class="dg2-seg-o"><input type="radio" name="docType" value="resource" onchange="toggleDocType('resource')"/>Ressource</label>
+        </div>
+      </div>
+      <div id="docFormResidentGroup">
+        <label class="v2-fld-l" for="docFormResident">Résident</label>
+        <select id="docFormResident" class="v2-fld"></select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="docFormName">Nom du document</label>
+        <input type="text" id="docFormName" class="v2-fld" placeholder="ex : Contrat de séjour"/>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="docFormDate">Date du document</label>
+          <input type="date" id="docFormDate" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="docFormDueDate">Date d'échéance</label>
+          <input type="date" id="docFormDueDate" class="v2-fld"/>
+        </div>
+      </div>
+      <div>
+        <span class="v2-fld-l">Catégorie</span>
+        <div class="dg2-cats" id="docCatChips"></div>
+        <select id="docFormCategory" style="display:none"><option value="">—</option><option value="administratif">Administratif</option><option value="medical">Médical</option><option value="scolaire">Scolaire</option><option value="judiciaire">Judiciaire</option><option value="contrat">Contrat</option><option value="autre">Autre</option></select>
+      </div>
+      <div>
+        <span class="v2-fld-l">Fichier</span>
+        <div class="dg2-drop" id="docDropZone" onclick="document.getElementById('docFileInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="flex:1;min-width:0">
+            <div class="dg2-drop-t">Glisser un fichier ici</div>
+            <div class="dg2-drop-s">PDF, Word, JPG, PNG · 3 Mo max</div>
+          </div>
+          <span class="dg2-drop-b">Parcourir</span>
         </div>
         <input type="file" id="docFileInput" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp" onchange="handleDocFileSelect(event)"/>
-        <div id="docFilePending" style="display:none;margin-top:.5rem;padding:.6rem .85rem;border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;gap:.6rem">
-          <span style="font-size:1.1rem">📎</span>
+        <div id="docFilePending" class="dg2-pending" style="display:none;margin-top:9px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <div style="flex:1;min-width:0">
-            <div id="docFilePendingName" style="font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-            <div id="docFilePendingSize" style="font-size:.7rem;color:var(--muted)"></div>
+            <div id="docFilePendingName" class="dg2-pending-n"></div>
+            <div id="docFilePendingSize" class="dg2-pending-s"></div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="cancelDocFile()" style="color:var(--red)">✕</button>
+          <button type="button" class="dg2-pending-x" onclick="cancelDocFile()" aria-label="Retirer le fichier">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('docModal')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveDocument()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('docModal')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveDocument()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Téléverser
+      </button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="famModal">
-  <div class="modal modal-sm">
-    <div class="modal-header"><span>👪 Compte famille</span></div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-      <div class="form-group"><div style="display:flex;gap:.75rem;padding:.25rem 0">
-        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="famMode" value="creer" checked onchange="toggleFamMode('creer')"/> Créer un nouveau compte</label>
-        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem"><input type="radio" name="famMode" value="lier" onchange="toggleFamMode('lier')"/> Lier un compte existant</label>
-      </div></div>
-      <div id="famCreerGroup" style="display:flex;flex-direction:column;gap:.85rem">
-        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-          <div class="form-group" style="margin:0"><label class="required">Prénom</label><input type="text" id="famFormPrenom" class="form-input"/></div>
-          <div class="form-group" style="margin:0"><label class="required">Nom</label><input type="text" id="famFormNom" class="form-input"/></div>
+<!-- ══ MODALE : COMPTE FAMILLE ══ -->
+<div class="v2-ov" id="famModal">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Compte famille</div>
+        <div class="v2-md-s">Accès en lecture aux documents partagés</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('famModal')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="dg2-seg">
+        <label class="dg2-seg-o"><input type="radio" name="famMode" value="creer" checked onchange="toggleFamMode('creer')"/>Créer un compte</label>
+        <label class="dg2-seg-o"><input type="radio" name="famMode" value="lier" onchange="toggleFamMode('lier')"/>Lier un compte existant</label>
+      </div>
+      <div id="famCreerGroup" style="display:flex;flex-direction:column;gap:15px">
+        <div class="v2-grid2">
+          <div>
+            <label class="v2-fld-l" for="famFormPrenom">Prénom</label>
+            <input type="text" id="famFormPrenom" class="v2-fld"/>
+          </div>
+          <div>
+            <label class="v2-fld-l" for="famFormNom">Nom</label>
+            <input type="text" id="famFormNom" class="v2-fld"/>
+          </div>
         </div>
-        <div class="form-group" style="margin:0"><label class="required">Email</label><input type="email" id="famFormEmail" class="form-input" placeholder="famille@exemple.fr"/></div>
+        <div>
+          <label class="v2-fld-l" for="famFormEmail">Email</label>
+          <input type="email" id="famFormEmail" class="v2-fld" placeholder="famille@exemple.fr"/>
+        </div>
       </div>
       <div id="famLierGroup" style="display:none">
-        <div class="form-group" style="margin:0"><label class="required">Email du compte famille existant</label><input type="email" id="famFormEmailExistant" class="form-input" placeholder="famille@exemple.fr"/></div>
+        <label class="v2-fld-l" for="famFormEmailExistant">Email du compte famille existant</label>
+        <input type="email" id="famFormEmailExistant" class="v2-fld" placeholder="famille@exemple.fr"/>
       </div>
-      <div id="famCreatedInfo" style="display:none;font-size:.82rem;padding:.6rem .8rem;border-radius:8px;background:var(--g50)"></div>
+      <div id="famCreatedInfo" class="v2-note v2-note-ok" style="display:none"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('famModal')">Fermer</button>
-      <button class="btn btn-primary" id="famSubmitBtn" onclick="soumettreCompteFamille()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('famModal')">Fermer</button>
+      <button type="button" class="v2-btn-pri" id="famSubmitBtn" onclick="soumettreCompteFamille()">Enregistrer</button>
     </div>
   </div>
 </div>
 
+<div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="js/residents.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -118,5 +213,6 @@
 <script src="js/documents-resident-supabase.js"></script>
 <script src="js/famille-supabase.js"></script>
 <script src="js/documents.js"></script>
+<script src="js/documents-v2.js"></script>
 </body>
 </html>

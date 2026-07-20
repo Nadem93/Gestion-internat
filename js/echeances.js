@@ -67,7 +67,15 @@ function ecBarPct(e) {
   return Math.max(8, Math.min(100, Math.round(diff / 90 * 100)));
 }
 
+// ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/echeances-v2.js (design V2). La version
+// historique reste disponible pour les contextes où le module n'est pas chargé.
 function renderEcheances() {
+  if (typeof ec2Render === 'function') return ec2Render();
+  return renderEcheancesLegacy();
+}
+
+function renderEcheancesLegacy() {
   const all = getEcheances();
   const showDone = document.getElementById('ecShowDone')?.checked;
   const fRes = document.getElementById('ecFilterResident')?.value || '';
@@ -134,6 +142,7 @@ function openRenouvelerModal(id) {
   document.getElementById('renEcTitle').textContent = `${e.libelle || t.label}${e.residentName ? ' — ' + e.residentName : ''}`;
   document.getElementById('renFile').value = '';
   document.getElementById('renDate').value = '';
+  if (typeof ec2FileName === 'function') ec2FileName();   // remet « Aucun fichier sélectionné »
   openModal('modalRenouveler');
 }
 
@@ -145,6 +154,9 @@ async function saveRenouvellement() {
   if (!file) { toast('Joignez le document renouvelé', 'error'); return; }
   if (!newDate) { toast("Indiquez la nouvelle date d'échéance", 'error'); return; }
   const btn = document.getElementById('renSaveBtn');
+  // On mémorise le balisage d'origine (icône SVG comprise) pour le restaurer :
+  // écrire textContent effacerait l'icône du bouton V2.
+  const btnHtml = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Envoi…'; }
   try {
     const t = EC_TYPES[e.type] || EC_TYPES.autre;
@@ -190,7 +202,7 @@ async function saveRenouvellement() {
     console.error('[saveRenouvellement]', err);
     toast('Erreur : ' + (err?.message || err), 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✔ Renouveler'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = btnHtml; }
   }
 }
 

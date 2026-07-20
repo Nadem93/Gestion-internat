@@ -1,0 +1,139 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   RÉPERTOIRE DES PARTENAIRES — DESIGN V2
+   D'après la maquette « Répertoire (dossiers) ».
+
+   Ne contient QUE le style propre à cette page : la coque, la barre haute,
+   les chips de filtre, les blocs et le gabarit de modale viennent de v2.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Recherche de la barre haute ──────────────────────────────────────── */
+.rp-search {
+  display: flex; align-items: center; gap: 9px;
+  height: 42px; width: 250px; max-width: 100%; padding: 0 14px;
+  border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t7);
+}
+.rp-search svg { width: 15px; height: 15px; flex-shrink: 0; }
+body.v2 .rp-search input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; margin: 0;
+  border: none !important; background: transparent !important; outline: none;
+  font: inherit; font-size: 13px; color: var(--v2-t2) !important;
+  border-radius: 0;
+}
+body.v2 .rp-search input::placeholder { color: var(--v2-t7); }
+
+/* ── Ligne de filtres ─────────────────────────────────────────────────── */
+.rp-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.rp-count { margin-left: auto; font-size: 12px; color: var(--v2-t7); white-space: nowrap; }
+
+/* ── Grille des contacts ──────────────────────────────────────────────── */
+.rp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.rp-card {
+  position: relative; min-width: 0; cursor: pointer;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  border-left: 4px solid var(--cc, #8095b4);
+  transition: background .15s, transform .15s, border-color .15s;
+}
+.rp-card:hover {
+  background: var(--v2-s-hover); transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--cc, #8095b4) 45%, transparent);
+  border-left-color: var(--cc, #8095b4);
+}
+.rp-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-width: 0; }
+.rp-av {
+  width: 44px; height: 44px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: #0a1728; background: var(--cc, #8095b4);
+}
+.rp-id { flex: 1; min-width: 0; }
+.rp-nom { font-size: 13.5px; font-weight: 700; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-fn { font-size: 11px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-cat {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700; white-space: nowrap;
+  padding: 2px 8px; border-radius: 6px;
+  color: var(--cc, #8095b4); background: color-mix(in srgb, var(--cc, #8095b4) 12%, transparent);
+}
+.rp-star {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  background: rgba(255,255,255,.05); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t8);
+}
+.rp-star:hover { background: var(--v2-s-hover); color: var(--v2-warn-icon); }
+.rp-star.on { color: var(--v2-warn-icon); background: rgba(245,158,11,.13); border-color: rgba(245,158,11,.28); }
+.rp-star svg { width: 13px; height: 13px; }
+.rp-org { font-size: 12px; font-weight: 600; color: var(--v2-t4); margin-bottom: 10px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-lines { display: flex; flex-direction: column; gap: 6px; }
+.rp-line { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--v2-t5); min-width: 0; }
+.rp-line svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--v2-t8); }
+.rp-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.v2 a.rp-line:hover { color: var(--v2-t2); }
+body.v2 a.rp-line:hover svg { color: var(--v2-cyan); }
+
+/* ── Bas de page : favoris + derniers appels ──────────────────────────── */
+.rp-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; align-items: start; }
+.rp-fav-blk {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(252,211,77,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.rp-fav-blk .v2-blk-t { color: var(--v2-warn-text); }
+.rp-blk-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.rp-blk-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.rp-fav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rp-fav {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: 11px; padding: 10px 12px; cursor: pointer;
+}
+.rp-fav:hover { background: var(--v2-s-hover); }
+.rp-fav-av {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #0a1728; background: var(--cc, #8095b4);
+}
+.rp-fav-n { font-size: 12px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-fav-t { font-size: 10px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.rp-appel { display: flex; align-items: center; gap: 11px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list); min-width: 0; }
+.rp-appel:last-child { border-bottom: none; }
+.rp-appel-i { flex-shrink: 0; color: var(--ac, #34d399); display: flex; }
+.rp-appel-i svg { width: 14px; height: 14px; }
+.rp-appel-b { flex: 1; min-width: 0; }
+.rp-appel-n { font-size: 12px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-appel-d { font-size: 10.5px; color: var(--v2-t6); }
+.rp-appel-w { flex-shrink: 0; font-size: 10.5px; color: var(--v2-t7); }
+
+/* ── Modale : rappel de droits ────────────────────────────────────────── */
+.rp-seg-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.rp-seg-wrap .v2-seg-o { flex: 1; min-width: 96px; height: 40px; font-size: 11.5px; }
+.rp-seg-wrap .v2-seg-o:disabled { opacity: .45; cursor: not-allowed; }
+.rp-seg-wrap .v2-seg-o:disabled:hover { color: var(--v2-t5); background: var(--v2-s-sub); }
+/* style.css met tous les <label> en majuscules espacées : la maquette les
+   veut en casse normale. */
+body.v2 .rp-fav-toggle {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 11px 14px; border-radius: 11px;
+  font-size: 12.5px; font-weight: 500; line-height: 1.4; color: var(--v2-t3);
+  text-transform: none; letter-spacing: normal; margin: 0;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+body.v2 .rp-fav-toggle input { width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--v2-warn); }
+.rp-fav-toggle svg { width: 14px; height: 14px; color: var(--v2-warn-icon); flex-shrink: 0; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1180px) { .rp-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 980px)  { .rp-bottom { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .rp-grid { grid-template-columns: 1fr; }
+  .rp-fav-grid { grid-template-columns: 1fr; }
+  .rp-search { width: 100%; }
+  .rp-count { margin-left: 0; width: 100%; }
+}

@@ -1,0 +1,312 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   OBJECTIFS & GRILLES D'ÉVALUATION — V2
+   D'après la maquette « Grilles d'évaluation (dossiers).dc.html » :
+   4 tuiles de statistiques, une rangée de puces de filtre, une liste de lignes
+   d'évaluation (avatar · résident/date · grille · score+barre · tendance ·
+   niveau), puis deux blocs : détail par domaine + progression.
+
+   L'onglet « Objectifs & axes » reprend le même vocabulaire visuel
+   (mêmes tuiles, mêmes puces, mêmes barres) — aucune surface claire.
+   Ne modifie que cette page : rien ici n'est global.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ob2-shell { --v2-halo: rgba(99,102,241,.2); }
+
+/* style.css étire tout <select>/<input> à 100 % et les <svg> sans dimension
+   remplissent leur boîte flex : on borne les deux ici, pour cette page. */
+.ob2-shell .v2-btn { white-space: nowrap; }
+.ob2-shell .v2-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.ob2-shell .v2-btn-primary svg { width: 16px; height: 16px; }
+.ob2-shell select.ob2-statut, .ob2-shell input.ob2-date { width: auto; max-width: 100%; }
+
+/* ── Barre du haut ────────────────────────────────────────────────────── */
+.ob2-topact { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ob2-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ── Onglets (puces) ──────────────────────────────────────────────────── */
+.ob2-tabs { margin-bottom: 16px; }
+.ob2-tabs .v2-chip-f svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── Tuiles de statistiques ───────────────────────────────────────────── */
+.ob2-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.ob2-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px; min-width: 0;
+}
+.ob2-kpi-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--c, #a5b4fc) 14%, transparent); color: var(--c, #a5b4fc);
+}
+.ob2-kpi-ico svg { width: 21px; height: 21px; }
+.ob2-kpi-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--c, #a5b4fc); }
+.ob2-kpi-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Barre de filtres ─────────────────────────────────────────────────── */
+.ob2-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.ob2-filters select.v2-fld { width: auto; min-width: 210px; max-width: 100%; height: 38px; font-size: 12.5px; }
+.ob2-filters .v2-chips { gap: 8px; }
+
+/* ── Guide ────────────────────────────────────────────────────────────── */
+.ob2-guide { padding: 14px 18px; margin-bottom: 16px; }
+.ob2-guide > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 700; color: var(--v2-t3); }
+.ob2-guide > summary::-webkit-details-marker { display: none; }
+.ob2-guide > summary svg { width: 16px; height: 16px; color: var(--v2-indigo-light); flex-shrink: 0; }
+.ob2-guide-steps { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.ob2-guide-step { display: flex; gap: 11px; align-items: flex-start;
+  font-size: 12.5px; line-height: 1.55; color: var(--v2-t5); }
+.ob2-guide-step strong { color: var(--v2-t3); font-weight: 700; }
+.ob2-guide-n {
+  width: 22px; height: 22px; border-radius: 8px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--v2-display); font-size: 11.5px; font-weight: 700; color: #0a1728;
+}
+
+/* ══ ONGLET GRILLES D'ÉVALUATION ══════════════════════════════════════ */
+
+.ob2-evlist { display: flex; flex-direction: column; gap: 12px; }
+.ob2-ev {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 20px;
+  display: flex; align-items: center; gap: 18px;
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.ob2-ev:hover { background: var(--v2-s-hover); border-color: var(--v2-b-active); }
+.ob2-ev-av {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #0a1728;
+}
+.ob2-ev-id { width: 150px; flex-shrink: 0; min-width: 0; }
+.ob2-ev-nom { font-size: 13px; font-weight: 700; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ob2-ev-date { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.ob2-ev-gr { font-size: 10.5px; font-weight: 700; padding: 4px 11px;
+  border-radius: 7px; white-space: nowrap; flex-shrink: 0; }
+.ob2-ev-score { flex: 1; min-width: 120px; }
+.ob2-ev-score-h { display: flex; align-items: baseline; margin-bottom: 5px; }
+.ob2-ev-score-l { font-size: 11px; color: var(--v2-t6); }
+.ob2-ev-score-v { margin-left: auto; font-family: var(--v2-display); font-size: 12px; font-weight: 800; }
+.ob2-ev-tr { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700;
+  flex-shrink: 0; width: 70px; }
+.ob2-ev-tr svg { width: 13px; height: 13px; flex-shrink: 0; }
+.ob2-ev-niv { font-size: 10.5px; font-weight: 700; padding: 3px 9px;
+  border-radius: 7px; white-space: nowrap; flex-shrink: 0; }
+.ob2-ev-act { display: flex; gap: 4px; flex-shrink: 0; margin-left: 2px; }
+.ob2-ico-btn {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  font: inherit; padding: 0;
+}
+.ob2-ico-btn:hover { background: var(--v2-s-hover); color: #fff; }
+.ob2-ico-btn svg { width: 14px; height: 14px; }
+.ob2-ico-btn.danger:hover { color: var(--v2-danger-text); }
+
+/* Deux blocs du bas */
+.ob2-bottom { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 16px; }
+.ob2-dom { display: flex; flex-direction: column; gap: 13px; }
+.ob2-dom-h { display: flex; align-items: baseline; margin-bottom: 5px; }
+.ob2-dom-l { font-size: 12px; color: var(--v2-t3); }
+.ob2-dom-v { margin-left: auto; font-size: 11.5px; font-weight: 700; }
+.ob2-blk-val { margin-left: auto; font-family: var(--v2-display); font-size: 12px; font-weight: 800; color: var(--v2-indigo-light); }
+.ob2-chart { display: flex; align-items: flex-end; gap: 12px; height: 140px; }
+.ob2-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  height: 100%; justify-content: flex-end; }
+.ob2-chart-v { font-size: 10px; font-weight: 700; color: var(--v2-indigo-pale); }
+.ob2-chart-bar { width: 100%; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, var(--v2-indigo-pale), var(--v2-indigo-light)); }
+.ob2-chart-l { font-size: 9.5px; color: var(--v2-t8); }
+.ob2-chart-note { font-size: 10.5px; color: var(--v2-t6); margin-top: 12px; }
+
+/* ══ ONGLET OBJECTIFS & AXES ══════════════════════════════════════════ */
+
+/* Vue d'ensemble : une carte par résident */
+.ob2-resgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.ob2-res {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  font: inherit; text-align: left; cursor: pointer;
+  transition: background .15s, transform .15s, border-color .15s;
+}
+.ob2-res:hover { background: var(--v2-s-hover); border-color: var(--v2-b-active); transform: translateY(-2px); }
+.ob2-res-h { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.ob2-res-eyebrow { font-family: var(--v2-display); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--v2-t8); }
+.ob2-res-nom { font-size: 14px; font-weight: 700; color: var(--v2-t2); margin-top: 2px; }
+.ob2-res-meta { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.ob2-res-bdgs { display: flex; flex-wrap: wrap; gap: 5px; }
+.ob2-res-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 10.5px; color: var(--v2-t7); border-top: 1px solid var(--v2-b-list); padding-top: 10px; margin-top: auto; }
+.ob2-rgauge { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: var(--v2-t5); }
+.ob2-rgauge .seg { display: inline-flex; gap: 3px; width: 56px; }
+.ob2-rgauge .seg i { flex: 1; height: 5px; border-radius: 2px; background: rgba(255,255,255,.1); }
+
+/* Barre du résident sélectionné */
+.ob2-resbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.ob2-resbar-t { font-size: 15px; font-weight: 700; color: var(--v2-t2); }
+.ob2-resbar-s { font-size: 12px; font-weight: 500; color: var(--v2-t6); }
+.ob2-resbar-act { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Bloc « objectifs du projet personnalisé » */
+.ob2-ppa { margin-bottom: 16px; }
+.ob2-ppa-row { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sub); padding: 11px 13px; }
+.ob2-ppa-dom { font-size: 10.5px; font-weight: 700; color: var(--v2-warn-text); white-space: nowrap; flex-shrink: 0; }
+.ob2-ppa-txt { font-size: 12.5px; color: var(--v2-t3); line-height: 1.45; flex: 1; min-width: 180px; }
+.ob2-ppa-meta { font-size: 11px; color: var(--v2-t7); margin-top: 4px; }
+
+/* Carte d'objectif */
+.ob2-objs { display: flex; flex-direction: column; gap: 14px; }
+.ob2-obj { background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card); overflow: hidden; }
+.ob2-obj-h { display: flex; gap: 18px; padding: 18px 20px; align-items: flex-start; flex-wrap: wrap; }
+.ob2-obj-gauge { width: 132px; flex-shrink: 0; }
+.ob2-obj-pct { font-family: var(--v2-display); font-size: 30px; font-weight: 800; line-height: 1; }
+.ob2-obj-pctl { font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--v2-t8); margin: 6px 0 8px; }
+.ob2-obj-main { flex: 1; min-width: 220px; }
+.ob2-obj-eyebrow { font-family: var(--v2-display); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--v2-t8); }
+.ob2-obj-t { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 4px; }
+.ob2-obj-nom { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.ob2-obj-desc { font-size: 12.5px; color: var(--v2-t6); margin-top: 4px; line-height: 1.5; }
+.ob2-obj-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 10px;
+  font-size: 11.5px; color: var(--v2-t6); }
+.ob2-rang { font-family: var(--v2-display); font-size: 10.5px; font-weight: 700;
+  letter-spacing: .08em; padding: 4px 9px; border-radius: var(--v2-r-badge);
+  background: rgba(99,102,241,.14); color: var(--v2-indigo-pale); white-space: nowrap; }
+.ob2-statut {
+  height: 30px; padding: 0 30px 0 11px; border-radius: 9px; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  background-color: var(--v2-s-sub); border: 1px solid;
+}
+.ob2-statut option { background: #101d31; color: var(--v2-t2); }
+.ob2-date {
+  height: 30px; padding: 0 10px; border-radius: 9px; font: inherit; font-size: 11.5px;
+  color: var(--v2-t3); background-color: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+.ob2-obj-b { border-top: 1px solid var(--v2-b); background: var(--v2-s-sub-soft); padding: 14px 20px 18px; }
+.ob2-sec { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 10px; }
+.ob2-sec-t { display: inline-flex; align-items: center; gap: 8px; background: none; border: none;
+  padding: 0; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--v2-t8); }
+.ob2-sec-t svg { width: 13px; height: 13px; }
+.ob2-sec-sum { font-weight: 500; text-transform: none; letter-spacing: normal; color: var(--v2-t6); }
+.ob2-sec-act { margin-left: auto; }
+
+/* Axe de travail */
+.ob2-axes { display: flex; flex-direction: column; gap: 10px; }
+.ob2-axe { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-left: 3px solid var(--ac, #38bdf8); border-radius: var(--v2-r-sub); padding: 12px 14px; }
+.ob2-axe-eyebrow { font-size: 9.5px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--v2-t8); }
+.ob2-axe-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 4px; }
+.ob2-axe-nom { font-size: 13px; font-weight: 600; color: var(--v2-t2); flex: 1; min-width: 150px; }
+.ob2-axe-top > svg { width: 62px; height: 20px; flex: 0 0 auto; }
+.ob2-axe-pct { font-family: var(--v2-display); font-size: 13px; font-weight: 800; min-width: 44px; text-align: right; }
+.ob2-axe-note { font-size: 12px; color: var(--v2-t5); margin-top: 5px; line-height: 1.5; }
+.ob2-axe-maj { font-size: 10.5px; color: var(--v2-t8); margin-top: 6px; }
+
+/* Paliers d'autonomie */
+.ob2-steps { display: flex; align-items: flex-start; margin-top: 12px; }
+.ob2-step-c { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 auto; width: 58px; }
+.ob2-step {
+  width: 30px; height: 30px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--v2-display); font-size: 12px; font-weight: 700; color: #0a1728;
+  background: rgba(255,255,255,.1); border: none; padding: 0;
+  transition: background .2s, transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.ob2-step[role=radio] { cursor: pointer; }
+.ob2-step[role=radio]:hover { transform: scale(1.12); }
+.ob2-step:focus-visible { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
+.ob2-step-cap { font-size: 8.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase;
+  text-align: center; line-height: 1.15; color: var(--v2-t8); }
+.ob2-step-cap.on { color: var(--v2-t5); }
+.ob2-conn-t { flex: 1; height: 4px; border-radius: 3px; background: rgba(255,255,255,.1);
+  margin-top: 13px; overflow: hidden; }
+.ob2-conn { height: 100%; border-radius: 3px; transition: width .5s cubic-bezier(.4,0,.2,1); }
+.ob2-step-lbl { display: block; text-align: center; margin-top: 8px; font-size: 12px; font-weight: 700; }
+@keyframes ob2StepPulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.18) } }
+
+/* Historique d'évaluation d'un objectif */
+.ob2-histo { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sm); padding: 9px 12px; }
+.ob2-histo > summary { cursor: pointer; list-style: none; display: flex; align-items: center;
+  gap: 9px; flex-wrap: wrap; font-size: 12px; color: var(--v2-t4); }
+.ob2-histo > summary::-webkit-details-marker { display: none; }
+.ob2-histo-b { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--v2-b-ctrl);
+  display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--v2-t5); }
+
+/* ══ MODALES : compléments au gabarit v2-md ══════════════════════════ */
+/* .ax-chip et .eo-* sont les classes émises par js/objectifs.js (modales
+   « axe de travail », « nouvel objectif » et « évaluer l'objectif ») : on les
+   habille ici plutôt que de réécrire ces rendus. */
+.ob2-sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.ob2-sugg-b, body.v2 .ax-chip {
+  height: 30px; padding: 0 11px; border-radius: 9px; font: inherit; font-size: 12px;
+  font-weight: 600; cursor: pointer; color: var(--v2-t5);
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); }
+.ob2-sugg-b:hover, body.v2 .ax-chip:hover { color: #fff; background: var(--v2-s-hover); }
+.ob2-live { padding: 12px 14px; border-radius: 11px; text-align: center;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); font-size: 13px; color: var(--v2-t5); }
+.ob2-md-info { padding: 11px 13px; border-radius: 11px; font-size: 12.5px; line-height: 1.5;
+  color: var(--v2-t5); background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); }
+body.v2 .eo-axe { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sub); padding: 11px 13px; }
+body.v2 .eo-axe-nom { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); margin-bottom: 8px; }
+body.v2 .eo-axe-nom span { font-weight: 400; font-size: 11px; color: var(--v2-t7); }
+body.v2 .eo-levels { display: flex; gap: 6px; flex-wrap: wrap; }
+body.v2 .eo-level { position: relative; font-size: 11.5px; font-weight: 600; padding: 6px 10px;
+  border-radius: 9px; cursor: pointer; user-select: none; color: var(--v2-t5);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); transition: all .12s; }
+body.v2 .eo-level input { position: absolute; opacity: 0; pointer-events: none; }
+body.v2 .eo-level:hover { color: var(--v2-t2); background: var(--v2-s-hover); }
+body.v2 .eo-level:has(input:checked) { color: #fff;
+  background: color-mix(in srgb, var(--lc, #6366f1) 22%, transparent);
+  border-color: color-mix(in srgb, var(--lc, #6366f1) 65%, transparent); }
+body.v2 .eo-level:has(input:focus-visible) { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
+
+/* Les formulaires MIF / Barthel / SERAFIN sont rendus par js/evaluations.js
+   (fichier partagé, non modifiable ici) : on neutralise ses fonds clairs.
+   #f8fafc et #fff sont déjà traités par css/v2.css ; #faf5ff ne l'est pas. */
+body.v2 [style*="#faf5ff"] { background: rgba(139,92,246,.12) !important; }
+body.v2 [style*="#ede9fe"] { border-color: rgba(139,92,246,.28) !important; }
+body.v2 #evFormBody select, body.v2 #evFormBody input { color: var(--v2-t2); }
+body.v2 #evDetailBody [style*="background:#f1f5f9"] { background: rgba(255,255,255,.08) !important; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .ob2-kpis { grid-template-columns: repeat(2, 1fr); }
+  .ob2-bottom { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .ob2-ev { flex-wrap: wrap; gap: 12px; }
+  .ob2-ev-id { width: auto; flex: 1; }
+  .ob2-ev-score { flex-basis: 100%; order: 5; }
+  .ob2-ev-tr { width: auto; }
+}
+@media (max-width: 620px) {
+  .ob2-kpis { grid-template-columns: 1fr; }
+  .ob2-topact { width: 100%; }
+  .ob2-topact .v2-btn { flex: 1; justify-content: center; }
+  .ob2-filters select.v2-fld { min-width: 0; width: 100%; }
+  .ob2-obj-h { gap: 12px; padding: 14px; }
+  .ob2-obj-gauge { width: 100%; }
+  .ob2-obj-b { padding: 12px 14px 16px; }
+  .ob2-resgrid { grid-template-columns: 1fr; }
+  .ob2-steps { flex-wrap: nowrap; }
+  .ob2-step-c { width: 40px; }
+  .ob2-step-cap { font-size: 6.5px; overflow-wrap: anywhere; }
+  .ob2-step { width: 26px; height: 26px; border-radius: 9px; font-size: 11px; }
+  .ob2-conn-t { min-width: 4px; margin-top: 11px; }
+  .ob2-ev { padding: 14px 16px; gap: 10px; }
+  .ob2-ev-id { flex: 1 1 auto; min-width: 0; }
+  .ob2-ev-gr { margin-left: auto; }
+  .ob2-ev-act { margin-left: auto; }
+}

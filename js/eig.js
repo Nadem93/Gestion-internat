@@ -96,7 +96,7 @@ function openEigModal(id) {
   const e = i.eig || {};
   document.getElementById('emTitle').textContent = `Déclaration EIG — ${i.titre}`;
   document.getElementById('emDestinataires').innerHTML = Object.entries(EIG_DESTINATAIRES).map(([k, label]) =>
-    `<label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:400"><input type="checkbox" value="${k}" ${(e.destinataires || []).includes(k) ? 'checked' : ''}/> ${label}</label>`
+    `<label class="eig2-chk"><input type="checkbox" value="${k}" ${(e.destinataires || []).includes(k) ? 'checked' : ''}/> ${label}</label>`
   ).join('');
   document.getElementById('emDeclareARS').checked = !!e.declareARS;
   document.getElementById('emDateDeclaration').value = e.dateDeclarationARS || '';
@@ -109,12 +109,12 @@ function openEigModal(id) {
   openModal('modalEig');
 }
 
-function saveEig() {
+async function saveEig() {
   const list = getIncidents();
   const i = list.find(x => x.id === eigEditId);
   if (!i) return;
   const destinataires = [...document.querySelectorAll('#emDestinataires input:checked')].map(c => c.value);
-  i.eig = {
+  const eig = {
     declarable: true,
     declareARS: document.getElementById('emDeclareARS').checked,
     dateDeclarationARS: document.getElementById('emDateDeclaration').value,
@@ -126,7 +126,16 @@ function saveEig() {
     dateCloture: document.getElementById('emDateCloture').value,
     suites: document.getElementById('emSuites').value.trim()
   };
-  saveIncidents(list);
+  // La persistance passe par Supabase : saveIncidents() n'existe pas
+  // (reliquat de la version localStorage) et faisait échouer l'enregistrement.
+  try {
+    await sbUpdateIncidentField(i.id, { eig });
+  } catch (err) {
+    console.error('[saveEig]', err);
+    toast('Enregistrement impossible', 'error');
+    return;
+  }
+  i.eig = eig;
   if (typeof auditLog === 'function') auditLog('eig_save', `EIG — ${i.titre}`);
   toast('Déclaration EIG enregistrée ✓');
   closeModal('modalEig');

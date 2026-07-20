@@ -1,0 +1,142 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   FICHE DE LIAISON HOSPITALIÈRE — design V2, d'après la maquette
+   « Fiche de liaison hosp (dossiers).dc.html »
+
+   Ne contient QUE le style propre à cette page : les composants communs
+   (.v2-shell, .v2-top, .v2-body, .v2-blk, .v2-blk-vide, .v2-ov/.v2-md/
+   .v2-fld/.v2-seg/.v2-note/.v2-btn-pri/.v2-btn-sec) viennent de css/v2.css,
+   qui n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Halo de la coque : teinte rouge de la maquette (module santé/hospitalier). */
+body.v2 .fl2-shell { --v2-halo: rgba(220,38,38,.16); }
+
+/* ── Barre du haut ───────────────────────────────────────────────────── */
+.fl2-topact { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+@media (max-width: 900px) {
+  .fl2-topact { margin-left: 0; width: 100%; }
+}
+
+.fl2-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 42px; padding: 0 16px; border: none; border-radius: var(--v2-r-ctrl);
+  background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff;
+  font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 8px 18px -6px rgba(79,70,229,.6);
+}
+.fl2-btn:hover { filter: brightness(1.08); }
+.fl2-btn svg { width: 15px; height: 15px; }
+.fl2-btn-sec {
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t4); box-shadow: none;
+}
+.fl2-btn-sec:hover { background: var(--v2-s-hover); color: #fff; filter: none; }
+
+/* ── Sélecteur de résident (puces de la maquette) ─────────────────────── */
+.fl2-selbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.fl2-selbar-l { font-size: 12px; color: var(--v2-t7); margin-right: 4px; }
+
+.fl2-rchip {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 12px; border-radius: var(--v2-r-chip);
+  cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600;
+  color: var(--v2-t5); background: rgba(255,255,255,.04);
+  border: 1px solid var(--v2-b); transition: background .15s, color .15s;
+}
+.fl2-rchip:hover { background: var(--v2-s-hover); color: var(--v2-t3); }
+.fl2-rchip.on { color: #fff; background: var(--v2-s-active); }
+.fl2-rchip-av {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #0a1728;
+}
+
+/* Le <select> natif reste dans le DOM (contrat avec js/fiche-liaison.js et
+   navigation au clavier) mais l'interface visible est la rangée de puces. */
+.fl2-native {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── Carte fiche ─────────────────────────────────────────────────────── */
+.fl2-card {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card); overflow: hidden;
+}
+
+.fl2-head {
+  padding: 22px 26px; display: flex; align-items: center; gap: 18px;
+  flex-wrap: wrap; border-bottom: 1px solid var(--v2-b-soft);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--fc, #22d3ee) 15%, transparent), transparent);
+}
+.fl2-head-av {
+  width: 64px; height: 64px; border-radius: 18px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: #0a1728; background: var(--fc, #22d3ee);
+}
+.fl2-head-id { flex: 1; min-width: 160px; }
+.fl2-head-n { font-size: 20px; font-weight: 800; color: #fff; }
+.fl2-head-m { font-size: 12.5px; color: #aebfda; margin-top: 3px; }
+.fl2-head-r { text-align: right; }
+.fl2-head-rl { font-size: 10.5px; color: var(--v2-t7); }
+.fl2-head-rv { font-family: var(--v2-display); font-size: 18px; font-weight: 800; color: var(--v2-danger-text); }
+
+/* ── Grille des sections ─────────────────────────────────────────────── */
+.fl2-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.fl2-sec {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--v2-b-list);
+  border-right: 1px solid var(--v2-b-list);
+}
+.fl2-sec-h { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.fl2-sec-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--sc, #818cf8) 13%, transparent); color: var(--sc, #818cf8);
+}
+.fl2-sec-ico svg { width: 15px; height: 15px; display: block; }
+.fl2-sec-t {
+  font-size: 12.5px; font-weight: 700; color: var(--sc, #818cf8);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.fl2-rows { display: flex; flex-direction: column; gap: 8px; }
+.fl2-row { display: flex; gap: 10px; }
+.fl2-k { font-size: 11.5px; color: var(--v2-t7); width: 110px; flex-shrink: 0; }
+.fl2-v { font-size: 12px; color: var(--v2-t3); font-weight: 600; flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fl2-v.mute { color: var(--v2-t7); font-weight: 500; }
+.fl2-v.danger { color: var(--v2-danger-text); }
+
+/* Pied de carte : mention de confidentialité + traçabilité d'édition. */
+.fl2-foot {
+  padding: 13px 22px; font-size: 11px; color: var(--v2-t7);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  background: var(--v2-s-sub-soft);
+}
+.fl2-foot-r { margin-left: auto; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .fl2-grid { grid-template-columns: 1fr; }
+  .fl2-sec { border-right: none; }
+}
+@media (max-width: 560px) {
+  .fl2-head { padding: 16px 16px; gap: 13px; }
+  .fl2-head-av { width: 52px; height: 52px; border-radius: 15px; font-size: 18px; }
+  .fl2-head-n { font-size: 17px; }
+  .fl2-head-r { text-align: left; width: 100%; }
+  .fl2-head-r .fl2-head-rv { font-size: 16px; }
+  .fl2-sec { padding: 15px 16px; }
+  .fl2-k { width: 92px; }
+  .fl2-foot { padding: 12px 16px; }
+  .fl2-foot-r { margin-left: 0; }
+  .fl2-topact { gap: 7px; }
+  .fl2-btn { flex: 1; justify-content: center; padding: 0 12px; white-space: nowrap; }
+  /* « Compléter la fiche » ne tient pas à côté d'« Imprimer » sur 375 px. */
+  .fl2-hide-sm { display: none; }
+}
+
+/* ── Impression : la page écran n'est pas imprimée (une fenêtre dédiée,
+      en thème clair, est ouverte par printFiche()). ────────────────────── */
+@media print {
+  .v2-top, .fl2-selbar, .fl2-foot { display: none !important; }
+}

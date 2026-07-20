@@ -80,7 +80,9 @@ async function initPpe() {
   const rid = params.get('residentId');
   if (rid) {
     const sel = document.getElementById('filterResidentAvenant');
-    if (sel) { sel.value = rid; sel.dispatchEvent(new Event('change')); }
+    // Le <select> de filtre est masqué (design V2) : on re-rend explicitement,
+    // l'événement 'change' seul ne déclenche aucun écouteur de rendu.
+    if (sel) { sel.value = rid; sel.dispatchEvent(new Event('change')); renderAvenant(); }
     window.history.replaceState({}, '', window.location.pathname);
   }
 }
@@ -163,6 +165,7 @@ function backToList() {
   const el = document.getElementById('avenantFullView');
   if (el) el.remove();
   document.getElementById('avenantList').style.display = '';
+  if (typeof pp2ListChrome === 'function') pp2ListChrome(true);   // design V2
 }
 
 function renderAvenantFull(p) {
@@ -170,10 +173,11 @@ function renderAvenantFull(p) {
   if (existing) existing.remove();
   const container = document.getElementById('avenantList');
   container.style.display = 'none';
+  if (typeof pp2ListChrome === 'function') pp2ListChrome(false);   // design V2
   const div = document.createElement('div');
   div.id = 'avenantFullView';
-  div.innerHTML = `<div style="max-width:800px;margin:0 auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+  div.innerHTML = `<div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
       <button class="btn btn-outline btn-sm" onclick="backToList()">← Retour à la liste</button>
       <button class="btn btn-accent btn-sm" onclick="regenerateAvenantFromJournal('${p.id}')" style="gap:.35rem"><span>🤖</span> Générer depuis le journal</button>
       <div style="display:flex;gap:.5rem">
@@ -871,6 +875,8 @@ function openAvenantBilan(id) {
 }
 
 function renderAvenant() {
+  // Design V2 : le rendu de la liste est délégué à js/ppe-v2.js (chargé après).
+  if (typeof pp2Render === 'function') { pp2Render(); return; }
   const container = document.getElementById('avenantList');
   if (!container) return;
   container.style.display = '';

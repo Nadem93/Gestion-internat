@@ -1,0 +1,161 @@
+/* ══════════════════════════════════════════════════════════════════════
+   REGISTRE DES EIG — V2
+   D'après la maquette « Registre EIG (dossiers) ».
+   Ne surcharge que cette page ; css/v2.css n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Chapeau ─────────────────────────────────────────────────────────── */
+.eig2-intro { font-size: 11.5px; color: var(--v2-t7); margin-bottom: 16px; }
+.eig2-intro a { color: var(--v2-indigo-light); }
+.eig2-intro a:hover { color: var(--v2-indigo-pale); }
+
+/* Chip « Registre annuel » de la barre supérieure */
+.eig2-top-btn { height: 42px; }
+
+/* ── Tuiles statistiques (4 colonnes : icône + gros chiffre coloré) ──── */
+.eig2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.eig2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.eig2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.eig2-stat-ico svg { width: 21px; height: 21px; display: block; }
+.eig2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--pc); }
+.eig2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+.eig2-stat-x { font-size: 10.5px; font-weight: 700; color: var(--v2-danger-text); margin-top: 4px; }
+
+/* ── Tableau du registre ─────────────────────────────────────────────── */
+.eig2-tw {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden;
+}
+.eig2-scroll { overflow-x: auto; }
+.eig2-t { width: 100%; border-collapse: collapse; min-width: 880px; }
+.eig2-t th {
+  text-align: left; padding: 13px 20px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  background: var(--v2-s-alt); border-bottom: 1px solid var(--v2-b);
+  white-space: nowrap;
+}
+.eig2-t td { padding: 13px 20px; border-bottom: 1px solid var(--v2-b-table); vertical-align: middle; }
+.eig2-t tr:last-child td { border-bottom: none; }
+.eig2-t tbody tr:hover td { background: rgba(255,255,255,.02); }
+
+.eig2-date { font-size: 12px; color: var(--v2-t5); white-space: nowrap; }
+.eig2-ti { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.eig2-ty { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+.eig2-res { font-size: 12px; color: var(--v2-t4); }
+.eig2-pill {
+  display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  white-space: nowrap; color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 11%, transparent);
+}
+.eig2-ars { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--pc); }
+.eig2-ars svg { width: 12px; height: 12px; flex-shrink: 0; display: block; }
+.eig2-late { display: block; font-size: 10px; font-weight: 700; color: var(--v2-danger-text); margin-top: 4px; }
+
+.eig2-acts { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.eig2-act {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  font: inherit;
+  background: color-mix(in srgb, var(--ac, #8095b4) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ac, #8095b4) 30%, transparent);
+  color: var(--ac, #8095b4);
+}
+.eig2-act:hover { background: color-mix(in srgb, var(--ac, #8095b4) 24%, transparent); }
+.eig2-act svg { width: 15px; height: 15px; display: block; }
+.eig2-act-l { width: auto; padding: 0 12px; font-size: 12px; font-weight: 600; }
+
+/* ── Deux panneaux du bas ────────────────────────────────────────────── */
+.eig2-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; }
+/* Sans min-width:0, le min-content des libellés en `nowrap` élargit la
+   colonne au-delà de la coquille et déborde sur mobile. */
+.eig2-duo > * { min-width: 0; }
+
+.eig2-bar-h { display: flex; align-items: baseline; margin-bottom: 5px; }
+.eig2-bar-l { font-size: 12px; color: var(--v2-t3); }
+.eig2-bar-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+.eig2-bars { display: flex; flex-direction: column; gap: 12px; }
+.eig2-prog { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.eig2-prog > span { display: block; height: 100%; border-radius: 4px; }
+
+/* Panneau vert « Suivi déclarations ARS » */
+.eig2-ars-blk {
+  background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(52,211,153,.22);
+  border-radius: var(--v2-r-card2); padding: 20px 22px;
+}
+.eig2-ars-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.eig2-ars-h svg { width: 15px; height: 15px; flex-shrink: 0; color: #34d399; }
+.eig2-ars-t { font-size: 13.5px; font-weight: 700; color: #6ee7b7; }
+.eig2-ars-r {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.eig2-ars-r:last-child { border-bottom: none; }
+.eig2-ars-i {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.eig2-ars-i svg { width: 14px; height: 14px; display: block; }
+.eig2-ars-n { font-size: 12px; font-weight: 600; color: var(--v2-t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eig2-ars-s { font-size: 10.5px; color: var(--v2-t6); overflow: hidden; text-overflow: ellipsis; }
+.eig2-ars-tag { font-size: 10.5px; font-weight: 700; color: var(--pc); flex-shrink: 0; white-space: nowrap; }
+
+/* ── Vide ────────────────────────────────────────────────────────────── */
+.eig2-empty {
+  padding: 46px 22px; text-align: center;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card2);
+}
+.eig2-empty svg { width: 34px; height: 34px; color: var(--v2-t8); margin-bottom: 12px; display: block; margin-inline: auto; }
+.eig2-empty-t { font-size: 14px; font-weight: 700; color: var(--v2-t3); }
+.eig2-empty-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 6px; }
+
+/* ── Modale : cases à cocher sombres ─────────────────────────────────── */
+/* La case native reste blanche sur fond sombre : on la redessine. */
+body.v2 .eig2-chk {
+  display: flex; align-items: center; gap: 9px; cursor: pointer; margin: 0;
+  font: inherit; font-size: 12.5px; font-weight: 500; color: var(--v2-t4);
+  text-transform: none; letter-spacing: normal;
+}
+body.v2 .eig2-chk input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px; margin: 0; padding: 0; flex-shrink: 0; cursor: pointer;
+  border-radius: 4px; background: rgba(10,23,40,.5); border: 1px solid rgba(255,255,255,.18);
+  background-repeat: no-repeat; background-position: center; background-size: 12px;
+}
+body.v2 .eig2-chk input[type="checkbox"]:checked {
+  background-color: #ef4444; border-color: #ef4444;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+}
+/* Case autonome présentée comme un champ, pour aligner avec la date voisine */
+.eig2-chk-fld {
+  height: 44px; padding: 0 14px; border-radius: 11px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+.eig2-dest {
+  display: flex; flex-direction: column; gap: 9px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  border-radius: 11px; padding: 12px 14px;
+}
+.eig2-sep { height: 1px; background: var(--v2-b); margin: 2px 0; }
+.eig2-lbl {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--v2-t8); margin-bottom: -4px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .eig2-stats { grid-template-columns: repeat(2, 1fr); }
+  .eig2-duo { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .eig2-stats { grid-template-columns: 1fr; }
+  .eig2-top-btn { flex: 1 1 auto; justify-content: center; }
+}
