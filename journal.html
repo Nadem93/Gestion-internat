@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Journal de bord — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     /* Champs plats (sans effet de profondeur) dans le modal de rédaction */
     #modalEntry input,
@@ -38,41 +39,56 @@
     @media(prefers-reduced-motion:reduce){.entry-card::before{animation:none}}
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Journal de bord</div></div>
-      <div class="header-right">
-        <button id="btnExportJournal" class="btn btn-outline btn-sm" onclick="exportJournalPDF()" style="gap:.4rem;display:none">
+    <div class="v2-shell" style="max-width:none;margin:22px 24px">
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Suivi individualisé</div>
+        <div class="v2-top-title">Journal de bord</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+        <div class="search-box" style="width:260px;max-width:100%">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="jSearch" placeholder="Rechercher…"/>
+        </div>
+        <button id="btnExportJournal" class="btn btn-ghost btn-sm" onclick="exportJournalPDF()" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <span class="btn-add-label">Exporter PDF</span>
+          Exporter PDF
         </button>
-        <button class="btn btn-accent btn-add-resident" onclick="showNewEntryForm()">
+        <button class="btn btn-accent btn-sm btn-add-resident" onclick="showNewEntryForm()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Nouvelle entrée</span>
         </button>
       </div>
-    </header>
+    </div>
 
-    <main class="content">
+    <div class="v2-body">
       <!-- VUE LISTE -->
       <div id="journalListView">
-        <div class="toolbar" style="margin-bottom:1.5rem;justify-content:center;max-width:760px;margin-left:auto;margin-right:auto">
-          <div class="search-box">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="jSearch" placeholder="Rechercher…"/>
-          </div>
+        <div class="v2-chips" id="jrChips" style="margin-bottom:14px"></div>
+        <div class="toolbar" style="margin-bottom:18px;gap:.6rem">
           <select id="jFilterResident" style="width:auto"><option value="">Tous les résidents</option></select>
-          <select id="jFilterCat" style="width:auto"><option value="">Toutes les catégories</option></select>
+          <select id="jFilterCat" style="width:auto;display:none"><option value="">Toutes les catégories</option></select>
           <input type="date" id="jFilterDate" style="width:auto" title="Date de début"/>
           <input type="date" id="jFilterDateEnd" style="width:auto" title="Date de fin"/>
-          <button class="btn btn-ghost btn-sm" id="btnUnreadFilter" onclick="toggleUnreadFilter()" style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" id="btnUnreadFilter" onclick="toggleUnreadFilter()" style="white-space:nowrap;margin-left:auto">
             <span id="unreadDot" style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block;flex-shrink:0"></span>
             Non lus <span id="unreadCount" style="background:var(--blue);color:#fff;border-radius:var(--r-full);padding:1px 6px;font-size:.7rem;margin-left:2px">0</span>
           </button>
         </div>
-        <div id="entriesList" style="display:flex;flex-direction:column;gap:.75rem;max-width:760px;margin:0 auto"></div>
+
+        <div class="v2-jr-body">
+          <div id="entriesList"></div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="v2-blk" id="jrCats"></div>
+            <div class="v2-blk" id="jrTop"></div>
+          </div>
+        </div>
+
+        <div class="v2-blk" id="jrSynthese" style="margin-top:18px"></div>
       </div>
 
       <!-- VUE FORMULAIRE -->
@@ -86,7 +102,8 @@
           <div id="entryFormContainer"></div>
         </div>
       </div>
-    </main>
+    </div>
+    </div>
   </div>
 </div>
 
@@ -165,5 +182,6 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
 <script src="js/journal.js"></script>
+<script src="js/journal-v2.js"></script>
 </body>
 </html>

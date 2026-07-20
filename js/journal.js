@@ -462,70 +462,11 @@ function journalNiveauLabel(v) {
   return ({ autonomie:'🟢 Autonomie — présence simple', supervision:'🔵 Supervision / veille', verbal:'🟡 Incitation / guidance verbale', partiel:'🟠 Aide partielle', total:'🔴 Aide totale' })[v] || v;
 }
 
+// Le rendu de la liste est assuré par js/journal-v2.js (maquette « Journal -
+// refonte »). La signature est conservée : tous les appels existants marchent.
 function renderEntries() {
-  const list = getEntries();
-  const el = document.getElementById('entriesList');
-  const cats = DB.get(DB.keys.categories) || [];
-  const journalResidents = _journalResidentsCache;
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Aucune entrée</h3><p>Commencez à documenter les événements.</p></div>`;
-    return;
-  }
-  updateUnreadBadge();
-  const session = Auth.getSession();
-  let lastDay = null;
-  el.innerHTML = list.map(e => {
-    const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
-    const jRes = journalResidents.find(r => r.id === e.residentId);
-    const isSelected = e.id === selectedEntryId;
-    const isUnread = session && (!e.readBy || !e.readBy.includes(session.userId));
-    const expandedSection = isSelected ? `
-      <div onclick="event.stopPropagation()" style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
-        <p style="font-size:.88rem;line-height:1.8;white-space:pre-wrap;color:var(--text);margin-bottom:.5rem">${escHtml(e.contenu)||''}</p>
-        ${(e.accompagnement || e.niveauSoutien) ? `<div style="background:#f0fdf4;border:1px solid #99e5dc55;border-radius:8px;padding:.5rem .65rem;margin-bottom:.6rem">
-          <div style="font-size:.68rem;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.15rem">🤝 Accompagnement apporté</div>
-          ${e.accompagnement ? `<div style="font-size:.82rem;color:var(--text);white-space:pre-wrap">${escHtml(e.accompagnement)}</div>` : ''}
-          ${e.niveauSoutien ? `<div style="font-size:.74rem;color:#0f766e;margin-top:.25rem">${journalNiveauLabel(e.niveauSoutien)}</div>` : ''}
-        </div>` : ''}
-        ${e.editedAt ? `<div style="font-size:.7rem;color:var(--muted);margin-bottom:.6rem;font-style:italic">✎ Modifié par ${escHtml(e.editedBy||'?')} le ${formatDateTime(e.editedAt)}${(e.editHistory&&e.editHistory.length)?` · <a href="#" onclick="event.preventDefault();event.stopPropagation();showEditHistory('${e.id}')" style="color:var(--accent)">historique (${e.editHistory.length})</a>`:''}</div>` : ''}
-        ${renderEntryAttachments(e)}
-        ${renderReplies(e)}
-        <div style="display:flex;gap:.5rem;align-items:flex-end;margin-top:.75rem">
-          <textarea id="replyContent_${e.id}" rows="2" class="form-control" style="flex:1;font-size:.82rem;resize:vertical" placeholder="Écrire une réponse…"></textarea>
-          <button class="btn btn-primary btn-sm" style="align-self:flex-end;flex-shrink:0" onclick="addReply('${e.id}')">Envoyer</button>
-        </div>
-        <div style="display:flex;gap:.4rem;justify-content:flex-end;margin-top:.5rem">
-          <button class="btn btn-ghost btn-sm" onclick="editEntry('${e.id}')">Modifier</button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntryById('${e.id}')">Supprimer</button>
-        </div>
-      </div>` : '';
-    const nodeColor = (entryCats[0] && entryCats[0].color) || e.residentColor || '#8b5cf6'; // couleur du nœud sur le fil = catégorie
-    const heure = e.date ? new Date(e.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-    const dayKey = (e.date || '').slice(0, 10);
-    let daySep = '';
-    if (dayKey && dayKey !== lastDay) { daySep = renderJournalDaySep(dayKey); lastDay = dayKey; }
-    return daySep + `<div class="entry-card ${isSelected ? 'selected' : ''}" style="--jc:${nodeColor};${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
-      ${heure ? `<div class="entry-time">${heure}</div>` : ''}
-      <div class="entry-header">
-        ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;display:inline-block"></span>' : ''}
-            <span style="font-weight:${isUnread ? '800' : '700'};font-size:.875rem">${escHtml(e.resident)||'—'}</span>
-            ${entryCats.map(cat => `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>`).join('')}
-            ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
-            ${e.serafinphType === 'direct' ? '<span class="badge" style="background:#8b5cf622;color:#8b5cf6">📊 Direct</span>' : ''}
-            ${e.serafinphType === 'indirect' ? '<span class="badge" style="background:#f9731622;color:#f97316">📊 Indirect</span>' : ''}
-          </div>
-          <div class="entry-meta">${formatDateTime(e.date)}${isUnread ? '' : ` · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span>`}</div>
-        </div>
-      </div>
-      ${!isSelected && !isUnread ? `<div class="entry-preview">${escHtml(e.contenu)||''}</div>` : ''}
-      ${!isSelected && isUnread ? `<div style="font-size:.78rem;color:var(--muted);margin-top:.5rem;font-style:italic">Cliquez pour lire</div>` : ''}
-      ${!isSelected && !isUnread && (e.replies||[]).length ? `<div style="font-size:.7rem;color:var(--blue);margin-top:.4rem;font-weight:600">💬 ${e.replies.length} réponse${e.replies.length>1?'s':''}</div>` : ''}
-      ${expandedSection}
-    </div>`;
-  }).join('');
+  if (typeof jr2Render === 'function') jr2Render();
+  if (typeof updateUnreadBadge === 'function') updateUnreadBadge();
 }
 
 function renderReplies(e) {
