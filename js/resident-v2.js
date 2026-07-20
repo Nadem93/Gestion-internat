@@ -19,6 +19,30 @@ const RV2_TABS = [
 ];
 
 const RV2_OK = '#10b981', RV2_WARN = '#f59e0b', RV2_DANGER = '#ef4444', RV2_MUTED = '#64748b';
+
+// Constantes recopiées ici pour que ce fichier soit autonome : OBJ_STATUTS n'est
+// déclaré que dans le script inline de resident.html et dans js/objectifs.js,
+// REGIME_TYPES/TEXTURES seulement dans js/repas.js — aucun n'est chargé par
+// l'annuaire. Les noms sont préfixés pour ne jamais entrer en collision.
+// Source de référence : js/objectifs.js et js/repas.js.
+const RV2_OBJ_STATUTS = {
+  non_commence: { label: 'Non commencé', color: '#64748b' },
+  en_cours:     { label: 'En cours',     color: '#d97706' },
+  atteint:      { label: 'Atteint',      color: '#16a34a' },
+  abandonne:    { label: 'Abandonné',    color: '#dc2626' }
+};
+const RV2_REGIMES = {
+  normal:        { label: 'Normal',        color: '#64748b' },
+  vegetarien:    { label: 'Végétarien',    color: '#16a34a' },
+  sansporc:      { label: 'Sans porc',     color: '#0891b2' },
+  halal:         { label: 'Halal',         color: '#0d9488' },
+  casher:        { label: 'Casher',        color: '#7c3aed' },
+  diabetique:    { label: 'Diabétique',    color: '#d97706' },
+  hyposode:      { label: 'Hyposodé',      color: '#0369a1' },
+  hypocalorique: { label: 'Hypocalorique', color: '#be185d' },
+  autre:         { label: 'Autre',         color: '#dc2626' }
+};
+const RV2_TEXTURES = { normale: 'Normale', hachee: 'Hachée', mixee: 'Mixée' };
 const RV2_MOIS = ['JANV', 'FÉVR', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
 const RV2_JOURS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
 
@@ -149,7 +173,7 @@ function rv2Projet(r) {
   const objs = ids.map(id => {
     const def = catalogue.find(o => String(o.id) === String(id)) || {};
     const sv = suivi[id] || {};
-    const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
+    const st = RV2_OBJ_STATUTS[sv.statut] || RV2_OBJ_STATUTS.non_commence;
     const pct = rv2ObjPct(sv);
     return { id, label: def.name || 'Objectif', st, sv, pct };
   });
@@ -217,11 +241,11 @@ function rv2Medical(r) {
   const reg = r.regime || {};
   const dietChips = [];
   if (reg.type) {
-    const rt = (typeof REGIME_TYPES !== 'undefined' && REGIME_TYPES[reg.type]) || { label: reg.type, color: RV2_MUTED };
+    const rt = RV2_REGIMES[reg.type] || { label: reg.type, color: RV2_MUTED };
     dietChips.push(rv2Chip(reg.type === 'autre' && reg.autreLabel ? reg.autreLabel : rt.label, rt.color));
   }
   if (reg.texture && reg.texture !== 'normale') {
-    const tx = (typeof TEXTURES !== 'undefined' && TEXTURES[reg.texture]) || reg.texture;
+    const tx = RV2_TEXTURES[reg.texture] || reg.texture;
     dietChips.push(rv2Chip('Texture ' + tx.toLowerCase(), '#8b5cf6'));
   }
   if (reg.allergiesAlim) dietChips.push(rv2Chip(reg.allergiesAlim, RV2_WARN));

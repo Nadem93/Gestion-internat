@@ -45,12 +45,12 @@ function resTags(r) {
   const t = [];
   const reg = r.regime || {};
   if (reg.type && reg.type !== 'normal') {
-    const rt = (typeof REGIME_TYPES !== 'undefined' && REGIME_TYPES[reg.type]) || null;
+    const rt = RV2_REGIMES[reg.type] || null;
     t.push({ l: reg.type === 'autre' && reg.autreLabel ? reg.autreLabel : (rt ? rt.label : reg.type),
              c: rt ? rt.color : '#64748b' });
   }
   if (reg.texture && reg.texture !== 'normale') {
-    const tx = (typeof TEXTURES !== 'undefined' && TEXTURES[reg.texture]) || reg.texture;
+    const tx = RV2_TEXTURES[reg.texture] || reg.texture;
     t.push({ l: tx, c: '#22d3ee' });
   }
   const allerg = reg.allergiesAlim || r.allergies;
@@ -96,7 +96,7 @@ function resRenderDetail() {
   const objs = (r.objectifs || []).map(id => {
     const def = catalogue.find(o => String(o.id) === String(id)) || {};
     const sv = suivi[id] || {};
-    const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
+    const st = RV2_OBJ_STATUTS[sv.statut] || RV2_OBJ_STATUTS.non_commence;
     return { label: def.name || 'Objectif', st, statut: sv.statut, pct: rv2ObjPct(sv) };
   });
 
