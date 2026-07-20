@@ -308,6 +308,101 @@ body.v2 .v2-shell {
 .v2-g-main { grid-template-columns: 1fr 340px; }
 .v2-g-15 { grid-template-columns: 1.5fr 1fr; }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   COUCHE DE COMPATIBILITÉ — composants hérités de style.css en thème sombre
+
+   Transitoire : permet à une page migrée d'afficher ses blocs pas encore
+   réécrits (cartes .card, badges, boutons…) sans qu'ils restent en clair.
+   À mesure qu'un bloc passe en composants v2-, il sort de cette couche.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) On redéfinit la palette de style.css : l'essentiel du markup hérité
+      utilise ces variables et s'adapte donc tout seul. */
+body.v2 {
+  --bg: #0a1728;
+  --white: rgba(255,255,255,.035);
+  --g50: rgba(255,255,255,.03);
+  --g100: rgba(255,255,255,.04);
+  --g200: rgba(255,255,255,.07);
+  --g300: rgba(255,255,255,.1);
+  --g400: #8095b4;
+  --g700: #c6d3e6;
+  --border: rgba(255,255,255,.07);
+  --muted: #8095b4;
+  --text: #eef3fb;
+  --primary: #eef3fb;
+  --accent: #818cf8;
+  --accent-h: #a5b4fc;
+}
+
+/* 2) Composants hérités */
+body.v2 .card {
+  background: var(--v2-s-card);
+  border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2);
+  box-shadow: none;
+  color: var(--v2-t4);
+}
+body.v2 .card h1, body.v2 .card h2, body.v2 .card h3,
+body.v2 .card-title, body.v2 .card-header { color: var(--v2-t3); }
+body.v2 .badge { border-color: transparent; }
+body.v2 .badge-gray { background: rgba(255,255,255,.06); color: var(--v2-t5); }
+body.v2 .btn { color: var(--v2-t4); }
+body.v2 .btn-ghost { background: rgba(255,255,255,.06); color: var(--v2-t4); }
+body.v2 .btn-ghost:hover { background: rgba(255,255,255,.1); }
+body.v2 .btn-outline { background: transparent; border-color: var(--v2-b-ctrl); color: var(--v2-t4); }
+body.v2 .empty { color: var(--v2-t6); }
+body.v2 .empty h3 { color: var(--v2-t3); }
+body.v2 table th { color: var(--v2-t8); }
+body.v2 table td { color: var(--v2-t4); }
+body.v2 input, body.v2 select, body.v2 textarea {
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t2);
+}
+body.v2 input::placeholder, body.v2 textarea::placeholder { color: var(--v2-t7); }
+body.v2 hr { border-color: var(--v2-b); }
+
+/* 3) Rattrapage des couleurs claires écrites EN DUR dans les styles inline.
+      Les styles inline l'emportent sur le CSS : d'où !important, strictement
+      limité à ces quelques valeurs héritées. */
+body.v2 [style*="background:#fff"],
+body.v2 [style*="background: #fff"],
+body.v2 [style*="background:#ffffff"] { background: var(--v2-s-card) !important; }
+body.v2 [style*="background:#f8fafc"],
+body.v2 [style*="background:#f1f5f9"] { background: var(--v2-s-sub) !important; }
+body.v2 [style*="color:#0f2b4a"] { color: var(--v2-t2) !important; }
+body.v2 [style*="border:1px solid #cbd5e1"],
+body.v2 [style*="border:1px solid #e2e8f0"] { border-color: var(--v2-b) !important; }
+
+/* En-tête de carte hérité : le bandeau clair de style.css doit disparaître */
+body.v2 .card-header {
+  background: transparent;
+  border-bottom-color: var(--v2-b);
+}
+
+/* 4) Fonds pastel de statut écrits en dur (≈80 occurrences dans l'app) :
+      on les convertit en voiles translucides et on éclaircit le texte associé,
+      sinon on garde des pastilles blanches illisibles sur fond sombre. */
+body.v2 [style*="#fef2f2"] { background: rgba(239,68,68,.14) !important; }
+body.v2 [style*="#f0fdf4"] { background: rgba(16,185,129,.14) !important; }
+body.v2 [style*="#fffbeb"], body.v2 [style*="#fef9c3"] { background: rgba(245,158,11,.14) !important; }
+body.v2 [style*="#ecfeff"] { background: rgba(34,211,238,.14) !important; }
+body.v2 [style*="#eef2ff"], body.v2 [style*="#f5f3ff"] { background: rgba(99,102,241,.14) !important; }
+
+body.v2 [style*="color:#dc2626"], body.v2 [style*="color:#ef4444"] { color: var(--v2-danger-text) !important; }
+body.v2 [style*="color:#16a34a"], body.v2 [style*="color:#15803d"] { color: var(--v2-ok-light) !important; }
+body.v2 [style*="color:#d97706"], body.v2 [style*="color:#b45309"],
+body.v2 [style*="color:#ea580c"] { color: var(--v2-warn-text) !important; }
+body.v2 [style*="color:#0891b2"], body.v2 [style*="color:#0284c7"] { color: var(--v2-cyan-pale) !important; }
+body.v2 [style*="color:#4f46e5"], body.v2 [style*="color:#7c3aed"],
+body.v2 [style*="color:#6366f1"], body.v2 [style*="color:#8b5cf6"] { color: var(--v2-indigo-pale) !important; }
+
+/* Bordures pastel associées */
+body.v2 [style*="#fecaca"] { border-color: rgba(239,68,68,.3) !important; }
+body.v2 [style*="#bbf7d0"] { border-color: rgba(16,185,129,.3) !important; }
+body.v2 [style*="#fde68a"] { border-color: rgba(245,158,11,.3) !important; }
+body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
+
 /* ── Responsive (les maquettes sont figées à 1400px : on adapte) ──────── */
 @media (max-width: 1200px) {
   .v2-g-main, .v2-g-15 { grid-template-columns: 1fr; }
