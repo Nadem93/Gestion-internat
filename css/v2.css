@@ -567,39 +567,3 @@ body.v2 .v2-res-ico a {
 }
 body.v2 .v2-res-ico a svg { width: 15px; height: 15px; }
 body.v2 .v2-res-ico a:hover { background: color-mix(in srgb, var(--bc, #818cf8) 30%, transparent) !important; }
-
-/* ── FICHE RÉSIDENT (dossier usager) ─────────────────────────────── */
-.v2-back {
-  display: inline-flex; align-items: center; gap: 9px; height: 40px;
-  padding: 0 15px 0 12px; border-radius: var(--v2-r-ctrl);
-  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
-  color: var(--v2-t4); font-size: 13px; font-weight: 600; flex-shrink: 0;
-}
-.v2-back:hover { background: rgba(255,255,255,.09); color: var(--v2-t2); }
-.v2-back svg { width: 16px; height: 16px; }
-
-.v2-hero-res {
-  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
-  padding: 20px 24px; margin-bottom: 18px;
-  border-radius: var(--v2-r-card);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--rc, #818cf8) 13%, transparent), var(--v2-s-alt));
-  border: 1px solid var(--v2-b-ctrl);
-}
-.v2-hero-av {
-  width: 74px; height: 74px; border-radius: var(--v2-r-card); flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; overflow: hidden;
-  font-size: 25px; font-weight: 800; color: #fff;
-  box-shadow: 0 10px 28px -8px color-mix(in srgb, var(--rc, #818cf8) 53%, transparent);
-}
-.v2-hero-av img { width: 100%; height: 100%; object-fit: cover; }
-.v2-hero-nom { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -.01em; }
-.v2-hero-meta { font-size: 12.5px; color: var(--v2-t5); margin-top: 6px; }
-.v2-facts { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
-.v2-fact {
-  min-width: 118px; padding: 10px 14px; border-radius: var(--v2-r-sm);
-  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b);
-}
-.v2-fact-k { font-size: 10px; color: var(--v2-t8); text-transform: uppercase;
-  letter-spacing: .05em; margin-bottom: 4px; }
-.v2-fact-v { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
-@media (max-width: 900px) { .v2-facts { margin-left: 0; width: 100%; } }
