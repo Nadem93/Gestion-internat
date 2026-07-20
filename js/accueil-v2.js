@@ -34,22 +34,22 @@ const _svg = (d, c, sz) => `<svg width="${sz || 21}" height="${sz || 21}" viewBo
 // Ordre, libellés et couleurs repris tels quels de la maquette.
 // href / perm / module proviennent de la page V1 (droits inchangés).
 const AV2_MODULES = [
-  { label: 'Tableau de bord', c: '#6366f1', ic: 'grid', href: 'dashboard.html', perm: 'view_dashboard' },
-  { label: 'Résidents', c: '#0891b2', ic: 'users', href: 'residents.html', perm: 'view_residents', module: 'residents', badge: true },
-  { label: 'Transmissions', c: '#3b82f6', ic: 'chat', href: 'transmissions.html', perm: 'access_journal', badge: true, badgeCls: 'tr-badge' },
-  { label: 'Alertes', c: '#ef4444', ic: 'bell', href: 'alertes.html', badge: true, badgeCls: 'al-badge' },
-  { label: 'Journal de bord', c: '#059669', ic: 'journal', href: 'journal.html', perm: 'access_journal', module: 'journal', badge: true },
-  { label: 'Agenda', c: '#d97706', ic: 'cal', href: 'planning.html', perm: 'access_presences', module: 'planning', badge: true },
-  { label: 'Vie quotidienne', c: '#0d9488', ic: 'home', href: 'vie-quotidienne.html', perm: 'access_presences,view_residents,access_journal,access_activites,access_medicaments' },
-  { label: 'Vie sociale (CVS)', c: '#16a34a', ic: 'users', href: 'cvs.html', perm: 'access_cvs', module: 'ppe' },
-  { label: 'Dossiers & suivi', c: '#b45309', ic: 'folder', href: 'dossiers.html', perm: 'access_ppe,view_residents,access_documents,access_repertoire,view_incidents,access_cvs,access_admissions', module: 'ppe', badge: true },
-  { label: 'Portail', c: '#818cf8', ic: 'gear', href: 'pilotage.html', perm: 'access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations', module: 'portail', badge: true },
-  { label: 'Interventions', c: '#14b8a6', ic: 'wrench', href: 'interventions.html', perm: 'access_interventions' },
-  { label: 'RH', c: '#a855f7', ic: 'users', href: 'rh.html', perm: 'access_paie,access_employes,manage_users,access_entretiens' },
-  { label: 'Finance', c: '#22c55e', ic: 'dollar', href: 'finance.html', only: 'admin-only' },
-  { label: 'Administration', c: '#94a3b8', ic: 'gear', href: 'admin.html', only: 'admin-only' },
+  { label: 'Tableau de bord', sub: 'Vue d\'ensemble', c: '#6366f1', ic: 'grid', href: 'dashboard.html', perm: 'view_dashboard' },
+  { label: 'Résidents', sub: 'Gestion et suivi', c: '#0891b2', ic: 'users', href: 'residents.html', perm: 'view_residents', module: 'residents', badge: true },
+  { label: 'Transmissions', sub: 'Échanges d\'équipe', c: '#3b82f6', ic: 'chat', href: 'transmissions.html', perm: 'access_journal', badge: true, badgeCls: 'tr-badge' },
+  { label: 'Alertes', sub: 'Notifications critiques', c: '#ef4444', ic: 'bell', href: 'alertes.html', badge: true, badgeCls: 'al-badge' },
+  { label: 'Journal de bord', sub: 'Notes et événements', c: '#059669', ic: 'journal', href: 'journal.html', perm: 'access_journal', module: 'journal', badge: true },
+  { label: 'Agenda', sub: 'Planning et RDV', c: '#d97706', ic: 'cal', href: 'planning.html', perm: 'access_presences', module: 'planning', badge: true },
+  { label: 'Vie quotidienne', sub: 'Activités & tâches', c: '#0d9488', ic: 'home', href: 'vie-quotidienne.html', perm: 'access_presences,view_residents,access_journal,access_activites,access_medicaments' },
+  { label: 'Vie sociale (CVS)', sub: 'Conseil de la vie sociale', c: '#16a34a', ic: 'users', href: 'cvs.html', perm: 'access_cvs', module: 'ppe' },
+  { label: 'Dossiers & suivi', sub: 'Dossiers résidents', c: '#b45309', ic: 'folder', href: 'dossiers.html', perm: 'access_ppe,view_residents,access_documents,access_repertoire,view_incidents,access_cvs,access_admissions', module: 'ppe', badge: true },
+  { label: 'Portail', sub: 'Espace personnel et pilotage', c: '#818cf8', ic: 'gear', href: 'pilotage.html', perm: 'access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations', module: 'portail', badge: true },
+  { label: 'Interventions', sub: 'Suivi des actions', c: '#14b8a6', ic: 'wrench', href: 'interventions.html', perm: 'access_interventions' },
+  { label: 'RH', sub: 'Ressources humaines', c: '#a855f7', ic: 'users', href: 'rh.html', perm: 'access_paie,access_employes,manage_users,access_entretiens' },
+  { label: 'Finance', sub: 'Budgets et factures', c: '#22c55e', ic: 'dollar', href: 'finance.html', only: 'admin-only' },
+  { label: 'Administration', sub: 'Paramètres et configuration', c: '#94a3b8', ic: 'gear', href: 'admin.html', only: 'admin-only' },
   // Absente de la maquette mais indispensable : bascule d'établissement (admin)
-  { label: 'Établissement', c: '#6f86ab', ic: 'home', href: 'javascript:showEtabSelection()', only: 'admin-only' }
+  { label: 'Établissement', sub: 'Informations générales', c: '#6f86ab', ic: 'home', href: 'javascript:showEtabSelection()', only: 'admin-only' }
 ];
 
 const AV2_ACTIONS = [
@@ -117,8 +117,11 @@ function _av2Grid() {
   return `<div class="v2-sep" style="margin:26px 0 14px"><span class="v2-sep-txt">Modules</span><span class="v2-sep-line"></span></div>
   <div class="v2-mods">${AV2_MODULES.map(m => `<a href="${m.href}" class="v2-mod${m.only ? ' ' + m.only : ''}"
       ${m.perm ? `data-perm="${m.perm}"` : ''} ${m.module ? `data-module="${m.module}"` : ''} style="--mc:${m.c}">
-      <span class="v2-mod-ico" style="background:${m.c}22">${_svg(IC[m.ic], m.c, 23)}</span>
-      <span class="v2-mod-lbl">${_av2(m.label)}</span>
+      <span class="v2-mod-ico" style="background:${m.c}22">${_svg(IC[m.ic], m.c, 20)}</span>
+      <span class="v2-mod-txt">
+        <span class="v2-mod-lbl">${_av2(m.label)}</span>
+        ${m.sub ? `<span class="v2-mod-sub">${_av2(m.sub)}</span>` : ''}
+      </span>
       ${m.badge ? `<span class="notif-badge${m.badgeCls ? ' ' + m.badgeCls : ''} hidden">0</span>` : ''}
     </a>`).join('')}</div>`;
 }
