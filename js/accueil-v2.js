@@ -140,21 +140,40 @@ function _av2Jour() {
       <span class="v2-card-meta">${evs.length} événement${evs.length > 1 ? 's' : ''}</span></div>${body}</div>`;
 }
 
+// Équipe en poste aujourd'hui, d'après les créneaux de planning_equipe.
 function _av2Activite() {
-  const f = [];
-  (AV2.data.transmissions || []).forEach(x => f.push({ q: x.createdAt || x.date, c: '#3b82f6', ic: 'chat', text: `Nouvelle transmission — ${x.residentName || 'établissement'}` }));
-  (AV2.data.incidents || []).forEach(x => f.push({ q: x.declaredAt || x.date, c: '#e11d48', ic: 'alert', text: `Incident déclaré — ${x.type || x.titre || ''}` }));
-  (AV2.data.journal || []).forEach(x => f.push({ q: x.createdAt || x.date, c: '#059669', ic: 'journal', text: `Entrée journal — ${x.residentName || x.titre || ''}` }));
-  (AV2.data.conges || []).filter(c => c.statut === 'accepte').forEach(x => f.push({ q: x.dateDemande || x.debut, c: '#f59e0b', ic: 'cal', text: `Congé validé — ${x.employeNom || ''}` }));
-  f.sort((a, b) => String(b.q || '').localeCompare(String(a.q || '')));
-  const body = f.length ? f.slice(0, 6).map(a => `<div class="v2-act">
-      <span class="v2-act-ico" style="background:${a.c}22">${_svg(IC[a.ic], a.c, 17)}</span>
-      <span class="v2-row-title" style="min-width:0">${_av2(a.text)}</span>
-      <span class="v2-act-t">${_av2Rel(a.q)}</span></div>`).join('')
-    : `<div style="font-size:12px;color:var(--v2-t7);padding:6px 0">Aucune activité récente.</div>`;
+  const t = _av2Today();
+  const now = new Date().toTimeString().slice(0, 5);
+  const jour = (AV2.data.shifts || [])
+    .filter(s => String(s.date || '').slice(0, 10) === t && s.employeNom)
+    .sort((a, b) => String(a.debut || '').localeCompare(String(b.debut || '')));
+
+  const enPoste = s => {
+    const d = (s.debut || '').slice(0, 5), f = (s.fin || '').slice(0, 5);
+    if (!d || !f) return false;
+    return f < d ? (now >= d || now < f)   // créneau de nuit, à cheval sur minuit
+                 : (now >= d && now < f);
+  };
+  const ini = n => (n || '').trim().split(/\s+/).filter(Boolean).slice(0, 2)
+    .map(w => w[0].toUpperCase()).join('') || '?';
+
+  const body = jour.length ? jour.slice(0, 8).map(s => {
+    const actif = enPoste(s);
+    const c = actif ? '#10b981' : '#64748b';
+    const h = (s.debut || '').slice(0, 5) && (s.fin || '').slice(0, 5)
+      ? `${(s.debut || '').slice(0, 5)} – ${(s.fin || '').slice(0, 5)}` : '';
+    return `<div class="v2-act">
+      <span class="v2-act-ico" style="background:${c}22;color:${c};font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${_av2(ini(s.employeNom))}</span>
+      <span class="v2-row-title" style="min-width:0">${_av2(s.employeNom)}${actif ? ' <span style="font-size:10px;font-weight:700;color:#10b981;background:#10b98118;padding:2px 7px;border-radius:6px;margin-left:6px">en poste</span>' : ''}</span>
+      <span class="v2-act-t">${_av2(h)}</span></div>`;
+  }).join('')
+    : `<div style="font-size:12px;color:var(--v2-t7);padding:6px 0">Aucun créneau planifié aujourd'hui.</div>`;
+
   return `<div class="v2-card"><div class="v2-card-head">
-      <span class="v2-ico" style="background:#818cf822">${_svg(IC.clock, '#818cf8', 17)}</span>
-      <span class="v2-card-title">Activité récente</span></div>${body}</div>`;
+      <span class="v2-ico" style="background:#10b98122">${_svg(IC.users, '#10b981', 17)}</span>
+      <span class="v2-card-title">Équipe présente</span>
+      <a href="planning-equipe.html" style="margin-left:auto;font-size:11.5px;font-weight:600;color:var(--v2-indigo-light)">Planning</a>
+      </div>${body}</div>`;
 }
 
 function _av2Actions() {
