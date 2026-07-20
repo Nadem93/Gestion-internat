@@ -1,8 +1,9 @@
 // ══════════════════════════════════════════════════════════════════════════
 // ACCUEIL V2 — reproduction de la maquette « Accueil - refonte (bento) »
 // Ordre, couleurs et structure repris du fichier de design.
-// Les tuiles conservent data-perm / data-module / admin-only / rh-only :
-// le filtrage des droits existant s'applique sans modification.
+// Les tuiles portent data-perm / data-module / admin-only. Le filtrage par
+// rôle de l'application vit dans des écouteurs DOMContentLoaded, qui tournent
+// AVANT ce rendu : _av2Roles() le réapplique donc explicitement après coup.
 // ══════════════════════════════════════════════════════════════════════════
 
 const AV2 = { data: {} };
@@ -77,6 +78,7 @@ async function initAccueilV2() {
 
   host.innerHTML = _av2Hero() + _av2Kpis(true) + _av2Grid() + `<div id="accV2Bas" style="margin-top:16px"></div>`;
   if (typeof applyPermissions === 'function') { try { applyPermissions(); } catch (e) { console.warn(e); } }
+  _av2Roles();
 
   const [presDay, incidents, planning, shifts, transmissions, journal, conges] = await Promise.all([
     call('sbGetPresencesForDate', t), call('sbGetIncidents'), call('sbGetPlanningEvents'),
@@ -90,6 +92,17 @@ async function initAccueilV2() {
   if (b) b.innerHTML = `<div class="v2-g v2-g2">${_av2Jour()}${_av2Activite()}</div>
     <div class="v2-sep" style="margin-top:22px"><span class="v2-sep-txt">Actions rapides</span><span class="v2-sep-line"></span></div>
     ${_av2Actions()}`;
+}
+
+// Filtrage par rôle des tuiles rendues dynamiquement. Indispensable : les
+// écouteurs DOMContentLoaded de l'app ont déjà tourné quand on arrive ici.
+function _av2Roles() {
+  const hide = sel => document.querySelectorAll('#accV2 ' + sel).forEach(el => el.style.display = 'none');
+  try {
+    if (!Auth.isAdmin()) hide('.admin-only');
+    if (typeof Auth.isRH === 'function' && !Auth.isRH()) hide('.rh-only');
+    if (typeof Auth.isSuperAdmin === 'function' && !Auth.isSuperAdmin()) hide('.superadmin-only');
+  } catch (e) { console.warn('[accV2] rôles', e); }
 }
 
 function _av2Hero() {
