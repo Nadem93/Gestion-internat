@@ -25,12 +25,14 @@ function _dv2MyName() {
   try { const s = Auth.getSession(); return s ? `${s.prenom || ''} ${s.nom || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') : ''; }
   catch (e) { return ''; }
 }
+function _dv2SeesAll() { try { return !!(Auth.isAdmin && Auth.isAdmin()); } catch (e) { return true; } }
+// Renvoie null quand le compte voit tout l'établissement (admin, ou nom de session absent).
 function _dv2MesReferes(list) {
+  if (_dv2SeesAll()) return null;
   const me = _dv2MyName();
   if (!me) return null;
   const n = x => (x || '').trim().toLowerCase().replace(/\s+/g, ' ');
-  const mine = (list || []).filter(r => n(r.referent) === me || n(r.coReferent) === me);
-  return mine.length ? mine : null;   // null = référent de personne → repli sur tout l'établissement
+  return (list || []).filter(r => n(r.referent) === me || n(r.coReferent) === me);
 }
 function _dv2Ini(r) { return ((r?.prenom || '')[0] || '') + ((r?.nom || '')[0] || ''); }
 
@@ -480,10 +482,11 @@ function _dv2Annonces() {
 
 function _dv2Residents() {
   const actifs = DV2.data.residents.filter(r => r.statut !== 'sorti');
-  const mine = _dv2MesReferes(actifs);
+  const mine = _dv2MesReferes(actifs);          // null = compte voyant tout l'établissement
   const list = mine || actifs;
   const titre = mine ? 'Mes référés — aperçu' : 'Résidents — aperçu';
-  if (!list.length) return _dv2Card({ title: titre, icon: '👤', color: '#10b981', body: _dv2Empty('Aucun résident.') });
+  if (!list.length) return _dv2Card({ title: titre, icon: '👤', color: '#10b981',
+    body: _dv2Empty(mine ? "Vous n'êtes référent d'aucun résident." : 'Aucun résident.') });
   const S = { present: ['Présent', 'v2-b-ok'], absent: ['Absent', 'v2-b-danger'], rdv: ['RDV ext.', 'v2-b-info'],
               sortie: ['Sortie', 'v2-b-info'], hopital: ['Hôpital', 'v2-b-warn'] };
   const body = `<div class="v2-g v2-g4" style="gap:10px">${list.map(r => {
