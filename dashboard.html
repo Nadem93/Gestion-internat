@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Tableau de bord — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     .mini-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.85rem;margin-bottom:1.5rem}
@@ -144,7 +145,7 @@
     @media(max-width:680px){.me-stats{order:3;flex:1 1 100%;min-width:0;margin-top:8px}#meHello{display:none}.me-link{display:none}}
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
 
   <!-- MAIN -->
@@ -160,6 +161,9 @@
     </header>
 
     <main class="content">
+      <!-- COCKPIT V2 — vue établissement (js/dashboard-v2.js) -->
+      <div id="dashV2"></div>
+
 
       <!-- MON ESPACE (salarié connecté) -->
       <div id="monEspaceCard" style="display:none;margin-bottom:1.5rem">
@@ -538,6 +542,12 @@
 <script src="js/taches-supabase.js"></script>
 <script src="js/plan-soins-supabase.js"></script>
 <script src="js/plan-soins.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/inventaire-supabase.js"></script>
+<script src="js/interventions-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
+<script src="js/dashboard-v2-supabase.js"></script>
+<script src="js/dashboard-v2.js"></script>
 <script>
   // Carte « Mon espace » : congés + heures de récup du salarié connecté
   (async function loadMonEspace() {
@@ -1871,6 +1881,8 @@
     try { await sbLoadResidentsCache(); } catch (e) { console.error(e); }
     try { await _dashLoadLive(); } catch (e) { console.error(e); }
     renderDashboard();
+    // Cockpit V2 (vue établissement) — indépendant des blocs référés ci-dessous.
+    try { if (typeof initDashboardV2 === 'function') await initDashboardV2(); } catch (e) { console.error('[dashV2]', e); }
     renderNiveauxSoutien().catch(e => console.error(e));
     try { renderReferesFiches(); } catch (e) { console.error(e); }
     try { renderPlanningReferes(); } catch (e) { console.error(e); }
