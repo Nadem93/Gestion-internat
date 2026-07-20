@@ -576,8 +576,15 @@ async function initResidents() {
     if (e.target.id === 'modalResident') { closeAllModals(); resetForm(); }
   });
 
-  // Ouvrir directement l'édition si ?edit=xxx
+  // Recherche pré-remplie depuis un autre écran (?q=…) — ex. la palette ⌘K du tableau de bord
   const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (q) {
+    const si = document.getElementById('searchInput');
+    if (si) { si.value = q; renderResidents(); si.focus(); }
+  }
+
+  // Ouvrir directement l'édition si ?edit=xxx
   const editId = params.get('edit');
   if (editId) {
     setTimeout(() => editResident(editId), 100);
