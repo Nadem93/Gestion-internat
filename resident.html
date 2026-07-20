@@ -3304,42 +3304,54 @@ document.addEventListener('DOMContentLoaded', async () => {
   // laisser la fiche figée sur « Chargement… » : chaque lecture est isolée, et le rendu a toujours lieu.
   const _safe = (label, p) => Promise.resolve().then(() => p).catch(e => { console.error('[fiche résident] échec chargement ' + label, e); return null; });
   const _dbset = (k, v) => { if (v != null) { try { DB.set(k, v); } catch (e) { console.warn('[fiche résident] cache local ignoré (quota ?) — ' + k, e); } } };
+  // Toutes ces lectures sont indépendantes : elles partent EN UNE SEULE VAGUE.
+  // Les enchaîner par `await` successifs multipliait les allers-retours réseau.
+  const opt = (nom, ...args) => (typeof window[nom] === 'function' ? window[nom](...args) : Promise.resolve(null));
+  const t0 = (window.performance && performance.now()) || 0;
   try {
-    [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache, _residentActCatalogue, , _residentTransmissionsAll] = await Promise.all([
-      _safe('résidents', sbGetResidents()),
-      _safe('journal', sbGetJournalEntries()),
-      _safe('présences', sbGetPresencesRange(daysAgo(35), today())),
-      _safe('planning', sbGetPlanningEvents()),
-      _safe('activités', (typeof sbGetActivites === 'function' ? sbGetActivites() : Promise.resolve([]))),
-      _safe('référents', (typeof loadReferents === 'function' ? loadReferents() : Promise.resolve())),
-      _safe('transmissions', (typeof sbGetTransmissions === 'function' ? sbGetTransmissions() : Promise.resolve([])))
-    ]);
-    _residentDetailCache      = _residentDetailCache      || [];
-    _residentJournalAll       = _residentJournalAll       || [];
-    _residentPresencesRange   = _residentPresencesRange   || {};
-    _residentPlanningCache    = _residentPlanningCache    || [];
-    _residentActCatalogue     = _residentActCatalogue     || [];
-    _residentTransmissionsAll = _residentTransmissionsAll || [];
-    await _safe('documents', loadDocResCache());
-    // L'unité vient de la chambre occupée, le téléphone du référent de la fiche employé.
-    _residentChambres = (await _safe('chambres', (typeof sbGetChambres === 'function' ? sbGetChambres() : Promise.resolve([])))) || [];
-    _residentEmployes = (await _safe('employés', (typeof sbGetEmployes === 'function' ? sbGetEmployes() : Promise.resolve([])))) || [];
+    // La fiche ne lit les présences que pour CE résident : on filtre côté serveur.
+    const idCourant = new URLSearchParams(window.location.search).get('id');
+    const lectures = {
+      residents:     sbGetResidents(),
+      journal:       sbGetJournalEntries(),
+      presences:     sbGetPresencesRange(daysAgo(35), today(), idCourant),
+      planning:      sbGetPlanningEvents(),
+      activites:     opt('sbGetActivites'),
+      referents:     opt('loadReferents'),
+      transmissions: opt('sbGetTransmissions'),
+      documents:     loadDocResCache(),
+      chambres:      opt('sbGetChambres'),
+      employes:      opt('sbGetEmployes'),
+      incidents:     opt('sbGetIncidents'),
+      ppe:           opt('sbGetPpe'),
+      nuits:         opt('sbGetNuits'),
+      visites:       opt('sbGetVisites'),
+      medicaments:   opt('sbGetMedDistrib'),
+      planSoins:     opt('sbGetPlanSoins')
+    };
+    const cles = Object.keys(lectures);
+    const vals = await Promise.all(cles.map(k => _safe(k, lectures[k])));
+    const d = {};
+    cles.forEach((k, n) => { d[k] = vals[n]; });
+
+    _residentDetailCache      = d.residents     || [];
+    _residentJournalAll       = d.journal       || [];
+    _residentPresencesRange   = d.presences     || {};
+    _residentPlanningCache    = d.planning      || [];
+    _residentActCatalogue     = d.activites     || [];
+    _residentTransmissionsAll = d.transmissions || [];
+    _residentChambres         = d.chambres      || [];
+    _residentEmployes         = d.employes      || [];
+
     // Hydrate en localStorage les stores migrés encore lus via DB.get sur la fiche
     // (incidents, ppe, nuits, visites, médicaments) — les sbGet* ne cachent pas d'eux-mêmes.
-    const _hy = await Promise.all([
-      _safe('incidents', (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null))),
-      _safe('ppe', (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null))),
-      _safe('nuits', (typeof sbGetNuits === 'function' ? sbGetNuits() : Promise.resolve(null))),
-      _safe('visites', (typeof sbGetVisites === 'function' ? sbGetVisites() : Promise.resolve(null))),
-      _safe('médicaments', (typeof sbGetMedDistrib === 'function' ? sbGetMedDistrib() : Promise.resolve(null))),
-      _safe('plan de soins', (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null))),
-    ]);
-    _dbset(DB.keys.incidents,   _hy[0]);
-    _dbset(DB.keys.ppe,         _hy[1]);
-    _dbset(DB.keys.nuits,       _hy[2]);
-    _dbset(DB.keys.visites,     _hy[3]);
-    _dbset(DB.keys.medicaments, _hy[4]);
-    _dbset(DB.keys.planSoins,   _hy[5]);
+    _dbset(DB.keys.incidents,   d.incidents);
+    _dbset(DB.keys.ppe,         d.ppe);
+    _dbset(DB.keys.nuits,       d.nuits);
+    _dbset(DB.keys.visites,     d.visites);
+    _dbset(DB.keys.medicaments, d.medicaments);
+    _dbset(DB.keys.planSoins,   d.planSoins);
+    if (t0) console.info('[fiche résident] données chargées en ' + Math.round(performance.now() - t0) + ' ms');
   } catch (e) {
     console.error('[fiche résident] erreur de chargement des données (rendu quand même)', e);
   }

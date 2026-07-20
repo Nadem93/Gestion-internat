@@ -579,25 +579,24 @@ async function initResidents() {
   renderObjectifsCheckboxes([]);
   initPhotoUpload();
   initDocUpload();
-  await loadDocResCache();
-  if (typeof sbGetPresencesRange === 'function') {
-    try {
-      const d = new Date(); d.setDate(d.getDate() - 3);
-      const from = d.toISOString().slice(0, 10);
-      DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
-    } catch (e) { console.error(e); }
-  }
-  // Le rail de détail a besoin de l'unité (table chambres) et de la dernière
-  // transmission. Échec silencieux : le rail se dégrade, la liste reste utilisable.
-  if (typeof sbGetChambres === 'function') {
-    try { _residentChambres = await sbGetChambres() || []; }
-    catch (e) { console.warn('[annuaire] chambres', e); }
-  }
-  if (typeof sbGetTransmissions === 'function') {
-    try { _residentsTransmissions = await sbGetTransmissions() || []; }
-    catch (e) { console.warn('[annuaire] transmissions', e); }
-  }
-  await loadAndRenderResidents();
+  // Toutes ces lectures sont indépendantes : une seule vague réseau.
+  // (chambres = l'unité du rail, transmissions = la dernière note du rail ;
+  //  échec silencieux, le rail se dégrade mais la liste reste utilisable.)
+  const _d3 = new Date(); _d3.setDate(_d3.getDate() - 3);
+  const _opt = (nom, ...a) => (typeof window[nom] === 'function' ? window[nom](...a) : Promise.resolve(null));
+  const _sr = (label, p) => Promise.resolve().then(() => p).catch(e => { console.warn('[annuaire] ' + label, e); return null; });
+  const [, presences, chambres, transmissions, residents] = await Promise.all([
+    _sr('documents', loadDocResCache()),
+    _sr('présences', _opt('sbGetPresencesRange', _d3.toISOString().slice(0, 10), today())),
+    _sr('chambres', _opt('sbGetChambres')),
+    _sr('transmissions', _opt('sbGetTransmissions')),
+    _sr('résidents', sbGetResidents())
+  ]);
+  if (presences) DB.set(DB.keys.presences, presences);
+  _residentChambres = chambres || [];
+  _residentsTransmissions = transmissions || [];
+  _residentsCache = residents || [];
+  renderResidents();
 
   const searchInput = document.getElementById('searchInput');
   if (searchInput) searchInput.addEventListener('input', renderResidents);

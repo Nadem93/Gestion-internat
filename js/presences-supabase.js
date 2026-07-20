@@ -15,14 +15,19 @@ async function sbGetPresencesForDate(date) {
 }
 
 // Pour l'export PDF : toutes les présences entre deux dates, groupées par date.
-async function sbGetPresencesRange(startDate, endDate) {
+// residentId facultatif : la fiche résident n'a besoin que d'une personne, et
+// filtrer côté serveur évite de rapatrier ~40× trop de lignes (donc la pagination).
+async function sbGetPresencesRange(startDate, endDate, residentId) {
   // Lecture paginée : une plage d'un mois dépasse déjà 1000 lignes (~41 résidents × 31 j)
   let data;
   try {
-    data = await sbFetchAll(() => supabaseClient
-      .from('presences').select('resident_id, date, statut')
-      .gte('date', startDate).lte('date', endDate)
-      .order('date').order('resident_id'));
+    data = await sbFetchAll(() => {
+      let q = supabaseClient
+        .from('presences').select('resident_id, date, statut')
+        .gte('date', startDate).lte('date', endDate);
+      if (residentId) q = q.eq('resident_id', residentId);
+      return q.order('date').order('resident_id');
+    });
   } catch (error) { console.error(error); toast('Erreur de chargement des présences', 'error'); return {}; }
   const out = {};
   data.forEach(row => {
