@@ -87,7 +87,7 @@ function jr2RenderFil(liste) {
 
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">${jours.map(d => {
     const ents = parJour[d].sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    return `<div>
+    return `<div class="v2-jr-grp">
       <div class="v2-jr-day">
         <span class="v2-jr-day-l">${escHtml(journalDayLabel(d))}</span>
         <span class="v2-jr-day-n">${ents.length} entrée${ents.length > 1 ? 's' : ''}</span>

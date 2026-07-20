@@ -1059,9 +1059,16 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 /* ── JOURNAL DE BORD ──────────────────────────────────────────────── */
 .v2-jr-body { display: grid; grid-template-columns: 1fr 358px; gap: 20px; align-items: start; }
 @media (max-width: 1100px) { .v2-jr-body { grid-template-columns: 1fr; } }
-.v2-jr-day { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.v2-jr-day-l { font-family: var(--v2-display); font-size: 12.5px; font-weight: 700;
-  color: var(--v2-t3); text-transform: capitalize; }
+/* Séparation de jour : filet pleine largeur + pastille datée, collée en haut
+   pendant le défilement pour qu'on sache toujours quel jour on lit. */
+.v2-jr-grp + .v2-jr-grp { border-top: 1px solid var(--v2-b); padding-top: 20px; }
+.v2-jr-day { display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  position: sticky; top: 0; z-index: 3; padding: 6px 0;
+  background: linear-gradient(var(--v2-bg) 78%, transparent); }
+.v2-jr-day-l { font-family: var(--v2-display); font-size: 12px; font-weight: 700;
+  color: var(--v2-t2); text-transform: capitalize;
+  padding: 5px 12px; border-radius: 999px;
+  background: var(--v2-s-sel); border: 1px solid var(--v2-b-ctrl); }
 .v2-jr-day-n { font-size: 11px; color: var(--v2-t7); }
 .v2-jr-day-s { flex: 1; height: 1px; background: var(--v2-b); }
 .v2-jr-row { display: flex; gap: 14px; }
