@@ -100,13 +100,18 @@ function med2Stats(enriched) {
     carte('#f59e0b', MED2_IC.clock, attente, 'En attente');
 }
 
-// ── PANNEAUX : renouvellements + prochaines prises ───────────────────
+// ── PANNEAUX : stock & renouvellements + prochaines prises ───────────
 function med2Panels(date, enriched) {
   const el = document.getElementById('medPanels');
   if (!el) return;
+  const ajout = medCanEdit
+    ? `<button type="button" class="v2-med-pan-add" onclick="stockMedOpen('')" title="Ajouter un stock">+ Stock</button>`
+    : '';
   el.innerHTML =
     `<div class="v2-med-pan v2-med-pan-warn">
-      <div class="v2-med-pan-h"><span style="color:var(--v2-warn-icon)">${_med2Svg(MED2_IC.box)}</span><span class="v2-med-pan-t">Renouvellements de traitements</span></div>
+      <div class="v2-med-pan-h"><span style="color:var(--v2-warn-icon)">${_med2Svg(MED2_IC.box)}</span><span class="v2-med-pan-t">Stock &amp; renouvellements</span>${ajout}</div>
+      <div class="v2-med-pan-c">${med2Stock()}</div>
+      <div class="v2-med-sub-h">Fins de traitement</div>
       <div class="v2-med-pan-c">${med2Renouvellements(date)}</div>
     </div>
     <div class="v2-med-pan">
@@ -115,8 +120,160 @@ function med2Panels(date, enriched) {
     </div>`;
 }
 
-// Le stock de médicaments n'existe pas en base : on affiche la seule donnée
-// réelle de renouvellement, la date de fin des traitements (r.sante.traitements[].fin).
+// ── STOCK DE MÉDICAMENTS ─────────────────────────────────────────────
+// Source : table stock_medicaments (js/stock-med-supabase.js). Tant que la
+// migration n'est pas exécutée, le cache reste vide et le bloc affiche un
+// état vide — la page reste utilisable.
+let _stockMedCache = [];
+function stockMedList() { return _stockMedCache; }
+async function loadStockMedCache() {
+  _stockMedCache = (typeof sbGetStockMed === 'function') ? await sbGetStockMed() : [];
+}
+
+// Niveau déduit de seuil_alerte, même convention que inventaire.seuil_alerte
+// (cf. _dv2Stocks dans js/dashboard-v2.js) : moitié du seuil = critique.
+function stockMedNiveau(s) {
+  const seuil = s.seuilAlerte;
+  if (seuil == null) return null;
+  const q = s.quantite ?? 0;
+  if (q <= seuil / 2) return { label: 'Critique', c: '#ef4444' };
+  if (q <= seuil) return { label: 'Bas', c: '#f59e0b' };
+  return { label: 'OK', c: '#10b981' };
+}
+
+// Pourcentage restant = quantite / quantite_initiale. Sans quantité initiale
+// exploitable, il n'y a pas de pourcentage : on n'affiche pas de barre.
+function stockMedPct(s) {
+  const init = s.quantiteInitiale ?? 0;
+  if (!init || init <= 0) return null;
+  return Math.max(0, Math.min(100, Math.round((s.quantite ?? 0) / init * 100)));
+}
+
+function med2Stock() {
+  const list = stockMedList();
+  if (!list.length) {
+    return `<div class="v2-blk-vide">Aucun stock enregistré.${medCanEdit ? ' Utilisez « + Stock » pour en ajouter un.' : ''}</div>`;
+  }
+  const resMap = {};
+  (typeof sbResidents === 'function' ? sbResidents() : []).forEach(r => { resMap[String(r.id)] = r; });
+
+  const rang = s => { const n = stockMedNiveau(s); return n ? ['Critique', 'Bas', 'OK'].indexOf(n.label) : 3; };
+  const tri = [...list].sort((a, b) => rang(a) - rang(b)
+    || (stockMedPct(a) ?? 101) - (stockMedPct(b) ?? 101)
+    || (a.libelle || '').localeCompare(b.libelle || '', 'fr'));
+
+  return tri.slice(0, 6).map(s => {
+    const niv = stockMedNiveau(s);
+    const pct = stockMedPct(s);
+    const c = niv ? niv.c : '#818cf8';
+    const r = s.residentId ? resMap[String(s.residentId)] : null;
+    const qui = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : (s.residentId ? '' : 'Stock collectif');
+
+    const sub = [
+      qui,
+      `${s.quantite ?? 0}${s.unite ? ' ' + s.unite : ''} restant(s)`,
+      s.datePeremption ? 'péremption ' + formatDate(s.datePeremption) : ''
+    ].filter(Boolean).join(' · ');
+
+    const barre = pct == null ? ''
+      : `<div class="v2-med-li-bar" title="${pct}% restant"><div class="v2-prog"><span style="width:${pct}%;background:${c}"></span></div></div>`;
+    const tag = niv
+      ? `<span class="v2-med-li-tag">${niv.label}${pct == null ? '' : ' · ' + pct + '%'}</span>`
+      : (pct == null ? '' : `<span class="v2-med-li-tag">${pct}%</span>`);
+    const edit = medCanEdit
+      ? `<button type="button" class="v2-med-li-edit" onclick="stockMedOpen('${escAttr(s.id)}')" title="Modifier ce stock" aria-label="Modifier le stock ${escAttr(s.libelle)}">${_med2Svg(MED2_IC.edit, 2.4)}</button>`
+      : '';
+
+    return `<div class="v2-med-li" style="--pc:${c}">
+      <div style="flex:1;min-width:0">
+        <div class="v2-med-li-n">${escHtml(s.libelle || '—')}</div>
+        <div class="v2-med-li-s">${escHtml(sub)}</div>
+      </div>
+      ${barre}${tag}${edit}
+    </div>`;
+  }).join('');
+}
+
+// ── MODALE STOCK (gabarit .v2-md) ────────────────────────────────────
+let _stkEditId = '';
+
+function stockMedOpen(id) {
+  if (!medCanEdit) return;
+  _stkEditId = id || '';
+  const s = _stockMedCache.find(x => String(x.id) === String(id)) || {};
+  const set = (el, v) => { const n = document.getElementById(el); if (n) n.value = v; };
+
+  // Liste des résidents pour un stock nominatif (vide = stock collectif)
+  const sel = document.getElementById('stkResident');
+  if (sel) {
+    const res = (typeof medResidents === 'function' ? medResidents() : []);
+    sel.innerHTML = `<option value="">Stock collectif (pharmacie de l'internat)</option>` +
+      res.map(r => `<option value="${escAttr(r.id)}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
+    sel.value = s.residentId || '';
+  }
+  set('stkLibelle', s.libelle || '');
+  set('stkQuantite', s.quantite ?? '');
+  set('stkInitiale', s.quantiteInitiale ?? '');
+  set('stkSeuil', s.seuilAlerte ?? '');
+  set('stkUnite', s.unite || '');
+  set('stkPeremption', s.datePeremption || '');
+
+  const t = document.getElementById('stkTitle');
+  if (t) t.textContent = id ? 'Modifier le stock' : 'Ajouter un stock';
+  const del = document.getElementById('stkDelete');
+  // La suppression est réservée aux administrateurs (politique RLS).
+  if (del) del.style.display = (id && Auth.isAdmin()) ? '' : 'none';
+
+  openModal('modalStockMed');
+}
+
+async function stockMedSave() {
+  const val = id => (document.getElementById(id) || {}).value || '';
+  const libelle = val('stkLibelle').trim();
+  if (!libelle) { toast('Indiquez le libellé du médicament', 'error'); return; }
+  const initiale = Number(val('stkInitiale'));
+  if (!Number.isFinite(initiale) || initiale <= 0) { toast('Indiquez une quantité initiale supérieure à 0', 'error'); return; }
+  const quantite = Number(val('stkQuantite'));
+  if (!Number.isFinite(quantite) || quantite < 0) { toast('Indiquez une quantité restante valide', 'error'); return; }
+
+  const s = {
+    id: _stkEditId || undefined,
+    residentId: val('stkResident'),
+    libelle,
+    quantite,
+    quantiteInitiale: initiale,
+    seuilAlerte: val('stkSeuil') === '' ? null : Number(val('stkSeuil')),
+    unite: val('stkUnite').trim(),
+    datePeremption: val('stkPeremption')
+  };
+  try {
+    await sbSaveStockMed(s);
+    await loadStockMedCache();
+    closeModal('modalStockMed');
+    med2Render();
+    toast('Stock enregistré');
+  } catch (e) {
+    console.error('[stock-med] enregistrement', e);
+    toast(e.message || 'Enregistrement du stock impossible', 'error');
+  }
+}
+
+async function stockMedDelete() {
+  if (!_stkEditId) return;
+  if (!confirm('Supprimer cette ligne de stock ?')) return;
+  try {
+    await sbDeleteStockMed(_stkEditId);
+    await loadStockMedCache();
+    closeModal('modalStockMed');
+    med2Render();
+    toast('Stock supprimé');
+  } catch (e) {
+    console.error('[stock-med] suppression', e);
+    toast(e.message || 'Suppression du stock impossible', 'error');
+  }
+}
+
+// Fins de traitement : donnée réelle issue de r.sante.traitements[].fin.
 function med2Renouvellements(date) {
   const lignes = [];
   medResidents().forEach(r => {

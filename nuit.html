@@ -130,6 +130,90 @@
   </div>
 </div>
 
+<!-- MODALE CONSIGNE DE VEILLE -->
+<div class="modal-overlay v2-ov" id="modalVeilleConsigne">
+  <div class="v2-md" style="--mc:#f59e0b">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Consigne de veille</div>
+        <div class="v2-md-s">Rappelée chaque nuit jusqu'à son retrait</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalVeilleConsigne')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="vcResident">Résident concerné *</label>
+        <select id="vcResident" class="v2-fld"></select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="vcTexte">Consigne *</label>
+        <textarea id="vcTexte" class="v2-fld" rows="3" placeholder="Ce que le veilleur doit surveiller ou faire…"></textarea>
+      </div>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Permanente : affichée toutes les nuits tant qu'elle n'est pas retirée par son auteur ou un administrateur.
+      </div>
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalVeilleConsigne')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveVeilleConsigne()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+        Ajouter la consigne
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE ÉTAT DU SOMMEIL -->
+<div class="modal-overlay v2-ov" id="modalSommeil">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">État du sommeil</div>
+        <div class="v2-md-s" id="smNom">—</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalSommeil')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="v2-md-b">
+      <input type="hidden" id="smResidentId"/>
+      <div>
+        <label class="v2-fld-l" for="smEtat">État de la nuit</label>
+        <select id="smEtat" class="v2-fld">
+          <option value="calme">Calme</option>
+          <option value="agite">Agité</option>
+          <option value="reveil">Réveil</option>
+          <option value="absent">Absent</option>
+        </select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="smNote">Précision</label>
+        <textarea id="smNote" class="v2-fld" rows="3" placeholder="Ce qui a été observé cette nuit…"></textarea>
+      </div>
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalSommeil')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveSommeil()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -137,6 +221,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/nuit-supabase.js"></script>
+<script src="js/veille-supabase.js"></script>
 <script src="js/nuit.js"></script>
 <script src="js/nuit-v2.js"></script>
 </body>

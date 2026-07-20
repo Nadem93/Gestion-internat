@@ -543,6 +543,9 @@ async function initMedicaments() {
   if (!requireModule('access_medicaments')) return;
   await sbLoadResidentsCache();
   await loadMedCache();
+  // Stock de médicaments (panneau « Stock & renouvellements »). Dégradation
+  // douce assurée par sbGetStockMed : cache vide si la migration manque.
+  if (typeof loadStockMedCache === 'function') await loadStockMedCache();
   if (typeof sbGetPresencesRange === 'function') {
     try {
       const d = new Date(); d.setDate(d.getDate() - 3);

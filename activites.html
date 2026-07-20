@@ -60,8 +60,11 @@
         <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
           <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           <span class="v2-blk-t" id="aInscritsTitre">Inscrits</span>
-          <span style="margin-left:auto;font-size:11.5px;color:var(--v2-t7)" id="aInscritsMeta"></span>
+          <label class="ac2-seance-l" for="aSeanceDate" style="margin-left:auto">Séance du</label>
+          <input type="date" id="aSeanceDate" class="ac2-seance-d" aria-label="Date de la séance à pointer"/>
+          <span style="font-size:11.5px;color:var(--v2-t7)" id="aInscritsMeta"></span>
         </div>
+        <div id="aPointageBar" class="ac2-pt-bar"></div>
         <div id="aInscrits" class="ac2-inscrits"></div>
       </div>
       <div class="ac2-blk-bilans">
@@ -214,13 +217,49 @@
   </div>
 </div>
 
+<!-- MODALE POINTAGE DE SÉANCE -->
+<div class="modal-overlay v2-ov" id="modalPointageSeance">
+  <div class="v2-md" style="--mc:#10b981">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="apTitle">Pointage de séance</div>
+        <div class="v2-md-s" id="apSubtitle">Présence à la séance</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalPointageSeance')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <span class="v2-fld-l">Statut de présence</span>
+        <div id="apSeg" class="ac2-seg"></div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="apNote">Note (facultatif)</label>
+        <textarea id="apNote" class="v2-fld" rows="3" placeholder="Motif de l'absence, comportement pendant la séance…"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="ac2ClearPointage()">Retirer le pointage</button>
+      <button type="button" class="v2-btn-pri" onclick="ac2SavePointage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/activites-supabase.js"></script>
+<script src="js/activite-presences-supabase.js"></script>
 <script src="js/activites.js?v=3"></script>
-<script src="js/activites-v2.js?v=1"></script>
+<script src="js/activites-v2.js?v=2"></script>
 </body>
 </html>

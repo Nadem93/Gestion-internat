@@ -72,9 +72,18 @@ function vis2Render() {
   vis2Chips(base);
   vis2List(list, td);
   vis2Droits();
-  vis2Creneaux(all, td);
+  vis2Creneaux();
   vis2Registre(all, td);
 }
+
+// Chargement des réservations du salon : indépendant du rendu principal pour
+// qu'une table absente n'empêche jamais l'affichage de la page.
+document.addEventListener('DOMContentLoaded', () => {
+  Promise.resolve()
+    .then(vis2LoadCreneaux)
+    .then(vis2Creneaux)
+    .catch(e => console.warn('[creneaux] init', e));
+});
 
 // ── KPI ───────────────────────────────────────────────────────────────
 function vis2Stats(list, td) {
@@ -200,24 +209,153 @@ function vis2Droits() {
   }).join('');
 }
 
-// ── Rail : créneaux du jour ───────────────────────────────────────────
-function vis2Creneaux(all, td) {
+// ── Rail : créneaux du salon famille ──────────────────────────────────
+// Le salon est une salle unique : la grille horaire ci-dessous est la plage
+// d'ouverture affichée par la page (convention d'affichage, aucune donnée
+// n'est stockée pour un créneau libre). Une ligne de `creneaux_salon` =
+// une réservation ; libérer un créneau, c'est supprimer la ligne.
+// Plages affichées, bornes explicites (la pause méridienne n'est pas un créneau)
+const VIS2_CRN_OUVERTURE = [
+  ['10:00', '11:00'], ['11:00', '12:00'],
+  ['14:00', '15:00'], ['15:00', '16:00'], ['16:00', '17:00'],
+  ['17:00', '18:00'], ['18:00', '19:00']
+];
+let VIS2_CRN = [];        // réservations du jour affiché
+let VIS2_CRN_DATE = '';   // jour affiché (aujourd'hui)
+
+function _crnHhMm(h) { return (h || '').slice(0, 5); }
+function _crnLabelH(h) { const p = _crnHhMm(h).split(':'); return p[1] === '00' ? `${+p[0]}h` : `${+p[0]}h${p[1]}`; }
+function _crnPlage(a, b) { return `${_crnLabelH(a)}–${_crnLabelH(b)}`; }
+
+async function vis2LoadCreneaux() {
+  VIS2_CRN_DATE = today();
+  VIS2_CRN = (typeof sbGetCreneauxSalon === 'function')
+    ? await sbGetCreneauxSalon(VIS2_CRN_DATE) : [];
+}
+
+// Réservation couvrant la plage [debut, fin[ de la grille
+function _crnPour(debut, fin) {
+  return VIS2_CRN.find(c => _crnHhMm(c.heureDebut) < fin && _crnHhMm(c.heureFin) > debut) || null;
+}
+
+// Qui occupe le créneau : la visite liée si elle existe, sinon reserve_par.
+// Aucun champ n'est inventé — si les deux sont vides on n'affiche qu'un nom
+// de salle différent du salon, ou rien.
+function _crnOccupant(c) {
+  const all = (typeof getVisites === 'function') ? getVisites() : [];
+  const v = c.visiteId ? all.find(x => String(x.id) === String(c.visiteId)) : null;
+  if (v) {
+    const t = _vis2Ty(v);
+    return { nom: v.residentName || c.reservePar || '', suffixe: t.l, couleur: t.c };
+  }
+  return { nom: c.reservePar || '', suffixe: '', couleur: '#a3e635' };
+}
+
+function vis2Creneaux() {
   const box = document.getElementById('vCreneaux');
   if (!box) return;
-  const jour = all.filter(v => v.date === td && v.statut !== 'annulee')
-    .sort((a, b) => (a.heure || '~').localeCompare(b.heure || '~'));
-  if (!jour.length) {
-    box.innerHTML = '<div class="v2-blk-vide">Aucune visite planifiée aujourd\'hui.</div>';
-    return;
-  }
-  box.innerHTML = jour.map(v => {
-    const t = _vis2Ty(v), st = _vis2St(v);
+  const canEdit = _vis2CanEdit();
+  const add = document.querySelector('.vs2-cr-add');
+  if (add) add.style.display = canEdit ? '' : 'none';
+
+  // Grille = plage d'ouverture + toute réservation posée hors de cette plage
+  const lignes = VIS2_CRN_OUVERTURE.map(([d, f]) => ({ debut: d, fin: f, crn: _crnPour(d, f) }));
+  const dansGrille = new Set(lignes.map(l => l.crn && l.crn.id).filter(Boolean));
+  VIS2_CRN.filter(c => !dansGrille.has(c.id)).forEach(c => {
+    lignes.push({ debut: _crnHhMm(c.heureDebut), fin: _crnHhMm(c.heureFin), crn: c });
+  });
+  lignes.sort((a, b) => a.debut.localeCompare(b.debut));
+
+  box.innerHTML = lignes.map(l => {
+    if (!l.crn) {
+      return `<div class="vs2-cr">
+        <span class="vs2-cr-h">${_crnPlage(l.debut, l.fin)}</span>
+        <div class="vs2-cr-b"><div class="vs2-cr-t vs2-cr-libre">Disponible</div></div>
+        ${canEdit ? `<button type="button" class="vs2-cr-btn" onclick="openCreneauModal('${l.debut}','${l.fin}')">Réserver</button>`
+                  : '<span class="vs2-cr-tag" style="--pc:#22d3ee">Libre</span>'}
+      </div>`;
+    }
+    const o = _crnOccupant(l.crn);
+    const salle = l.crn.salle && l.crn.salle !== 'Salon famille' ? ` <span class="vs2-cr-salle">· ${escHtml(l.crn.salle)}</span>` : '';
     return `<div class="vs2-cr">
-      <span class="vs2-cr-h">${v.heure || '—'}</span>
-      <div class="vs2-cr-b"><div class="vs2-cr-t">${escHtml(v.residentName || '—')} <span style="color:${t.c}">(${t.l})</span></div></div>
-      <span class="vs2-cr-tag" style="--pc:${st.c}">${st.l}</span>
+      <span class="vs2-cr-h">${_crnPlage(l.debut, l.fin)}</span>
+      <div class="vs2-cr-b"><div class="vs2-cr-t">${escHtml(o.nom || 'Réservé')}${o.suffixe ? ` <span style="color:${o.couleur}">(${o.suffixe})</span>` : ''}${salle}</div></div>
+      <span class="vs2-cr-tag" style="--pc:${o.couleur}">Réservé</span>
+      ${canEdit ? `<button type="button" class="vs2-act danger no-print" title="Libérer le créneau" onclick="libererCreneau('${l.crn.id}')">✕</button>` : ''}
     </div>`;
   }).join('');
+}
+
+// ── Modale de réservation (gabarit .v2-md) ────────────────────────────
+function openCreneauModal(debut, fin) {
+  const d = document.getElementById('crDate');
+  if (d) d.value = VIS2_CRN_DATE || today();
+  const hd = document.getElementById('crDebut'); if (hd) hd.value = debut || '';
+  const hf = document.getElementById('crFin');   if (hf) hf.value = fin || '';
+  const s = document.getElementById('crSalle');  if (s) s.value = 'Salon famille';
+  const p = document.getElementById('crPersonne'); if (p) p.value = '';
+
+  // Visites du jour, pour rattacher la réservation à une visite existante
+  const sel = document.getElementById('crVisite');
+  if (sel) {
+    const jour = ((typeof getVisites === 'function') ? getVisites() : [])
+      .filter(v => v.date === (VIS2_CRN_DATE || today()) && v.statut !== 'annulee')
+      .sort((a, b) => (a.heure || '~').localeCompare(b.heure || '~'));
+    sel.innerHTML = '<option value="">— Aucune —</option>' + jour.map(v =>
+      `<option value="${escAttr(v.id)}">${escHtml(`${v.heure || '—'} · ${v.residentName || '—'} · ${v.personne || ''}`.trim())}</option>`).join('');
+  }
+  openModal('modalCreneau');
+}
+
+// Choisir une visite pré-remplit le nom affiché si le champ est vide
+function crVisiteChanged() {
+  const sel = document.getElementById('crVisite');
+  const p = document.getElementById('crPersonne');
+  if (!sel || !p || !sel.value || p.value.trim()) return;
+  const v = ((typeof getVisites === 'function') ? getVisites() : [])
+    .find(x => String(x.id) === String(sel.value));
+  if (v) p.value = v.personne || v.residentName || '';
+}
+
+function _crnToastErreur(e) {
+  if (e && e.crnMissingTable) {
+    toast(`Créneaux indisponibles : exécutez ${typeof CRENEAUX_SQL_FILE !== 'undefined' ? CRENEAUX_SQL_FILE : 'migration-creneaux-salon.sql'} dans Supabase`, 'error');
+  } else {
+    toast('Réservation impossible', 'error');
+  }
+  console.error('[creneaux]', e);
+}
+
+async function saveCreneau() {
+  const date = document.getElementById('crDate')?.value || '';
+  const heureDebut = document.getElementById('crDebut')?.value || '';
+  const heureFin = document.getElementById('crFin')?.value || '';
+  const reservePar = (document.getElementById('crPersonne')?.value || '').trim();
+  const visiteId = document.getElementById('crVisite')?.value || '';
+  const salle = (document.getElementById('crSalle')?.value || '').trim() || 'Salon famille';
+  if (!date || !heureDebut || !heureFin) { toast('Date et horaires obligatoires', 'error'); return; }
+  if (heureFin <= heureDebut) { toast('L\'heure de fin doit suivre l\'heure de début', 'error'); return; }
+  if (!reservePar && !visiteId) { toast('Indiquez pour qui le créneau est réservé', 'error'); return; }
+  try {
+    await sbSaveCreneauSalon({ date, heureDebut, heureFin, salle, visiteId, reservePar });
+    if (typeof auditLog === 'function') auditLog('creneau_salon_save', `Créneau ${salle} ${date} ${heureDebut}`);
+    closeModal('modalCreneau');
+    toast('Créneau réservé ✓');
+    await vis2LoadCreneaux();
+    vis2Creneaux();
+  } catch (e) { _crnToastErreur(e); }
+}
+
+function libererCreneau(id) {
+  confirmDialog('Libérer ce créneau ?', async () => {
+    try {
+      await sbDeleteCreneauSalon(id);
+      if (typeof auditLog === 'function') auditLog('creneau_salon_delete', 'Créneau libéré');
+      await vis2LoadCreneaux();
+      vis2Creneaux();
+      toast('Créneau libéré', 'info');
+    } catch (e) { _crnToastErreur(e); }
+  });
 }
 
 // ── Registre des visiteurs ────────────────────────────────────────────

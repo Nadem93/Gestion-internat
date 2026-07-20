@@ -166,6 +166,8 @@ async function initNuit() {
   if (!requireModule('access_journal')) return;
   await sbLoadResidentsCache();
   await loadNuitsCache();
+  // Consignes de veille (dégradation douce si la migration n'est pas passée)
+  if (typeof nt2LoadVeille === 'function') await nt2LoadVeille();
   if (typeof sbGetPresencesRange === 'function') {
     try {
       const d = new Date(); d.setDate(d.getDate() - 3);

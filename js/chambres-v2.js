@@ -12,9 +12,11 @@ const CH2 = { filter: 'all' };
 
 // Niveaux réellement enregistrés par l'application (EDL_NIVEAUX de chambres.js)
 const CH2_NIV = {
-  'Bon':     { c: '#10b981' },
-  'Moyen':   { c: '#f59e0b' },
-  'Dégradé': { c: '#ef4444' }
+  'Bon':        { c: '#10b981' },
+  'Moyen':      { c: '#f59e0b' },
+  'Dégradé':    { c: '#ef4444' },
+  // Uniquement pour relire un ancien relevé où le poste n'existait pas encore.
+  'Non évalué': { c: '#8095b4' }
 };
 
 // Icône par poste d'état des lieux (clés = EDL_ITEMS de chambres.js)
@@ -31,9 +33,15 @@ const CH2_IC = {
   out:   '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
   plus:  '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
   pen:   '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
-  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  win:   '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/>',
+  bolt:  '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  heat:  '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5S5 13 5 15a7 7 0 0 0 7 7z"/>'
 };
-const CH2_ITEM_IC = { murs: 'home', sol: 'layer', mobilier: 'box', literie: 'bed', sanitaires: 'drop' };
+const CH2_ITEM_IC = {
+  murs: 'home', sol: 'layer', mobilier: 'box', literie: 'bed', sanitaires: 'drop',
+  fenetre: 'win', elec: 'bolt', chauffage: 'heat'
+};
 
 function ch2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -48,13 +56,15 @@ function ch2CanEdit() {
 function ch2Cap(c) { return Math.max(parseInt(c.capacite) || 1, 1); }
 function ch2IsPmr(c) { return /pmr/i.test(String(c.notes || '')); }
 
-// « depuis » de la maquette : la date d'attribution d'une chambre n'existe pas
-// en base. On affiche la date d'entrée du résident dans l'établissement, et on
-// le dit explicitement (« entré(e) MM/AA ») plutôt que d'inventer une date.
-function ch2Since(r) {
-  const d = String(r.entree || '').slice(0, 10);
+// « depuis » de la maquette : source = chambres.date_attribution, la date à
+// laquelle l'occupant actuel a reçu la chambre. Tant qu'elle n'est pas saisie
+// (ou que la migration n'est pas passée), on n'affiche rien — on ne se rabat
+// plus sur la date d'entrée du résident dans l'établissement, qui est autre
+// chose.
+function ch2Since(c) {
+  const d = String((c && c.dateAttribution) || '').slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
-  return 'entré(e) ' + d.slice(5, 7) + '/' + d.slice(2, 4);
+  return 'depuis ' + d.slice(5, 7) + '/' + d.slice(2, 4);
 }
 
 function ch2SetFilter(f) { CH2.filter = f; ch2Render(); }
@@ -118,9 +128,9 @@ function ch2RoomCard(i, canEdit) {
     : i.libre ? 'Libre'
     : i.complete ? 'Occupée'
     : `${i.cap - i.occ.length} lit(s) libre(s)`;
+  const since = ch2Since(c);
   const occRows = i.occ.map(r => {
     const rc = safeColor(r.color, '#22d3ee');
-    const since = ch2Since(r);
     return `<div class="ch2-occ" onclick="location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche">
       <span class="ch2-occ-av" style="background:${rc}">${initials(r.prenom, r.nom)}</span>
       <div style="min-width:0">
@@ -208,13 +218,24 @@ function ch2RenderEdlHistory() {
   el.innerHTML = hist.map(e => {
     const entree = e.type === 'entree';
     const c = entree ? '#10b981' : '#f59e0b';
-    return `<div class="ch2-edl-r" style="--pc:${c}">
-      <span class="ch2-edl-ico">${ch2Svg(entree ? CH2_IC.in : CH2_IC.out, 2.4)}</span>
-      <div style="flex:1;min-width:0">
-        <div class="ch2-edl-t">Ch. ${escHtml(e.chambreNom || '—')} · ${entree ? 'Entrée' : 'Sortie'}</div>
-        <div class="ch2-edl-m">${escHtml(e.residentName || '—')} · ${e.date ? formatDate(e.date) : '—'}</div>
-      </div>
-    </div>`;
+    // Détail des 8 postes. Un relevé antérieur à l'ajout d'un poste n'en
+    // porte pas la clé : edlNiveau() renvoie alors « Non évalué ».
+    const postes = EDL_ITEMS.map(([k, label]) => {
+      const niv = edlNiveau(e, k);
+      const nc = (CH2_NIV[niv] || CH2_NIV['Non évalué']).c;
+      return `<div class="ch2-edl-p"><span>${escHtml(label)}</span><b style="color:${nc}">${escHtml(niv)}</b></div>`;
+    }).join('');
+    return `<details class="ch2-edl-d" style="--pc:${c}">
+      <summary class="ch2-edl-r">
+        <span class="ch2-edl-ico">${ch2Svg(entree ? CH2_IC.in : CH2_IC.out, 2.4)}</span>
+        <div style="flex:1;min-width:0">
+          <div class="ch2-edl-t">Ch. ${escHtml(e.chambreNom || '—')} · ${entree ? 'Entrée' : 'Sortie'}</div>
+          <div class="ch2-edl-m">${escHtml(e.residentName || '—')} · ${e.date ? formatDate(e.date) : '—'}</div>
+        </div>
+      </summary>
+      <div class="ch2-edl-ps">${postes}</div>
+      ${e.observations ? `<div class="ch2-edl-obs">${escHtml(e.observations)}</div>` : ''}
+    </details>`;
   }).join('');
 }
 function renderEdlHistory() { ch2RenderEdlHistory(); }

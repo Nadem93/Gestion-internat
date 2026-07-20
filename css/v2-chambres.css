@@ -115,6 +115,20 @@
 .ch2-edl-m { font-size: 10px; color: var(--v2-t6); }
 .ch2-edl-obs { font-size: 10.5px; color: var(--v2-t7); line-height: 1.5; margin-top: 3px; }
 
+/* Relevé dépliable : détail des 8 postes. Un poste absent d'un ancien
+   relevé s'affiche « Non évalué ». */
+.ch2-edl-d { border-bottom: 1px solid var(--v2-b-list); }
+.ch2-edl-d:last-child { border-bottom: none; }
+.ch2-edl-d .ch2-edl-r { border-bottom: none; cursor: pointer; list-style: none; }
+.ch2-edl-d .ch2-edl-r::-webkit-details-marker { display: none; }
+.ch2-edl-d[open] .ch2-edl-r .ch2-edl-t { color: #fff; }
+.ch2-edl-ps { display: flex; flex-direction: column; gap: 4px; padding: 2px 0 9px 37px; }
+.ch2-edl-p { display: flex; align-items: baseline; gap: 8px; font-size: 10.5px; color: var(--v2-t7); }
+.ch2-edl-p b { margin-left: auto; font-weight: 700; white-space: nowrap; }
+
+/* ── Aides de champ (modales) ─────────────────────────────────────────── */
+.ch2-fld-hint { font-size: 10.5px; color: var(--v2-t7); line-height: 1.45; margin-top: 5px; }
+
 /* ── Panneau « état des lieux » interactif ────────────────────────────── */
 .ch2-panel { margin-top: 20px; background: var(--v2-s-alt); border: 1px solid var(--v2-b);
   border-radius: 18px; padding: 20px 22px; }

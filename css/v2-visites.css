@@ -157,3 +157,16 @@ a.vs2-nom:hover { color: #fff; }
 @media (max-width: 1100px) { .vs2-body { grid-template-columns: 1fr; } }
 @media (max-width: 900px)  { .vs2-stats { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { .vs2-stats { grid-template-columns: 1fr; } .vs2-sel { margin-left: 0; } }
+
+/* ── Rail : créneaux du salon famille ───────────────────────────────── */
+.vs2-cr-libre { color: var(--v2-t5); font-weight: 500; }
+.vs2-cr-salle { color: var(--v2-t7); font-weight: 500; }
+.vs2-cr-btn {
+  flex-shrink: 0; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer;
+  padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  color: #22d3ee; background: rgba(34, 211, 238, .12);
+  border: 1px solid rgba(34, 211, 238, .3);
+}
+.vs2-cr-btn:hover { background: rgba(34, 211, 238, .2); color: #67e8f9; }
+.vs2-cr-add { margin-left: auto; }
+.vs2-cr .vs2-act { flex-shrink: 0; }

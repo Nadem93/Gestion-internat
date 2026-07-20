@@ -238,3 +238,56 @@ body.v2 textarea.nt2-trans {
 .nt2-vide-ico svg { width: 28px; height: 28px; }
 .nt2-vide-t { font-size: 15px; font-weight: 700; color: var(--v2-t2); }
 .nt2-vide-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 5px; }
+
+/* ══ CONSIGNES DE VEILLE & SOMMEIL ═══════════════════════════════════════
+   D'après les deux blocs du rail de la maquette (bloc ambre « Consignes de
+   veille » + bloc « Sommeil »). Aucun fond clair opaque : on reste sur les
+   surfaces translucides du thème sombre.                                   */
+
+/* ── Consignes de veille ─────────────────────────────────────────────── */
+.nt2-cons-l { display: flex; flex-direction: column; gap: 12px; }
+.nt2-cons { display: flex; gap: 11px; align-items: flex-start; }
+.nt2-cons-av {
+  width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0a1728;
+}
+.nt2-cons-b { min-width: 0; flex: 1; }
+.nt2-cons-n { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.nt2-cons-x { font-size: 12px; color: var(--v2-t3); line-height: 1.45; margin-top: 1px; }
+.nt2-cons-ch { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Sommeil ─────────────────────────────────────────────────────────── */
+.nt2-sm-l {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 340px; overflow-y: auto;
+}
+.nt2-sm { padding: 8px 0; border-bottom: 1px solid var(--v2-b-list); }
+.nt2-sm:last-child { border-bottom: none; }
+.nt2-sm-h { display: flex; align-items: center; gap: 9px; }
+.nt2-sm-n {
+  font-size: 12px; color: var(--v2-t2); flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nt2-sm-e {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  font-size: 11px; font-weight: 700; color: var(--pc, var(--v2-t6));
+}
+.nt2-sm-e svg { width: 12px; height: 12px; }
+.nt2-sm-e.vide { font-weight: 500; color: var(--v2-t6); }
+.nt2-sm-note { font-size: 11px; color: var(--v2-t5); line-height: 1.45; margin-top: 3px; }
+
+.nt2-sm-chips { display: flex; gap: 6px; margin-top: 7px; }
+.nt2-sm-c {
+  width: 28px; height: 24px; flex-shrink: 0; border-radius: 7px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t6);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.nt2-sm-c svg { width: 13px; height: 13px; }
+.nt2-sm-c:hover { color: var(--pc); border-color: color-mix(in srgb, var(--pc) 45%, transparent); }
+.nt2-sm-c.on {
+  color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 16%, transparent);
+  border-color: color-mix(in srgb, var(--pc) 45%, transparent);
+}

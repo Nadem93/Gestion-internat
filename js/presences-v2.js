@@ -14,10 +14,74 @@ const PRV2_ST = {
 };
 const PRV2_ORDRE = ['present', 'absent', 'sortie', 'unknown'];
 
-// La maquette filtre par « unité » : cette notion n'existe pas en base
-// (les résidents n'ont qu'une chambre). Le rang de filtres porte donc sur
-// l'état de pointage, qui est une donnée réelle.
 let _prv2Filtre = 'all';
+
+// ── UNITÉS ───────────────────────────────────────────────────────────────
+// Le résident ne porte pas d'unité : c'est la CHAMBRE qui la porte
+// (table `chambres`, colonne `unite`). On joint donc r.chambre au nom de
+// chambre du catalogue — même règle que rv2Unite() sur la fiche résident.
+// Si la chambre n'est pas au catalogue, on n'affiche AUCUNE unité.
+let _prv2Chambres = [];
+let _prv2Unite = 'all';
+
+function prv2UniteDe(r) {
+  const nom = (r.chambre || '').trim().toLowerCase();
+  if (!nom || !_prv2Chambres.length) return '';
+  const ch = _prv2Chambres.find(c => (c.nom || '').trim().toLowerCase() === nom);
+  return (ch && ch.unite) ? String(ch.unite).trim() : '';
+}
+
+// Lecture tolérante : table absente / couche non chargée → [] + console.warn,
+// la page reste utilisable, le rang de filtres reste simplement masqué.
+async function prv2LoadChambres() {
+  if (typeof sbGetChambres !== 'function') {
+    console.warn('[présences] catalogue des chambres indisponible — filtre par unité désactivé');
+    return;
+  }
+  try {
+    _prv2Chambres = (await sbGetChambres()) || [];
+  } catch (e) {
+    _prv2Chambres = [];
+    console.warn('[présences] lecture des chambres impossible — filtre par unité désactivé', e);
+  }
+  // Le rendu principal a pu avoir lieu avant l'arrivée du catalogue.
+  if (_presResidentsCache.length && document.getElementById('presenceTable')) prv2RenderTable();
+}
+
+function prv2SetUnite(u) {
+  _prv2Unite = u;
+  prv2RenderTable();
+}
+
+// Chips construits sur les unités RÉELLEMENT présentes parmi les résidents
+// affichés ; masqués tant qu'aucune unité n'est connue.
+function prv2RenderUnites(lignes) {
+  const bar = document.getElementById('presUnitesBar');
+  const box = document.getElementById('presUnites');
+  if (!bar || !box) return;
+
+  const n = {};
+  lignes.forEach(l => { if (l.unite) n[l.unite] = (n[l.unite] || 0) + 1; });
+  const unites = Object.keys(n).sort((a, b) => a.localeCompare(b, 'fr'));
+
+  if (!unites.length) {
+    bar.hidden = true;
+    box.innerHTML = '';
+    if (_prv2Unite !== 'all') _prv2Unite = 'all';
+    return;
+  }
+  // Une unité qui disparaît (changement de jour) ne doit pas figer un filtre vide.
+  if (_prv2Unite !== 'all' && unites.indexOf(_prv2Unite) === -1) _prv2Unite = 'all';
+
+  bar.hidden = false;
+  const defs = [{ id: 'all', l: 'Toutes les unités', n: lignes.length }]
+    .concat(unites.map(u => ({ id: u, l: u, n: n[u] })));
+  box.innerHTML = defs.map(f => {
+    const on = _prv2Unite === f.id;
+    return `<button type="button" class="pr2-uchip${on ? ' on' : ''}" aria-pressed="${on}"
+      data-u="${escAttr(f.id)}" onclick="prv2SetUnite(this.dataset.u)">${escHtml(f.l)}<span class="n">${f.n}</span></button>`;
+  }).join('');
+}
 
 function _prv2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2.4}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -37,6 +101,7 @@ function prv2Lignes() {
       plan,
       pointe: !!manual && manual.statut !== 'unknown',
       motif: (manual && manual.motif) ? manual.motif : '',
+      unite: prv2UniteDe(r),
       key: PRV2_ST[key] ? key : 'unknown'
     };
   });
@@ -101,7 +166,11 @@ function prv2RenderTable() {
   const el = document.getElementById('presenceTable');
   if (!el) return;
   const lignes = prv2Lignes();
-  prv2RenderFiltres(lignes);
+  prv2RenderUnites(lignes);
+  // Les deux filtres se combinent : l'unité restreint d'abord, les compteurs
+  // d'état portent donc sur l'unité sélectionnée.
+  const dansUnite = _prv2Unite === 'all' ? lignes : lignes.filter(l => l.unite === _prv2Unite);
+  prv2RenderFiltres(dansUnite);
 
   if (!lignes.length) {
     el.innerHTML = `<div class="v2-blk-vide" style="text-align:center;padding:26px 0">
@@ -109,7 +178,7 @@ function prv2RenderTable() {
     return;
   }
 
-  const vues = _prv2Filtre === 'all' ? lignes : lignes.filter(l => l.key === _prv2Filtre);
+  const vues = _prv2Filtre === 'all' ? dansUnite : dansUnite.filter(l => l.key === _prv2Filtre);
   const isFuture = getDateStr() > today();
 
   const cartes = vues.map(l => {
@@ -119,6 +188,8 @@ function prv2RenderTable() {
     const av = r.photo
       ? `<span class="pr2-av"><img src="${sanitizeUrl(r.photo)}" alt=""/></span>`
       : `<span class="pr2-av" style="background:${col}">${initials(r.prenom, r.nom)}</span>`;
+    // « Ch. 04 · Unité A » — l'unité n'apparaît que si la chambre est au catalogue.
+    const meta = `Ch. ${escHtml(r.chambre || '—')}${l.unite ? ' · ' + escHtml(l.unite) : ''}`;
     const plan = l.plan
       ? `<span class="pr2-plan" title="${escAttr(l.plan.label)}">📅 ${escHtml(l.plan.label)}${l.plan.debut ? ' · ' + escHtml(l.plan.debut) : ''}</span>`
       : '';
@@ -136,7 +207,7 @@ function prv2RenderTable() {
         onclick="event.stopPropagation();presOpenMotif('${r.id}')" onpointerdown="event.stopPropagation()">${_prv2Svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>', 2)}</button>
       <div class="pr2-head">
         ${av}
-        <span class="pr2-id"><span class="pr2-nom">${escHtml(nom) || '—'}</span><span class="pr2-meta">Ch. ${escHtml(r.chambre || '—')}</span></span>
+        <span class="pr2-id"><span class="pr2-nom">${escHtml(nom) || '—'}</span><span class="pr2-meta">${meta}</span></span>
       </div>
       <div class="pr2-st">${_prv2Svg(st.i, 2.6)}${st.l}</div>
       ${plan}
@@ -182,3 +253,7 @@ function prv2Render() {
   prv2Stats();
   prv2RenderTable();
 }
+
+// Le catalogue des chambres est une lecture annexe : elle ne doit ni retarder
+// ni bloquer la feuille de présence, d'où ce chargement indépendant.
+document.addEventListener('DOMContentLoaded', () => { prv2LoadChambres(); });

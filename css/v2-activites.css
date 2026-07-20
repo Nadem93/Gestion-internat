@@ -107,6 +107,65 @@
 .ac2-ins-b { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
   white-space: nowrap; color: var(--pc); background: color-mix(in srgb, var(--pc) 11%, transparent); }
 
+/* ── Pointage de séance (table activite_presences) ──────────────────── */
+.ac2-seance-l { font-size: 11.5px; color: var(--v2-t6); flex-shrink: 0; }
+.ac2-seance-d {
+  height: 28px; padding: 0 8px; border-radius: 8px; flex-shrink: 0;
+  font: inherit; font-size: 11.5px; color: var(--v2-t3);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.ac2-seance-d::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.55); cursor: pointer; }
+
+.ac2-pt-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
+.ac2-pt-bar:empty { display: none; }
+.ac2-pt-c {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 7px;
+  color: var(--sc); background: color-mix(in srgb, var(--sc) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc) 26%, transparent);
+}
+.ac2-pt-c .ic { font-weight: 900; line-height: 1; }
+
+/* La ligne « inscrit » porte maintenant le statut de présence */
+.ac2-ins { flex-wrap: wrap; row-gap: 7px; }
+.ac2-ins.nopt { opacity: .82; }
+.ac2-ins-lien { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.ac2-ins-p {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+  height: 24px; padding: 0 9px; border-radius: 7px; cursor: pointer;
+  font: inherit; font-size: 10px; font-weight: 700; white-space: nowrap;
+  color: var(--sc); background: color-mix(in srgb, var(--sc) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc) 30%, transparent);
+  transition: background .15s;
+}
+.ac2-ins-p:hover { background: color-mix(in srgb, var(--sc) 26%, transparent); }
+.ac2-ins-p .ic { font-weight: 900; line-height: 1; }
+.ac2-ins-e {
+  width: 24px; height: 24px; flex-shrink: 0; border-radius: 7px; cursor: pointer;
+  font: inherit; font-size: 11px; line-height: 1;
+  color: var(--v2-t6); background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.ac2-ins-e:hover { color: #fff; background: var(--v2-s-hover); }
+.ac2-ins-note {
+  flex-basis: 100%; font-size: 10.5px; color: var(--v2-t5); line-height: 1.45;
+  padding: 5px 8px; border-radius: 7px; background: rgba(255, 255, 255, .04);
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Segmenté de la modale de pointage */
+.ac2-seg { display: flex; gap: 8px; }
+.ac2-seg-b {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 6px; border-radius: var(--v2-r-ctrl); cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 600;
+  color: var(--sc); background: color-mix(in srgb, var(--sc) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc) 28%, transparent);
+  transition: background .15s;
+}
+.ac2-seg-b .ic { font-size: 14px; font-weight: 900; line-height: 1; }
+.ac2-seg-b:hover { background: color-mix(in srgb, var(--sc) 20%, transparent); }
+.ac2-seg-b.on { color: #0a1728; background: var(--sc); border-color: var(--sc); }
+
 .ac2-blk-bilans {
   background: linear-gradient(135deg, rgba(129,140,248,.14), rgba(219,39,119,.05)), var(--v2-s-alt);
   border: 1px solid rgba(129,140,248,.22); border-radius: var(--v2-r-card2); padding: 20px 22px;

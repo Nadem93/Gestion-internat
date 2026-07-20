@@ -111,3 +111,23 @@
 }
 .pr2-card:hover .pr2-edit, .pr2-edit:hover, .pr2-edit:focus-visible { opacity: 1; color: #fff; }
 .pr2-edit svg { width: 13px; height: 13px; }
+
+/* ── Rang de filtres par unité (au-dessus des filtres d'état) ─────────── */
+.pr2-bar-u { padding-bottom: 12px; }
+.pr2-bar-u[hidden] { display: none; }
+.pr2-uchips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pr2-uchip {
+  height: 32px; padding: 0 14px; border-radius: 9px; cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; color: var(--v2-t5);
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pr2-uchip:hover { background: rgba(255,255,255,.08); color: var(--v2-t4); }
+.pr2-uchip.on { color: #fff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.18); }
+.pr2-uchip .n {
+  font-size: 10.5px; font-weight: 700; line-height: 1;
+  padding: 3px 6px; border-radius: 6px;
+  background: rgba(255,255,255,.07); color: var(--v2-t6);
+}
+.pr2-uchip.on .n { background: rgba(255,255,255,.16); color: #fff; }

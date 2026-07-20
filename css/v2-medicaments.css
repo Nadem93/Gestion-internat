@@ -53,6 +53,28 @@
 .v2-med-li-k { font-size: 10px; font-weight: 700; color: var(--v2-t5); white-space: nowrap; }
 .v2-med-li-bar { width: 90px; flex-shrink: 0; }
 
+/* ── Stock de médicaments (panneau « Stock & renouvellements ») ───────── */
+.v2-med-pan-add {
+  margin-left: auto; flex-shrink: 0; height: 26px; padding: 0 11px;
+  border-radius: 8px; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700;
+  color: var(--v2-warn-text); background: rgba(245,158,11,.14);
+  border: 1px solid rgba(245,158,11,.3);
+}
+.v2-med-pan-add:hover { background: rgba(245,158,11,.24); }
+.v2-med-sub-h {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t7); margin: 14px 0 2px; padding-top: 12px;
+  border-top: 1px solid var(--v2-b-soft);
+}
+.v2-med-li-edit {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--v2-t6); background: rgba(255,255,255,.04); border: 1px solid var(--v2-b-ctrl);
+}
+.v2-med-li-edit:hover { background: var(--v2-s-hover); color: var(--v2-t2); }
+.v2-med-li-edit svg { width: 12px; height: 12px; }
+
 /* ── Filtres ──────────────────────────────────────────────────────────── */
 .v2-med-search {
   height: 34px; flex: 1; min-width: 190px; max-width: 300px;

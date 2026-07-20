@@ -92,6 +92,56 @@
   </div>
 </div>
 
+<!-- MODALE STOCK DE MÉDICAMENTS (gabarit V2) -->
+<div class="v2-ov modal-overlay" id="modalStockMed">
+  <div class="v2-md" style="--mc:#f59e0b;max-width:560px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+      <div style="min-width:0"><div class="v2-md-t" id="stkTitle">Ajouter un stock</div><div class="v2-md-s">Quantité restante, seuil d'alerte, péremption</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalStockMed')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="stkLibelle">Médicament</label>
+        <input class="v2-fld" id="stkLibelle" type="text" placeholder="Ex : Antihypertenseur 5 mg"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="stkResident">Rattachement</label>
+        <select class="v2-fld" id="stkResident"></select>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="stkInitiale">Quantité initiale</label>
+          <input class="v2-fld" id="stkInitiale" type="number" min="1" step="1" placeholder="Ex : 30"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="stkQuantite">Quantité restante</label>
+          <input class="v2-fld" id="stkQuantite" type="number" min="0" step="1" placeholder="Ex : 12"/>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="stkUnite">Unité</label>
+          <input class="v2-fld" id="stkUnite" type="text" placeholder="comprimés, ml, gélules…"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="stkSeuil">Seuil d'alerte</label>
+          <input class="v2-fld" id="stkSeuil" type="number" min="0" step="1" placeholder="Ex : 10"/>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="stkPeremption">Date de péremption</label>
+        <input class="v2-fld" id="stkPeremption" type="date"/>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" id="stkDelete" onclick="stockMedDelete()" style="display:none">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalStockMed')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="stockMedSave()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -99,6 +149,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/medicaments-supabase.js"></script>
+<script src="js/stock-med-supabase.js"></script>
 <script src="js/medicaments.js"></script>
 <script src="js/medicaments-v2.js"></script>
 </body>

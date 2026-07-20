@@ -57,7 +57,8 @@
         <div class="v2-blk">
           <div class="vs2-droits-h">
             <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span class="v2-blk-t">Créneaux du jour</span>
+            <span class="v2-blk-t">Salon famille — créneaux</span>
+            <button type="button" class="vs2-cr-btn vs2-cr-add" onclick="openCreneauModal()">Réserver</button>
           </div>
           <div id="vCreneaux" class="vs2-cr-l"></div>
         </div>
@@ -230,13 +231,67 @@
   </div>
 </div>
 
+<!-- MODALE RÉSERVATION DE CRÉNEAU (salon famille) -->
+<div class="v2-ov" id="modalCreneau">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </span>
+      <div>
+        <div class="v2-md-t">Réserver un créneau</div>
+        <div class="v2-md-s">Salon famille — réservation par le personnel</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCreneau')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="crDate">Date *</label>
+        <input type="date" id="crDate" class="v2-fld"/>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="crDebut">Début *</label>
+          <input type="time" id="crDebut" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="crFin">Fin *</label>
+          <input type="time" id="crFin" class="v2-fld"/>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="crSalle">Salle</label>
+        <input type="text" id="crSalle" class="v2-fld" value="Salon famille"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="crVisite">Visite rattachée</label>
+        <select id="crVisite" class="v2-fld" onchange="crVisiteChanged()"></select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="crPersonne">Réservé pour *</label>
+        <input type="text" id="crPersonne" class="v2-fld" placeholder="Résident, famille ou service"/>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCreneau')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveCreneau()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Réserver
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/visites-supabase.js"></script>
+<script src="js/creneaux-supabase.js"></script>
 <script src="js/visites.js?v=2"></script>
-<script src="js/visites-v2.js?v=1"></script>
+<script src="js/visites-v2.js?v=2"></script>
 </body>
 </html>

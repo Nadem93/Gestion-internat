@@ -66,6 +66,7 @@ function ac2Render() {
   ac2Participation(all);
   ac2Inscrits();
   ac2Bilans(all);
+  ac2EnsureSeance();   // recharge le pointage si l'activité sélectionnée a changé
 }
 
 // ── TUILES KPI ────────────────────────────────────────────────────────
@@ -238,6 +239,7 @@ function ac2Inscrits() {
   const horaire = [AC2_JOURS_COURTS[a.jour] || a.jour, _ac2Horaire(a)].filter(Boolean).join(' ');
   if (head) head.textContent = `Inscrits — ${a.nom || 'Activité'}${horaire ? ' (' + horaire + ')' : ''}`;
   if (meta) meta.textContent = inscrits.length + (a.placesMax > 0 ? ' / ' + a.placesMax : '');
+  ac2PointageBar(inscrits);
   if (!inscrits.length) {
     el.innerHTML = '<div class="v2-blk-vide">Aucun résident inscrit pour le moment.</div>';
     return;
@@ -247,13 +249,179 @@ function ac2Inscrits() {
     const nom = `${r.prenom || ''} ${r.nom || ''}`.trim();
     const nb = (i.bilans || []).length;
     const bc = nb ? '#10b981' : '#8095b4';
-    return `<a class="ac2-ins" href="resident.html?id=${r.id}">
-      <span class="ac2-ins-av" style="background:${color}">${initials(r.prenom, r.nom)}</span>
-      <span class="ac2-ins-n">${escHtml(nom)}</span>
+    const p = _apCache[r.id];
+    const st = AP_STATUTS[p && p.statut] || AP_STATUTS.unknown;
+    const note = (p && p.note) ? p.note : '';
+    const rid = escAttr(String(r.id));
+    return `<div class="ac2-ins${p ? '' : ' nopt'}" style="--sc:${st.color}">
+      <a class="ac2-ins-lien" href="resident.html?id=${encodeURIComponent(r.id)}">
+        <span class="ac2-ins-av" style="background:${color}">${initials(r.prenom, r.nom)}</span>
+        <span class="ac2-ins-n">${escHtml(nom)}</span>
+      </a>
       <span class="ac2-ins-b" style="--pc:${bc}">${nb ? nb + ' bilan' + (nb > 1 ? 's' : '') : 'Sans bilan'}</span>
-    </a>`;
+      <button type="button" class="ac2-ins-p" onclick="ac2CyclePresence('${rid}')"
+        title="Cliquer pour changer le statut de présence"
+        aria-label="${escAttr(nom)} — ${st.label}. Cliquer pour changer.">
+        <span class="ic">${st.icon}</span>${st.label}
+      </button>
+      <button type="button" class="ac2-ins-e" onclick="ac2OpenPointage('${rid}')"
+        title="Statut détaillé et note" aria-label="Note de pointage pour ${escAttr(nom)}">✎</button>
+      ${note ? `<div class="ac2-ins-note" title="${escAttr(note)}">${escHtml(note)}</div>` : ''}
+    </div>`;
   }).join('');
 }
+
+// ── POINTAGE DE SÉANCE (table activite_presences) ─────────────────────
+// L'inscription (residents.activites) dit qui est attendu ; ces statuts
+// disent qui était réellement là, séance par séance.
+const AP_STATUTS = {
+  present: { label: 'Présent',    icon: '✓', color: '#10b981' },
+  excuse:  { label: 'Excusé',     icon: '~', color: '#f59e0b' },
+  absent:  { label: 'Absent',     icon: '✕', color: '#ef4444' },
+  unknown: { label: 'Non pointé', icon: '·', color: '#8095b4' }
+};
+const AP_CYCLE = { unknown: 'present', present: 'excuse', excuse: 'absent', absent: 'unknown' };
+
+let _apCache = {};        // { residentId: { statut, note } }
+let _apLoadedKey = null;  // 'activiteId|date' déjà chargé
+let _apLoadSeq = 0;
+
+function ac2SeanceDate() {
+  const el = document.getElementById('aSeanceDate');
+  return (el && el.value) || today();
+}
+function _apKey() { return String(AC2_SEL) + '|' + ac2SeanceDate(); }
+
+// Charge la séance si (activité, date) a changé. La lecture ne jette jamais :
+// tant que migration-presences-activite.sql n'est pas exécutée, elle renvoie
+// [] et la page affiche simplement « Non pointé » partout.
+async function ac2EnsureSeance(force) {
+  if (!AC2_SEL) { _apCache = {}; _apLoadedKey = null; return; }
+  const key = _apKey();
+  if (!force && key === _apLoadedKey) return;
+  const seq = ++_apLoadSeq;
+  const rows = await sbGetPresencesActivite(AC2_SEL, ac2SeanceDate());
+  if (seq !== _apLoadSeq) return;
+  const map = {};
+  rows.forEach(p => { map[p.residentId] = { statut: p.statut, note: p.note || '' }; });
+  _apCache = map;
+  _apLoadedKey = key;
+  ac2Inscrits();
+}
+
+function ac2SeanceDateChange() { _apLoadedKey = null; ac2EnsureSeance(true); }
+
+// Bandeau de comptage au-dessus de la liste des inscrits.
+function ac2PointageBar(inscrits) {
+  const el = document.getElementById('aPointageBar');
+  if (!el) return;
+  if (!inscrits.length) { el.innerHTML = ''; return; }
+  const n = { present: 0, excuse: 0, absent: 0, unknown: 0 };
+  inscrits.forEach(({ resident: r }) => {
+    const p = _apCache[r.id];
+    n[(p && AP_STATUTS[p.statut]) ? p.statut : 'unknown']++;
+  });
+  el.innerHTML = ['present', 'excuse', 'absent', 'unknown'].map(k =>
+    `<span class="ac2-pt-c" style="--sc:${AP_STATUTS[k].color}">
+      <span class="ic">${AP_STATUTS[k].icon}</span>${n[k]} ${escHtml(AP_STATUTS[k].label.toLowerCase())}
+    </span>`).join('')
+    + `<button type="button" class="ac2-act" style="margin-left:auto" onclick="ac2MarquerTousPresents()">Tous présents</button>`;
+}
+
+// Écriture optimiste : on peint le nouveau statut tout de suite, et on
+// revient à l'état précédent si la base refuse (table absente, RLS…).
+async function ac2SetPresence(residentId, statut, note) {
+  const activiteId = AC2_SEL;
+  const date = ac2SeanceDate();
+  const prev = _apCache[residentId];
+  if (statut === 'unknown') delete _apCache[residentId];
+  else _apCache[residentId] = { statut, note: note !== undefined ? note : (prev ? prev.note : '') };
+  ac2Inscrits();
+  try {
+    if (statut === 'unknown') await sbDeletePresenceActivite(activiteId, residentId, date);
+    else await sbSetPresenceActivite(activiteId, residentId, date, statut, note);
+  } catch (e) {
+    console.error('[activite_presences] écriture', e);
+    if (prev) _apCache[residentId] = prev; else delete _apCache[residentId];
+    ac2Inscrits();
+    toast(`Pointage non enregistré : exécutez ${AP_SQL_FILE}`, 'error');
+    return;
+  }
+  if (typeof auditLog === 'function') {
+    const a = getActivites().find(x => String(x.id) === String(activiteId));
+    auditLog('activite_presence', `Pointage ${statut} — ${(a && a.nom) || ''} (${date})`);
+  }
+}
+
+function ac2CyclePresence(residentId) {
+  const cur = _apCache[residentId];
+  const next = AP_CYCLE[cur ? cur.statut : 'unknown'] || 'present';
+  ac2SetPresence(residentId, next);
+}
+
+async function ac2MarquerTousPresents() {
+  const a = getActivites().find(x => String(x.id) === String(AC2_SEL));
+  if (!a) return;
+  const aPointer = actInscriptions(a.id).filter(({ resident: r }) => !_apCache[r.id]);
+  if (!aPointer.length) { toast('Tous les inscrits sont déjà pointés'); return; }
+  for (const { resident: r } of aPointer) await ac2SetPresence(r.id, 'present');
+}
+
+// ── MODALE POINTAGE (statut détaillé + note) ──────────────────────────
+let _apModalRid = null, _apModalStatut = 'present';
+
+function ac2OpenPointage(residentId) {
+  const r = residentsList().find(x => String(x.id) === String(residentId));
+  const a = getActivites().find(x => String(x.id) === String(AC2_SEL));
+  if (!r || !a) return;
+  _apModalRid = String(residentId);
+  const cur = _apCache[_apModalRid];
+  _apModalStatut = cur ? cur.statut : 'present';
+  document.getElementById('apTitle').textContent = `${r.prenom || ''} ${r.nom || ''}`.trim() || 'Pointage';
+  document.getElementById('apSubtitle').textContent =
+    `${a.nom || 'Activité'} — séance du ${formatDate(ac2SeanceDate())}`;
+  document.getElementById('apNote').value = cur ? (cur.note || '') : '';
+  ac2RenderPointageSeg();
+  openModal('modalPointageSeance');
+}
+
+function ac2RenderPointageSeg() {
+  const el = document.getElementById('apSeg');
+  if (!el) return;
+  el.innerHTML = ['present', 'excuse', 'absent'].map(k => {
+    const st = AP_STATUTS[k];
+    const on = _apModalStatut === k;
+    return `<button type="button" class="ac2-seg-b${on ? ' on' : ''}" style="--sc:${st.color}"
+      aria-pressed="${on}" onclick="ac2PickStatut('${k}')">
+      <span class="ic">${st.icon}</span>${st.label}
+    </button>`;
+  }).join('');
+}
+function ac2PickStatut(k) { _apModalStatut = k; ac2RenderPointageSeg(); }
+
+async function ac2SavePointage() {
+  if (!_apModalRid) return;
+  const note = document.getElementById('apNote').value.trim();
+  closeModal('modalPointageSeance');
+  await ac2SetPresence(_apModalRid, _apModalStatut, note);
+}
+
+async function ac2ClearPointage() {
+  if (!_apModalRid) return;
+  closeModal('modalPointageSeance');
+  await ac2SetPresence(_apModalRid, 'unknown');
+}
+
+// Initialisation du sélecteur de date : appelée après le premier rendu.
+function ac2InitSeance() {
+  const el = document.getElementById('aSeanceDate');
+  if (!el || el.dataset.apInit) return;
+  el.dataset.apInit = '1';
+  if (!el.value) el.value = today();
+  el.addEventListener('change', ac2SeanceDateChange);
+  ac2EnsureSeance(true);
+}
+document.addEventListener('DOMContentLoaded', () => setTimeout(ac2InitSeance, 0));
 
 // ── BAS DE PAGE — BILANS ANNUELS ──────────────────────────────────────
 function ac2Bilans(all) {

@@ -20,7 +20,9 @@ const NT2_IC = {
   pen:   '<path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
   x:     '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
   plus:  '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-  pin:   '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.5-4.5V7a5.5 5.5 0 0 0-11 0v5.5z"/>'
+  pin:   '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.5-4.5V7a5.5 5.5 0 0 0-11 0v5.5z"/>',
+  bang:  '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  out:   '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/>'
 };
 function _nt2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -96,10 +98,14 @@ function nt2Render() {
       ${canWrite ? `<button type="button" class="nt2-new" style="margin-top:18px" onclick="ouvrirNuit()">
         ${_nt2Svg(NT2_IC.moon)}Ouvrir le cahier de cette nuit</button>` : ''}
     </div>`;
-    document.getElementById('ntRail').innerHTML = `<div class="v2-blk" id="ntHistoBlk">
+    // Les consignes de veille et le pointage du sommeil ne dépendent pas de
+    // l'ouverture du cahier : le veilleur doit les lire même avant de l'ouvrir.
+    document.getElementById('ntRail').innerHTML = nt2VeilleBlocsHtml(canWrite) + `<div class="v2-blk" id="ntHistoBlk">
       <div class="v2-blk-h"><span class="v2-blk-t">Nuits précédentes</span></div>
       <div id="ntHisto"></div>
     </div>`;
+    nt2RenderConsignes();
+    nt2RenderSommeil();
     nt2RenderHisto();
     return;
   }
@@ -111,6 +117,8 @@ function nt2Render() {
   nt2RenderStats(n, rondes, evts, astr);
   nt2RenderTimeline(n, evts, canWrite);
   nt2RenderRail(n, rondes, astr, canWrite);
+  nt2RenderConsignes();
+  nt2RenderSommeil();
   nt2RenderHisto();
 }
 
@@ -261,6 +269,8 @@ function nt2RenderRail(n, rondes, astr, canWrite) {
       ${formRonde}
     </div>
 
+    ${nt2VeilleBlocsHtml(canWrite)}
+
     <div class="nt2-blk-warn">
       <div class="v2-blk-h">
         <span style="color:var(--v2-warn-icon);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.phone)}</span>
@@ -323,4 +333,248 @@ function nt2Aller(date) {
   nuitDate = date;
   renderNuit();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CONSIGNES DE VEILLE & ÉTAT DU SOMMEIL
+// Données : js/veille-supabase.js (tables veille_consignes et sommeil_nuit).
+// Tant que migration-veille-sommeil.sql n'est pas exécuté, les lectures
+// renvoient [] : les deux blocs s'affichent vides et la page reste utilisable.
+// ══════════════════════════════════════════════════════════════════════
+
+let _nt2Consignes = [];            // consignes actives, tous résidents
+let _nt2Sommeil = {};              // { 'YYYY-MM-DD': [état, …] }
+let _nt2Uid = null;                // auth.uid() courant (droit de retrait)
+let _nt2ConsEditRid = null;        // résident présélectionné dans la modale
+
+const NT2_SOMMEIL = {
+  calme:  { label: 'Calme',  c: '#10b981', i: NT2_IC.check },
+  agite:  { label: 'Agité',  c: '#f59e0b', i: NT2_IC.bang },
+  reveil: { label: 'Réveil', c: '#818cf8', i: NT2_IC.moon },
+  absent: { label: 'Absent', c: '#64748b', i: NT2_IC.out }
+};
+
+// Couleur d'avatar stable par résident (la maquette en fixe une par ligne ;
+// ici on la dérive de l'identifiant pour qu'elle ne saute pas d'un rendu à l'autre).
+const NT2_AV_COLORS = ['#818cf8', '#22d3ee', '#f472b6', '#34d399', '#fbbf24', '#94a3b8'];
+function _nt2AvColor(id) {
+  const s = String(id || '');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return NT2_AV_COLORS[h % NT2_AV_COLORS.length];
+}
+
+function _nt2Res(id) {
+  return (typeof sbResidents === 'function' ? sbResidents() : []).find(r => String(r.id) === String(id)) || null;
+}
+function _nt2ResNom(r) { return `${r.prenom || ''} ${r.nom || ''}`.trim(); }
+function _nt2ResActifs() {
+  return (typeof sbResidents === 'function' ? sbResidents() : [])
+    .filter(r => r.statut !== 'sorti')
+    .sort((a, b) => _nt2ResNom(a).localeCompare(_nt2ResNom(b), 'fr'));
+}
+function _nt2Admin() {
+  const s = Auth.getSession();
+  return !!s && ['admin', 'superadmin'].includes(s.role);
+}
+
+// ── CHARGEMENT ───────────────────────────────────────────────────────
+
+async function nt2LoadVeille() {
+  _nt2Uid = (typeof _vlAuthUid === 'function') ? await _vlAuthUid() : null;
+  _nt2Consignes = await sbGetVeilleConsignes();
+}
+
+// Le sommeil est daté : on le charge à la demande pour la nuit affichée, puis
+// on ne repeint que son bloc (le rendu principal reste synchrone).
+async function nt2LoadSommeil(date) {
+  if (_nt2Sommeil[date]) return;
+  _nt2Sommeil[date] = await sbGetSommeilNuit(date);
+  if (date === nuitDate) nt2RenderSommeil();
+}
+function _nt2SommeilDe(rid) {
+  return (_nt2Sommeil[nuitDate] || []).find(s => String(s.residentId) === String(rid)) || null;
+}
+
+// ── COQUES DES DEUX BLOCS (insérées dans le rail) ────────────────────
+
+function nt2VeilleBlocsHtml(canWrite) {
+  return `
+    <div class="nt2-blk-warn">
+      <div class="v2-blk-h">
+        <span style="color:var(--v2-warn-icon);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.alert)}</span>
+        <span class="v2-blk-t">Consignes de veille</span>
+        ${canWrite ? `<button type="button" class="nt2-ico-btn" style="margin-left:auto" title="Ajouter une consigne"
+          onclick="openVeilleConsigneModal()">${_nt2Svg(NT2_IC.plus, 2.4)}</button>` : ''}
+      </div>
+      <div id="ntConsignes"></div>
+    </div>
+
+    <div class="v2-blk">
+      <div class="v2-blk-h">
+        <span style="color:var(--v2-indigo-pale);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.moon)}</span>
+        <span class="v2-blk-t">Sommeil</span>
+      </div>
+      <div id="ntSommeil"></div>
+    </div>`;
+}
+
+// ── CONSIGNES DE VEILLE ──────────────────────────────────────────────
+
+function nt2RenderConsignes() {
+  const el = document.getElementById('ntConsignes');
+  if (!el) return;
+  const canWrite = !!Auth.getSession();
+  const admin = _nt2Admin();
+
+  if (!_nt2Consignes.length) {
+    el.innerHTML = '<div class="v2-blk-vide">Aucune consigne de veille</div>';
+    return;
+  }
+
+  el.innerHTML = `<div class="nt2-cons-l">${_nt2Consignes.map(c => {
+    const r = _nt2Res(c.residentId);
+    const nom = r ? _nt2ResNom(r) : '';
+    // Rien n'est inventé : sans fiche résident on n'affiche ni initiales ni chambre.
+    const ini = nom ? _nt2Ini(nom) : '?';
+    const peutRetirer = canWrite && (admin || (!!_nt2Uid && c.createdBy === _nt2Uid));
+    return `<div class="nt2-cons">
+      <span class="nt2-cons-av" style="background:${_nt2AvColor(c.residentId)}">${escHtml(ini)}</span>
+      <div class="nt2-cons-b">
+        ${nom ? `<div class="nt2-cons-n">${escHtml(nom)}</div>` : ''}
+        <div class="nt2-cons-x">${escHtml(c.texte)}</div>
+        ${r && r.chambre ? `<div class="nt2-cons-ch">Ch. ${escHtml(String(r.chambre))}</div>` : ''}
+      </div>
+      ${peutRetirer ? `<button type="button" class="nt2-ico-btn danger" title="Retirer la consigne"
+        onclick="delVeilleConsigne('${c.id}')">${_nt2Svg(NT2_IC.x, 2.2)}</button>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function openVeilleConsigneModal(residentId) {
+  _nt2ConsEditRid = residentId || null;
+  const sel = document.getElementById('vcResident');
+  sel.innerHTML = _nt2ResActifs().map(r =>
+    `<option value="${escHtml(String(r.id))}"${String(r.id) === String(residentId) ? ' selected' : ''}>${escHtml(_nt2ResNom(r))}</option>`).join('');
+  document.getElementById('vcTexte').value = '';
+  openModal('modalVeilleConsigne');
+}
+
+async function saveVeilleConsigne() {
+  const residentId = document.getElementById('vcResident').value;
+  const texte = document.getElementById('vcTexte').value.trim();
+  if (!residentId) { toast('Choisissez un résident', 'error'); return; }
+  if (!texte) { toast('Rédigez la consigne', 'error'); return; }
+  try {
+    const c = await sbSaveVeilleConsigne({ residentId, texte });
+    _nt2Consignes = [c, ..._nt2Consignes];
+    closeModal('modalVeilleConsigne');
+    toast('Consigne de veille ajoutée ✓');
+    nt2RenderConsignes();
+  } catch (e) {
+    console.error('[veille] consigne', e);
+    toast(veilleErrMsg(e), 'error');
+  }
+}
+
+function delVeilleConsigne(id) {
+  confirmDialog('Retirer cette consigne de veille ?', async () => {
+    try {
+      await sbDeleteVeilleConsigne(id);
+      _nt2Consignes = _nt2Consignes.filter(c => c.id !== id);
+      nt2RenderConsignes();
+    } catch (e) {
+      console.error('[veille] retrait', e);
+      toast(veilleErrMsg(e), 'error');
+    }
+  });
+}
+
+// ── ÉTAT DU SOMMEIL ──────────────────────────────────────────────────
+
+function nt2RenderSommeil() {
+  const el = document.getElementById('ntSommeil');
+  if (!el) return;
+  const canWrite = !!Auth.getSession();
+  const residents = _nt2ResActifs();
+
+  if (!residents.length) {
+    el.innerHTML = '<div class="v2-blk-vide">Aucun résident accueilli</div>';
+    return;
+  }
+  if (!_nt2Sommeil[nuitDate]) nt2LoadSommeil(nuitDate);
+
+  el.innerHTML = `<div class="nt2-sm-l">${residents.map(r => {
+    const s = _nt2SommeilDe(r.id);
+    const st = s ? NT2_SOMMEIL[s.etat] : null;
+    const chips = Object.entries(NT2_SOMMEIL).map(([k, v]) =>
+      `<button type="button" class="nt2-sm-c${s && s.etat === k ? ' on' : ''}" style="--pc:${v.c}"
+        title="${escHtml(v.label)}" aria-label="${escHtml(v.label + ' — ' + _nt2ResNom(r))}"
+        onclick="setSommeil('${escHtml(String(r.id))}','${k}')">${_nt2Svg(v.i, 2.4)}</button>`).join('');
+    return `<div class="nt2-sm">
+      <div class="nt2-sm-h">
+        <span class="nt2-sm-n">${escHtml(_nt2ResNom(r))}</span>
+        ${st ? `<span class="nt2-sm-e" style="--pc:${st.c}">${_nt2Svg(st.i, 2.4)}${escHtml(st.label)}</span>`
+             : '<span class="nt2-sm-e vide">Non renseigné</span>'}
+        ${canWrite ? `<button type="button" class="nt2-ico-btn" title="Préciser / annoter"
+          onclick="openSommeilModal('${escHtml(String(r.id))}')">${_nt2Svg(NT2_IC.pen)}</button>` : ''}
+      </div>
+      ${s && s.note ? `<div class="nt2-sm-note">${escHtml(s.note)}</div>` : ''}
+      ${canWrite ? `<div class="nt2-sm-chips">${chips}</div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// Mémorise l'état localement puis persiste. Recliquer l'état actif l'efface.
+function _nt2SetSommeilLocal(row) {
+  const l = (_nt2Sommeil[row.date] || []).filter(s => String(s.residentId) !== String(row.residentId));
+  _nt2Sommeil[row.date] = [...l, row];
+}
+
+async function setSommeil(residentId, etat) {
+  const prev = _nt2SommeilDe(residentId);
+  const date = nuitDate;
+  try {
+    if (prev && prev.etat === etat) {
+      await sbDeleteSommeilNuit(residentId, date);
+      _nt2Sommeil[date] = (_nt2Sommeil[date] || []).filter(s => String(s.residentId) !== String(residentId));
+    } else {
+      const saved = await sbSaveSommeilNuit({ residentId, date, etat, note: prev ? prev.note : '' });
+      _nt2SetSommeilLocal(saved);
+    }
+    nt2RenderSommeil();
+  } catch (e) {
+    console.error('[veille] sommeil', e);
+    toast(veilleErrMsg(e), 'error');
+  }
+}
+
+function openSommeilModal(residentId) {
+  const r = _nt2Res(residentId);
+  if (!r) return;
+  const s = _nt2SommeilDe(residentId);
+  document.getElementById('smResidentId').value = String(residentId);
+  document.getElementById('smNom').textContent = _nt2ResNom(r);
+  document.getElementById('smEtat').value = s ? s.etat : 'calme';
+  document.getElementById('smNote').value = s ? s.note : '';
+  openModal('modalSommeil');
+}
+
+async function saveSommeil() {
+  const residentId = document.getElementById('smResidentId').value;
+  const date = nuitDate;
+  try {
+    const saved = await sbSaveSommeilNuit({
+      residentId, date,
+      etat: document.getElementById('smEtat').value,
+      note: document.getElementById('smNote').value.trim()
+    });
+    _nt2SetSommeilLocal(saved);
+    closeModal('modalSommeil');
+    toast('Sommeil consigné ✓');
+    nt2RenderSommeil();
+  } catch (e) {
+    console.error('[veille] sommeil', e);
+    toast(veilleErrMsg(e), 'error');
+  }
 }

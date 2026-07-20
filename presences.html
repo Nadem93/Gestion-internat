@@ -70,6 +70,10 @@
             <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#7f93b3"></span>Non pointé</span>
           </span>
         </div>
+        <!-- Filtre par unité (déduit de la chambre du résident, catalogue `chambres`) -->
+        <div class="pr2-bar pr2-bar-u" id="presUnitesBar" hidden>
+          <div class="pr2-uchips" id="presUnites" role="group" aria-label="Filtrer par unité"></div>
+        </div>
         <div class="pr2-bar">
           <div class="v2-chips" id="presFiltres"></div>
           <button type="button" class="pr2-all" onclick="markAllPresent()" title="Pointer présents tous les résidents non pointés">
@@ -160,6 +164,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/presences-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
 <script src="js/presences.js?v=5"></script>
 <script src="js/presences-v2.js"></script>
 </body>
