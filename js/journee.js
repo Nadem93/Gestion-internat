@@ -88,6 +88,10 @@ async function initJournee() {
   // Avenants pour relier les objectifs (facultatif : la page vit sans)
   try { if (typeof sbGetPpe === 'function') _jrPpe = await sbGetPpe(); } catch (e) { _jrPpe = []; }
 
+  // Nature des moments (design V2) — dégradation douce si migration-journee.sql
+  // n'a pas été exécuté : la page s'affiche simplement sans nature.
+  if (typeof jn2LoadTypes === 'function') await jn2LoadTypes();
+
   renderJournee();
 }
 
@@ -109,15 +113,20 @@ function jrEtat(t) {
 
 function renderJournee() {
   if (_jrLoadError) return;   // l'écran d'erreur reste affiché
+  // Design V2 : le rendu est délégué à js/journee-v2.js. Tous les appelants
+  // existants (jrFait, jrMotif, saveTache…) continuent d'appeler renderJournee().
+  if (typeof jn2Render === 'function') { jn2Render(); return; }
   renderTournee();
 }
 
+// Rendu V1 de secours — conservé tant que le module V2 n'est pas chargé.
 function renderTournee() {
   const jour = jrTachesDuJour();
   const parQuart = q => jour.filter(t => t.moment === q);
 
   // Segments de quart
   const quartsEl = document.getElementById('jrQuarts');
+  if (!quartsEl) return;
   quartsEl.innerHTML = JR_MOMENTS.map(m => {
     const list = parQuart(m.id);
     const faits = list.filter(t => jrEtat(t) === 'fait').length;
@@ -400,10 +409,12 @@ function openTacheModal(id) {
   const joursEl = document.getElementById('tcJours');
   joursEl.style.display = rec.type === 'jours' ? 'flex' : 'none';
   joursEl.innerHTML = JR_JOURS.map((j, i) =>
-    `<label style="display:inline-flex;align-items:center;gap:.25rem;font-size:.74rem;padding:.25rem .5rem;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${i}"${rec.jours && rec.jours.includes(i) ? ' checked' : ''} style="width:auto"/>${j}</label>`).join('');
+    `<label><input type="checkbox" value="${i}"${rec.jours && rec.jours.includes(i) ? ' checked' : ''}/>${j}</label>`).join('');
   document.getElementById('tcConsigne').value = t ? t.consigne : '';
   document.getElementById('tcSoutien').value = t ? t.soutienAttendu : '';
   document.getElementById('tcArchiveBtn').style.display = t ? '' : 'none';
+  // Nature du moment (design V2) — donnée portée par la table taches_type
+  if (typeof jn2SetType === 'function') jn2SetType(t ? jn2TypeOf(t.id) : '');
   tcSyncObjectifs(t ? t.objectif : '');
   openModal('modalTache');
 }
@@ -459,11 +470,18 @@ async function saveTache() {
     soutienAttendu: document.getElementById('tcSoutien').value,
     createdBy: existante ? existante.createdBy : _jrUser().nom
   };
+  let savedId = id;
   try {
     const saved = await sbSaveTache(data);
+    savedId = saved.id;
     if (id) { _jrTaches = _jrTaches.map(x => x.id === id ? saved : x); toast('Tâche modifiée'); }
     else { _jrTaches.push(saved); toast('Tâche créée', 'success'); }
   } catch (e) { console.error('[saveTache]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  // La nature du moment vit à part (table taches_type) : elle ne peut pas faire
+  // échouer l'enregistrement de la tâche, qui est déjà en base.
+  if (typeof jn2SaveType === 'function') {
+    await jn2SaveType(savedId, document.getElementById('tcType')?.value || '');
+  }
   closeModal('modalTache');
   renderJournee();
 }

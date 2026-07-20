@@ -1,173 +1,205 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Journée — Ma tournée — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    /* ── Vue « Ma tournée » (design A — Le Fil du quart) ── */
-    /* ── Cockpit : quarts + progression + compteur + transmission, sur UNE barre collante ── */
-    .jr-cockpit{position:sticky;top:8px;z-index:30;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
-      background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      border:1px solid var(--border);border-radius:14px;padding:.5rem .8rem;margin-bottom:.7rem;
-      box-shadow:0 8px 24px rgba(15,43,74,.08)}
-    .jr-cockq{display:flex;gap:4px}
-    .jr-quart{min-height:38px;padding:0 11px;border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--muted);font-weight:700;font-size:.74rem;cursor:pointer;font-family:inherit;white-space:nowrap}
-    .jr-quart.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
-    .jr-bar{height:8px;border-radius:999px;background:#e6ecf5;overflow:hidden;margin-top:6px}
-    .jr-barfill{height:100%;border-radius:999px;background:linear-gradient(90deg,#4f46e5,#0f766e);transition:width .4s ease}
-    .jr-rail{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:.4rem}
-    .jr-rail::-webkit-scrollbar{height:0}
-    .jr-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 14px 4px 5px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.9);font-weight:700;font-size:.8rem;white-space:nowrap;color:#0f2b4a;cursor:pointer;font-family:inherit}
-    .jr-chip small{color:var(--muted);font-weight:600}
-    .jr-chip small.todo{color:#4f46e5}
-    .jr-chip:hover{border-color:#4f46e5}
-    .jr-av{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:.72rem;flex-shrink:0}
-    .jr-group{margin:0 0 1.1rem;scroll-margin-top:12px}
-    .jr-ghead{display:flex;align-items:center;gap:10px;padding:6px 4px 8px}
-    .jr-gname{font-size:.95rem;font-weight:800;color:#0f2b4a}
-    .jr-gmeta{font-size:.72rem;color:var(--muted)}
-    .jr-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.55rem;margin-bottom:.55rem;align-items:start}
-    .jr-cards .jr-task{margin-bottom:0}
-    .jr-task{background:rgba(255,255,255,.95);border:1px solid var(--border);border-left:4px solid #cbd5e1;border-radius:14px;padding:.8rem .95rem;margin-bottom:.55rem;box-shadow:0 4px 14px rgba(15,43,74,.05)}
-    .jr-task.fait{border-left-color:#16a34a;background:linear-gradient(rgba(22,163,74,.05),rgba(22,163,74,.05)),#fff}
-    .jr-task.reporte{border-left-color:#d97706;background:linear-gradient(rgba(217,119,6,.05),rgba(217,119,6,.05)),#fff}
-    .jr-lib{font-size:.87rem;font-weight:600;color:#0f2b4a}
-    .jr-task.fait .jr-lib{text-decoration:line-through;color:#334155;font-weight:500}
-    .jr-obj{font-size:.72rem;color:#7c3aed;margin-top:2px}
-    .jr-note{font-size:.72rem;color:#0f766e;margin-top:3px}
-    .jr-note.rep{color:#b45309}
-    .jr-btn-fait{min-height:44px;min-width:66px;padding:0 12px;border-radius:11px;border:none;background:#4f46e5;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;font-family:inherit}
-    .jr-btn-fait:hover{background:#4338ca}
-    .jr-btn-sec{min-height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:.74rem;cursor:pointer;font-family:inherit}
-    .jr-btn-sec:hover{border-color:#94a3b8;color:#334155}
-    .jr-check{width:46px;height:46px;min-width:46px;border-radius:50%;border:2px solid #c7d2fe;background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#a5b4fc;font-family:inherit;line-height:1;padding:0;transition:.12s}
-    .jr-check:hover{border-color:#4f46e5;color:#4f46e5;background:#eef2ff}
-    .jr-check.done{background:#16a34a;border-color:#16a34a;color:#fff}
-    .jr-check.done:hover{background:#15803d;border-color:#15803d}
-    .jr-check.rep{background:#fffbeb;border-color:#d97706;color:#d97706}
-    .jr-mode{display:flex;align-items:flex-start;gap:6px;margin-top:7px;padding:7px 9px;background:#faf5ff;border-radius:9px;border:1px solid #ede9fe;font-size:.74rem;color:#6d28d9;line-height:1.45}
-    .jr-strip{display:flex;align-items:center;gap:5px;margin-top:8px;flex-wrap:wrap}
-    .jr-strip-label{font-size:.68rem;color:var(--muted)}
-    .jr-pill{font-size:.68rem;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;color:#64748b;cursor:pointer;font-family:inherit;min-height:32px}
-    .jr-pill.attendu{border:2px solid #d97706;background:#fffbeb;color:#b45309;font-weight:800}
-    .jr-pill.on{background:#0f766e;border-color:#0f766e;color:#fff}
-    .jr-footnote{text-align:center;font-size:.74rem;color:var(--muted);margin:1.2rem 0 .4rem}
-    .jr-footnote a{color:#0f766e;font-weight:700}
-    /* ── Tri de la tournée : par résident / par heure ── */
-    .jr-tri{display:flex;gap:3px;padding:3px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.7)}
-    .jr-tribtn{min-height:34px;padding:0 12px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-weight:600;font-size:.72rem;cursor:pointer;font-family:inherit}
-    .jr-tribtn.on{background:#0f2b4a;color:#fff}
-    .jr-hrail{display:flex;align-items:center;gap:8px;margin:.7rem 0 .4rem}
-    .jr-hrail span{font-size:.68rem;font-weight:800;color:#4f46e5;background:#eef2ff;border-radius:999px;padding:2px 10px;flex-shrink:0}
-    .jr-hrail i{flex:1;height:1px;background:#e0e4ff}
-    .jr-resline{display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem}
-    .jr-resline .jr-av{width:24px;height:24px;font-size:.6rem}
-    .jr-resline b{font-size:.76rem;color:#0f2b4a}
-    button:focus-visible{outline:3px solid rgba(79,70,229,.4);outline-offset:2px}
-    @media(max-width:640px){.jr-btn-fait{min-width:74px}}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-journee.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<header class="header">
-  <div class="header-info"><div class="header-title">🧭 Journée — Ma tournée</div></div>
-  <div class="header-right"></div>
-</header>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell jn2-shell">
 
-<main class="content" style="max-width:1020px">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem">
-    <div>
-      <div style="font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4f46e5">Projets personnalisés · Journée</div>
-      <div id="jrDateLabel" style="font-size:1.15rem;font-weight:800;color:#0f2b4a"></div>
-      <div id="jrCharge" style="font-size:.8rem;color:var(--muted);margin-top:2px"></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
-      <button class="btn btn-accent btn-sm" id="jrAddBtn" onclick="openTacheModal()" style="display:none">+ Nouvelle tâche</button>
-    </div>
-  </div>
-
-  <div class="jr-cockpit">
-    <div class="jr-cockq" id="jrQuarts" role="group" aria-label="Choix du quart"></div>
-    <div style="flex:1;min-width:130px">
-      <div class="jr-bar" style="margin-top:0"><div class="jr-barfill" id="jrBarFill" style="width:0%"></div></div>
-      <div id="jrBarLabel" style="font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-    </div>
-    <span style="font-size:.78rem;color:var(--muted);white-space:nowrap"><span id="jrDone" style="font-size:1.05rem;font-weight:800;color:#0f2b4a">0</span><span id="jrTotal"> / 0</span></span>
-    <a href="transmissions.html" title="La coche garde la trace — la transmission raconte l'essentiel" style="color:#0f766e;font-weight:700;font-size:.76rem;text-decoration:none;white-space:nowrap">✎ transmission</a>
-    <div id="jrTriBar" style="display:flex"></div>
-  </div>
-  <div class="jr-rail" id="jrRail"></div>
-  <div id="jrList"><div class="empty" style="padding:3rem;text-align:center"><p>Chargement…</p></div></div>
-
-  <div class="jr-footnote">Ces moments sont des <strong>supports d'accompagnement</strong>, pas une cadence : l'équipe ajuste avec la personne, et son refus est un droit.</div>
-</main>
-
-<div id="toast-container" class="toast-container"></div>
-
-<!-- ── Modal création / édition de tâche ── -->
-<div class="modal-overlay" id="modalTache">
-  <div class="modal" style="max-width:520px;--mc:#4f46e5">
-    <div class="mdx-hero">
-      <button class="mdx-close" onclick="closeModal('modalTache')" aria-label="Fermer">✕</button>
-      <div class="mdx-badge">🧭</div>
-      <div class="mdx-hero-txt">
-        <div class="mdx-title" id="tacheModalTitle">Nouvelle tâche</div>
-        <div class="mdx-sub">Un moment du projet personnalisé</div>
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="vie-quotidienne.html" style="background:linear-gradient(135deg,#0d9488,#22d3ee)" aria-label="Vie quotidienne">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polyline points="20 6 9 17 4 12"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+        <div class="v2-top-title">Ma tournée</div>
+      </div>
+      <div class="jn2-topact">
+        <div class="jn2-date"><span id="jrDateLabel"></span><span id="jrCharge"></span></div>
+        <button type="button" class="jn2-new" id="jrAddBtn" onclick="openTacheModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle tâche
+        </button>
       </div>
     </div>
-    <div class="modal-body mdx-body">
-      <input type="hidden" id="tcEditId"/>
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>🧑</span> La personne et le geste</div>
-        <div class="form-group"><label>Résident *</label><select id="tcResident" class="form-input" onchange="tcSyncObjectifs()"></select></div>
-        <div class="form-group"><label>Tâche *</label><input id="tcLibelle" class="form-input" placeholder="Ex : Trier son linge et lancer une machine"/></div>
-        <div class="form-group"><label>🎯 Objectif du projet relié</label>
-          <select id="tcObjectif" class="form-input"></select>
-          <input id="tcObjectifLibre" class="form-input" placeholder="Ou saisissez l'objectif librement…" style="margin-top:.35rem;display:none"/>
+
+    <div class="v2-body">
+      <div class="jn2-body">
+
+        <!-- FIL DE LA TOURNÉE -->
+        <div class="jn2-main">
+          <div class="jn2-filters v2-chips" id="jn2Chips"></div>
+          <div id="jrList"><div class="jn2-vide">Chargement…</div></div>
+          <div class="jn2-foot">Ces moments sont des <strong>supports d'accompagnement</strong>, pas une cadence :
+            l'équipe ajuste avec la personne, et son refus est un droit.</div>
         </div>
-      </div>
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>🕐</span> Quand</div>
-        <div class="form-row">
-          <div class="form-group"><label>Moment *</label>
-            <select id="tcMoment" class="form-input">
-              <option value="matin">☀️ Matin</option>
-              <option value="aprem">🌤 Après-midi</option>
-              <option value="soir">🌙 Soir / nuit</option>
-            </select>
+
+        <!-- RAIL : progression, prochaine tâche, répartition -->
+        <div class="jn2-side">
+
+          <div class="v2-blk jn2-ring-blk">
+            <div class="jn2-ring">
+              <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+                <circle cx="66" cy="66" r="58" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+                <circle id="jn2RingArc" cx="66" cy="66" r="58" fill="none" stroke="#2dd4bf" stroke-width="12"
+                        stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+              </svg>
+              <div class="jn2-ring-c">
+                <div class="jn2-ring-p" id="jn2Pct">0%</div>
+                <div class="jn2-ring-l">tournée</div>
+              </div>
+            </div>
+            <div class="jn2-ring-x" id="jn2Count"></div>
+            <div class="jn2-ring-r" id="jn2Reports"></div>
           </div>
-          <div class="form-group"><label>Heure indicative</label><input id="tcHeure" type="time" class="form-input"/></div>
-        </div>
-        <div class="form-group"><label>Récurrence</label>
-          <select id="tcRecurrence" class="form-input" onchange="document.getElementById('tcJours').style.display=this.value==='jours'?'':'none'">
-            <option value="quotidien">Tous les jours</option>
-            <option value="jours">Certains jours</option>
-          </select>
-          <div id="tcJours" style="display:none;margin-top:.4rem;display:none;gap:.3rem;flex-wrap:wrap"></div>
-        </div>
-      </div>
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>📖</span> Mode d'emploi (pour les remplaçants)</div>
-        <div class="form-group"><label>Consigne</label><textarea id="tcConsigne" class="form-input" rows="2" placeholder="Ex : proposer 2 tenues maximum, la laisser trancher ; machine de l'étage 2, la laisser doser la lessive…"></textarea></div>
-        <div class="form-group"><label>Niveau de soutien attendu</label>
-          <select id="tcSoutien" class="form-input">
-            <option value="">Non précisé</option>
-            <option value="autonomie">🟢 Autonomie — présence simple</option>
-            <option value="supervision">🔵 Supervision / veille</option>
-            <option value="verbal">🟡 Incitation / guidance verbale</option>
-            <option value="partiel">🟠 Aide partielle</option>
-            <option value="total">🔴 Aide totale</option>
-          </select>
+
+          <div class="v2-blk v2-rail-blk">
+            <div class="v2-blk-sub">Prochaine tâche</div>
+            <div id="jn2Next"></div>
+          </div>
+
+          <div class="v2-blk v2-rail-blk">
+            <div class="v2-blk-sub">Répartition</div>
+            <div class="jn2-break" id="jn2Break"></div>
+          </div>
+
+          <a class="jn2-cta" href="transmissions.html" title="La coche garde la trace — la transmission raconte l'essentiel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v4l4-4"/></svg>
+            Clôturer &amp; transmettre
+          </a>
+
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="tcArchiveBtn" style="margin-right:auto;display:none;color:#dc2626" onclick="archiveTache()">🗄 Retirer cette tâche</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalTache')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveTache()">💾 Enregistrer</button>
+
+    <!-- Conteneurs hérités : contrat d'ID avec renderTournee() (rendu V1 de
+         secours). Ils restent dans le DOM mais ne sont plus affichés. -->
+    <div id="jrLegacy" hidden>
+      <div id="jrQuarts"></div><div id="jrRail"></div><div id="jrTriBar"></div>
+      <div id="jrBarFill"></div><div id="jrBarLabel"></div>
+      <span id="jrDone"></span><span id="jrTotal"></span>
+    </div>
+
+  </div>
+</div></div>
+
+<!-- ── MODALE CRÉATION / ÉDITION DE TÂCHE ── -->
+<div class="modal-overlay v2-ov" id="modalTache">
+  <div class="v2-md" style="--mc:#0d9488">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="tacheModalTitle">Nouvelle tâche</div>
+        <div class="v2-md-s">Un moment du projet personnalisé</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalTache')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <input type="hidden" id="tcEditId"/>
+    <input type="hidden" id="tcType" value=""/>
+
+    <div class="v2-md-b">
+
+      <div>
+        <label class="v2-fld-l" for="tcResident">Résident *</label>
+        <select id="tcResident" class="v2-fld" onchange="tcSyncObjectifs()"></select>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcLibelle">Tâche *</label>
+        <input type="text" id="tcLibelle" class="v2-fld" placeholder="Ex : Trier son linge et lancer une machine"/>
+      </div>
+
+      <div>
+        <label class="v2-fld-l">Nature du moment</label>
+        <div class="v2-seg jn2-seg-w" id="tcTypeSeg">
+          <button type="button" class="v2-seg-o on" data-val="" onclick="jn2SetType('')">Non précisée</button>
+          <button type="button" class="v2-seg-o" data-val="soin" onclick="jn2SetType('soin')">Soin</button>
+          <button type="button" class="v2-seg-o" data-val="repas" onclick="jn2SetType('repas')">Repas</button>
+          <button type="button" class="v2-seg-o" data-val="activite" onclick="jn2SetType('activite')">Activité</button>
+          <button type="button" class="v2-seg-o" data-val="transmission" onclick="jn2SetType('transmission')">Transmission</button>
+          <button type="button" class="v2-seg-o" data-val="accompagnement" onclick="jn2SetType('accompagnement')">Accompagnement</button>
+          <button type="button" class="v2-seg-o" data-val="rdv" onclick="jn2SetType('rdv')">RDV ext.</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcObjectif">Objectif du projet relié</label>
+        <select id="tcObjectif" class="v2-fld"></select>
+        <input type="text" id="tcObjectifLibre" class="v2-fld" placeholder="Ou saisissez l'objectif librement…" style="display:none"/>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="tcMoment">Moment *</label>
+          <select id="tcMoment" class="v2-fld">
+            <option value="matin">Matin — 7 h à 14 h</option>
+            <option value="aprem">Après-midi — 14 h à 22 h</option>
+            <option value="soir">Soir &amp; nuit — 22 h à 7 h</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="tcHeure">Heure indicative</label>
+          <input type="time" id="tcHeure" class="v2-fld"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcRecurrence">Récurrence</label>
+        <select id="tcRecurrence" class="v2-fld" onchange="document.getElementById('tcJours').style.display=this.value==='jours'?'flex':'none'">
+          <option value="quotidien">Tous les jours</option>
+          <option value="jours">Certains jours</option>
+        </select>
+        <div id="tcJours" class="jn2-jours" style="display:none"></div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcConsigne">Mode d'emploi (pour les remplaçants)</label>
+        <textarea id="tcConsigne" class="v2-fld" rows="2" placeholder="Ex : proposer 2 tenues maximum, la laisser trancher ; machine de l'étage 2, la laisser doser la lessive…"></textarea>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcSoutien">Niveau de soutien attendu</label>
+        <select id="tcSoutien" class="v2-fld">
+          <option value="">Non précisé</option>
+          <option value="autonomie">Autonomie — présence simple</option>
+          <option value="supervision">Supervision / veille</option>
+          <option value="verbal">Incitation / guidance verbale</option>
+          <option value="partiel">Aide partielle</option>
+          <option value="total">Aide totale</option>
+        </select>
+      </div>
+
+      <div class="v2-note v2-note-warn" id="tcTypeWarn" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <span>La nature du moment ne sera pas enregistrée : exécutez <strong>migration-journee.sql</strong> dans Supabase.</span>
+      </div>
+
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" id="tcArchiveBtn" style="display:none" onclick="archiveTache()">Retirer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalTache')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveTache()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
+
+<div id="toast-container" class="toast-container"></div>
 
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -176,5 +208,7 @@
 <script src="js/ppe-supabase.js"></script>
 <script src="js/taches-supabase.js"></script>
 <script src="js/journee.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_journal')) { const c = document.querySelector('.content'); if (c) c.innerHTML = ''; } else { initJournee(); }</script>
-</body></html>
+<script src="js/journee-v2.js"></script>
+<script>Auth.requireAuth(); if (!requireModule('access_journal')) { const c = document.querySelector('.v2-shell'); if (c) c.innerHTML = ''; } else { initJournee(); }</script>
+</body>
+</html>
