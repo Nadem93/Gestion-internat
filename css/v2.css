@@ -995,3 +995,63 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 .v2-histo-r:hover .v2-histo-d { color: #fff; }
 .v2-histo-d { width: 150px; flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
 .v2-histo-p { font-size: 11px; color: var(--v2-t5); padding: 3px 10px; border-radius: 7px; }
+
+/* ── ALERTES & NOTIFICATIONS ──────────────────────────────────────── */
+.v2-al-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+@media (max-width: 900px) { .v2-al-stats { grid-template-columns: repeat(2, 1fr); } }
+.v2-al-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi); }
+.v2-al-stat-ico { width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc); }
+.v2-al-stat-ico svg { width: 21px; height: 21px; }
+.v2-al-stat-n { font-family: var(--v2-display); font-size: 26px; font-weight: 800;
+  line-height: 1; color: var(--pc); }
+.v2-al-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+.v2-al-body { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .v2-al-body { grid-template-columns: 1fr; } }
+
+.v2-al { display: flex; align-items: flex-start; gap: 15px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-left: 4px solid var(--sc); border-radius: var(--v2-r-kpi); }
+.v2-al-ico { width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc); }
+.v2-al-t { font-size: 14px; font-weight: 700; color: var(--v2-t2); }
+.v2-al-sev { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  color: var(--sc); background: color-mix(in srgb, var(--sc) 11%, transparent); }
+.v2-al-d { font-size: 12.5px; color: var(--v2-t5); line-height: 1.5; }
+.v2-al-meta { display: flex; align-items: center; gap: 12px; margin-top: 9px; flex-wrap: wrap; }
+.v2-al-type { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px;
+  color: var(--pc); background: color-mix(in srgb, var(--pc) 8%, transparent); }
+.v2-al-ctx { font-size: 11px; color: var(--v2-t7); }
+.v2-al-act { display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; }
+.v2-al-cta, .v2-al-ign {
+  height: 32px; padding: 0 12px; border-radius: 9px; font: inherit;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none;
+}
+.v2-al-cta { color: #fff; background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo)); }
+.v2-al-cta:hover { filter: brightness(1.1); }
+.v2-al-ign { color: var(--v2-t6); background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); }
+.v2-al-ign:hover { color: #fff; background: var(--v2-s-hover); }
+
+/* Rail : répartition cliquable + échéances */
+.v2-al-cat { cursor: pointer; }
+.v2-al-cat.on .v2-al-cat-l { color: #fff; font-weight: 600; }
+.v2-al-ech { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-soft); }
+.v2-al-ech-d { width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 11%, transparent); color: var(--pc); }
+.v2-al-ech-j { font-family: var(--v2-display); font-size: 14px; font-weight: 800; line-height: 1; }
+.v2-al-ech-m { font-size: 8.5px; font-weight: 700; }
+.v2-al-res { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 26px; }
+@media (max-width: 780px) { .v2-al-res { grid-template-columns: 1fr; } }
+.v2-al-res-i { display: flex; align-items: center; gap: 12px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.v2-al-res-c { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(16,185,129,.09); color: var(--v2-ok); }
+.v2-al-res-c svg { width: 14px; height: 14px; }

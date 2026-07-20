@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Alertes — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 <style>
 .al-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem}
 .al-stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem;text-align:center}
@@ -18,31 +19,44 @@
 @media(max-width:600px){.al-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">🔔 Alertes &amp; Notifications</div>
+  <div class="v2-shell" style="max-width:none;margin:22px 24px">
+
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Centre de notifications</div>
+        <div class="v2-top-title">Alertes &amp; notifications</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="al2ToutTraiter()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="20 6 9 17 4 12"/></svg>
+          Tout marquer comme traité
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="resetAlDismissed()" title="Réafficher toutes les alertes ignorées">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 2v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 8"/></svg>
+          Réinitialiser
+        </button>
+      </div>
     </div>
-    <div class="header-right">
-      <button class="btn btn-ghost btn-sm" onclick="resetAlDismissed()" title="Réafficher toutes les alertes ignorées">↺ Réinitialiser</button>
+
+    <div class="v2-body">
+      <div class="v2-al-stats" id="alStats"></div>
+      <div class="v2-chips" id="alFilters" style="margin-bottom:18px"></div>
+
+      <div class="v2-al-body">
+        <div id="alList" style="display:flex;flex-direction:column;gap:12px"></div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="v2-blk" id="alCats"></div>
+          <div class="v2-consignes" id="alEcheances"></div>
+        </div>
+      </div>
+
+      <div class="v2-blk" id="alTraitees" style="margin-top:18px"></div>
     </div>
-  </header>
 
-  <main class="content">
-    <div style="max-width:800px;margin:0 auto">
-
-      <!-- Stats -->
-      <div class="al-stats" id="alStats"></div>
-
-      <!-- Filtres par type -->
-      <div class="al-filter-bar" id="alFilters"></div>
-
-      <!-- Liste des alertes -->
-      <div id="alList"></div>
-
-    </div>
-  </main>
+  </div>
 </div></div>
 
 <div id="toast-container" class="toast-container"></div>
@@ -60,5 +74,6 @@
 <script src="js/plan-soins-supabase.js"></script>
 <script src="js/budget-supabase.js"></script>
 <script src="js/alertes.js"></script>
+<script src="js/alertes-v2.js"></script>
 </body>
 </html>
