@@ -34,6 +34,7 @@ const TV2_COLS = [
 ];
 
 let _tv2Consignes = [];
+let _tv2Uid = null;   // UID d'authentification, pour repérer ses propres consignes
 
 function _tv2Cat(id) { return TV2_CATS[id] || { l: id || '—', c: '#64748b' }; }
 function _tv2Svg(d, w) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`; }
@@ -217,12 +218,16 @@ const TV2_CONS_COL = { soin: '#ec4899', securite: '#f59e0b', direction: '#ef4444
 function tv2RenderConsignes() {
   const el = document.getElementById('trConsignes');
   if (!el) return;
+  // Tout le personnel peut publier une consigne ; chacun ne retire que la
+  // sienne, les administrateurs retirent tout (même règle que le répertoire).
   const admin = typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin();
+  const sess = (typeof Auth !== 'undefined' && Auth.getSession && Auth.getSession()) || {};
+  const peutEcrire = !!sess.userId && sess.role !== 'famille';
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
       <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
       <span class="v2-blk-t" style="color:var(--v2-warn-text)">Consignes permanentes</span>
-      ${admin ? `<button type="button" class="v2-tr-act" style="margin-left:auto;color:var(--v2-warn-text)" onclick="tv2OuvrirConsigne()" title="Ajouter une consigne">
+      ${peutEcrire ? `<button type="button" class="v2-tr-act" style="margin-left:auto;color:var(--v2-warn-text)" onclick="tv2OuvrirConsigne()" title="Ajouter une consigne">
         ${_tv2Svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 2.4)}Ajouter</button>` : ''}
     </div>
     ${_tv2Consignes.length ? `<div style="display:flex;flex-direction:column;gap:12px">${
@@ -234,10 +239,10 @@ function tv2RenderConsignes() {
             <div style="font-size:12px;color:var(--v2-t2);line-height:1.45">${escHtml(c.texte || '')}</div>
             <div style="font-size:10.5px;color:var(--v2-t6);margin-top:3px">${escHtml(c.auteur || '')}</div>
           </div>
-          ${admin ? `<button type="button" class="v2-tr-act" onclick="tv2SupprimerConsigne('${c.id}')" title="Retirer" style="color:var(--v2-danger-text)">${_tv2Svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')}</button>` : ''}
+          ${(admin || (peutEcrire && c.createdBy && c.createdBy === _tv2Uid)) ? `<button type="button" class="v2-tr-act" onclick="tv2SupprimerConsigne('${c.id}')" title="Retirer" style="color:var(--v2-danger-text)">${_tv2Svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')}</button>` : ''}
         </div>`;
       }).join('')}</div>`
-      : `<div class="v2-blk-vide">Aucune consigne permanente${admin ? ' — cliquez sur « Ajouter »' : ''}.</div>`}`;
+      : `<div class="v2-blk-vide">Aucune consigne permanente${peutEcrire ? ' — cliquez sur « Ajouter »' : ''}.</div>`}`;
 }
 
 // ── JOURS PRÉCÉDENTS ─────────────────────────────────────────────────
@@ -334,6 +339,10 @@ function tv2SupprimerConsigne(id) {
 // Chargement initial, déclenché après initTransmissions().
 async function tv2ChargerConsignes() {
   if (typeof sbGetConsignes !== 'function') return;
+  try {
+    const { data } = await supabaseClient.auth.getUser();
+    _tv2Uid = (data && data.user && data.user.id) || null;
+  } catch (e) { _tv2Uid = null; }
   _tv2Consignes = await sbGetConsignes();
   tv2RenderConsignes();
 }

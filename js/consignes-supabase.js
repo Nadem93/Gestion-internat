@@ -23,12 +23,21 @@ async function sbGetConsignes() {
   }
 }
 
+// created_by stocke l'UID d'authentification, pas session.userId (identifiant
+// hérité, différent) : c'est lui que la politique RLS compare à auth.uid().
+async function _consAuthUid() {
+  try {
+    const { data } = await supabaseClient.auth.getUser();
+    return (data && data.user && data.user.id) || null;
+  } catch (e) { console.error('[consignes] uid', e); return null; }
+}
+
 async function sbSaveConsigne(c) {
-  const etablissementId = await sbGetEtablissementId();
+  const [etablissementId, uid] = await Promise.all([sbGetEtablissementId(), _consAuthUid()]);
   const row = {
     etablissement_id: etablissementId,
     texte: c.texte || '', categorie: c.categorie || 'autre',
-    auteur: c.auteur || '', created_by: c.createdBy || ''
+    auteur: c.auteur || '', created_by: uid
   };
   const { data, error } = await supabaseClient.from('consignes').insert(row).select();
   if (error) throw error;
