@@ -521,7 +521,7 @@ function editTr(id) {
   document.getElementById('trResident').value  = t.residentId  || '';
   document.getElementById('trShift').value     = t.shift       || 'matin';
   document.getElementById('trCat').value       = t.cat         || 'administratif';
-  document.getElementById('trPriority').value  = t.priority    || 'normal';
+  trSetPriority(t.priority || 'normal');
   document.getElementById('trContent').value   = t.content     || '';
   const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = t.soutien || '';
   const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = t.soutienNiveau || '';
@@ -635,34 +635,25 @@ function resetTrModal() {
   const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = '';
   const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = '';
   document.getElementById('trCat').value       = 'administratif';
-  document.getElementById('trPriority').value  = 'normal';
+  trSetPriority('normal');
   document.getElementById('modalTrTitle').textContent = 'Nouvelle transmission';
   const h = new Date().getHours();
   const autoShift = (h >= 7 && (h < 13 || (h === 13 && new Date().getMinutes() < 30))) ? 'matin' : (h >= 13 && h < 22) ? 'aprem' : 'nuit';
   document.getElementById('trShift').value = autoShift;
-  trGoStep(1);
+  trSetPriority('normal');
 }
 
-function trGoStep(step) {
-  for (let i = 1; i <= 3; i++) {
-    const nav = document.getElementById('trStep' + i + 'Nav');
-    if (!nav) continue;
-    if (i === step) {
-      nav.style.background = 'rgba(255,255,255,.18)';
-      nav.style.opacity    = '1';
-      const circle = nav.querySelector('span');
-      if (circle) { circle.style.background = '#fff'; circle.style.color = '#059669'; }
-    } else {
-      nav.style.background = 'transparent';
-      nav.style.opacity    = '.55';
-      const circle = nav.querySelector('span');
-      if (circle) { circle.style.background = 'rgba(255,255,255,.2)'; circle.style.color = '#fff'; }
-    }
-  }
-  const label = document.getElementById('trStepLabel');
-  if (label) label.textContent = 'Étape ' + step + ' sur 3';
-  const target = document.getElementById('trFormStep' + step);
-  if (target) target.scrollIntoView({ behavior:'smooth', block:'nearest' });
+// Priorité : choix segmenté (.v2-seg) adossé à un input caché, pour que
+// saveTr_Modal() et editTr() continuent de lire/écrire trPriority.
+function trSetPriority(v) {
+  const inp = document.getElementById('trPriority');
+  if (inp) inp.value = v;
+  document.querySelectorAll('#trPrioritySeg .v2-seg-o').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === v);
+  });
+  const MC = { info: '#64748b', normal: '#22d3ee', urgent: '#ef4444' };
+  const md = document.querySelector('#modalTr .v2-md');
+  if (md) md.style.setProperty('--mc', MC[v] || '#22d3ee');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
