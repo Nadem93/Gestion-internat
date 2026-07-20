@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Accueil — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
@@ -79,8 +80,9 @@
     .accueil-home-illus{filter:drop-shadow(0 2px 8px color-mix(in srgb, var(--c) 34%, transparent))}
   </style>
 </head>
-<body>
+<body class="v2">
 <script src="js/app.js"></script>
+<script src="js/accueil-v2.js"></script>
 <script src="js/alertes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
@@ -180,10 +182,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div class="accueil-home" id="mainAccueilView" style="display:none">
   <div class="acc-aurora" aria-hidden="true"><span class="ab1"></span><span class="ab2"></span><span class="ab3"></span></div>
-  <header class="header" style="border:none;position:absolute;width:100%">
-    <div style="visibility:hidden;pointer-events:none"><div class="header-title"></div></div>
-    <div class="header-right" style="position:relative;z-index:40">
-      <button class="acc-bell" id="accBell" onclick="toggleNotifPanel(event)" aria-label="Notifications">
+  <div class="v2-shell" style="margin:22px auto;max-width:1560px">
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <span class="v2-brand">INTERNALIS</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <label class="v2-search" style="cursor:text;min-width:280px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="accSearch" type="search" placeholder="Rechercher un résident, une note…"
+                 style="flex:1;background:none;border:none;outline:none;color:var(--v2-t2);font-family:inherit;font-size:13.5px;padding:0"/>
+          <span class="v2-kbd">⌘K</span>
+        </label>
+        <div class="header-right" style="position:relative;z-index:40;display:flex;align-items:center">
+          <button class="acc-bell" id="accBell" onclick="toggleNotifPanel(event)" aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="acc-bell-count hidden" id="accBellCount">0</span>
       </button>
@@ -192,44 +203,16 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="accNotifList"></div>
         <div class="acc-notif-foot" id="accNotifFoot" style="display:none"><button onclick="markAllNotifsRead()">Tout marquer comme lu</button></div>
       </div>
-    </div>
-  </header>
-  <main class="accueil-home-main">
-    <div class="accueil-fab-stack">
-      <a href="aide.html" class="accueil-fab" title="Aide" style="background:#14b8a6;text-decoration:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </a>
-      <div class="accueil-fab" onclick="openModal('modalIntervention')" title="Demander une intervention" style="background:#0d9488">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <a href="employe.html" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+          <span class="v2-av" id="accUserAv" style="background:linear-gradient(135deg,#818cf8,#22d3ee);width:40px;height:40px">·</span>
+          <span><span id="accUserName" style="display:block;font-size:13px;font-weight:700;color:var(--v2-t2)"></span>
+                <span id="accUserRole" style="display:block;font-size:11.5px;color:var(--v2-t7)"></span></span>
+        </a>
       </div>
-      <div class="accueil-fab" data-module="incidents" onclick="var _s=Auth.getSession();localStorage.setItem('ftr_last_visit_incidents_'+_s.userId,Date.now());if(_s?.role==='admin'){location.href='incidents.html'}else{openModal('modalIncident')}" title="Signaler un incident" style="background:#e11d48">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></svg>
-      </div>
-      <a href="vehicules.html" class="accueil-fab" title="Gérer les véhicules" style="background:#6366f1;text-decoration:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg>
-      </a>
-      <a href="console.html" class="accueil-fab superadmin-only" title="Console groupe" style="background:#a16207;text-decoration:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg>
-      </a>
     </div>
-    <div class="accueil-home-grid">
-      <a href="dashboard.html" class="accueil-home-card" data-perm="view_dashboard" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#E7E6FB"/><rect x="16.5" y="15.5" width="11" height="11" rx="2.5" fill="#4f46e5"/><rect x="28.5" y="15.5" width="11" height="11" rx="2.5" fill="#A5A0F2"/><rect x="16.5" y="28.5" width="11" height="11" rx="2.5" fill="#A5A0F2"/><rect x="28.5" y="28.5" width="11" height="11" rx="2.5" fill="#4f46e5"/></svg></span><span class="accueil-home-label">Tableau de bord</span></a>
-      <a href="residents.html" class="accueil-home-card" data-module="residents" data-perm="view_residents" style="--c:#0891b2;background:linear-gradient(135deg,#0891b218,#22d3ee12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DCF0F5"/><circle cx="34" cy="24" r="4.6" fill="#6FC5D8"/><path d="M26 39 Q26 28.4 34 28.4 Q42 28.4 42 39 Z" fill="#6FC5D8"/><circle cx="23" cy="25.5" r="5.3" fill="#0891b2"/><path d="M13.5 40 Q13.5 29.4 23 29.4 Q32.5 29.4 32.5 40 Z" fill="#0891b2"/></svg></span><span class="accueil-home-label">Résidents</span><span class="notif-badge hidden">0</span></a>
-      <a href="transmissions.html" class="accueil-home-card" data-perm="access_journal" style="--c:#3b82f6;background:linear-gradient(135deg,#3b82f618,#93c5fd12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#E2EDFD"/><rect x="26" y="26.5" width="15" height="11" rx="4" fill="#93BBF9"/><path d="M30 35.5 L30 41 L36 35.5 Z" fill="#93BBF9"/><rect x="15" y="16" width="21" height="15" rx="5" fill="#3b82f6"/><path d="M20 29 L20 35 L27 29 Z" fill="#3b82f6"/><circle cx="22" cy="23.5" r="1.6" fill="#fff"/><circle cx="26" cy="23.5" r="1.6" fill="#fff"/><circle cx="30" cy="23.5" r="1.6" fill="#fff"/></svg></span><span class="accueil-home-label">Transmissions</span><span class="notif-badge tr-badge hidden"></span></a>
-      <a href="alertes.html" class="accueil-home-card" style="--c:#ef4444;background:linear-gradient(135deg,#ef444418,#fca5a512),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#FCE5E5"/><rect x="26.3" y="12.5" width="3.4" height="4.5" rx="1.7" fill="#ef4444"/><path d="M28 16 C23 16 20 20 20 25 V30 L18 33 H38 L36 30 V25 C36 20 33 16 28 16 Z" fill="#ef4444"/><path d="M28 21 C25 21 23 23.4 23 26.4 V30 H33 V26.4 C33 23.4 31 21 28 21 Z" fill="#F59E9E"/><path d="M24.6 34.5 Q28 38.5 31.4 34.5 Z" fill="#ef4444"/><circle cx="38" cy="17" r="4" fill="#ef4444" stroke="#fff" stroke-width="1.6"/></svg></span><span class="accueil-home-label">Alertes</span><span class="notif-badge al-badge hidden"></span></a>
-      <a href="journal.html" class="accueil-home-card" data-module="journal" data-perm="access_journal" style="--c:#059669;background:linear-gradient(135deg,#05966918,#34d39912),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DCF2EA"/><path d="M28 18 L18 16.2 V37 L28 38.8 Z" fill="#059669"/><path d="M28 18 L38 16.2 V37 L28 38.8 Z" fill="#6FC9A8"/><path d="M21 22 H25.5 M21 26 H25.5 M21 30 H25.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><path d="M30.5 22 H35 M30.5 26 H35 M30.5 30 H35" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></span><span class="accueil-home-label">Journal de bord</span><span class="notif-badge hidden">0</span></a>
-      <a href="planning.html" class="accueil-home-card" data-module="planning" data-perm="access_presences" style="--c:#d97706;background:linear-gradient(135deg,#d9770618,#fbbf2412),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#FBEBD7"/><rect x="21.5" y="13.5" width="2.6" height="5" rx="1.3" fill="#b45309"/><rect x="31.9" y="13.5" width="2.6" height="5" rx="1.3" fill="#b45309"/><rect x="17" y="17" width="22" height="22" rx="4" fill="#fff" stroke="#d97706" stroke-width="2"/><path d="M17 21 Q17 17 21 17 H35 Q39 17 39 21 V23 H17 Z" fill="#d97706"/><rect x="20" y="27" width="6" height="6" rx="1.5" fill="#d97706"/><rect x="29" y="27.5" width="6" height="5" rx="1.5" fill="#F0B768"/><rect x="20" y="35" width="6" height="2.5" rx="1.2" fill="#F0B768"/><rect x="29" y="35" width="6" height="2.5" rx="1.2" fill="#F0B768"/></svg></span><span class="accueil-home-label">Agenda</span><span class="notif-badge hidden">0</span></a>
-      <a href="vie-quotidienne.html" class="accueil-home-card" data-perm="access_presences,view_residents,access_journal,access_activites,access_medicaments" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#5eead412),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DAF0ED"/><circle cx="18" cy="19" r="4.5" fill="#F0B85E"/><path d="M18.5 28.5 L29 19 L39.5 28.5 Z" fill="#0d9488"/><rect x="21.5" y="27" width="15" height="13" rx="2" fill="#3FB6AC"/><rect x="26.3" y="32" width="5" height="8" rx="1" fill="#fff"/><circle cx="33" cy="31" r="1.8" fill="#fff"/></svg></span><span class="accueil-home-label">Vie quotidienne</span></a>
-      <a href="cvs.html" class="accueil-home-card" data-module="ppe" data-perm="access_cvs" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#86efac12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DEF3E4"/><path d="M28 19.2 C27 17.2 24 17.2 24 20.2 C24 22.4 28 24.8 28 24.8 C28 24.8 32 22.4 32 20.2 C32 17.2 29 17.2 28 19.2 Z" fill="#16a34a"/><circle cx="21.5" cy="29.5" r="3.6" fill="#74CB92"/><path d="M15.5 39.5 Q15.5 32.4 21.5 32.4 Q27.5 32.4 27.5 39.5 Z" fill="#74CB92"/><circle cx="34.5" cy="29.5" r="3.6" fill="#16a34a"/><path d="M28.5 39.5 Q28.5 32.4 34.5 32.4 Q40.5 32.4 40.5 39.5 Z" fill="#16a34a"/></svg></span><span class="accueil-home-label">Vie Sociale (CVS)</span></a>
-      <a href="dossiers.html" class="accueil-home-card" data-module="ppe" data-perm="access_ppe,view_residents,access_documents,access_repertoire,view_incidents,access_cvs,access_admissions" style="--c:#b45309;background:linear-gradient(135deg,#b4530918,#fcd34d12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#F5E6D5"/><rect x="16" y="19.5" width="11" height="5" rx="2" fill="#b45309"/><rect x="19" y="19" width="18" height="13" rx="2" fill="#fff"/><path d="M22 23 H34 M22 26 H31 M22 29 H34" stroke="#E0C3A0" stroke-width="1.3" stroke-linecap="round"/><path d="M15 27 H41 V36 A3 3 0 0 1 38 39 H18 A3 3 0 0 1 15 36 Z" fill="#C8691A"/></svg></span><span class="accueil-home-label">Dossiers & suivi</span><span class="notif-badge hidden">0</span></a>
-      <a href="pilotage.html" class="accueil-home-card" data-module="portail" data-perm="access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DDE3EA"/><rect x="17" y="16" width="6" height="6" rx="1.6" fill="#0f2b4a"/><rect x="25" y="16" width="6" height="6" rx="1.6" fill="#6B7E94"/><rect x="33" y="16" width="6" height="6" rx="1.6" fill="#0f2b4a"/><rect x="17" y="24" width="6" height="6" rx="1.6" fill="#6B7E94"/><rect x="25" y="24" width="6" height="6" rx="1.6" fill="#0f2b4a"/><rect x="33" y="24" width="6" height="6" rx="1.6" fill="#6B7E94"/><rect x="17" y="32" width="6" height="6" rx="1.6" fill="#0f2b4a"/><rect x="25" y="32" width="6" height="6" rx="1.6" fill="#6B7E94"/><rect x="33" y="32" width="6" height="6" rx="1.6" fill="#0f2b4a"/></svg></span><span class="accueil-home-label">Portail</span><span class="notif-badge hidden">0</span></a>
-<a href="interventions.html" class="accueil-home-card" id="tileInterventions" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DAF0ED"/><path d="M33.8 16.6 A5.4 5.4 0 0 0 26.9 23.5 L16.8 33.6 A2.6 2.6 0 0 0 20.4 37.2 L30.5 27.1 A5.4 5.4 0 0 0 37.4 20.2 L33.2 24.4 A2.4 2.4 0 0 1 29.8 21 L33.8 16.6 Z" fill="#0d9488"/><circle cx="20" cy="34" r="1.7" fill="#fff"/></svg></span><span class="accueil-home-label">Interventions</span></a>
-      <a href="rh.html" class="accueil-home-card rh-only" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#E7E6FB"/><rect x="24" y="14.5" width="8" height="4" rx="2" fill="#A5A0F2"/><rect x="17" y="17.5" width="22" height="21" rx="3" fill="#4f46e5"/><circle cx="23" cy="26" r="3.6" fill="#fff"/><path d="M18.6 33.5 Q18.6 29 23 29 Q27.4 29 27.4 33.5 Z" fill="#fff"/><rect x="29" y="24" width="7.5" height="2.2" rx="1.1" fill="#A5A0F2"/><rect x="29" y="28.5" width="7.5" height="2.2" rx="1.1" fill="#A5A0F2"/></svg></span><span class="accueil-home-label">RH</span></a>
-      <a href="finance.html" class="accueil-home-card admin-only" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DEF3E4"/><rect x="17.5" y="30" width="6" height="7.5" rx="2" fill="#74CB92"/><rect x="25.5" y="25" width="6" height="12.5" rx="2" fill="#3FB46A"/><rect x="33.5" y="19.5" width="6" height="18" rx="2" fill="#16a34a"/><circle cx="22" cy="20" r="5" fill="#F0B85E" stroke="#d98e2b" stroke-width="1.5"/><circle cx="22" cy="20" r="2.2" fill="#F8D08A"/></svg></span><span class="accueil-home-label">Finance</span></a>
-      <a href="admin.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#ECEAE7"/><rect x="25.4" y="13.5" width="5.2" height="6.5" rx="1.6" fill="#78716c"/><rect x="25.4" y="34" width="5.2" height="6.5" rx="1.6" fill="#78716c"/><rect x="13.5" y="24.4" width="6.5" height="5.2" rx="1.6" fill="#78716c"/><rect x="36" y="24.4" width="6.5" height="5.2" rx="1.6" fill="#78716c"/><rect x="17" y="16.5" width="5.2" height="6.5" rx="1.6" fill="#78716c" transform="rotate(45 19.6 19.75)"/><rect x="33.8" y="16.5" width="5.2" height="6.5" rx="1.6" fill="#78716c" transform="rotate(-45 36.4 19.75)"/><rect x="17" y="33" width="5.2" height="6.5" rx="1.6" fill="#78716c" transform="rotate(-45 19.6 36.25)"/><rect x="33.8" y="33" width="5.2" height="6.5" rx="1.6" fill="#78716c" transform="rotate(45 36.4 36.25)"/><circle cx="28" cy="27" r="9" fill="#78716c"/><circle cx="28" cy="27" r="3.6" fill="#ECEAE7"/></svg></span><span class="accueil-home-label">Administration</span></a>
-      <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-illus"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="27" r="23" fill="#DDE3EA"/><rect x="31" y="23" width="8" height="16" rx="1.5" fill="#6B7E94"/><rect x="18" y="16" width="14" height="23" rx="1.5" fill="#0f2b4a"/><g fill="#fff"><rect x="20.5" y="19" width="3" height="3" rx="0.6"/><rect x="26.5" y="19" width="3" height="3" rx="0.6"/><rect x="20.5" y="24" width="3" height="3" rx="0.6"/><rect x="26.5" y="24" width="3" height="3" rx="0.6"/><rect x="20.5" y="29" width="3" height="3" rx="0.6"/><rect x="26.5" y="29" width="3" height="3" rx="0.6"/><rect x="33.5" y="26" width="3" height="3" rx="0.6"/><rect x="33.5" y="31" width="3" height="3" rx="0.6"/><rect x="23" y="34" width="4" height="5" rx="0.7"/></g></svg></span><span class="accueil-home-label">Établissement</span></a>
-    </div>
-  </main>
+    <div class="v2-body"><div id="accV2"></div></div>
+  </div>
 </div><!-- /mainAccueilView -->
 
 <div class="modal-overlay" id="modalIncident" onclick="closeModal('modalIncident')">
@@ -743,6 +726,21 @@ function showMainAccueil() {
   document.getElementById('mainAccueilView').style.display = 'block';
   applyTerminology();
   applyEtabBackground();
+
+  const s = Auth.getSession() || {};
+  const un = document.getElementById('accUserName');
+  if (un) un.textContent = [s.prenom, s.nom].filter(Boolean).join(' ') || s.username || '';
+  const ur = document.getElementById('accUserRole'); if (ur) ur.textContent = s.fonction || s.role || '';
+  const av = document.getElementById('accUserAv');
+  if (av) av.textContent = ((s.prenom||'')[0]||'') + ((s.nom||'')[0]||'') || (s.username||'?')[0].toUpperCase();
+
+  const si = document.getElementById('accSearch');
+  if (si && !si._bound) {
+    si._bound = true;
+    si.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.trim()) location.href = 'residents.html?q=' + encodeURIComponent(e.target.value.trim()); });
+    document.addEventListener('keydown', e => { if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k') { e.preventDefault(); si.focus(); } });
+  }
+  if (typeof initAccueilV2 === 'function') initAccueilV2().catch(e => console.error('[accV2]', e));
 }
 
 // ── Suivi du curseur pour la lueur des cartes ──
