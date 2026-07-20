@@ -447,12 +447,28 @@ function anonymizeResident() {
   const r = getResident();
   if (!r) return;
   confirmDialog('Anonymiser définitivement ce résident ? Ses données personnelles (nom, prénom, photo, contacts, NIR, INS) seront effacées. Les données médicales et d\'activité seront conservées anonymement.', async () => {
-    const data = { ...r, prenom: 'Résident', nom: 'Anonyme', photo: '', notes: '', contacts: '', medecin: '', medecinTel: '', allergies: '', nss: '', ins: '', dmp: '', tuteur: '', tuteurTel: '', ecole: '', classe: '', organisme: '', dossier: '', organismeA: '', dossierA: '', protectionNom: '', protectionTel: '', color: '#94a3b8', consent: 'non', updatedAt: new Date().toISOString() };
+    // L'effacement est fait côté base par anonymiser_resident(), qui vérifie le
+    // rôle du compte : masquer le bouton ne suffirait pas (appel possible depuis
+    // la console). Voir migration-anonymisation-admin.sql.
     try {
-      const updated = await sbSaveResident(data);
+      const { data: row, error } = await supabaseClient.rpc('anonymiser_resident', { p_id: currentResidentId });
+      if (error) {
+        // Fonction absente = migration pas encore exécutée. On ne retombe PAS
+        // sur l'ancien chemin (non contrôlé) : on le dit clairement.
+        if (error.code === 'PGRST202') {
+          toast('Anonymisation indisponible : exécutez migration-anonymisation-admin.sql', 'error');
+        } else if (error.code === '42501') {
+          toast('Seul un administrateur peut anonymiser un résident', 'error');
+        } else {
+          toast('Erreur lors de l\'anonymisation', 'error');
+        }
+        console.error('[anonymiser_resident]', error);
+        return;
+      }
+      const updated = _sbFromRow(Array.isArray(row) ? row[0] : row);
       const idx = _residentDetailCache.findIndex(x => x.id === currentResidentId);
       if (idx !== -1) _residentDetailCache[idx] = updated;
-    } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
+    } catch (e) { toast('Erreur lors de l\'anonymisation', 'error'); console.error(e); return; }
     if (typeof auditLog === 'function') auditLog('anonymize', 'Résident anonymisé — '+r.prenom+' '+r.nom);
     toast('Résident anonymisé', 'info');
     loadResident();
