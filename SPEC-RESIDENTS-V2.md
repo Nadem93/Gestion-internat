@@ -37,3 +37,16 @@ En-tête : « {N} résidents affichés ». Chaque carte :
 2. Ne pas forcer de `max-width` inline : laisser `.v2-shell` à 1400 px.
 3. Neutraliser le conteneur clair hérité de la page s'il en existe un.
 4. Vérifier les noms de champs réels (`prenom`, `nom`, `chambre`, `statut`, `referent`, `coReferent`, `dob`, `objectifs`) avant de coder.
+
+---
+
+## ⚠️ Périmètre révisé — DESIGN SEUL
+
+Décision du 2026-07-20 : on ré-habille la page **sans ajouter de fonctionnalité**.
+
+Concrètement pour Résidents :
+- On garde `renderResidents()` et toute la logique existante (recherche, `?q=`, filtres, modales, droits).
+- On applique la coque V2 + `css/v2.css`, et on restructure le markup des cartes selon la maquette.
+- **On n'implémente pas** le rail de détail ni les blocs « Objectifs individualisés », « Suivi médical »,
+  « Dernière transmission » s'ils n'existent pas déjà — ils viendront dans une passe ultérieure.
+- Les chips de filtre ne sont reprises que si un filtre équivalent existe déjà côté V1.
