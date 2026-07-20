@@ -201,6 +201,8 @@ function getResidents() {
   let list = _residentsCache;
   if (q) list = list.filter(r => `${r.prenom} ${r.nom}`.toLowerCase().includes(q) || (r.chambre||'').toLowerCase().includes(q));
   if (objectif) list = list.filter(r => (r.objectifs || []).includes(String(objectif)));
+  // Chips de statut (maquette V2). RES_FILTRE vaut 'all' sur les pages sans chips.
+  if (typeof RES_FILTRE !== 'undefined' && RES_FILTRE !== 'all') list = list.filter(r => r.statut === RES_FILTRE);
 
   list.sort((a, b) => {
     // Sortis toujours en dernier
@@ -224,18 +226,26 @@ function renderResidents() {
   const container = document.getElementById('residentsContainer');
   const countEl = document.getElementById('residentCount');
   if (!container || !countEl) return; // page sans liste (fiche résident, documents…)
-  countEl.textContent = `${list.length} résident${list.length > 1 ? 's' : ''}`;
+  countEl.textContent = `${list.length} résident${list.length > 1 ? 's' : ''} affiché${list.length > 1 ? 's' : ''}`;
+  if (typeof resRenderChips === 'function') resRenderChips();
+  // Le rail montre le premier résident visible tant qu'aucun n'a été choisi,
+  // et se recale si le filtre courant exclut la sélection.
+  if (typeof RES_SEL !== 'undefined') {
+    if (!list.some(r => String(r.id) === String(RES_SEL))) RES_SEL = list.length ? list[0].id : null;
+  }
 
   if (!list.length) {
+    if (typeof resRenderDetail === 'function') resRenderDetail();
     container.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3>Aucun résident trouvé</h3><p>Ajoutez votre premier résident ou modifiez vos filtres.</p><button class="btn btn-accent" onclick="openModal('modalResident')">+ Nouveau résident</button></div>`;
     return;
   }
 
   if (currentView === 'grid') {
-    container.innerHTML = `<div class="res-grid" style="gap:.5rem">${list.map(residentCard).join('')}</div>`;
+    container.innerHTML = `<div class="res-grid" style="gap:14px">${list.map(residentCard).join('')}</div>`;
   } else {
     container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Résident</th><th>Âge / Naissance</th><th>Entrée</th><th>Chambre</th><th>Actions</th><th>Statut</th><th>Objectifs</th></tr></thead><tbody>${list.map(residentRow).join('')}</tbody></table></div>`;
   }
+  if (typeof resRenderDetail === 'function') resRenderDetail();
 }
 
 function statusBadge(s) {
@@ -247,16 +257,9 @@ function statusBadge(s) {
 
 function residentCard(r) {
   const coverColor = safeColor(r.color, 'var(--primary)');
-  const photoEl = r.photo
-    ? `<img src="${sanitizeUrl(r.photo)}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
-    : `<div class="res-card-photo" style="background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
-
   const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
   const presenceStatus = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-  const ico = (title, href, svg, color) => `<li><a href="${href}" title="${title}" style="--bc:${color}" onclick="event.stopPropagation()">${svg}</a></li>`;
-  const svgEval = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`;
-  const svgRepas = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`;
-  const svgAgenda = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+
   // Progression des objectifs : part réellement atteinte (objectifsSuivi), pas d'estimation
   const objIds = r.objectifs || [];
   const suivi = r.objectifsSuivi || {};
@@ -265,9 +268,17 @@ function residentCard(r) {
   const refNom = (r.referent || '').trim();
   const refIni = refNom ? refNom.split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '';
 
-  return `<div class="v2-res" style="--rc:${coverColor}" onclick="window.location.href='resident.html?id=${r.id}'">
+  const tags = (typeof resTags === 'function') ? resTags(r) : [];
+  const choisie = (typeof RES_SEL !== 'undefined') && String(RES_SEL) === String(r.id);
+  // Clic = sélection dans le rail (maquette V2) ; l'ouverture se fait par
+  // « Ouvrir la fiche ». Sur les pages sans rail, on va directement à la fiche.
+  const action = (typeof resSelect === 'function')
+    ? `resSelect('${r.id}')`
+    : `window.location.href='resident.html?id=${r.id}'`;
+
+  return `<div class="v2-res${choisie ? ' on' : ''}" style="--rc:${coverColor}" onclick="${action}">
     <span class="v2-res-bar"></span>
-    <div style="display:flex;align-items:flex-start;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
       <div class="v2-res-av" style="background:${coverColor}">${r.photo
         ? `<img src="${sanitizeUrl(r.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`
         : initials(r.prenom, r.nom)}</div>
@@ -280,18 +291,15 @@ function residentCard(r) {
 
     ${refNom ? `<div class="v2-res-ref">
       <span class="v2-res-ref-av" style="background:${coverColor}33;color:${coverColor}">${escHtml(refIni)}</span>
-      <span>Réf. ${escHtml(refNom)}</span></div>` : ''}
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Réf. ${escHtml(refNom)}</span></div>` : ''}
 
     <div class="v2-res-obj">
-      <div class="v2-res-obj-h"><span>Objectifs</span><span>${atteints}/${objIds.length}</span></div>
+      <div class="v2-res-obj-h"><span>Objectifs</span><span style="color:${coverColor};font-weight:700">${atteints}/${objIds.length}</span></div>
       <div class="v2-bar v2-bar-sm"><span style="width:${objPct}%;background:${coverColor}"></span></div>
     </div>
 
-    <ul class="res-card-ico v2-res-ico">
-      ${ico('Grille d\'évaluation', 'objectifs.html?tab=evaluations&residentId=' + r.id, svgEval, '#6366f1')}
-      ${ico('Repas', 'repas.html', svgRepas, '#ea580c')}
-      ${ico('Agenda', 'planning.html', svgAgenda, '#0d9488')}
-    </ul>
+    ${tags.length ? `<div class="v2-res-tags">${tags.map(t =>
+      `<span class="v2-res-tag" style="--pc:${t.c}">${escHtml(t.l)}</span>`).join('')}</div>` : ''}
   </div>`;
 }
 
@@ -578,6 +586,16 @@ async function initResidents() {
       const from = d.toISOString().slice(0, 10);
       DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
     } catch (e) { console.error(e); }
+  }
+  // Le rail de détail a besoin de l'unité (table chambres) et de la dernière
+  // transmission. Échec silencieux : le rail se dégrade, la liste reste utilisable.
+  if (typeof sbGetChambres === 'function') {
+    try { _residentChambres = await sbGetChambres() || []; }
+    catch (e) { console.warn('[annuaire] chambres', e); }
+  }
+  if (typeof sbGetTransmissions === 'function') {
+    try { _residentsTransmissions = await sbGetTransmissions() || []; }
+    catch (e) { console.warn('[annuaire] transmissions', e); }
   }
   await loadAndRenderResidents();
 

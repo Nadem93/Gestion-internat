@@ -52,7 +52,11 @@
           <div class="v2-eyebrow">INTERNALIS · Annuaire</div>
           <div class="v2-top-title">Résidents</div>
         </div>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="search-box" style="width:300px;max-width:100%">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Rechercher un résident…"/>
+          </div>
           <button class="btn btn-accent btn-sm admin-only btn-add-resident" onclick="openModal('modalResident')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Ajouter un résident</span>
@@ -67,12 +71,9 @@
 
     <main class="content">
       <!-- TOOLBAR -->
-      <div class="toolbar" style="margin-bottom:1.5rem">
-        <div class="search-box">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="searchInput" placeholder="Rechercher un résident…"/>
-        </div>
-        <select id="filterObjectif" style="width:auto">
+      <div class="toolbar" style="margin-bottom:1.25rem;gap:.75rem">
+        <div class="v2-chips" id="resChips"></div>
+        <select id="filterObjectif" style="width:auto;margin-left:auto">
           <option value="">Tous les objectifs</option>
         </select>
         <select id="sortResidents" style="width:auto">
@@ -82,14 +83,19 @@
           <option value="entree">Trier : Date d'entrée</option>
           <option value="age">Trier : Âge</option>
         </select>
-        <div style="margin-left:auto;display:flex;gap:.5rem">
+        <div style="display:flex;gap:.5rem">
           <button class="btn btn-ghost btn-icon" id="viewGrid" title="Grille"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
           <button class="btn btn-ghost btn-icon" id="viewList" title="Liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
         </div>
       </div>
 
-      <div id="residentCount" style="font-size:.8rem;color:var(--muted);margin-bottom:1rem"></div>
-      <div id="residentsContainer"></div>
+      <div class="v2-list">
+        <div style="min-width:0">
+          <div id="residentCount" style="font-size:12px;color:var(--v2-t7);margin-bottom:12px"></div>
+          <div id="residentsContainer"></div>
+        </div>
+        <div id="resDetail" class="no-print"></div>
+      </div>
     </main>
       </div>
     </div>
@@ -343,7 +349,11 @@
 <script src="js/documents-resident-supabase.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
 <script src="js/residents.js"></script>
+<script src="js/resident-v2.js"></script>
+<script src="js/residents-v2.js"></script>
 <script>
 // Suivi du curseur pour la lueur des cartes résidents (délégation : robuste au re-render)
 document.addEventListener('mousemove', e => {
