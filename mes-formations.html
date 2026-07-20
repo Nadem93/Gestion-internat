@@ -2,32 +2,113 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
   <title>Mes formations — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-mes-formations.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Mes formations</div></div>
-      <div class="header-right">
-        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(22,163,74,.16)">
 
-    <main class="content" style="max-width:1280px">
-      <div id="mfInfo" style="margin-bottom:1rem"></div>
-      <div class="toolbar" style="margin-bottom:1.25rem">
-        <select id="mfFiltre" style="width:auto" onchange="renderMesFormations()">
+  <div class="v2-top">
+    <a class="v2-logo" href="pilotage.html" style="background:linear-gradient(135deg,#16a34a,#4ade80)" title="Retour au portail">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Espace personnel</div>
+      <div class="v2-top-title">Mes formations</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <a href="pilotage.html" class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Portail
+      </a>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <!-- Message : fiche salarié non reliée / erreur de chargement -->
+    <div id="mfInfo"></div>
+
+    <!-- Le reste n'apparaît qu'une fois la fiche salarié trouvée -->
+    <div id="mfLayout" style="display:none">
+
+      <!-- Tuiles statistiques -->
+      <div id="mfStats" class="mf2-stats"></div>
+
+      <!-- Filtres : chips à pastille. Le <select> hérité reste le contrat du JS. -->
+      <div class="mf2-filters">
+        <div id="mfChips" class="v2-chips"></div>
+        <select id="mfFiltre" hidden aria-hidden="true" tabindex="-1" onchange="renderMesFormations()">
           <option value="dispo">Formations à venir</option>
           <option value="inscrit">Mes inscriptions</option>
           <option value="passe">Passées / suivies</option>
           <option value="tout">Toutes</option>
         </select>
       </div>
-      <div id="mfList"></div>
-    </main>
+
+      <div class="mf2-body">
+        <div class="mf2-main">
+          <div class="mf2-card"><div id="mfList"></div></div>
+        </div>
+
+        <aside class="mf2-rail">
+          <div id="mfParcours" class="mf2-parcours"></div>
+          <div id="mfDomaines" class="v2-blk v2-rail-blk"></div>
+          <div id="mfSessions" class="v2-blk v2-rail-blk"></div>
+          <div id="mfEvaluations" class="v2-blk v2-rail-blk"></div>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALE — ÉVALUER UNE FORMATION SUIVIE -->
+<div class="v2-ov" id="modalMfEval">
+  <div class="v2-md" style="--mc:#fbbf24">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="mfEvalTitre">Évaluer cette formation</div>
+        <div class="v2-md-s" id="mfEvalSous"></div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalMfEval')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l">Note globale</label>
+        <div class="v2-seg" id="mfEvalSeg">
+          <button type="button" class="v2-seg-o" data-n="1" onclick="mf2SetNote(1)">1</button>
+          <button type="button" class="v2-seg-o" data-n="2" onclick="mf2SetNote(2)">2</button>
+          <button type="button" class="v2-seg-o" data-n="3" onclick="mf2SetNote(3)">3</button>
+          <button type="button" class="v2-seg-o" data-n="4" onclick="mf2SetNote(4)">4</button>
+          <button type="button" class="v2-seg-o" data-n="5" onclick="mf2SetNote(5)">5</button>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="mfEvalChaud">À chaud — juste après la session</label>
+        <textarea class="v2-fld" id="mfEvalChaud" placeholder="Contenu, animation, ce que vous en retenez…"></textarea>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="mfEvalFroid">À froid — quelques semaines plus tard</label>
+        <textarea class="v2-fld" id="mfEvalFroid" placeholder="Ce que vous avez réellement mis en pratique auprès des résidents…"></textarea>
+      </div>
+      <div class="v2-note v2-note-warn" id="mfEvalWarn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Les évaluations ne sont pas encore activées : exécutez migration-mes-formations.sql dans Supabase.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalMfEval')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="mf2SaveEval()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
+    </div>
   </div>
 </div>
 
@@ -69,6 +150,8 @@ async function initMesFormations() {
   }
 }
 
+// Rendu historique — remplacé par js/mes-formations-v2.js, conservé comme
+// repli si le module V2 n'est pas chargé.
 function renderMesFormations() {
   const el = document.getElementById('mfList');
   const filtre = document.getElementById('mfFiltre').value;
@@ -79,59 +162,10 @@ function renderMesFormations() {
   else if (filtre === 'dispo') list = list.filter(f => f.statut === 'planifiee' && (f.dateFin || f.dateDebut) >= mfToday());
   else if (filtre === 'passe') list = list.filter(f => (f.participants || []).includes(myId) && (f.statut === 'realisee' || (f.dateFin || f.dateDebut) < mfToday()));
 
-  // Passées : du plus récent au plus ancien ; à venir : du plus proche au plus lointain
   if (filtre === 'passe') list.sort((a, b) => (b.dateFin || b.dateDebut || '').localeCompare(a.dateFin || a.dateDebut || ''));
   else list.sort((a, b) => (a.dateDebut || '').localeCompare(b.dateDebut || ''));
 
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">🎓</div><h3>Aucune formation</h3><p>${filtre === 'inscrit' ? 'Vous n\'êtes inscrit à aucune formation.' : filtre === 'passe' ? 'Aucune formation passée pour le moment.' : 'Aucune formation à venir pour le moment.'}</p></div>`;
-    return;
-  }
-
-  el.innerHTML = `<div class="frx-grid">` + list.map(f => {
-    const color = MF_STATUT_C[f.statut] || '#6b7280';
-    const parts = f.participants || [];
-    const inscrit = parts.includes(myId);
-    const dateRef = f.dateFin || f.dateDebut;
-    const passe = dateRef && dateRef < mfToday();
-    const complet = f.maxParticipants && parts.length >= f.maxParticipants && !inscrit;
-
-    let action = '';
-    if (f.statut === 'planifiee' && !passe) {
-      if (inscrit) action = `<button class="frx-act ok" onclick="mfDesinscrire('${f.id}')">✓ Inscrit · Se désinscrire</button>`;
-      else if (complet) action = `<span class="frx-act muted">Complet (${parts.length}/${f.maxParticipants})</span>`;
-      else action = `<button class="frx-act primary" onclick="mfInscrire('${f.id}')">S'inscrire${f.maxParticipants ? ` · ${parts.length}/${f.maxParticipants}` : ''}</button>`;
-    } else if (passe) {
-      action = `<span class="frx-act muted">${inscrit ? 'Suivie' : 'Terminée'}</span>`;
-    }
-
-    const meta = [`📅 ${formatDate(f.dateDebut)}${f.dateFin && f.dateFin !== f.dateDebut ? ' → ' + formatDate(f.dateFin) : ''}`];
-    if (f.organisme) meta.push(`🏢 ${escHtml(f.organisme)}`);
-    if (f.dureeHeures) meta.push(`⏱ ${f.dureeHeures} h`);
-
-    let capHtml = '';
-    if (f.maxParticipants) {
-      const pct = Math.min(100, Math.round(parts.length / f.maxParticipants * 100));
-      capHtml = `<div><div class="frx-cap-top"><span>Places</span><span>${parts.length}/${f.maxParticipants}</span></div><div class="frx-cap-bar"><div class="frx-cap-fill" style="width:${pct}%"></div></div></div>`;
-    }
-    const noms = parts.map(id => _mfEmployesMap.get(id) || _mfEmployesMap.get(String(id))).filter(Boolean);
-
-    return `<article class="frx-card ${f.statut === 'annulee' ? 'annulee' : ''}" style="--ac:${color}">
-      <div class="frx-head">
-        <div class="frx-ico">🎓</div>
-        <div class="frx-h-txt">
-          <div class="frx-title">${escHtml(f.titre)}</div>
-          ${f.domaine ? `<div class="frx-chips" style="margin-top:.25rem"><span class="frx-chip dom">${escHtml(f.domaine)}</span></div>` : ''}
-        </div>
-        <span class="frx-status">${MF_STATUT_L[f.statut] || f.statut}</span>
-      </div>
-      <div class="frx-meta">${meta.map(m => `<span>${m}</span>`).join('')}</div>
-      ${capHtml}
-      ${parts.length ? `<div class="frx-names"><b>Inscrits (${parts.length}${f.maxParticipants ? '/' + f.maxParticipants : ''}) :</b> ${noms.length ? noms.map(escHtml).join(', ') : '<span style="color:var(--muted);font-style:italic">noms indisponibles</span>'}</div>` : ''}
-      ${f.notes ? `<div class="frx-notes">${escHtml(f.notes)}</div>` : ''}
-      ${action ? `<div class="frx-foot">${action}</div>` : ''}
-    </article>`;
-  }).join('') + `</div>`;
+  el.innerHTML = list.map(f => `<div class="v2-row"><div class="v2-row-title">${escHtml(f.titre)}</div></div>`).join('');
 }
 
 async function mfInscrire(id) {
@@ -161,7 +195,9 @@ async function mfDesinscrire(id) {
   } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[mfDesinscrire]', e); }
 }
 
-document.addEventListener('DOMContentLoaded', initMesFormations);
+// Liaison tardive : js/mes-formations-v2.js remplace initMesFormations.
+document.addEventListener('DOMContentLoaded', () => initMesFormations());
 </script>
+<script src="js/mes-formations-v2.js"></script>
 </body>
 </html>

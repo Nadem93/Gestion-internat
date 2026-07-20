@@ -1,54 +1,109 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<head>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Documentation — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-documentation.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info"><div class="header-title">Documentation</div></div>
-    <div class="header-right"></div>
-  </header>
-  <main class="content">
-    <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-primary admin-only" onclick="openDocumentationModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <div class="v2-shell dc2-shell">
+
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="index.html" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)" aria-label="Accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Équipe &amp; échanges</div>
+        <div class="v2-top-title">Documentation</div>
+      </div>
+      <div class="dc2-top-act">
+        <label class="dc2-search" for="docuSearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="docuSearch" placeholder="Rechercher un document…" aria-label="Rechercher un document" oninput="renderDocumentation()"/>
+        </label>
+        <button type="button" class="dc2-new admin-only" onclick="openDocumentationModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Ajouter un document
         </button>
       </div>
     </div>
 
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-      <input type="search" id="docuSearch" class="form-input" style="flex:1;min-width:180px" placeholder="Rechercher un document…" oninput="renderDocumentation()"/>
-      <select id="docuFiltreCategorie" class="form-input" style="width:220px" onchange="renderDocumentation()">
-        <option value="">Toutes les catégories</option>
-        <option value="Projet d'établissement">Projet d'établissement</option>
-        <option value="Notes de service">Notes de service</option>
-        <option value="Règlement intérieur">Règlement intérieur</option>
-        <option value="Procédures">Procédures</option>
-        <option value="Comptes-rendus de réunion">Comptes-rendus de réunion</option>
-        <option value="Autre">Autre</option>
-      </select>
-    </div>
+    <div class="v2-body">
+      <main class="content">
 
-    <div id="docuList"><div class="empty" style="padding:3rem;text-align:center"><p>Aucun document</p></div></div>
-  </main>
+        <!-- TUILES CHIFFRÉES -->
+        <div class="dc2-stats" id="docuStats"></div>
+
+        <!-- PUCES DE FILTRE PAR CATÉGORIE -->
+        <div class="dc2-filters">
+          <div class="v2-chips" id="docuChips"></div>
+          <select id="docuFiltreCategorie" style="display:none" onchange="renderDocumentation()">
+            <option value="">Toutes les catégories</option>
+            <option value="Projet d'établissement">Projet d'établissement</option>
+            <option value="Notes de service">Notes de service</option>
+            <option value="Règlement intérieur">Règlement intérieur</option>
+            <option value="Procédures">Procédures</option>
+            <option value="Comptes-rendus de réunion">Comptes-rendus de réunion</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+
+        <!-- LISTE + RAIL -->
+        <div class="dc2-body">
+          <div id="docuList"></div>
+
+          <div class="dc2-rail">
+            <div class="v2-blk">
+              <div class="dc2-blk-h">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="v2-blk-t">Ajoutés récemment</span>
+              </div>
+              <div id="docuRecents"></div>
+            </div>
+            <div class="v2-blk">
+              <div class="dc2-blk-h">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span class="v2-blk-t">Répartition par catégorie</span>
+              </div>
+              <div id="docuRepartition"></div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
 </div></div>
-<div id="toast-container" class="toast-container"></div>
 
-<div class="modal-overlay" id="modalDocumentation">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <span class="modal-title">📚 Ajouter un document</span>
-      <button class="modal-close" onclick="closeModal('modalDocumentation')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ══ MODALE : AJOUTER UN DOCUMENT ══ -->
+<div class="v2-ov" id="modalDocumentation">
+  <div class="v2-md" style="--mc:#8b5cf6">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Ajouter un document</div>
+        <div class="v2-md-s">Documentation de l’établissement</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalDocumentation')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div class="form-group"><label>Titre *</label><input type="text" id="docuFormTitre" class="form-input" placeholder="Ex : Projet d'établissement 2026-2030"/></div>
-      <div class="form-group"><label>Catégorie *</label>
-        <select id="docuFormCategorie" class="form-input">
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="docuFormTitre">Titre</label>
+        <input type="text" id="docuFormTitre" class="v2-fld" placeholder="Ex : Projet d'établissement 2026-2030"/>
+      </div>
+      <div>
+        <span class="v2-fld-l">Catégorie</span>
+        <div class="dc2-cats" id="docuCatChips"></div>
+        <select id="docuFormCategorie" style="display:none">
           <option value="Projet d'établissement">Projet d'établissement</option>
           <option value="Notes de service">Notes de service</option>
           <option value="Règlement intérieur">Règlement intérieur</option>
@@ -57,14 +112,44 @@
           <option value="Autre">Autre</option>
         </select>
       </div>
-      <div class="form-group"><label>Fichier * (PDF, Word, image — max 3 Mo)</label><input type="file" id="docuFormFile" class="form-input" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"/></div>
+      <div>
+        <span class="v2-fld-l">Fichier</span>
+        <div class="dc2-drop" id="docuDropZone" onclick="document.getElementById('docuFormFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="flex:1;min-width:0">
+            <div class="dc2-drop-t">Glisser un fichier ici</div>
+            <div class="dc2-drop-s">PDF, Word, JPG, PNG · 3 Mo max</div>
+          </div>
+          <span class="dc2-drop-b">Parcourir</span>
+        </div>
+        <input type="file" id="docuFormFile" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"/>
+        <div id="docuFilePending" class="dc2-pending" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="flex:1;min-width:0">
+            <div id="docuFilePendingName" class="dc2-pending-n"></div>
+            <div id="docuFilePendingSize" class="dc2-pending-s"></div>
+          </div>
+          <button type="button" class="dc2-pending-x" onclick="dc2ClearFile()" aria-label="Retirer le fichier">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Le document sera visible par toute l’équipe de l’établissement.
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalDocumentation')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveDocumentation()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalDocumentation')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveDocumentation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
+
+<div id="toast-container" class="toast-container"></div>
 
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -73,5 +158,6 @@
 <script src="js/absences-supabase.js"></script>
 <script src="js/documentation-supabase.js"></script>
 <script src="js/documentation.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_documentation')) { document.querySelector('.content').innerHTML = ''; }</script>
+<script src="js/documentation-v2.js"></script>
+<script>Auth.requireAuth(); if (!requireModule('access_documentation')) { const c = document.querySelector('.content'); if (c) c.innerHTML = ''; const t = document.querySelector('.dc2-top-act'); if (t) t.innerHTML = ''; }</script>
 </body></html>

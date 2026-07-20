@@ -1,83 +1,122 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Notes rapides — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    .notes-layout{display:grid;grid-template-columns:300px 1fr;gap:1rem;height:calc(100vh - var(--header-h) - 3rem);min-height:420px}
-    /* Volet gauche */
-    .notes-aside{background:#fff;border-radius:var(--r-lg);box-shadow:0 1px 4px rgba(15,43,74,.08);display:flex;flex-direction:column;overflow:hidden}
-    .notes-aside-top{padding:.85rem;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:.6rem}
-    .notes-search{width:100%}
-    .notes-list{flex:1;overflow-y:auto;padding:.5rem}
-    .note-item{padding:.6rem .7rem;border-radius:var(--r-sm);cursor:pointer;border:1px solid transparent;transition:background .12s}
-    .note-item:hover{background:var(--g50)}
-    .note-item.active{background:#fef9ec;border-color:#fcd34d}
-    .note-item-title{font-weight:650;font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .note-item-sub{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-    .notes-empty-list{padding:1.5rem;text-align:center;color:var(--muted);font-size:.8rem}
-    /* Éditeur droite */
-    .notes-main{background:#fff;border-radius:var(--r-lg);box-shadow:0 1px 4px rgba(15,43,74,.08);display:flex;flex-direction:column;overflow:hidden}
-    .notes-main-top{padding:.85rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
-    #noteTitle{flex:1;border:none;outline:none;font-size:1.05rem;font-weight:700;color:var(--text);background:transparent}
-    #noteBody{flex:1;border:none;outline:none;resize:none;padding:1rem;font-size:.92rem;line-height:1.7;color:var(--g700);font-family:inherit}
-    .notes-saved{font-size:.72rem;color:#16a34a;min-width:80px;text-align:right}
-    .notes-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:.5rem;text-align:center;padding:2rem}
-    @media(max-width:760px){
-      .notes-layout{grid-template-columns:1fr;height:auto}
-      .notes-aside{max-height:40vh}
-    }
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-notes.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">🗒️ Notes rapides</div></div>
-      <div class="header-right">
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(245,158,11,.16)">
 
-    <main class="content">
-      <div class="notes-layout">
-        <!-- VOLET GAUCHE -->
-        <aside class="notes-aside">
-          <div class="notes-aside-top">
-            <button class="btn btn-accent btn-sm" onclick="newNote()" style="gap:.4rem;justify-content:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Nouvelle note
-            </button>
-            <input type="text" id="notesSearch" class="form-control notes-search" placeholder="Rechercher…" oninput="renderList()"/>
-          </div>
-          <div class="notes-list" id="notesList"></div>
-        </aside>
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#f59e0b,#fcd34d)" aria-label="Retour à l'accueil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Équipe &amp; échanges</div>
+      <div class="v2-top-title">Notes rapides</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label class="nt-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="notesSearch" placeholder="Rechercher dans mes notes…" oninput="renderList()" aria-label="Rechercher une note"/>
+      </label>
+      <button type="button" class="v2-btn v2-btn-primary" onclick="newNote()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle note
+      </button>
+    </div>
+  </div>
 
-        <!-- ÉDITEUR DROITE -->
-        <section class="notes-main">
-          <div class="notes-main-top" id="noteEditorTop" style="display:none">
-            <input type="text" id="noteTitle" placeholder="Titre de la note" oninput="onEdit()"/>
-            <span class="notes-saved" id="noteSaved"></span>
-            <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteCurrentNote()" title="Supprimer">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            </button>
-          </div>
-          <textarea id="noteBody" placeholder="Écrivez votre note ici…" oninput="onEdit()" style="display:none"></textarea>
-          <div class="notes-placeholder" id="notesPlaceholder">
-            <div style="font-size:2.2rem">🗒️</div>
-            <div style="font-weight:600">Sélectionnez une note à gauche</div>
-            <div style="font-size:.82rem">ou créez-en une nouvelle. Vos notes sont personnelles et enregistrées automatiquement.</div>
-          </div>
-        </section>
+  <div class="v2-body">
+
+    <div class="nt-intro">
+      <h1 class="v2-h1">Mon bloc-notes</h1>
+      <div class="v2-sub">Vos notes sont strictement personnelles et enregistrées automatiquement sur cet appareil.</div>
+    </div>
+
+    <!-- Compteurs -->
+    <div class="nt-kpis">
+      <div class="nt-kpi" style="--kc:#f59e0b;--kc2:#fcd34d">
+        <span class="nt-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></span>
+        <div class="nt-kpi-n" id="ntKpiTotal">0</div>
+        <div class="nt-kpi-l">Notes enregistrées</div>
+        <div class="nt-kpi-s" id="ntKpiTotalSub">—</div>
       </div>
-    </main>
+      <div class="nt-kpi" style="--kc:#d97706;--kc2:#fbbf24">
+        <span class="nt-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+        <div class="nt-kpi-n" id="ntKpiPin">0</div>
+        <div class="nt-kpi-l">Épinglées</div>
+        <div class="nt-kpi-s">remontées en haut de liste</div>
+      </div>
+      <div class="nt-kpi" style="--kc:#0891b2;--kc2:#22d3ee">
+        <span class="nt-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        <div class="nt-kpi-n" id="ntKpiWeek">0</div>
+        <div class="nt-kpi-l">Modifiées cette semaine</div>
+        <div class="nt-kpi-s" id="ntKpiWeekSub">—</div>
+      </div>
+      <div class="nt-kpi" style="--kc:#7c3aed;--kc2:#a78bfa">
+        <span class="nt-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg></span>
+        <div class="nt-kpi-n" id="ntKpiWords">0</div>
+        <div class="nt-kpi-l">Mots écrits</div>
+        <div class="nt-kpi-s">toutes notes confondues</div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="nt-filters">
+      <div id="notesChips" class="v2-chips"></div>
+      <span id="notesCount" class="nt-count"></span>
+    </div>
+
+    <!-- Liste + éditeur -->
+    <div class="nt-layout">
+
+      <aside class="nt-aside">
+        <div class="nt-aside-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="v2-blk-t">Mes notes</span>
+        </div>
+        <div class="nt-list" id="notesList"></div>
+      </aside>
+
+      <section class="nt-editor">
+        <div class="nt-ed-top" id="noteEditorTop" style="display:none">
+          <input type="text" id="noteTitle" placeholder="Titre de la note" oninput="onEdit()" aria-label="Titre de la note"/>
+          <span class="nt-saved" id="noteSaved"></span>
+          <button type="button" class="nt-ed-btn" id="notePinBtn" onclick="NotesV2.togglePinCurrent()" title="Épingler cette note" aria-label="Épingler cette note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button type="button" class="nt-ed-btn danger" onclick="deleteCurrentNote()" title="Supprimer la note" aria-label="Supprimer la note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+        <textarea id="noteBody" placeholder="Écrivez votre note ici…" oninput="onEdit()" style="display:none"></textarea>
+        <div class="nt-ed-foot" id="noteEdFoot" style="display:none">
+          <span id="noteStatMots">0 mot</span>
+          <span class="sep"></span>
+          <span id="noteStatCar">0 caractère</span>
+          <span class="sep"></span>
+          <span id="noteStatMaj">—</span>
+        </div>
+        <div class="nt-placeholder" id="notesPlaceholder">
+          <span class="nt-ph-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></span>
+          <div class="nt-ph-t">Sélectionnez une note</div>
+          <div class="nt-ph-s">Choisissez une note dans la colonne de gauche, ou créez-en une nouvelle. Vos notes sont personnelles et enregistrées automatiquement.</div>
+        </div>
+      </section>
+
+    </div>
+
   </div>
 </div>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_notes')) { document.querySelector('.content').innerHTML = ''; }</script>
+<script>Auth.requireAuth(); requireModule('access_notes');</script>
 <script>
 function notesKey() { const s = Auth.getSession(); return 'ftr_notes_' + (s ? s.userId : 'anon'); }
 function getNotes() { try { return JSON.parse(localStorage.getItem(notesKey()) || '[]'); } catch (e) { return []; } }
@@ -103,26 +142,15 @@ function notePreview(n) {
   return txt ? txt.slice(0, 60) : 'Note vide';
 }
 
+// Rendu délégué au module V2 (js/notes-v2.js), qui remplace cette fonction.
 function renderList() {
-  const q = (document.getElementById('notesSearch').value || '').trim().toLowerCase();
-  const el = document.getElementById('notesList');
-  let list = [...notes].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-  if (q) list = list.filter(n => `${n.title||''} ${n.body||''}`.toLowerCase().includes(q));
-  if (!list.length) {
-    el.innerHTML = `<div class="notes-empty-list">${q ? 'Aucune note trouvée.' : 'Aucune note.<br>Cliquez sur « Nouvelle note ».'}</div>`;
-    return;
-  }
-  el.innerHTML = list.map(n => `
-    <div class="note-item ${String(n.id) === String(currentNoteId) ? 'active' : ''}" onclick="selectNote('${n.id}')">
-      <div class="note-item-title">${escHtml(n.title || 'Sans titre')}</div>
-      <div class="note-item-sub">${escHtml(notePreview(n))}</div>
-      <div class="note-item-sub">${n.updatedAt ? formatDate(n.updatedAt.slice(0,10)) : ''}</div>
-    </div>`).join('');
+  if (window.NotesV2) NotesV2.render();
 }
 
 function showEditor(show) {
   document.getElementById('noteEditorTop').style.display = show ? '' : 'none';
   document.getElementById('noteBody').style.display = show ? '' : 'none';
+  document.getElementById('noteEdFoot').style.display = show ? '' : 'none';
   document.getElementById('notesPlaceholder').style.display = show ? 'none' : '';
 }
 
@@ -134,6 +162,7 @@ function selectNote(id) {
   document.getElementById('noteBody').value = n.body || '';
   document.getElementById('noteSaved').textContent = '';
   showEditor(true);
+  if (window.NotesV2) NotesV2.syncEditor();
   renderList();
 }
 
@@ -151,6 +180,7 @@ function onEdit() {
   n.title = document.getElementById('noteTitle').value;
   n.body = document.getElementById('noteBody').value;
   n.updatedAt = new Date().toISOString();
+  if (window.NotesV2) NotesV2.syncEditor();
   clearTimeout(saveTimer);
   document.getElementById('noteSaved').textContent = '…';
   saveTimer = setTimeout(() => {
@@ -185,5 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<script src="js/notes-v2.js?v=1"></script>
 </body>
 </html>

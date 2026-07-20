@@ -1,0 +1,211 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   MES ABSENCES — Design V2
+   Transposition de la maquette « Absences & AT (RH) » à l'espace personnel
+   du salarié : KPI, chips de motif, tableau, registre AT, rail d'analyse,
+   suivi de déclaration AT, visites médicales, facteur Bradford.
+   Ne redéfinit rien de css/v2.css : uniquement des classes « ma2- ».
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bandeau d'information (fiche salarié non reliée, erreur…) ────────── */
+.ma2-info { margin-bottom: 18px; }
+.ma2-notice {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: var(--v2-r-card2);
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  font-size: 13px; color: var(--v2-t4); line-height: 1.55;
+}
+.ma2-notice-ico {
+  width: 42px; height: 42px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ma2-notice-ico svg { width: 20px; height: 20px; }
+.ma2-notice b { color: var(--v2-t2); display: block; margin-bottom: 3px; font-size: 13.5px; }
+.ma2-notice-warn { background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.26); }
+.ma2-notice-warn .ma2-notice-ico { background: rgba(245,158,11,.16); color: var(--v2-warn-icon); }
+.ma2-notice-err { background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.26); }
+.ma2-notice-err .ma2-notice-ico { background: rgba(239,68,68,.16); color: var(--v2-danger-text); }
+
+/* ── KPI ──────────────────────────────────────────────────────────────── */
+.ma2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.ma2-k {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: var(--v2-r-kpi);
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+}
+.ma2-k-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--kc, #818cf8) 13%, transparent); color: var(--kc, #818cf8);
+}
+.ma2-k-ico svg { width: 21px; height: 21px; }
+.ma2-k-txt { min-width: 0; }
+.ma2-k-n {
+  font-family: var(--v2-display); font-size: 24px; font-weight: 800;
+  line-height: 1; color: var(--kc, #818cf8);
+}
+.ma2-k-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Filtres ──────────────────────────────────────────────────────────── */
+.ma2-filters { margin-bottom: 16px; }
+
+/* ── Corps deux colonnes ──────────────────────────────────────────────── */
+.ma2-body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.ma2-main, .ma2-rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ma2-rail { gap: 16px; }
+
+/* ── Tableau des absences ─────────────────────────────────────────────── */
+.ma2-tbl-wrap {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden;
+}
+.ma2-scroll { overflow-x: auto; }
+.ma2-tbl { width: 100%; border-collapse: collapse; min-width: 640px; }
+.ma2-tbl th {
+  text-align: left; padding: 13px 20px; white-space: nowrap;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--v2-t8); background: var(--v2-s-alt);
+  border-bottom: 1px solid var(--v2-b);
+}
+.ma2-tbl td { padding: 12px 20px; border-bottom: 1px solid var(--v2-b-table); vertical-align: middle; }
+.ma2-tbl tr:last-child td { border-bottom: none; }
+.ma2-tbl tbody tr:hover td { background: rgba(255,255,255,.02); }
+.ma2-motif {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 7px;
+  background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent); color: var(--pc, #818cf8);
+}
+.ma2-motif svg { width: 12px; height: 12px; flex-shrink: 0; }
+.ma2-per { font-size: 12px; color: var(--v2-t4); white-space: nowrap; }
+.ma2-dur { font-size: 12px; color: var(--v2-t5); white-space: nowrap; }
+.ma2-just {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 11px; font-weight: 600; background: none; border: none; padding: 0;
+  font-family: inherit; color: var(--jc, var(--v2-t5));
+}
+button.ma2-just { cursor: pointer; }
+button.ma2-just:hover { text-decoration: underline; }
+.ma2-just svg { width: 12px; height: 12px; flex-shrink: 0; }
+.ma2-st { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent); color: var(--pc, #818cf8); }
+.ma2-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.ma2-ib {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.ma2-ib:hover { background: var(--v2-s-hover); color: #fff; }
+.ma2-ib.danger:hover { background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.32); color: var(--v2-danger-text); }
+.ma2-ib svg { width: 14px; height: 14px; }
+
+/* Vide */
+.ma2-empty { padding: 46px 24px; text-align: center; }
+.ma2-empty-ico {
+  width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.05); color: var(--v2-t7);
+}
+.ma2-empty-ico svg { width: 26px; height: 26px; }
+.ma2-empty-t { font-size: 14.5px; font-weight: 700; color: var(--v2-t2); }
+.ma2-empty-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 5px; }
+
+/* ── Cartes teintées ──────────────────────────────────────────────────── */
+.ma2-tint {
+  border-radius: var(--v2-r-card2); padding: 20px 22px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tc, #ef4444) 13%, transparent),
+              rgba(255,255,255,.02)), var(--v2-s-alt);
+  border: 1px solid color-mix(in srgb, var(--tc, #ef4444) 24%, transparent);
+}
+.ma2-tint-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.ma2-tint-h svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--tc, #ef4444); }
+.ma2-tint-t { font-size: 13.5px; font-weight: 700; color: color-mix(in srgb, var(--tc, #ef4444) 42%, #fff); }
+.ma2-tint-tag { margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  background: rgba(245,158,11,.12); color: var(--v2-warn-icon); }
+
+/* ── Lignes de liste ──────────────────────────────────────────────────── */
+.ma2-l { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--v2-b-list); }
+.ma2-l:last-child { border-bottom: none; }
+.ma2-l-ico {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 16%, transparent); color: var(--pc, #818cf8);
+}
+.ma2-l-ico svg { width: 15px; height: 15px; }
+.ma2-l-b { flex: 1; min-width: 0; }
+.ma2-l-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.ma2-l-m { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+.ma2-l-tag { font-size: 10.5px; font-weight: 700; flex-shrink: 0; }
+.ma2-dotp { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--pc, #818cf8); }
+
+/* ── Rail : graphique mensuel ─────────────────────────────────────────── */
+.ma2-rail-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.ma2-rail-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.ma2-rail-v { margin-left: auto; font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: var(--v2-danger-text); }
+.ma2-chart { display: flex; align-items: flex-end; gap: 9px; height: 110px; }
+.ma2-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; min-width: 0; }
+.ma2-bar { width: 100%; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #f87171, #dc2626); min-height: 3px; }
+.ma2-bar.z { background: rgba(255,255,255,.08); }
+.ma2-col-l { font-size: 9px; color: var(--v2-t8); white-space: nowrap; }
+.ma2-col-n { font-size: 9.5px; font-weight: 700; color: var(--v2-t5); }
+
+/* ── Rail : répartition par motif ─────────────────────────────────────── */
+.ma2-mot { margin-bottom: 12px; }
+.ma2-mot:last-child { margin-bottom: 0; }
+.ma2-mot-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 5px; }
+.ma2-mot-l { font-size: 12px; color: var(--v2-t3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ma2-mot-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+/* ── Bas de page : 3 cartes ───────────────────────────────────────────── */
+.ma2-feat { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 20px; margin-top: 18px; }
+.ma2-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 38px; margin-top: 14px; border-radius: 11px; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 700;
+  background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.32); color: var(--v2-danger-text);
+}
+.ma2-cta:hover { background: rgba(239,68,68,.24); }
+.ma2-cta svg { width: 15px; height: 15px; }
+.ma2-score { font-family: var(--v2-display); font-size: 15px; font-weight: 800; flex-shrink: 0; }
+.ma2-blk-s { font-size: 10.5px; color: var(--v2-t6); margin: -8px 0 12px; }
+
+/* ── Modale : choix du motif ──────────────────────────────────────────── */
+.ma2-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.ma2-seg-o {
+  height: 46px; padding: 0 8px; border-radius: 11px; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600; line-height: 1.25;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  color: var(--v2-t5); background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+.ma2-seg-o:hover { color: var(--v2-t2); background: var(--v2-s-hover); }
+.ma2-seg-o.on { color: #fff;
+  background: color-mix(in srgb, var(--oc, #818cf8) 18%, transparent);
+  border-color: color-mix(in srgb, var(--oc, #818cf8) 58%, transparent); }
+/* style.css met tous les <label> en majuscules : la maquette les veut en casse
+   normale (la zone d'upload est un <label> pour rendre l'input cliquable). */
+.ma2-file {
+  text-transform: none; letter-spacing: normal; font-weight: 400;
+  display: flex; align-items: center; gap: 12px; padding: 14px;
+  border-radius: 11px; cursor: pointer;
+  background: rgba(255,255,255,.04); border: 1px dashed rgba(255,255,255,.16);
+}
+.ma2-file:hover { background: var(--v2-s-hover); }
+.ma2-file > svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--v2-cyan); }
+.ma2-file-t { flex: 1; min-width: 0; font-size: 12px; color: var(--v2-t4); }
+.ma2-file-a { font-size: 11px; font-weight: 700; color: #67e8f9; flex-shrink: 0; }
+.ma2-file input[type="file"] { display: none; }
+#maJustifInfo { font-size: 11.5px; color: var(--v2-t7); margin-top: 7px; }
+#maJustifInfo a { color: var(--v2-cyan); text-decoration: underline; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .ma2-body { grid-template-columns: 1fr; }
+  .ma2-feat { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .ma2-stats { grid-template-columns: repeat(2, 1fr); }
+  .ma2-feat { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .ma2-stats { grid-template-columns: 1fr; }
+  .ma2-seg { grid-template-columns: 1fr 1fr; }
+  .ma2-tint, .ma2-tbl-wrap { border-radius: var(--v2-r-kpi); }
+}

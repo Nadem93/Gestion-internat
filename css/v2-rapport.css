@@ -1,0 +1,179 @@
+/* ══════════════════════════════════════════════════════════════════════
+   RAPPORT D'ACTIVITÉ — V2
+   D'après la maquette « Rapport d'activité (pilotage) ».
+   Ne surcharge que cette page ; css/v2.css n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Contrôles de période dans la barre du haut ──────────────────────── */
+.rap2-ctrl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rap2-ctrl > * { flex: 0 0 auto; }
+.rap2-inp {
+  height: 42px; padding: 0 14px; font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--v2-t4); background: var(--v2-s-ctrl);
+  border: 1px solid rgba(255,255,255,.1); border-radius: var(--v2-r-ctrl);
+  color-scheme: dark; appearance: none; cursor: pointer; min-width: 0;
+}
+/* La règle globale `input,select,textarea{width:100%}` de style.css ferait
+   déborder les contrôles de période dans la barre du haut : on les borne. */
+body.v2 select.rap2-inp, body.v2 input.rap2-inp {
+  height: 42px; width: auto; color: var(--v2-t4); background: var(--v2-s-ctrl);
+  border: 1px solid rgba(255,255,255,.1); border-radius: var(--v2-r-ctrl);
+  color-scheme: dark;
+}
+body.v2 select#rapportType.rap2-inp { width: 120px; }
+body.v2 input#rapportMois.rap2-inp  { width: 160px; }
+body.v2 input#rapportAnnee.rap2-inp { width: 110px; }
+select.rap2-inp {
+  padding-right: 34px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237f93b3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+select.rap2-inp option { background: #101d31; color: var(--v2-t2); }
+.rap2-inp:focus { outline: none; border-color: rgba(34,197,94,.55); }
+.rap2-wrap { display: flex; align-items: center; gap: 8px; }
+
+/* ── Tuiles KPI (4 colonnes) ─────────────────────────────────────────── */
+.rap2-kgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.rap2-k {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.rap2-k-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.rap2-k-ico svg { width: 21px; height: 21px; display: block; }
+.rap2-k-n { font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; color: var(--pc, #fff); }
+.rap2-k-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+@media (max-width: 1000px) { .rap2-kgrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .rap2-kgrid { grid-template-columns: 1fr; } }
+
+/* ── Corps : colonne principale + rail ───────────────────────────────── */
+.rap2-main { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.rap2-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+@media (max-width: 1120px) { .rap2-main { grid-template-columns: 1fr; } }
+
+/* ── Sections du rapport ─────────────────────────────────────────────── */
+.rap2-h { font-size: 14px; font-weight: 700; color: var(--v2-t2); margin-bottom: 12px; }
+.rap2-secs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) { .rap2-secs { grid-template-columns: 1fr; } }
+.rap2-sec {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: 14px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px; min-width: 0;
+}
+.rap2-sec-ico {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.rap2-sec-ico svg { width: 17px; height: 17px; display: block; }
+.rap2-sec-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rap2-sec-d { font-size: 10.5px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rap2-sec-ok { flex-shrink: 0; display: flex; }
+.rap2-sec-ok svg { width: 16px; height: 16px; display: block; }
+
+/* ── Graphique 12 mois ───────────────────────────────────────────────── */
+.rap2-chart { display: flex; align-items: flex-end; gap: 8px; height: 130px; }
+.rap2-chart-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; height: 100%; justify-content: flex-end; min-width: 0; }
+.rap2-chart-b { width: 100%; border-radius: 4px 4px 1px 1px;
+  background: linear-gradient(180deg, #4ade80, #16a34a); min-height: 2px; }
+.rap2-chart-b.vide { background: rgba(255,255,255,.07); }
+.rap2-chart-l { font-size: 8.5px; color: var(--v2-t8); }
+.rap2-big { font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: #4ade80; }
+
+/* ── Deux / trois colonnes ───────────────────────────────────────────── */
+.rap2-two { display: grid; grid-template-columns: 1fr 1.2fr; gap: 18px; align-items: start; }
+.rap2-three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; }
+/* Colonnes étroites : le titre s'abrège plutôt que de renvoyer « + Ajouter »
+   à la ligne suivante. */
+.rap2-three .v2-blk-h { flex-wrap: nowrap; }
+.rap2-three .v2-blk-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 900px) { .rap2-two, .rap2-three { grid-template-columns: 1fr; } }
+
+/* ── Lignes de liste génériques ──────────────────────────────────────── */
+.rap2-row { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); min-width: 0; }
+.rap2-row:last-child { border-bottom: none; }
+.rap2-row-ico { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8); }
+.rap2-row-ico svg { width: 15px; height: 15px; display: block; }
+.rap2-row-l { flex: 1; min-width: 0; font-size: 12px; color: var(--v2-t3);
+  overflow: hidden; text-overflow: ellipsis; }
+.rap2-row-n { font-family: var(--v2-display); font-size: 16px; font-weight: 800;
+  color: var(--pc, #fff); flex-shrink: 0; }
+.rap2-row-tag { font-size: 10.5px; font-weight: 700; color: var(--pc, var(--v2-t6)); flex-shrink: 0; }
+.rap2-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--pc, #818cf8); }
+.rap2-mini { width: 15px; height: 15px; flex-shrink: 0; display: block; color: var(--pc, var(--v2-t6)); }
+.rap2-mini svg { width: 15px; height: 15px; display: block; }
+
+/* ── Comparaison N-1 ─────────────────────────────────────────────────── */
+.rap2-cmp { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.rap2-cmp-l { width: 150px; flex-shrink: 0; font-size: 12px; color: var(--v2-t3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rap2-cmp-v { font-family: var(--v2-display); font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
+.rap2-cmp-d { margin-left: auto; display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 700; color: var(--pc, var(--v2-t6)); flex-shrink: 0; }
+.rap2-cmp-d svg { width: 13px; height: 13px; display: block; flex-shrink: 0; }
+@media (max-width: 560px) { .rap2-cmp-l { width: 110px; } }
+
+/* ── Blocs teintés (rappel du gabarit .v2-card-tint) ─────────────────── */
+.rap2-tint-vert {
+  background: linear-gradient(135deg, rgba(34,197,94,.13), rgba(34,211,238,.05)), rgba(255,255,255,.03);
+  border-color: rgba(34,197,94,.22);
+}
+.rap2-tint-vert .v2-blk-t { color: #86efac; }
+.rap2-tint-ambre {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(252,211,77,.05)), rgba(255,255,255,.03);
+  border-color: rgba(245,158,11,.22);
+}
+.rap2-tint-ambre .v2-blk-t { color: #fde68a; }
+.rap2-blk-ico { width: 15px; height: 15px; flex-shrink: 0; display: block; }
+.rap2-blk-ico svg { width: 15px; height: 15px; display: block; }
+
+/* ── Échéance ────────────────────────────────────────────────────────── */
+.rap2-ech-d { font-family: var(--v2-display); font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+.rap2-ech-s { font-size: 11px; color: var(--v2-t6); }
+
+/* ── Contributions (rail) ────────────────────────────────────────────── */
+.rap2-contrib { display: flex; align-items: flex-start; gap: 11px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); min-width: 0; }
+.rap2-contrib:last-child { border-bottom: none; }
+.rap2-contrib-e { width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  background: color-mix(in srgb, var(--pc, #818cf8) 15%, transparent); }
+.rap2-contrib-t { font-size: 11.5px; font-weight: 600; color: var(--v2-t2);
+  line-height: 1.45; word-break: break-word; white-space: pre-wrap; }
+.rap2-contrib-m { font-size: 10px; color: var(--v2-t6); margin-top: 2px; }
+.rap2-x { flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 2px 4px;
+  color: var(--v2-t7); font: inherit; font-size: 13px; line-height: 1; border-radius: 6px; }
+.rap2-x:hover { color: var(--v2-danger-text); background: rgba(239,68,68,.12); }
+
+/* ── Bouton « + » d'un en-tête de bloc ───────────────────────────────── */
+.rap2-add { margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center;
+  justify-content: center; gap: 6px; height: 28px; padding: 0 10px; cursor: pointer; font: inherit;
+  font-size: 11.5px; font-weight: 600; color: var(--v2-t5);
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b-ctrl); border-radius: 9px; }
+.rap2-add:hover { background: var(--v2-s-hover); color: #fff; }
+.rap2-add svg { width: 13px; height: 13px; display: block; }
+
+/* ── Aperçu du document ──────────────────────────────────────────────── */
+.rap2-apercu { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sm); padding: 12px; }
+.rap2-apercu iframe { display: block; width: 100%; border: 1px solid var(--v2-b);
+  border-radius: 10px; min-height: 640px; }
+.rap2-apercu p { margin: 0; }
+
+/* ── Grille de champs dans la modale ─────────────────────────────────── */
+.rap2-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .rap2-grid2 { grid-template-columns: 1fr; } }
+.v2-md-b > * + * { margin-top: 14px; }
+
+/* ── Barre du haut : les contrôles passent à la ligne en mobile ──────── */
+@media (max-width: 760px) {
+  .rap2-ctrl { width: 100%; margin-left: 0 !important; }
+  .rap2-ctrl > * { flex: 1 1 auto; }
+}

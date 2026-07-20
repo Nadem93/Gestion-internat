@@ -1,0 +1,219 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PLANNING ÉQUIPE — V2, d'après « Planning équipe - refonte (bento) »
+   Ne dépend que de css/v2.css. Tous les sélecteurs sont préfixés pe2-.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre du haut : navigation de période + bascule semaine/mois ──────── */
+.pe2-nav { display: flex; align-items: center; gap: 2px; padding: 4px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); border-radius: 10px; }
+.pe2-nav button { width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--v2-t5); }
+.pe2-nav button:hover { background: var(--v2-s-hover); color: #fff; }
+.pe2-nav svg { width: 15px; height: 15px; }
+.pe2-nav-l { padding: 0 10px; font-size: 12px; font-weight: 700; color: var(--v2-t2);
+  white-space: nowrap; }
+
+.pe2-seg { display: flex; gap: 3px; padding: 4px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); border-radius: 10px; }
+.pe2-seg button { padding: 5px 13px; border-radius: 7px; border: none; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--v2-t5); background: transparent; }
+.pe2-seg button:hover { color: var(--v2-t2); }
+.pe2-seg button.on { color: #fff; background: rgba(255,255,255,.14); }
+
+/* ── Rangée d'outils (filtre métier + actions) ─────────────────────────── */
+.pe2-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.pe2-tools .pe2-hint { font-size: 11.5px; color: var(--v2-t7); }
+.pe2-tools .pe2-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+body.v2 select.pe2-select {
+  height: 34px; padding: 0 34px 0 12px; border-radius: 10px; font: inherit; font-size: 12.5px;
+  font-weight: 600; color: var(--v2-t3); cursor: pointer; max-width: 220px;
+  background-color: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f93b3' stroke-width='2.2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; background-size: 15px;
+  appearance: none;
+}
+body.v2 select.pe2-select option { background: #101d31; color: var(--v2-t2); }
+
+/* ── Tuiles de statistiques ────────────────────────────────────────────── */
+.pe2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.pe2-stat { display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi); }
+.pe2-stat-ico { width: 40px; height: 40px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc); }
+.pe2-stat-ico svg { width: 19px; height: 19px; }
+.pe2-stat-n { font-family: var(--v2-display); font-size: 22px; font-weight: 800; line-height: 1;
+  color: var(--pc); }
+.pe2-stat-l { font-size: 11.5px; color: var(--v2-t6); margin-top: 4px; }
+@media (max-width: 900px) { .pe2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .pe2-stats { grid-template-columns: 1fr; } }
+
+/* ── Grille du planning ────────────────────────────────────────────────── */
+.pe2-grid { background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden; margin-bottom: 20px; }
+.pe2-scroll { overflow-x: auto; }
+.pe2-table { width: 100%; border-collapse: collapse; }
+
+.pe2-table th.pe2-h-emp,
+.pe2-table td.pe2-c-emp {
+  position: sticky; left: 0; z-index: 2;
+  width: 200px; min-width: 200px;
+  background: #0d1a2d;
+}
+.pe2-table th.pe2-h-emp { z-index: 3; background: #0e1c30; }
+
+.pe2-table thead th {
+  padding: 12px 16px; text-align: left;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--v2-t8); border-bottom: 1px solid var(--v2-b);
+  background: rgba(255,255,255,.03);
+}
+.pe2-table thead th.pe2-h-day { padding: 12px 6px; text-align: center; border-left: 1px solid var(--v2-b-soft); }
+.pe2-table thead th.pe2-h-tot { text-align: center; border-left: 1px solid var(--v2-b-soft); }
+.pe2-h-dow { font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--v2-t7); }
+.pe2-h-num { font-family: var(--v2-display); font-size: 14px; font-weight: 800;
+  color: var(--v2-t3); margin-top: 2px; }
+.pe2-h-day.today { background: rgba(79,70,229,.14); }
+.pe2-h-day.today .pe2-h-num { color: #fff; }
+.pe2-h-day.we .pe2-h-dow, .pe2-h-day.we .pe2-h-num { color: var(--v2-t9); }
+
+.pe2-table td { border-bottom: 1px solid var(--v2-b-list); vertical-align: top; }
+.pe2-table tr:last-child td { border-bottom: none; }
+.pe2-table td.pe2-cell { border-left: 1px solid var(--v2-b-soft); padding: 6px;
+  min-width: 96px; min-height: 52px; }
+.pe2-table.pe2-mois td.pe2-cell,
+.pe2-table.pe2-mois th.pe2-h-day { min-width: 62px; }
+.pe2-table td.pe2-cell.today { background: rgba(79,70,229,.07); }
+.pe2-table td.pe2-cell.clic { cursor: pointer; }
+.pe2-table td.pe2-cell.clic:hover { background: rgba(255,255,255,.045); }
+
+/* Sur petit écran la colonne figée mangeait toute la largeur : on la resserre
+   pour laisser voir au moins deux jours. */
+@media (max-width: 700px) {
+  .pe2-table th.pe2-h-emp, .pe2-table td.pe2-c-emp { width: 148px; min-width: 148px; }
+  .pe2-table thead th { padding-left: 10px; padding-right: 10px; }
+  .pe2-table .pe2-emp { width: 148px; padding-left: 10px; padding-right: 10px; }
+  .pe2-table .pe2-lbl { padding-left: 10px; padding-right: 10px; white-space: normal; }
+  .pe2-table td.pe2-cell { min-width: 82px; }
+}
+
+/* Ligne salarié */
+/* Largeur portée par le contenu : la cellule d'un tableau auto-layout ne se
+   laisse pas contraindre, sinon le nom (nowrap) impose sa largeur mini. */
+.pe2-emp { display: flex; align-items: center; gap: 10px; padding: 10px 14px; width: 200px; }
+.pe2-av { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0a1728; }
+.pe2-av img { width: 100%; height: 100%; object-fit: cover; }
+.pe2-emp-n { font-size: 12px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pe2-emp-r { font-size: 10px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Bloc de créneau */
+.pe2-sh { width: 100%; border-radius: 8px; padding: 5px 6px; margin-bottom: 3px; cursor: pointer;
+  background: color-mix(in srgb, var(--tc) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tc) 30%, transparent);
+  border-left: 3px solid var(--ptc, color-mix(in srgb, var(--tc) 30%, transparent));
+  text-align: center; }
+.pe2-sh:hover { background: color-mix(in srgb, var(--tc) 26%, transparent); }
+.pe2-sh.confl { border: 2px solid var(--v2-danger); }
+.pe2-sh-t { font-size: 10.5px; font-weight: 700; color: var(--tc); line-height: 1.25; }
+.pe2-sh-s { font-size: 9.5px; color: var(--v2-t6); margin-top: 1px; }
+.pe2-sh-e { font-size: 9.5px; font-weight: 600; color: #c4b5fd; }
+
+.pe2-flag { border-radius: 8px; padding: 5px 6px; text-align: center;
+  font-size: 10px; font-weight: 700; }
+.pe2-flag-abs { background: rgba(220,38,38,.16); color: var(--v2-danger-text); }
+.pe2-flag-cg { background: rgba(255,255,255,.06); color: var(--v2-t5); }
+.pe2-add { text-align: center; color: rgba(255,255,255,.18); font-size: 15px; line-height: 1.2; }
+
+/* Ligne de couverture / non assignés / total */
+.pe2-row-meta td { background: rgba(255,255,255,.02); }
+.pe2-lbl { padding: 8px 14px; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--v2-t8); white-space: nowrap; }
+.pe2-cov { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; padding: 6px 2px; }
+.pe2-cov b { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; }
+.pe2-cov i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+.pe2-tot { padding: 10px 12px; text-align: center; white-space: nowrap; }
+.pe2-tot-n { font-family: var(--v2-display); font-size: 13px; font-weight: 800; color: var(--v2-t2); }
+.pe2-tot-d { font-size: 10.5px; font-weight: 700; margin-top: 2px; }
+.pe2-row-sum td { background: rgba(255,255,255,.035); border-top: 1px solid var(--v2-b); }
+.pe2-day-sum { text-align: center; padding: 9px 4px; font-family: var(--v2-display);
+  font-size: 12px; font-weight: 800; color: var(--v2-t3); }
+
+/* ── Légende + récapitulatif ───────────────────────────────────────────── */
+.pe2-bottom { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 16px; }
+@media (max-width: 1000px) { .pe2-bottom { grid-template-columns: 1fr; } }
+.pe2-leg { display: flex; flex-wrap: wrap; gap: 10px 20px; }
+.pe2-leg span { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--v2-t4); }
+.pe2-leg i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.pe2-leg i.wide { width: 20px; }
+.pe2-leg-sep { height: 1px; background: var(--v2-b); margin: 14px 0; }
+
+.pe2-recap { display: flex; flex-direction: column; gap: 11px; max-height: 260px; overflow-y: auto; }
+.pe2-recap-h { display: flex; align-items: baseline; margin-bottom: 4px; }
+.pe2-recap-n { font-size: 12px; color: var(--v2-t3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pe2-recap-v { margin-left: auto; padding-left: 10px; font-size: 11.5px; font-weight: 700; }
+
+/* ── Conformité Code du travail ────────────────────────────────────────── */
+.pe2-regles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 1100px) { .pe2-regles { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px)  { .pe2-regles { grid-template-columns: 1fr; } }
+.pe2-regle { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sm); padding: 13px 14px; border-top: 3px solid var(--pc); }
+.pe2-regle-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pe2-regle-ico { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc); }
+.pe2-regle-ico svg { width: 14px; height: 14px; }
+.pe2-regle-tag { font-size: 11px; font-weight: 700; color: var(--pc); padding: 2px 8px;
+  border-radius: 6px; background: color-mix(in srgb, var(--pc) 11%, transparent); }
+.pe2-regle-l { font-size: 12px; font-weight: 600; color: var(--v2-t2); line-height: 1.3; }
+.pe2-regle-d { font-size: 10.5px; color: var(--v2-t6); margin-top: 4px; }
+
+/* ── Alertes réglementaires ────────────────────────────────────────────── */
+.pe2-alertes { display: flex; flex-direction: column; gap: 10px; }
+.pe2-alerte { display: flex; align-items: center; gap: 13px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-left: 3px solid var(--pc); border-radius: var(--v2-r-ctrl); padding: 12px 15px; }
+.pe2-alerte-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0a1728; }
+.pe2-alerte-av img { width: 100%; height: 100%; object-fit: cover; }
+.pe2-alerte-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.pe2-alerte-r { font-size: 11px; color: var(--v2-t6); margin-top: 1px; }
+.pe2-alerte-lv { font-size: 10px; font-weight: 700; color: var(--pc); white-space: nowrap;
+  padding: 3px 9px; border-radius: 7px; background: color-mix(in srgb, var(--pc) 11%, transparent);
+  flex-shrink: 0; }
+
+/* ── Seuils réglementaires (modale) ────────────────────────────────────── */
+.pe2-seuils { display: flex; flex-direction: column; gap: 12px; }
+.pe2-seuil { display: flex; align-items: center; gap: 12px; }
+.pe2-seuil-l { flex: 1; min-width: 0; }
+.pe2-seuil-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.pe2-seuil-d { font-size: 11px; color: var(--v2-t7); margin-top: 1px; }
+.pe2-seuil input { width: 92px; flex-shrink: 0; text-align: center; }
+
+/* ── Zone d'import (modale) ────────────────────────────────────────────── */
+.pe2-drop { padding: 22px; border-radius: 13px; cursor: pointer; text-align: center;
+  border: 1.5px dashed rgba(255,255,255,.16); background: var(--v2-s-sub);
+  font-size: 12.5px; color: var(--v2-t6); }
+.pe2-drop:hover { border-color: rgba(255,255,255,.3); color: var(--v2-t3); }
+.pe2-drop svg { width: 30px; height: 30px; margin: 0 auto 8px; display: block; color: var(--v2-t7); }
+.pe2-code { display: block; margin-top: 8px; padding: 9px 11px; border-radius: 9px;
+  background: rgba(255,255,255,.04); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; color: var(--v2-t5); line-height: 1.7; }
+
+/* ── Impression ────────────────────────────────────────────────────────── */
+@media print {
+  body.v2 { background: #fff !important; color: #111 !important; }
+  body.v2 .v2-shell { border: none; box-shadow: none; margin: 0; background: #fff !important; }
+  .v2-top, .pe2-tools, #toast-container, .v2-ov, .pe2-stats,
+  #pe2LegendBlk, #pe2ReglesBlk, #pe2AlertesBlk { display: none !important; }
+  .pe2-grid { border: none; }
+  .pe2-scroll { overflow: visible; }
+  .pe2-table th, .pe2-table td { color: #111 !important; background: #fff !important; }
+}

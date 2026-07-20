@@ -2,27 +2,87 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
   <title>Mes fiches de paie — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-mes-fiches-paie.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Mes fiches de paie</div></div>
-      <div class="header-right">
-        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(56,97,161,.26)">
 
-    <main class="content" style="max-width:1200px">
-      <div id="mfpInfo" style="margin-bottom:1rem"></div>
-      <div class="toolbar" style="margin-bottom:1.25rem">
-        <select id="mfpAnnee" style="width:auto" onchange="renderMesFichesPaie()"><option value="">Toutes les années</option></select>
+  <div class="v2-top">
+    <a class="v2-logo" href="pilotage.html" style="background:linear-gradient(135deg,#1e3a5f,#0f2b4a)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Mon portail</div>
+      <div class="v2-top-title">Mes fiches de paie</div>
+    </div>
+    <div class="mfp-top-actions">
+      <div id="mfpChips" class="v2-chips"></div>
+      <!-- Contrat historique du JS : le filtre reste un <select>, piloté par les chips -->
+      <select id="mfpAnnee" hidden aria-hidden="true" tabindex="-1" onchange="renderMesFichesPaie()">
+        <option value="">Toutes les années</option>
+      </select>
+      <a href="pilotage.html" class="v2-btn v2-btn-sm">Portail</a>
+    </div>
+  </div>
+
+  <div class="v2-body">
+    <div id="mfpInfo"></div>
+    <div id="mfpStats" class="mfp-stats"></div>
+    <div class="mfp-layout">
+      <div class="mfp-main">
+        <div class="v2-blk-t">Mes bulletins</div>
+        <div id="mfpList"></div>
       </div>
-      <div id="mfpList"></div>
-    </main>
+      <aside class="mfp-rail" id="mfpRail"></aside>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE — DEMANDE D'ATTESTATION DE SALAIRE -->
+<div class="v2-ov" id="modalAttestation">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+      <div><div class="v2-md-t">Attestation employeur</div><div class="v2-md-s">Demander une attestation de salaire à l'administration</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAttestation')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l">Type de document</label>
+        <div class="v2-seg" id="mfpAttSeg">
+          <button type="button" class="v2-seg-o on" data-motif="Attestation de salaire">Salaire</button>
+          <button type="button" class="v2-seg-o" data-motif="Attestation employeur">Employeur</button>
+          <button type="button" class="v2-seg-o" data-motif="Duplicata de bulletin">Duplicata</button>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="mfpAttDebut">Période — début</label>
+          <input type="month" class="v2-fld" id="mfpAttDebut"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="mfpAttFin">Période — fin</label>
+          <input type="month" class="v2-fld" id="mfpAttFin"/>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="mfpAttCom">Précisions (facultatif)</label>
+        <textarea class="v2-fld" id="mfpAttCom" placeholder="Destinataire, usage prévu…"></textarea>
+      </div>
+      <div class="v2-note v2-note-warn" id="mfpAttNote" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Le module de demandes n'est pas encore installé : exécuter migration-mes-fiches-paie.sql.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAttestation')">Annuler</button>
+      <button type="button" class="v2-btn-pri" id="mfpAttSubmit" onclick="MFPV2.soumettreAttestation()">Envoyer la demande</button>
+    </div>
   </div>
 </div>
 
@@ -50,62 +110,41 @@ function mfpFmtPeriode(p) {
 async function initMesFichesPaie() {
   const s = Auth.requireAuth();
   if (!s) return;
-  const info = document.getElementById('mfpInfo');
   try {
     // Récupère le taux de cotisations / majoration partagé (pour un net estimé à jour)
     if (typeof hydrateConfigFromCloud === 'function') await hydrateConfigFromCloud();
     const employes = await sbGetEmployes();
     _mfpFiche = employes.find(e => String(e.profileId) === String(s.userId)) || null;
+    window._mfpFiche = _mfpFiche;
     if (!_mfpFiche) {
-      info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--muted)">Votre compte n'est pas encore relié à une fiche salarié.<br>Contactez votre administrateur pour accéder à vos bulletins.</div>`;
+      // Message historique : l'espace personnel exige employe.profile_id = compte connecté.
+      MFPV2.infoBloc(
+        "Votre compte n'est pas encore relié à une fiche salarié",
+        "Contactez votre administrateur pour accéder à vos bulletins de paie.",
+        '#f59e0b');
+      renderMesFichesPaie();
       return;
     }
     // La RLS ne renvoie que les bulletins du salarié connecté ; on filtre par sécurité
     _mfpCache = (await sbGetFichesPaie()).filter(f => String(f.employeId) === String(_mfpFiche.id));
+    window._mfpCache = _mfpCache;
     const annees = [...new Set(_mfpCache.map(f => (f.periode || '').slice(0, 4)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
     document.getElementById('mfpAnnee').innerHTML = '<option value="">Toutes les années</option>' + annees.map(a => `<option value="${a}">${a}</option>`).join('');
+    await MFPV2.chargerDemandes();
     renderMesFichesPaie();
   } catch (e) {
     console.error('[initMesFichesPaie]', e);
-    info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--red)">Erreur de chargement : ${escHtml(e?.message || e)}</div>`;
+    MFPV2.infoBloc('Erreur de chargement', String(e?.message || e), '#ef4444');
+    renderMesFichesPaie();
   }
 }
 
+// Rendu délégué au module V2 (js/mes-fiches-paie-v2.js) : les appelants
+// historiques (onchange du select, init) continuent de fonctionner.
 function renderMesFichesPaie() {
-  const el = document.getElementById('mfpList');
-  const annee = document.getElementById('mfpAnnee').value;
-  let list = [..._mfpCache];
-  if (annee) list = list.filter(f => (f.periode || '').slice(0, 4) === annee);
-  list.sort((a, b) => (b.periode || '').localeCompare(a.periode || ''));
-
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">🧾</div><h3>Aucun bulletin</h3><p>Vos fiches de paie apparaîtront ici une fois déposées par votre employeur.</p></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="pyx-grid">` + list.map(f => {
-    let _tx = 22; try { _tx = JSON.parse(localStorage.getItem('ftr_paie_majoration') || '{}').tauxCotisations ?? 22; } catch {}
-    const _ass = (Number(f.brut)||0) + (Number(f.primes)||0) + (Number(f.heuresSup)||0);
-    const _cot = _ass * _tx / 100;
-    const net = _ass ? (_ass - _cot - (Number(f.retenues)||0)) : (Number(f.net) || 0);
-    const stats = [];
-    if (f.brut) stats.push(`<div class="pyx-stat"><div class="v">${moneyMask(Math.round(f.brut) + ' €')}</div><div class="l">Brut</div></div>`);
-    if (f.primes) stats.push(`<div class="pyx-stat"><div class="v">${moneyMask(Math.round(f.primes) + ' €')}</div><div class="l">Primes</div></div>`);
-    if (_cot) stats.push(`<div class="pyx-stat neg"><div class="v">${moneyMask('-' + Math.round(_cot) + ' €')}</div><div class="l">Cotis. ${_tx}%</div></div>`);
-    if (f.retenues) stats.push(`<div class="pyx-stat neg"><div class="v">${moneyMask('-' + Math.round(f.retenues) + ' €')}</div><div class="l">Retenues</div></div>`);
-    return `<article class="pyx-card">
-      <div class="pyx-head">
-        <div class="pyx-ico">🧾</div>
-        <div class="pyx-h-txt"><div class="pyx-period">${mfpFmtPeriode(f.periode)}</div></div>
-      </div>
-      ${net > 0 ? `<div class="pyx-net"><div class="pyx-net-lbl">Net estimé</div><div class="pyx-net-val">${moneyMask(net.toFixed(2) + ' €', 'lead')}</div></div>` : `<div class="pyx-nofile">Bulletin déposé</div>`}
-      ${stats.length ? `<div class="pyx-break">${stats.join('')}</div>` : ''}
-      <div class="pyx-meta">${f.fichierNom ? escHtml(f.fichierNom) : 'Sans fichier joint'}</div>
-      <div class="pyx-foot">
-        ${f.fichierPath ? `<button class="pyx-btn dl" onclick="mfpDownload('${f.id}')">⬇ Télécharger</button>` : `<span class="pyx-meta">Aucun fichier</span>`}
-        <span class="sp"></span>
-      </div>
-    </article>`;
-  }).join('') + `</div>`;
+  window._mfpCache = _mfpCache;
+  window._mfpFiche = _mfpFiche;
+  MFPV2.render();
 }
 
 async function mfpDownload(id) {
@@ -117,5 +156,6 @@ async function mfpDownload(id) {
 
 document.addEventListener('DOMContentLoaded', initMesFichesPaie);
 </script>
+<script src="js/mes-fiches-paie-v2.js"></script>
 </body>
 </html>

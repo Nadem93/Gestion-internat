@@ -46,7 +46,9 @@ function getPeEmployes() {
       poste: e.poste || '',
       statut: e.statut || 'actif',
       heuresContrat: e.heuresContrat ?? 35,
-      profileId: e.profileId || null
+      profileId: e.profileId || null,
+      color: e.color || '',
+      photo: e.photo || ''
     }));
 }
 
@@ -256,22 +258,26 @@ function peCanEditPlanning() {
 
 // ── IMPORT CSV ──
 function openImportPlanning() {
-  const html = `<div class="modal-overlay" id="modalImportPe" style="display:flex" onclick="closeModal('modalImportPe')">
-    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">📥 Importer le planning</span><button class="modal-close" onclick="closeModal('modalImportPe')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-        <div style="font-size:.78rem;color:var(--muted);line-height:1.5">
-          Le fichier CSV doit contenir les colonnes : <strong>employé, date, début, fin</strong> (séparateur virgule ou point-virgule).
-          Une ligne d'en-tête est ignorée. Les créneaux importés sont ajoutés au planning existant.<br/>
-          <span style="display:block;margin-top:.5rem;padding:.5rem .75rem;background:#f1f5f9;border-radius:6px;font-family:monospace;font-size:.72rem">
-            employé,date,début,fin<br/>
-            Jean Martin,2026-06-10,08:00,16:00<br/>
-            Sophie Dubois,2026-06-10,13:00,21:00
-          </span>
+  // Gabarit de modale V2 (.v2-ov / .v2-md), comme le reste du site.
+  const html = `<div class="v2-ov" id="modalImportPe" onclick="closeModal('modalImportPe')">
+    <div class="v2-md" style="--mc:#22d3ee;max-width:520px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+        <div style="min-width:0">
+          <div class="v2-md-t">Importer le planning</div>
+          <div class="v2-md-s">Fichier CSV — créneaux ajoutés au planning existant</div>
         </div>
-        <div class="photo-upload-zone" onclick="document.getElementById('peFileInput').click()" style="padding:1.5rem;text-align:center;cursor:pointer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;margin:0 auto .5rem;color:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <div style="font-size:.82rem;color:var(--muted)">Cliquez pour sélectionner un fichier CSV</div>
+        <button type="button" class="v2-md-x" onclick="closeModal('modalImportPe')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="v2-md-b">
+        <div style="font-size:12.5px;color:var(--v2-t5);line-height:1.55">
+          Colonnes attendues : <b>employé, date, début, fin</b> (séparateur virgule ou point-virgule).
+          La ligne d'en-tête est ignorée.
+          <span class="pe2-code">employé,date,début,fin<br/>Jean Martin,2026-06-10,08:00,16:00<br/>Sophie Dubois,2026-06-10,13:00,21:00</span>
+        </div>
+        <div class="pe2-drop" onclick="document.getElementById('peFileInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Cliquez pour sélectionner un fichier CSV
         </div>
         <input type="file" id="peFileInput" accept=".csv,.tsv,.txt" style="display:none" onchange="handlePeImport(event)"/>
       </div>
@@ -281,8 +287,8 @@ function openImportPlanning() {
   if (old) old.remove();
   const div = document.createElement('div');
   div.innerHTML = html;
-  document.body.appendChild(div);
-  requestAnimationFrame(() => document.getElementById('modalImportPe')?.classList.add('open'));
+  document.body.appendChild(div.firstElementChild);
+  requestAnimationFrame(() => openModal('modalImportPe'));
 }
 
 function handlePeImport(e) {
@@ -405,6 +411,10 @@ function deletePeShift() {
 
 // ── RENDU GRILLE ──
 function renderPlanningEquipe() {
+  // Design V2 : le rendu complet (statistiques, grille, conformité, alertes)
+  // est délégué à js/planning-equipe-v2.js. Les appelants historiques
+  // (navigation, filtres, enregistrement d'un créneau…) restent inchangés.
+  if (typeof pe2Render === 'function') { pe2Render(); return; }
   const wBtn = document.getElementById('peViewWeekBtn');
   const mBtn = document.getElementById('peViewMonthBtn');
   if (wBtn && mBtn) {

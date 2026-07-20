@@ -1,0 +1,208 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   NOTES RAPIDES — DESIGN V2
+   Langage visuel de la maquette « Portail - refonte (bento) » appliqué à la
+   structure réelle de la page (liste de notes + éditeur).
+
+   Ne contient QUE le style propre à cette page : la coque, la barre haute,
+   les KPI, les chips de filtre, les blocs et le gabarit de modale viennent
+   de css/v2.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Recherche de la barre haute ──────────────────────────────────────── */
+.nt-search {
+  display: flex; align-items: center; gap: 9px;
+  height: 42px; width: 272px; max-width: 100%; padding: 0 14px;
+  border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t7);
+}
+.nt-search svg { width: 15px; height: 15px; flex-shrink: 0; }
+body.v2 .nt-search input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; margin: 0;
+  border: none !important; background: transparent !important; outline: none;
+  font: inherit; font-size: 13px; color: var(--v2-t2) !important;
+  border-radius: 0; box-shadow: none;
+}
+body.v2 .nt-search input::placeholder { color: var(--v2-t7); }
+
+/* ── En-tête de page ──────────────────────────────────────────────────── */
+.nt-intro { margin-bottom: 20px; }
+
+/* ── Bandeau KPI (cartes « Mon espace » de la maquette) ───────────────── */
+.nt-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.nt-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 18px;
+}
+.nt-kpi-ico {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; background: linear-gradient(135deg, var(--kc, #f59e0b), var(--kc2, #fcd34d));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--kc, #f59e0b) 33%, transparent);
+}
+.nt-kpi-ico svg { width: 21px; height: 21px; }
+.nt-kpi-n {
+  font-family: var(--v2-display); font-size: 23px; font-weight: 800;
+  line-height: 1; color: #fff; margin-top: 14px;
+}
+.nt-kpi-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); margin-top: 6px; }
+.nt-kpi-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Ligne de filtres ─────────────────────────────────────────────────── */
+.nt-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.nt-count { margin-left: auto; font-size: 12px; color: var(--v2-t7); white-space: nowrap; }
+
+/* ── Disposition liste / éditeur ──────────────────────────────────────── */
+.nt-layout {
+  display: grid; grid-template-columns: 330px 1fr; gap: 18px;
+  align-items: stretch;
+}
+
+/* ── Colonne de gauche : liste des notes ──────────────────────────────── */
+.nt-aside {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2);
+  display: flex; flex-direction: column; overflow: hidden;
+  max-height: calc(100vh - 300px); min-height: 380px;
+}
+.nt-aside-h {
+  display: flex; align-items: center; gap: 9px;
+  padding: 16px 18px 12px; border-bottom: 1px solid var(--v2-b-soft);
+}
+.nt-aside-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nt-list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px; }
+
+.nt-item {
+  position: relative; cursor: pointer; min-width: 0;
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 11px 12px; border-radius: var(--v2-r-chip);
+  border: 1px solid transparent; margin-bottom: 4px;
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.nt-item:hover { background: var(--v2-s-hover); transform: translateX(2px); }
+.nt-item.on {
+  background: var(--v2-s-sel);
+  border-color: rgba(245,158,11,.4);
+  box-shadow: inset 3px 0 0 var(--v2-warn);
+}
+.nt-item-ico {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(245,158,11,.14); color: var(--v2-warn-icon);
+}
+.nt-item-ico svg { width: 15px; height: 15px; }
+/* Les lignes sont composées de <span> : sans display:block, titre, aperçu et
+   date se retrouveraient sur une seule ligne et déborderaient de la colonne. */
+.nt-item-b { display: block; flex: 1; min-width: 0; }
+.nt-item-t {
+  display: block; font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nt-item-p {
+  display: block; font-size: 11px; color: var(--v2-t6); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nt-item-d { display: block; font-size: 10.5px; color: var(--v2-t8); margin-top: 3px; }
+.nt-item-pin {
+  flex-shrink: 0; width: 26px; height: 26px; padding: 0; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: transparent; border: none; color: var(--v2-t8);
+  transition: background .15s, color .15s;
+}
+.nt-item-pin svg { width: 14px; height: 14px; }
+.nt-item-pin:hover { background: var(--v2-s-active); color: var(--v2-warn-icon); }
+.nt-item-pin.on { color: var(--v2-warn-icon); }
+
+.nt-list-empty {
+  padding: 26px 18px; text-align: center;
+  font-size: 12px; color: var(--v2-t7); line-height: 1.6;
+}
+.nt-sect {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--v2-t9);
+  padding: 10px 12px 5px;
+}
+
+/* ── Colonne de droite : éditeur ──────────────────────────────────────── */
+.nt-editor {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2);
+  display: flex; flex-direction: column; overflow: hidden;
+  max-height: calc(100vh - 300px); min-height: 380px;
+}
+.nt-ed-top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; border-bottom: 1px solid var(--v2-b-soft);
+}
+body.v2 #noteTitle {
+  flex: 1; min-width: 0; height: 38px; padding: 0; margin: 0;
+  border: none !important; background: transparent !important; outline: none;
+  box-shadow: none; border-radius: 0;
+  font: inherit; font-family: var(--v2-display); font-size: 17px; font-weight: 700;
+  color: #fff !important; letter-spacing: -.01em;
+}
+body.v2 #noteTitle::placeholder { color: var(--v2-t7); font-weight: 600; }
+
+.nt-saved {
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+  min-width: 74px; text-align: right; color: var(--v2-ok-light);
+}
+.nt-ed-btn {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: var(--v2-r-chip);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t5); transition: background .15s, color .15s, border-color .15s;
+}
+.nt-ed-btn svg { width: 15px; height: 15px; }
+.nt-ed-btn:hover { background: var(--v2-s-hover); color: #fff; }
+.nt-ed-btn.on { color: var(--v2-warn-icon); border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.12); }
+.nt-ed-btn.danger:hover { color: var(--v2-danger-text); border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.12); }
+
+body.v2 #noteBody {
+  flex: 1; min-height: 240px; width: 100%;
+  border: none !important; outline: none; resize: none; box-shadow: none;
+  border-radius: 0;
+  padding: 18px; margin: 0;
+  background: transparent !important;
+  font: inherit; font-size: 13.5px; line-height: 1.75; color: var(--v2-t4) !important;
+}
+body.v2 #noteBody::placeholder { color: var(--v2-t7); }
+
+.nt-ed-foot {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 11px 18px; border-top: 1px solid var(--v2-b-soft);
+  font-size: 11px; color: var(--v2-t7);
+}
+.nt-ed-foot .sep { width: 4px; height: 4px; border-radius: 50%; background: var(--v2-t9); }
+
+/* ── État vide de l'éditeur ───────────────────────────────────────────── */
+.nt-placeholder {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  gap: 10px; padding: 40px 26px;
+}
+.nt-ph-ico {
+  width: 62px; height: 62px; border-radius: 19px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; background: linear-gradient(135deg, #f59e0b, #fcd34d);
+  box-shadow: 0 10px 26px -8px rgba(245,158,11,.6);
+}
+.nt-ph-ico svg { width: 27px; height: 27px; }
+.nt-ph-t { font-family: var(--v2-display); font-size: 16px; font-weight: 700; color: #fff; }
+.nt-ph-s { font-size: 12.5px; color: var(--v2-t6); max-width: 340px; line-height: 1.6; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .nt-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1000px) {
+  .nt-layout { grid-template-columns: 1fr; }
+  .nt-aside { max-height: 44vh; min-height: 0; }
+  .nt-editor { max-height: none; }
+  body.v2 #noteBody { min-height: 320px; }
+}
+@media (max-width: 560px) {
+  .nt-kpis { grid-template-columns: 1fr; }
+  .nt-search { width: 100%; }
+  .nt-count { margin-left: 0; }
+}

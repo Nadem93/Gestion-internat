@@ -3,59 +3,128 @@
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Portail — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    html,body{margin:0;height:100%}
-    .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:transparent}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
-    #plFrame{flex:1;width:100%;border:none;background:#fff}
-
-    /* ── Dock flottant ── */
-    .rh-dock{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:60;
-      display:flex;align-items:center;gap:5px;
-      background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(12px);
-      border-radius:17px;padding:6px 9px;
-      border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(80,90,160,.18);
-      max-width:calc(100vw - 24px);overflow-x:auto}
-    .rh-dock::-webkit-scrollbar{height:0}
-    .rh-dock-home{width:36px;height:36px;flex-shrink:0;border-radius:13px;border:none;
-      background:rgba(15,23,42,.05);color:#64748b;display:flex;align-items:center;justify-content:center;
-      cursor:pointer;transition:background .15s,color .15s}
-    .rh-dock-home:hover{background:rgba(255,255,255,.2);color:#fff}
-    .rh-dock-home svg{width:17px;height:17px}
-    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-pilotage.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<header class="header">
-  <div class="header-info" style="display:flex;align-items:center;gap:.7rem">
-    <div class="header-title" id="plTitle">Portail</div>
-  </div>
-  <div class="header-right"></div>
-</header>
+<body class="v2">
 
-<div class="rh-layout">
-  <div class="rh-main">
-    <main class="content" id="plHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem 100px">
-      <div style="max-width:1060px;margin:0 auto">
-        <div id="plWelcome" style="margin-bottom:1.5rem"></div>
-        <div id="mesDocsSection"></div>
-      </div>
-    </main>
-    <iframe id="plFrame" title="Contenu du portail" style="display:none"></iframe>
+<div class="v2-shell pl-shell">
+
+  <!-- ── Navigation latérale ── -->
+  <nav class="pl-side" id="plSide" aria-label="Navigation du portail">
+    <div class="pl-side-top">
+      <a class="pl-side-brand" href="accueil.html" title="Retour à l'accueil">
+        <span class="pl-side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+        <span class="pl-side-brand-txt">
+          <span class="pl-side-brand-t">Mon portail</span>
+          <span class="pl-side-brand-s">Mes accès personnels</span>
+        </span>
+      </a>
+      <button type="button" class="pl-side-fold" id="plSideFold" aria-expanded="true"
+        aria-label="Réduire le menu" title="Réduire le menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <div class="pl-side-nav" id="plSideNav"></div>
+    <div class="pl-side-user" id="plSideUser"></div>
+  </nav>
+
+  <!-- ── Panneau principal ── -->
+  <div class="pl-main">
+    <div class="pl-topbar">
+      <button type="button" class="pl-back" id="plBack" onclick="showHome()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Portail
+      </button>
+      <div class="pl-topbar-t" id="plTitle">Portail</div>
+      <!-- La cloche partagée (js/notif-bell.js) s'injecte dans .header-right -->
+      <div class="header-right pl-bellbox"></div>
+    </div>
+    <div class="pl-scroll">
+      <main class="v2-body" id="plHome"><div id="plWelcome"></div></main>
+      <iframe id="plFrame" title="Contenu du portail" style="display:none"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Mode d'emploi d'un module (gabarit de modale V2) ── -->
+<div class="v2-ov" id="plTutoOv" role="dialog" aria-modal="true" aria-labelledby="plTutoT">
+  <div class="v2-md" style="--mc:#6366f1">
+    <div class="v2-md-h">
+      <span class="v2-md-ico pl-md-ico" id="plTutoIco"></span>
+      <div><div class="v2-md-t" id="plTutoT"></div><div class="v2-md-s" id="plTutoS"></div></div>
+      <button class="v2-md-x" type="button" onclick="pl2CloseTuto()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b" id="plTutoB"></div>
+    <div class="v2-md-f">
+      <button class="v2-btn-sec" type="button" onclick="pl2CloseTuto()">Fermer</button>
+      <button class="v2-btn-pri" type="button" onclick="pl2OuvrirTuto()">Ouvrir le module</button>
+    </div>
   </div>
 </div>
 
-<!-- Dock flottant (rempli par le script) -->
-<nav class="rh-dock" id="rhDock" aria-label="Navigation du portail"></nav>
+<!-- ── Droits annuels de congés (gabarit de modale V2) ── -->
+<div class="v2-ov" id="plDroitsOv" role="dialog" aria-modal="true" aria-labelledby="plDroitsT">
+  <div class="v2-md" style="--mc:#f59e0b">
+    <div class="v2-md-h">
+      <span class="v2-md-ico pl-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <div><div class="v2-md-t" id="plDroitsT">Droits annuels de congés</div>
+        <div class="v2-md-s">Base de calcul des compteurs « Congés payés » et « RTT »</div></div>
+      <button class="v2-md-x" type="button" onclick="pl2CloseDroits()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="pl-dr-l" id="plDroitsList"></div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="plDrEmp">Salarié</label>
+          <select class="v2-fld" id="plDrEmp" onchange="pl2SyncDroits()"></select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="plDrAnnee">Année</label>
+          <input class="v2-fld" id="plDrAnnee" type="number" min="2000" max="2100" step="1" onchange="pl2SyncDroits()"/>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="plDrCp">Jours de congés payés</label>
+          <input class="v2-fld" id="plDrCp" type="number" min="0" max="365" step="0.5" placeholder="25"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="plDrRtt">Jours de RTT</label>
+          <input class="v2-fld" id="plDrRtt" type="number" min="0" max="365" step="0.5" placeholder="10"/>
+        </div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Sans droit annuel renseigné, les compteurs n'affichent que les jours pris : aucun solde n'est déduit.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button class="v2-btn-sec" type="button" onclick="pl2CloseDroits()">Fermer</button>
+      <button class="v2-btn-pri" type="button" id="plDrSave" onclick="pl2SaveDroits()">Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/profiles-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/absences-supabase.js"></script>
+<script src="js/conges-supabase.js"></script>
+<script src="js/formations-supabase.js"></script>
+<script src="js/fiches-paie-supabase.js"></script>
+<script src="js/planning-equipe-supabase.js"></script>
+<script src="js/entretiens-supabase.js"></script>
 <script src="js/documents-employe-supabase.js"></script>
 <script src="js/messages-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
@@ -64,13 +133,12 @@
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
 <script src="js/notif-bell.js"></script>
-<script src="js/portal-dock.js"></script>
 <script src="js/portal-tuto-data.js"></script>
-<script src="js/portal-tuto.js"></script>
 <script>
   Auth.requireAuth();
 
-  // ── Les modules du portail (mêmes data-page, couleurs 1re teinte et icônes que l'ancienne barre) ──
+  // ── Les modules du portail (mêmes data-page, permissions, couleurs 1re teinte
+  //    et icônes que l'ancienne barre) ──
   const PL_NAV = [
     { g:'Mon espace personnel', page:'mes-absences.html', label:'Mes absences', c1:'#ef4444', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
     { g:'Mon espace personnel', page:'mes-conges.html', label:'Mes congés', c1:'#f59e0b', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
@@ -86,62 +154,59 @@
     { g:'Pilotage & ressources', page:'satisfaction.html', label:'Satisfaction résidents', perm:'view_residents', c1:'#f59e0b', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
     { g:'Pilotage & ressources', page:'inventaire.html', label:'Inventaire & matériel', perm:'view_dashboard', c1:'#b45309', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>' }
   ];
-  // Accès rapides du dock (les 5 modules les plus utilisés) + libellés courts
-  const QUICK = ['mes-absences.html', 'mes-conges.html', 'planning-equipe.html', 'messages.html', 'mes-fiches-paie.html'];
-  const SHORT = { 'mes-absences.html':'Absences', 'mes-conges.html':'Congés', 'planning-equipe.html':'Planning', 'messages.html':'Messages', 'mes-fiches-paie.html':'Paie' };
-  const GROUPS = ['Mon espace personnel', 'Équipe & échanges', 'Pilotage & ressources'];
+  const PL_GROUPS = ['Mon espace personnel', 'Équipe & échanges', 'Pilotage & ressources'];
 
-  const allowed = e => {
+  // Masquage par permission : admin/superadmin voient tout ; sinon hasPermission
+  const plAllowed = e => {
     if (!e.perm) return true;
     const s = Auth.getSession();
     return !!(s && (s.role === 'admin' || s.role === 'superadmin' || hasPermission(s.userId, e.perm)));
   };
   const entryOf = page => PL_NAV.find(e => e.page === page);
 
+  // `const` au premier niveau d'un script classique ne crée PAS de propriété
+  // sur window : le module de rendu (js/pilotage-v2.js) lit ces valeurs via
+  // window, on les y publie explicitement.
+  window.PL_NAV = PL_NAV;
+  window.PL_GROUPS = PL_GROUPS;
+  window.plAllowed = plAllowed;
+
   const plFrame = document.getElementById('plFrame');
   const plHome = document.getElementById('plHome');
   const plTitle = document.getElementById('plTitle');
+  const plBack = document.getElementById('plBack');
 
-  function setActive(page) {
-    if (window.PortalDock) PortalDock.setActive(page);
-  }
-
-  // ── Navigation interne : la page s'ouvre dans le panneau, le dock reste visible ──
+  // ── Navigation interne : la page s'ouvre dans le panneau ──
   function showHome() {
     plFrame.style.display = 'none';
     plFrame.src = 'about:blank';
     plHome.style.display = '';
+    plBack.classList.remove('on');
     plTitle.textContent = 'Portail';
-    setActive(null);
+    window.plCurrentPage = null;
     sessionStorage.removeItem('pl_last_page');
+    renderPlHome();
   }
   function loadPage(page, label) {
     plHome.style.display = 'none';
     plFrame.style.display = '';
     plFrame.src = page + (page.includes('?') ? '&' : '?') + 'embed=1';
+    plBack.classList.add('on');
     plTitle.textContent = label || '';
-    setActive(page);
+    window.plCurrentPage = page;
     sessionStorage.setItem('pl_last_page', page);
+    if (typeof pl2RenderSide === 'function') pl2RenderSide();
   }
 
-  // ── Dock « par catégories » — 1 pastille par groupe (composant partagé) ──
-  const homeBtn = `<button class="rh-dock-home" id="plHomeBtn" title="Accueil du portail" aria-label="Accueil du portail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>`;
-  const GROUP_META = {
-    'Mon espace personnel':  { short: 'Mon espace', color: '#6366f1', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
-    'Équipe & échanges':     { short: 'Équipe',     color: '#0891b2', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-    'Pilotage & ressources': { short: 'Pilotage',   color: '#16a34a', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>' }
-  };
-  const _plLast = sessionStorage.getItem('pl_last_page');
-  const _plLastE = _plLast && entryOf(_plLast);
-  PortalDock.init({
-    dock: document.getElementById('rhDock'),
-    nav: PL_NAV, key: 'page', groups: GROUPS, groupMeta: GROUP_META,
-    allowed, leading: homeBtn, onNavigate: e => loadPage(e.page, e.label),
-    current: (_plLastE && allowed(_plLastE)) ? _plLastE.page : null
-  });
+  // Ancienne fonction de rendu de l'accueil : elle délègue au module V2,
+  // pour que tous les appelants existants continuent de marcher.
+  function renderPlHome() {
+    if (typeof pl2Render === 'function') pl2Render();
+  }
 
-  // Bouton accueil : revient à l'accueil du portail
-  document.getElementById('plHomeBtn').addEventListener('click', showHome);
+  window.loadPage = loadPage;
+  window.showHome = showHome;
+  window.plCurrentPage = null;
 
   // Si une page chargée navigue vers l'accueil ou le portail, on sort de l'iframe
   // (sinon on se retrouve avec un portail imbriqué dans le panneau).
@@ -152,92 +217,14 @@
       else if (f === 'pilotage.html') window.top.location.href = 'pilotage.html';
     } catch (e) { /* origine différente, on ignore */ }
   });
-
-  // Reprend la rubrique affichée avant un rafraîchissement
-  const lastPage = sessionStorage.getItem('pl_last_page');
-  const lastEntry = lastPage && entryOf(lastPage);
-  if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
-
-  // ── Accueil = tutoriel des modules (rôle · mode d'emploi · synchro · exemple) ──
-  (function () {
-    const s = Auth.getSession();
-    const prenom = (s && (s.prenom || s.username) || '').trim();
-    PortalTuto.render({
-      mount: 'plWelcome', nav: PL_NAV, allowed,
-      onOpen: loadPage, title: '🧭 Portail', greetingName: prenom
-    });
-  })();
-
-  // ── Badge messages non lus (sur l'icône de la rubrique) — source Supabase ──
-  function _plRenderMsgBadge(unread) {
-    document.querySelectorAll('[data-module="messages"]').forEach(el => {
-      const host = el.querySelector('span') || el;
-      let badge = host.querySelector('.notif-badge');
-      if (unread > 0) {
-        if (!badge) { badge = document.createElement('span'); badge.className = 'notif-badge'; host.appendChild(badge); }
-        badge.textContent = unread > 99 ? '99+' : unread;
-        badge.classList.remove('hidden');
-      } else if (badge) {
-        badge.remove();
-      }
-    });
-  }
-  async function updatePilotageNotifs() {
-    const session = Auth.getSession();
-    if (!session || typeof sbGetMessages !== 'function') return;
-    const uid = String(session.userId);
-    try {
-      const [messages, convs] = await Promise.all([sbGetMessages(), sbGetConversations()]);
-      const myConvIds = Object.values(convs).filter(c => (c.userIds || []).map(String).includes(uid)).map(c => c.id);
-      const unread = messages.filter(m => myConvIds.includes(m.convId) && !(m.readBy || []).map(String).includes(uid) && String(m.from) !== uid).length;
-      _plRenderMsgBadge(unread);
-    } catch (e) { console.error('[updatePilotageNotifs]', e); }
-  }
-  document.addEventListener('DOMContentLoaded', updatePilotageNotifs);
-  window.addEventListener('focus', updatePilotageNotifs);
-  setInterval(updatePilotageNotifs, 30000);
-
-  // ── Mes documents transmis ──
-  (async function renderMesDocs() {
-    const session = Auth.getSession();
-    if (!session) return;
-    const DOC_CAT = { contrat:'Contrat', fiche:'Fiche de poste', administratif:'Administratif', formation:'Formation', sanction:'Sanction', autre:'Autre' };
-    function fmtSize(b) {
-      if (!b) return '';
-      if (b < 1024) return b + ' o';
-      if (b < 1024*1024) return Math.round(b/1024) + ' Ko';
-      return (b/1024/1024).toFixed(1) + ' Mo';
-    }
-    try {
-      const employes = await sbGetEmployes();
-      const fiche = employes.find(e => String(e.profileId) === String(session.userId));
-      if (!fiche) return;
-      const docs = await sbGetDocsEmploye(fiche.id);
-      if (!docs.length) return;
-      window._mesDocs = docs;
-      const docRows = docs.map(d => `
-        <div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-bottom:1px solid var(--border)">
-          <span style="font-size:1.2rem">📎</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(d.name)}</div>
-            <div style="font-size:.72rem;color:var(--muted)">${DOC_CAT[d.category]||d.category||'—'}${d.docDate?' · '+new Date(d.docDate).toLocaleDateString('fr-FR'):''} · ${fmtSize(d.size)}</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="mesDocsDownload('${d.id}')">↓</button>
-        </div>`).join('');
-      document.getElementById('mesDocsSection').innerHTML = `
-        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Mes documents</div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">📎 Documents transmis</span></div>
-          <div class="card-body" style="padding:0">${docRows}</div>
-        </div>`;
-    } catch (e) { console.error('[renderMesDocs]', e); }
-  })();
-
-  async function mesDocsDownload(id) {
-    const d = (window._mesDocs || []).find(x => x.id === id);
-    if (!d || !d.fichierPath) return;
-    const url = await sbJustificatifUrl(d.fichierPath);
-    if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
-  }
+</script>
+<script src="js/pilotage-v2.js"></script>
+<script>
+  // Rendu de l'accueil, puis reprise éventuelle de la rubrique affichée
+  // avant un rafraîchissement.
+  renderPlHome();
+  const _plLast = sessionStorage.getItem('pl_last_page');
+  const _plLastE = _plLast && entryOf(_plLast);
+  if (_plLastE && plAllowed(_plLastE)) loadPage(_plLastE.page, _plLastE.label);
 </script>
 </body></html>
