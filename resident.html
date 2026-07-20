@@ -630,6 +630,10 @@ function serafinphCard(r) {
 const _medRow = (label, value) => `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${value ? escHtml(value) : '<span style="color:var(--g400)">—</span>'}</div></div>`;
 
 function rgpdCard(r) {
+  // Réservée aux administrateurs : elle expose l'export intégral des données du
+  // résident et son anonymisation. Le filtrage est fait ici, pas au point d'appel,
+  // pour qu'aucun autre rendu ne puisse la faire réapparaître.
+  if (!Auth.isAdmin()) return '';
   const created = r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '—';
   const updated = r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('fr-FR') : '—';
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #78716c 12%, #fff)">
