@@ -492,6 +492,10 @@ function render() {
   else if (currentView === 'week') renderWeek();
   else if (currentView === 'month') renderMonth();
   else renderListView();
+  // Compléments V2 (maquette « Planning - refonte ») : rail « Prochains
+  // événements » et teinte des blocs d'événement.
+  if (typeof pl2RenderUpcoming === 'function') pl2RenderUpcoming();
+  if (typeof pl2TeinterEvenements === 'function') pl2TeinterEvenements();
 }
 
 function navigate(dir) {

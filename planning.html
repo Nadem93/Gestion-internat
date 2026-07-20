@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Planning — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     /* ── Layout agenda (sidebar + timeline) ── */
     /* Fond aurora (identité INTERNALIS) — ressort à travers les cartes en verre */
@@ -336,38 +337,42 @@
     @media(prefers-reduced-motion:reduce){.pl-week::before{animation:none}}
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-        <div class="header-title">Agenda</div>
+    <div class="v2-shell" style="max-width:none;margin:22px 24px">
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Agenda</div>
+        <div class="v2-top-title">Planning</div>
       </div>
-      <div class="header-right">
-        <button class="btn btn-accent btn-add-resident" onclick="quickAddEvent(dateStr(currentDate),'')" title="Nouvel événement" aria-label="Nouvel événement">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-      </div>
-    </header>
-
-    <main class="content">
-      <!-- Nav calendrier -->
-      <div class="pl-nav" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
-        <button class="btn btn-outline btn-sm" id="prevBtn">&#8592;</button>
-        <h2 id="calTitle" style="font-size:1.1rem;font-weight:700;min-width:220px;text-align:center"></h2>
-        <button class="btn btn-outline btn-sm" id="nextBtn">&#8594;</button>
-        <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
-        <div class="pl-search-wrap" style="margin-left:auto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+        <div class="pl-search-wrap search-box" style="width:240px;max-width:100%">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" id="searchEvent" placeholder="Rechercher…" autocomplete="off"/>
         </div>
         <select id="filterEventResident" style="width:auto"><option value="">Tous les résidents</option></select>
+        <button class="btn btn-accent btn-sm btn-add-resident" onclick="quickAddEvent(dateStr(currentDate),'')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="btn-add-label">Nouvel événement</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="v2-body">
+      <div class="v2-pl-nav">
+        <div style="display:flex;align-items:center;gap:4px">
+          <button class="v2-pl-nav-b" id="prevBtn" title="Précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="v2-pl-nav-b" id="nextBtn" title="Suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        <h2 class="v2-pl-titre" id="calTitle"></h2>
+        <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
+        <div class="pl-legend" id="typeLegend" style="margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap"></div>
       </div>
 
-      <div class="pl-layout">
-        <aside class="pl-sidebar" id="planningSidebar"></aside>
-        <div class="pl-content">
-          <div class="pl-legend" id="typeLegend"></div>
+      <div class="v2-pl-body">
+        <div style="min-width:0">
           <div id="calContainer"></div>
 
           <!-- Vue liste -->
@@ -378,8 +383,13 @@
             </div>
           </div>
         </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div id="planningSidebar"></div>
+          <div class="v2-blk" id="plUpcoming"></div>
+        </div>
       </div>
-    </main>
+    </div>
+    </div>
   </div>
 </div>
 
@@ -582,6 +592,7 @@
 <script src="js/planning-supabase.js"></script>
 <script src="js/activites-supabase.js"></script>
 <script src="js/planning.js"></script>
+<script src="js/planning-v2.js"></script>
 <script>
 // ── Panneau gauche (aperçu) du modal « Nouvel évènement » ──
 const _MEV_ICONS = { activite:'🎨', rdv:'🏥', sortie:'🚶', reunion:'👥', avenant:'📄', projet:'⭐', evaluation:'📊', autre:'📌' };

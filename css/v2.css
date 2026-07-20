@@ -1103,3 +1103,76 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 .v2-jr-sum-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800;
   line-height: 1; color: #fff; }
 .v2-jr-sum-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── AGENDA / PLANNING ────────────────────────────────────────────── */
+.v2-pl-body { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .v2-pl-body { grid-template-columns: 1fr; } }
+.v2-pl-nav { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.v2-pl-nav-b { width: 34px; height: 34px; border-radius: 9px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5); }
+.v2-pl-nav-b:hover { background: var(--v2-s-hover); color: #fff; }
+.v2-pl-nav-b svg { width: 16px; height: 16px; }
+.v2-pl-titre { font-family: var(--v2-display); font-size: 15px; font-weight: 700; color: #fff;
+  min-width: 210px; text-align: center; }
+
+/* Grille hebdomadaire — restylage des classes rendues par js/planning.js */
+body.v2 #calContainer { background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: 18px; overflow: hidden; }
+body.v2 .pl-week, body.v2 .pl-week-head, body.v2 .pl-week-body { background: transparent; }
+body.v2 .pl-week-head { border-bottom: 1px solid var(--v2-b-ctrl); }
+body.v2 .plh-day { border-left: 1px solid var(--v2-b-soft); }
+body.v2 .plh-dow { font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--v2-t7); }
+body.v2 .plh-num { font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: var(--v2-t2); }
+body.v2 .plh-year { color: var(--v2-t8); }
+body.v2 .pl-day { border-left: 1px solid var(--v2-b-soft); background-image:
+  repeating-linear-gradient(to bottom, transparent 0, transparent 51px, rgba(255,255,255,.05) 52px); }
+body.v2 .pl-time-col { color: var(--v2-t8); }
+body.v2 .pl-time-col > * { font-size: 10.5px; font-weight: 600; color: var(--v2-t8); }
+body.v2 .pl-ev { border-radius: 8px; background: color-mix(in srgb, var(--ec, #6366f1) 17%, #0e1c31);
+  border: 1px solid color-mix(in srgb, var(--ec, #6366f1) 34%, transparent);
+  border-left: 3px solid var(--ec, #6366f1); }
+body.v2 .pl-ev-time { font-size: 10px; font-weight: 600; color: var(--ec, #a5b4fc); }
+body.v2 .pl-ev-title { font-size: 11px; font-weight: 700; color: var(--v2-t2); }
+body.v2 .pl-now { background: var(--v2-danger); }
+
+/* Légende cliquable */
+body.v2 .lg-chip { display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+  color: var(--v2-t4); background: var(--v2-s-ctrl); border: 1px solid rgba(255,255,255,.1); }
+body.v2 .lg-chip:hover { color: #fff; }
+body.v2 .lg-chip.off { opacity: .38; }
+body.v2 .lg-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* Mini-calendriers du rail */
+body.v2 .mini-cal { background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: 18px; padding: 16px; }
+body.v2 .mc-title { font-family: var(--v2-display); font-size: 13px; font-weight: 700; color: var(--v2-t2); }
+body.v2 .mg-cell { border-radius: 7px; font-size: 11px; color: var(--v2-t5); }
+body.v2 .mg-cell.out { color: var(--v2-t9); }
+body.v2 .mg-cell.today { background: var(--v2-indigo); color: #fff; font-weight: 700; }
+body.v2 .mg-cell.sel, body.v2 .mg-cell.on { background: var(--v2-s-active); color: #fff; font-weight: 600; }
+body.v2 .mini-cal-head { color: var(--v2-t9); font-size: 9.5px; font-weight: 700; }
+
+/* Prochains événements */
+.v2-pl-up { display: flex; gap: 11px; align-items: flex-start; }
+.v2-pl-up-d { width: 42px; flex-shrink: 0; text-align: center; }
+.v2-pl-up-j { font-size: 10.5px; font-weight: 700; color: var(--pc); }
+.v2-pl-up-h { font-size: 10.5px; color: var(--v2-t7); }
+.v2-pl-up-b { flex: 1; min-width: 0; padding-left: 11px; border-left: 2px solid var(--pc); }
+.v2-pl-up-t { font-size: 12px; font-weight: 600; color: var(--v2-t2); line-height: 1.3; }
+.v2-pl-up-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+
+/* La grille se dimensionnait via .pl-content, supprimé par la coquille V2 :
+   on la force à occuper toute sa colonne. */
+body.v2 #calContainer > * { width: 100%; }
+body.v2 .pl-week, body.v2 .pl-week-head, body.v2 .pl-week-body,
+body.v2 .pl-days, body.v2 .plm-cell { width: 100%; }
+body.v2 .pl-week-head, body.v2 .pl-days {
+  display: grid; grid-template-columns: 52px repeat(7, 1fr);
+}
+/* En-tête de mini-calendrier : dégradé clair hérité → surface sombre. */
+body.v2 #planningSidebar .mini-cal-head,
+body.v2 #planningSidebar [class*="mc-"] { background: transparent !important; }
+body.v2 #planningSidebar .mc-title { color: var(--v2-t2) !important; }
