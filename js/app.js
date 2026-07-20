@@ -160,6 +160,13 @@ function _isDarkColor(hex) {
 }
 
 function applyEtabBackground() {
+  // Pages migrées au design V2 (body.v2) : le thème sombre possède le fond.
+  // Sans cette sortie, le dégradé clair posé ici en inline « !important »
+  // l'emporterait sur toute règle de css/v2.css.
+  if (document.body.classList.contains('v2')) {
+    document.body.style.removeProperty('background');
+    return;
+  }
   const etab = getCurrentEtab();
   if (!etab) return;
   document.body.classList.remove('etab-dark-bg');
