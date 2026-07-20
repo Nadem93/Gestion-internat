@@ -567,3 +567,142 @@ body.v2 .v2-res-ico a {
 }
 body.v2 .v2-res-ico a svg { width: 15px; height: 15px; }
 body.v2 .v2-res-ico a:hover { background: color-mix(in srgb, var(--bc, #818cf8) 30%, transparent) !important; }
+
+/* ── FICHE RÉSIDENT (dossier usager) ─────────────────────────────── */
+.v2-back {
+  display: inline-flex; align-items: center; gap: 9px; height: 40px;
+  padding: 0 15px 0 12px; border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t4); font-size: 13px; font-weight: 600; flex-shrink: 0;
+}
+.v2-back:hover { background: rgba(255,255,255,.09); color: var(--v2-t2); }
+.v2-back svg { width: 16px; height: 16px; }
+
+/* Bandeau d'identité */
+.v2-hero-res {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  padding: 20px 24px; border-radius: var(--v2-r-card);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rc, #818cf8) 13%, transparent), var(--v2-s-alt));
+  border: 1px solid var(--v2-b-ctrl);
+}
+.v2-hero-av {
+  width: 74px; height: 74px; border-radius: var(--v2-r-card); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-size: 25px; font-weight: 800; color: #fff;
+  box-shadow: 0 10px 28px -8px color-mix(in srgb, var(--rc, #818cf8) 53%, transparent);
+}
+.v2-hero-av img { width: 100%; height: 100%; object-fit: cover; }
+.v2-hero-nom { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+.v2-hero-meta { font-size: 12.5px; color: var(--v2-t5); margin-top: 6px; }
+.v2-facts { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+.v2-fact { min-width: 118px; padding: 10px 14px; border-radius: var(--v2-r-sm);
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b); }
+.v2-fact-k { font-size: 10px; color: var(--v2-t8); text-transform: uppercase;
+  letter-spacing: .05em; margin-bottom: 4px; }
+.v2-fact-v { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
+
+/* Onglets */
+.v2-tabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 18px 0 14px; }
+.v2-tab {
+  height: 34px; padding: 0 15px; display: inline-flex; align-items: center;
+  border-radius: var(--v2-r-chip); font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; color: var(--v2-t5);
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+}
+.v2-tab:hover { background: var(--v2-s-hover); color: var(--v2-t3); }
+.v2-tab.on { color: #fff; background: var(--v2-s-active); border-color: var(--v2-b-active); }
+
+/* Corps deux colonnes */
+.v2-fiche { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+.v2-fiche-main, .v2-fiche-rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.v2-fiche-rail { gap: 16px; }
+@media (max-width: 1080px) { .v2-fiche { grid-template-columns: 1fr; } }
+
+/* Bloc générique de la maquette */
+.v2-blk { background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 20px 22px; }
+.v2-blk-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.v2-blk-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.v2-blk-lien { margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--v2-indigo-light); }
+.v2-blk-sub { font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--v2-t8); margin-bottom: 10px; }
+.v2-rail-blk { padding: 18px 20px; }
+.v2-rail-blk .v2-blk-t { font-size: 12.5px; }
+.v2-blk-vide { font-size: 12px; color: var(--v2-t7); padding: 4px 0; }
+
+/* Puce colorée (badge léger) */
+.v2-pill { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  background: color-mix(in srgb, var(--pc, #818cf8) 11%, transparent); color: var(--pc, #818cf8); }
+.v2-chip { font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: var(--v2-r-badge);
+  background: color-mix(in srgb, var(--pc, #818cf8) 9%, transparent); color: var(--pc, #818cf8); }
+
+/* Objectifs (projet personnalisé) */
+.v2-objs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 26px; }
+@media (max-width: 780px) { .v2-objs { grid-template-columns: 1fr; } }
+.v2-obj-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.v2-obj-l { font-size: 12.5px; color: var(--v2-t3); }
+.v2-obj-p { margin-left: auto; font-size: 12px; font-weight: 700; }
+.v2-obj-n { font-size: 10.5px; color: var(--v2-t7); margin-top: 6px; }
+.v2-prog { height: 8px; border-radius: 5px; background: rgba(255,255,255,.08); overflow: hidden; }
+.v2-prog > span { display: block; height: 100%; border-radius: 5px; }
+
+/* Suivi médical */
+.v2-med2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 780px) { .v2-med2 { grid-template-columns: 1fr; } }
+.v2-line { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft); border-radius: 11px; }
+.v2-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.v2-line-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.v2-line-m { margin-left: auto; font-size: 11px; color: var(--v2-t6); }
+
+/* Timeline transmissions */
+.v2-tl2-row { display: flex; gap: 14px; }
+.v2-tl2-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.v2-tl2-dot { width: 11px; height: 11px; border-radius: 50%; margin-top: 4px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); }
+.v2-tl2-bar { flex: 1; width: 2px; background: rgba(255,255,255,.09); }
+.v2-tl2-b { padding-bottom: 16px; min-width: 0; }
+.v2-tl2-t { font-size: 12.5px; font-weight: 700; color: var(--v2-t2); }
+.v2-tl2-h { font-size: 10.5px; color: var(--v2-t7); }
+.v2-tl2-x { font-size: 12px; color: var(--v2-t4); line-height: 1.5; margin-top: 4px; }
+
+/* Rail : état civil */
+.v2-kv { display: flex; align-items: baseline; gap: 12px; }
+.v2-kv-k { font-size: 11px; color: var(--v2-t8); width: 96px; flex-shrink: 0; }
+.v2-kv-v { font-size: 12px; font-weight: 600; color: var(--v2-t2); text-align: right; margin-left: auto; }
+
+/* Rail : contacts */
+.v2-ct { display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft); border-radius: var(--v2-r-ctrl); }
+a.v2-ct:hover { background: var(--v2-s-hover); border-color: rgba(255,255,255,.14); }
+.v2-ct-av { width: 34px; height: 34px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #0a1728; }
+.v2-ct-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2-ct-r { font-size: 11px; color: var(--v2-t6); }
+
+/* Rail : documents */
+.v2-doc { display: flex; align-items: center; gap: 10px; }
+.v2-doc-l { font-size: 12px; color: var(--v2-t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v2-doc-d { margin-left: auto; font-size: 10.5px; color: var(--v2-t7); flex-shrink: 0; }
+
+/* Rail : rendez-vous */
+.v2-appt { display: flex; align-items: center; gap: 12px; }
+.v2-appt-d { width: 44px; flex-shrink: 0; text-align: center; border-radius: var(--v2-r-chip);
+  padding: 6px 0; background: color-mix(in srgb, var(--pc, #818cf8) 11%, transparent); }
+.v2-appt-j { font-size: 15px; font-weight: 800; line-height: 1; color: var(--pc, #818cf8); }
+.v2-appt-m { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--pc, #818cf8); }
+.v2-appt-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.v2-appt-s { font-size: 11px; color: var(--v2-t6); }
+
+/* Cartes héritées : les en-têtes sont teintés en inline vers du blanc
+   (color-mix(... , #fff)). On les ramène sur une surface sombre en gardant
+   la couleur d'accent du titre. */
+body.v2 .card > .card-header[style*="color-mix"] {
+  background: var(--v2-s-alt) !important;
+  border-bottom: 1px solid var(--v2-b);
+}
+body.v2 .itab-bar { border-bottom-color: var(--v2-b); }
+body.v2 .itab { color: var(--v2-t6); }
+body.v2 .itab.active { color: var(--v2-t2); }

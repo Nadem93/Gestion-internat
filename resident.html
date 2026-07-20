@@ -4,7 +4,8 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Fiche résident — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     /* Boutons de navigation par catégorie (carte Documents) */
     .docnav-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
@@ -12,12 +13,6 @@
     .docnav:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,#fff)}
     .docnav.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 32%,transparent)}
     .docnav.active .badge{background:rgba(255,255,255,.28);color:#fff}
-    /* En-tête riche : menu ⋮ + masquage des boutons dupliqués de la barre de page */
-    .hdr-menu-item{display:block;width:100%;text-align:left;padding:.6rem .9rem;background:none;border:none;font:inherit;font-size:.83rem;color:var(--text);cursor:pointer}
-    .hdr-menu-item:hover{background:var(--g50,#f1f5f9)}
-    #btnDownload, #btnIaSynthese, #btnEdit{display:none !important}
-    .hdr-grid{display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr) minmax(0,2.6fr);align-items:start}
-    @media (max-width:820px){.hdr-grid{grid-template-columns:1fr;gap:1rem}.hdr-grid > div{border-left:none !important;padding:0 1.25rem !important}.hdr-grid > div + div{border-top:1px solid var(--border);padding-top:1rem !important}}
     /* Onglets internes (cartes Médical & Plan de soins) */
     .itab-bar{display:flex;gap:.1rem;border-bottom:1px solid var(--border);flex-wrap:wrap;--itab-color:var(--accent)}
     .itab{font:inherit;font-size:.74rem;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;padding:.35rem .6rem;cursor:pointer;margin-bottom:-1px;white-space:nowrap}
@@ -131,26 +126,36 @@
     }
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title" id="pageTitle">Fiche résident</div></div>
-      <div class="header-right">
+    <div class="v2-shell">
+      <div class="v2-top no-print">
+        <a class="v2-back" href="residents.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>Résidents
+        </a>
+        <div style="line-height:1.15;min-width:0">
+          <div class="v2-eyebrow">INTERNALIS · Dossier usager</div>
+          <div class="v2-top-title" id="pageTitle">Fiche résident</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm btn-add-resident" id="btnIaSynthese" onclick="iaOuvrirSynthese(currentResidentId)" title="Synthèse de période assistée par IA (relecture obligatoire avant insertion)">✨<span class="btn-add-label"> Synthèse IA</span></button>
         <button class="btn btn-ghost btn-sm btn-add-resident" id="btnDownload" onclick="printResident()" title="Télécharger la fiche">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span class="btn-add-label"> Télécharger</span>
         </button>
         <button class="btn btn-accent btn-sm btn-add-resident" id="btnEdit" onclick="togglePageEdit()">✎<span class="btn-add-label"> Modifier</span></button>
+        </div>
       </div>
-    </header>
-    <div id="printHeader">
-      <div class="ph-etab" id="phEtab"></div>
-      <div class="ph-title" id="phTitle">Fiche résident</div>
-      <div class="ph-meta" id="phMeta"></div>
+      <div id="printHeader">
+        <div class="ph-etab" id="phEtab"></div>
+        <div class="ph-title" id="phTitle">Fiche résident</div>
+        <div class="ph-meta" id="phMeta"></div>
+      </div>
+      <div class="v2-body">
+        <main class="content" id="residentContent"></main>
+      </div>
     </div>
-    <main class="content" id="residentContent"></main>
   </div>
 </div>
 
@@ -403,7 +408,9 @@
 <script src="js/visites-supabase.js"></script>
 <script src="js/medicaments-supabase.js"></script>
 <script src="js/plan-soins-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
 <script src="js/residents.js"></script>
+<script src="js/resident-v2.js"></script>
 <script>
 let currentResidentId = null;
 let pageEditMode = false;
@@ -461,7 +468,8 @@ function loadResident() {
 
   const r = getResident();
   if (!r) { document.getElementById('residentContent').innerHTML = '<div class="empty"><h3>Résident introuvable</h3><p>Ce résident n\'existe pas ou a été supprimé.</p><a href="residents.html" class="btn btn-accent">← Retour aux résidents</a></div>'; return; }
-  document.getElementById('pageTitle').textContent = `${r.prenom||''} ${r.nom||''}`;
+  // Le nom occupe le bandeau d'identité (maquette V2) : la barre du haut reste « Fiche résident ».
+  document.title = `${r.prenom||''} ${r.nom||''} — Fiche résident`;
 
   const editBtn = document.getElementById('btnEdit');
   if (editBtn) {
@@ -481,84 +489,65 @@ function loadResident() {
 function renderViewMode(r) {
   const type = getStructureType();
   const docs = docResByResident(currentResidentId);
-  const genderLabel = r.genre==='M'?'Masculin':r.genre==='F'?'Féminin':'Autre';
-  const todayPresences = _residentPresencesRange[today()] || {};
-  const presenceStatus = todayPresences[currentResidentId] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-
-  const photoEl = r.photo
-    ? `<img src="${sanitizeUrl(r.photo)}" style="width:96px;height:96px;border-radius:12px;object-fit:cover;border:3px solid #fff;box-shadow:var(--shadow-md)" alt=""/>`
-    : `<div style="width:96px;height:96px;border-radius:12px;background:${safeColor(r.color,'var(--blue)')};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#fff;box-shadow:var(--shadow-md)">${initials(r.prenom,r.nom)}</div>`;
+  const isEnfant = type === 'enfants' || type === 'mixte';
+  const isAdulte = type === 'adultes' || type === 'mixte';
 
   const infoRow = (label, value) => value ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${escHtml(value)}</div></div>` : '';
-
   const infoCard = (color, title, rows) => {
     const content = rows.filter(Boolean).join('');
     if (!content) return '';
     return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #${color} 12%, #fff)"><span class="card-title" style="color:#${color}">${title}</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem"><div class="grid grid-2" style="gap:.75rem">${content}</div></div></div>`;
   };
 
-  const isEnfant = type === 'enfants' || type === 'mixte';
-  const isAdulte = type === 'adultes' || type === 'mixte';
+  // ── Blocs repris de la maquette V2 ──
+  const projetV2  = rv2Projet(r);
+  const medicalV2 = rv2Medical(r);
+  const transV2   = rv2Transmissions(r);
+
+  // ── Cartes historiques, réparties dans les onglets ──
+  const sejour = infoCard('d97706', '🏠 Séjour', [
+    infoRow('Date d\'entrée', r.entree ? formatDate(r.entree) : ''),
+    infoRow('Statut', r.statut), infoRow('Chambre / Unité', r.chambre),
+    infoRow('Référent principal', r.referent), infoRow('Co-référent', r.coReferent)
+  ]);
+  const enfant = isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
+    infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
+    infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
+    infoRow('Organisme', r.organisme), infoRow('N° dossier', r.dossier)
+  ]) : '';
+  const adulte = isAdulte ? infoCard('3b82f6', '💼 Situation administrative & professionnelle', [
+    infoRow('Situation professionnelle', r.situationPro),
+    infoRow('Ressources', (r.ressources || '').toUpperCase()),
+    infoRow('Organisme prescripteur', r.organismeA),
+    infoRow('Situation administrative', r.situationAdmin),
+    infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
+    infoRow('Tuteur / Curateur', r.protectionNom),
+    infoRow('Tél. tuteur / curateur', r.protectionTel)
+  ]) : '';
+  const notes = r.notes ? infoCard('6366f1', '📝 Notes', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.notes)}</p></div>`]) : '';
+  const paire = (a, b) => (a && b) ? `<div class="grid grid-2" style="gap:1rem;align-items:start">${a}${b}</div>` : (a || b);
+
+  // ── Contenu de chaque onglet ──
+  const ONGLETS = {
+    apercu:     () => projetV2 + medicalV2 + transV2 + residentHeaderCard(r) + radarSignauxCard(r),
+    projet:     () => projetV2 + paire(objectifsCard(r), evaluationsCard(r)),
+    medical:    () => medicalV2 + paire(santeCard(r), planSoinsCard(r)),
+    quotidien:  () => planningResidentCard(r) + planningHebdoCard(r)
+                    + paire(sortiesCard(r), activitesCard(r))
+                    + paire(trousseauCard(r), budgetCard(r)),
+    historique: () => transV2 + filDeVieCard(r) + autonomieCard(r),
+    admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
+                    + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r)
+  };
+  const rendu = (ONGLETS[RV2_TAB] || ONGLETS.apercu)();
 
   document.getElementById('residentContent').innerHTML = `
-    ${residentHeaderCard(r)}
-    ${radarSignauxCard(r)}
-    <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
-      ${(() => {
-        const sejour  = infoCard('d97706', '🏠 Séjour', [
-          infoRow('Date d\'entrée', r.entree ? formatDate(r.entree) : ''),
-          infoRow('Statut', r.statut), infoRow('Chambre / Unité', r.chambre),
-          infoRow('Référent principal', r.referent),
-          infoRow('Co-référent', r.coReferent)
-        ]);
-        const enfant  = isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
-          infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
-          infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
-          infoRow('Organisme', r.organisme), infoRow('N° dossier', r.dossier)
-        ]) : '';
-        const adulte  = isAdulte ? infoCard('3b82f6', '💼 Situation administrative & professionnelle', [
-          infoRow('Situation professionnelle', r.situationPro),
-          infoRow('Ressources', (r.ressources||'').toUpperCase()),
-          infoRow('Organisme prescripteur', r.organismeA),
-          infoRow('Situation administrative', r.situationAdmin),
-          infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
-          infoRow('Tuteur / Curateur', r.protectionNom),
-          infoRow('Tél. tuteur / curateur', r.protectionTel)
-        ]) : '';
-        // Séjour | Enfant ou Adulte (premier dispo), l'autre en dessous si mixte
-        if (enfant)
-          return `<div class="grid grid-2" style="gap:1rem;align-items:stretch">${sejour}${enfant}</div>${adulte}`;
-        if (adulte)
-          return `<div class="grid grid-2" style="gap:1rem;align-items:stretch">${sejour}${adulte}</div>`;
-        return sejour;
-      })()}
-      ${planningResidentCard(r)}
-      ${planningHebdoCard(r)}
-      <div class="grid grid-2" style="gap:1rem;align-items:start">${santeCard(r)}${planSoinsCard(r)}</div>
-      <div class="grid grid-2" style="gap:1rem;align-items:start">
-        <div class="no-print">${filDeVieCard(r)}</div>
-        <div class="no-print">
-          <div id="tab-documents">${docsHtml(docs)}</div>
-        </div>
-      </div>
-      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
-      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${trousseauCard(r)}${activitesCard(r)}</div>
-      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${objectifsCard(r)}${evaluationsCard(r)}</div>
-      ${(() => {
-        const notes    = r.notes    ? infoCard('6366f1', '📝 Notes',            [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.notes)}</p></div>`]) : '';
-        const contacts = r.contacts ? infoCard('6366f1', '📞 Contacts d\'urgence', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.contacts)}</p></div>`]) : '';
-        return (notes && contacts)
-          ? `<div class="grid grid-2" style="gap:1rem;align-items:stretch">${notes}${contacts}</div>`
-          : notes + contacts;
-      })()}
-      ${rgpdCard(r)}
-    </div>
-    <div class="no-print" style="display:flex;align-items:center;gap:.75rem;margin:1.5rem 0 1rem;padding:.5rem 0">
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap">TABLEAU DE BORD DU RÉSIDENT</span>
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-    </div>
-    ${autonomieCard(r)}`;
+    ${residentHeroV2(r)}
+    ${rv2TabBar()}
+    <div class="v2-fiche">
+      <div class="v2-fiche-main">${rendu}</div>
+      <div class="v2-fiche-rail no-print">${rv2Rail(r)}</div>
+    </div>`;
   initPageTabs();
   initPageDocUpload(currentResidentId);
 }
@@ -2574,8 +2563,6 @@ function autonomieCard(r) {
   </div>`;
 }
 
-function hdrToggleMenu(e) { if (e) e.stopPropagation(); const m = document.getElementById('hdrMenu'); if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-function hdrCloseMenu() { const m = document.getElementById('hdrMenu'); if (m) m.style.display = 'none'; }
 function _hdrSpark(color, d) {
   return `<svg viewBox="0 0 80 28" preserveAspectRatio="none" style="width:100%;height:22px;display:block"><path d="${d} L80,28 L0,28 Z" fill="${color}" opacity="0.09"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
@@ -2590,15 +2577,9 @@ function _hdrStat(label, num, sub, color, d, onclick) {
     : `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem">${inner}</div>`;
 }
 
-// En-tête riche : hero (avec actions) + carte groupée (perso | séjour | suivi) + bandeau vigilance.
+// Carte « Suivi & Activités » + bandeau de vigilance. L'identité est portée par
+// residentHeroV2() (maquette V2), d'où le retrait de l'ancien hero bleu.
 function residentHeaderCard(r) {
-  if (!window._hdrMenuBound) { window._hdrMenuBound = true; document.addEventListener('click', hdrCloseMenu); }
-  const canEdit = canEditResident();
-  const genderLabel = r.genre === 'M' ? 'Masculin' : r.genre === 'F' ? 'Féminin' : 'Autre';
-  const todayPresences = _residentPresencesRange[today()] || {};
-  const presenceStatus = todayPresences[currentResidentId] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-  const ini = initials(r.prenom, r.nom);
-
   const presences = _residentPresencesRange;
   const planning = _residentPlanningCache;
   const ppeList = DB.get(DB.keys.ppe) || [];
@@ -2620,49 +2601,7 @@ function residentHeaderCard(r) {
     : { c: '#16a34a', bg: '#f0fdf4', bd: '#bbf7d0', txt: 'Situation stable' };
   const solde = getBudgetOps(r).reduce((a, o) => a + (o.type === 'recette' ? Number(o.montant || 0) : -Number(o.montant || 0)), 0);
 
-  const hero = `<div style="position:relative;overflow:hidden;background:linear-gradient(120deg,#3b5bdb,#4263eb 55%,#5c7cfa);border-radius:16px;padding:1.4rem 1.75rem;color:#fff">
-    <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="position:absolute;top:0;right:0;width:55%;height:100%;opacity:.18;pointer-events:none"><path d="M0,120 C80,80 140,160 220,110 C300,60 340,120 400,70" fill="none" stroke="#fff" stroke-width="2"/><path d="M0,150 C80,110 140,190 220,140 C300,90 340,150 400,100" fill="none" stroke="#fff" stroke-width="1.5"/></svg>
-    <div style="display:flex;align-items:center;gap:1.2rem;position:relative;flex-wrap:wrap">
-      <div style="position:relative;flex-shrink:0">
-        <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.4rem;color:#fff">${ini}</div>
-        <span style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#22c55e;border:2.5px solid #4263eb"></span>
-      </div>
-      <div style="flex:1;min-width:140px">
-        <h1 style="font-size:1.7rem;font-weight:800;color:#fff;margin:0">${escHtml(r.prenom || '')} ${escHtml(r.nom || '')}</h1>
-        <div style="display:flex;gap:.5rem;margin-top:.55rem;flex-wrap:wrap">
-          ${statusBadge(presenceStatus)}
-          ${r.genre ? `<span class="badge" style="background:rgba(255,255,255,.22);color:#fff">${genderLabel}</span>` : ''}
-        </div>
-      </div>
-      <div class="no-print" style="display:flex;gap:.5rem;align-items:center;flex-shrink:0">
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="printResident()">⬇ Télécharger</button>
-        ${canEdit ? `<button class="btn btn-sm" style="background:#fff;color:#3b5bdb;border:none;font-weight:700" onclick="togglePageEdit()">✎ Modifier</button>` : ''}
-        <div style="position:relative">
-          <button class="btn btn-sm" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);padding:.4rem .6rem" onclick="hdrToggleMenu(event)" title="Plus d'actions">⋮</button>
-          <div id="hdrMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);min-width:200px;z-index:50;overflow:hidden">
-            <button class="hdr-menu-item" onclick="hdrCloseMenu();iaOuvrirSynthese(currentResidentId)">✨ Synthèse IA</button>
-            <button class="hdr-menu-item" onclick="hdrCloseMenu();exportResidentData()">⬇ Exporter les données</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  const perso = `<div style="padding:0 1.25rem">
-    <div style="font-size:.8rem;font-weight:700;color:#3b82f6;margin-bottom:.7rem">Informations personnelles</div>
-    <div style="display:flex;flex-direction:column;gap:.7rem">
-      <div><div style="font-size:.7rem;color:var(--muted)">🎂 Naissance</div><div style="font-weight:700;font-size:.9rem">${r.dob ? formatDate(r.dob) : '—'}</div>${r.dob ? `<div style="font-size:.68rem;color:var(--muted)">${age(r.dob)} ans</div>` : ''}</div>
-      <div><div style="font-size:.7rem;color:var(--muted)">⚧ Genre</div><div style="font-weight:700;font-size:.9rem">${genderLabel}</div></div>
-    </div>
-  </div>`;
-  const sejour = `<div style="padding:0 1.25rem;border-left:1px solid var(--border)">
-    <div style="font-size:.8rem;font-weight:700;color:#16a34a;margin-bottom:.7rem">Informations séjour</div>
-    <div style="display:flex;flex-direction:column;gap:.7rem">
-      <div><div style="font-size:.7rem;color:var(--muted)">🚪 Entrée</div><div style="font-weight:700;font-size:.9rem">${r.entree ? formatDate(r.entree) : '—'}</div><div style="font-size:.68rem;color:var(--muted)">Date d'admission</div></div>
-      <div><div style="font-size:.7rem;color:var(--muted)">🏠 Chambre</div><div style="font-weight:700;font-size:.9rem">${r.chambre || '—'}</div><div style="font-size:.68rem;color:var(--muted)">Espace de vie</div></div>
-    </div>
-  </div>`;
-  const suivi = `<div style="padding:0 1.25rem;border-left:1px solid var(--border)">
+  const suivi = `<div style="padding:0 1.25rem">
     <div style="font-size:.8rem;font-weight:700;color:#8b5cf6;margin-bottom:.7rem">Suivi &amp; Activités</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:.6rem">
       ${_hdrStat('Absences (mois)', monthAbsences, pct + '%', '#ef4444', 'M0,14 C10,8 18,20 28,14 C38,8 46,18 56,10 C66,4 74,14 80,8')}
@@ -2671,9 +2610,7 @@ function residentHeaderCard(r) {
       ${_hdrStat('Documents', docCount, 'Fichiers attachés', '#8b5cf6', 'M0,20 C12,18 22,16 34,14 C46,12 56,11 68,8 C74,7 78,6 80,5', "document.getElementById('tab-documents') && document.getElementById('tab-documents').scrollIntoView({behavior:'smooth',block:'center'})")}
     </div>
   </div>`;
-  const grouped = `<div class="card" style="margin-top:-14px;position:relative;z-index:2;padding:1.2rem 0;border-radius:14px">
-    <div class="hdr-grid">${perso}${sejour}${suivi}</div>
-  </div>`;
+  const grouped = `<div class="card" style="padding:1.2rem 0;border-radius:14px">${suivi}</div>`;
 
   const band = `<div class="no-print" onclick="document.getElementById('radarCard') && document.getElementById('radarCard').scrollIntoView({behavior:'smooth',block:'center'})" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;background:${vig.bg};border:1px solid ${vig.bd};border-radius:12px;padding:.85rem 1.25rem;margin:1rem 0 1.5rem;cursor:pointer">
     <div style="display:flex;align-items:center;gap:.5rem;color:${vig.c};font-weight:700;font-size:.9rem">🛡 Radar de vigilance</div>
@@ -2682,7 +2619,7 @@ function residentHeaderCard(r) {
     <div style="margin-left:auto;display:flex;align-items:center;gap:.35rem;color:${vig.c};font-weight:700;font-size:.85rem">${vig.txt} <span style="font-size:1.1rem">›</span></div>
   </div>`;
 
-  return hero + grouped + band;
+  return grouped + band;
 }
 
 function renderStatCards(r) {
@@ -3364,6 +3301,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     _residentActCatalogue     = _residentActCatalogue     || [];
     _residentTransmissionsAll = _residentTransmissionsAll || [];
     await _safe('documents', loadDocResCache());
+    // L'unité vient de la chambre occupée, le téléphone du référent de la fiche employé.
+    _residentChambres = (await _safe('chambres', (typeof sbGetChambres === 'function' ? sbGetChambres() : Promise.resolve([])))) || [];
+    _residentEmployes = (await _safe('employés', (typeof sbGetEmployes === 'function' ? sbGetEmployes() : Promise.resolve([])))) || [];
     // Hydrate en localStorage les stores migrés encore lus via DB.get sur la fiche
     // (incidents, ppe, nuits, visites, médicaments) — les sbGet* ne cachent pas d'eux-mêmes.
     const _hy = await Promise.all([
@@ -3406,9 +3346,21 @@ function printResident() {
     phMeta.textContent = parts.join(' · ');
   }
 
+  // Les onglets ne découpent que l'affichage : une fiche imprimée doit rester complète.
+  const ongletCourant = RV2_TAB;
+  const zone = document.getElementById('residentContent');
+  const tout = RV2_TABS.map(t => { RV2_TAB = t.k; renderViewMode(r); return zone.innerHTML; });
+  RV2_TAB = ongletCourant;
+  renderViewMode(r);
+  const sauvegarde = zone.innerHTML;
+  zone.innerHTML = tout.join('');
+
   document.title = `Fiche — ${name}`;
   window.print();
   document.title = 'Fiche résident — FTR';
+  zone.innerHTML = sauvegarde;
+  initPageTabs();
+  initPageDocUpload(currentResidentId);
 }
 </script>
 </body>
