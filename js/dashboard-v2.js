@@ -18,6 +18,20 @@ function _dv2Date(d) { return (typeof formatDate === 'function') ? formatDate(d)
 function _dv2Days(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
 function _dv2Shift(n) { const d = new Date(_dv2Today()); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
 function _dv2Nom(r) { return `${r?.prenom || ''} ${r?.nom || ''}`.trim() || 'Résident'; }
+
+// Périmètre référent : mêmes règles de rapprochement que l'ancien _dashScope
+// (nom du compte comparé à referent / coReferent, casse et espaces normalisés).
+function _dv2MyName() {
+  try { const s = Auth.getSession(); return s ? `${s.prenom || ''} ${s.nom || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') : ''; }
+  catch (e) { return ''; }
+}
+function _dv2MesReferes(list) {
+  const me = _dv2MyName();
+  if (!me) return null;
+  const n = x => (x || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const mine = (list || []).filter(r => n(r.referent) === me || n(r.coReferent) === me);
+  return mine.length ? mine : null;   // null = référent de personne → repli sur tout l'établissement
+}
 function _dv2Ini(r) { return ((r?.prenom || '')[0] || '') + ((r?.nom || '')[0] || ''); }
 
 // Enveloppe de carte bento
@@ -465,8 +479,11 @@ function _dv2Annonces() {
 }
 
 function _dv2Residents() {
-  const list = DV2.data.residents.filter(r => r.statut !== 'sorti');
-  if (!list.length) return _dv2Card({ title: 'Résidents — aperçu', icon: '👤', color: '#10b981', body: _dv2Empty('Aucun résident.') });
+  const actifs = DV2.data.residents.filter(r => r.statut !== 'sorti');
+  const mine = _dv2MesReferes(actifs);
+  const list = mine || actifs;
+  const titre = mine ? 'Mes référés — aperçu' : 'Résidents — aperçu';
+  if (!list.length) return _dv2Card({ title: titre, icon: '👤', color: '#10b981', body: _dv2Empty('Aucun résident.') });
   const S = { present: ['Présent', 'v2-b-ok'], absent: ['Absent', 'v2-b-danger'], rdv: ['RDV ext.', 'v2-b-info'],
               sortie: ['Sortie', 'v2-b-info'], hopital: ['Hôpital', 'v2-b-warn'] };
   const body = `<div class="v2-g v2-g4" style="gap:10px">${list.map(r => {
@@ -478,7 +495,8 @@ function _dv2Residents() {
         <span class="v2-row-meta">${r.chambre ? 'Ch. ' + _dv2Esc(r.chambre) : '—'}</span></span>
       <span class="v2-badge ${st[1]}">${st[0]}</span></a>`;
   }).join('')}</div>`;
-  return _dv2Card({ title: 'Résidents — aperçu', icon: '👤', color: '#10b981', meta: `${list.length}`, body });
+  return _dv2Card({ title: titre, icon: '👤', color: '#10b981',
+    meta: mine ? `${list.length} référé${list.length > 1 ? 's' : ''}` : `${list.length}`, body });
 }
 
 function _dv2Vehicules() {
