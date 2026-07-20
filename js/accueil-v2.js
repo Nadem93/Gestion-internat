@@ -76,7 +76,7 @@ async function initAccueilV2() {
   const call = async (fn, ...a) => { try { return (typeof window[fn] === 'function') ? await window[fn](...a) : null; } catch (e) { console.warn('[accV2]', fn, e); return null; } };
   const t = _av2Today();
 
-  host.innerHTML = _av2Hero() + _av2Kpis(true) + _av2Grid() + `<div id="accV2Bas" style="margin-top:16px"></div>`;
+  host.innerHTML = _av2Hero() + _av2Grid() + `<div id="accV2Bas" style="margin-top:16px"></div>`;
   if (typeof applyPermissions === 'function') { try { applyPermissions(); } catch (e) { console.warn(e); } }
   _av2Roles();
 
@@ -87,7 +87,6 @@ async function initAccueilV2() {
   AV2.data = { presDay: presDay || {}, incidents: incidents || [], planning: planning || [], shifts: shifts || [],
     transmissions: transmissions || [], journal: journal || [], conges: conges || [] };
 
-  const k = document.getElementById('accV2Kpis'); if (k) k.outerHTML = _av2Kpis(false);
   const b = document.getElementById('accV2Bas');
   if (b) b.innerHTML = `<div class="v2-g v2-g2">${_av2Jour()}${_av2Activite()}</div>
     <div class="v2-sep" style="margin-top:22px"><span class="v2-sep-txt">Actions rapides</span><span class="v2-sep-line"></span></div>
@@ -112,20 +111,6 @@ function _av2Hero() {
   return `<div style="margin-bottom:22px">
     <div class="v2-hero-eyebrow">${_av2(d)}${etab ? ' · ' + _av2(etab) : ''}</div>
     <h1 class="v2-hero-h1">Bonjour, ${_av2(s?.prenom || s?.username || '')}</h1></div>`;
-}
-
-function _av2Kpis(vide) {
-  const D = AV2.data, t = _av2Today();
-  const v = x => vide ? '—' : x;
-  const K = [
-    { n: v(Object.values(D.presDay || {}).filter(p => (p.statut || '') === 'present').length), l: 'Résidents présents', c: '#22d3ee', ic: 'users' },
-    { n: v((D.incidents || []).filter(i => i.statut && i.statut !== 'resolu' && i.statut !== 'clos').length), l: 'Incidents ouverts', c: '#ef4444', ic: 'alert' },
-    { n: v((D.planning || []).filter(p => p.date === t).length), l: 'Événements du jour', c: '#818cf8', ic: 'cal' },
-    { n: v((D.shifts || []).filter(s => s.date === t).length), l: 'En poste', c: '#10b981', ic: 'users' }
-  ];
-  return `<div class="v2-kgrid" id="accV2Kpis">${K.map(k => `<div class="v2-k">
-    <span class="v2-k-ico" style="background:${k.c}22">${_svg(IC[k.ic], k.c, 22)}</span>
-    <span><span class="v2-k-n">${k.n}</span><span class="v2-k-l">${k.l}</span></span></div>`).join('')}</div>`;
 }
 
 function _av2Grid() {
