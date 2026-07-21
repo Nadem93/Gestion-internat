@@ -1240,3 +1240,27 @@ body.v2 .v2-ico > svg, body.v2 .v2-act-ico > svg, body.v2 .v2-q-ico > svg {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .40));
 }
 body.v2 .v2-q:hover .v2-q-ico { transform: translateY(-1px); transition: transform .15s; }
+
+/* Tuile de module allongée : le lien principal occupe la ligne, une rangée de
+   raccourcis s'ajoute à droite. Le conteneur porte les attributs de droits,
+   pour que le module entier disparaisse quand la permission manque. */
+.v2-mod-wrap { position: relative; display: flex; align-items: stretch; gap: 6px;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-sub); overflow: hidden;
+  transition: transform .15s, border-color .15s, background .15s; }
+.v2-mod-wrap:hover { transform: translateY(-2px); background: var(--v2-s-hover);
+  border-color: color-mix(in srgb, var(--mc, #818cf8) 45%, transparent); }
+.v2-mod-wrap .v2-mod { flex: 1; min-width: 0; background: none; border: none;
+  border-radius: 0; transform: none; }
+.v2-mod-wrap .v2-mod:hover { transform: none; background: none; }
+.v2-mod-racc { display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  padding: 6px 8px 6px 0; position: relative; z-index: 2; }
+.v2-mod-r { width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--mc, #818cf8) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mc, #818cf8) 26%, transparent); }
+.v2-mod-r:hover { background: color-mix(in srgb, var(--mc, #818cf8) 26%, transparent); }
+.v2-mods { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1400px) { .v2-mods { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 980px)  { .v2-mods { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .v2-mods { grid-template-columns: 1fr; } }
