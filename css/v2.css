@@ -492,9 +492,28 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
                  border-radius: 50%; background: var(--mc, #818cf8); opacity: .13; filter: blur(24px); pointer-events: none; }
 .v2-mod:hover { transform: translateY(-2px); background: var(--v2-s-hover);
                 border-color: color-mix(in srgb, var(--mc, #818cf8) 45%, transparent); }
+/* Pastille d'icône en relief : dégradé teinté par la couleur du module, liseré
+   clair en haut (lumière rasante), ombre portée courte en bas, et un reflet
+   interne pour donner l'épaisseur. La couleur vient de --mc, posée sur .v2-mod. */
 .v2-mod-ico { width: 38px; height: 38px; flex-shrink: 0; border-radius: var(--v2-r-chip);
               position: relative; z-index: 1;
-              display: flex; align-items: center; justify-content: center; }
+              display: flex; align-items: center; justify-content: center;
+              background-image: linear-gradient(160deg,
+                color-mix(in srgb, var(--mc, #818cf8) 30%, transparent) 0%,
+                color-mix(in srgb, var(--mc, #818cf8) 12%, transparent) 55%,
+                rgba(0, 0, 0, .18) 100%) !important;
+              border: 1px solid color-mix(in srgb, var(--mc, #818cf8) 30%, transparent);
+              box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .22),
+                inset 0 -1px 2px rgba(0, 0, 0, .30),
+                0 2px 4px -1px rgba(0, 0, 0, .45);
+              transition: box-shadow .15s, transform .15s; }
+.v2-mod-ico > svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .45)); }
+.v2-mod:hover .v2-mod-ico { transform: translateY(-1px);
+              box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .30),
+                inset 0 -1px 2px rgba(0, 0, 0, .30),
+                0 4px 8px -2px color-mix(in srgb, var(--mc, #818cf8) 40%, transparent); }
 .v2-mod-txt { position: relative; z-index: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .v2-mod-lbl { font-size: 13px; font-weight: 700; line-height: 1.2;
               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1205,3 +1224,19 @@ body.v2 .plm-dl-t { color: var(--v2-t2) !important; }
 body.v2 .plm-dl-s, body.v2 .plm-dl-empty { color: var(--v2-t7) !important; }
 body.v2 .pl-day.today, body.v2 .plh-day.today {
   background-color: color-mix(in srgb, var(--v2-indigo) 8%, transparent) !important; }
+
+/* Même relief sur les autres pastilles d'icône de l'accueil (cartes du bas et
+   actions rapides). Elles portent leur couleur en inline via background:XXX22,
+   d'où le --ic posé par le rendu et le repli sur une teinte neutre. */
+body.v2 .v2-ico, body.v2 .v2-act-ico, body.v2 .v2-q-ico {
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    inset 0 -1px 2px rgba(0, 0, 0, .26),
+    0 2px 4px -1px rgba(0, 0, 0, .40);
+  border: 1px solid rgba(255, 255, 255, .07);
+}
+body.v2 .v2-ico > svg, body.v2 .v2-act-ico > svg, body.v2 .v2-q-ico > svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .40));
+}
+body.v2 .v2-q:hover .v2-q-ico { transform: translateY(-1px); transition: transform .15s; }
