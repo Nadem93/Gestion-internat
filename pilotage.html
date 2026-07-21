@@ -15,10 +15,8 @@
 <div class="v2-shell pl-shell">
 
   <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
-       « Accès rapides » de l'accueil du portail (pl2Cards). Les fonctions de
-       rendu du rail — y compris le repli mémorisé (pl2ToggleSide /
-       pl2RestoreSide) — restent en place mais ne trouvent plus leur hôte et
-       sortent immédiatement. -->
+       « Accès rapides » de l'accueil du portail (pl2Cards). Le code de rendu
+       du rail et son repli mémorisé ont été supprimés avec lui. -->
 
   <!-- ── Panneau principal ── -->
   <div class="pl-main">
@@ -189,7 +187,6 @@
     plTitle.textContent = label || '';
     window.plCurrentPage = page;
     sessionStorage.setItem('pl_last_page', page);
-    if (typeof pl2RenderSide === 'function') pl2RenderSide();
   }
 
   // Ancienne fonction de rendu de l'accueil : elle délègue au module V2,

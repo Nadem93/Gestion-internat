@@ -521,11 +521,20 @@ async function markAllNotifsRead() {
   try {
     const jrn = await sbGetJournalEntries();
     const unreadJ = jrn.filter(en => Array.isArray(en.readBy) && !en.readBy.map(String).includes(uid));
-    for (const en of unreadJ) { en.readBy = [...(en.readBy || []), uid]; await sbSaveJournalEntry(en); }
+    // En file, marquer 30 entrées non lues coûtait 30 allers-retours enchaînés.
+    // Les écritures sont indépendantes : même traitement que les messages
+    // quelques lignes plus haut.
+    await Promise.all(unreadJ.map(en => {
+      en.readBy = [...(en.readBy || []), uid];
+      return sbSaveJournalEntry(en);
+    }));
   } catch (e) { console.error('[markAllNotifsRead] journal', e); }
   closeNotifPanel();
-  try { await _loadAccRhCounts(); } catch (_) {}
-  try { await _loadAccIncidentCount(); } catch (_) {}
+  // Les deux recomptages sont indépendants : une seule vague.
+  await Promise.all([
+    _loadAccRhCounts().catch(() => {}),
+    _loadAccIncidentCount().catch(() => {}),
+  ]);
   if (typeof toast === 'function') toast('Notifications marquées comme lues', 'success');
 }
 

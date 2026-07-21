@@ -142,7 +142,6 @@ function _dsPieceErr(e) {
 
 // ─── Entrée principale ────────────────────────────────────────────────────
 function ds2Render() {
-  ds2RenderSide();
   const el = document.getElementById('dsWelcome');
   if (el) el.innerHTML = ds2Hello() + ds2Kpis() + ds2Cards() + ds2Bento();
   ds2Meta();
@@ -185,7 +184,6 @@ async function ds2Load() {
   const el = document.getElementById('dsWelcome');
   if (el) el.innerHTML = ds2Hello() + ds2Kpis() + ds2Cards() + ds2Bento();
   ds2Meta();
-  ds2RenderSide();
 }
 
 // ─── Chiffres dérivés des données réelles ─────────────────────────────────
@@ -269,42 +267,6 @@ function ds2Completude() {
       pct, manque
     };
   }).sort((a, b) => a.pct - b.pct || a.nom.localeCompare(b.nom, 'fr'));
-}
-
-// ─── Navigation latérale ──────────────────────────────────────────────────
-function ds2RenderSide() {
-  const host = document.getElementById('dsSideNav');
-  if (!host || !window.DS_NAV) return;
-  const groups = window.DS_GROUPS || [];
-  const nav = window.DS_NAV.filter(window.dsAllowed || (() => true));
-  host.innerHTML = groups.map(g => {
-    const items = nav.filter(e => e.g === g);
-    if (!items.length) return '';
-    return `<div class="ds-grp"><div class="ds-grp-l">${_ds(g)}</div>${items.map(e => `
-      <button type="button" class="ds-it${window.dsCurrentPage === e.page ? ' on' : ''}"
-        data-page="${_ds(e.page)}" data-label="${_ds(e.label)}" title="${_ds(e.label)}"
-        aria-current="${window.dsCurrentPage === e.page ? 'page' : 'false'}"
-        style="--dsc:${_ds(e.c1)};--dsc-sh:${_dsRgba(e.c1, .33)}">
-        <span class="ds-it-ic">${_dsSvg(e.icon, 'currentColor', 15)}</span>
-        <span class="ds-it-l">${_ds(e.label)}</span>
-      </button>`).join('')}</div>`;
-  }).join('');
-
-  const u = document.getElementById('dsSideUser');
-  if (u) {
-    const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-    const prenom = (s && s.prenom) || '', nom = (s && s.nom) || '';
-    const nomComplet = `${prenom} ${nom}`.trim() || (s && s.username) || 'Utilisateur';
-    const ini = (typeof initials === 'function') ? initials(prenom, nom)
-      : nomComplet.slice(0, 2).toUpperCase();
-    const roles = { admin: 'Administrateur', superadmin: 'Super administrateur', educateur: 'Éducateur',
-      infirmier: 'Infirmier', direction: 'Direction', rh: 'Ressources humaines' };
-    u.innerHTML = `<div class="ds-side-av">${_ds(ini)}</div>
-      <div style="line-height:1.2;min-width:0">
-        <div class="ds-side-nom">${_ds(nomComplet)}</div>
-        <div class="ds-side-role">${_ds(roles[s && s.role] || (s && s.role) || '')}</div>
-      </div>`;
-  }
 }
 
 // Bandeau de droite de la barre de titre : « n dossiers actifs »

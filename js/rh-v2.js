@@ -88,7 +88,6 @@ const _rhNomCourt = e => `${(e.prenom || '').charAt(0)}${e.prenom ? '.' : ''} ${
 
 // ─── Entrée principale ────────────────────────────────────────────────────
 function rh2Render() {
-  rh2RenderSide();
   const el = document.getElementById('rhWelcome');
   if (el) el.innerHTML = rh2Hello() + rh2Kpis() + rh2Cards() + rh2Bento();
   rh2Meta();
@@ -99,7 +98,6 @@ function rh2Repaint() {
   const el = document.getElementById('rhWelcome');
   if (el) el.innerHTML = rh2Hello() + rh2Kpis() + rh2Cards() + rh2Bento();
   rh2Meta();
-  rh2RenderSide();
 }
 
 // Chargement des données réelles, puis re-rendu des parties chiffrées
@@ -217,44 +215,6 @@ function rh2Badges() {
   if (st.absencesCours.length) b['absences.html'] = st.absencesCours.length;
   if (st.entretiensRetard.length) b['entretiens.html'] = st.entretiensRetard.length;
   return b;
-}
-
-// ─── Navigation latérale ──────────────────────────────────────────────────
-function rh2RenderSide() {
-  const host = document.getElementById('rhSideNav');
-  if (!host || !window.RH_NAV) return;
-  const groups = window.RH_GROUPS || [];
-  const nav = window.RH_NAV.filter(window.rhAllowed || (() => true));
-  const badges = rh2Badges();
-  host.innerHTML = groups.map(g => {
-    const items = nav.filter(e => e.g === g);
-    if (!items.length) return '';
-    return `<div class="rh-grp"><div class="rh-grp-l">${_rh(g)}</div>${items.map(e => {
-      const n = badges[e.page];
-      return `<button type="button" class="rh-it${window.rhCurrentPage === e.page ? ' on' : ''}"
-        data-page="${_rh(e.page)}" data-label="${_rh(e.label)}" title="${_rh(e.label)}"
-        aria-current="${window.rhCurrentPage === e.page ? 'page' : 'false'}"
-        style="--rhc:${_rh(e.c1)};--rhc-sh:${_rhRgba(e.c1, .33)}">
-        <span class="rh-it-ic">${e.icon}</span>
-        <span class="rh-it-l">${_rh(e.label)}</span>
-        ${n ? `<span class="rh-it-b">${_rh(n)}</span>` : ''}
-      </button>`;
-    }).join('')}</div>`;
-  }).join('');
-
-  const u = document.getElementById('rhSideUser');
-  if (u) {
-    const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-    const prenom = (s && s.prenom) || '', nom = (s && s.nom) || '';
-    const nomComplet = `${prenom} ${nom}`.trim() || (s && s.username) || 'Utilisateur';
-    const roles = { admin: 'Administrateur', superadmin: 'Super administrateur', educateur: 'Éducateur',
-      infirmier: 'Infirmier', direction: 'Direction', rh: 'Ressources humaines' };
-    u.innerHTML = `<div class="rh-side-av">${_rh(_rhInitiales(prenom, nom) || nomComplet.slice(0, 2).toUpperCase())}</div>
-      <div style="line-height:1.2;min-width:0">
-        <div class="rh-side-nom">${_rh(nomComplet)}</div>
-        <div class="rh-side-role">${_rh(roles[s && s.role] || (s && s.role) || '')}</div>
-      </div>`;
-  }
 }
 
 // Bandeau de droite de la barre de titre : effectif + ETP (donnée réelle)
@@ -514,6 +474,5 @@ document.addEventListener('keydown', ev => {
 });
 
 window.rh2Render = rh2Render;
-window.rh2RenderSide = rh2RenderSide;
 window.rh2CloseTuto = rh2CloseTuto;
 window.rh2OuvrirTuto = rh2OuvrirTuto;

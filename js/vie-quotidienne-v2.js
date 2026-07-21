@@ -64,7 +64,6 @@ const VQ_TEXTURES = { hachee: 'haché', mixee: 'mixé' };
 
 // ─── Entrée principale ────────────────────────────────────────────────────
 function vq2Render() {
-  vq2RenderSide();
   const el = document.getElementById('vqWelcome');
   if (el) el.innerHTML = vq2Hello() + vq2Kpis() + vq2Cards() + vq2Bento();
   vq2Meta();
@@ -97,7 +96,6 @@ async function vq2Load() {
   const el = document.getElementById('vqWelcome');
   if (el) el.innerHTML = vq2Hello() + vq2Kpis() + vq2Cards() + vq2Bento();
   vq2Meta();
-  vq2RenderSide();
 }
 
 // ─── Chiffres dérivés des données réelles ─────────────────────────────────
@@ -146,42 +144,6 @@ function vq2Med() {
       }));
   });
   return out.sort((a, b) => (a.fait - b.fait) || (a.ordre - b.ordre));
-}
-
-// ─── Navigation latérale ──────────────────────────────────────────────────
-function vq2RenderSide() {
-  const host = document.getElementById('vqSideNav');
-  if (!host || !window.VQ_NAV) return;
-  const groups = window.VQ_GROUPS || ['Suivi quotidien', 'Cadre de vie', 'Soins'];
-  const nav = window.VQ_NAV.filter(window.vqAllowed || (() => true));
-  host.innerHTML = groups.map(g => {
-    const items = nav.filter(e => e.g === g);
-    if (!items.length) return '';
-    return `<div class="vq-grp"><div class="vq-grp-l">${_vq(g)}</div>${items.map(e => `
-      <button type="button" class="vq-it${window.vqCurrentPage === e.page ? ' on' : ''}"
-        data-page="${_vq(e.page)}" data-label="${_vq(e.label)}" title="${_vq(e.label)}"
-        aria-current="${window.vqCurrentPage === e.page ? 'page' : 'false'}"
-        style="--vqc:${_vq(e.c1)};--vqc-sh:${_vqRgba(e.c1, .33)}">
-        <span class="vq-it-ic">${e.icon}</span>
-        <span class="vq-it-l">${_vq(e.label)}</span>
-      </button>`).join('')}</div>`;
-  }).join('');
-
-  const u = document.getElementById('vqSideUser');
-  if (u) {
-    const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-    const prenom = (s && s.prenom) || '', nom = (s && s.nom) || '';
-    const nomComplet = `${prenom} ${nom}`.trim() || (s && s.username) || 'Utilisateur';
-    const ini = (typeof initials === 'function') ? initials(prenom, nom)
-      : nomComplet.slice(0, 2).toUpperCase();
-    const roles = { admin: 'Administrateur', superadmin: 'Super administrateur', educateur: 'Éducateur',
-      infirmier: 'Infirmier', direction: 'Direction', rh: 'Ressources humaines' };
-    u.innerHTML = `<div class="vq-side-av">${_vq(ini)}</div>
-      <div style="line-height:1.2;min-width:0">
-        <div class="vq-side-nom">${_vq(nomComplet)}</div>
-        <div class="vq-side-role">${_vq(roles[s && s.role] || (s && s.role) || '')}</div>
-      </div>`;
-  }
 }
 
 // Bandeau de droite de la barre de titre : date + présents (donnée réelle)

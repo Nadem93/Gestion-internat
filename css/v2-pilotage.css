@@ -13,108 +13,7 @@ body.v2 .pl-shell {
     radial-gradient(1200px 600px at 78% -10%, rgba(56,97,161,.28), transparent 60%),
     var(--v2-bg);
 }
-
-/* ── Navigation latérale ──────────────────────────────────────────────── */
-.pl-side {
-  /* min-width:0 — sans quoi le min-content des libellés (nowrap) empêcherait
-     la barre de descendre à 78 px en mode replié. */
-  width: 264px; flex-shrink: 0; min-width: 0; overflow: hidden;
-  background: var(--v2-s-alt);
-  border-right: 1px solid var(--v2-b);
-  display: flex; flex-direction: column;
-  padding: 20px 14px;
-  transition: width .26s cubic-bezier(.4, 0, .2, 1);
-}
-.pl-side-top { display: flex; align-items: center; gap: 11px; padding: 6px 6px 20px; }
-.pl-side-brand { display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0; }
-.pl-side-logo {
-  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
-  display: flex; align-items: center; justify-content: center; color: #fff;
-}
-.pl-side-logo svg { width: 19px; height: 19px; }
-.pl-side-brand-txt { line-height: 1.2; min-width: 0; overflow: hidden; transition: opacity .18s; }
-.pl-side-brand-t { display: block; font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; }
-.pl-side-brand-s { display: block; font-size: 11px; color: var(--v2-t7); white-space: nowrap; }
-
-/* Bouton de repli de la barre (chevron de la maquette) */
-.pl-side-fold {
-  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--v2-s-ctrl); border: 1px solid rgba(255,255,255,.1);
-  color: var(--v2-t5); font-family: inherit; outline: none;
-  transition: background .15s, color .15s;
-}
-.pl-side-fold:hover { background: var(--v2-s-active); color: #fff; }
-.pl-side-fold:focus-visible { box-shadow: 0 0 0 3px rgba(129,140,248,.55); }
-.pl-side-fold svg { width: 15px; height: 15px; transition: transform .26s; }
-
-.pl-side-nav { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
-.pl-grp { margin-bottom: 6px; }
-.pl-grp-l {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-  color: var(--v2-t9); padding: 12px 10px 6px; white-space: nowrap; overflow: hidden;
-  transition: opacity .18s;
-}
-.pl-it {
-  display: flex; align-items: center; gap: 11px;
-  padding: 8px 10px; border-radius: 10px; cursor: pointer; margin-bottom: 2px;
-  background: transparent; border: none; width: 100%; text-align: left;
-  font-family: inherit; outline: none;
-  transition: background .16s, transform .16s, box-shadow .16s;
-}
-.pl-it:hover { background: rgba(255,255,255,.09); transform: translateX(3px); }
-.pl-it:focus-visible { box-shadow: 0 0 0 2.5px rgba(129,140,248,.6); }
-.pl-it.on { background: var(--v2-s-active); }
-.pl-it-ic {
-  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  background: var(--plc, #818cf8); box-shadow: 0 3px 8px var(--plc-sh, rgba(129,140,248,.33));
-  transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
-}
-.pl-it-ic svg { width: 15px; height: 15px; }
-/* La maquette fait battre l'icône de la rubrique ouverte */
-.pl-it.on .pl-it-ic { animation: plNavPulse 1.9s ease-in-out infinite; }
 @keyframes plNavPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.09) rotate(3deg); } }
-.pl-it-l {
-  font-size: 12.5px; font-weight: 500; color: #aebbd0; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; transition: opacity .18s;
-}
-.pl-it.on .pl-it-l { font-weight: 700; color: #fff; }
-.pl-it-b {
-  margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; flex-shrink: 0;
-  background: var(--v2-danger); border-radius: 9px; color: #fff;
-  font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.pl-side-user {
-  display: flex; align-items: center; gap: 11px; padding: 10px 8px 4px;
-  border-top: 1px solid var(--v2-b); margin-top: 8px;
-}
-.pl-side-av {
-  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, #818cf8, #22d3ee); color: #0a1728;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
-}
-.pl-side-u-txt { line-height: 1.2; min-width: 0; overflow: hidden; transition: opacity .18s; }
-.pl-side-nom { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); white-space: nowrap; }
-.pl-side-role { font-size: 10.5px; color: var(--v2-t6); white-space: nowrap; }
-
-/* Barre repliée : plus que les pastilles d'icônes */
-.pl-side.mini { width: 78px; min-width: 78px; }
-.pl-side.mini .pl-side-brand-txt,
-.pl-side.mini .pl-side-u-txt,
-.pl-side.mini .pl-it-l { opacity: 0; width: 0; flex: none; }
-.pl-side.mini .pl-grp-l { opacity: 0; height: 0; width: 0; padding: 6px 0 0; }
-.pl-side.mini .pl-it { justify-content: center; padding: 8px; }
-.pl-side.mini .pl-it:hover { transform: none; }
-.pl-side.mini .pl-it-b { display: none; }
-.pl-side.mini .pl-side-top { flex-direction: column; gap: 10px; padding-bottom: 14px; }
-.pl-side.mini .pl-side-brand { flex: none; justify-content: center; }
-.pl-side.mini .pl-side-user { justify-content: center; }
-.pl-side.mini .pl-side-fold svg { transform: scaleX(-1); }
 
 /* ── Panneau principal ────────────────────────────────────────────────── */
 .pl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -402,23 +301,8 @@ body.v2 .pl-bellbox .nb-foot button:hover { background: rgba(99,102,241,.16); }
 }
 @media (max-width: 960px) {
   body.v2 .pl-shell { flex-direction: column; height: auto; }
-  .pl-side { width: auto; border-right: none; border-bottom: 1px solid var(--v2-b); }
-  .pl-side.mini { width: auto; }
-  .pl-side-nav { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-  .pl-grp { flex: 1; min-width: 190px; }
-  .pl-side-fold { display: none; }
   .pl-stats, .pl-cards { grid-template-columns: repeat(2, 1fr); }
   #plFrame { min-height: 70vh; }
-}
-/* Sous 700 px, empiler 13 entrées de navigation repousserait le contenu de
-   plus d'un écran : la barre latérale se réduit à son bandeau d'identité,
-   la navigation passe par les tuiles « Accès rapides » et le bouton retour. */
-@media (max-width: 700px) {
-  .pl-side { flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; }
-  .pl-side-top { padding: 0; flex: 1; min-width: 0; }
-  .pl-side-nav { display: none; }
-  .pl-side-user { border-top: none; margin-top: 0; padding: 0; flex-shrink: 0; }
-  .pl-side-u-txt { display: none; }
 }
 @media (max-width: 620px) {
   .pl-stats, .pl-cards { grid-template-columns: 1fr; }

@@ -15,9 +15,8 @@
 <div class="v2-shell vq-shell">
 
   <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
-       « Accès rapides » de l'accueil du portail (vq2Cards). Les fonctions de
-       rendu du rail restent en place mais ne trouvent plus leur hôte et
-       sortent immédiatement. -->
+       « Accès rapides » de l'accueil du portail (vq2Cards). Le code de rendu du
+       rail a été supprimé avec lui. -->
 
   <!-- ── Panneau principal ── -->
   <div class="vq-main">
@@ -123,7 +122,6 @@
     vqTitle.textContent = label || '';
     window.vqCurrentPage = page;
     sessionStorage.setItem('vq_last_page', page);
-    if (typeof vq2RenderSide === 'function') vq2RenderSide();
   }
 
   // Si une page chargée renvoie vers l'accueil ou la vie quotidienne, on sort de l'iframe

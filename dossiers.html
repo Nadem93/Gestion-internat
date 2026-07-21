@@ -15,9 +15,8 @@
 <div class="v2-shell ds-shell">
 
   <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
-       « Accès rapides » de l'accueil du portail (ds2Cards). Les fonctions de
-       rendu du rail restent en place mais ne trouvent plus leur hôte et
-       sortent immédiatement. -->
+       « Accès rapides » de l'accueil du portail (ds2Cards). Le code de rendu du
+       rail a été supprimé avec lui. -->
 
   <!-- ── Panneau principal ── -->
   <div class="ds-main">
@@ -181,7 +180,6 @@
     dsTitle.textContent = label || '';
     window.dsCurrentPage = page;
     sessionStorage.setItem('ds_last_page', page);
-    if (typeof ds2RenderSide === 'function') ds2RenderSide();
   }
 
   // Ancienne fonction de rendu de l'accueil : elle délègue au module V2,

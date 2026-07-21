@@ -13,63 +13,6 @@ body.v2 .ds-shell {
     var(--v2-bg);
 }
 
-/* ── Navigation latérale ──────────────────────────────────────────────── */
-.ds-side {
-  width: 252px; flex-shrink: 0;
-  background: var(--v2-s-alt);
-  border-right: 1px solid var(--v2-b);
-  display: flex; flex-direction: column;
-  padding: 20px 14px;
-}
-.ds-side-brand { display: flex; align-items: center; gap: 11px; padding: 6px 6px 18px; }
-.ds-side-logo {
-  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-  background: linear-gradient(135deg, #6366f1, #a5b4fc);
-  display: flex; align-items: center; justify-content: center; color: #fff;
-}
-.ds-side-logo svg { width: 19px; height: 19px; }
-.ds-side-brand-t { font-size: 14px; font-weight: 800; color: #fff; }
-.ds-side-brand-s { font-size: 11px; color: var(--v2-t7); }
-
-.ds-side-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-.ds-grp { margin-bottom: 6px; }
-.ds-grp-l {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-  color: var(--v2-t9); padding: 12px 10px 6px;
-}
-.ds-it {
-  display: flex; align-items: center; gap: 11px;
-  padding: 8px 10px; border-radius: 10px; cursor: pointer; margin-bottom: 2px;
-  background: transparent; border: none; width: 100%; text-align: left;
-  font-family: inherit; outline: none;
-  transition: background .16s, transform .16s, box-shadow .16s;
-}
-.ds-it:hover { background: rgba(255,255,255,.09); transform: translateX(3px); }
-.ds-it:focus-visible { box-shadow: 0 0 0 2.5px rgba(129,140,248,.6); }
-.ds-it.on { background: var(--v2-s-sel); }
-.ds-it-ic {
-  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  background: var(--dsc, #818cf8); box-shadow: 0 3px 8px var(--dsc-sh, rgba(129,140,248,.33));
-}
-.ds-it-ic svg { width: 15px; height: 15px; }
-.ds-it-l { font-size: 12.5px; font-weight: 500; color: #aebbd0; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; }
-.ds-it.on .ds-it-l { font-weight: 700; color: #fff; }
-
-.ds-side-user {
-  display: flex; align-items: center; gap: 11px; padding: 10px 8px 4px;
-  border-top: 1px solid var(--v2-b); margin-top: 8px;
-}
-.ds-side-av {
-  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, #818cf8, #22d3ee); color: #0a1728;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
-}
-.ds-side-nom { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
-.ds-side-role { font-size: 10.5px; color: var(--v2-t6); }
-
 /* ── Panneau principal ────────────────────────────────────────────────── */
 .ds-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ds-topbar {
@@ -252,22 +195,9 @@ body.v2 .ds-shell {
 }
 @media (max-width: 960px) {
   body.v2 .ds-shell { flex-direction: column; height: auto; }
-  .ds-side { width: auto; border-right: none; border-bottom: 1px solid var(--v2-b); }
-  .ds-side-nav { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-  .ds-grp { flex: 1; min-width: 180px; }
   .ds-kpis { grid-template-columns: repeat(2, 1fr); }
   .ds-cards { grid-template-columns: repeat(2, 1fr); }
   #dsFrame { min-height: 70vh; }
-}
-/* Sous 700 px, empiler 11 entrées de navigation repousserait le contenu de
-   plus d'un écran : la barre latérale se réduit à son bandeau d'identité,
-   la navigation passe par les tuiles « Accès rapides » et le bouton retour. */
-@media (max-width: 700px) {
-  .ds-side { flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; }
-  .ds-side-brand { padding: 0; flex: 1; min-width: 0; }
-  .ds-side-nav { display: none; }
-  .ds-side-user { border-top: none; margin-top: 0; padding: 0; flex-shrink: 0; }
-  .ds-side-user > div:not(.ds-side-av) { display: none; }
 }
 @media (max-width: 620px) {
   .ds-kpis, .ds-cards { grid-template-columns: 1fr; }

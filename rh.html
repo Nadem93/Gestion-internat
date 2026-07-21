@@ -15,9 +15,8 @@
 <div class="v2-shell rh-shell">
 
   <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
-       « Accès rapides » de l'accueil du portail (rh2Cards). Les fonctions de
-       rendu du rail restent en place mais ne trouvent plus leur hôte et
-       sortent immédiatement. -->
+       « Accès rapides » de l'accueil du portail (rh2Cards). Le code de rendu du
+       rail a été supprimé avec lui. -->
 
   <!-- ── Panneau principal ── -->
   <div class="rh-main">
@@ -133,7 +132,6 @@
       rhTitle.textContent = label || '';
       window.rhCurrentPage = page;
       sessionStorage.setItem('rh_last_page', page);
-      if (typeof rh2RenderSide === 'function') rh2RenderSide();
     }
 
     // Si une page chargée renvoie vers l'accueil ou le hub RH, on sort de l'iframe

@@ -12,74 +12,7 @@ body.v2 .rh-shell {
     radial-gradient(1000px 520px at 80% -10%, rgba(79,70,229,.24), transparent 60%),
     var(--v2-bg);
 }
-
-/* ── Navigation latérale ──────────────────────────────────────────────── */
-.rh-side {
-  width: 256px; flex-shrink: 0;
-  background: var(--v2-s-alt);
-  border-right: 1px solid var(--v2-b);
-  display: flex; flex-direction: column;
-  padding: 20px 14px;
-}
-.rh-side-brand { display: flex; align-items: center; gap: 11px; padding: 6px 6px 18px; }
-.rh-side-logo {
-  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-  background: linear-gradient(135deg, #4f46e5, #818cf8);
-  display: flex; align-items: center; justify-content: center; color: #fff;
-}
-.rh-side-logo svg { width: 19px; height: 19px; }
-.rh-side-brand-t { font-size: 14px; font-weight: 800; color: #fff; }
-.rh-side-brand-s { font-size: 11px; color: var(--v2-t7); }
-
-.rh-side-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-.rh-grp { margin-bottom: 6px; }
-.rh-grp-l {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-  color: var(--v2-t9); padding: 12px 10px 6px;
-}
-.rh-it {
-  display: flex; align-items: center; gap: 11px;
-  padding: 8px 10px; border-radius: 10px; cursor: pointer; margin-bottom: 2px;
-  background: transparent; border: none; width: 100%; text-align: left;
-  font-family: inherit; outline: none;
-  transition: background .16s, transform .16s, box-shadow .16s;
-}
-.rh-it:hover { background: rgba(255,255,255,.09); transform: translateX(3px); }
-.rh-it:focus-visible { box-shadow: 0 0 0 2.5px rgba(129,140,248,.6); }
-.rh-it.on { background: var(--v2-s-active); }
-.rh-it-ic {
-  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  background: var(--rhc, #6366f1); box-shadow: 0 3px 8px var(--rhc-sh, rgba(99,102,241,.33));
-}
-.rh-it-ic svg { width: 15px; height: 15px; }
-.rh-it.on .rh-it-ic { animation: rhNavPulse 1.9s ease-in-out infinite; }
 @keyframes rhNavPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.09) rotate(3deg); } }
-@media (prefers-reduced-motion: reduce) { .rh-it.on .rh-it-ic { animation: none; } }
-.rh-it-l {
-  font-size: 12.5px; font-weight: 500; color: #aebbd0; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.rh-it.on .rh-it-l { font-weight: 700; color: #fff; }
-.rh-it-b {
-  margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; flex-shrink: 0;
-  background: var(--v2-danger); border-radius: 9px; color: #fff;
-  font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.rh-side-user {
-  display: flex; align-items: center; gap: 11px; padding: 10px 8px 4px;
-  border-top: 1px solid var(--v2-b); margin-top: 8px;
-}
-.rh-side-av {
-  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, #818cf8, #22d3ee); color: #0a1728;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
-}
-.rh-side-nom { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
-.rh-side-role { font-size: 10.5px; color: var(--v2-t6); }
 
 /* ── Panneau principal ────────────────────────────────────────────────── */
 .rh-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -273,17 +206,7 @@ body.v2 .rh-shell {
   .rh-bento { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 960px) {
-  body.v2 .rh-shell { flex-direction: column; height: auto; }
-  .rh-side {
-    width: auto; border-right: none; border-bottom: 1px solid var(--v2-b);
-    flex-direction: row; align-items: center; padding: 12px 16px;
-  }
-  .rh-side-brand { padding: 0; flex: 1; min-width: 0; }
-  /* Sur mobile, les 15 tuiles « Modules RH » assurent déjà la navigation :
-     on masque la liste latérale plutôt que d'imposer un écran de liens. */
-  .rh-side-nav { display: none; }
-  /* l'identité connectée reste lisible dans l'appli, pas besoin ici */
-  .rh-side-user { display: none; }
+  body.v2 .rh-shell { flex-direction: column; height: auto; }/* Sur mobilenav { display: none; }/* l'identité connectée reste lisible dans l'appliser { display: none; }
   .rh-kpis { grid-template-columns: repeat(2, 1fr); }
   .rh-cards { grid-template-columns: repeat(2, 1fr); }
   #rhFrame { min-height: 70vh; }

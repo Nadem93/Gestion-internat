@@ -139,7 +139,6 @@ function _plDroitErr(e) {
 
 // ─── Entrée principale ────────────────────────────────────────────────────
 function pl2Render() {
-  pl2RenderSide();
   const el = document.getElementById('plWelcome');
   if (el) el.innerHTML = pl2Body();
   if (!PL2.data && !PL2.loading) pl2Load();
@@ -193,7 +192,6 @@ async function pl2Load() {
   PL2.unread = _plUnread();
   const el = document.getElementById('plWelcome');
   if (el) el.innerHTML = pl2Body();
-  pl2RenderSide();
 }
 
 // ─── Chiffres dérivés des données réelles ─────────────────────────────────
@@ -311,75 +309,6 @@ function _plMyConvs() {
 }
 function _plUnread() {
   return _plMyConvs().reduce((n, c) => n + c.unread, 0);
-}
-
-// ─── Navigation latérale ──────────────────────────────────────────────────
-function pl2RenderSide() {
-  const host = document.getElementById('plSideNav');
-  if (!host || !window.PL_NAV) return;
-  const groups = window.PL_GROUPS || [];
-  const nav = window.PL_NAV.filter(window.plAllowed || (() => true));
-  host.innerHTML = groups.map(g => {
-    const items = nav.filter(e => e.g === g);
-    if (!items.length) return '';
-    return `<div class="pl-grp"><div class="pl-grp-l">${_pl(g)}</div>${items.map(e => {
-      const badge = (e.module === 'messages' && PL2.unread > 0)
-        ? `<span class="pl-it-b">${PL2.unread > 99 ? '99+' : PL2.unread}</span>` : '';
-      const on = window.plCurrentPage === e.page;
-      return `<button type="button" class="pl-it${on ? ' on' : ''}"
-        data-page="${_pl(e.page)}" data-label="${_pl(e.label)}" title="${_pl(e.label)}"
-        ${e.module ? `data-module="${_pl(e.module)}"` : ''}
-        aria-current="${on ? 'page' : 'false'}"
-        style="--plc:${_pl(e.c1)};--plc-sh:${_plRgba(e.c1, .33)}">
-        <span class="pl-it-ic">${_plSvg(_plInner(e.icon), 'currentColor', 15)}</span>
-        <span class="pl-it-l">${_pl(e.label)}</span>${badge}
-      </button>`;
-    }).join('')}</div>`;
-  }).join('');
-
-  const u = document.getElementById('plSideUser');
-  if (u) {
-    const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-    const prenom = (s && s.prenom) || '', nom = (s && s.nom) || '';
-    const nomComplet = `${prenom} ${nom}`.trim() || (s && s.username) || 'Utilisateur';
-    const ini = (typeof initials === 'function') ? initials(prenom, nom)
-      : nomComplet.slice(0, 2).toUpperCase();
-    const roles = { admin: 'Administrateur', superadmin: 'Super administrateur', educateur: 'Éducateur',
-      infirmier: 'Infirmier', direction: 'Direction', rh: 'Ressources humaines' };
-    const fonction = (s && s.fonction) || roles[s && s.role] || (s && s.role) || '';
-    u.innerHTML = `<div class="pl-side-av">${_pl(ini)}</div>
-      <div class="pl-side-u-txt">
-        <div class="pl-side-nom">${_pl(nomComplet)}</div>
-        <div class="pl-side-role">${_pl(fonction)}</div>
-      </div>`;
-  }
-}
-
-// Repli de la barre latérale (chevron de la maquette), mémorisé
-function pl2ToggleSide() {
-  const side = document.getElementById('plSide');
-  const btn = document.getElementById('plSideFold');
-  if (!side) return;
-  const mini = side.classList.toggle('mini');
-  try { localStorage.setItem('pl_side_mini', mini ? '1' : '0'); } catch (e) { /* stockage indisponible */ }
-  if (btn) {
-    btn.setAttribute('aria-expanded', mini ? 'false' : 'true');
-    btn.setAttribute('aria-label', mini ? 'Agrandir le menu' : 'Réduire le menu');
-    btn.title = mini ? 'Agrandir le menu' : 'Réduire le menu';
-  }
-}
-function pl2RestoreSide() {
-  let mini = false;
-  try { mini = localStorage.getItem('pl_side_mini') === '1'; } catch (e) { /* stockage indisponible */ }
-  if (!mini) return;
-  const side = document.getElementById('plSide');
-  const btn = document.getElementById('plSideFold');
-  if (side) side.classList.add('mini');
-  if (btn) {
-    btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-label', 'Agrandir le menu');
-    btn.title = 'Agrandir le menu';
-  }
 }
 
 // ─── Blocs de contenu ─────────────────────────────────────────────────────
@@ -862,7 +791,6 @@ async function pl2RefreshUnread() {
   const n = _plUnread();
   if (n === PL2.unread) return;
   PL2.unread = n;
-  pl2RenderSide();
   if (!window.plCurrentPage) {
     const el = document.getElementById('plWelcome');
     if (el) el.innerHTML = pl2Body();
@@ -872,7 +800,6 @@ async function pl2RefreshUnread() {
 // ─── Interactions ─────────────────────────────────────────────────────────
 document.addEventListener('click', ev => {
   const fold = ev.target.closest('#plSideFold');
-  if (fold) { pl2ToggleSide(); return; }
   const info = ev.target.closest('.pl-card-i');
   if (info) { ev.stopPropagation(); pl2OpenTuto(info.dataset.tuto); return; }
   const dl = ev.target.closest('.pl-doc-dl');
@@ -901,6 +828,5 @@ document.addEventListener('keydown', ev => {
   }
 });
 
-pl2RestoreSide();
 window.addEventListener('focus', pl2RefreshUnread);
 setInterval(pl2RefreshUnread, 30000);

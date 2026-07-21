@@ -1,7 +1,10 @@
 /* ══════════════════════════════════════════════════════════════════════════
    portal-tuto-data.js — Contenu du tutoriel d'accueil des portails.
    window.PORTAL_TUTO[page] = { role, mode:[…], sync, ex }.
-   Consommé par js/portal-tuto.js (composant de rendu partagé).
+   Consommé via window.PORTAL_TUTO par les portails V2, qui font leur propre
+   rendu : js/pilotage-v2.js, js/dossiers-v2.js, js/rh-v2.js.
+   (L'ancien composant de rendu partagé js/portal-tuto.js a été supprimé —
+   ces DONNÉES restent bien vivantes.)
    ══════════════════════════════════════════════════════════════════════════ */
 window.PORTAL_TUTO = {
   "journee.html": {
