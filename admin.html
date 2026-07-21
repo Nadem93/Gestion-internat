@@ -1,918 +1,794 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <script>try{if(window.self!==window.top)document.documentElement.classList.add('is-embedded');}catch(_){}</script>
-  <title>Administration — FTR</title>
+  <title>Administration — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --av:#0f2b4a; --av-l:#dce8f4; --av-d:#071a2f; --av-2:#f1f5f9;
-      --glass:rgba(255,255,255,.82);
-      --glass-border:rgba(255,255,255,.6);
-      --glass-shadow:0 4px 24px rgba(15,43,74,.09),0 1px 4px rgba(15,43,74,.05);
-      --glass-shadow-lg:0 10px 40px rgba(15,43,74,.13),0 2px 8px rgba(15,43,74,.07);
-      --blur:blur(14px);
-    }
-
-    body{
-      background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);
-      background-attachment:fixed;
-      min-height:100vh;
-    }
-
-    /* ── TOPBAR ── */
-    .admin-topbar{
-      background:rgba(255,255,255,.82);
-      backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-      border-bottom:1px solid rgba(255,255,255,.65);
-      padding:.95rem 2rem;display:flex;align-items:center;justify-content:space-between;
-      position:sticky;top:0;z-index:50;
-      box-shadow:0 1px 0 rgba(15,43,74,.07),0 4px 20px rgba(15,43,74,.05);
-    }
-    .atb-left{display:flex;align-items:center;gap:.75rem}
-    .atb-back{
-      display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
-      background:rgba(255,255,255,.85);border:1px solid rgba(15,43,74,.12);
-      color:var(--muted);transition:all .18s;text-decoration:none;cursor:pointer;
-      box-shadow:0 1px 4px rgba(0,0,0,.06);
-    }
-    .atb-back:hover{background:var(--av-l);color:var(--av);border-color:var(--av)}
-    .atb-title{font-size:1.05rem;font-weight:800;color:var(--text)}
-    .atb-sub{font-size:.6rem;font-weight:700;color:var(--av);text-transform:uppercase;letter-spacing:.10em;opacity:.7}
-    .atb-right{display:flex;align-items:center;gap:.75rem}
-    .atb-badge{
-      display:flex;align-items:center;gap:.45rem;
-      padding:.4rem .9rem;border-radius:var(--r-full);
-      background:rgba(15,43,74,.08);color:var(--av);
-      font-size:.73rem;font-weight:700;
-      border:1px solid rgba(15,43,74,.12);
-    }
-
-    /* ── CIRCULAR STATS ── */
-    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:0 2rem}
-    .stat-circ-card{
-      background:var(--glass);
-      backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-      border-radius:20px;padding:1.3rem 1.1rem 1.1rem;
-      box-shadow:var(--glass-shadow);
-      border:1px solid var(--glass-border);
-      display:flex;flex-direction:column;align-items:center;text-align:center;
-      transition:transform .22s ease,box-shadow .22s ease;cursor:default;
-    }
-    .stat-circ-card:hover{transform:translateY(-4px);box-shadow:var(--glass-shadow-lg)}
-    .circ-wrap{position:relative;width:88px;height:88px;margin:0 auto .75rem}
-    .circ-svg{width:88px;height:88px;transform:rotate(-90deg)}
-    .circ-track{fill:none;stroke:rgba(15,43,74,.07);stroke-width:8}
-    .circ-bar{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)}
-    .circ-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.15rem;font-weight:800;color:var(--text);line-height:1}
-    .circ-sub{font-size:.6rem;color:var(--muted);margin-top:1px}
-    .stat-circ-name{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.3rem}
-    .stat-circ-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:var(--r-full);font-size:.68rem;font-weight:700;margin-top:.15rem}
-    .scb-green{background:#dcfce7;color:#16a34a}
-    .scb-yellow{background:#fef9c3;color:#a16207}
-    .scb-red{background:#fee2e2;color:#dc2626}
-    .scb-blue{background:#dbeafe;color:#1d4ed8}
-    .scb-violet{background:var(--av-l);color:var(--av)}
-
-    /* ── STATS DÉTAILS ── */
-    .stats-detail{display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem;padding:1rem 2rem 0}
-    .sdcard{background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:16px;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border)}
-    .sdcard-head{padding:.9rem 1.25rem;border-bottom:1px solid rgba(15,43,74,.07);display:flex;align-items:center;justify-content:space-between}
-    .sdcard-title{font-size:.82rem;font-weight:700;color:var(--text)}
-    .sdcard-body{padding:1rem 1.25rem}
-    .bar-chart{display:flex;align-items:flex-end;gap:.4rem;height:130px;padding-bottom:.25rem}
-    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;position:relative}
-    .bar-fill{width:100%;border-radius:5px 5px 0 0;min-height:4px;transition:height .8s ease;position:relative;cursor:pointer}
-    .bar-fill:hover::after{content:attr(data-count);position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--av);color:#fff;font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:10;box-shadow:0 2px 8px rgba(15,43,74,.2)}
-    .bar-lbl{font-size:.58rem;color:var(--muted);font-weight:500;white-space:nowrap}
-    .btn-freq:hover{color:var(--text)!important}
-    .btn-freq.active{color:var(--av)!important;background:rgba(15,43,74,.09)!important;border-radius:6px}
-    .qstat-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(15,43,74,.06)}
-    .qstat-row:last-child{border-bottom:none}
-    .qstat-label{font-size:.77rem;color:var(--muted)}
-    .qstat-value{font-size:.88rem;font-weight:700;color:var(--text)}
-    .ppe-bar-wrap{margin-top:.5rem}
-    .ppe-bar-track{height:7px;border-radius:var(--r-full);background:rgba(15,43,74,.07);overflow:hidden;margin-bottom:.3rem}
-    .ppe-bar-fill{height:100%;border-radius:var(--r-full);transition:width 1s ease}
-
-    /* ── CONTENT ── */
-    .admin-content{padding:1.25rem 2rem 96px}
-    .admin-panel{display:none}
-    .admin-panel.active{
-      display:block;animation:fadeUp .25s ease;
-      background:var(--glass);
-      backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-      border-radius:20px;padding:1.6rem;
-      border:1px solid var(--glass-border);
-      box-shadow:var(--glass-shadow);
-    }
-    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-    .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.3rem}
-    .panel-title{font-size:1.05rem;font-weight:800;color:var(--text)}
-    .panel-sub{font-size:.74rem;color:var(--muted);margin-top:.2rem}
-    .admin-content .card{
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.65);
-      box-shadow:var(--glass-shadow);
-      background:rgba(255,255,255,.88);
-      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    }
-    .admin-content .card-header{border-radius:16px 16px 0 0;padding:.9rem 1.3rem;background:rgba(255,255,255,.55);border-bottom:1px solid rgba(15,43,74,.06)}
-    .fonc-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
-    .adm-row{display:flex;align-items:center;gap:.8rem;padding:.85rem 1.3rem;border-bottom:1px solid rgba(15,43,74,.05);transition:background .15s}
-    .adm-row:hover{background:rgba(15,43,74,.03)}
-    .adm-row:last-child{border-bottom:none}
-    .rights-item{display:flex;align-items:center;gap:.6rem;padding:.45rem 0;font-size:.82rem;border-bottom:1px solid rgba(15,43,74,.06)}
-    .rights-item:last-child{border-bottom:none}
-    .rights-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .color-row{display:flex;align-items:center;gap:.75rem}
-    .btn-violet{background:linear-gradient(135deg,var(--av),#1a4a7a);color:#fff;border:none;box-shadow:0 2px 10px rgba(15,43,74,.25);transition:all .18s ease}
-    .btn-violet:hover{background:linear-gradient(135deg,#1a4a7a,var(--av));box-shadow:0 4px 16px rgba(15,43,74,.35);transform:translateY(-1px)}
-    .admin-content input:focus,.admin-content textarea:focus,.admin-content select:focus{border-color:var(--av);box-shadow:0 0 0 3px rgba(15,43,74,.12);outline:none}
-    .danger-zone{border:1.5px solid #fecaca!important}
-    .danger-zone .card-header{background:rgba(254,242,242,.85)!important}
-    .perm-btn{display:inline-flex;align-items:center;justify-content:center;padding:.35rem .7rem;border-radius:var(--r);border:1.5px solid rgba(15,43,74,.14);background:rgba(255,255,255,.8);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;gap:.3rem}
-    .perm-btn:hover{border-color:var(--av);color:var(--av);background:#fff}
-    .perm-btn.active{background:var(--av-l);border-color:var(--av);color:var(--av);box-shadow:0 0 0 2px var(--av-l)}
-    /* Permissions : cartes de rôles */
-    .role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem}
-    .role-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,43,74,.06);display:flex;flex-direction:column;transition:box-shadow .2s,transform .2s}
-    .role-card:hover{box-shadow:0 8px 22px rgba(15,43,74,.1);transform:translateY(-2px)}
-    .role-card-top{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;color:#fff}
-    .role-card-top .role-name{font-weight:700;font-size:.9rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .role-card-top .role-edit{background:rgba(255,255,255,.25);border:none;color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:.8rem;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-    .role-card-top .role-edit:hover{background:rgba(255,255,255,.45)}
-    .role-card-body{padding:.75rem .9rem;display:flex;flex-direction:column;gap:.55rem;flex:1}
-    .role-count{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-    .role-perms{display:flex;flex-wrap:wrap;gap:.3rem}
-    .role-perm{font-size:.66rem;font-weight:600;padding:.18rem .55rem;border-radius:100px;background:var(--g100);color:var(--g600)}
-    .role-noperm{font-size:.76rem;color:var(--g400);font-style:italic}
-    .perm-group{margin-bottom:.7rem}
-    .perm-group:last-child{margin-bottom:0}
-    .perm-group-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.4rem}
-
-    /* ── RESPONSIVE ── */
-    @media(max-width:900px){
-      .stats-strip{grid-template-columns:repeat(2,1fr);padding:0 1rem}
-      .stats-detail{grid-template-columns:1fr;padding:.75rem 1rem 0}
-      .admin-content{padding:1rem 1rem 96px}
-      .admin-topbar{padding:.85rem 1.1rem}
-      .fonc-grid{grid-template-columns:1fr}
-      .atb-badge{display:none}
-    }
-    @media(max-width:480px){
-      .stats-strip{gap:.625rem;padding:0 .75rem}
-      .admin-content{padding:.75rem .75rem 96px}
-      .admin-topbar{padding:.7rem .75rem}
-      .atb-title{font-size:.9rem}
-      .circ-wrap{width:72px;height:72px}
-      .circ-svg{width:72px;height:72px}
-      .circ-label{font-size:1rem}
-      .stat-circ-card{padding:1rem .75rem .875rem}
-      .sdcard-body{padding:.75rem 1rem}
-      .sdcard-head{padding:.75rem 1rem}
-    }
-
-    /* ══════════════════════════════════════
-       ONGLET EMPLOYÉS — vue tableau style Contracts
-    ══════════════════════════════════════ */
-    .emp-title-bar{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 0 .6rem}
-    .emp-title{font-size:1.25rem;font-weight:800;color:#1a1a2e}
-    .emp-title-actions{display:flex;gap:.5rem}
-
-    /* ════ Cartes profil — Chrome doré ════ */
-    .emp-cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:1.25rem 0;align-items:start}
-    @media(max-width:1100px){.emp-cards-grid{grid-template-columns:repeat(3,1fr)}}
-    @media(max-width:820px){.emp-cards-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:560px){.emp-cards-grid{grid-template-columns:1fr}}
-    .card-c{background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(15,23,42,.06);
-      position:relative;overflow:hidden;
-      transition:transform .2s ease,box-shadow .2s ease;cursor:pointer;display:flex;flex-direction:column}
-    .card-c:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(15,23,42,.12)}
-    .c-banner{background:linear-gradient(135deg,var(--avatar-b),var(--avatar-a));
-      padding:18px 18px 16px;position:relative;overflow:hidden}
-    .c-watermark{position:absolute;top:-8px;right:-4px;font-size:72px;font-weight:900;
-      color:rgba(255,255,255,.15);line-height:1;user-select:none;pointer-events:none}
-    .c-head{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
-    .c-avatar{width:58px;height:58px;border-radius:50%;flex-shrink:0;overflow:hidden;
-      background:rgba(255,255,255,.25);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-weight:800;font-size:18px;
-      border:2.5px solid rgba(255,255,255,.6);
-      box-shadow:0 4px 12px rgba(0,0,0,.18)}
-    .c-avatar img{width:100%;height:100%;object-fit:cover}
-    .c-name{font-size:14.5px;font-weight:800;color:#fff;margin:0;line-height:1.2;
-      text-shadow:0 1px 2px rgba(0,0,0,.15)}
-    .c-role-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:6px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;
-      background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.3)}
-    .c-body{padding:14px 18px 18px;display:flex;flex-direction:column;flex:1}
-    .c-status{display:inline-block;font-size:11px;font-weight:700;margin-bottom:10px;
-      color:#92400e;background-color:#fef3c7;padding:3px 10px;border-radius:6px}
-    .c-status.inactive{color:#64748b;background-color:#f1f5f9}
-    .c-status.admin{color:#fff;background:linear-gradient(135deg,#06b6d4,#6366f1)}
-    .c-status.conge{color:#92400e;background-color:#fef3c7}
-    .c-info{font-size:12.5px;color:#4b5563;flex:1}
-    .c-info .row-field{display:flex;align-items:center;gap:9px;padding:4px 0}
-    .c-info svg{stroke:var(--accent);flex-shrink:0}
-    .c-info span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .c-info .empty{color:#cbd5e1}
-    .c-btn{margin-top:14px;width:100%;padding:9px;border-radius:10px;
-      border:1.5px solid var(--accent);background:#fff;color:var(--accent-text);
-      font-weight:700;font-size:12.5px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;gap:6px;
-      transition:background .15s ease}
-    .c-btn:hover{background:var(--accent-hover)}
-    .c-action-icon{transition:transform .15s ease,color .15s ease;border-radius:8px;padding:4px}
-    .c-action-icon:hover{transform:scale(1.22);color:var(--accent)!important;background:rgba(0,0,0,.05)}
-
-    .emp-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0 .75rem;border-bottom:1.5px solid #f0f0f4;margin-bottom:0}
-    .emp-toolbar-left,.emp-toolbar-right{display:flex;align-items:center;gap:.4rem}
-    .emp-tool-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .75rem;border:1.5px solid #e4e8ed;border-radius:8px;background:#fff;font-size:.78rem;font-weight:500;color:#444;cursor:pointer;transition:all .12s;white-space:nowrap}
-    .emp-tool-btn:hover{background:#f5f5fd;border-color:#b0aaf7;color:#5b5fc7}
-    .emp-tool-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
-
-    .emp-table-wrap{overflow-x:auto;background:#fff;border-radius:14px;border:1.5px solid #f0f0f4;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-    .emp-table{width:100%;border-collapse:collapse;font-size:.82rem}
-    .emp-table thead tr{border-bottom:1.5px solid #f0f0f4}
-    .emp-table th{padding:.7rem 1rem;text-align:left;font-size:.72rem;font-weight:600;color:#9a9aae;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;background:#fff}
-    .emp-table th:first-child{padding-left:1.2rem}
-    .emp-table td{padding:.75rem 1rem;border-bottom:1px solid #f7f7fa;color:#1a1a2e;vertical-align:middle}
-    .emp-table td:first-child{padding-left:1.2rem}
-    .emp-table tbody tr{transition:background .1s;cursor:pointer}
-    .emp-table tbody tr:hover{background:#f8f8fd}
-    .emp-table tbody tr:last-child td{border-bottom:none}
-
-    /* Colonne personne */
-    .emp-person{display:flex;align-items:center;gap:.7rem}
-    .emp-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;color:#fff;flex-shrink:0}
-    .emp-person-info{}
-    .emp-person-name{font-weight:600;font-size:.84rem;color:#1a1a2e}
-    .emp-person-phone{font-size:.72rem;color:#9a9aae;margin-top:1px}
-
-    /* Pills statut */
-    .emp-pill{display:inline-flex;align-items:center;padding:.22rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
-    .emp-pill-actif{background:#dcfce7;color:#15803d}
-    .emp-pill-inactif{background:#fee2e2;color:#dc2626}
-    .emp-pill-none{background:#f1f1f5;color:#888}
-
-    /* Popup profil */
-    .emp-popup{position:fixed;z-index:200;width:320px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid #ebebf0;overflow:hidden;pointer-events:auto}
-    .emp-popup-banner{height:88px;background:linear-gradient(135deg,#c4b5fd 0%,#818cf8 50%,#93c5fd 100%);position:relative}
-    .emp-popup-av{position:absolute;left:50%;transform:translateX(-50%);bottom:-30px;width:64px;height:64px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15rem;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-    .emp-popup-action-row{display:flex;justify-content:flex-end;gap:.4rem;padding:.55rem .9rem .2rem;position:relative;z-index:1}
-    .emp-popup-action-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid #e4e8ed;background:#fff;color:#666;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
-    .emp-popup-action-btn:hover{border-color:#5b5fc7;color:#5b5fc7}
-    .emp-popup-action-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none}
-    .emp-popup-identity{text-align:center;padding:1.8rem 1rem .5rem}
-    .emp-popup-name{font-size:.95rem;font-weight:700;color:#1a1a2e}
-    .emp-popup-role{font-size:.75rem;color:#9a9aae;margin-top:2px}
-    .emp-popup-role a{color:#5b5fc7;font-weight:500;text-decoration:none}
-    .emp-popup-details{padding:.5rem 1rem 1rem}
-    .emp-popup-details-title{font-size:.7rem;font-weight:700;color:#9a9aae;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
-    .emp-popup-row{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:.78rem;border-top:1px solid #f5f5f8}
-    .emp-popup-row:first-of-type{border-top:none}
-    .emp-popup-row-icon{width:28px;height:28px;border-radius:8px;background:#f5f5f8;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .emp-popup-row-icon svg{width:13px;height:13px;stroke:#666;stroke-width:1.8;fill:none}
-    .emp-popup-row-label{color:#9a9aae;min-width:70px;flex-shrink:0}
-    .emp-popup-row-val{color:#1a1a2e;font-weight:500;flex:1;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
-    /* ── Menu latéral admin (style RH) ── */
-    .admin-shell{display:flex;height:100vh;overflow:hidden}
-    .admin-main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
-    /* Chargée dans un hub (iframe) : on masque le menu latéral + la topbar (le hub fournit déjà la navigation) */
-    .is-embedded .admin-topbar{display:none}
-    .is-embedded .admin-shell{height:auto;overflow:visible}
-    .is-embedded .admin-main{overflow:visible}
-    @media(max-width:760px){
-      .admin-shell{flex-direction:column;height:auto;overflow:visible}
-      .admin-main{overflow:visible}
-    }
-
-    /* ── Dock flottant (remplace la sidebar) ── */
-    .rh-dock{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:60;
-      display:flex;align-items:center;gap:5px;
-      background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(12px);
-      border-radius:17px;padding:6px 9px;border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(80,90,160,.18);
-      max-width:calc(100vw - 24px);overflow-x:auto}
-    .rh-dock::-webkit-scrollbar{height:0}
-    .rh-dock-sep{width:1px;height:26px;flex-shrink:0;background:rgba(15,23,42,.1);margin:0 3px;align-self:center}
-    .is-embedded .rh-dock{display:none}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-admin.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="v2">
 
-<div class="admin-shell">
-<div class="admin-main">
+<div class="v2-shell adm-shell">
 
-<!-- ══════════ TOPBAR ══════════ -->
-<header class="admin-topbar">
-  <div class="atb-left">
-    <a href="accueil.html" class="atb-back" title="Accueil">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
+  <!-- ══════════ BARRE LATÉRALE ══════════ -->
+  <nav class="adm-side" aria-label="Navigation Administration">
+    <a class="adm-side-brand" href="accueil.html" title="Retour à l'accueil">
+      <span class="adm-side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+      <span style="line-height:1.2;min-width:0">
+        <span class="adm-side-t" style="display:block">Administration</span>
+        <span class="adm-side-s" style="display:block">Paramètres &amp; conformité</span>
+      </span>
     </a>
-    <div>
-      <div class="atb-sub">Administration</div>
-      <div class="atb-title" id="atbTitle">Statistiques</div>
+    <div class="adm-side-scroll">
+      <div class="adm-side-grp">Réglages</div>
+      <div id="admSideNav"></div>
     </div>
-  </div>
-  <div class="atb-right">
-    <div class="atb-badge" id="atbBadge">Tableau de bord admin</div>
-  </div>
-</header>
+    <div class="adm-side-user" id="admSideUser"></div>
+  </nav>
 
-<!-- ══════════ ÉTABLISSEMENT ACTIF ══════════ -->
-<div id="etabBanner" style="display:flex;align-items:center;gap:.75rem;padding:.5rem 2rem 0;flex-wrap:wrap">
-  <div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
-  <div>
-    <span id="etabBannerNom" style="font-weight:800;font-size:.95rem;color:var(--primary)">—</span>
-    <span id="etabBannerType" class="badge" style="margin-left:.5rem;background:#0891b220;color:#0891b2;font-size:.68rem"></span>
-  </div>
-  <a href="accueil.html" target="_top" style="margin-left:auto;font-size:.75rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
-    Changer d'établissement
-  </a>
-</div>
+  <!-- ══════════ PANNEAU PRINCIPAL ══════════ -->
+  <div class="adm-main">
 
-<!-- ══════════ CIRCULAR STATS STRIP ══════════ -->
-<div class="stats-strip" id="statsStrip">
-  <div class="stat-circ-card">
-    <div class="circ-wrap">
-      <svg class="circ-svg" viewBox="0 0 88 88">
-        <circle class="circ-track" cx="44" cy="44" r="36"/>
-        <circle class="circ-bar" id="c1bar" cx="44" cy="44" r="36" stroke="#7C6FCD" stroke-dasharray="226" stroke-dashoffset="226"/>
-      </svg>
-      <div class="circ-label"><span id="c1pct">0</span><span style="font-size:.6rem">%</span></div>
-    </div>
-    <div class="stat-circ-name">Taux de présence</div>
-    <div style="font-size:.7rem;color:var(--muted)" id="c1sub">— / — résidents</div>
-    <span class="stat-circ-badge scb-violet" id="c1badge">—</span>
-  </div>
-  <div class="stat-circ-card">
-    <div class="circ-wrap">
-      <svg class="circ-svg" viewBox="0 0 88 88">
-        <circle class="circ-track" cx="44" cy="44" r="36"/>
-        <circle class="circ-bar" id="c2bar" cx="44" cy="44" r="36" stroke="#10b981" stroke-dasharray="226" stroke-dashoffset="226"/>
-      </svg>
-      <div class="circ-label"><span id="c2pct">0</span><span style="font-size:.6rem">%</span></div>
-    </div>
-    <div class="stat-circ-name">Taux d'occupation</div>
-    <div style="font-size:.7rem;color:var(--muted)" id="c2sub">— / — places</div>
-    <span class="stat-circ-badge scb-green" id="c2badge">—</span>
-  </div>
-  <div class="stat-circ-card">
-    <div class="circ-wrap">
-      <svg class="circ-svg" viewBox="0 0 88 88">
-        <circle class="circ-track" cx="44" cy="44" r="36"/>
-        <circle class="circ-bar" id="c3bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/>
-      </svg>
-      <div class="circ-label" style="font-size:.9rem"><span id="c3val">0</span></div>
-    </div>
-    <div class="stat-circ-name">Journal (7 jours)</div>
-    <div style="font-size:.7rem;color:var(--muted)" id="c3sub">entrées cette semaine</div>
-    <span class="stat-circ-badge scb-yellow" id="c3badge">—</span>
-  </div>
-  <div class="stat-circ-card">
-    <div class="circ-wrap">
-      <svg class="circ-svg" viewBox="0 0 88 88">
-        <circle class="circ-track" cx="44" cy="44" r="36"/>
-        <circle class="circ-bar" id="c4bar" cx="44" cy="44" r="36" stroke="#ef4444" stroke-dasharray="226" stroke-dashoffset="226"/>
-      </svg>
-      <div class="circ-label" style="font-size:.9rem"><span id="c4val">0</span></div>
-    </div>
-    <div class="stat-circ-name">Incidents actifs</div>
-    <div style="font-size:.7rem;color:var(--muted)" id="c4sub">non traités</div>
-    <span class="stat-circ-badge scb-red" id="c4badge">—</span>
-  </div>
-  <div class="stat-circ-card">
-    <div class="circ-wrap">
-      <svg class="circ-svg" viewBox="0 0 88 88">
-        <circle class="circ-track" cx="44" cy="44" r="36"/>
-        <circle class="circ-bar" id="c5bar" cx="44" cy="44" r="36" stroke="#8b5cf6" stroke-dasharray="226" stroke-dashoffset="226"/>
-      </svg>
-      <div class="circ-label" style="font-size:.9rem"><span id="c5val">0</span></div>
-    </div>
-    <div class="stat-circ-name">SERAFIN-PH</div>
-    <div style="font-size:.7rem;color:var(--muted)" id="c5sub">résidents évalués</div>
-    <span class="stat-circ-badge scb-violet" id="c5badge">—</span>
-  </div>
-  <div class="stat-circ-card">
-    <div class="circ-wrap">
-      <svg class="circ-svg" viewBox="0 0 88 88">
-        <circle class="circ-track" cx="44" cy="44" r="36"/>
-        <circle class="circ-bar" id="c6bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/>
-      </svg>
-      <div class="circ-label"><span id="c6pct">—</span><span style="font-size:.6rem" id="c6pctSign"></span></div>
-    </div>
-    <div class="stat-circ-name">Satisfaction</div>
-    <div style="font-size:.7rem;color:var(--muted)" id="c6sub">résidents</div>
-    <span class="stat-circ-badge scb-yellow" id="c6badge">—</span>
-  </div>
-</div>
+    <header class="v2-top adm-top">
+      <div class="adm-top-ico" id="admTopIco"></div>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · ADMIN</div>
+        <div class="v2-top-title" id="atbTitle">Statistiques</div>
+      </div>
+      <div class="adm-top-act">
+        <span class="adm-etab" id="etabBanner">
+          <span class="adm-etab-dot"></span>
+          <b id="etabBannerNom">—</b>
+          <span id="etabBannerType" style="color:var(--v2-t7)"></span>
+        </span>
+        <span id="atbBadge" hidden></span>
+        <a class="v2-btn" href="accueil.html" target="_top" title="Changer d'établissement">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
+          Changer
+        </a>
+        <button type="button" class="v2-btn v2-btn-primary" id="admSaveBtn" onclick="admSaveCurrent()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>
+          Enregistrer
+        </button>
+      </div>
+    </header>
 
-<!-- ══════════ DETAIL STATS ══════════ -->
-<div class="stats-detail" id="statsDetail" style="display:none">
-  <div class="sdcard">
-    <div class="sdcard-head">
-      <span class="sdcard-title">📊 Taux de présence</span>
-      <div style="display:flex;align-items:center;gap:.4rem;margin-left:auto">
-        <button class="btn-freq" data-freq="jour" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Jour</button>
-        <button class="btn-freq" data-freq="semaine" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Semaine</button>
-        <button class="btn-freq active" data-freq="mois" style="background:transparent;border:none;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;transition:.15s">Mois</button>
-        <span style="font-size:.7rem;color:var(--muted);margin-left:.2rem" id="presenceFreqAvg">—</span>
-      </div>
-    </div>
-    <div class="sdcard-body"><div class="bar-chart" id="barPresenceMonth"></div></div>
-  </div>
-  <div class="sdcard">
-    <div class="sdcard-head"><span class="sdcard-title">📋 PPE / Avenants</span></div>
-    <div class="sdcard-body">
-      <div class="qstat-row"><span class="qstat-label">Actifs</span><span class="qstat-value" id="ppeActif" style="color:var(--green)">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Brouillons</span><span class="qstat-value" id="ppeBrouillon" style="color:var(--amber)">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Terminés</span><span class="qstat-value" id="ppeTermine" style="color:var(--muted)">—</span></div>
-      <div class="ppe-bar-wrap" style="margin-top:.75rem">
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.3rem"><span>Actifs</span><span id="ppeActifPct">—%</span></div>
-        <div class="ppe-bar-track"><div class="ppe-bar-fill" id="ppeActifBar" style="background:var(--green);width:0%"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.3rem;margin-top:.4rem"><span>Brouillons</span><span id="ppeBrouillonPct">—%</span></div>
-        <div class="ppe-bar-track"><div class="ppe-bar-fill" id="ppeBrouillonBar" style="background:var(--amber);width:0%"></div></div>
-      </div>
-    </div>
-  </div>
-  <div class="sdcard">
-    <div class="sdcard-head"><span class="sdcard-title">📊 Autres indicateurs</span></div>
-    <div class="sdcard-body">
-      <div class="qstat-row"><span class="qstat-label">Résidents actifs</span><span class="qstat-value" id="qResidents">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Utilisateurs</span><span class="qstat-value" id="qUsers">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Véhicules réservés</span><span class="qstat-value" id="qVehi">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Messages non lus</span><span class="qstat-value" id="qMessages">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Documents stockés</span><span class="qstat-value" id="qDocs">—</span></div>
-    </div>
-  </div>
-  <div class="sdcard" style="grid-column:1/-1">
-    <div class="sdcard-head"><span class="sdcard-title">🧬 SERAFIN-PH</span></div>
-    <div class="sdcard-body">
-      <div class="qstat-row"><span class="qstat-label">Résidents évalués</span><span class="qstat-value" id="spEvalues" style="color:var(--accent)">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">GMPS moyen</span><span class="qstat-value" id="spGmps" style="color:var(--primary)">—</span></div>
-      <div class="qstat-row"><span class="qstat-label">Score total cumulé</span><span class="qstat-value" id="spScore" style="color:var(--primary)">—</span></div>
-      <div id="spBars" style="margin-top:.75rem"></div>
-      <div id="spNiveau" style="margin-top:.5rem"></div>
-    </div>
-  </div>
-</div>
+    <main class="adm-body">
 
-<!-- ══════════ CONTENT PANELS ══════════ -->
-<main class="admin-content">
+      <!-- ═══════════════════ STATISTIQUES ═══════════════════ -->
+      <section id="tab-stats" class="adm-panel active">
+        <div class="adm-stack">
 
-  <!-- ═══ STATISTIQUES ═══ -->
-  <div id="tab-stats" class="admin-panel active">
-    <!-- Rapport d'activité -->
-    <div class="card" style="margin-bottom:1.25rem">
-      <div class="card-header"><span class="card-title">📄 Rapport d'activité</span></div>
-      <div class="card-body" style="display:flex;align-items:flex-end;gap:.75rem;flex-wrap:wrap">
-        <div class="form-group" style="margin:0;min-width:140px">
-          <label>Période</label>
-          <select id="rapportType" onchange="toggleRapportPeriode()">
-            <option value="mois">Mensuel</option>
-            <option value="annee">Annuel</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0" id="rapportMoisWrap">
-          <label>Mois</label>
-          <input type="month" id="rapportMois"/>
-        </div>
-        <div class="form-group" style="margin:0;display:none" id="rapportAnneeWrap">
-          <label>Année</label>
-          <input type="number" id="rapportAnnee" min="2000" max="2100" step="1"/>
-        </div>
-        <button class="btn btn-violet" onclick="genererRapportPDF()" style="font-weight:700">📄 Générer le rapport PDF</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
-      <div class="card">
-        <div class="card-header"><span class="card-title">👥 Résidents par statut</span></div>
-        <div class="card-body" style="padding:.75rem 1.25rem"><div id="residentStatutList" style="display:flex;flex-direction:column;gap:.4rem"></div></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">🔑 Connexions récentes</span></div>
-        <div class="card-body" style="padding:0"><div id="recentLoginsList"></div></div>
-      </div>
-    </div>
-    <!-- Indicateurs clés -->
-    <div class="grid grid-4" style="gap:1rem;margin-bottom:1.25rem">
-      <div class="stat-card" style="background:linear-gradient(135deg,#3b82f625,#93c5fd15)">
-        <div class="stat-card-top"><span class="stat-label">Résidents actifs</span><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div>
-        <div class="stat-num" id="sResidentsActifs">—</div>
-      </div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#10b98125,#34d39915)">
-        <div class="stat-card-top"><span class="stat-label">Taux présence mois</span><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/></svg></div></div>
-        <div class="stat-num" id="sTauxPresence">—</div>
-      </div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)">
-        <div class="stat-card-top"><span class="stat-label">Avenants actifs</span><div class="stat-icon" style="background:#8b5cf620;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div></div>
-        <div class="stat-num" id="sAvenantsActifs">—</div>
-      </div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#ef444425,#fca5a515)">
-        <div class="stat-card-top"><span class="stat-label">Incidents ouverts</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div>
-        <div class="stat-num" id="sIncidentsOuverts">—</div>
-      </div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#f59e0b25,#fde68a15)">
-        <div class="stat-card-top"><span class="stat-label">Satisfaction résidents</span><div class="stat-icon" style="background:#f59e0b20;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div></div>
-        <div class="stat-num" id="sSatScore">—</div>
-        <div style="font-size:.72rem;margin-top:.15rem;font-weight:600" id="sSatNiv"></div>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-      <div class="card">
-        <div class="card-header"><span class="card-title">📂 Catégories journal</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="journalCatTotal"></span></div>
-        <div class="card-body" style="padding:.9rem 1.25rem"><div id="journalCatBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">⚠️ Types d'incidents</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="incidentTypeTotal"></span></div>
-        <div class="card-body" style="padding:.9rem 1.25rem"><div id="incidentTypeBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
-      </div>
-    </div>
-
-    <!-- PPE & Documents -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
-      <div class="card">
-        <div class="card-header"><span class="card-title">📋 PPE — statuts</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="ppeTotal"></span></div>
-        <div class="card-body" style="padding:.9rem 1.25rem"><div id="ppeBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">📁 Documents par catégorie</span><span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="docTotal"></span></div>
-        <div class="card-body" style="padding:.9rem 1.25rem"><div id="docBars" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
-      </div>
-    </div>
-
-    <!-- Satisfaction évolution -->
-    <div class="card" style="margin-top:1.25rem">
-      <div class="card-header">
-        <span class="card-title">⭐ Évolution de la satisfaction résidents</span>
-        <span style="font-size:.73rem;color:var(--muted);margin-left:auto" id="satEvolTotal"></span>
-        <a href="satisfaction.html" style="font-size:.75rem;color:var(--primary);text-decoration:none;font-weight:600;margin-left:1rem">Voir le détail →</a>
-      </div>
-      <div class="card-body" style="padding:.9rem 1.25rem">
-        <div id="satEvolChart" style="min-height:80px"></div>
-        <div id="satCatBars" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem .9rem;margin-top:1rem"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ ÉTABLISSEMENT ═══ -->
-  <div id="tab-etablissement" class="admin-panel" style="display:none">
-    <div class="panel-header">
-      <div><div class="panel-title">Établissement &amp; personnalisation</div><div class="panel-sub">Informations, identité visuelle et configuration de votre structure</div></div>
-    </div>
-    <div class="card" style="margin-bottom:1.25rem">
-      <div class="card-body" style="display:grid;grid-template-columns:1fr 280px;gap:2rem;padding:1.5rem">
-        <div style="display:flex;flex-direction:column;gap:1rem">
-          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Informations générales</div>
-          <div class="form-group"><label>Nom de l'établissement</label><input type="text" id="setEtab" placeholder="Ex : Foyer d'Hébergement Les Trois Rivières"/></div>
-          <div class="form-row"><div class="form-group"><label>Ville</label><input type="text" id="setVille" placeholder="Ville"/></div><div class="form-group"><label>N° FINESS</label><input type="text" id="setFiness" placeholder="Ex : 750123456"/></div></div>
-          <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="setTel" placeholder="01 23 45 67 89"/></div><div class="form-group"><label>Email</label><input type="email" id="setEmail" placeholder="contact@foyer.fr"/></div></div>
-          <div class="form-row"><div class="form-group"><label>Capacité d'accueil</label><input type="number" id="setCapacite" placeholder="Ex : 100" min="1"/></div><div class="form-group"><label>Adresse</label><input type="text" id="setAdresse" placeholder="Adresse complète…"/></div></div>
-        </div>
-        <div style="background:var(--av-l);border-radius:14px;padding:1.25rem;align-self:start;position:sticky;top:1.5rem">
-          <div style="display:flex;align-items:center;gap:.85rem;margin-bottom:1.25rem">
-            <div id="previewLogo" style="width:52px;height:52px;border-radius:12px;background:#fff;color:var(--av);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;box-shadow:0 1px 4px rgba(0,0,0,.08)">FTR</div>
-            <div><div style="font-weight:800;font-size:.95rem" id="previewNom">—</div><div style="font-size:.72rem;color:var(--av)" id="previewVille"></div></div>
+          <!-- Hero : occupation + connexions + répartition -->
+          <div class="adm-hero">
+            <div class="adm-hero-main">
+              <div class="adm-donut" id="admHeroDonut" style="--p:0turn">
+                <div class="adm-donut-in">
+                  <span class="adm-donut-n" id="admHeroPct">—</span>
+                  <span class="adm-donut-l">occupation</span>
+                </div>
+              </div>
+              <div>
+                <div class="adm-hero-eyebrow">Vue d'ensemble</div>
+                <div class="adm-hero-facts">
+                  <div><div class="adm-hero-n" id="admHeroOccup">—</div><div class="adm-hero-l">Places occupées</div></div>
+                  <div><div class="adm-hero-n" id="admHeroPersonnel">—</div><div class="adm-hero-l">Personnel actif</div></div>
+                  <div><div class="adm-hero-n" id="admHeroEntrees" style="color:var(--v2-ok-light)">—</div><div class="adm-hero-l">Entrées ce mois</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="v2-blk">
+              <div class="v2-blk-h" style="margin-bottom:12px">
+                <span class="adm-li-dot" style="--pc:#34d399"></span>
+                <span class="v2-blk-t">Connexions — 7 jours</span>
+              </div>
+              <div class="adm-spark" id="admConnexions"></div>
+            </div>
+            <div class="v2-blk">
+              <div class="v2-blk-h" style="margin-bottom:12px"><span class="v2-blk-t">Répartition du personnel</span></div>
+              <div id="admRepartition" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.82rem">
-            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">FINESS</span><span id="previewFiness" style="font-weight:700">—</span></div>
-            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Téléphone</span><span id="previewTel" style="font-weight:700">—</span></div>
-            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Email</span><span id="previewEmail" style="font-weight:700">—</span></div>
-            <div style="display:flex;gap:.5rem"><span style="color:var(--muted);min-width:80px;font-size:.7rem">Adresse</span><span id="previewAdresse" style="font-weight:700">—</span></div>
+
+          <!-- KPI -->
+          <div class="adm-kgrid" id="admKpis"></div>
+
+          <!-- Activité + modules -->
+          <div class="v2-g v2-g-15">
+            <div class="v2-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Activité de la plateforme — 6 mois</span><span class="v2-blk-lien" id="admActiviteMeta"></span></div>
+              <div class="adm-chart" id="admActivite"></div>
+            </div>
+            <div class="v2-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Modules les plus utilisés</span></div>
+              <div id="admModules" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+          </div>
+
+          <!-- Audit + système -->
+          <div class="v2-g v2-g2">
+            <div class="v2-blk">
+              <div class="v2-blk-h">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="v2-blk-t">Journal d'activité (audit)</span>
+                <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="renderAuditLog();admRenderAuditRecent()">↻</button>
+              </div>
+              <div id="admAudit"></div>
+            </div>
+            <div class="v2-blk adm-tint-ok">
+              <div class="v2-blk-h">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" style="width:15px;height:15px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span class="v2-blk-t">État du système</span>
+              </div>
+              <div id="admSysteme"></div>
+            </div>
+          </div>
+
+          <div class="v2-sep"><span class="v2-sep-txt">Indicateurs de l'établissement</span><span class="v2-sep-line"></span></div>
+
+          <!-- Anneaux d'indicateurs (données réelles Supabase) -->
+          <div class="adm-rings" id="statsStrip">
+            <div class="adm-ring">
+              <div class="adm-ring-w">
+                <svg viewBox="0 0 88 88"><circle class="adm-ring-track" cx="44" cy="44" r="36"/><circle class="adm-ring-bar" id="c1bar" cx="44" cy="44" r="36" stroke="#a78bfa" stroke-dasharray="226" stroke-dashoffset="226"/></svg>
+                <div class="adm-ring-v"><span id="c1pct">0</span><span style="font-size:11px">%</span></div>
+              </div>
+              <div class="adm-ring-n">Taux de présence</div>
+              <div class="adm-ring-s" id="c1sub">— / — résidents</div>
+              <span class="v2-badge v2-b-info" id="c1badge">—</span>
+            </div>
+            <div class="adm-ring">
+              <div class="adm-ring-w">
+                <svg viewBox="0 0 88 88"><circle class="adm-ring-track" cx="44" cy="44" r="36"/><circle class="adm-ring-bar" id="c2bar" cx="44" cy="44" r="36" stroke="#10b981" stroke-dasharray="226" stroke-dashoffset="226"/></svg>
+                <div class="adm-ring-v"><span id="c2pct">0</span><span style="font-size:11px">%</span></div>
+              </div>
+              <div class="adm-ring-n">Taux d'occupation</div>
+              <div class="adm-ring-s" id="c2sub">— / — places</div>
+              <span class="v2-badge v2-b-ok" id="c2badge">—</span>
+            </div>
+            <div class="adm-ring">
+              <div class="adm-ring-w">
+                <svg viewBox="0 0 88 88"><circle class="adm-ring-track" cx="44" cy="44" r="36"/><circle class="adm-ring-bar" id="c3bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/></svg>
+                <div class="adm-ring-v"><span id="c3val">0</span></div>
+              </div>
+              <div class="adm-ring-n">Journal (7 jours)</div>
+              <div class="adm-ring-s" id="c3sub">entrées cette semaine</div>
+              <span class="v2-badge v2-b-warn" id="c3badge">—</span>
+            </div>
+            <div class="adm-ring">
+              <div class="adm-ring-w">
+                <svg viewBox="0 0 88 88"><circle class="adm-ring-track" cx="44" cy="44" r="36"/><circle class="adm-ring-bar" id="c4bar" cx="44" cy="44" r="36" stroke="#ef4444" stroke-dasharray="226" stroke-dashoffset="226"/></svg>
+                <div class="adm-ring-v"><span id="c4val">0</span></div>
+              </div>
+              <div class="adm-ring-n">Incidents actifs</div>
+              <div class="adm-ring-s" id="c4sub">non traités</div>
+              <span class="v2-badge v2-b-danger" id="c4badge">—</span>
+            </div>
+            <div class="adm-ring">
+              <div class="adm-ring-w">
+                <svg viewBox="0 0 88 88"><circle class="adm-ring-track" cx="44" cy="44" r="36"/><circle class="adm-ring-bar" id="c5bar" cx="44" cy="44" r="36" stroke="#8b5cf6" stroke-dasharray="226" stroke-dashoffset="226"/></svg>
+                <div class="adm-ring-v"><span id="c5val">0</span></div>
+              </div>
+              <div class="adm-ring-n">SERAFIN-PH</div>
+              <div class="adm-ring-s" id="c5sub">résidents évalués</div>
+              <span class="v2-badge v2-b-info" id="c5badge">—</span>
+            </div>
+            <div class="adm-ring">
+              <div class="adm-ring-w">
+                <svg viewBox="0 0 88 88"><circle class="adm-ring-track" cx="44" cy="44" r="36"/><circle class="adm-ring-bar" id="c6bar" cx="44" cy="44" r="36" stroke="#f59e0b" stroke-dasharray="226" stroke-dashoffset="226"/></svg>
+                <div class="adm-ring-v"><span id="c6pct">—</span><span style="font-size:11px" id="c6pctSign"></span></div>
+              </div>
+              <div class="adm-ring-n">Satisfaction</div>
+              <div class="adm-ring-s" id="c6sub">résidents</div>
+              <span class="v2-badge v2-b-warn" id="c6badge">—</span>
+            </div>
+          </div>
+
+          <!-- Détails : présence, PPE, autres indicateurs -->
+          <div id="statsDetail" class="adm-stack">
+            <div class="v2-g v2-g-15">
+              <div class="v2-blk">
+                <div class="v2-blk-h">
+                  <span class="v2-blk-t">Taux de présence</span>
+                  <span class="v2-chips" style="margin-left:auto">
+                    <button type="button" class="v2-chip-f btn-freq" data-freq="jour">Jour</button>
+                    <button type="button" class="v2-chip-f btn-freq" data-freq="semaine">Semaine</button>
+                    <button type="button" class="v2-chip-f btn-freq on active" data-freq="mois">Mois</button>
+                    <span style="font-size:11.5px;color:var(--v2-t7)" id="presenceFreqAvg">—</span>
+                  </span>
+                </div>
+                <div class="v2-chart" id="barPresenceMonth" style="gap:4px"></div>
+              </div>
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">PPE / Avenants</span></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Actifs</span><b style="margin-left:auto;color:var(--v2-ok-light)" id="ppeActif">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Brouillons</span><b style="margin-left:auto;color:var(--v2-warn-text)" id="ppeBrouillon">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Terminés</span><b style="margin-left:auto;color:var(--v2-t5)" id="ppeTermine">—</b></div>
+                <div style="margin-top:12px">
+                  <div class="adm-use-h"><span class="adm-use-l">Actifs</span><span class="adm-use-n" id="ppeActifPct">—%</span></div>
+                  <div class="v2-prog"><span id="ppeActifBar" style="background:var(--v2-ok);width:0%"></span></div>
+                  <div class="adm-use-h" style="margin-top:10px"><span class="adm-use-l">Brouillons</span><span class="adm-use-n" id="ppeBrouillonPct">—%</span></div>
+                  <div class="v2-prog"><span id="ppeBrouillonBar" style="background:var(--v2-warn);width:0%"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="v2-g v2-g4">
+              <div class="v2-kpi"><div class="v2-kpi-val" id="sResidentsActifs">—</div><div class="v2-kpi-lbl">Résidents actifs</div></div>
+              <div class="v2-kpi"><div class="v2-kpi-val" id="sTauxPresence">—</div><div class="v2-kpi-lbl">Taux présence mois</div></div>
+              <div class="v2-kpi"><div class="v2-kpi-val" id="sAvenantsActifs">—</div><div class="v2-kpi-lbl">Avenants actifs</div></div>
+              <div class="v2-kpi"><div class="v2-kpi-val" id="sIncidentsOuverts">—</div><div class="v2-kpi-lbl">Incidents ouverts</div></div>
+            </div>
+
+            <div class="v2-g v2-g3">
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Satisfaction résidents</span></div>
+                <div class="v2-kpi-val" id="sSatScore">—</div>
+                <div style="font-size:12px;font-weight:600;margin-top:6px" id="sSatNiv"></div>
+              </div>
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Autres indicateurs</span></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Résidents actifs</span><b style="margin-left:auto" id="qResidents">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Utilisateurs</span><b style="margin-left:auto" id="qUsers">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Véhicules réservés</span><b style="margin-left:auto" id="qVehi">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Messages non lus</span><b style="margin-left:auto" id="qMessages">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Documents stockés</span><b style="margin-left:auto" id="qDocs">—</b></div>
+              </div>
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">SERAFIN-PH</span></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Résidents évalués</span><b style="margin-left:auto;color:var(--v2-indigo-pale)" id="spEvalues">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">GMPS moyen</span><b style="margin-left:auto" id="spGmps">—</b></div>
+                <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Score total cumulé</span><b style="margin-left:auto" id="spScore">—</b></div>
+                <div id="spBars" style="margin-top:12px"></div>
+                <div id="spNiveau" style="margin-top:10px"></div>
+              </div>
+            </div>
+
+            <div class="v2-g v2-g2">
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Résidents par statut</span></div>
+                <div id="residentStatutList" style="display:flex;flex-direction:column;gap:6px"></div>
+              </div>
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Connexions récentes</span></div>
+                <div id="recentLoginsList"></div>
+              </div>
+            </div>
+
+            <div class="v2-g v2-g2">
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Catégories journal</span><span class="v2-card-meta" id="journalCatTotal"></span></div>
+                <div id="journalCatBars"></div>
+              </div>
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Types d'incidents</span><span class="v2-card-meta" id="incidentTypeTotal"></span></div>
+                <div id="incidentTypeBars"></div>
+              </div>
+            </div>
+
+            <div class="v2-g v2-g2">
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">PPE — statuts</span><span class="v2-card-meta" id="ppeTotal"></span></div>
+                <div id="ppeBars"></div>
+              </div>
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Documents par catégorie</span><span class="v2-card-meta" id="docTotal"></span></div>
+                <div id="docBars"></div>
+              </div>
+            </div>
+
+            <div class="v2-blk">
+              <div class="v2-blk-h">
+                <span class="v2-blk-t">Évolution de la satisfaction résidents</span>
+                <span class="v2-card-meta" id="satEvolTotal"></span>
+                <a class="v2-blk-lien" href="satisfaction.html">Voir le détail →</a>
+              </div>
+              <div id="satEvolChart" style="min-height:80px"></div>
+              <div id="satCatBars" class="v2-g v2-g2" style="margin-top:16px"></div>
+            </div>
+
+            <!-- Rapport d'activité -->
+            <div class="v2-blk adm-tint-indigo">
+              <div class="v2-blk-h"><span class="v2-blk-t">Rapport d'activité</span></div>
+              <div class="adm-actions" style="align-items:flex-end">
+                <div style="min-width:150px">
+                  <label class="v2-fld-l" for="rapportType">Période</label>
+                  <select class="v2-fld" id="rapportType" onchange="toggleRapportPeriode()">
+                    <option value="mois">Mensuel</option>
+                    <option value="annee">Annuel</option>
+                  </select>
+                </div>
+                <div id="rapportMoisWrap" style="min-width:150px">
+                  <label class="v2-fld-l" for="rapportMois">Mois</label>
+                  <input class="v2-fld" type="month" id="rapportMois"/>
+                </div>
+                <div id="rapportAnneeWrap" style="display:none;min-width:150px">
+                  <label class="v2-fld-l" for="rapportAnnee">Année</label>
+                  <input class="v2-fld" type="number" id="rapportAnnee" min="2000" max="2100" step="1"/>
+                </div>
+                <button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="genererRapportPDF()">Générer le rapport PDF</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-      <div class="card">
-        <div class="card-header"><span class="card-title">🎨 Couleurs</span></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-          <div class="form-group"><label>Sidebar</label><div class="color-row"><input type="color" id="bPrimary" value="#1e293b" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/><span style="font-size:.76rem;color:var(--muted)">Barre latérale et titres</span></div></div>
-          <div class="form-group"><label>Accent</label><div class="color-row"><input type="color" id="bAccent" value="#7C6FCD" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/><span style="font-size:.76rem;color:var(--muted)">Boutons et badges</span></div></div>
-          <div class="form-group"><label>Fond d'écran</label><div class="color-row"><input type="color" id="bBackground" value="#dbeafe" style="width:44px;height:34px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)" onchange="setEtabBgColor(this.value)"/><span style="font-size:.76rem;color:var(--muted)">Couleur de fond de cet établissement</span><button class="btn btn-ghost btn-sm" type="button" onclick="setEtabBgColor(null);loadBgColorInput()" style="margin-left:auto">Défaut</button></div></div>
-          <div style="display:flex;gap:.5rem"><button class="btn btn-violet btn-sm" onclick="saveBranding()">Appliquer</button><button class="btn btn-ghost btn-sm" onclick="resetBranding()">Défaut</button></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">🖼 Logo</span></div>
-        <div class="card-body">
-          <div class="photo-upload-zone" id="logoZone" onclick="document.getElementById('logoInput').click()" style="padding:.85rem">
-            <div id="logoPreview" style="width:52px;height:52px;border-radius:10px;background:var(--g100);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden"><svg viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="1.5" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-            <div class="photo-upload-info"><strong style="font-size:.8rem">Logo</strong><span style="font-size:.7rem">PNG/JPG/SVG — max 1 Mo</span><button type="button" class="photo-remove" id="logoRemoveBtn" style="display:none" onclick="event.stopPropagation();removeLogo()">✕ Supprimer</button></div>
+      </section>
+
+      <!-- ═══════════════════ ÉTABLISSEMENT ═══════════════════ -->
+      <section id="tab-etablissement" class="adm-panel">
+        <div class="adm-stack">
+          <div class="v2-g v2-g2">
+            <div class="v2-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Coordonnées de l'établissement</span></div>
+              <div class="adm-fields">
+                <div><label class="v2-fld-l" for="setEtab">Raison sociale</label><input class="v2-fld" type="text" id="setEtab" placeholder="Ex : Foyer d'Hébergement Les Trois Rivières"/></div>
+                <div class="v2-grid2">
+                  <div><label class="v2-fld-l" for="setFiness">N° FINESS</label><input class="v2-fld" type="text" id="setFiness" placeholder="Ex : 750123456"/></div>
+                  <div><label class="v2-fld-l" for="setVille">Ville</label><input class="v2-fld" type="text" id="setVille" placeholder="Ville"/></div>
+                </div>
+                <div><label class="v2-fld-l" for="setAdresse">Adresse</label><input class="v2-fld" type="text" id="setAdresse" placeholder="Adresse complète…"/></div>
+                <div class="v2-grid2">
+                  <div><label class="v2-fld-l" for="setTel">Téléphone</label><input class="v2-fld" type="tel" id="setTel" placeholder="01 23 45 67 89"/></div>
+                  <div><label class="v2-fld-l" for="setEmail">Email</label><input class="v2-fld" type="email" id="setEmail" placeholder="contact@foyer.fr"/></div>
+                </div>
+                <div><label class="v2-fld-l" for="setCapacite">Capacité d'accueil (places autorisées)</label><input class="v2-fld" type="number" id="setCapacite" placeholder="Ex : 42" min="1"/></div>
+                <div class="adm-actions"><button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="saveSettings()">Enregistrer les paramètres</button></div>
+              </div>
+            </div>
+
+            <div class="adm-stack">
+              <div class="v2-blk">
+                <div class="v2-blk-h">
+                  <span class="v2-blk-t">Agréments &amp; habilitations</span>
+                  <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="admOpenAgrement()">+ Ajouter</button>
+                </div>
+                <div id="admAgrements"></div>
+              </div>
+
+              <div class="v2-blk adm-tint-indigo">
+                <div class="v2-blk-h" style="margin-bottom:6px"><span class="v2-blk-t">Capacité d'accueil</span></div>
+                <div id="admCapacite" style="display:flex;align-items:baseline;gap:8px">
+                  <span class="v2-gauge-val" style="font-size:30px">—</span>
+                </div>
+              </div>
+
+              <div class="v2-blk">
+                <div class="v2-blk-h"><span class="v2-blk-t">Aperçu de la fiche</span></div>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                  <div id="previewLogo" class="v2-av v2-av-sq" style="width:48px;height:48px;background:var(--v2-s-ctrl);color:var(--v2-t2);font-size:13px">FTR</div>
+                  <div style="min-width:0">
+                    <div style="font-weight:700;font-size:14px;color:var(--v2-t2)" id="previewNom">—</div>
+                    <div style="font-size:11.5px;color:var(--v2-t6)" id="previewVille"></div>
+                  </div>
+                </div>
+                <div class="v2-kv" style="padding:6px 0"><span class="v2-kv-k">FINESS</span><span class="v2-kv-v" id="previewFiness">—</span></div>
+                <div class="v2-kv" style="padding:6px 0"><span class="v2-kv-k">Téléphone</span><span class="v2-kv-v" id="previewTel">—</span></div>
+                <div class="v2-kv" style="padding:6px 0"><span class="v2-kv-k">Email</span><span class="v2-kv-v" id="previewEmail">—</span></div>
+                <div class="v2-kv" style="padding:6px 0"><span class="v2-kv-k">Adresse</span><span class="v2-kv-v" id="previewAdresse">—</span></div>
+              </div>
+            </div>
           </div>
-          <input type="file" id="logoInput" class="photo-upload-input" accept="image/png,image/jpeg,image/svg+xml"/>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1.25rem">
-      <div class="card-body" style="display:flex;justify-content:flex-end;padding:1.25rem 1.5rem">
-        <button class="btn btn-violet" onclick="saveSettings()">💾 Enregistrer les paramètres</button>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1.25rem">
-      <div class="card-header"><span class="card-title">🏢 Mes établissements</span><button class="btn btn-accent btn-sm btn-add-resident" style="margin-left:auto" onclick="document.getElementById('newEtabForm').style.display=document.getElementById('newEtabForm').style.display==='none'?'':'none'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btn-add-label"> Nouvel établissement</span></button></div>
-      <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-        <div id="newEtabForm" style="display:none;background:var(--g50);border-radius:var(--r-sm);padding:1rem;border:1px solid var(--border)">
-          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem">Nouvel établissement</div>
-          <div class="form-row">
-            <div class="form-group"><label>Nom</label><input type="text" id="newEtabNom" placeholder="Ex : Foyer Les Pins" class="form-control"/></div>
-            <div class="form-group"><label>Type</label><select id="newEtabType" class="form-control"><optgroup label="Hébergement"><option value="foyer_hebergement">Foyer d'hébergement</option><option value="foyer_vie">Foyer de vie</option><option value="foyer_jeunes">FJT</option><option value="mecs">MECS</option><option value="lhss">LHSS</option></optgroup><optgroup label="Médico-social enfants"><option value="ime">IME</option><option value="itep">ITEP</option><option value="sessad">SESSAD</option><option value="camsp">CAMSP</option></optgroup><optgroup label="Médico-social adultes"><option value="esat">ESAT</option><option value="mas">MAS</option><option value="fam">FAM</option><option value="savs">SAVS</option><option value="samsah">SAMSAH</option></optgroup></select></div>
-            <div class="form-group"><label>Couleur</label><input type="color" id="newEtabColor" value="#0f2b4a" style="width:44px;height:38px;border-radius:7px;cursor:pointer;padding:0;border:1px solid var(--border)"/></div>
+
+          <div class="v2-g v2-g2">
+            <div class="v2-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Identité visuelle</span></div>
+              <div class="adm-fields">
+                <div>
+                  <label class="v2-fld-l" for="bPrimary">Barre latérale &amp; titres</label>
+                  <div class="adm-actions"><input type="color" class="adm-color" id="bPrimary" value="#1e293b"/><span style="font-size:12px;color:var(--v2-t6)">Couleur principale</span></div>
+                </div>
+                <div>
+                  <label class="v2-fld-l" for="bAccent">Accent</label>
+                  <div class="adm-actions"><input type="color" class="adm-color" id="bAccent" value="#7C6FCD"/><span style="font-size:12px;color:var(--v2-t6)">Boutons et badges</span></div>
+                </div>
+                <div>
+                  <label class="v2-fld-l" for="bBackground">Fond d'écran de l'établissement</label>
+                  <div class="adm-actions">
+                    <input type="color" class="adm-color" id="bBackground" value="#dbeafe" onchange="setEtabBgColor(this.value)"/>
+                    <span style="font-size:12px;color:var(--v2-t6)">Couleur de fond</span>
+                    <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="setEtabBgColor(null);loadBgColorInput()">Défaut</button>
+                  </div>
+                </div>
+                <div class="adm-actions">
+                  <button type="button" class="v2-btn v2-btn-primary v2-btn-sm" onclick="saveBranding()">Appliquer</button>
+                  <button type="button" class="v2-btn v2-btn-sm" onclick="resetBranding()">Réinitialiser</button>
+                </div>
+                <div>
+                  <label class="v2-fld-l">Logo — PNG / JPG / SVG, max 1 Mo</label>
+                  <div class="adm-drop" id="logoZone" onclick="document.getElementById('logoInput').click()">
+                    <div class="adm-drop-p" id="logoPreview"><svg viewBox="0 0 24 24" fill="none" stroke="#8095b4" stroke-width="1.5" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+                    <div style="min-width:0">
+                      <div class="adm-drop-t">Logo de l'établissement</div>
+                      <div class="adm-drop-s">Cliquez pour choisir un fichier</div>
+                      <button type="button" class="v2-btn v2-btn-sm" id="logoRemoveBtn" style="display:none;margin-top:8px" onclick="event.stopPropagation();removeLogo()">✕ Supprimer</button>
+                    </div>
+                  </div>
+                  <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="v2-blk">
+              <div class="v2-blk-h">
+                <span class="v2-blk-t">Mes établissements</span>
+                <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="admToggleNewEtab()">+ Nouvel établissement</button>
+              </div>
+              <div id="newEtabForm" style="display:none;margin-bottom:14px">
+                <div class="v2-sub-card">
+                  <div class="v2-grid2" style="margin-bottom:10px">
+                    <div><label class="v2-fld-l" for="newEtabNom">Nom</label><input class="v2-fld" type="text" id="newEtabNom" placeholder="Ex : Foyer Les Pins"/></div>
+                    <div><label class="v2-fld-l" for="newEtabType">Type</label><select class="v2-fld" id="newEtabType"><optgroup label="Hébergement"><option value="foyer_hebergement">Foyer d'hébergement</option><option value="foyer_vie">Foyer de vie</option><option value="foyer_jeunes">FJT</option><option value="mecs">MECS</option><option value="lhss">LHSS</option></optgroup><optgroup label="Médico-social enfants"><option value="ime">IME</option><option value="itep">ITEP</option><option value="sessad">SESSAD</option><option value="camsp">CAMSP</option></optgroup><optgroup label="Médico-social adultes"><option value="esat">ESAT</option><option value="mas">MAS</option><option value="fam">FAM</option><option value="savs">SAVS</option><option value="samsah">SAMSAH</option></optgroup></select></div>
+                  </div>
+                  <div class="adm-actions">
+                    <input type="color" class="adm-color" id="newEtabColor" value="#0f2b4a"/>
+                    <button type="button" class="v2-btn v2-btn-primary v2-btn-sm" onclick="adminCreateEtab()">Créer</button>
+                    <button type="button" class="v2-btn v2-btn-sm" onclick="admToggleNewEtab(false)">Annuler</button>
+                  </div>
+                </div>
+              </div>
+              <div id="etabAdminList"></div>
+            </div>
           </div>
-          <div style="display:flex;gap:.5rem;margin-top:.5rem"><button class="btn btn-primary btn-sm" onclick="adminCreateEtab()">Créer</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('newEtabForm').style.display='none'">Annuler</button></div>
         </div>
-        <div id="etabAdminList"></div>
-      </div>
-    </div>
-  </div>
+      </section>
 
-  <!-- ═══ FONCTIONS & CATÉGORIES ═══ -->
-  <div id="tab-fonctions" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Catégories &amp; Objectifs</div><div class="panel-sub">Gérez les catégories du journal et les objectifs des résidents</div></div></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div style="display:flex;flex-direction:column;gap:1rem">
-        <div class="card"><div class="card-header"><span class="card-title">📂 Catégories du journal</span><button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="resetCatForm();openModal('modalCat')">+ Ajouter</button></div><div id="catList" style="min-height:80px"></div></div>
-        <div class="card"><div class="card-header"><span class="card-title">💡 À propos des catégories</span></div><div class="card-body" style="font-size:.82rem;color:var(--muted);line-height:1.7"><p>Les catégories classifient les entrées du journal de bord.</p><div class="alert alert-info" style="margin-top:.75rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Supprimer une catégorie n'affecte pas les entrées existantes.</div></div></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:1rem">
-        <div class="card"><div class="card-header"><span class="card-title">🎯 Objectifs personnalisés</span><button class="btn btn-violet btn-sm" style="margin-left:auto" onclick="openModal('modalObj')">+ Ajouter</button></div><div style="display:grid;grid-template-columns:1fr;gap:1rem;padding:1rem"><div id="objList" style="min-height:60px"></div></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ UTILISATEURS (fiches + comptes — fusionné dans tab-employes) ═══ -->
-  <div id="tab-employes" class="admin-panel" style="display:none">
-    <!-- Titre + actions -->
-    <div class="emp-title-bar">
-      <div class="emp-title">Utilisateurs</div>
-      <div class="emp-title-actions">
-        <button class="btn btn-violet btn-sm" onclick="exportEmployesCsv()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exporter
-        </button>
-        <button class="emp-tool-btn" style="padding:.38rem .6rem">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-        </button>
-      </div>
-    </div>
-    <!-- Barre d'outils -->
-    <div class="emp-toolbar">
-      <div class="emp-toolbar-left">
-        <input type="text" id="empSearch" class="form-input" placeholder="Rechercher…" style="width:200px;padding:.32rem .7rem;font-size:.82rem" oninput="renderEmployes()"/>
-      </div>
-      <div class="emp-toolbar-right">
-        <button class="btn btn-violet btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button>
-      </div>
-    </div>
-    <!-- Grille cartes -->
-    <div id="employesList" style="margin-top:.75rem"></div>
-    <!-- Popup profil (hover) -->
-    <div id="empPopup" class="emp-popup" style="display:none" onmouseenter="clearEmpPopupTimer()" onmouseleave="hideEmpPopup()"></div>
-  </div>
-
-  <!-- ═══ PERMISSIONS ═══ -->
-  <div id="tab-permissions" class="admin-panel" style="display:none">
-    <style>
-      .perm2-layout{display:grid;grid-template-columns:230px 1fr;gap:1rem;align-items:start}
-      .perm2-role{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;margin-bottom:.4rem;transition:background .12s}
-      .perm2-role:hover{background:#f8fafc}
-      .perm2-role.active{border-color:#7c3aed;background:#f5f3ff}
-      .perm2-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-      .perm2-role-name{flex:1;min-width:0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .perm2-role.active .perm2-role-name{font-weight:700;color:#6d28d9}
-      .perm2-role-count{font-size:.7rem;color:var(--muted);background:#f1f5f9;border-radius:999px;padding:1px 7px}
-      .perm2-detail{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden}
-      .perm2-head{display:flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-bottom:1px solid var(--border)}
-      .perm2-body{padding:.4rem .9rem .9rem}
-      .perm2-group{}
-      .perm2-group-label{display:flex;align-items:center;justify-content:space-between;margin:.85rem 0 .15rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-      .perm2-allbtn{cursor:pointer;font-weight:600;text-transform:none;letter-spacing:0;color:#7c3aed}
-      .perm2-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-top:1px solid #f1f5f9}
-      .perm2-row-label{flex:1;font-size:.82rem}
-      .perm2-sw{width:36px;height:21px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;border:none;padding:0}
-      .perm2-sw.on{background:#7c3aed}
-      .perm2-sw::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:left .15s}
-      .perm2-sw.on::after{left:17px}
-      .perm2-saved{margin-left:auto;font-size:.72rem;font-weight:600;color:#16a34a;opacity:0;transition:opacity .2s}
-      .perm2-saved.show{opacity:1}
-      @media(max-width:720px){.perm2-layout{grid-template-columns:1fr}}
-    </style>
-    <div class="panel-header"><div><div class="panel-title">Rôles &amp; accès</div><div class="panel-sub">Choisissez un rôle, activez ses accès. Enregistrement automatique.</div></div><div style="display:flex;gap:.4rem"><button class="btn btn-outline btn-sm" onclick="permApplyRecommendedAll()" title="Appliquer les droits recommandés à tous les rôles reconnus">↺ Droits recommandés</button><button class="btn btn-violet btn-sm" onclick="permAddRole()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouveau rôle</button></div></div>
-    <div class="perm2-layout">
-      <div id="permRolesList"></div>
-      <div class="perm2-detail" id="permDetail"></div>
-    </div>
-  </div>
-
-  <!-- ═══ SÉGUR / CONFORMITÉ ═══ -->
-  <div id="tab-segur" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">🛡️ Ségur</div><div class="panel-sub">Préparation à l'interopérabilité : DMP, INS, MSSanté, Pro Santé Connect</div></div></div>
-    <div id="segurDashboard" style="display:flex;flex-direction:column;gap:1rem"></div>
-  </div>
-
-  <!-- ═══ MON COMPTE ═══ -->
-  <div id="tab-compte" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Mon compte</div><div class="panel-sub">Informations personnelles et identifiants</div></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;max-width:860px">
-      <div class="card"><div class="card-header"><span class="card-title">Informations</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-        <div style="display:flex;align-items:center;gap:1rem;padding:.85rem;background:var(--av-l);border-radius:12px"><div class="avatar lg" id="accountAvatar" style="background:var(--av);width:48px;height:48px;font-size:1.1rem">A</div><div><div style="font-weight:700;font-size:.95rem" id="accountName">Administrateur</div><div style="font-size:.74rem;color:var(--av);font-weight:600" id="accountRole">Admin</div></div></div>
-        <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="uPrenom" placeholder="Votre prénom"/></div><div class="form-group"><label>Nom</label><input type="text" id="uNom" placeholder="Votre nom"/></div></div>
-        <div class="form-group"><label>Rôle / Poste</label><input type="text" id="uRole" placeholder="Ex : Chef de service…"/></div>
-        <button class="btn btn-violet" onclick="saveUser()">Enregistrer</button>
-      </div></div>
-      <div class="card"><div class="card-header"><span class="card-title">Identifiants</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-        <div class="form-group"><label>Identifiant</label><input type="text" id="uUsername" placeholder="Identifiant" autocomplete="off"/></div>
-        <div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="uPassword" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"/></div>
-        <div class="form-group"><label>Confirmer</label><input type="password" id="uPasswordConfirm" placeholder="Confirmer" autocomplete="new-password"/></div>
-        <button class="btn btn-violet" onclick="saveCredentials()">Mettre à jour</button>
-      </div></div>
-    </div>
-  </div>
-
-  <!-- ═══ DONNÉES ═══ -->
-  <div id="tab-donnees" class="admin-panel" style="display:none">
-    <div class="panel-header"><div><div class="panel-title">Données &amp; historique</div><div class="panel-sub">Export, réinitialisation et journal des connexions</div></div></div>
-    <div class="grid grid-2" style="gap:1.5rem;align-items:start">
-      <div class="card"><div class="card-header"><span class="card-title">Conformité RGPD / HDS</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.65rem">
-        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
-          <span style="font-size:1.1rem">✅</span>
-          <span>Consentement des résidents — <strong>champ présent</strong> dans les fiches</span>
+      <!-- ═══════════════════ CATÉGORIES & OBJECTIFS ═══════════════════ -->
+      <section id="tab-fonctions" class="adm-panel">
+        <div class="v2-g v2-g2">
+          <div class="adm-stack">
+            <div class="v2-blk">
+              <div class="v2-blk-h">
+                <span class="v2-blk-t">Catégories du journal</span>
+                <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="resetCatForm();openModal('modalCat')">+ Ajouter</button>
+              </div>
+              <div id="catList"></div>
+            </div>
+            <div class="v2-blk adm-tint-indigo">
+              <div class="v2-blk-h"><span class="v2-blk-t">À propos des catégories</span></div>
+              <p style="font-size:12.5px;color:var(--v2-t4);line-height:1.7;margin:0">
+                Les catégories classifient les entrées du journal de bord.
+                Supprimer une catégorie n'affecte pas les entrées existantes.
+              </p>
+            </div>
+          </div>
+          <div class="v2-blk">
+            <div class="v2-blk-h">
+              <span class="v2-blk-t">Objectifs personnalisés</span>
+              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="resetObjForm();openModal('modalObj')">+ Ajouter</button>
+            </div>
+            <div id="objList"></div>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
-          <span style="font-size:1.1rem">✅</span>
-          <span>Droit d'accès &amp; d'export — <strong>bouton Export</strong> dans chaque fiche résident</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
-          <span style="font-size:1.1rem">✅</span>
-          <span>Droit à l'effacement — <strong>Anonymisation</strong> disponible dans chaque fiche</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:var(--r-sm);border:1px solid #16a34a30;font-size:.78rem;color:#166534">
-          <span style="font-size:1.1rem">✅</span>
-          <span>Journal d'accès — <strong>audit log</strong> actif (onglet Données ci-dessous)</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:#fffbeb;border-radius:var(--r-sm);border:1px solid #d9770630;font-size:.78rem;color:#92400e">
-          <span style="font-size:1.1rem">⚠️</span>
-          <span>Hébergement HDS — <strong>non certifié</strong> (données stockées localement dans le navigateur). Hébergement professionnel recommandé.</span>
-        </div>
-        <div style="font-size:.72rem;color:var(--muted);line-height:1.5;margin-top:.25rem">
-          🔐 Les données de santé sont stockées exclusivement dans le <strong>localStorage</strong> du navigateur. Aucune transmission externe.
-          Pour une conformité HDS complète, déployez l'application sur un <strong>serveur certifié HDS</strong> (hébergement professionnel de données de santé).
-        </div>
-      </div></div>
-      <div class="card"><div class="card-header"><span class="card-title">Sauvegarde &amp; restauration</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div style="font-size:.78rem;color:var(--muted);padding:.5rem .75rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border)">
-          💡 Sauvegardez régulièrement vos données. En cas de réinitialisation du navigateur, elles seraient perdues. Le « backup complet » couvre désormais tous les modules (résidents, équipe, planning, budget, paie, entretiens, annuaire, documentation, etc.).
-        </div>
-        <button class="btn btn-outline" onclick="exportData('residents')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exporter les résidents
-        </button>
-        <button class="btn btn-outline" onclick="exportData('journal')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exporter le journal
-        </button>
-        <button class="btn btn-violet" onclick="exportData('all')" style="font-weight:700">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Sauvegarder tout (backup complet)
-        </button>
-        <div style="border-top:1px solid var(--border);margin:.25rem 0"></div>
-        <button class="btn btn-outline" onclick="importData()" style="border-color:#a78bfa;color:#7c3aed">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Restaurer depuis un fichier…
-        </button>
-      </div></div>
-      <div class="card danger-zone"><div class="card-header"><span class="card-title" style="color:var(--red)">⚠ Zone dangereuse</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <button class="btn btn-outline" style="border-color:#fecaca;color:var(--red)" onclick="resetData('journal')">Vider le journal de bord</button>
-        <button class="btn btn-outline" style="border-color:#fecaca;color:var(--red)" onclick="resetData('presences')">Réinitialiser les présences</button>
-        <button class="btn btn-danger" onclick="resetData('all')">Réinitialiser toutes les données</button>
-      </div></div>
-    </div>
-    <div class="card" style="margin-top:1.5rem" id="dupCard">
-      <div class="card-header">
-        <span class="card-title">🔍 Doublons potentiels</span>
-        <button class="btn btn-outline btn-sm" onclick="scanDuplicates()" style="margin-left:auto">Analyser</button>
-      </div>
-      <div class="card-body" id="dupResults">
-        <div style="font-size:.82rem;color:var(--muted)">Recherche les transmissions et incidents en double (même résident, horaire proche, texte similaire). Cliquez sur « Analyser ».</div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1.5rem">
-      <div class="card-header">
-        <span class="card-title">📋 Journal d'audit</span>
-        <button class="btn btn-ghost btn-sm" onclick="renderAuditLog()" style="margin-left:auto">↻</button>
-        <button class="btn btn-outline btn-sm" onclick="exportAuditLog()" style="margin-left:.5rem;font-size:.72rem">Exporter CSV</button>
-      </div>
-      <div class="card-body" style="padding:0;overflow-x:auto;max-height:280px;overflow-y:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-          <thead style="background:var(--g50);position:sticky;top:0;z-index:1">
-            <tr>
-              <th style="padding:.6rem 1rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Date</th>
-              <th style="padding:.6rem 1rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Utilisateur</th>
-              <th style="padding:.6rem 1rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Action</th>
-              <th style="padding:.6rem 1rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Détails</th>
-            </tr>
-          </thead>
-          <tbody id="auditLogBody"></tbody>
-        </table>
-      </div>
-    </div>
+      </section>
 
-    <div class="card" style="margin-top:1.5rem"><div class="card-header"><span class="card-title">Historique des connexions</span><button class="btn btn-ghost btn-sm" onclick="renderLoginHistory()" style="margin-left:auto">↻</button></div><div class="card-body" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead style="background:var(--g50)"><tr><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap">Date</th><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Utilisateur</th><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Action</th><th style="padding:.65rem 1.25rem;text-align:left;font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase">Rôle</th></tr></thead><tbody id="loginHistoryBody"></tbody></table></div></div>
-  </div>
+      <!-- ═══════════════════ UTILISATEURS ═══════════════════ -->
+      <section id="tab-employes" class="adm-panel">
+        <div class="adm-stack">
+          <div class="v2-chips">
+            <input type="text" id="empSearch" class="v2-fld" placeholder="Rechercher un salarié…" style="max-width:280px;height:38px" oninput="renderEmployes()"/>
+            <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="exportEmployesCsv()">Exporter CSV</button>
+            <button type="button" class="v2-btn v2-btn-primary v2-btn-sm" onclick="resetEmployeForm();openModal('modalEmploye')">+ Ajouter</button>
+          </div>
+          <!-- Statistiques de comptes + filtres par rôle (js/admin-v2.js) -->
+          <div class="adm-kgrid" id="admUserKpis"></div>
+          <div class="v2-chips" id="admRoleFilters" role="group" aria-label="Filtrer par fonction"></div>
+          <div id="employesList"></div>
+          <div id="empPopup" class="emp-popup" style="display:none" onmouseenter="clearEmpPopupTimer()" onmouseleave="hideEmpPopup()"></div>
+        </div>
+      </section>
 
-</main>
+      <!-- ═══════════════════ PERMISSIONS ═══════════════════ -->
+      <section id="tab-permissions" class="adm-panel">
+        <div class="adm-stack">
+          <div class="v2-chips">
+            <span class="v2-sub" style="margin:0">Cochez les accès de chaque rôle. Enregistrement automatique.</span>
+            <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="permApplyRecommendedAll()">↺ Droits recommandés</button>
+            <button type="button" class="v2-btn v2-btn-primary v2-btn-sm" onclick="permAddRole()">+ Nouveau rôle</button>
+          </div>
+          <div class="adm-perm-wrap">
+            <div class="adm-perm-scroll"><table class="adm-perm" id="admPermMatrix"></table></div>
+          </div>
+          <!-- Vue héritée (maître-détail) : conservée pour les scripts qui l'alimentent -->
+          <div class="adm-perm-legacy"><div id="permRolesList"></div><div id="permDetail"></div></div>
+        </div>
+      </section>
 
-<!-- ══════════ MODALS ══════════ -->
-<div class="modal-overlay" id="modalCat">
-  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalCatTitle">Nouvelle catégorie</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body"><input type="hidden" id="catId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="catName" placeholder="Nom de la catégorie"/></div><div class="form-group"><label>Couleur</label><div style="display:flex;align-items:center;gap:.75rem"><input type="color" id="catColor" value="#3b82f6" style="width:48px;border-radius:8px"/></div></div></div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteCat" style="margin-right:auto;display:none" onclick="deleteCat()">Supprimer</button><button class="btn btn-violet" onclick="saveCat()">Enregistrer</button></div>
+      <!-- ═══════════════════ MON COMPTE ═══════════════════ -->
+      <section id="tab-compte" class="adm-panel">
+        <div class="v2-g v2-g2">
+          <div class="v2-blk">
+            <div class="v2-blk-h"><span class="v2-blk-t">Informations</span></div>
+            <div class="adm-fields">
+              <div style="display:flex;align-items:center;gap:14px">
+                <div class="v2-av" id="accountAvatar" style="width:48px;height:48px;font-size:16px;background:var(--v2-indigo-light)">A</div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--v2-t2)" id="accountName">Administrateur</div>
+                  <div style="font-size:11.5px;color:var(--v2-t6)" id="accountRole">Admin</div>
+                </div>
+              </div>
+              <div class="v2-grid2">
+                <div><label class="v2-fld-l" for="uPrenom">Prénom</label><input class="v2-fld" type="text" id="uPrenom" placeholder="Votre prénom"/></div>
+                <div><label class="v2-fld-l" for="uNom">Nom</label><input class="v2-fld" type="text" id="uNom" placeholder="Votre nom"/></div>
+              </div>
+              <div><label class="v2-fld-l" for="uRole">Rôle / Poste</label><input class="v2-fld" type="text" id="uRole" placeholder="Ex : Chef de service…"/></div>
+              <div class="adm-actions"><button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="saveUser()">Enregistrer</button></div>
+            </div>
+          </div>
+          <div class="v2-blk">
+            <div class="v2-blk-h"><span class="v2-blk-t">Identifiants</span></div>
+            <div class="adm-fields">
+              <div><label class="v2-fld-l" for="uUsername">Identifiant</label><input class="v2-fld" type="text" id="uUsername" placeholder="Identifiant" autocomplete="off"/></div>
+              <div><label class="v2-fld-l" for="uPassword">Nouveau mot de passe</label><input class="v2-fld" type="password" id="uPassword" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"/></div>
+              <div><label class="v2-fld-l" for="uPasswordConfirm">Confirmer</label><input class="v2-fld" type="password" id="uPasswordConfirm" placeholder="Confirmer" autocomplete="new-password"/></div>
+              <div class="adm-actions"><button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="saveCredentials()">Mettre à jour</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SÉGUR / CONFORMITÉ ═══════════════════ -->
+      <section id="tab-segur" class="adm-panel">
+        <div class="adm-stack">
+          <div class="adm-kgrid adm-kgrid-3" id="admSegurKpis"></div>
+          <div id="segurDashboard" class="adm-stack" style="gap:12px"></div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ DONNÉES ═══════════════════ -->
+      <section id="tab-donnees" class="adm-panel">
+        <div class="adm-stack">
+          <div class="v2-g v2-g2">
+            <div class="v2-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Sauvegardes &amp; exports</span></div>
+              <div id="admBackups"></div>
+            </div>
+            <div class="v2-blk adm-tint-grey">
+              <div class="v2-blk-h"><span class="v2-blk-t">RGPD &amp; rétention</span></div>
+              <div id="admRgpd"></div>
+            </div>
+          </div>
+
+          <div class="v2-blk">
+            <div class="v2-blk-h">
+              <span class="v2-blk-t">Doublons potentiels</span>
+              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="scanDuplicates()">Analyser</button>
+            </div>
+            <div id="dupResults" class="v2-blk-vide">Recherche les transmissions et incidents en double (même résident, horaire proche, texte similaire). Cliquez sur « Analyser ».</div>
+          </div>
+
+          <div class="v2-blk pad0" style="padding:20px 22px">
+            <div class="v2-blk-h">
+              <span class="v2-blk-t">Journal d'audit</span>
+              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="renderAuditLog()">↻</button>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="exportAuditLog()">Exporter CSV</button>
+            </div>
+            <div class="adm-tw adm-tw-h">
+              <table class="v2-table">
+                <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détails</th></tr></thead>
+                <tbody id="auditLogBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="v2-blk">
+            <div class="v2-blk-h">
+              <span class="v2-blk-t">Historique des connexions</span>
+              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="renderLoginHistory()">↻</button>
+            </div>
+            <div class="adm-tw adm-tw-h">
+              <table class="v2-table">
+                <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Rôle</th></tr></thead>
+                <tbody id="loginHistoryBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="v2-blk adm-tint-danger">
+            <div class="v2-blk-h"><span class="v2-blk-t">Zone dangereuse</span></div>
+            <p class="adm-note-sql" style="margin:0 0 12px">Ces actions vident les données locales de sauvegarde. Elles sont irréversibles.</p>
+            <div class="adm-actions">
+              <button type="button" class="v2-btn v2-btn-sm" onclick="resetData('journal')">Vider le journal de bord</button>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="resetData('presences')">Réinitialiser les présences</button>
+              <button type="button" class="v2-btn v2-btn-sm" style="color:var(--v2-danger-text);border-color:rgba(239,68,68,.35)" onclick="resetData('all')">Réinitialiser toutes les données</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalObj">
-  <div class="modal"><div class="modal-header"><span class="modal-title" id="modalObjTitle">Nouvel objectif</span><button class="modal-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body"><input type="hidden" id="objId"/><div class="form-group"><label class="required">Nom</label><input type="text" id="objName" placeholder="Nom de l'objectif"/></div><div class="form-group"><label>Description</label><textarea id="objDesc" rows="3" placeholder="Description…"></textarea></div></div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeAllModals()">Annuler</button><button class="btn btn-danger btn-sm" id="btnDeleteObj" style="margin-right:auto;display:none" onclick="deleteObj()">Supprimer</button><button class="btn btn-violet" onclick="saveObj()">Enregistrer</button></div>
+<!-- ══════════════════════ MODALES (gabarit V2) ══════════════════════ -->
+<div class="modal-overlay v2-ov" id="modalCat" role="dialog" aria-modal="true" aria-labelledby="modalCatTitle">
+  <div class="v2-md" style="--mc:#e85d04">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+      <div><div class="v2-md-t" id="modalCatTitle">Nouvelle catégorie</div><div class="v2-md-s">Classement des entrées du journal de bord</div></div>
+      <button type="button" class="v2-md-x modal-close" aria-label="Fermer" onclick="closeModal('modalCat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <input type="hidden" id="catId"/>
+      <div><label class="v2-fld-l" for="catName">Nom de la catégorie</label><input class="v2-fld" type="text" id="catName" placeholder="Nom de la catégorie"/></div>
+      <div><label class="v2-fld-l" for="catColor">Couleur</label><input type="color" class="adm-color" id="catColor" value="#3b82f6"/></div>
+    </div>
+    <div class="v2-md-f adm-md-f">
+      <button type="button" class="v2-btn-sec" id="btnDeleteCat" style="display:none;color:var(--v2-danger-text)" onclick="deleteCat()">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeAllModals()">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveCat()">Enregistrer</button>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalEmploye">
-  <div class="modal umx-modal" style="max-width:560px">
-    <div class="umx-hero">
-      <button class="umx-close" onclick="closeModal('modalEmploye')" aria-label="Fermer">✕</button>
-      <div class="umx-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;height:22px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-      <div class="umx-hero-txt">
-        <div class="umx-title" id="modalEmployeTitle">Nouvel employé</div>
-        <div class="umx-hero-name" id="empLiveName">Renseignez le profil ci-dessous</div>
-      </div>
+<div class="modal-overlay v2-ov" id="modalObj" role="dialog" aria-modal="true" aria-labelledby="modalObjTitle">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+      <div><div class="v2-md-t" id="modalObjTitle">Nouvel objectif</div><div class="v2-md-s">Objectif proposable dans les projets personnalisés</div></div>
+      <button type="button" class="v2-md-x modal-close" aria-label="Fermer" onclick="closeModal('modalObj')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
-    <div class="modal-body umx-body">
+    <div class="v2-md-b">
+      <input type="hidden" id="objId"/>
+      <div><label class="v2-fld-l" for="objName">Nom</label><input class="v2-fld" type="text" id="objName" placeholder="Nom de l'objectif"/></div>
+      <div><label class="v2-fld-l" for="objDesc">Description</label><textarea class="v2-fld" id="objDesc" rows="3" placeholder="Description…"></textarea></div>
+    </div>
+    <div class="v2-md-f adm-md-f">
+      <button type="button" class="v2-btn-sec" id="btnDeleteObj" style="display:none;color:var(--v2-danger-text)" onclick="deleteObj()">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeAllModals()">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveObj()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay v2-ov" id="modalEmploye" role="dialog" aria-modal="true" aria-labelledby="modalEmployeTitle">
+  <div class="v2-md v2-md-lg" style="--mc:#9333ea">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <div><div class="v2-md-t" id="modalEmployeTitle">Nouvel employé</div><div class="v2-md-s" id="empLiveName">Renseignez le profil ci-dessous</div></div>
+      <button type="button" class="v2-md-x" aria-label="Fermer" onclick="closeModal('modalEmploye')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="v2-md-b">
       <input type="hidden" id="empId"/>
 
-      <div class="umx-section">
-        <div class="umx-sec-head"><span>👤</span> Identité</div>
-        <div style="display:flex;align-items:center;gap:.85rem">
+      <div class="adm-md-sec">
+        <div class="adm-md-sec-h">Identité</div>
+        <div style="display:flex;align-items:center;gap:14px">
           <div id="empPhotoPreview" onclick="document.getElementById('empPhoto').click()" title="Cliquer pour ajouter une photo"
-               style="width:56px;height:56px;border-radius:50%;background:#f1f5f9;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="width:22px;height:22px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+               style="width:56px;height:56px;border-radius:50%;background:var(--v2-s-sub);border:2px dashed rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8095b4" stroke-width="1.5" style="width:22px;height:22px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
-          <div class="umx-photo-hint">Photo de profil <span style="color:#94a3b8">(optionnel)</span><br>Cliquez sur l'avatar — JPG/PNG, max 2 Mo</div>
+          <div class="adm-md-info">Photo de profil (optionnel)<br>Cliquez sur l'avatar — JPG/PNG, max 2 Mo</div>
         </div>
         <input type="file" id="empPhoto" accept="image/*" style="display:none" onchange="previewEmpPhoto(this)"/>
-        <div class="form-row"><div class="form-group"><label>Prénom</label><input type="text" id="empPrenom" placeholder="Prénom" oninput="umxLiveName()"/></div><div class="form-group"><label>Nom</label><input type="text" id="empNom" placeholder="Nom" oninput="umxLiveName()"/></div></div>
-        <div class="form-group"><label>Poste</label><select id="empPoste"><option value="">— Sélectionner —</option></select></div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="empPrenom">Prénom</label><input class="v2-fld" type="text" id="empPrenom" placeholder="Prénom" oninput="umxLiveName()"/></div>
+          <div><label class="v2-fld-l" for="empNom">Nom</label><input class="v2-fld" type="text" id="empNom" placeholder="Nom" oninput="umxLiveName()"/></div>
+        </div>
+        <div><label class="v2-fld-l" for="empPoste">Poste</label><select class="v2-fld" id="empPoste"><option value="">— Sélectionner —</option></select></div>
       </div>
 
-      <div class="umx-section">
-        <div class="umx-sec-head"><span>✉️</span> Coordonnées</div>
-        <div class="form-row"><div class="form-group"><label>Téléphone</label><input type="tel" id="empTel" placeholder="06 12 34 56 78"/></div><div class="form-group"><label>Email</label><input type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div></div>
-        <div class="form-group"><label>Date d'embauche</label><input type="date" id="empDate"/></div>
+      <div class="adm-md-sec">
+        <div class="adm-md-sec-h">Coordonnées</div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="empTel">Téléphone</label><input class="v2-fld" type="tel" id="empTel" placeholder="06 12 34 56 78"/></div>
+          <div><label class="v2-fld-l" for="empEmail">Email</label><input class="v2-fld" type="email" id="empEmail" placeholder="prenom.nom@exemple.fr"/></div>
+        </div>
+        <div><label class="v2-fld-l" for="empDate">Date d'embauche</label><input class="v2-fld" type="date" id="empDate"/></div>
       </div>
 
-      <div class="umx-section">
-        <div class="umx-sec-head"><span>💼</span> Contrat &amp; rémunération</div>
-        <div class="form-row"><div class="form-group"><label>Heures / semaine</label><input type="number" id="empHeuresContrat" min="0" step="0.5" placeholder="35" oninput="umxTauxHoraire()"/></div><div class="form-group"><label>Salaire brut de base (€)</label><input type="number" id="empSalaireBase" min="0" step="0.01" placeholder="0" oninput="umxTauxHoraire()"/></div></div>
-        <div id="empTauxHoraire" style="font-size:.72rem;color:var(--muted);margin-top:-.35rem"></div>
-        <div class="form-row"><div class="form-group"><label>Type de contrat</label><select id="empContratType"><option value="">— Aucun pour l'instant —</option><option value="cdi">CDI</option><option value="cdd">CDD</option><option value="vacation">Vacation</option><option value="stage">Stage</option><option value="alternance">Alternance</option></select></div><div class="form-group"><label>Fin période d'essai</label><input type="date" id="empContratEssai"/></div></div>
-        <div class="form-row"><div class="form-group"><label>Début du contrat</label><input type="date" id="empContratDebut"/></div><div class="form-group"><label>Fin (CDD / vacation)</label><input type="date" id="empContratFin"/></div></div>
-        <div style="font-size:.7rem;color:var(--muted)">Crée le contrat initial sur la page Contrats. Vacataire sans compte : laissez l'email vide, le contrat suffit.</div>
+      <div class="adm-md-sec">
+        <div class="adm-md-sec-h">Contrat &amp; rémunération</div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="empHeuresContrat">Heures / semaine</label><input class="v2-fld" type="number" id="empHeuresContrat" min="0" step="0.5" placeholder="35" oninput="umxTauxHoraire()"/></div>
+          <div><label class="v2-fld-l" for="empSalaireBase">Salaire brut de base (€)</label><input class="v2-fld" type="number" id="empSalaireBase" min="0" step="0.01" placeholder="0" oninput="umxTauxHoraire()"/></div>
+        </div>
+        <div class="adm-md-info" id="empTauxHoraire"></div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="empContratType">Type de contrat</label><select class="v2-fld" id="empContratType"><option value="">— Aucun pour l'instant —</option><option value="cdi">CDI</option><option value="cdd">CDD</option><option value="vacation">Vacation</option><option value="stage">Stage</option><option value="alternance">Alternance</option></select></div>
+          <div><label class="v2-fld-l" for="empContratEssai">Fin période d'essai</label><input class="v2-fld" type="date" id="empContratEssai"/></div>
+        </div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="empContratDebut">Début du contrat</label><input class="v2-fld" type="date" id="empContratDebut"/></div>
+          <div><label class="v2-fld-l" for="empContratFin">Fin (CDD / vacation)</label><input class="v2-fld" type="date" id="empContratFin"/></div>
+        </div>
+        <div class="adm-md-info">Crée le contrat initial sur la page Contrats. Vacataire sans compte : laissez l'email vide, le contrat suffit.</div>
       </div>
 
-      <div class="umx-section">
-        <div class="umx-sec-head"><span>🔑</span> Compte de connexion</div>
-        <div class="form-group"><label>Rôle du compte</label><select id="empRole"><option value="educateur">Éducateur — accès de base</option><option value="rh">Encadrement / RH — accès aux données RH</option><option value="admin">Administrateur — accès complet</option></select><div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">Utilisé seulement si vous cliquez sur « Créer un compte ».</div></div>
-        <div class="form-group" id="empLinkBox" style="display:none">
-          <label>Compte relié (espace personnel)</label>
-          <div id="empLinkStatus" style="font-size:.8rem"></div>
-          <div id="empLinkPicker" style="display:none;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
-            <select id="empLinkSelect" style="flex:1;min-width:180px"></select>
-            <button type="button" class="btn btn-outline btn-sm" onclick="linkEmpToAccount()">🔗 Lier à cette fiche</button>
+      <div class="adm-md-sec">
+        <div class="adm-md-sec-h">Compte de connexion</div>
+        <div>
+          <label class="v2-fld-l" for="empRole">Rôle du compte</label>
+          <select class="v2-fld" id="empRole"><option value="educateur">Éducateur — accès de base</option><option value="rh">Encadrement / RH — accès aux données RH</option><option value="admin">Administrateur — accès complet</option></select>
+          <div class="adm-md-info" style="margin-top:6px">Utilisé seulement si vous cliquez sur « Créer un compte ».</div>
+        </div>
+        <div id="empLinkBox" style="display:none">
+          <label class="v2-fld-l">Compte relié (espace personnel)</label>
+          <div id="empLinkStatus" style="font-size:12.5px"></div>
+          <div id="empLinkPicker" style="display:none;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <select class="v2-fld" id="empLinkSelect" style="flex:1;min-width:180px"></select>
+            <button type="button" class="v2-btn v2-btn-sm" onclick="linkEmpToAccount()">🔗 Lier à cette fiche</button>
           </div>
-          <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Relie une fiche à un compte déjà créé, pour débloquer « Mes absences / congés / formations / fiches de paie ».</div>
+          <div class="adm-md-info" style="margin-top:6px">Relie une fiche à un compte déjà créé, pour débloquer « Mes absences / congés / formations / fiches de paie ».</div>
         </div>
       </div>
 
-      <div class="form-group"><label>Notes</label><textarea id="empNotes" rows="2" placeholder="Observations…"></textarea></div>
+      <div><label class="v2-fld-l" for="empNotes">Notes</label><textarea class="v2-fld" id="empNotes" rows="2" placeholder="Observations…"></textarea></div>
+      <div id="empCreatedAccount" style="display:none;font-size:12.5px;color:var(--v2-indigo-pale)"></div>
     </div>
-    <div class="modal-footer" style="flex-wrap:wrap;gap:.5rem">
-      <button class="btn btn-danger btn-sm" id="btnDeleteEmp" style="margin-right:auto;display:none" onclick="deleteEmploye()">Supprimer</button>
-      <button class="btn btn-outline btn-sm" onclick="createUserFromEmploye()" style="border-color:var(--accent);color:var(--accent)">🔑 Créer un compte</button>
-      <button class="btn btn-outline btn-sm" onclick="resetUserPassword()">🔁 Réinit. mot de passe</button>
-      <button class="btn btn-violet" onclick="saveEmploye()">Enregistrer</button>
-      <div id="empCreatedAccount" style="width:100%;font-size:.75rem;color:var(--accent);display:none"></div>
+    <div class="v2-md-f adm-md-f">
+      <button type="button" class="v2-btn-sec" id="btnDeleteEmp" style="display:none;color:var(--v2-danger-text)" onclick="deleteEmploye()">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="createUserFromEmploye()">🔑 Créer un compte</button>
+      <button type="button" class="v2-btn-sec" onclick="resetUserPassword()">🔁 Réinit. mot de passe</button>
+      <button type="button" class="v2-btn-pri" onclick="saveEmploye()">Enregistrer</button>
     </div>
   </div>
 </div>
 
-</div><!-- /admin-main -->
-</div><!-- /admin-shell -->
+<!-- Agrément / habilitation (données Supabase — migration-admin.sql) -->
+<div class="modal-overlay v2-ov" id="modalAgrement" role="dialog" aria-modal="true" aria-labelledby="modalAgrementTitle">
+  <div class="v2-md" style="--mc:#34d399">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></span>
+      <div><div class="v2-md-t" id="modalAgrementTitle">Nouvel agrément</div><div class="v2-md-s">Autorisation, habilitation ou évaluation</div></div>
+      <button type="button" class="v2-md-x" aria-label="Fermer" onclick="closeModal('modalAgrement')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <input type="hidden" id="agrId"/>
+      <div><label class="v2-fld-l" for="agrLibelle">Libellé</label><input class="v2-fld" type="text" id="agrLibelle" placeholder="Ex : Autorisation ARS"/></div>
+      <div><label class="v2-fld-l" for="agrDetail">Détail</label><input class="v2-fld" type="text" id="agrDetail" placeholder="Ex : FAM — 42 places"/></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="agrTag">Mention affichée</label><input class="v2-fld" type="text" id="agrTag" placeholder="Ex : Valide 2029"/></div>
+        <div><label class="v2-fld-l" for="agrEcheance">Échéance</label><input class="v2-fld" type="date" id="agrEcheance"/></div>
+      </div>
+      <div>
+        <label class="v2-fld-l">État</label>
+        <div class="v2-seg" id="agrEtatSeg">
+          <button type="button" class="v2-seg-o on" data-val="valide" onclick="admAgrEtat('valide')">Valide</button>
+          <button type="button" class="v2-seg-o" data-val="a_renouveler" onclick="admAgrEtat('a_renouveler')">À renouveler</button>
+          <button type="button" class="v2-seg-o" data-val="expire" onclick="admAgrEtat('expire')">Expiré</button>
+        </div>
+        <input type="hidden" id="agrEtat" value="valide"/>
+      </div>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Enregistré dans la table <code>admin_agrements</code> (migration-admin.sql).
+      </div>
+    </div>
+    <div class="v2-md-f adm-md-f">
+      <button type="button" class="v2-btn-sec" id="btnDeleteAgr" style="display:none;color:var(--v2-danger-text)" onclick="admDeleteAgrement()">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAgrement')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="admSaveAgrement()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Configuration Ségur -->
+<div class="modal-overlay v2-ov" id="modalSegurConfig" role="dialog" aria-modal="true" aria-labelledby="modalSegurTitle">
+  <div class="v2-md" style="--mc:#60a5fa">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <div><div class="v2-md-t" id="modalSegurTitle">Configuration Ségur</div><div class="v2-md-s">Services d'interopérabilité ANS</div></div>
+      <button type="button" class="v2-md-x" aria-label="Fermer" onclick="closeModal('modalSegurConfig')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div><label class="v2-fld-l" for="segurMssante">Adresse MSSanté (messagerie sécurisée de santé)</label><input class="v2-fld" type="email" id="segurMssante" placeholder="prenom.nom@mssante.fr"/></div>
+      <div><label class="v2-fld-l" for="segurProSante">Client ID Pro Santé Connect</label><input class="v2-fld" type="text" id="segurProSante" placeholder="ID client fourni par l'ANS"/></div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Préparation avant certification ANS. Paramètres enregistrés sur cet appareil.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalSegurConfig')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveSegurConfig()">Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
+
 <script src="js/app.js"></script>
 <script>Auth.requireAdmin();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -982,24 +858,7 @@ const PANEL_NAMES = {
 const ALL_TABS = ['stats','etablissement','fonctions','employes','permissions','segur','compte','donnees'];
 
 function adminNav(btn) { activateTab(btn.dataset.tab); }
-
-function activateTab(name) {
-  if (!ALL_TABS.includes(name)) name = 'stats';
-  ALL_TABS.forEach(n => {
-    const el = document.getElementById('tab-' + n);
-    if (!el) return;
-    el.style.display = n === name ? '' : 'none';
-    el.classList.toggle('active', n === name);
-  });
-  if (name === 'employes') renderEmployes();
-  document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
-  document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
-  const strip = document.getElementById('statsStrip');
-  if (strip) strip.style.display = name === 'stats' ? '' : 'none';
-  const detail = document.getElementById('statsDetail');
-  if (detail) detail.style.display = name === 'stats' ? '' : 'none';
-  if (name === 'stats') refreshAllStats();
-}
+// La seule définition d'activateTab vit plus bas (elle délègue à js/admin-v2.js).
 
 // Fiches employés autonomes — source unique = table Supabase "employes"
 let _empCache = [];
@@ -1392,6 +1251,8 @@ function renderEmployes() {
     (e.email).toLowerCase().includes(q) ||
     (e.telephone).includes(q)
   );
+  // Filtre par fonction, piloté par les pastilles de js/admin-v2.js
+  if (window._admPosteFilter) list = list.filter(e => (e.poste || '') === window._admPosteFilter);
   if (!list.length) {
     el.innerHTML = `<div style="text-align:center;color:#9a9aae;padding:3rem;font-size:.85rem">Aucun employé — cliquez sur "+ Ajouter"</div>`;
     return;
@@ -1652,6 +1513,9 @@ async function refreshAllStats() {
   renderPpeBars();
   renderDocBars();
   renderSerafinphStats();
+  // Blocs de la maquette V2 (hero, connexions, répartition, KPI, activité,
+  // modules, audit, système) — alimentés par les mêmes données.
+  if (typeof adminV2AfterStats === 'function') adminV2AfterStats(_statsData);
 }
 
 function renderKeyStats(residents, presences, incidents) {
@@ -2139,7 +2003,7 @@ async function renderSegurDashboard() {
       <div style="flex:1">
         <div style="font-weight:700;font-size:.95rem">${title}</div>
         <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem">
-          <div style="flex:1;height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden">
+          <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
             <div style="width:${score}%;height:100%;background:${color||'#16a34a'};border-radius:99px;transition:width .6s ease"></div>
           </div>
           <span style="font-size:.78rem;font-weight:700;color:${color||'#16a34a'};white-space:nowrap">${score}%</span>
@@ -2155,7 +2019,7 @@ async function renderSegurDashboard() {
   const autoLock = localStorage.getItem('ftr_auto_lock') !== 'off';
 
   document.getElementById('segurDashboard').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem">
       ${card('🆔', 'INS (Identifiant National de Santé)', pct(rAvecINS.length),
         `${rAvecINS.length}/${total} résidents avec INS renseigné.` + (pct(rAvecINS.length) < 80 ? ` <span style="color:#d97706">Objectif : >80%</span>` : ''),
         pct(rAvecINS.length) >= 80 ? '#16a34a' : pct(rAvecINS.length) >= 40 ? '#d97706' : '#ef4444')}
@@ -2175,12 +2039,12 @@ async function renderSegurDashboard() {
         <span style="font-weight:700;font-size:.9rem">🔌 Services d'interopérabilité</span>
         <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openSegurConfig()">✎ Configurer</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem">
         <div style="padding:.85rem;border:1px solid var(--border);border-radius:var(--r-sm)">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
             <span style="font-size:1.1rem">📧</span>
             <span style="font-weight:600;font-size:.82rem">MSSanté</span>
-            <span style="margin-left:auto;padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${mssante?'#16a34a18':'#e2e8f0'};color:${mssante?'#16a34a':'#94a3b8'}">${mssante?'Configuré':'Non configuré'}</span>
+            <span style="margin-left:auto;padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${mssante?'#16a34a26':'rgba(148,163,184,.16)'};color:${mssante?'#34d399':'#94a3b8'}">${mssante?'Configuré':'Non configuré'}</span>
           </div>
           <div style="font-size:.74rem;color:var(--muted)">${mssante ? escHtml(mssante) : 'Adresse MSSanté non renseignée'}</div>
         </div>
@@ -2188,7 +2052,7 @@ async function renderSegurDashboard() {
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
             <span style="font-size:1.1rem">🔐</span>
             <span style="font-weight:600;font-size:.82rem">Pro Santé Connect</span>
-            <span style="margin-left:auto;padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${proSante?'#16a34a18':'#e2e8f0'};color:${proSante?'#16a34a':'#94a3b8'}">${proSante?'Configuré':'Non configuré'}</span>
+            <span style="margin-left:auto;padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${proSante?'#16a34a26':'rgba(148,163,184,.16)'};color:${proSante?'#34d399':'#94a3b8'}">${proSante?'Configuré':'Non configuré'}</span>
           </div>
           <div style="font-size:.74rem;color:var(--muted)">${proSante ? 'Client ID : '+escHtml(proSante) : 'Aucun client configuré'}</div>
         </div>
@@ -2240,30 +2104,33 @@ function saveSegurConfig() {
 
 function activateTab(name) {
   if (!ALL_TABS.includes(name)) name = 'stats';
-  document.querySelectorAll('.admin-nav-card').forEach(i => i.classList.toggle('active', i.dataset.tab === name));
-  if (window.PortalDock) PortalDock.setActive(name);
   ALL_TABS.forEach(n => {
     const el = document.getElementById('tab-' + n);
     if (!el) return;
-    el.style.display = n === name ? '' : 'none';
     el.classList.toggle('active', n === name);
   });
   if (name === 'employes') renderEmployes();
   if (name === 'segur') renderSegurDashboard();
-  document.getElementById('atbTitle').textContent = PANEL_NAMES[name] || name;
-  document.getElementById('atbBadge').textContent = PANEL_NAMES[name] || name;
-  const strip = document.getElementById('statsStrip');
-  if (strip) strip.style.display = name === 'stats' ? '' : 'none';
-  const detail = document.getElementById('statsDetail');
-  if (detail) detail.style.display = name === 'stats' ? '' : 'none';
+  if (name === 'permissions' && typeof admRenderPermMatrix === 'function') admRenderPermMatrix();
+  if (name === 'etablissement' && typeof admRenderEtablissement === 'function') admRenderEtablissement();
+  if (name === 'donnees' && typeof admRenderDonnees === 'function') admRenderDonnees();
+  const t = document.getElementById('atbTitle');
+  if (t) t.textContent = PANEL_NAMES[name] || name;
+  // Habillage de la barre latérale + du bandeau (module V2)
+  if (typeof adminV2OnTab === 'function') adminV2OnTab(name);
   if (name === 'stats') refreshAllStats();
 }
+window.activateTab = activateTab;
 
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const tabParam = params.get('tab') || 'stats';
   activateTab(tabParam);
-  loadEmpCache().then(() => { if (document.getElementById('tab-employes')?.classList.contains('active')) renderEmployes(); });
+  loadEmpCache().then(() => {
+    if (document.getElementById('tab-employes')?.classList.contains('active')) renderEmployes();
+    // Les indicateurs de comptes dépendent du cache : on les (re)peint ici
+    if (typeof admRenderUsers === 'function') admRenderUsers();
+  });
   initRapportDefaults();
   refreshSidebarUser();
   renderEtabAdminList();
@@ -2273,13 +2140,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = document.getElementById('etabBannerType');
     if (nom) nom.textContent = etab.nom;
     if (type) type.textContent = etabTypeLabel(etab.type);
-    const badge = document.getElementById('atbBadge');
-    if (badge) badge.textContent = etab.nom;
   }
   document.querySelectorAll('.btn-freq').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.btn-freq').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      document.querySelectorAll('.btn-freq').forEach(b => b.classList.remove('active', 'on'));
+      btn.classList.add('active', 'on');
       const freq = btn.dataset.freq;
       renderPresenceChart(_statsData.residents, _statsData.presences, freq);
       renderJournalCatBars(_statsData.journal, freq);
@@ -2288,42 +2153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tabParam === 'stats') setTimeout(refreshAllStats, 120);
 });
 </script>
-<!-- Dock flottant (remplace la sidebar admin) -->
-<nav class="rh-dock" id="adminDock" aria-label="Navigation administration"></nav>
-<script src="js/portal-dock.js"></script>
-<script>
-(function () {
-  const ADMIN_NAV = [
-    { g:'Tableau de bord', tab:'stats', label:'Statistiques', c1:'#7c6fcd', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
-    { g:'Configuration', tab:'etablissement', label:'Établissement', c1:'#0891b2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>' },
-    { g:'Configuration', tab:'fonctions', label:'Catégories & objectifs', c1:'#e85d04', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>' },
-    { g:'Comptes & accès', tab:'employes', label:'Utilisateurs', c1:'#9333ea', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-    { g:'Comptes & accès', tab:'permissions', label:'Permissions', c1:'#16a34a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
-    { g:'Comptes & accès', tab:'compte', label:'Mon compte', c1:'#0d9488', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
-    { g:'Système', tab:'segur', label:'Ségur / Conformité', c1:'#2563eb', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>' },
-    { g:'Système', tab:'donnees', label:'Données', c1:'#64748b', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>' }
-  ];
-  const QUICK = ['stats', 'etablissement', 'fonctions', 'permissions', 'donnees'];
-  const SHORT = { stats:'Stats', etablissement:'Établiss.', fonctions:'Catégories', employes:'Utilisateurs', permissions:'Permissions', donnees:'Données' };
-  const GROUPS = ['Tableau de bord', 'Configuration', 'Comptes & accès', 'Système'];
-  const dock = document.getElementById('adminDock');
-  if (!dock || typeof activateTab !== 'function') return;
-  const entryOf = t => ADMIN_NAV.find(e => e.tab === t);
-  // ── Dock « par catégories » — 1 pastille par groupe (composant partagé) ──
-  const GROUP_META = {
-    'Tableau de bord': { short: 'Tableau', color: '#7c6fcd', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
-    'Configuration':   { short: 'Config',  color: '#0891b2', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>' },
-    'Comptes & accès': { short: 'Comptes', color: '#9333ea', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-    'Système':         { short: 'Système', color: '#2563eb', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' }
-  };
-  const _adminTab = new URLSearchParams(location.search).get('tab');
-  PortalDock.init({
-    dock: dock,
-    nav: ADMIN_NAV, key: 'tab', groups: GROUPS, groupMeta: GROUP_META,
-    onNavigate: e => activateTab(e.tab),
-    current: (_adminTab && entryOf(_adminTab)) ? _adminTab : 'stats'
-  });
-})();
-</script>
+<script src="js/admin-v2.js"></script>
+<script>if (typeof window.adminV2Init === 'function') window.adminV2Init();</script>
 </body>
 </html>
