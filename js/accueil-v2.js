@@ -119,7 +119,7 @@ function _av2Grid() {
   <div class="v2-mods">${AV2_MODULES.map(m => `<div class="v2-mod-wrap${m.only ? ' ' + m.only : ''}"
       ${m.perm ? `data-perm="${m.perm}"` : ''} ${m.module ? `data-module="${m.module}"` : ''} style="--mc:${m.c}">
     <a href="${m.href}" class="v2-mod">
-      <span class="v2-mod-ico" style="background:${m.c}22">${_svg(IC[m.ic], m.c, 20)}</span>
+      <span class="v2-mod-ico" style="background:${m.c}22">${_svg(IC[m.ic], m.c, 26)}</span>
       <span class="v2-mod-txt">
         <span class="v2-mod-lbl">${_av2(m.label)}</span>
         ${m.sub ? `<span class="v2-mod-sub">${_av2(m.sub)}</span>` : ''}
