@@ -1,4 +1,4 @@
-const CACHE = 'internalis-v39';
+const CACHE = 'internalis-v40';
 const ASSETS = [
   './',
   './accueil.html',

@@ -192,6 +192,54 @@ html.clair body.v2 .v2-ov { background: rgba(15,30,55,.42); }
 html.clair body.v2 .modal { background: #ffffff !important; color: var(--v2-t3); }
 html.clair body.v2 .modal-overlay { background: rgba(15,30,55,.42); }
 
+/* ── 2d) Halos décoratifs codés en dur dans les feuilles de page ───────── */
+/* Ces pages ne passent pas par --v2-halo : elles écrivent leur lueur en dur,
+   à 22-30 % d'opacité. Posée sur du bleu nuit, c'est une lueur qu'on devine ;
+   posée sur du blanc, la même couche vire au VOILE GRIS — c'est ce qui
+   « grisait » la moitié droite de la page de connexion.
+   On rejoue le dégradé complet (impossible de ne surcharger qu'une couche) en
+   gardant la teinte d'origine, mais à une opacité qui tient sur du clair.
+   La specificité suffit à passer devant : ces feuilles sont chargées APRÈS
+   celle-ci, mais leurs sélecteurs sont plus courts. */
+html.clair body.v2 .lc-shell {
+  background:
+    radial-gradient(900px 520px at 82% -12%, rgba(99,102,241,.07), transparent 62%),
+    #f7f9fd;
+}
+html.clair body.v2 .ds-shell {
+  background:
+    radial-gradient(1000px 520px at 80% -10%, rgba(99,102,241,.07), transparent 60%),
+    #f7f9fd;
+}
+html.clair body.v2 .pl-shell {
+  background:
+    radial-gradient(1200px 600px at 78% -10%, rgba(79,110,190,.07), transparent 60%),
+    #f7f9fd;
+}
+html.clair body.v2 .vq-shell {
+  background:
+    radial-gradient(1000px 520px at 80% -10%, rgba(13,148,136,.07), transparent 60%),
+    radial-gradient(800px 460px at 6% 110%, rgba(234,88,12,.05), transparent 60%),
+    #f7f9fd;
+}
+html.clair body.v2 .rh-shell {
+  background:
+    radial-gradient(1000px 520px at 80% -10%, rgba(79,70,229,.07), transparent 60%),
+    #f7f9fd;
+}
+
+/* Le volet gauche de la connexion était presque blanc alors que le volet droit
+   portait le voile : les deux moitiés paraissaient de couleurs différentes. */
+html.clair body.v2 .lc-side { background: #ffffff; }
+
+/* Mot-symbole « INTERNALIS » : dégradé peint dans le texte, qui DÉMARRE au
+   blanc — donc invisible sur fond clair, d'où les premières lettres effacées.
+   On repart d'un indigo foncé vers le cyan foncé, mêmes teintes, lisibles. */
+html.clair body.v2 .lc-brand-name {
+  background: linear-gradient(120deg, #1e2a5a, #4338ca 55%, #0e7490);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
 /* ── 3) Couche de compatibilité V1 ─────────────────────────────────────── */
 /* La palette héritée de style.css, repointée vers le clair. */
 html.clair body.v2 {
