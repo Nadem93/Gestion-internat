@@ -218,6 +218,8 @@ function _renderTransmissions() {
   }
 
   // Rendu V2 (maquette « Transmissions - refonte (bento) »).
+  if (typeof tv2RenderPrise === 'function') tv2RenderPrise();   // prise de poste (non lues)
+  if (typeof tv2RenderTodos === 'function') tv2RenderTodos();   // à faire pour la relève (tous jours)
   tv2RenderFilters(allDay, userId);
   tv2RenderBoard(list, residents, userId);
   tv2RenderSynthese(allDay);
@@ -452,6 +454,7 @@ async function saveTr_Modal() {
   const content    = document.getElementById('trContent')?.value.trim() || '';
   const soutien       = document.getElementById('trSoutien')?.value.trim() || '';
   const soutienNiveau = document.getElementById('trSoutienNiveau')?.value  || '';
+  const aFaire        = !!document.getElementById('trAFaire')?.checked;
   if (!content) { toast('Le contenu est obligatoire', 'error'); return; }
 
   const sess = _trSession();
@@ -462,7 +465,7 @@ async function saveTr_Modal() {
     if (editId) {
       const existing = _trCache.find(x => x.id === editId);
       if (!existing) return;
-      const updated = await sbSaveTransmission({ ...existing, residentId, shift, cat, priority, content, soutien, soutienNiveau, updatedAt: now });
+      const updated = await sbSaveTransmission({ ...existing, residentId, shift, cat, priority, content, soutien, soutienNiveau, aFaire, updatedAt: now });
       const idx = _trCache.findIndex(x => x.id === editId);
       if (idx !== -1) _trCache[idx] = updated;
       toast('Transmission modifiée');
@@ -471,7 +474,7 @@ async function saveTr_Modal() {
         date: _trCurrentDate,
         residentId,
         residentName: r ? `${r.prenom||''} ${r.nom||''}`.trim() : '',
-        shift, cat, priority, content, soutien, soutienNiveau,
+        shift, cat, priority, content, soutien, soutienNiveau, aFaire,
         authorId:   String(sess.id),
         authorName: sess.name,
         createdAt:  now,
@@ -503,6 +506,7 @@ function editTr(id) {
   document.getElementById('trContent').value   = t.content     || '';
   const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = t.soutien || '';
   const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = t.soutienNiveau || '';
+  const _afEl = document.getElementById('trAFaire');       if (_afEl) _afEl.checked = !!t.aFaire;
   document.getElementById('modalTrTitle').textContent = 'Modifier la transmission';
   openModal('modalTr');
 }
@@ -612,6 +616,8 @@ function resetTrModal() {
   document.getElementById('trContent').value   = '';
   const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = '';
   const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = '';
+  const _afEl = document.getElementById('trAFaire');       if (_afEl) _afEl.checked = false;
+  trDicteeStop();
   document.getElementById('trCat').value       = 'administratif';
   trSetPriority('normal');
   document.getElementById('modalTrTitle').textContent = 'Nouvelle transmission';
@@ -620,6 +626,67 @@ function resetTrModal() {
   document.getElementById('trShift').value = autoShift;
   trSetPriority('normal');
 }
+
+// ─── Dictée vocale ──────────────────────────────────────────────────────────
+// Reconnaissance vocale du navigateur (Web Speech API). Le texte reconnu
+// s'ajoute au champ Observation. Support inégal : surtout Chrome / Android —
+// le bouton reste caché là où l'API n'existe pas.
+let _trReco = null, _trRecoOn = false;
+
+function trDicteeDispo() {
+  return typeof (window.SpeechRecognition || window.webkitSpeechRecognition) === 'function';
+}
+
+function trDicteeInit() {
+  const mic = document.getElementById('trMic');
+  if (mic && trDicteeDispo()) mic.hidden = false;
+}
+
+function trDicteeToggle() {
+  if (_trRecoOn) { trDicteeStop(); return; }
+  const Reco = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Reco) { toast('La dictée n\'est pas disponible sur ce navigateur', 'info'); return; }
+  const champ = document.getElementById('trContent');
+  if (!champ) return;
+
+  _trReco = new Reco();
+  _trReco.lang = 'fr-FR';
+  _trReco.interimResults = false;
+  _trReco.continuous = true;
+  let base = champ.value;
+
+  _trReco.onresult = e => {
+    let ajout = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) ajout += e.results[i][0].transcript;
+    }
+    if (!ajout) return;
+    ajout = ajout.trim();
+    ajout = ajout.charAt(0).toUpperCase() + ajout.slice(1);           // majuscule en début
+    base = (base ? base.replace(/\s+$/, '') + (/[.!?…]$/.test(base.trim()) ? ' ' : '. ') : '') + ajout;
+    champ.value = base;
+  };
+  _trReco.onerror = ev => {
+    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')
+      toast('Micro refusé — autorisez l\'accès au microphone', 'error');
+    trDicteeStop();
+  };
+  _trReco.onend = () => { if (_trRecoOn) { try { _trReco.start(); } catch (_) {} } };  // relance auto tant qu'actif
+
+  try { _trReco.start(); } catch (_) {}
+  _trRecoOn = true;
+  document.getElementById('trMic')?.classList.add('on');
+  const hint = document.getElementById('trMicHint'); if (hint) hint.style.display = '';
+}
+
+function trDicteeStop() {
+  _trRecoOn = false;
+  if (_trReco) { try { _trReco.stop(); } catch (_) {} _trReco = null; }
+  document.getElementById('trMic')?.classList.remove('on');
+  const hint = document.getElementById('trMicHint'); if (hint) hint.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', trDicteeInit);
 
 // Priorité : choix segmenté (.v2-seg) adossé à un input caché, pour que
 // saveTr_Modal() et editTr() continuent de lire/écrire trPriority.

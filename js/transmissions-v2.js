@@ -103,6 +103,8 @@ function tv2Card(t, residents, userId) {
       <span class="v2-tr-tag" style="--pc:${cat.c}"><span class="dot"></span>${escHtml(cat.l)}</span>
       <span class="v2-tr-tag" style="--pc:${pri.c}">${escHtml(pri.l)}</span>
       ${t.soutienNiveau ? `<span class="v2-tr-tag" style="--pc:#8b5cf6">${escHtml(t.soutienNiveau)}</span>` : ''}
+      ${t.aFaire && !t.fait ? `<span class="v2-tr-tag tr-tag-todo">⏳ À faire</span>` : ''}
+      ${t.aFaire && t.fait ? `<span class="v2-tr-tag tr-tag-done">✓ Fait${t.faitPar ? ' — ' + escHtml(t.faitPar) : ''}</span>` : ''}
     </div>
 
     ${reps.length ? `<div class="v2-tr-rep">${reps.map(rp => `
@@ -125,6 +127,7 @@ function tv2Card(t, residents, userId) {
         ${_tv2Svg('<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>')}${reps.length}
       </button>
       ${!lu ? `<button type="button" class="v2-tr-act" onclick="markTrRead('${t.id}')" title="Marquer comme lu">${_tv2Svg('<path d="M20 6L9 17l-5-5"/>', 2.4)}</button>` : ''}
+      ${t.aFaire && !t.fait ? `<button type="button" class="v2-tr-act" onclick="tv2MarquerFait('${t.id}')" title="Marquer l'action comme faite" style="color:#10b981">${_tv2Svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', 2.2)}</button>` : ''}
       ${moi ? `<button type="button" class="v2-tr-act" onclick="editTr('${t.id}')" title="Modifier">${_tv2Svg('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/>')}</button>` : ''}
       ${(moi || admin) ? `<button type="button" class="v2-tr-act" onclick="deleteTr('${t.id}')" title="Supprimer" style="color:var(--v2-danger-text)">${_tv2Svg('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>')}</button>` : ''}
       ${urgent && typeof declarerEnIncident === 'function' ? `<button type="button" class="v2-tr-act" onclick="declarerEnIncident('${t.id}')" title="Déclarer en incident" style="color:var(--v2-warn)">${_tv2Svg('<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>')}</button>` : ''}
@@ -345,4 +348,116 @@ async function tv2ChargerConsignes() {
   } catch (e) { _tv2Uid = null; }
   _tv2Consignes = await sbGetConsignes();
   tv2RenderConsignes();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SUIVI « À FAIRE » + PRISE DE POSTE  (fonctionnalités de passation d'équipe)
+// ══════════════════════════════════════════════════════════════════════════
+
+// Marque une action « à faire » comme faite (qui + quand).
+async function tv2MarquerFait(id) {
+  const t = getTr().find(x => String(x.id) === String(id));
+  if (!t) return;
+  const sess = Auth.getSession() || {};
+  const nom = [sess.prenom, sess.nom].filter(Boolean).join(' ') || sess.username || '';
+  const now = new Date().toISOString();
+  try {
+    // Colonnes suivi_* présentes par définition : la carte n'est « à faire »
+    // que si la transmission a été enregistrée avec ces colonnes.
+    const upd = await sbUpdateTransmissionField(id, { suivi_fait: true, suivi_par: nom, suivi_le: now });
+    const i = _trCache.findIndex(x => String(x.id) === String(id));
+    if (i !== -1) _trCache[i] = upd; else Object.assign(t, { fait: true, faitPar: nom, faitLe: now });
+    if (typeof toast === 'function') toast('Action marquée comme faite ✓', 'success');
+  } catch (e) {
+    console.error('[transmissions] marquer fait', e);
+    if (typeof toast === 'function') toast('Enregistrement impossible', 'error');
+    return;
+  }
+  _renderTransmissions();
+}
+
+// « depuis hier », « depuis le 18/07 » pour une action reportée d'un jour passé.
+function _tv2Depuis(dateStr) {
+  if (!dateStr) return '';
+  const t0 = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  if (dateStr >= t0) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const veille = new Date(t0 + 'T00:00:00'); veille.setDate(veille.getDate() - 1);
+  if (dateStr === veille.toISOString().slice(0, 10)) return 'depuis hier';
+  return 'depuis le ' + dateStr.slice(8, 10) + '/' + dateStr.slice(5, 7);
+}
+
+// Bloc « À faire pour la relève » : les actions ouvertes, TOUS jours confondus.
+// C'est le report automatique — une action non faite reste visible jour après jour.
+function tv2RenderTodos() {
+  const el = document.getElementById('trTodo');
+  if (!el) return;
+  const residents = _trResidentsCache || [];
+  const ouvertes = getTr().filter(t => t.aFaire && !t.fait)
+    .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));   // plus ancien en tête
+  if (!ouvertes.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `<div class="tr-todo-block">
+    <div class="tr-todo-h">
+      ${_tv2Svg('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>')}
+      <b>À faire pour la relève</b><span class="n">${ouvertes.length}</span>
+    </div>
+    ${ouvertes.map(t => {
+      const r = residents.find(x => String(x.id) === String(t.residentId));
+      const nom = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : (t.residentName || 'Collectif');
+      const depuis = _tv2Depuis(t.date);
+      return `<div class="tr-todo-i">
+        <button type="button" class="tr-todo-chk" onclick="tv2MarquerFait('${t.id}')" title="Marquer comme fait" aria-label="Marquer comme fait">
+          ${_tv2Svg('<polyline points="20 6 9 17 4 12"/>', 3)}
+        </button>
+        <div class="tr-todo-b">
+          <div class="tr-todo-txt">${escHtml(t.content || '')}</div>
+          <div class="tr-todo-m">${escHtml(nom)}${depuis ? ' · <span class="old">' + escHtml(depuis) + '</span>' : ''}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// Bandeau « prise de poste » : ce que l'agent qui arrive n'a pas encore lu, du
+// jour affiché. Un bouton valide la prise de connaissance de toute la passation.
+function tv2RenderPrise() {
+  const el = document.getElementById('trPrise');
+  if (!el) return;
+  const userId = (Auth.getSession() || {}).userId;
+  const nonLues = getTr().filter(t => t.date === _trCurrentDate && !_trIsRead(t, userId));
+  if (!nonLues.length) { el.innerHTML = ''; return; }
+  const n = nonLues.length;
+  el.innerHTML = `<div class="tr-prise">
+    <span class="tr-prise-ic">${_tv2Svg('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>')}</span>
+    <div style="min-width:0">
+      <div class="tr-prise-t">${n} transmission${n > 1 ? 's' : ''} non lue${n > 1 ? 's' : ''}</div>
+      <div class="tr-prise-s">Prenez connaissance de la passation avant votre service.</div>
+    </div>
+    <button type="button" class="tr-prise-b" onclick="tv2PriseDePoste()">J'ai pris connaissance</button>
+  </div>`;
+}
+
+async function tv2PriseDePoste() {
+  const sess = Auth.getSession() || {};
+  const userId = String(sess.userId || '');
+  const nonLues = getTr().filter(t => t.date === _trCurrentDate && !_trIsRead(t, userId));
+  if (!nonLues.length) return;
+  try {
+    await Promise.all(nonLues.map(t => {
+      const readBy = [...(t.readBy || []).map(String)];
+      if (!readBy.includes(userId)) readBy.push(userId);
+      return sbUpdateTransmissionField(t.id, { read_by: readBy }).then(upd => {
+        const i = _trCache.findIndex(x => String(x.id) === String(t.id));
+        if (i !== -1) _trCache[i] = upd; else t.readBy = readBy;
+      });
+    }));
+    if (typeof auditLog === 'function') auditLog('passation_lue', `Prise de connaissance — ${nonLues.length} transmission(s) du ${_trCurrentDate}`);
+    if (typeof toast === 'function') toast('Passation prise en compte ✓', 'success');
+  } catch (e) {
+    console.error('[transmissions] prise de poste', e);
+    if (typeof toast === 'function') toast('Enregistrement impossible', 'error');
+  }
+  _renderTransmissions();
+  if (typeof _updateTrUnreadBadge === 'function') _updateTrUnreadBadge();
 }

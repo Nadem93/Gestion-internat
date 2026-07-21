@@ -52,3 +52,24 @@ create policy audit_log_insert
 
 -- Volontairement AUCUNE politique UPDATE ni DELETE : un journal d'audit ne se
 -- modifie pas. RLS étant actif, l'absence de politique interdit ces opérations.
+
+
+-- ══════════════════════════════════════════════════════════════════════════
+-- TRANSMISSIONS — suivi « à faire pour la relève »
+-- ──────────────────────────────────────────────────────────────────────────
+-- Une transmission peut porter une action à faire par la vacation suivante ;
+-- elle reste ouverte (et se reporte à l'écran) jusqu'à ce qu'on la coche.
+-- Colonnes ajoutées de façon idempotente ; RLS de la table `transmissions`
+-- inchangée. Tant que ces colonnes n'existent pas, l'app se dégrade toute
+-- seule (elle enregistre la transmission sans le suivi).
+-- ══════════════════════════════════════════════════════════════════════════
+
+alter table public.transmissions add column if not exists suivi       boolean     not null default false;
+alter table public.transmissions add column if not exists suivi_fait  boolean     not null default false;
+alter table public.transmissions add column if not exists suivi_par   text;
+alter table public.transmissions add column if not exists suivi_le    timestamptz;
+
+-- Index partiel : retrouver vite les actions encore ouvertes.
+create index if not exists transmissions_suivi_ouvert_idx
+  on public.transmissions (etablissement_id)
+  where suivi = true and suivi_fait = false;
