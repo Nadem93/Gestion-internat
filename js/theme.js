@@ -99,6 +99,12 @@
 
   function injecterBouton() {
     if (document.getElementById('thmBtn')) return;
+
+    // Page ouverte DANS un portail (iframe, `?embed=1`) : pas de bouton. Le
+    // thème est déjà appliqué — même origine, donc même localStorage — et un
+    // second bouton à l'intérieur du panneau doublerait celui du portail.
+    if (/[?&]embed=1\b/.test(location.search)) return;
+
     injecterStyles();
 
     var b = document.createElement('button');
@@ -108,7 +114,9 @@
 
     // Barre supérieure V2 : on se place juste avant le bloc utilisateur quand
     // il existe, sinon en fin de barre.
-    var top = document.querySelector('.v2-top');
+    // Les portails (vie quotidienne, dossiers, pilotage) n'ont pas de `.v2-top`
+    // mais leur propre barre : sans elles, le bouton tomberait en flottant.
+    var top = document.querySelector('.v2-top, .vq-topbar, .ds-topbar, .pl-topbar');
     if (top) {
       var dernier = top.lastElementChild;
       // Le bloc de droite est un conteneur flex (margin-left:auto) : on entre

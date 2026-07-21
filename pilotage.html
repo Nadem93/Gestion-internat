@@ -14,24 +14,11 @@
 
 <div class="v2-shell pl-shell">
 
-  <!-- ── Navigation latérale ── -->
-  <nav class="pl-side" id="plSide" aria-label="Navigation du portail">
-    <div class="pl-side-top">
-      <a class="pl-side-brand" href="accueil.html" title="Retour à l'accueil">
-        <span class="pl-side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
-        <span class="pl-side-brand-txt">
-          <span class="pl-side-brand-t">Mon portail</span>
-          <span class="pl-side-brand-s">Mes accès personnels</span>
-        </span>
-      </a>
-      <button type="button" class="pl-side-fold" id="plSideFold" aria-expanded="true"
-        aria-label="Réduire le menu" title="Réduire le menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-    </div>
-    <div class="pl-side-nav" id="plSideNav"></div>
-    <div class="pl-side-user" id="plSideUser"></div>
-  </nav>
+  <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
+       « Accès rapides » de l'accueil du portail (pl2Cards). Les fonctions de
+       rendu du rail — y compris le repli mémorisé (pl2ToggleSide /
+       pl2RestoreSide) — restent en place mais ne trouvent plus leur hôte et
+       sortent immédiatement. -->
 
   <!-- ── Panneau principal ── -->
   <div class="pl-main">

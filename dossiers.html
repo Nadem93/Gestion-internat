@@ -14,18 +14,10 @@
 
 <div class="v2-shell ds-shell">
 
-  <!-- ── Navigation latérale ── -->
-  <nav class="ds-side" aria-label="Navigation dossiers">
-    <a class="ds-side-brand" href="accueil.html" title="Retour à l'accueil">
-      <span class="ds-side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
-      <span style="line-height:1.2;min-width:0">
-        <span class="ds-side-brand-t" style="display:block">Dossiers &amp; suivi</span>
-        <span class="ds-side-brand-s" style="display:block">Dossier du résident</span>
-      </span>
-    </a>
-    <div class="ds-side-nav" id="dsSideNav"></div>
-    <div class="ds-side-user" id="dsSideUser"></div>
-  </nav>
+  <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
+       « Accès rapides » de l'accueil du portail (ds2Cards). Les fonctions de
+       rendu du rail restent en place mais ne trouvent plus leur hôte et
+       sortent immédiatement. -->
 
   <!-- ── Panneau principal ── -->
   <div class="ds-main">
