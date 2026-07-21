@@ -560,7 +560,10 @@ body.v2 .v2-shell { max-width: none; margin: 22px 24px; }
 body.v2 .v2-body > .content { padding: 0; max-width: none; margin: 0; }
 
 /* ── Cartes résident (maquette « Residents - refonte (bento) ») ────────── */
-body.v2 .res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+/* minmax(0, 1fr) et NON 1fr : le minimum implicite de `1fr` est min-content ;
+   une carte au contenu large empêchait alors la grille de rétrécir, elle
+   débordait de sa colonne et le rail de détail passait par-dessus les cartes. */
+body.v2 .res-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .v2-res {
   position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
   border-radius: var(--v2-r-card2); padding: 16px; cursor: pointer;
@@ -583,7 +586,7 @@ body.v2 .res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1
 .v2-res-obj-h { display: flex; align-items: baseline; justify-content: space-between;
   font-size: 10.5px; color: var(--v2-t6); margin-bottom: 5px; }
 .v2-res-ico { display: flex; gap: 8px; list-style: none; margin: 0; padding: 0; }
-@media (max-width: 1100px) { body.v2 .res-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1100px) { body.v2 .res-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px)  { body.v2 .res-grid { grid-template-columns: 1fr; } }
 body.v2 .v2-res-ico a {
   width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
@@ -746,7 +749,12 @@ body.v2 .itab.active { color: var(--v2-t2); }
 .v2-chip-f .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .v2-chip-f .n { opacity: .7; }
 
-.v2-list { display: grid; grid-template-columns: 1fr 372px; gap: 20px; align-items: start; }
+/* minmax(0, 1fr) et NON 1fr : le minimum implicite de `1fr` est min-content,
+   donc une carte au contenu large empêchait la colonne de rétrécir et poussait
+   le rail de détail par-dessus les cartes. minmax(0,…) autorise le rétrécissement. */
+.v2-list { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 20px; align-items: start; }
+.v2-list > * { min-width: 0; }
+.v2-det { width: 100%; max-width: 100%; }
 @media (max-width: 1180px) { .v2-list { grid-template-columns: 1fr; } }
 
 /* Carte sélectionnée */
