@@ -396,6 +396,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
 <script src="js/search-global.js"></script>
 <script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
@@ -559,7 +560,7 @@ function renderViewMode(r) {
                     + paire(trousseauCard(r), budgetCard(r)),
     historique: () => transV2 + filDeVieCard(r) + autonomieCard(r),
     admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
-                    + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r)
+                    + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r) + accesCard(r)
   };
   const rendu = (ONGLETS[RV2_TAB] || ONGLETS.apercu)();
 
@@ -572,6 +573,69 @@ function renderViewMode(r) {
     </div>`;
   initPageTabs();
   initPageDocUpload(currentResidentId);
+
+  // Traçabilité RGPD (pas pendant l'assemblage d'impression) :
+  if (!_rv2Printing) {
+    // consultation journalisée UNE FOIS par ouverture de fiche, pas à chaque
+    // changement d'onglet
+    if (!pageEditMode && window._accesLogged !== currentResidentId) {
+      window._accesLogged = currentResidentId;
+      if (typeof auditLog === 'function') auditLog('acces_dossier', 'Consultation de la fiche', currentResidentId);
+    }
+    // l'historique n'existe que dans l'onglet Administration (admin only)
+    if (document.getElementById('accesHistoBody')) _remplirAccesHisto(r);
+  }
+}
+
+let _rv2Printing = false;
+
+// Historique des accès au dossier — carte réservée aux administrateurs, dans
+// l'onglet Administration. Le corps est rempli en asynchrone après le rendu.
+function accesCard(r) {
+  if (!Auth.isAdmin()) return '';
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #6366f1 12%, #fff)">
+      <span class="card-title" style="color:#4f46e5">🕓 Historique des accès</span>
+      <span style="margin-left:auto;font-size:.72rem;color:var(--muted)">Traçabilité RGPD</span>
+    </div><div class="card-body">
+      <div id="accesHistoBody"><div style="padding:.8rem 0;color:var(--muted);font-size:.82rem">Chargement…</div></div>
+      <div style="font-size:.72rem;color:var(--muted);line-height:1.5;padding:.4rem 0 0">
+        Qui a consulté ou modifié ce dossier, et quand. Trace centralisée et durable — nécessite la table <code>audit_log</code>.
+      </div>
+    </div></div>`;
+}
+
+const _ACCES_LIB = {
+  acces_dossier: ['👁', 'Consultation'],
+  resident_update: ['✎', 'Modification'],
+  export: ['⬇', 'Export des données'],
+  anonymisation: ['🕶', 'Anonymisation'],
+  resident_create: ['＋', 'Création']
+};
+
+async function _remplirAccesHisto(r) {
+  const hote = document.getElementById('accesHistoBody');
+  if (!hote) return;
+  if (typeof sbGetAuditForResident !== 'function') {
+    hote.innerHTML = '<div style="padding:.8rem 0;color:var(--muted);font-size:.82rem">Historique indisponible (module non chargé).</div>';
+    return;
+  }
+  const lignes = await sbGetAuditForResident(currentResidentId, 40);
+  if (!lignes.length) {
+    hote.innerHTML = '<div style="padding:.8rem 0;color:var(--muted);font-size:.82rem">Aucun accès enregistré pour l\'instant.</div>';
+    return;
+  }
+  hote.innerHTML = lignes.map(l => {
+    const d = new Date(l.ts);
+    const quand = d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const def = _ACCES_LIB[l.action] || ['•', l.action || 'Action'];
+    return `<div style="display:flex;align-items:flex-start;gap:.6rem;padding:.5rem 0;border-top:1px solid var(--border,rgba(15,38,70,.08))">
+      <span style="font-size:1rem;line-height:1.2;flex-shrink:0">${def[0]}</span>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:.83rem;font-weight:600;color:var(--text,#16283f)">${escHtml(def[1])}${l.details ? ' — ' + escHtml(l.details) : ''}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${escHtml(l.user_name || 'Utilisateur')}${l.role ? ' · ' + escHtml(l.role) : ''} · ${quand}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── SANTÉ (intégré à la carte Médical) ──
@@ -3387,9 +3451,13 @@ function printResident() {
   // Les onglets ne découpent que l'affichage : une fiche imprimée doit rester complète.
   const ongletCourant = RV2_TAB;
   const zone = document.getElementById('residentContent');
+  // Pendant l'assemblage des onglets, on ne journalise pas et on ne recharge
+  // pas l'historique (renderViewMode tourne 6 fois sur des rendus jetables).
+  _rv2Printing = true;
   const tout = RV2_TABS.map(t => { RV2_TAB = t.k; renderViewMode(r); return zone.innerHTML; });
   RV2_TAB = ongletCourant;
   renderViewMode(r);
+  _rv2Printing = false;
   const sauvegarde = zone.innerHTML;
   zone.innerHTML = tout.join('');
 

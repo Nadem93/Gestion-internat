@@ -383,22 +383,34 @@ function requireModule(perm) {
 }
 
 // ── AUDIT LOG ──
-function auditLog(action, details) {
+// 3e argument facultatif : residentId, pour rattacher l'entrée à un dossier
+// (traçabilité RGPD « qui a consulté/modifié ce résident »).
+function auditLog(action, details, residentId) {
   try {
     const session = Auth?.getSession?.();
     if (!session) return;
+    const user = [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username;
+
+    // 1) Trace locale — conservée telle quelle (la vue admin actuelle la lit).
     const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
     log.unshift({
       id: genId(),
       date: new Date().toISOString(),
       userId: session.userId,
-      user: [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username,
+      user,
       role: session.role,
       action,
       details: details || ''
     });
     if (log.length > 1000) log.length = 1000;
     localStorage.setItem('ftr_audit_log', JSON.stringify(log));
+
+    // 2) Trace centralisée — durable et partagée (audit-supabase.js). « Au
+    //    mieux » : jamais bloquante, et si le module ou la table manquent,
+    //    la trace locale reste. Passe par la file hors-ligne au besoin.
+    if (typeof sbLogAudit === 'function') {
+      sbLogAudit({ action, details, residentId, userId: session.userId, userName: user, role: session.role });
+    }
   } catch {}
 }
 
