@@ -8,22 +8,35 @@ function rhRow(icon, title, sub, color, href) {
     </div>
   </a>`;
 }
+function rhSet(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
 function rhEmpty(msg) { return `<div class="empty" style="padding:1.5rem;text-align:center"><p style="font-size:.82rem">${msg}</p></div>`; }
 
 async function initRhDashboard() {
   const s = Auth.requireAuth();
   if (!s) return;
 
-  let employes = [], contrats = [], absences = [], conges = [], entretiens = [], formations = [], candidats = [];
+  let employes = [], contrats = [], absences = [], conges = [], entretiens = [], formations = [], candidats = [], fichesPaie = [];
   try {
-    [employes, contrats, absences, conges, entretiens, formations, candidats] = await Promise.all([
+    [employes, contrats, absences, conges, entretiens, formations, candidats, fichesPaie] = await Promise.all([
       sbGetEmployes(), sbGetContrats(), sbGetAbsences(), sbGetConges(),
-      sbGetEntretiens(), sbGetFormations(), sbGetCandidats()
+      sbGetEntretiens(), sbGetFormations(), sbGetCandidats(),
+      // Masse salariale (maquette V2) — dégradation douce si la couche n'est pas chargée
+      (typeof sbGetFichesPaie === 'function'
+        ? sbGetFichesPaie().catch(e => { console.warn('[initRhDashboard] fiches de paie', e); return []; })
+        : Promise.resolve([]))
     ]);
   } catch (e) {
     console.error('[initRhDashboard]', e);
     toast('Erreur chargement du tableau de bord RH', 'error');
   }
+
+  // ── Rendu V2 (maquette « RH - refonte (bento) ») ──
+  // L'ancien rendu ci-dessous reste comme repli si le module n'est pas chargé.
+  if (typeof window.renderRhDashboardV2 === 'function') {
+    window.renderRhDashboardV2({ employes, contrats, absences, conges, entretiens, formations, candidats, fichesPaie });
+    return;
+  }
+
   const todayStr = today();
   const in30 = (() => { const d = new Date(todayStr+'T00:00:00'); d.setDate(d.getDate()+30); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
@@ -35,62 +48,62 @@ async function initRhDashboard() {
   const formationsAVenir = formations.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr).sort((a,b)=>a.dateDebut.localeCompare(b.dateDebut));
   const candidatsActifs = candidats.filter(c => !['accepte','refuse'].includes(c.statut));
 
-  document.getElementById('rhStats').innerHTML = `
+  rhSet('rhStats', `
     <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Effectif</span></div><div class="chx-stat-num">${employes.length}</div></div>
     <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Absences en cours</span></div><div class="chx-stat-num">${absencesEnCours.length}</div></div>
     <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">CDD ≤30j</span></div><div class="chx-stat-num">${cddEcheance.length}</div></div>
-    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Congés en attente</span></div><div class="chx-stat-num">${congesEnAttente.length}</div></div>`;
+    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Congés en attente</span></div><div class="chx-stat-num">${congesEnAttente.length}</div></div>`);
 
   // Contrats
-  document.getElementById('rhContrats').innerHTML = cddEcheance.length
+  rhSet('rhContrats', cddEcheance.length
     ? cddEcheance.sort((a,b)=>a.fin.localeCompare(b.fin)).map(c => {
         const emp = employes.find(e => String(e.id) === String(c.employeId));
         const nom = emp ? `${emp.prenom||''} ${emp.nom||''}`.trim() : 'Inconnu';
         const j = Math.ceil((new Date(c.fin+'T00:00:00') - new Date(todayStr+'T00:00:00')) / 86400000);
         return rhRow('⚠️', escHtml(nom), `Fin de CDD le ${formatDate(c.fin)} (J-${j})`, '#dc2626', 'contrats.html');
       }).join('')
-    : rhEmpty('Aucune échéance de CDD dans les 30 jours.');
+    : rhEmpty('Aucune échéance de CDD dans les 30 jours.'));
 
   // Absences
-  document.getElementById('rhAbsences').innerHTML = absencesEnCours.length
+  rhSet('rhAbsences', absencesEnCours.length
     ? absencesEnCours.map(a => {
         const emp = employes.find(e => String(e.id) === String(a.employeId));
         const nom = emp ? `${emp.prenom||''} ${emp.nom||''}`.trim() : 'Inconnu';
         const icon = a.type === 'at' ? '⚠️' : a.type === 'maladie_pro' ? '🏭' : '🤒';
         return rhRow(icon, escHtml(nom), `Depuis le ${formatDate(a.debut)}`, '#dc2626', 'absences.html');
       }).join('')
-    : rhEmpty('Aucune absence en cours.');
+    : rhEmpty('Aucune absence en cours.'));
 
   // Congés
-  document.getElementById('rhConges').innerHTML = congesEnAttente.length
+  rhSet('rhConges', congesEnAttente.length
     ? congesEnAttente.sort((a,b)=>(a.debut||'').localeCompare(b.debut||'')).map(c => {
         const e = employes.find(x => String(x.id) === String(c.employeId));
         const nom = e ? `${e.prenom||''} ${e.nom||''}`.trim() : (c.employeNom||'Inconnu');
         return rhRow('🗓', escHtml(nom), `${formatDate(c.debut)} → ${formatDate(c.fin)}`, '#16a34a', 'conges.html');
       }).join('')
-    : rhEmpty('Aucune demande en attente.');
+    : rhEmpty('Aucune demande en attente.'));
 
   // Entretiens
-  document.getElementById('rhEntretiens').innerHTML = entretiensAVenir.length
+  rhSet('rhEntretiens', entretiensAVenir.length
     ? entretiensAVenir.sort((a,b)=>a.date.localeCompare(b.date)).map(e =>
         rhRow('🧑‍💼', escHtml(e.employeNom||'Inconnu'), `Planifié le ${formatDate(e.date)}`, '#9333ea', 'entretiens.html')
       ).join('')
-    : rhEmpty("Aucun entretien planifié dans les 30 jours.");
+    : rhEmpty("Aucun entretien planifié dans les 30 jours."));
 
   // Formations
-  document.getElementById('rhFormations').innerHTML = formationsAVenir.length
+  rhSet('rhFormations', formationsAVenir.length
     ? formationsAVenir.slice(0,8).map(f =>
         rhRow('🎓', escHtml(f.titre||'Formation'), `Le ${formatDate(f.dateDebut)}`, '#7c3aed', 'formations.html')
       ).join('')
-    : rhEmpty('Aucune formation planifiée.');
+    : rhEmpty('Aucune formation planifiée.'));
 
   // Recrutement
-  document.getElementById('rhRecrutement').innerHTML = candidatsActifs.length
+  rhSet('rhRecrutement', candidatsActifs.length
     ? candidatsActifs.map(c => {
         const nom = `${c.prenom||''} ${c.nom||''}`.trim();
         const lbl = { recu:'Reçu', entretien_planifie:'Entretien planifié', entretien_fait:'Entretien réalisé' }[c.statut] || c.statut;
         return rhRow('📋', escHtml(nom), `${escHtml(c.poste||'')} — ${lbl}`, '#6366f1', 'recrutement.html');
       }).join('')
-    : rhEmpty('Aucun candidat en cours.');
+    : rhEmpty('Aucun candidat en cours.'));
 }
 document.addEventListener('DOMContentLoaded', initRhDashboard);

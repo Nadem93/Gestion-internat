@@ -2,109 +2,135 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
   <title>SERAFIN-PH — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    @media print {
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
-      @page { margin: 1.5cm 1.2cm; size: A4; }
-
-      .header, #toast-container, .no-print, .btn, .tab, .tabs { display: none !important; }
-
-      html, body { height: auto !important; overflow: visible !important; background: #fff !important; margin: 0 !important; font-size: 10pt !important; }
-      .app-layout, .main { display: block !important; height: auto !important; overflow: visible !important; }
-      .content { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; margin: 0 !important; flex: none !important; }
-
-      .grid-4 { grid-template-columns: repeat(4, 1fr) !important; gap: .5rem !important; }
-
-      .card { box-shadow: none !important; background: #fff !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; margin-bottom: .5rem !important; }
-      .card-body { padding: .6rem .85rem !important; }
-      .card-header { padding: .5rem .85rem !important; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
-      .card-title { font-size: .75rem !important; }
-      .stat-card { box-shadow: none !important; break-inside: avoid; }
-
-      #printHeader { display: block !important; }
-      #spResidentsBody { display: block !important; }
-
-      h1, h2, h3 { font-size: 11pt !important; }
-      p, div, span, td, th { font-size: 9pt !important; line-height: 1.4 !important; }
-    }
-
-    #printHeader {
-      display: none;
-      border-bottom: 3px solid #0f2b4a;
-      padding-bottom: .5cm;
-      margin-bottom: .5cm;
-    }
-    #printHeader .ph-etab { font-size: 9pt; color: #64748b; }
-    #printHeader .ph-title { font-size: 16pt; font-weight: 800; color: #0f2b4a; margin: 2px 0; }
-    #printHeader .ph-meta { font-size: 8pt; color: #94a3b8; }
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-serafinph.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">SERAFIN-PH</div></div>
-      <div class="header-right">
-        <button class="btn btn-ghost btn-sm" onclick="printSerafinph()" title="Télécharger / Imprimer le rapport">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span class="btn-add-label"> Télécharger</span>
-        </button>
-      </div>
-    </header>
+<body class="v2">
+
+<div class="v2-shell" style="--v2-halo:rgba(139,92,246,.20)">
+
+  <!-- ── Barre du haut ── -->
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" title="Retour à l'accueil" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Pilotage &amp; ressources</div>
+      <div class="v2-top-title">SERAFIN-PH</div>
+    </div>
+    <div class="sp2-top-actions">
+      <button type="button" class="v2-btn" onclick="printSerafinph()" title="Télécharger / Imprimer le rapport">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Télécharger
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Contenu ── -->
+  <main class="v2-body" id="spContent">
+
+    <!-- En-tête d'impression (masqué à l'écran) -->
     <div id="printHeader">
       <div class="ph-etab" id="phEtab"></div>
       <div class="ph-title" id="phTitle">Rapport SERAFIN-PH</div>
       <div class="ph-meta" id="phMeta"></div>
     </div>
-    <main class="content" id="spContent">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-        <div>
-          <div style="font-weight:700;font-size:1rem">📊 SERAFIN-PH</div>
-          <div style="font-size:.78rem;color:var(--muted)">Indicateurs tarifaires — Prestations directes et indirectes</div>
-        </div>
-      </div>
-      <div class="grid grid-4" style="margin-bottom:1rem">
-        <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)"><div class="stat-card-top"><span class="stat-label">GMPS Moyen</span><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div></div><div class="stat-num" id="spStatGmps">—</div></div>
-        <div class="stat-card" style="background:linear-gradient(135deg,#16a34a25,#34d39915)"><div class="stat-card-top"><span class="stat-label">Score total</span><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/></svg></div></div><div class="stat-num" id="spStatTotal">—</div></div>
-        <div class="stat-card" style="background:linear-gradient(135deg,#f9731625,#fb923c15)"><div class="stat-card-top"><span class="stat-label">Résidents évalués</span><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="stat-num" id="spStatEvalues">—</div></div>
-        <div class="stat-card" style="background:linear-gradient(135deg,#ef444425,#fca5a515)"><div class="stat-card-top"><span class="stat-label">Besoins élevés (≥3)</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="stat-num" id="spStatEleves">—</div></div>
-      </div>
-      <div class="card" style="margin-bottom:1rem">
-        <div class="card-header"><span class="card-title">📋 Entrées journal liées</span></div>
-        <div class="card-body" id="spJournalStats"><div style="font-size:.75rem;color:var(--muted);padding:.75rem 1.25rem">Chargement…</div></div>
-      </div>
 
-      <div class="card" style="margin-bottom:1rem">
-        <div class="card-header"><span class="card-title">Vue par prestation</span></div>
-        <div class="card-body" style="padding:0"><div id="spPrestationsList"></div></div>
+    <div class="sp2-head">
+      <h1 class="v2-h1">Indicateurs tarifaires</h1>
+      <div class="v2-sub">Nomenclature SERAFIN-PH — prestations directes et indirectes.</div>
+    </div>
+
+    <!-- Tuiles KPI -->
+    <div class="sp2-kpis">
+      <div class="sp2-kpi" style="--pc:#8b5cf6;--pc2:#a78bfa">
+        <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M2 12h20"/></svg></span>
+        <div class="sp2-kpi-n" id="spStatGmps">—</div>
+        <div class="sp2-kpi-l">GMPS moyen</div>
+        <div class="sp2-kpi-s" id="spStatGmpsSub">—</div>
       </div>
-      <div class="card">
-        <div class="card-header" style="cursor:pointer" onclick="toggleSpResidentsCard()">
-          <span class="card-title">Détail par résident</span>
-          <div style="display:flex;gap:.35rem;align-items:center;font-size:.65rem" id="spResidentsLegend">
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#d1d5db;color:#fff;font-weight:700;font-size:.55rem">0</span><span style="color:var(--muted)">Nul</span>
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#22c55e;color:#fff;font-weight:700;font-size:.55rem">1</span><span style="color:var(--muted)">Faible</span>
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#eab308;color:#fff;font-weight:700;font-size:.55rem">2</span><span style="color:var(--muted)">Modéré</span>
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#f97316;color:#fff;font-weight:700;font-size:.55rem">3</span><span style="color:var(--muted)">Important</span>
-            <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:#ef4444;color:#fff;font-weight:700;font-size:.55rem">4</span><span style="color:var(--muted)">Très important</span>
-          </div>
-          <button class="btn btn-ghost btn-sm" id="spResidentsToggle" style="margin-left:.5rem" onclick="event.stopPropagation();toggleSpResidentsCard()">▸</button>
-        </div>
-        <div class="card-body" id="spResidentsBody" style="padding:0;display:none"><div id="spResidentsList"></div></div>
+      <div class="sp2-kpi" style="--pc:#16a34a;--pc2:#4ade80">
+        <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <div class="sp2-kpi-n" id="spStatTotal">—</div>
+        <div class="sp2-kpi-l">Score total</div>
+        <div class="sp2-kpi-s" id="spStatTotalSub">—</div>
       </div>
-      <script>
-        function toggleSpResidentsCard() {
-          const body = document.getElementById('spResidentsBody');
-          const btn = document.getElementById('spResidentsToggle');
-          const open = body.style.display !== 'none';
-          body.style.display = open ? 'none' : '';
-          btn.textContent = open ? '▸' : '▾';
-        }
-      </script>
-    </main>
+      <div class="sp2-kpi" style="--pc:#0891b2;--pc2:#22d3ee">
+        <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+        <div class="sp2-kpi-n" id="spStatEvalues">—</div>
+        <div class="sp2-kpi-l">Résidents évalués</div>
+        <div class="sp2-kpi-s" id="spStatEvaluesSub">—</div>
+      </div>
+      <div class="sp2-kpi" style="--pc:#ef4444;--pc2:#f87171">
+        <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+        <div class="sp2-kpi-n" id="spStatEleves">—</div>
+        <div class="sp2-kpi-l">Besoins élevés (≥ 3)</div>
+        <div class="sp2-kpi-s" id="spStatElevesSub">—</div>
+      </div>
+    </div>
+
+    <!-- Entrées journal liées -->
+    <div class="v2-blk sp2-blk">
+      <div class="v2-blk-h">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="v2-blk-t">Entrées journal liées</span>
+      </div>
+      <div id="spJournalStats"><div class="v2-blk-vide">Chargement…</div></div>
+    </div>
+
+    <!-- Vue par prestation -->
+    <div class="v2-blk sp2-blk">
+      <div class="v2-blk-h">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
+        <span class="v2-blk-t">Vue par prestation</span>
+        <span class="v2-card-meta">Cliquez une ligne pour voir les résidents concernés</span>
+      </div>
+      <div class="v2-chips" style="margin-bottom:14px">
+        <button type="button" class="v2-chip-f on" data-sp-cat="toutes"><span class="dot" style="background:#818cf8"></span>Toutes <span class="n" id="spCatToutesN"></span></button>
+        <button type="button" class="v2-chip-f" data-sp-cat="directe"><span class="dot" style="background:#8b5cf6"></span>Directes <span class="n" id="spCatDirecteN"></span></button>
+        <button type="button" class="v2-chip-f" data-sp-cat="indirecte"><span class="dot" style="background:#f97316"></span>Indirectes <span class="n" id="spCatIndirecteN"></span></button>
+      </div>
+      <div id="spPrestationsList"></div>
+    </div>
+
+    <!-- Détail par résident -->
+    <div class="v2-blk sp2-blk">
+      <div class="v2-blk-h sp2-res-head" onclick="toggleSpResidentsCard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <span class="v2-blk-t">Détail par résident</span>
+        <span class="v2-card-meta" id="spResidentsCount"></span>
+        <span class="sp2-leg" id="spResidentsLegend"></span>
+        <input type="search" class="sp2-search" id="spResidentsSearch" placeholder="Rechercher un résident…" aria-label="Rechercher un résident"/>
+        <button type="button" class="sp2-fold" id="spResidentsToggle" aria-expanded="false"
+          aria-controls="spResidentsBody" aria-label="Afficher le détail par résident"
+          onclick="event.stopPropagation();toggleSpResidentsCard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div id="spResidentsBody" style="display:none"><div id="spResidentsList"></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Modale : détail d'une prestation (gabarit V2) ── -->
+<div class="v2-ov" id="spPrestOv" role="dialog" aria-modal="true" aria-labelledby="spPrestT">
+  <div class="v2-md" style="--mc:#8b5cf6">
+    <div class="v2-md-h">
+      <span class="v2-md-ico" id="spPrestIco" style="font-size:20px"></span>
+      <div><div class="v2-md-t" id="spPrestT"></div><div class="v2-md-s" id="spPrestS"></div></div>
+      <button class="v2-md-x" type="button" onclick="sp2ClosePrestation()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b" id="spPrestB"></div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="sp2ClosePrestation()">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -115,6 +141,7 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
 <script src="js/serafinph.js"></script>
+<script src="js/serafinph-v2.js"></script>
 <script>
   Auth.requireAuth();
   if (!requireModule('access_serafinph')) {

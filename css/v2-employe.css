@@ -1,0 +1,210 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   FICHE EMPLOYÉ — V2 (module RH)
+   Langage visuel de la maquette « Utilisateurs (RH) » appliqué à la fiche :
+   tuiles à carré d'icône, chips d'onglets, cartes translucides, tableaux
+   sombres. Ne modifie que des sélecteurs portés par #employeContent.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2 .v2-shell { --v2-halo: rgba(139, 92, 246, .2); }
+
+/* ── Barre du haut ─────────────────────────────────────────────────────── */
+body.v2 .ev2-top-logo {
+  background: linear-gradient(135deg, var(--v2-violet), #a78bfa);
+}
+body.v2 .ev2-top-logo svg { width: 20px; height: 20px; }
+body.v2 .ev2-top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Boutons hérités de la barre (Attestation / Modifier) au gabarit V2 */
+body.v2 .v2-top .btn {
+  height: 42px; padding: 0 16px; border-radius: var(--v2-r-ctrl);
+  font-size: 13px; font-weight: 600; box-shadow: none;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+body.v2 .v2-top .btn.btn-outline,
+body.v2 .v2-top .btn.btn-ghost {
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t4);
+}
+body.v2 .v2-top .btn.btn-outline:hover,
+body.v2 .v2-top .btn.btn-ghost:hover { background: var(--v2-s-hover); color: #fff; }
+body.v2 .v2-top .btn.btn-accent {
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  border: none; color: #fff; box-shadow: var(--v2-sh-primary);
+}
+
+/* ── Bandeau d'identité : actions à droite ─────────────────────────────── */
+body.v2 .ev2-hero-actions { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+body.v2 .ev2-ico-btn {
+  width: 38px; height: 38px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t4); cursor: pointer; padding: 0;
+}
+body.v2 .ev2-ico-btn:hover { background: var(--v2-s-hover); color: #fff; }
+/* Un SVG sans dimensions remplit toute sa boîte : on borne. */
+body.v2 .ev2-ico-btn svg { width: 17px; height: 17px; display: block; }
+
+/* ── Tuiles statistiques (maquette « stats ») ──────────────────────────── */
+body.v2 .ev2-kgrid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px;
+}
+body.v2 .ev2-k {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 15px 17px;
+  font: inherit; cursor: pointer;
+  transition: background .15s, transform .15s, border-color .15s;
+}
+body.v2 .ev2-k:hover { background: var(--v2-s-hover); border-color: var(--v2-b-active); transform: translateY(-2px); }
+body.v2 .ev2-k-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+body.v2 .ev2-k-ico svg { width: 21px; height: 21px; display: block; }
+body.v2 .ev2-k-txt { min-width: 0; display: block; }
+body.v2 .ev2-k-n { display: block; font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; }
+body.v2 .ev2-k-l { display: block; font-size: 12px; font-weight: 600; color: var(--v2-t4); margin-top: 6px; }
+body.v2 .ev2-k-s {
+  display: block; font-size: 10.5px; color: var(--v2-t7); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Grille des modules ────────────────────────────────────────────────── */
+body.v2 .ev2-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+body.v2 .ev2-g2 > * { min-width: 0; }
+
+/* ── Cartes héritées rhabillées au gabarit .v2-blk ─────────────────────── */
+body.v2 #employeContent .card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); box-shadow: none; overflow: hidden;
+  color: var(--v2-t4);
+}
+body.v2 #employeContent .card-header {
+  background: transparent !important; border-bottom: 1px solid var(--v2-b-soft);
+  padding: 15px 20px 13px;
+}
+body.v2 #employeContent .card-title { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+body.v2 #employeContent .card-body { padding: 16px 20px; }
+body.v2 #employeContent .card-footer { border-top: 1px solid var(--v2-b-soft); background: transparent; }
+
+/* ── Tableaux au gabarit .v2-table ─────────────────────────────────────── */
+body.v2 #employeContent table.table { width: 100%; border-collapse: collapse; }
+body.v2 #employeContent table.table th {
+  text-align: left; padding: 11px 16px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  background: var(--v2-s-alt); border-top: 1px solid var(--v2-b-soft);
+  border-bottom: 1px solid var(--v2-b-soft);
+}
+body.v2 #employeContent table.table td {
+  padding: 11px 16px; font-size: 12.5px; color: var(--v2-t4);
+  border-bottom: 1px solid var(--v2-b-table);
+}
+body.v2 #employeContent table.table tbody tr:hover td { background: rgba(255, 255, 255, .025); }
+
+/* ── Boutons dans les modules ──────────────────────────────────────────── */
+body.v2 #employeContent .btn {
+  border-radius: var(--v2-r-chip); font-weight: 600; box-shadow: none;
+}
+body.v2 #employeContent .btn-ghost { background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t4); }
+body.v2 #employeContent .btn-ghost:hover { background: var(--v2-s-hover); color: #fff; }
+body.v2 #employeContent .btn-outline { background: transparent; border: 1px solid var(--v2-b-ctrl); color: var(--v2-t4); }
+body.v2 #employeContent .btn-outline:hover { background: var(--v2-s-hover); color: #fff; }
+body.v2 #employeContent .btn-primary,
+body.v2 #employeContent .btn-accent {
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  border: none; color: #fff; box-shadow: var(--v2-sh-primary);
+}
+
+/* ── Champs de formulaire ──────────────────────────────────────────────── */
+body.v2 #employeContent .form-input,
+body.v2 #employeContent input, body.v2 #employeContent select, body.v2 #employeContent textarea {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t2); border-radius: 11px;
+}
+body.v2 #employeContent input[type="color"] { padding: 4px; height: 44px; }
+body.v2 #employeContent .form-group label { color: var(--v2-t5); font-size: 12px; font-weight: 500; }
+
+/* Sélecteurs natifs (date, heure) : les widgets du navigateur suivent le thème. */
+body.v2 #employeContent, body.v2 .v2-md { color-scheme: dark; }
+
+/* Cases à cocher : le carré blanc natif est la seule surface claire restante. */
+body.v2 #employeContent input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-active);
+  position: relative; margin: 0; padding: 0;
+}
+body.v2 #employeContent input[type="checkbox"]:hover { border-color: var(--v2-indigo-light); }
+body.v2 #employeContent input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo)); border-color: transparent;
+}
+body.v2 #employeContent input[type="checkbox"]:checked::after {
+  content: ''; position: absolute; left: 5px; top: 1px;
+  width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+
+/* style.css met les <label> en capitales : illisible pour une liste à cocher. */
+body.v2 #employeContent label:has(input[type="checkbox"]) {
+  text-transform: none; letter-spacing: normal;
+  font-size: 12.5px; font-weight: 500; color: var(--v2-t3);
+}
+
+/* ── Zone d'état vide ──────────────────────────────────────────────────── */
+body.v2 #employeContent .empty { color: var(--v2-t7); }
+body.v2 #employeContent .empty h3 { color: var(--v2-t3); }
+body.v2 #employeContent .empty p { color: var(--v2-t7); font-size: 12.5px; }
+
+/* ── Zone de dépôt de document (bordure pointillée héritée) ────────────── */
+body.v2 #employeContent .doc-upload-zone {
+  background: var(--v2-s-sub) !important;
+  border: 2px dashed var(--v2-b-active) !important;
+  color: var(--v2-t5);
+}
+body.v2 #employeContent .doc-upload-zone:hover { background: var(--v2-s-hover) !important; }
+
+/* ── Mode édition ──────────────────────────────────────────────────────── */
+body.v2 .ev2-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+body.v2 .ev2-edit-f {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--v2-b);
+}
+body.v2 .ev2-edit-f .v2-btn-sec, body.v2 .ev2-edit-f .v2-btn-pri { flex: 0 0 auto; padding: 0 22px; }
+
+/* ── Modales au gabarit .v2-ov / .v2-md ────────────────────────────────── */
+/* L'icône du gabarit attend un SVG ; ici les modules apportent un emoji. */
+body.v2 .v2-md-ico { font-size: 19px; line-height: 1; }
+body.v2 .v2-md-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+body.v2 .v2-fld-w { min-width: 0; }
+body.v2 .v2-md-b { display: flex; flex-direction: column; gap: 14px; }
+body.v2 .v2-md-b input[type="file"] {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t5); border-radius: 11px; padding: 10px 12px; font-size: 12.5px; width: 100%;
+}
+body.v2 .v2-md .v2-fld-l { margin-bottom: 7px; }
+@media (max-width: 560px) { body.v2 .v2-md-2 { grid-template-columns: 1fr; } }
+
+/* ── Divers : bulles de message et pastilles claires en dur ────────────── */
+body.v2 #employeContent [style*="background:#f1f5f9"] { background: var(--v2-s-sub) !important; color: var(--v2-t3) !important; }
+body.v2 #employeContent svg { max-width: 100%; }
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 1280px) {
+  body.v2 .ev2-kgrid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1080px) {
+  body.v2 .ev2-g2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  body.v2 .ev2-kgrid { grid-template-columns: repeat(2, 1fr); }
+  body.v2 .ev2-form { grid-template-columns: 1fr; }
+  body.v2 .v2-hero-res { gap: 16px; }
+  body.v2 .v2-facts {
+    margin-left: 0; width: 100%;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  body.v2 .v2-fact { min-width: 0; }
+}
+@media (max-width: 560px) {
+  body.v2 .ev2-kgrid { grid-template-columns: 1fr; }
+  body.v2 .ev2-hero-actions { width: 100%; }
+  body.v2 .v2-top .btn { height: 38px; padding: 0 12px; }
+}

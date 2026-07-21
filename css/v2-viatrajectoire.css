@@ -1,0 +1,121 @@
+/* ══════════════════════════════════════════════════════════════════════
+   VIATRAJECTOIRE — style spécifique V2
+   Langage visuel repris de la maquette « Portail - refonte (bento) » :
+   tuiles bento à carré d'icône, lignes de liste à avatar, carte teintée.
+   Ne redéfinit AUCUN composant de css/v2.css : uniquement des classes vt2-.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Tuiles KPI ─────────────────────────────────────────────────────── */
+.vt2-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.vt2-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 18px;
+}
+.vt2-kpi-ico {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: linear-gradient(135deg, var(--pc, #818cf8), color-mix(in srgb, var(--pc, #818cf8) 55%, #fff));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--pc, #818cf8) 33%, transparent);
+}
+.vt2-kpi-ico svg { width: 21px; height: 21px; display: block; }
+.vt2-kpi-n {
+  font-family: var(--v2-display); font-size: 23px; font-weight: 800;
+  line-height: 1; color: #fff; margin-top: 14px;
+}
+.vt2-kpi-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); margin-top: 6px; }
+.vt2-kpi-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Barre de filtres ───────────────────────────────────────────────── */
+.vt2-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.vt2-search {
+  height: 38px; flex: 1; min-width: 200px; max-width: 320px;
+  display: flex; align-items: center; gap: 9px; padding: 0 13px;
+  border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.vt2-search svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--v2-t7); }
+body.v2 .vt2-search input {
+  flex: 1; min-width: 0; height: 100%; border: none; background: transparent;
+  font: inherit; font-size: 12.5px; color: var(--v2-t2); outline: none; padding: 0;
+}
+.vt2-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ── Corps deux colonnes ────────────────────────────────────────────── */
+.vt2-body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+/* sans quoi le contenu minimal des lignes élargit la colonne au-delà de l'écran */
+.vt2-body > * { min-width: 0; }
+.vt2-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 1100px) { .vt2-body { grid-template-columns: 1fr; } }
+@media (max-width: 900px)  { .vt2-kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .vt2-kpis { grid-template-columns: 1fr; } }
+
+/* ── Ligne de demande ───────────────────────────────────────────────── */
+.vt2-list { display: flex; flex-direction: column; }
+.vt2-row {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 13px 0; border-bottom: 1px solid var(--v2-b-list);
+}
+.vt2-row:last-child { border-bottom: none; }
+.vt2-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 800; color: var(--v2-bg);
+}
+.vt2-row-b { flex: 1; min-width: 0; }
+.vt2-row-h { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.vt2-row-n { font-size: 13px; font-weight: 700; color: var(--v2-t2); }
+.vt2-row-m { font-size: 11px; color: var(--v2-t7); margin-top: 3px; }
+.vt2-row-c {
+  font-size: 12px; color: var(--v2-t4); line-height: 1.5; margin-top: 7px;
+  padding: 9px 11px; border-radius: 11px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.vt2-tag {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  background: color-mix(in srgb, var(--tc, #818cf8) 13%, transparent); color: var(--tc, #818cf8);
+}
+.vt2-pill {
+  flex-shrink: 0; font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  padding: 4px 10px; border-radius: 7px; margin-top: 3px;
+  background: color-mix(in srgb, var(--pc, #818cf8) 14%, transparent); color: var(--pc, #818cf8);
+}
+.vt2-acts { display: flex; gap: 6px; flex-shrink: 0; }
+.vt2-act {
+  width: 30px; height: 30px; border-radius: 9px; cursor: pointer; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.vt2-act:hover { background: var(--v2-s-hover); color: #fff; }
+.vt2-act svg { width: 14px; height: 14px; display: block; }
+.vt2-act-x:hover { color: var(--v2-danger-text); border-color: rgba(239,68,68,.4); }
+
+/* Écrans étroits : la pastille de statut et les actions passent sous la ligne */
+@media (max-width: 640px) {
+  .vt2-row { flex-wrap: wrap; row-gap: 10px; }
+  .vt2-row-b { flex: 1 1 150px; }
+  .vt2-pill { order: 3; margin-top: 0; }
+  .vt2-acts { order: 4; margin-left: auto; }
+}
+
+/* ── Compteurs du rail ──────────────────────────────────────────────── */
+.vt2-cmp + .vt2-cmp { margin-top: 15px; }
+.vt2-cmp-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.vt2-cmp-l { font-size: 12px; color: var(--v2-t3); }
+.vt2-cmp-v { margin-left: auto; font-family: var(--v2-display); font-size: 13px; font-weight: 800; }
+.vt2-cmp-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 6px; }
+.vt2-jours { font-size: 11px; font-weight: 700; color: var(--pc, #818cf8); white-space: nowrap; flex-shrink: 0; }
+
+/* ── État vide ──────────────────────────────────────────────────────── */
+.vt2-empty { padding: 44px 20px; text-align: center; }
+.vt2-empty svg { width: 40px; height: 40px; margin: 0 auto 14px; display: block; color: var(--v2-t9); }
+.vt2-empty-t { font-size: 14px; font-weight: 700; color: var(--v2-t3); }
+.vt2-empty-s { font-size: 12px; color: var(--v2-t7); margin-top: 6px; line-height: 1.55; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+/* ── Accès refusé ───────────────────────────────────────────────────── */
+.vt2-deny { padding: 60px 20px; text-align: center; }
+.vt2-deny h3 { font-family: var(--v2-display); font-size: 19px; color: #fff; margin: 0 0 8px; }
+.vt2-deny p { font-size: 13px; color: var(--v2-t7); margin: 0 0 20px; }
+
+/* ── Modale : icônes bornées ────────────────────────────────────────── */
+#modalVTDemande .v2-md-ico svg { width: 22px; height: 22px; }

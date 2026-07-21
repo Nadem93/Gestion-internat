@@ -3,99 +3,204 @@
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Facturation — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-facturation.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info"><div class="header-title">Facturation &amp; tarification</div></div>
-    <div class="header-right"></div>
-  </header>
-  <main class="content">
-    <div style="max-width:1000px;margin:0 auto">
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(15,43,74,.5)">
 
-    <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;gap:1rem;padding:.75rem 1rem;flex-wrap:wrap">
-        <div style="flex:1;text-align:center;min-width:90px"><div id="factStatTotal" style="font-weight:800;font-size:1.4rem;color:#0f2b4a">0,00 €</div><div style="font-size:.72rem;color:var(--muted)">Total (filtre actif)</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="factStatBrouillon" style="font-weight:800;font-size:1.4rem;color:#6b7280">0</div><div style="font-size:.72rem;color:var(--muted)">Brouillons</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="factStatEnvoyee" style="font-weight:800;font-size:1.4rem;color:#0284c7">0</div><div style="font-size:.72rem;color:var(--muted)">Envoyées</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="factStatPayee" style="font-weight:800;font-size:1.4rem;color:#16a34a">0</div><div style="font-size:.72rem;color:var(--muted)">Payées</div></div>
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#0f2b4a,#1e3a5f)" title="Retour à l'accueil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · PILOTAGE</div>
+      <div class="v2-top-title">Facturation &amp; tarification</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="v2-btn" id="fc2Exercice" style="cursor:default"></span>
+      <button type="button" class="v2-btn" onclick="fc2ExportCsv()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter CSV
+      </button>
+      <button type="button" class="v2-btn v2-btn-primary admin-only" onclick="openTarifModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle catégorie
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <!-- Bandeau de statistiques -->
+    <div class="fc2-stats">
+      <div class="fc2-stat" style="--pc:#22d3ee">
+        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <div class="fc2-stat-n" id="factStatTotal">0 €</div>
+        <div class="fc2-stat-l">Total facturé (filtre actif)</div>
+      </div>
+      <div class="fc2-stat" style="--pc:#4ade80">
+        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+        <div class="fc2-stat-n" id="fc2StatEncaisse">0 €</div>
+        <div class="fc2-stat-l">Encaissé (factures payées)</div>
+      </div>
+      <div class="fc2-stat" style="--pc:#8095b4">
+        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        <div class="fc2-stat-n" id="factStatBrouillon">0</div>
+        <div class="fc2-stat-l">Brouillons</div>
+      </div>
+      <div class="fc2-stat" style="--pc:#818cf8">
+        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+        <div class="fc2-stat-n" id="factStatEnvoyee">0</div>
+        <div class="fc2-stat-l">Envoyées</div>
+      </div>
+      <div class="fc2-stat" style="--pc:#10b981">
+        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <div class="fc2-stat-n" id="factStatPayee">0</div>
+        <div class="fc2-stat-l">Payées</div>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid var(--border)">
-        <div style="font-weight:700;font-size:.9rem">💶 Tarifs (catégories de prise en charge)</div>
-        <button class="btn btn-outline btn-sm admin-only" onclick="openTarifModal()">+ Nouvelle catégorie</button>
-      </div>
-      <div id="tarifsList" style="padding:.75rem 1rem"></div>
-    </div>
-
-    <div class="card" style="margin-bottom:1rem">
-      <div style="padding:.75rem 1rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem">🧑 Affectation des résidents</div>
-      <div id="affectationsList" style="padding:.75rem 1rem"></div>
-    </div>
-
-    <div class="card" style="margin-bottom:1rem">
-      <div style="padding:.75rem 1rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem">🧾 Générer les factures du mois</div>
-      <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;padding:.85rem 1rem">
-        <div class="form-group" style="margin:0">
-          <label>Période</label>
-          <input type="month" id="factPeriode" class="form-input" style="width:170px"/>
+    <!-- Jauge de recouvrement + récapitulatif par statut -->
+    <div class="fc2-g2">
+      <div class="fc2-gauge-card">
+        <div class="fc2-gauge" id="fc2Gauge" style="--gp:0turn">
+          <div class="fc2-gauge-in">
+            <span class="fc2-gauge-n" id="fc2GaugeN">0%</span>
+            <span class="fc2-gauge-s">recouvré</span>
+          </div>
         </div>
-        <button class="btn btn-primary" onclick="genererFactures()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div style="min-width:0">
+          <div class="fc2-gauge-t">Taux de recouvrement</div>
+          <div class="fc2-gauge-x" id="fc2GaugeX">—</div>
+        </div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Répartition par statut</span></div>
+        <div class="fc2-recap" id="fc2Recap"></div>
+      </div>
+    </div>
+
+    <!-- Tendance -->
+    <div class="v2-blk fc2-blk">
+      <div class="v2-blk-h">
+        <span class="v2-blk-t">Tendance de facturation — 12 dernières périodes</span>
+        <span class="fc2-leg">
+          <span><i style="background:#4ade80"></i>Facturé</span>
+          <span><i style="background:#818cf8"></i>Encaissé</span>
+        </span>
+      </div>
+      <div id="fc2Trend"></div>
+    </div>
+
+    <!-- Organismes payeurs + tarifs -->
+    <div class="fc2-g2">
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Facturation par organisme payeur</span></div>
+        <div class="fc2-orgs" id="fc2Organismes"></div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Tarifs (catégories de prise en charge)</span>
+          <button type="button" class="fc2-mini admin-only" style="margin-left:auto" onclick="openTarifModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter
+          </button>
+        </div>
+        <div id="tarifsList"></div>
+      </div>
+    </div>
+
+    <!-- Génération des factures -->
+    <div class="v2-blk fc2-blk">
+      <div class="v2-blk-h"><span class="v2-blk-t">Générer les factures du mois</span></div>
+      <div class="fc2-gen">
+        <div>
+          <label class="fc2-f-lbl" for="factPeriode">Période</label>
+          <input type="month" id="factPeriode" class="v2-fld fc2-f"/>
+        </div>
+        <button type="button" class="v2-btn v2-btn-primary" onclick="genererFactures()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Générer les factures
         </button>
-        <span style="font-size:.74rem;color:var(--muted)">Calcule le nombre de jours de présence de chaque résident affecté et crée/actualise une facture brouillon par résident pour la période choisie.</span>
+        <span class="fc2-gen-x">Calcule le nombre de jours de présence de chaque résident affecté et crée/actualise une facture brouillon par résident pour la période choisie.</span>
       </div>
     </div>
 
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-      <select id="factFiltrePeriode" class="form-input" style="width:180px" onchange="renderFactures()"><option value="">Toutes les périodes</option></select>
-      <select id="factFiltreStatut" class="form-input" style="width:180px" onchange="renderFactures()">
-        <option value="">Tous les statuts</option>
-        <option value="brouillon">Brouillon</option>
-        <option value="envoyee">Envoyée</option>
-        <option value="payee">Payée</option>
-      </select>
-      <select id="factFiltreOrganisme" class="form-input" style="width:220px" onchange="renderFactures()"><option value="">Tous les organismes</option></select>
+    <!-- Classement + tableau des factures -->
+    <div class="fc2-g-top">
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Top résidents facturés</span></div>
+        <div id="fc2Top"></div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Factures</span>
+          <span class="v2-blk-sub" id="fc2TableCount" style="margin:0 0 0 6px"></span>
+          <span class="fc2-filters">
+            <select id="factFiltrePeriode" class="v2-fld fc2-f" onchange="renderFactures()"><option value="">Toutes les périodes</option></select>
+            <select id="factFiltreStatut" class="v2-fld fc2-f" onchange="renderFactures()">
+              <option value="">Tous les statuts</option>
+              <option value="brouillon">Brouillon</option>
+              <option value="envoyee">Envoyée</option>
+              <option value="payee">Payée</option>
+            </select>
+            <select id="factFiltreOrganisme" class="v2-fld fc2-f" onchange="renderFactures()"><option value="">Tous les organismes</option></select>
+          </span>
+        </div>
+        <div id="factList"><div class="v2-blk-vide">Aucune facture</div></div>
+      </div>
     </div>
 
-    <div id="factList"><div class="empty" style="padding:3rem;text-align:center"><p>Aucune facture</p></div></div>
+    <!-- Affectation des résidents -->
+    <div class="v2-blk fc2-blk">
+      <div class="v2-blk-h">
+        <span class="v2-blk-t">Affectation des résidents</span>
+        <span class="v2-blk-sub" id="fc2AffCount" style="margin:0 0 0 6px"></span>
+      </div>
+      <div class="fc2-affs" id="affectationsList"></div>
     </div>
-  </main>
-</div></div>
+
+  </div>
+</div>
 <div id="toast-container" class="toast-container"></div>
 
-<div class="modal-overlay" id="modalTarif">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <span class="modal-title" id="tarifModalTitle">💶 Nouvelle catégorie de tarif</span>
-      <button class="modal-close" onclick="closeModal('modalTarif')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- MODALE — catégorie de tarif (gabarit .v2-ov/.v2-md) -->
+<div class="v2-ov" id="modalTarif">
+  <div class="v2-md" style="--mc:#22d3ee;max-width:460px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="tarifModalTitle">Nouvelle catégorie de tarif</div>
+        <div class="v2-md-s">Prix par jour appliqué aux résidents affectés</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalTarif')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-      <div class="form-group"><label class="required">Libellé</label><input type="text" id="tarifFormLabel" class="form-input" placeholder="Ex : Internat complet (7j/7)"/></div>
-      <div class="form-group"><label class="required">Prix par jour (€)</label>
-        <div style="position:relative">
-          <input type="number" id="tarifFormPrix" class="form-input" min="0" step="0.01" placeholder="0,00" style="padding-right:2.2rem"/>
-          <span style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none">€</span>
-        </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="tarifFormLabel">Libellé</label>
+        <input type="text" id="tarifFormLabel" class="v2-fld" placeholder="Ex : Internat complet (7j/7)"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="tarifFormPrix">Prix par jour (€)</label>
+        <input type="number" id="tarifFormPrix" class="v2-fld" min="0" step="0.01" placeholder="0,00"/>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalTarif')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveTarif()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalTarif')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveTarif()">Enregistrer</button>
     </div>
   </div>
 </div>
 
 <script src="js/app.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_facturation')) { document.querySelector('.content').innerHTML = ''; }</script>
+<script>Auth.requireAuth(); if (!requireModule('access_facturation')) { const b = document.querySelector('.v2-body'); if (b) b.innerHTML = ''; }</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/facturation-supabase.js"></script>
 <script src="js/facturation.js"></script>
+<script src="js/facturation-v2.js"></script>
 </body></html>

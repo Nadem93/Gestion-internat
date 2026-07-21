@@ -1,5 +1,25 @@
 const EV_KEY = DB.keys.evaluations;
 
+// ─── Design V2 (sombre) ───────────────────────────────────────────────────────
+// La feuille et le module de rendu sont injectés ici pour que toute page
+// chargeant js/evaluations.js (objectifs.html, fiche-liaison.html) hérite du
+// thème sombre sans que le HTML ait à être modifié.
+(function () {
+  const base = (document.currentScript && document.currentScript.src || '')
+    .replace(/js\/evaluations\.js.*$/, '');
+  if (!document.querySelector('link[href$="css/v2-evaluations.css"]')) {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = base + 'css/v2-evaluations.css';
+    document.head.appendChild(l);
+  }
+  if (!document.querySelector('script[src$="js/evaluations-v2.js"]')) {
+    const s = document.createElement('script');
+    s.src = base + 'js/evaluations-v2.js';
+    s.async = false; // exécution ordonnée, après ce fichier
+    document.head.appendChild(s);
+  }
+})();
+
 // ─── Grilles disponibles ──────────────────────────────────────────────────────
 const EV_GRILLES = {
   mif: {
@@ -184,59 +204,38 @@ function renderEvList() {
   const container = document.getElementById('evList');
   if (!container) return;
 
+  // Repli sombre : sur objectifs.html c'est ob2RenderEv (js/objectifs-v2.js)
+  // qui prend la main. Ce rendu sert aux pages sans ce module.
   const grilleFilter = document.getElementById('evGrille')?.value || '';
   const residents    = sbResidents();
-  let list = getEv();
+  const all          = getEv();
+  let list = all;
   if (_evResidentId) list = list.filter(e => e.residentId === _evResidentId);
   if (grilleFilter)  list = list.filter(e => e.grille === grilleFilter);
-  list = list.slice().sort((a,b) => b.date.localeCompare(a.date));
+  list = list.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 
-  const all = getEv();
-  const monthPrefix = today().slice(0,7);
-  const ceMois = all.filter(e => (e.date||'').slice(0,7) === monthPrefix).length;
-  const avgPct = all.length ? Math.round(all.reduce((s,e) => {
-    const g = EV_GRILLES[e.grille]; if (!g) return s;
-    return s + (_evScore(e) / g.scoreMax * 100);
-  }, 0) / all.length) : 0;
-
-  document.getElementById('evStats').innerHTML = `
-    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Évaluations</span></div><div class="chx-stat-num">${all.length}</div></div>
-    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Résidents évalués</span></div><div class="chx-stat-num">${new Set(all.map(e=>e.residentId).filter(Boolean)).size}</div></div>
-    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Ce mois</span></div><div class="chx-stat-num">${ceMois}</div></div>
-    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Score moyen</span></div><div class="chx-stat-bar"><i style="width:${avgPct}%"></i></div><div class="chx-stat-num">${avgPct}%</div></div>`;
+  const stats = document.getElementById('evStats');
+  if (stats) {
+    const monthPrefix = today().slice(0, 7);
+    const ceMois = all.filter(e => (e.date || '').slice(0, 7) === monthPrefix).length;
+    const nbRes  = new Set(all.map(e => e.residentId).filter(Boolean)).size;
+    const kpi = (n, l, c) => `<div class="v2-kpi" style="--c:${c}"><div style="min-width:0">
+      <div class="v2-kpi-n">${n}</div><div class="v2-kpi-l">${l}</div></div></div>`;
+    stats.innerHTML = kpi(all.length, 'Évaluations', '#a5b4fc')
+      + kpi(nbRes, 'Résidents évalués', '#818cf8')
+      + kpi(ceMois, 'Ce mois', '#10b981');
+  }
 
   if (!list.length) {
-    container.innerHTML = `<div class="empty" style="padding:2.5rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div><h3>${_evResidentId?'Aucune évaluation pour ce résident':'Aucune évaluation'}</h3><p>Créez une évaluation MIF ou Barthel pour suivre l'autonomie des résidents.</p></div>`;
+    container.innerHTML = `<div class="v2-blk"><div class="v2-blk-t">Évaluations</div>
+      <div class="v2-blk-vide">${_evResidentId || grilleFilter
+        ? 'Aucune évaluation ne correspond à ce filtre.'
+        : 'Aucune évaluation enregistrée. Créez une évaluation MIF, Barthel ou SERAFIN-PH pour suivre l\'autonomie des résidents.'}</div></div>`;
     return;
   }
 
-  // Grouper par résident
-  const byRes = {};
-  list.forEach(e => {
-    const k = e.residentId || '__';
-    if (!byRes[k]) byRes[k] = [];
-    byRes[k].push(e);
-  });
-
-  container.innerHTML = Object.entries(byRes).map(([rid, evals]) => {
-    const r = residents.find(x => x.id === rid);
-    const col = safeColor(r?.color, '#6366f1');
-    const nom = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Inconnu';
-    const av = r?.photo
-      ? `<img src="${sanitizeUrl(r.photo)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${col}44" alt=""/>`
-      : `<div style="width:32px;height:32px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;color:#fff;flex-shrink:0">${initials(r?.prenom,r?.nom)}</div>`;
-    return `<div style="margin-bottom:1.75rem">
-      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;padding:.55rem .85rem;background:#fff;border-radius:10px;border:1.5px solid ${col}33">
-        ${av}
-        <a href="resident.html?id=${rid}" style="font-weight:700;font-size:.92rem;color:${col};text-decoration:none">${escHtml(nom)}</a>
-        <span style="margin-left:auto;font-size:.75rem;color:var(--muted)">${evals.length} évaluation${evals.length>1?'s':''}</span>
-        <button class="btn btn-accent btn-sm" onclick="openEvModal('','${rid}')">+ Évaluer</button>
-      </div>
-      <div class="grid grid-3" style="gap:.85rem">
-        ${evals.map(e => _evCard(e, col)).join('')}
-      </div>
-    </div>`;
-  }).join('');
+  container.innerHTML = '<div class="ev2-list">'
+    + list.map(e => _evCard(e, residents)).join('') + '</div>';
 }
 
 function _evScore(e) {
@@ -271,7 +270,7 @@ function _evScale(g, niveau) {
   const nivs = (g && g.niveaux) || [];
   if (!nivs.length) return '';
   const cur = nivs.indexOf(niveau);
-  const segs = nivs.map((n, i) => `<span style="flex:1;height:8px;border-radius:3px;background:${i <= cur ? n.color : 'var(--g100)'}"></span>`).join('');
+  const segs = nivs.map((n, i) => `<span style="flex:1;height:8px;border-radius:3px;background:${i <= cur ? n.color : 'rgba(255,255,255,.08)'}"></span>`).join('');
   const lbls = nivs.map((n, i) => `<span style="flex:1;text-align:center;line-height:1.2;${i === cur ? `color:${n.color};font-weight:700` : ''}">${escHtml(_evShort(n.label))}</span>`).join('');
   return `<div style="margin-top:.55rem">
     <div style="display:flex;gap:3px">${segs}</div>
@@ -279,42 +278,34 @@ function _evScale(g, niveau) {
   </div>`;
 }
 
-function _evCard(e, resColor) {
+function _evCard(e, residents) {
   const g   = EV_GRILLES[e.grille];
-  const col = g?.color || resColor;
-  const icon = g?.icon || '📊';
-  const score   = _evScore(e);
-  const scoreMax = g?.scoreMax || 100;
-  const niveau  = _evNiveau(e.grille, score);
-  const dateStr = e.date ? new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '—';
-  const sessRole = Auth.getSession()?.role;
-  const canEdit = ['admin', 'moderator', 'superadmin'].includes(sessRole)
-    || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
-  const ringCol = niveau?.color || col;
-  return `<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .12s" onmouseover="this.style.boxShadow='0 6px 20px rgba(15,23,42,.1)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(15,23,42,.06)'">
-    <div style="background:linear-gradient(135deg,${col}22,${col}08);border-bottom:1px solid ${col}22;padding:.9rem 1rem .75rem;display:flex;align-items:center;gap:.65rem">
-      <div style="width:38px;height:38px;border-radius:10px;background:${col}18;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${icon}</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(g?.short||e.grille)}</div>
-        <div style="font-size:.68rem;font-weight:600;color:${col};margin-top:1px">${dateStr}</div>
-      </div>
+  const r   = (residents || []).find(x => String(x.id) === String(e.residentId));
+  const nom = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : 'Résident inconnu';
+  const col = safeColor(r?.color, '#818cf8');
+  const gc  = g?.color || '#818cf8';
+  const score = _evScore(e), max = g?.scoreMax || 100;
+  const pct = max ? Math.round(score / max * 100) : 0;
+  const niveau = _evNiveau(e.grille, score);
+  const dateStr = e.date
+    ? new Date(e.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+  return `<div class="ev2-row-ev" role="button" tabindex="0" onclick="openEvDetail('${e.id}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEvDetail('${e.id}')}"
+      aria-label="Évaluation ${escHtml(g?.short || e.grille)} de ${escHtml(nom)}">
+    <span style="width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0a1728;background:${col}">${initials(r?.prenom, r?.nom)}</span>
+    <div style="width:150px;flex-shrink:0;min-width:0">
+      <div class="nom">${escHtml(nom)}</div><div class="date">${dateStr}</div>
     </div>
-    <div style="padding:.85rem 1rem;flex:1;display:flex;flex-direction:column;gap:.4rem">
-      <div style="display:flex;align-items:baseline;gap:.5rem">
-        <span style="font-size:1.5rem;font-weight:800;color:${ringCol};line-height:1">${score}</span>
-        <span style="font-size:.76rem;color:var(--muted)">/ ${scoreMax}</span>
-        <span style="margin-left:auto;font-size:.68rem;font-weight:700;padding:.14rem .5rem;border-radius:999px;background:${ringCol}1a;color:${ringCol};white-space:nowrap">${niveau?.label||''}</span>
+    <span class="v2-badge" style="color:${gc};background:${gc}1c">${escHtml(g?.short || e.grille)}</span>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:baseline;margin-bottom:5px">
+        <span style="font-size:11px;color:var(--v2-t6,#8095b4)">Score</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:800;color:${gc};font-family:var(--v2-display,'Space Grotesk',sans-serif)">${score} / ${max}</span>
       </div>
-      ${_evScale(g, niveau)}
-      ${e.note ? `<div style="font-size:.73rem;color:var(--muted);line-height:1.5;margin-top:.1rem;font-style:italic">${escHtml(e.note.slice(0,80))}${e.note.length>80?'…':''}</div>` : ''}
-      <div style="margin-top:auto;padding-top:.5rem;display:flex">
-        <button class="btn btn-ghost btn-sm" onclick="openEvDetail('${e.id}')">👁 Détail</button>
-      </div>
+      <div class="v2-prog"><span style="width:${pct}%;background:${gc}"></span></div>
     </div>
-    ${canEdit?`<div style="display:flex;gap:.3rem;justify-content:flex-end;border-top:1px solid var(--border);padding:.5rem .75rem;background:var(--g50)">
-      <button class="btn btn-ghost btn-sm" onclick="openEvModal('${e.id}')">✎</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEv('${e.id}')">✕</button>
-    </div>`:''}
+    ${niveau ? `<span class="v2-badge" style="color:${niveau.color};background:${niveau.color}1c">${escHtml(niveau.label)}</span>` : ''}
   </div>`;
 }
 

@@ -4,19 +4,34 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Fiche employé — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-employe.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title" id="pageTitle">Fiche employé</div></div>
-      <div class="header-right">
-        <button class="btn btn-outline btn-sm btn-add-resident" id="btnAttestation" onclick="generateAttestation()" style="display:none">📄<span class="btn-add-label"> Attestation</span></button>
-        <button class="btn btn-accent btn-sm btn-add-resident" id="btnEdit" onclick="togglePageEdit()">✎<span class="btn-add-label"> Modifier</span></button>
+    <div class="v2-shell">
+      <div class="v2-top">
+        <a class="v2-back" href="rh.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>RH
+        </a>
+        <div class="v2-logo ev2-top-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        </div>
+        <div style="line-height:1.15;min-width:0">
+          <div class="v2-eyebrow">INTERNALIS · RH</div>
+          <div class="v2-top-title" id="pageTitle">Fiche employé</div>
+        </div>
+        <div class="ev2-top-actions">
+          <button class="btn btn-outline btn-sm btn-add-resident" id="btnAttestation" onclick="generateAttestation()" style="display:none">📄<span class="btn-add-label"> Attestation</span></button>
+          <button class="btn btn-accent btn-sm btn-add-resident" id="btnEdit" onclick="togglePageEdit()">✎<span class="btn-add-label"> Modifier</span></button>
+        </div>
       </div>
-    </header>
-    <main class="content" id="employeContent"></main>
+      <div class="v2-body">
+        <main class="content" id="employeContent"></main>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -159,7 +174,25 @@ function loadEmploye() {
   renderViewMode(e);
 }
 
+// Contexte partagé avec js/employe-v2.js : les `let` de premier niveau ne créent
+// pas de propriété sur window, on expose donc explicitement les caches.
+window.EMP_CTX = {
+  get id()          { return currentEmployeId; },
+  get docs()        { return _empDocsCache; },
+  get arrets()      { return _empArretsFor(currentEmployeId); },
+  get conges()      { return _empCongesFor(currentEmployeId); },
+  get planning()    { return _empPlanningFor(currentEmployeId); },
+  get entretiens()  { return _empEntretiensFor(currentEmployeId); },
+  get paie()        { return _empFichesPaieFor(currentEmployeId).slice().sort((a,b) => (b.periode||'').localeCompare(a.periode||'')); },
+  get formationsLocales() { return (JSON.parse(localStorage.getItem(FORM_KEY)||'{}'))[currentEmployeId] || []; },
+  get diplomes()    { return (JSON.parse(localStorage.getItem(DIPLOME_KEY)||'{}'))[currentEmployeId] || []; },
+  get historique()  { return (JSON.parse(localStorage.getItem(HISTO_KEY)||'{}'))[currentEmployeId] || []; },
+  get alertes()     { return (JSON.parse(localStorage.getItem(ALERTES_KEY)||'{}'))[currentEmployeId] || []; }
+};
+
 function renderViewMode(e) {
+  // Rendu V2 (js/employe-v2.js, chargé après ce script).
+  if (window.ev2RenderViewMode) { window.ev2RenderViewMode(e); return; }
   const docs = _empDocsCache;
   const paies = _empFichesPaieFor(currentEmployeId).slice().sort((a,b) => (b.periode||'').localeCompare(a.periode||''));
   const congesList = _empCongesFor(currentEmployeId);
@@ -430,18 +463,22 @@ function empOuvrirRefus(id) {
   const old = document.getElementById('modalRefusConge');
   if (old) old.remove();
   const div = document.createElement('div');
-  div.innerHTML = `<div class="modal-overlay" id="modalRefusConge" style="display:flex" onclick="closeModal('modalRefusConge')">
-    <div class="modal" style="max-width:440px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">✕ Refuser la demande</span><button class="modal-close" onclick="closeModal('modalRefusConge')">&times;</button></div>
-      <div class="modal-body">
+  div.innerHTML = `<div class="v2-ov" id="modalRefusConge" onclick="closeModal('modalRefusConge')">
+    <div class="v2-md" style="--mc:#ef4444;max-width:440px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#ef444422;color:#ef4444">✕</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Refuser la demande</div><div class="v2-md-s">Motiver la décision</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalRefusConge')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="v2-md-b">
         <div class="form-group">
           <label>Motif du refus <span style="font-size:.75rem;color:var(--muted)">(optionnel)</span></label>
-          <textarea id="refusMotifInput" class="form-input" rows="3" placeholder="Expliquer la raison du refus…"></textarea>
+          <textarea id="refusMotifInput" class="v2-fld" rows="3" placeholder="Expliquer la raison du refus…"></textarea>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalRefusConge')">Annuler</button>
-        <button class="btn" style="background:#ef4444;color:#fff" onclick="empConfirmerRefus('${id}')">✕ Confirmer le refus</button>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalRefusConge')">Annuler</button>
+        <button class="v2-btn-pri" style="background:linear-gradient(135deg,#dc2626,#ef4444);box-shadow:0 10px 26px -8px rgba(220,38,38,.7)" onclick="empConfirmerRefus('${id}')">✕ Confirmer le refus</button>
       </div>
     </div>
   </div>`;
@@ -479,20 +516,24 @@ function empOpenDemandeConge() {
     { v:'enfant_malade', l:'Enfant malade' }, { v:'formation', l:'Formation' }, { v:'autre', l:'Autre' }
   ];
   const tOpts = types.map(t => `<option value="${t.v}">${t.l}</option>`).join('');
-  const html = `<div class="modal-overlay" id="modalEmpConge" style="display:flex" onclick="closeModal('modalEmpConge')">
-    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">🗓 Nouvelle demande de congés</span><button class="modal-close" onclick="closeModal('modalEmpConge')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="form-group"><label>Type *</label><select id="ecType" class="form-input">${tOpts}</select></div>
-        <div class="form-row">
-          <div class="form-group"><label>Date début *</label><input type="date" id="ecDebut" class="form-input"/></div>
-          <div class="form-group"><label>Date fin *</label><input type="date" id="ecFin" class="form-input"/></div>
-        </div>
-        <div class="form-group"><label>Motif</label><textarea id="ecMotif" class="form-input" rows="2" placeholder="Raison de la demande…"></textarea></div>
+  const html = `<div class="v2-ov" id="modalEmpConge" onclick="closeModal('modalEmpConge')">
+    <div class="v2-md" style="--mc:#f59e0b;max-width:480px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#f59e0b22;color:#f59e0b">🗓</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nouvelle demande de congés</div><div class="v2-md-s">Type, dates et motif</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalEmpConge')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalEmpConge')">Annuler</button>
-        <button class="btn btn-primary" onclick="empSaveConge()">Envoyer la demande</button>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-fld-w"><label class="v2-fld-l">Type *</label><select id="ecType" class="v2-fld">${tOpts}</select></div>
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Date début *</label><input type="date" id="ecDebut" class="v2-fld"/></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date fin *</label><input type="date" id="ecFin" class="v2-fld"/></div>
+        </div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Motif</label><textarea id="ecMotif" class="v2-fld" rows="2" placeholder="Raison de la demande…"></textarea></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalEmpConge')">Annuler</button>
+        <button class="v2-btn-pri" onclick="empSaveConge()">Envoyer la demande</button>
       </div>
     </div>
   </div>`;
@@ -812,15 +853,19 @@ function initPaieUpload() {
 function openPaieNameModal(defaultName) {
   const old = document.getElementById('modalPaieName'); if (old) old.remove();
   const div = document.createElement('div');
-  div.innerHTML = `<div class="modal-overlay" id="modalPaieName" style="display:flex" onclick="closeModal('modalPaieName')">
-    <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">📄 Nom du document</span><button class="modal-close" onclick="closeModal('modalPaieName')">&times;</button></div>
-      <div class="modal-body">
-        <div class="form-group"><label>Nom *</label><input id="paieNameInput" class="form-input" value="${escHtml(defaultName.replace(/\.[^/.]+$/,''))}" placeholder="ex: Fiche de paie juin 2026"/></div>
+  div.innerHTML = `<div class="v2-ov" id="modalPaieName" onclick="closeModal('modalPaieName')">
+    <div class="v2-md" style="--mc:#a855f7;max-width:400px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#a855f722;color:#a855f7">📄</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nom du document</div><div class="v2-md-s">Nommer le document avant ajout</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalPaieName')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cancelPaie()">Annuler</button>
-        <button class="btn btn-primary" onclick="uploadPaie()">Ajouter</button>
+      <div class="v2-md-b">
+        <div class="v2-fld-w"><label class="v2-fld-l">Nom *</label><input id="paieNameInput" class="v2-fld" value="${escHtml(defaultName.replace(/\.[^/.]+$/,''))}" placeholder="ex: Fiche de paie juin 2026"/></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="cancelPaie()">Annuler</button>
+        <button class="v2-btn-pri" onclick="uploadPaie()">Ajouter</button>
       </div>
     </div>
   </div>`;
@@ -991,21 +1036,25 @@ function empFormationsHtml() {
 function openFormationModal() {
   const old=document.getElementById('modalFormation'); if(old)old.remove();
   const div=document.createElement('div');
-  div.innerHTML=`<div class="modal-overlay" id="modalFormation" style="display:flex" onclick="closeModal('modalFormation')">
-    <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">📚 Nouvelle formation / habilitation</span><button class="modal-close" onclick="closeModal('modalFormation')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="form-group"><label>Intitulé *</label><input id="fTitre" class="form-input" placeholder="ex: SST, CACES, Formation Excel…"/></div>
-        <div class="form-group"><label>Organisme</label><input id="fOrga" class="form-input" placeholder="ex: INRS, AFPA…"/></div>
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Date d'obtention</label><input type="date" id="fDate" class="form-input"/></div>
-          <div class="form-group"><label>Date d'expiration</label><input type="date" id="fExp" class="form-input"/></div>
-        </div>
-        <div class="form-group"><label>Durée (heures)</label><input type="number" id="fHeures" class="form-input" placeholder="ex: 14"/></div>
+  div.innerHTML=`<div class="v2-ov" id="modalFormation" onclick="closeModal('modalFormation')">
+    <div class="v2-md" style="--mc:#10b981;max-width:500px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#10b98122;color:#10b981">📚</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nouvelle formation / habilitation</div><div class="v2-md-s">Intitulé, organisme et validité</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalFormation')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalFormation')">Annuler</button>
-        <button class="btn btn-primary" onclick="saveFormation()">Enregistrer</button>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-fld-w"><label class="v2-fld-l">Intitulé *</label><input id="fTitre" class="v2-fld" placeholder="ex: SST, CACES, Formation Excel…"/></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Organisme</label><input id="fOrga" class="v2-fld" placeholder="ex: INRS, AFPA…"/></div>
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Date d'obtention</label><input type="date" id="fDate" class="v2-fld"/></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date d'expiration</label><input type="date" id="fExp" class="v2-fld"/></div>
+        </div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Durée (heures)</label><input type="number" id="fHeures" class="v2-fld" placeholder="ex: 14"/></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalFormation')">Annuler</button>
+        <button class="v2-btn-pri" onclick="saveFormation()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1077,25 +1126,29 @@ function openEntretienModal() {
   const old=document.getElementById('modalEntretien'); if(old)old.remove();
   const types=[['annuel','Entretien annuel'],['professionnel','Entretien professionnel'],['suivi','Entretien de suivi']];
   const div=document.createElement('div');
-  div.innerHTML=`<div class="modal-overlay" id="modalEntretien" style="display:flex" onclick="closeModal('modalEntretien')">
-    <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">🗂 Nouvel entretien</span><button class="modal-close" onclick="closeModal('modalEntretien')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Type *</label><select id="eType" class="form-input">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
-          <div class="form-group"><label>Date *</label><input type="date" id="eDate" class="form-input"/></div>
-        </div>
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Statut</label><select id="eStatut" class="form-input"><option value="planifie">Planifié</option><option value="realise">Réalisé</option></select></div>
-          <div class="form-group"><label>Évaluateur</label><input id="eEvaluateur" class="form-input" placeholder="Nom de l'évaluateur"/></div>
-        </div>
-        <div class="form-group"><label>Bilan (période écoulée)</label><textarea id="eBilan" class="form-input" rows="2" placeholder="Points forts, points à améliorer…"></textarea></div>
-        <div class="form-group"><label>Objectifs (période suivante)</label><textarea id="eObjectifs" class="form-input" rows="2" placeholder="Objectifs définis pour la prochaine période…"></textarea></div>
-        <div class="form-group"><label>Besoins en formation</label><textarea id="eFormations" class="form-input" rows="2" placeholder="Formations souhaitées / nécessaires…"></textarea></div>
+  div.innerHTML=`<div class="v2-ov" id="modalEntretien" onclick="closeModal('modalEntretien')">
+    <div class="v2-md" style="--mc:#6366f1;max-width:520px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#6366f122;color:#6366f1">🗂</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nouvel entretien</div><div class="v2-md-s">Type, bilan et objectifs</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalEntretien')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalEntretien')">Annuler</button>
-        <button class="btn btn-primary" id="eSaveBtn" onclick="saveEntretien()">Enregistrer</button>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Type *</label><select id="eType" class="v2-fld">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date *</label><input type="date" id="eDate" class="v2-fld"/></div>
+        </div>
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Statut</label><select id="eStatut" class="v2-fld"><option value="planifie">Planifié</option><option value="realise">Réalisé</option></select></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Évaluateur</label><input id="eEvaluateur" class="v2-fld" placeholder="Nom de l'évaluateur"/></div>
+        </div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Bilan (période écoulée)</label><textarea id="eBilan" class="v2-fld" rows="2" placeholder="Points forts, points à améliorer…"></textarea></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Objectifs (période suivante)</label><textarea id="eObjectifs" class="v2-fld" rows="2" placeholder="Objectifs définis pour la prochaine période…"></textarea></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Besoins en formation</label><textarea id="eFormations" class="v2-fld" rows="2" placeholder="Formations souhaitées / nécessaires…"></textarea></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalEntretien')">Annuler</button>
+        <button class="v2-btn-pri" id="eSaveBtn" onclick="saveEntretien()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1182,23 +1235,27 @@ function openHistoriqueModal() {
   const old=document.getElementById('modalHistorique'); if(old)old.remove();
   const motifs=[['promotion','Promotion'],['changement','Changement de poste'],['augmentation','Augmentation'],['titularisation','Titularisation'],['autre','Autre']];
   const div=document.createElement('div');
-  div.innerHTML=`<div class="modal-overlay" id="modalHistorique" style="display:flex" onclick="closeModal('modalHistorique')">
-    <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">📈 Nouvelle entrée historique</span><button class="modal-close" onclick="closeModal('modalHistorique')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Poste *</label><input id="hPoste" class="form-input" placeholder="Intitulé du poste"/></div>
-          <div class="form-group"><label>Date *</label><input type="date" id="hDate" class="form-input"/></div>
-        </div>
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Motif</label><select id="hMotif" class="form-input">${motifs.map(m=>`<option value="${m[0]}">${m[1]}</option>`).join('')}</select></div>
-          <div class="form-group"><label>Salaire brut (€)</label><input type="number" id="hSalaire" class="form-input" placeholder="ex: 2100"/></div>
-        </div>
-        <div class="form-group"><label>Note</label><textarea id="hNote" class="form-input" rows="2" placeholder="Détails…"></textarea></div>
+  div.innerHTML=`<div class="v2-ov" id="modalHistorique" onclick="closeModal('modalHistorique')">
+    <div class="v2-md" style="--mc:#0ea5e9;max-width:500px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#0ea5e922;color:#0ea5e9">📈</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nouvelle entrée historique</div><div class="v2-md-s">Poste, date et rémunération</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalHistorique')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalHistorique')">Annuler</button>
-        <button class="btn btn-primary" onclick="saveHistorique()">Enregistrer</button>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Poste *</label><input id="hPoste" class="v2-fld" placeholder="Intitulé du poste"/></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date *</label><input type="date" id="hDate" class="v2-fld"/></div>
+        </div>
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Motif</label><select id="hMotif" class="v2-fld">${motifs.map(m=>`<option value="${m[0]}">${m[1]}</option>`).join('')}</select></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Salaire brut (€)</label><input type="number" id="hSalaire" class="v2-fld" placeholder="ex: 2100"/></div>
+        </div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Note</label><textarea id="hNote" class="v2-fld" rows="2" placeholder="Détails…"></textarea></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalHistorique')">Annuler</button>
+        <button class="v2-btn-pri" onclick="saveHistorique()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1272,11 +1329,15 @@ function empArretsHtml() {
 function empOpenArret() {
   const old = document.getElementById('modalArret'); if (old) old.remove();
   const div = document.createElement('div');
-  div.innerHTML = `<div class="modal-overlay" id="modalArret" style="display:flex" onclick="closeModal('modalArret')">
-    <div class="modal" style="max-width:460px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">🤒 Absence / Arrêt</span><button class="modal-close" onclick="closeModal('modalArret')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="form-group"><label>Type *</label><select id="arretType" class="form-input">
+  div.innerHTML = `<div class="v2-ov" id="modalArret" onclick="closeModal('modalArret')">
+    <div class="v2-md" style="--mc:#ef4444;max-width:460px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#ef444422;color:#ef4444">🤒</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Absence / Arrêt</div><div class="v2-md-s">Type, période et justificatif</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalArret')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-fld-w"><label class="v2-fld-l">Type *</label><select id="arretType" class="v2-fld">
           <option value="maladie">Arrêt maladie</option>
           <option value="at">Accident du travail</option>
           <option value="maladie_pro">Maladie professionnelle</option>
@@ -1284,16 +1345,16 @@ function empOpenArret() {
           <option value="longue_maladie">Longue maladie</option>
           <option value="autre">Autre absence</option>
         </select></div>
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Date début *</label><input type="date" id="arretDateDebut" class="form-input"/></div>
-          <div class="form-group"><label>Date fin</label><input type="date" id="arretDateFin" class="form-input"/></div>
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Date début *</label><input type="date" id="arretDateDebut" class="v2-fld"/></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date fin</label><input type="date" id="arretDateFin" class="v2-fld"/></div>
         </div>
-        <div class="form-group"><label>Motif / Note</label><input id="arretMotif" class="form-input" placeholder="Optionnel…"/></div>
-        <div class="form-group"><label>Justificatif (arrêt de travail…)</label><input type="file" id="arretFichier" class="form-input" accept="image/*,application/pdf"/><div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">PDF ou image, max 5 Mo.</div></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Motif / Note</label><input id="arretMotif" class="v2-fld" placeholder="Optionnel…"/></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Justificatif (arrêt de travail…)</label><input type="file" id="arretFichier" class="v2-fld" accept="image/*,application/pdf"/><div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">PDF ou image, max 5 Mo.</div></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalArret')">Annuler</button>
-        <button class="btn btn-primary" id="arretSaveBtn" onclick="empSaveArret()">Enregistrer</button>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalArret')">Annuler</button>
+        <button class="v2-btn-pri" id="arretSaveBtn" onclick="empSaveArret()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1416,11 +1477,15 @@ function empDiplomesHtml() {
 function empOpenDiplome() {
   const old = document.getElementById('modalDiplome'); if (old) old.remove();
   const div = document.createElement('div');
-  div.innerHTML = `<div class="modal-overlay" id="modalDiplome" style="display:flex" onclick="closeModal('modalDiplome')">
-    <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">🎓 Diplôme / Habilitation</span><button class="modal-close" onclick="closeModal('modalDiplome')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="form-group"><label>Type *</label><select id="diplType" class="form-input">
+  div.innerHTML = `<div class="v2-ov" id="modalDiplome" onclick="closeModal('modalDiplome')">
+    <div class="v2-md" style="--mc:#8b5cf6;max-width:500px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#8b5cf622;color:#8b5cf6">🎓</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Diplôme / Habilitation</div><div class="v2-md-s">Intitulé, organisme et validité</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalDiplome')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-fld-w"><label class="v2-fld-l">Type *</label><select id="diplType" class="v2-fld">
           <option value="diplome_etat">Diplôme d'État (DEES, DEME, DEASS…)</option>
           <option value="diplome">Diplôme / Titre professionnel</option>
           <option value="permis">Permis de conduire</option>
@@ -1428,17 +1493,17 @@ function empOpenDiplome() {
           <option value="certification">Certification / SST / CACES</option>
           <option value="autre">Autre</option>
         </select></div>
-        <div class="form-group"><label>Intitulé *</label><input id="diplIntitule" class="form-input" placeholder="ex: DEES, Permis B, Habilitation électrique B1…"/></div>
-        <div class="form-group"><label>Organisme / Établissement</label><input id="diplOrganisme" class="form-input" placeholder="ex: IRTS, Préfecture, INRS…"/></div>
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Date d'obtention</label><input type="date" id="diplDate" class="form-input"/></div>
-          <div class="form-group"><label>Date d'expiration</label><input type="date" id="diplExp" class="form-input"/></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Intitulé *</label><input id="diplIntitule" class="v2-fld" placeholder="ex: DEES, Permis B, Habilitation électrique B1…"/></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Organisme / Établissement</label><input id="diplOrganisme" class="v2-fld" placeholder="ex: IRTS, Préfecture, INRS…"/></div>
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Date d'obtention</label><input type="date" id="diplDate" class="v2-fld"/></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date d'expiration</label><input type="date" id="diplExp" class="v2-fld"/></div>
         </div>
-        <div class="form-group"><label>Numéro / Référence</label><input id="diplNumero" class="form-input" placeholder="Optionnel…"/></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Numéro / Référence</label><input id="diplNumero" class="v2-fld" placeholder="Optionnel…"/></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalDiplome')">Annuler</button>
-        <button class="btn btn-primary" onclick="empSaveDiplome()">Enregistrer</button>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalDiplome')">Annuler</button>
+        <button class="v2-btn-pri" onclick="empSaveDiplome()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1514,20 +1579,24 @@ function openSanctionModal() {
   const old=document.getElementById('modalSanction'); if(old)old.remove();
   const types=[['avertissement','Avertissement'],['mise_en_demeure','Mise en demeure'],['blâme','Blâme'],['convocation','Convocation'],['autre','Autre']];
   const div=document.createElement('div');
-  div.innerHTML=`<div class="modal-overlay" id="modalSanction" style="display:flex" onclick="closeModal('modalSanction')">
-    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">⚠️ Nouvel incident RH</span><button class="modal-close" onclick="closeModal('modalSanction')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label>Type *</label><select id="sType" class="form-input">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
-          <div class="form-group"><label>Date *</label><input type="date" id="sDate" class="form-input"/></div>
-        </div>
-        <div class="form-group"><label>Motif *</label><textarea id="sMotif" class="form-input" rows="3" placeholder="Décrire les faits reprochés…"></textarea></div>
-        <div class="form-group"><label>Suite donnée</label><textarea id="sSuite" class="form-input" rows="2" placeholder="Décision prise, suivi…"></textarea></div>
+  div.innerHTML=`<div class="v2-ov" id="modalSanction" onclick="closeModal('modalSanction')">
+    <div class="v2-md" style="--mc:#dc2626;max-width:480px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#dc262622;color:#dc2626">⚠</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nouvel incident RH</div><div class="v2-md-s">Type, date et motif</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalSanction')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalSanction')">Annuler</button>
-        <button class="btn" style="background:#ef4444;color:#fff" onclick="saveSanction()">Enregistrer</button>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-md-2">
+          <div class="v2-fld-w"><label class="v2-fld-l">Type *</label><select id="sType" class="v2-fld">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
+          <div class="v2-fld-w"><label class="v2-fld-l">Date *</label><input type="date" id="sDate" class="v2-fld"/></div>
+        </div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Motif *</label><textarea id="sMotif" class="v2-fld" rows="3" placeholder="Décrire les faits reprochés…"></textarea></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Suite donnée</label><textarea id="sSuite" class="v2-fld" rows="2" placeholder="Décision prise, suivi…"></textarea></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalSanction')">Annuler</button>
+        <button class="v2-btn-pri" style="background:linear-gradient(135deg,#dc2626,#ef4444);box-shadow:0 10px 26px -8px rgba(220,38,38,.7)" onclick="saveSanction()">Enregistrer</button>
       </div>
     </div>
   </div>`;
@@ -1621,17 +1690,21 @@ function openAlerteModal() {
   const old=document.getElementById('modalAlerte'); if(old)old.remove();
   const types=[['periode_essai','Fin de période d\'essai'],['renouvellement','Renouvellement de contrat'],['visite_med','Visite médicale'],['formation_exp','Formation à renouveler'],['autre','Autre']];
   const div=document.createElement('div');
-  div.innerHTML=`<div class="modal-overlay" id="modalAlerte" style="display:flex" onclick="closeModal('modalAlerte')">
-    <div class="modal" style="max-width:460px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">🔔 Nouveau rappel</span><button class="modal-close" onclick="closeModal('modalAlerte')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div class="form-group"><label>Type *</label><select id="aType" class="form-input">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
-        <div class="form-group"><label>Date d'échéance *</label><input type="date" id="aDate" class="form-input"/></div>
-        <div class="form-group"><label>Note</label><input id="aNote" class="form-input" placeholder="Détails optionnels…"/></div>
+  div.innerHTML=`<div class="v2-ov" id="modalAlerte" onclick="closeModal('modalAlerte')">
+    <div class="v2-md" style="--mc:#f59e0b;max-width:460px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico" style="background:#f59e0b22;color:#f59e0b">🔔</span>
+        <div style="flex:1;min-width:0"><div class="v2-md-t">Nouveau rappel</div><div class="v2-md-s">Type, échéance et note</div></div>
+        <button class="v2-md-x" onclick="closeModal('modalAlerte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalAlerte')">Annuler</button>
-        <button class="btn btn-primary" onclick="saveAlerte()">Ajouter</button>
+      <div class="v2-md-b" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="v2-fld-w"><label class="v2-fld-l">Type *</label><select id="aType" class="v2-fld">${types.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Date d'échéance *</label><input type="date" id="aDate" class="v2-fld"/></div>
+        <div class="v2-fld-w"><label class="v2-fld-l">Note</label><input id="aNote" class="v2-fld" placeholder="Détails optionnels…"/></div>
+      </div>
+      <div class="v2-md-f">
+        <button class="v2-btn-sec" onclick="closeModal('modalAlerte')">Annuler</button>
+        <button class="v2-btn-pri" onclick="saveAlerte()">Ajouter</button>
       </div>
     </div>
   </div>`;
@@ -1682,6 +1755,8 @@ function selectField(id, label, value, options) {
 }
 
 function renderEditMode(e) {
+  // Formulaire au gabarit V2 (mêmes identifiants de champs).
+  if (window.ev2RenderEditMode) { window.ev2RenderEditMode(e); return; }
   document.getElementById('employeContent').innerHTML = `
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-header"><span class="card-title">✎ Modification — ${escHtml(e.prenom||'')} ${escHtml(e.nom||'')}</span></div>
@@ -1962,5 +2037,6 @@ function generateAttestation() {
   if (win) { win.document.write(html); win.document.close(); }
 }
 </script>
+<script src="js/employe-v2.js"></script>
 </body>
 </html>

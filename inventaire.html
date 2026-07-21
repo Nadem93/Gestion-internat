@@ -2,146 +2,363 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Inventaire — FTR</title>
+  <title>Inventaire &amp; matériel — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-.inv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem}
-.inv-stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem;text-align:center}
-.inv-stat-num{font-size:1.5rem;font-weight:800;line-height:1;color:var(--primary)}
-.inv-stat-lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
-.inv-toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1.25rem}
-.inv-toolbar input,.inv-toolbar select{font-size:.8rem;padding:.35rem .6rem;border:1px solid var(--border);border-radius:8px;background:#fff}
-.inv-toolbar input{flex:1;min-width:180px}
-</style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-inventaire.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">📦 Inventaire & matériel</div>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(217,119,6,.18)">
+
+  <!-- ══ BARRE DU HAUT ══════════════════════════════════════════════ -->
+  <div class="v2-top">
+    <a class="v2-logo" href="pilotage.html" title="Pilotage &amp; ressources" style="background:linear-gradient(135deg,#b45309,#d97706)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · PILOTAGE</div>
+      <div class="v2-top-title">Inventaire &amp; matériel</div>
     </div>
-    <div class="header-right">
-      <button class="btn btn-accent btn-sm" onclick="openInvModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Ajouter
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button type="button" class="v2-btn" onclick="inv2OpenMouvement()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/></svg>
+        Mouvement de stock
+      </button>
+      <button type="button" class="v2-btn v2-btn-primary" onclick="openInvModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter un article
       </button>
     </div>
-  </header>
+  </div>
 
-  <main class="content">
-    <div style="max-width:900px;margin:0 auto">
+  <div class="v2-body">
 
-      <div class="inv-stats">
-        <div class="inv-stat"><div class="inv-stat-num" id="invStatTotal">—</div><div class="inv-stat-lbl">Équipements</div></div>
-        <div class="inv-stat"><div class="inv-stat-num" id="invStatDefaillant" style="color:#ea580c">—</div><div class="inv-stat-lbl">Défaillants</div></div>
-        <div class="inv-stat"><div class="inv-stat-num" id="invStatHorsUsage" style="color:#dc2626">—</div><div class="inv-stat-lbl">Hors d'usage</div></div>
+    <!-- ══ STATISTIQUES ═══════════════════════════════════════════ -->
+    <div class="iv2-stats">
+      <div class="iv2-stat" style="--pc:#d97706">
+        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span>
+        <div><div class="iv2-stat-n" id="invStatTotal">—</div><div class="iv2-stat-l">Articles référencés</div></div>
+      </div>
+      <div class="iv2-stat" style="--pc:#ef4444">
+        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <div><div class="iv2-stat-n" id="invStatSeuil">—</div><div class="iv2-stat-l">Sous seuil</div></div>
+      </div>
+      <div class="iv2-stat" style="--pc:#4ade80">
+        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg></span>
+        <div><div class="iv2-stat-n" id="invStatValeur">—</div><div class="iv2-stat-l">Valeur du parc</div></div>
+      </div>
+      <div class="iv2-stat" style="--pc:#22d3ee">
+        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+        <div><div class="iv2-stat-n" id="invStatMaint">—</div><div class="iv2-stat-l">Maintenance due</div></div>
+      </div>
+    </div>
+
+    <!-- ══ FILTRES ════════════════════════════════════════════════ -->
+    <div class="iv2-filters">
+      <input type="search" id="invSearch" class="iv2-search" placeholder="Rechercher un article…"/>
+      <span id="invFiltresCat" class="v2-chips" style="gap:8px"></span>
+      <span id="invFiltresEtat" class="v2-chips" style="gap:8px"></span>
+    </div>
+
+    <!-- ══ CORPS : TABLEAU + RAIL ═════════════════════════════════ -->
+    <div class="iv2-main">
+      <div class="iv2-col">
+
+        <div class="iv2-tablecard" id="invList"></div>
+
+        <div class="iv2-reappro">
+          <div class="iv2-hdr">
+            <svg class="iv2-hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="iv2-reappro-t">Réapprovisionnement à commander</span>
+          </div>
+          <div id="invReappro"></div>
+        </div>
+
       </div>
 
-      <div class="inv-toolbar">
-        <input type="search" id="invSearch" placeholder="Rechercher un équipement…"/>
-        <select id="invFilterCat">
-          <option value="">Toutes les catégories</option>
-          <option value="mobilier">🪑 Mobilier</option>
-          <option value="medical">🩺 Matériel médical</option>
-          <option value="informatique">💻 Informatique</option>
-          <option value="electromenager">🔌 Électroménager</option>
-          <option value="linge">🛏️ Linge & literie</option>
-          <option value="hygiene">🧴 Hygiène & produits</option>
-          <option value="securite">🔒 Sécurité</option>
-          <option value="vehicule">🚗 Véhicules</option>
-          <option value="autre">📦 Autre</option>
-        </select>
-        <select id="invFilterEtat">
-          <option value="">Tous les états</option>
-          <option value="bon">Bon état</option>
-          <option value="usage">Usagé</option>
-          <option value="defaillant">Défaillant</option>
-          <option value="hors_usage">Hors d'usage</option>
-        </select>
+      <div class="iv2-rail">
+        <div class="v2-blk v2-rail-blk">
+          <div class="v2-blk-h"><span class="v2-blk-t">Par catégorie</span></div>
+          <div id="invParCat"></div>
+        </div>
+
+        <div class="iv2-valeur">
+          <div class="iv2-valeur-t">Valeur du parc</div>
+          <div class="iv2-valeur-n" id="invValeurTotal">—</div>
+          <div class="iv2-valeur-s" id="invValeurSub">—</div>
+          <div id="invPatrimoine"></div>
+        </div>
+
+        <div class="v2-blk v2-rail-blk">
+          <div class="v2-blk-h">
+            <svg style="width:15px;height:15px;color:#22d3ee;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <span class="v2-blk-t">Maintenance à prévoir</span>
+          </div>
+          <div id="invMaintenance"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MOUVEMENTS + ROTATION ══════════════════════════════════ -->
+    <div class="iv2-feat1">
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <svg style="width:15px;height:15px;color:#22d3ee;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/></svg>
+          <span class="v2-blk-t">Derniers mouvements de stock</span>
+          <button type="button" class="iv2-add" onclick="inv2OpenMouvement()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Enregistrer
+          </button>
+        </div>
+        <div id="invMouvements"></div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Taux de rotation</span></div>
+        <div id="invRotation"></div>
+      </div>
+    </div>
+
+    <!-- ══ COMPTAGE + FOURNISSEURS + GARANTIES ════════════════════ -->
+    <div class="iv2-feat2">
+      <div class="iv2-comptage">
+        <div class="iv2-hdr" style="margin-bottom:6px">
+          <svg class="iv2-hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="iv2-comptage-t">Inventaire annuel</span>
+        </div>
+        <div class="iv2-comptage-s">Comptage physique de l'exercice</div>
+        <span class="v2-prog" style="height:9px"><span id="invComptageBar" style="width:0%;background:linear-gradient(90deg,#16a34a,#4ade80)"></span></span>
+        <div class="iv2-comptage-m" id="invComptageMeta">—</div>
+        <button type="button" class="iv2-comptage-b" id="invComptageBtn" onclick="inv2OpenComptage()">Démarrer le comptage</button>
       </div>
 
-      <div id="invList"></div>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Fournisseurs</span>
+          <button type="button" class="iv2-add" id="invFournAdd" onclick="inv2OpenFourn()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter
+          </button>
+        </div>
+        <div id="invFournisseurs"></div>
+      </div>
 
+      <div class="iv2-gar">
+        <div class="iv2-hdr">
+          <svg class="iv2-hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="iv2-gar-t">Garanties &amp; contrats</span>
+        </div>
+        <div id="invGaranties"></div>
+      </div>
     </div>
-  </main>
-</div></div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modalInv">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <h3 id="invModalTitle">Nouvel équipement</h3>
-      <button class="modal-close" onclick="closeModal('modalInv')">&times;</button>
+  </div>
+</div>
+
+<!-- ══ MODALE : ARTICLE ═════════════════════════════════════════════ -->
+<div class="v2-ov" id="modalInv">
+  <div class="v2-md" style="--mc:#d97706">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span>
+      <div><div class="v2-md-t" id="invModalTitle">Nouvel article</div><div class="v2-md-s">Matériel, mobilier et consommables</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalInv')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
+    <div class="v2-md-b">
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="form-group">
-          <label>Catégorie *</label>
-          <select id="invModalCat">
-            <option value="mobilier">🪑 Mobilier</option>
-            <option value="medical">🩺 Matériel médical</option>
-            <option value="informatique">💻 Informatique</option>
-            <option value="electromenager">🔌 Électroménager</option>
-            <option value="linge">🛏️ Linge & literie</option>
-            <option value="hygiene">🧴 Hygiène & produits</option>
-            <option value="securite">🔒 Sécurité</option>
-            <option value="vehicule">🚗 Véhicules</option>
-            <option value="autre">📦 Autre</option>
+      <div>
+        <label class="v2-fld-l" for="invModalNom">Nom / désignation *</label>
+        <input type="text" class="v2-fld" id="invModalNom" placeholder="Ex : Lit médicalisé, Fauteuil roulant…"/>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invModalCat">Catégorie *</label>
+          <select class="v2-fld" id="invModalCat">
+            <option value="mobilier">Mobilier</option>
+            <option value="medical">Matériel médical</option>
+            <option value="informatique">Informatique</option>
+            <option value="electromenager">Électroménager</option>
+            <option value="linge">Linge &amp; literie</option>
+            <option value="hygiene">Hygiène &amp; produits</option>
+            <option value="securite">Sécurité</option>
+            <option value="vehicule">Véhicules</option>
+            <option value="autre">Autre</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>État</label>
-          <select id="invModalEtat">
-            <option value="bon">✅ Bon état</option>
-            <option value="usage">⚠️ Usagé</option>
-            <option value="defaillant">🔴 Défaillant</option>
-            <option value="hors_usage">⛔ Hors d'usage</option>
-          </select>
+        <div>
+          <label class="v2-fld-l" for="invModalLieu">Localisation</label>
+          <input type="text" class="v2-fld" id="invModalLieu" placeholder="Ex : Chambre 12, Réserve…"/>
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Nom / désignation *</label>
-        <input type="text" id="invModalNom" placeholder="Ex : Lit médicalisé, Fauteuil roulant…"/>
+      <div>
+        <label class="v2-fld-l">État</label>
+        <div class="v2-seg" id="invModalEtatSeg">
+          <button type="button" class="v2-seg-o on" data-v="bon" onclick="inv2SetEtatChamp('bon')">Bon état</button>
+          <button type="button" class="v2-seg-o" data-v="usage" onclick="inv2SetEtatChamp('usage')">Usagé</button>
+          <button type="button" class="v2-seg-o" data-v="defaillant" onclick="inv2SetEtatChamp('defaillant')">Défaillant</button>
+          <button type="button" class="v2-seg-o" data-v="hors_usage" onclick="inv2SetEtatChamp('hors_usage')">Hors d'usage</button>
+        </div>
+        <input type="hidden" id="invModalEtat" value="bon"/>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="form-group">
-          <label>Référence / n° de série</label>
-          <input type="text" id="invModalRef" placeholder="REF-00001"/>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invModalRef">Référence / n° de série</label>
+          <input type="text" class="v2-fld" id="invModalRef" placeholder="REF-00001"/>
         </div>
-        <div class="form-group">
-          <label>Quantité</label>
-          <input type="number" id="invModalQte" value="1" min="1"/>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Localisation</label>
-        <input type="text" id="invModalLieu" placeholder="Ex : Chambre 12, Salle commune, Réserve…"/>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="form-group">
-          <label>Date d'achat</label>
-          <input type="date" id="invModalAchat"/>
-        </div>
-        <div class="form-group">
-          <label>Dernière maintenance</label>
-          <input type="date" id="invModalMaintenance"/>
+        <div>
+          <label class="v2-fld-l" for="invModalQte">Quantité</label>
+          <input type="number" class="v2-fld" id="invModalQte" value="1" min="0"/>
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="invModalNotes" rows="2" placeholder="Observations, fournisseur, garantie…" style="resize:vertical"></textarea>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invModalSeuil">Seuil d'alerte</label>
+          <input type="number" class="v2-fld" id="invModalSeuil" min="0" placeholder="Laisser vide si non suivi"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="invModalValeur">Valeur unitaire (€)</label>
+          <input type="number" class="v2-fld" id="invModalValeur" min="0" step="0.01" placeholder="Ex : 850"/>
+        </div>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invModalAchat">Date d'achat</label>
+          <input type="date" class="v2-fld" id="invModalAchat"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="invModalMaintenance">Dernière maintenance</label>
+          <input type="date" class="v2-fld" id="invModalMaintenance"/>
+        </div>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invModalMaintProchaine">Prochaine maintenance</label>
+          <input type="date" class="v2-fld" id="invModalMaintProchaine"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="invModalGarantieFin">Fin de garantie</label>
+          <input type="date" class="v2-fld" id="invModalGarantieFin"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="invModalGarantieType">Garantie / contrat</label>
+        <input type="text" class="v2-fld" id="invModalGarantieType" placeholder="Ex : Garantie constructeur, contrat de maintenance…"/>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="invModalNotes">Notes</label>
+        <textarea class="v2-fld" id="invModalNotes" rows="2" placeholder="Observations, fournisseur, garantie…"></textarea>
+      </div>
+
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Le seuil d'alerte déclenche le réapprovisionnement ; la valeur unitaire alimente la valeur du parc.
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalInv')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveInventaire()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalInv')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveInventaire()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE : MOUVEMENT DE STOCK ══════════════════════════════════ -->
+<div class="v2-ov" id="modalInvMouvement">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/></svg></span>
+      <div><div class="v2-md-t">Mouvement de stock</div><div class="v2-md-s">Entrée ou sortie d'un article</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalInvMouvement')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="invMvArticle">Article</label>
+        <select class="v2-fld" id="invMvArticle"></select>
+      </div>
+      <div>
+        <label class="v2-fld-l">Sens</label>
+        <div class="v2-seg" id="invMvSens">
+          <button type="button" class="v2-seg-o on" data-v="in" onclick="inv2SetSens('in')">Entrée (+)</button>
+          <button type="button" class="v2-seg-o" data-v="out" onclick="inv2SetSens('out')">Sortie (−)</button>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invMvQte">Quantité</label>
+          <input type="number" class="v2-fld" id="invMvQte" min="1" value="1"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="invMvMotif">Motif</label>
+          <input type="text" class="v2-fld" id="invMvMotif" placeholder="Réception, sortie unité A, rebut…"/>
+        </div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        La quantité en stock de l'article est mise à jour automatiquement.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalInvMouvement')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="inv2SaveMouvement()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE : COMPTAGE ANNUEL ═════════════════════════════════════ -->
+<div class="v2-ov" id="modalInvComptage">
+  <div class="v2-md v2-md-lg" style="--mc:#10b981">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+      <div><div class="v2-md-t">Comptage physique</div><div class="v2-md-s">Saisissez les quantités réellement constatées</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalInvComptage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div id="invComptageList"></div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalInvComptage')">Fermer</button>
+      <button type="button" class="v2-btn-pri" onclick="inv2SaveComptage()">Enregistrer le comptage</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE : FOURNISSEUR (administrateurs) ═══════════════════════ -->
+<div class="v2-ov" id="modalInvFourn">
+  <div class="v2-md" style="--mc:#ea580c">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+      <div><div class="v2-md-t" id="invFournTitle">Nouveau fournisseur</div><div class="v2-md-s">Référencement et délai de livraison</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalInvFourn')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="invFournNom">Nom *</label>
+        <input type="text" class="v2-fld" id="invFournNom" placeholder="Ex : Metro Distribution"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="invFournSpecialite">Spécialité</label>
+        <input type="text" class="v2-fld" id="invFournSpecialite" placeholder="Alimentation, consommables…"/>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="invFournDelai">Délai de livraison</label>
+          <input type="text" class="v2-fld" id="invFournDelai" placeholder="48 h, 5 j…"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="invFournContact">Contact</label>
+          <input type="text" class="v2-fld" id="invFournContact" placeholder="Téléphone ou courriel"/>
+        </div>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalInvFourn')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="inv2SaveFourn()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -153,5 +370,6 @@
 <script src="js/residents-supabase.js"></script>
 <script src="js/inventaire-supabase.js"></script>
 <script src="js/inventaire.js"></script>
+<script src="js/inventaire-v2.js"></script>
 </body>
 </html>

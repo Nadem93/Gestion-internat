@@ -2,14 +2,25 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Grilles d'évaluation — FTR</title>
+  <meta name="theme-color" content="#0a1728"/>
+  <title>Grilles d'évaluation — INTERNALIS</title>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-evaluations.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <script>
     // Page fusionnée dans objectifs.html (onglet « Grilles d'évaluation »).
     // On redirige en conservant les paramètres (?residentId=… des anciens liens).
     location.replace('objectifs.html' + (location.search ? location.search + '&' : '?') + 'tab=evaluations');
   </script>
 </head>
-<body>
-  <p style="font-family:sans-serif;padding:1rem">Redirection vers <a href="objectifs.html?tab=evaluations">Objectifs &amp; évaluations</a>…</p>
+<body class="v2 ev2-redir">
+  <div class="ev2-redir-c">
+    <div class="ev2-redir-e">INTERNALIS · Dossiers &amp; suivi</div>
+    <div class="ev2-redir-t">Grilles d'évaluation</div>
+    <p class="ev2-redir-p">
+      Cette page a été fusionnée dans <strong>Objectifs &amp; évaluations</strong>.<br/>
+      Redirection en cours… <a href="objectifs.html?tab=evaluations">Ouvrir maintenant</a>
+    </p>
+  </div>
 </body>
 </html>

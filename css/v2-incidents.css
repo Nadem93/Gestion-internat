@@ -1,0 +1,193 @@
+/* ══════════════════════════════════════════════════════════════════════
+   INCIDENTS — V2
+   Langage visuel de la maquette « Registre EIG (dossiers) » appliqué au
+   registre des incidents : tuiles statistiques, tableau, panneaux d'analyse.
+   Ne surcharge que cette page ; css/v2.css n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Chapeau ─────────────────────────────────────────────────────────── */
+.inc2-intro { font-size: 11.5px; color: var(--v2-t7); margin-bottom: 16px; }
+.inc2-intro a { color: var(--v2-indigo-light); }
+.inc2-intro a:hover { color: var(--v2-indigo-pale); }
+.inc2-top-btn { height: 42px; }
+.inc2-top-btn svg { width: 15px; height: 15px; flex-shrink: 0; display: block; }
+
+/* ── Tuiles statistiques ─────────────────────────────────────────────── */
+.inc2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.inc2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.inc2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.inc2-stat-ico svg { width: 21px; height: 21px; display: block; }
+.inc2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--pc); }
+.inc2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+.inc2-stat-x { font-size: 10.5px; font-weight: 700; color: var(--v2-danger-text); margin-top: 4px; }
+
+/* ── Barre de filtres ────────────────────────────────────────────────── */
+.inc2-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.inc2-search {
+  display: flex; align-items: center; gap: 10px; flex: 1 1 260px; min-width: 200px;
+  height: 42px; padding: 0 14px; border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.inc2-search svg { width: 16px; height: 16px; flex-shrink: 0; display: block; color: var(--v2-t7); }
+body.v2 .inc2-search input {
+  flex: 1; min-width: 0; height: 100%; margin: 0; padding: 0;
+  border: none; background: transparent; box-shadow: none;
+  font: inherit; font-size: 13px; color: var(--v2-t2);
+}
+body.v2 .inc2-search input:focus { outline: none; box-shadow: none; }
+body.v2 .inc2-search input::placeholder { color: var(--v2-t7); }
+
+body.v2 select.inc2-sel {
+  width: auto; height: 42px; margin: 0; padding: 0 40px 0 14px;
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--v2-t4);
+  background-color: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-ctrl); cursor: pointer;
+  background-position: right 14px center; background-size: 15px;
+}
+body.v2 select.inc2-sel:focus { outline: none; border-color: rgba(255,255,255,.2); }
+body.v2 select.inc2-sel option { background: #101d31; color: var(--v2-t2); }
+
+.inc2-count { font-size: 11.5px; font-weight: 600; color: var(--v2-t7); margin-bottom: 12px; }
+
+/* ── Tableau du registre ─────────────────────────────────────────────── */
+.inc2-tw {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden;
+}
+.inc2-scroll { overflow-x: auto; }
+.inc2-t { width: 100%; border-collapse: collapse; min-width: 940px; }
+.inc2-t th {
+  text-align: left; padding: 13px 20px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  background: var(--v2-s-alt); border-bottom: 1px solid var(--v2-b); white-space: nowrap;
+}
+.inc2-t td { padding: 13px 20px; border-bottom: 1px solid var(--v2-b-table); vertical-align: middle; }
+.inc2-t tr:last-child td { border-bottom: none; }
+.inc2-t tbody tr:hover td { background: rgba(255,255,255,.02); }
+
+.inc2-date { font-size: 12px; color: var(--v2-t5); white-space: nowrap; }
+.inc2-date span { display: block; font-size: 10.5px; color: var(--v2-t8); margin-top: 2px; }
+.inc2-ti { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.inc2-ty { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--v2-t7); margin-top: 3px; }
+.inc2-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--tc, #8095b4); }
+.inc2-res { font-size: 12px; color: var(--v2-t4); }
+.inc2-res span { display: block; font-size: 10.5px; color: var(--v2-t8); margin-top: 2px; }
+.inc2-pill {
+  display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  white-space: nowrap; color: var(--pc); background: color-mix(in srgb, var(--pc) 11%, transparent);
+}
+.inc2-eig { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--pc); }
+.inc2-eig svg { width: 12px; height: 12px; flex-shrink: 0; display: block; }
+
+.inc2-acts { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.inc2-act {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font: inherit;
+  background: color-mix(in srgb, var(--ac, #8095b4) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ac, #8095b4) 30%, transparent);
+  color: var(--ac, #8095b4);
+}
+.inc2-act:hover { background: color-mix(in srgb, var(--ac, #8095b4) 24%, transparent); }
+.inc2-act svg { width: 15px; height: 15px; display: block; }
+.inc2-act-l { width: auto; padding: 0 12px; font-size: 12px; font-weight: 600; gap: 6px; }
+
+/* ── Deux panneaux du bas ────────────────────────────────────────────── */
+.inc2-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; }
+.inc2-duo > * { min-width: 0; }
+
+.inc2-bars { display: flex; flex-direction: column; gap: 12px; }
+.inc2-bar-h { display: flex; align-items: baseline; margin-bottom: 5px; }
+.inc2-bar-l { font-size: 12px; color: var(--v2-t3); }
+.inc2-bar-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+.inc2-prog { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.inc2-prog > span { display: block; height: 100%; border-radius: 4px; }
+
+/* Panneau vert « Suivi des EIG » */
+.inc2-ars-blk {
+  background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(52,211,153,.22);
+  border-radius: var(--v2-r-card2); padding: 20px 22px;
+}
+.inc2-ars-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.inc2-ars-h svg { width: 15px; height: 15px; flex-shrink: 0; color: #34d399; }
+.inc2-ars-t { font-size: 13.5px; font-weight: 700; color: #6ee7b7; }
+.inc2-ars-lien { margin-left: auto; font-size: 11px; font-weight: 700; color: #6ee7b7; }
+.inc2-ars-r {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.inc2-ars-r:last-child { border-bottom: none; }
+.inc2-ars-i {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.inc2-ars-i svg { width: 14px; height: 14px; display: block; }
+.inc2-ars-n { font-size: 12px; font-weight: 600; color: var(--v2-t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inc2-ars-s { font-size: 10.5px; color: var(--v2-t6); overflow: hidden; text-overflow: ellipsis; }
+.inc2-ars-tag { font-size: 10.5px; font-weight: 700; color: var(--pc); flex-shrink: 0; white-space: nowrap; }
+.inc2-ars-vide { font-size: 12px; color: var(--v2-t6); padding: 4px 0; }
+
+/* ── Vide ────────────────────────────────────────────────────────────── */
+.inc2-empty {
+  padding: 46px 22px; text-align: center;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card2);
+}
+.inc2-empty svg { width: 34px; height: 34px; color: var(--v2-t8); margin-bottom: 12px; display: block; margin-inline: auto; }
+.inc2-empty-t { font-size: 14px; font-weight: 700; color: var(--v2-t3); }
+.inc2-empty-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 6px; }
+
+/* ── Modale : détail ─────────────────────────────────────────────────── */
+.inc2-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.inc2-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.inc2-fact {
+  padding: 10px 13px; border-radius: 11px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); min-width: 0;
+}
+.inc2-fact-k {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--v2-t8); margin-bottom: 4px;
+}
+.inc2-fact-v { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); word-break: break-word; }
+.inc2-lbl {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--v2-t8); margin-bottom: -4px;
+}
+.inc2-txt { font-size: 12.5px; color: var(--v2-t4); line-height: 1.6; white-space: pre-wrap; }
+.inc2-sep { height: 1px; background: var(--v2-b); margin: 2px 0; }
+.inc2-eig-blk {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 14px; border-radius: 11px;
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.24);
+}
+.inc2-eig-blk .inc2-eig-t { font-size: 12.5px; font-weight: 700; color: var(--v2-danger-text); }
+.inc2-mini {
+  height: 32px; padding: 0 12px; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t3);
+}
+.inc2-mini:hover { background: var(--v2-s-hover); color: #fff; }
+.inc2-mini svg { width: 14px; height: 14px; flex-shrink: 0; display: block; }
+.inc2-eig-blk > svg { width: 16px; height: 16px; flex-shrink: 0; display: block; color: var(--v2-danger); }
+.v2-btn-pri svg, .v2-btn-sec svg { width: 16px; height: 16px; flex-shrink: 0; display: block; }
+.inc2-md-f-l { margin-right: auto; flex: 0 0 auto !important; }
+.v2-md-f .inc2-mini { height: 44px; padding: 0 14px; border-radius: 11px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .inc2-stats { grid-template-columns: repeat(2, 1fr); }
+  .inc2-duo { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .inc2-stats { grid-template-columns: 1fr; }
+  .inc2-facts { grid-template-columns: 1fr; }
+  .inc2-top-btn { flex: 1 1 auto; justify-content: center; }
+  body.v2 select.inc2-sel { flex: 1 1 auto; width: 100%; }
+}

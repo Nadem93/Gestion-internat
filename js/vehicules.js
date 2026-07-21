@@ -87,6 +87,7 @@ async function reserverVehicule() {
     return;
   }
   toast(`🚗 ${vehicule} réservé par ${prenom || userName} vers ${destination}`);
+  if (typeof closeModal === 'function') closeModal('modalReservation');
   initVehicules();
 }
 
