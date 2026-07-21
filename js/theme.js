@@ -114,9 +114,10 @@
 
     // Barre supérieure V2 : on se place juste avant le bloc utilisateur quand
     // il existe, sinon en fin de barre.
-    // Les portails (vie quotidienne, dossiers, pilotage) n'ont pas de `.v2-top`
-    // mais leur propre barre : sans elles, le bouton tomberait en flottant.
-    var top = document.querySelector('.v2-top, .vq-topbar, .ds-topbar, .pl-topbar');
+    // Les portails (vie quotidienne, dossiers, pilotage, RH) n'ont pas de
+    // `.v2-top` mais leur propre barre : sans elles, le bouton tomberait en
+    // position flottante sur ces pages.
+    var top = document.querySelector('.v2-top, .vq-topbar, .ds-topbar, .pl-topbar, .rh-topbar');
     if (top) {
       var dernier = top.lastElementChild;
       // Le bloc de droite est un conteneur flex (margin-left:auto) : on entre
