@@ -186,6 +186,9 @@ html.clair body.v2 .v2-q-ico > svg { filter: none; }
    le baisse pour ne garder qu'un rappel de couleur dans l'angle. */
 html.clair body.v2 .v2-mod::after { opacity: .07; filter: blur(22px); }
 
+/* Rail de détail de l'annuaire : fond opaque en clair aussi (voir .v2-det). */
+html.clair body.v2 .v2-det { background: #ffffff; }
+
 /* Modales — le gabarit .v2-md et la modale héritée. */
 html.clair body.v2 .v2-md { background: #ffffff; box-shadow: 0 40px 100px -40px rgba(15,38,70,.45); }
 html.clair body.v2 .v2-ov { background: rgba(15,30,55,.42); }

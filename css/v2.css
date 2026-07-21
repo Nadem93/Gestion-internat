@@ -759,7 +759,9 @@ body.v2 .itab.active { color: var(--v2-t2); }
   background: color-mix(in srgb, var(--pc, #818cf8) 8%, transparent); color: var(--pc, #818cf8); }
 
 /* Rail de détail */
-.v2-det { background: var(--v2-s-card); border: 1px solid var(--v2-b);
+/* Fond OPAQUE (comme les modales) : --v2-s-card est un voile translucide, à
+   travers lequel les cartes de l'annuaire transparaissaient. */
+.v2-det { background: #101d31; border: 1px solid var(--v2-b);
   border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
 .v2-det-h { padding: 24px 22px 20px; border-bottom: 1px solid var(--v2-b-soft);
   background: linear-gradient(135deg, color-mix(in srgb, var(--rc, #818cf8) 15%, transparent), transparent); }
