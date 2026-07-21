@@ -329,8 +329,10 @@ async function initVisites() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await loadResidentsCache();
-  await loadVisitesCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([loadResidentsCache(), loadVisitesCache()]);
   const opts = visResidents().map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   document.getElementById('vFilterResident').innerHTML = '<option value="">Tous les résidents</option>' + opts;
   document.getElementById('vmResident').innerHTML = '<option value="">— Choisir —</option>' + opts;

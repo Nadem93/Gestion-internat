@@ -283,12 +283,20 @@ function getAlerteCount() {
 async function initAlertes() {
   const s = Auth.requireAuth();
   if (!s) return;
-  await sbLoadResidentsCache();
-  if (typeof sbGetMedDistribForDate === 'function') {
-    try { _alMedRecords = await sbGetMedDistribForDate(today()); } catch (e) { console.error('[initAlertes] médicaments', e); }
-  }
   // Hydrate les stores migrés lus par generateAlertes (sinon localStorage mort → alertes muettes)
+  // TOUT part en une seule vague, y compris le cache résidents et les
+  // médicaments. Ces deux-là étaient `await`és avant le lot : le lot partait
+  // donc deux vagues plus tard, hors de la fenêtre où supabase-client.js
+  // mutualise les lectures identiques. Résultat mesuré sur accueil.html :
+  // ppe, planning_events et incidents repartaient en réseau alors que
+  // l'accueil venait de les demander. Ni les résidents ni les médicaments
+  // n'étaient nécessaires aux appels suivants.
   try {
+    const _resCache = sbLoadResidentsCache();
+    const _med = (typeof sbGetMedDistribForDate === 'function')
+      ? sbGetMedDistribForDate(today()).catch(e => { console.error('[initAlertes] médicaments', e); return null; })
+      : Promise.resolve(null);
+
     const _hy = await Promise.all([
       (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null)),
       (typeof sbGetEcheances === 'function' ? sbGetEcheances() : Promise.resolve(null)),
@@ -298,7 +306,10 @@ async function initAlertes() {
       (typeof sbGetAdmissions === 'function' ? sbGetAdmissions() : Promise.resolve(null)),
       (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null)),
       (typeof sbGetBudgetDemandes === 'function' ? sbGetBudgetDemandes() : Promise.resolve(null)),
+      _resCache,
+      _med,
     ]);
+    _alMedRecords = _hy[9] != null ? _hy[9] : _alMedRecords;
     if (_hy[0] != null) DB.set(DB.keys.ppe, _hy[0]);
     if (_hy[1] != null) DB.set(DB.keys.echeances, _hy[1]);
     if (_hy[2] != null) DB.set(DB.keys.planning, _hy[2]);

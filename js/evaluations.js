@@ -165,8 +165,10 @@ let _evEditId     = '';
 async function initEvaluations() {
   const s = Auth.requireAuth();
   if (!s) return;
-  await sbLoadResidentsCache();
-  await loadEvCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadEvCache()]);
   const params = new URLSearchParams(window.location.search);
   _evResidentId = params.get('residentId') || params.get('id') || '';
 

@@ -5,8 +5,10 @@ async function initViaTrajectoire() {
   const _s = Auth.requireAuth();
   if (!_s) return;
   if (!Auth.isAdmin()) return;
-  await sbLoadResidentsCache();
-  await loadVTCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadVTCache()]);
   renderVT();
 }
 

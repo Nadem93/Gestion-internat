@@ -284,8 +284,10 @@ async function initEcheances() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await sbLoadResidentsCache();
-  await loadEcheancesCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadEcheancesCache()]);
   // Remplir les sélecteurs résident
   const residents = sbResidents().filter(r => r.statut !== 'sorti');
   const opts = residents.map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');

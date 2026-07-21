@@ -345,8 +345,10 @@ async function initActivites() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_activites')) return;
-  await loadResidentsCache();
-  await loadActivitesCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([loadResidentsCache(), loadActivitesCache()]);
   document.getElementById('aFilterCat').innerHTML = '<option value="">Toutes catégories</option>' + Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');
   document.getElementById('aFilterJour').innerHTML = '<option value="">Tous les jours</option>' + ACT_JOURS.map(j => `<option value="${j}">${j}</option>`).join('');
   document.getElementById('amCategorie').innerHTML = Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');

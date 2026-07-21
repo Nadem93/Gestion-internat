@@ -313,8 +313,10 @@ function toggleDocPartageFamille(docId) {
 }
 
 async function initDocumentsPage() {
-  await sbLoadResidentsCache();
-  await loadDocResCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadDocResCache()]);
   initDocuments();
   document.getElementById('docSearchInput')?.addEventListener('input', renderDocuments);
   document.getElementById('docFilterResident')?.addEventListener('change', renderDocuments);

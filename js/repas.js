@@ -616,8 +616,10 @@ async function initRepas() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await loadResidentsCache();
-  await loadRepasCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([loadResidentsCache(), loadRepasCache()]);
   repasDate = today();
   document.getElementById('rpDate')?.addEventListener('change', e => { if (e.target.value) { repasDate = e.target.value; renderRepas(); } });
   document.getElementById('rpSearch')?.addEventListener('input', renderRepas);

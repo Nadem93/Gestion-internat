@@ -21,19 +21,16 @@ let _chDateAttrOk = true;
 
 function chDateAttrDisponible() { return _chDateAttrOk; }
 
-async function loadChambresDatesAttribution() {
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) { _chDateAttrOk = false; return; }
-  try {
-    const { data, error } = await supabaseClient.from('chambres').select('id,date_attribution');
-    if (error) throw error;
-    const par = {};
-    (data || []).forEach(r => { par[String(r.id)] = r.date_attribution || ''; });
-    _chCache.forEach(c => { c.dateAttribution = par[String(c.id)] || ''; });
-    _chDateAttrOk = true;
-  } catch (e) {
-    _chDateAttrOk = false;
+// Ne fait plus AUCUNE requête : sbGetChambres() lit déjà la table avec
+// `select('*')`, donc date_attribution est arrivée avec le reste et
+// _chFromRow la conserve désormais. Cette fonction relisait toute la table
+// une seconde fois, séquentiellement, pour cette seule colonne.
+function loadChambresDatesAttribution() {
+  _chDateAttrOk = (typeof supabaseClient !== 'undefined' && !!supabaseClient)
+    && (typeof sbChambresDateAttrPresente === 'undefined' || sbChambresDateAttrPresente);
+  if (!_chDateAttrOk) {
     _chCache.forEach(c => { c.dateAttribution = ''; });
-    console.warn(`[chambres] colonne date_attribution absente — exécutez ${CH_SQL_FILE} ; l'ancienneté d'occupation ne sera pas affichée.`, e?.message || e);
+    console.warn(`[chambres] colonne date_attribution absente — exécutez ${CH_SQL_FILE} ; l'ancienneté d'occupation ne sera pas affichée.`);
   }
 }
 
@@ -400,9 +397,8 @@ async function initChambres() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await loadResidentsCache();
-  await Promise.all([loadChambresCache(), loadEdlCache()]);
-  await loadChambresDatesAttribution();
+  await Promise.all([loadResidentsCache(), loadChambresCache(), loadEdlCache()]);
+  loadChambresDatesAttribution();   // purement local désormais
   const added = await seedChambresFromResidents();
   if (added) toast(`${added} chambre(s) importée(s) depuis les fiches résidents`, 'info');
   const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(s.role)

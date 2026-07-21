@@ -341,12 +341,24 @@ async function initFinance() {
     document.querySelector('.content').innerHTML = `<div class="empty" style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé aux administrateurs.</p><a href="accueil.html" class="btn btn-accent">← Accueil</a></div>`;
     return;
   }
-  await sbLoadResidentsCache();
-  if (typeof sbGetBudgetEnveloppes === 'function') { try { DB.set(DB.keys.budgetEnveloppes, await sbGetBudgetEnveloppes()); } catch(e){ console.error(e); } }
-  if (typeof sbGetBudgetDemandes === 'function') { try { DB.set(DB.keys.budgetDemandes, await sbGetBudgetDemandes()); } catch(e){ console.error(e); } }
-  if (typeof sbGetFichesPaie === 'function') { try { DB.set(DB.keys.fichesPaie, await sbGetFichesPaie()); } catch(e){ console.error(e); } }
-  if (typeof sbGetContrats === 'function') { try { DB.set(DB.keys.contrats, await sbGetContrats()); } catch(e){ console.error(e); } }
-  if (typeof sbGetEmployes === 'function') { try { DB.set(DB.keys.employes, await sbGetEmployes()); } catch(e){ console.error(e); } }
+  // Six lectures indépendantes : elles partaient l'une après l'autre, soit six
+  // allers-retours en file. Une seule vague suffit — chacune garde sa propre
+  // dégradation douce, une table absente n'empêche pas les autres de se charger.
+  const _lot = [
+    ['budgetEnveloppes', 'sbGetBudgetEnveloppes'],
+    ['budgetDemandes',   'sbGetBudgetDemandes'],
+    ['fichesPaie',       'sbGetFichesPaie'],
+    ['contrats',         'sbGetContrats'],
+    ['employes',         'sbGetEmployes'],
+  ];
+  await Promise.all([
+    sbLoadResidentsCache(),
+    ..._lot.map(([cle, fn]) =>
+      (typeof window[fn] === 'function')
+        ? window[fn]().then(d => DB.set(DB.keys[cle], d)).catch(e => console.error('[initFinance]', fn, e))
+        : Promise.resolve()
+    ),
+  ]);
   finPopulatePeriode();
   document.getElementById('finPeriode').addEventListener('change', renderFinance);
   renderFinance();
