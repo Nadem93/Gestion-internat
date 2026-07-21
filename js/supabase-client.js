@@ -37,7 +37,15 @@ function _sbCle(url, init) {
 function _sbFetch(input, init) {
   const url = typeof input === 'string' ? input : (input && input.url) || String(input);
   const methode = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
-  if (methode !== 'GET') return fetch(input, init);
+  if (methode !== 'GET') {
+    // Écritures : la file d'attente hors-ligne (js/offline-outbox.js) prend le
+    // relais quand le réseau manque. Si ce module n'est pas chargé, on retombe
+    // sur le comportement d'origine — un simple fetch.
+    if (window.OfflineOutbox && typeof window.OfflineOutbox.write === 'function') {
+      return window.OfflineOutbox.write(input, init, fetch);
+    }
+    return fetch(input, init);
+  }
 
   const cle = _sbCle(url, init);
   const enVol = _sbEnVol.get(cle);
