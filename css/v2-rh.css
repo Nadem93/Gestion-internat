@@ -296,3 +296,33 @@ body.v2 .rh-shell {
   .rh-topbar { padding-left: 18px; padding-right: 18px; }
   .rh-topbar-m { display: none; }
 }
+
+/* ── Mobile ───────────────────────────────────────────────────────────────
+   Ajouté avec le passage bord à bord de css/v2.css. Placé en fin de fichier :
+   les règles ci-dessus ont la même specificité, c'est l'ordre qui tranche. */
+@media (max-width: 960px) {
+  /* Le rail supprimé, la coquille n'est plus qu'une colonne. En `height:auto`
+     l'iframe du module (flex:1) n'a aucune base de calcul et se réduit à une
+     hauteur arbitraire : on redonne une hauteur réelle. dvh d'abord pour ne
+     pas compter la barre d'URL mobile, vh en repli. */
+  body.v2 .rh-shell { height: 100vh; height: 100dvh; min-height: 0; }
+}
+@media (max-width: 860px) {
+  .rh-topbar {
+    height: auto; min-height: 58px; flex-wrap: wrap;
+    padding: 10px 14px; gap: 8px;
+  }
+  /* Sans troncature, le titre pousse la méta hors de l'écran. */
+  .rh-topbar-t {
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* La méta passe à la ligne plutôt que de disparaître : l'information
+     (date, effectif) reste lisible. */
+  /* `order` élevé : la méta occupant toute la ligne, sans ça elle
+     repousserait le bouton de thème sur une troisième ligne. */
+  .rh-topbar-m {
+    order: 10; display: block; margin-left: 0; flex-basis: 100%;
+    font-size: 11.5px; white-space: normal;
+  }
+  .rh-topbar #thmBtn { margin-left: auto; }
+}

@@ -454,9 +454,10 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
 }
 @media (max-width: 860px) {
   .v2-g2, .v2-g3 { grid-template-columns: 1fr; }
-  .v2-body { padding: 18px; }
-  .v2-top { padding: 16px 18px 12px; }
-  .v2-shell { border-radius: 0; border-left: none; border-right: none; }
+  .v2-body { padding: 18px 14px; }
+  .v2-top { padding: 16px 14px 12px; }
+  /* Le passage bord à bord de .v2-shell est plus bas, collé à la règle de
+     largeur de page : à specificité égale c'est l'ordre qui tranche. */
 }
 @media (max-width: 560px) {
   .v2-g4 { grid-template-columns: 1fr; }
@@ -539,6 +540,20 @@ body.v2 .acc-aurora { display: none !important; }
    Les maquettes sont dessinées sur un canevas de 1400 px, mais les pages
    doivent occuper toute la fenêtre. Ne pas remettre de max-width en inline. */
 body.v2 .v2-shell { max-width: none; margin: 22px 24px; }
+
+/* Mobile : bord à bord. Sur un écran de 375 px, les 24 px de marge de chaque
+   côté coûtaient 13 % de la largeur — et 23 % avec le rembourrage intérieur.
+   Cette règle DOIT rester juste après celle du dessus : même sélecteur, donc
+   même specificité, c'est l'ordre qui tranche. Une règle `.v2-shell` seule
+   (0-1-0) placée plus haut ne ferait rien — c'était le cas jusqu'ici. */
+@media (max-width: 860px) {
+  body.v2 .v2-shell {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
 
 /* Pages migrées « design seul » : le <main class="content"> hérité vit
    désormais dans .v2-body, qui porte déjà la gouttière. */
