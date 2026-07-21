@@ -25,7 +25,15 @@ function ceCardVars(hex) {
 
 let ceEditId = null;
 
+// Le rendu est assuré par js/contacts-externes-v2.js (maquette « Contacts
+// extérieurs (RH) » — vivier de remplaçants & vacataires). Le rendu d'origine
+// est conservé en repli si le module V2 n'est pas chargé.
 function renderContactsExternes() {
+  if (typeof ce2Render === 'function') return ce2Render();
+  return renderContactsExternesLegacy();
+}
+
+function renderContactsExternesLegacy() {
   const all = getContactsExternes().sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
   const q = (document.getElementById('ceSearch')?.value || '').trim().toLowerCase();
   const list = q
@@ -94,6 +102,8 @@ function openCeModal(id) {
   document.getElementById('ceEmail').value = c?.email || '';
   document.getElementById('ceNotes').value = c?.notes || '';
   document.getElementById('ceBtnDelete').style.display = c ? '' : 'none';
+  // Champs propres au design V2 (métier, statut, taux horaire, disponibilité)
+  if (typeof ce2FillModal === 'function') ce2FillModal(c);
   openModal('modalContactExterne');
 }
 
@@ -109,18 +119,24 @@ async function saveContactExterne() {
     email: document.getElementById('ceEmail').value.trim(),
     notes: document.getElementById('ceNotes').value.trim()
   };
+  let savedId = null;
   try {
     if (ceEditId) {
       const old = _ceCache.find(c => c.id === ceEditId) || {};
       const saved = await sbSaveContactExterne({ ...old, ...data, id: ceEditId });
       _ceCache = _ceCache.map(c => c.id === ceEditId ? saved : c);
+      savedId = saved.id;
       toast('Contact mis à jour', 'success');
     } else {
       const saved = await sbSaveContactExterne(data);
       _ceCache.push(saved);
+      savedId = saved.id;
       toast('Contact ajouté ✓', 'success');
     }
   } catch (e) { console.error('[saveContactExterne]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  // Champs du design V2 : enregistrés dans un second temps, avec dégradation
+  // douce si migration-contacts-externes.sql n'a pas encore été exécuté.
+  if (typeof ce2AfterSave === 'function') await ce2AfterSave(savedId);
   if (typeof auditLog === 'function') auditLog('contact_externe_save', `${prenom} ${nom}`);
   closeModal('modalContactExterne');
   renderContactsExternes();
@@ -163,5 +179,11 @@ function seedDemoContactsExternes() {
   toast('Ajout de contacts de démo désactivé (base de production)', 'info');
 }
 
-document.addEventListener('DOMContentLoaded', async () => { await loadContactsExternesCache(); renderContactsExternes(); });
-if (typeof registerPageInit === 'function') registerPageInit('contacts-externes', async () => { await loadContactsExternesCache(); renderContactsExternes(); });
+async function loadContactsExternesPage() {
+  await loadContactsExternesCache();
+  if (typeof ce2Load === 'function') await ce2Load();
+  renderContactsExternes();
+}
+
+document.addEventListener('DOMContentLoaded', loadContactsExternesPage);
+if (typeof registerPageInit === 'function') registerPageInit('contacts-externes', loadContactsExternesPage);

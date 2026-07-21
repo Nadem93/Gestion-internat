@@ -1,0 +1,302 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — Remplaçants & vacataires (contacts extérieurs) · design V2
+   D'après la maquette « Contacts extérieurs (RH) ».
+   Ne redéfinit rien de css/v2.css : uniquement le spécifique de cette page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre du haut ────────────────────────────────────────────────────── */
+.ce2-search {
+  height: 42px; width: 240px; max-width: 100%;
+  border-radius: var(--v2-r-ctrl); padding: 0 14px 0 38px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t2); font: inherit; font-size: 13px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f93b3' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: left 13px center; background-size: 15px;
+}
+body.v2 .ce2-search { border-radius: var(--v2-r-ctrl); }
+.ce2-search::placeholder { color: var(--v2-t7); }
+.ce2-count { font-size: 12px; color: var(--v2-t7); white-space: nowrap; }
+
+/* ── Tuiles de statistiques ───────────────────────────────────────────── */
+.ce2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.ce2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.ce2-stat-i {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--sc) 13%, transparent); color: var(--sc);
+}
+.ce2-stat-i svg { width: 21px; height: 21px; }
+.ce2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--sc); }
+.ce2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+@media (max-width: 980px) { .ce2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .ce2-stats { grid-template-columns: 1fr; } }
+
+/* ── Bandeau « besoins à couvrir » ────────────────────────────────────── */
+.ce2-besoins {
+  background: linear-gradient(135deg, rgba(239,68,68,.13), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(239,68,68,.22); border-radius: var(--v2-r-kpi); padding: 16px 20px;
+}
+.ce2-besoins-h { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; flex-wrap: wrap; }
+.ce2-besoins-h svg { width: 15px; height: 15px; color: var(--v2-danger-text); flex-shrink: 0; }
+.ce2-besoins-t { font-size: 13px; font-weight: 700; color: #fecaca; }
+.ce2-besoins-g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 1000px) { .ce2-besoins-g { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px)  { .ce2-besoins-g { grid-template-columns: 1fr; } }
+.ce2-besoin {
+  display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-ctrl); padding: 11px 14px; font: inherit; cursor: pointer;
+}
+.ce2-besoin:hover { background: rgba(10,23,40,.62); border-color: rgba(255,255,255,.14); }
+.ce2-besoin.on { border-color: color-mix(in srgb, var(--bc) 55%, transparent); }
+.ce2-besoin-i {
+  width: 34px; height: 34px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--bc) 13%, transparent); color: var(--bc);
+}
+.ce2-besoin-i svg { width: 16px; height: 16px; }
+.ce2-besoin-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.ce2-besoin-m { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.ce2-besoin-u {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+  color: var(--bc); background: color-mix(in srgb, var(--bc) 11%, transparent);
+}
+.ce2-besoin-add {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px dashed rgba(255,255,255,.14); border-radius: var(--v2-r-ctrl);
+  padding: 11px 14px; font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--v2-t7); background: none; cursor: pointer; width: 100%;
+}
+.ce2-besoin-add:hover { border-color: rgba(255,255,255,.28); color: var(--v2-t3); }
+.ce2-besoin-add svg { width: 14px; height: 14px; }
+
+/* ── Grille du vivier ─────────────────────────────────────────────────── */
+.ce2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 1180px) { .ce2-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 720px)  { .ce2-grid { grid-template-columns: 1fr; } }
+
+.ce2-card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-left: 4px solid var(--stc, #8095b4);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; flex-direction: column;
+}
+.ce2-card-h { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.ce2-av {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: var(--v2-bg); background: var(--ac, #818cf8);
+}
+.ce2-av-sm { width: 32px; height: 32px; font-size: 11px; font-weight: 700; }
+.ce2-av-xs { width: 30px; height: 30px; font-size: 10px; font-weight: 700; }
+.ce2-nom {
+  font-size: 13.5px; font-weight: 700; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ce2-metier { font-size: 11px; color: var(--v2-t6); margin-top: 1px; }
+.ce2-st {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+  color: var(--stc); background: color-mix(in srgb, var(--stc) 11%, transparent);
+}
+.ce2-st .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--stc); }
+
+.ce2-mini { display: flex; gap: 8px; margin-bottom: 11px; }
+.ce2-mini-c {
+  flex: 1; min-width: 0; text-align: center;
+  background: var(--v2-s-sub); border-radius: 9px; padding: 7px 4px;
+}
+.ce2-mini-v { font-size: 12px; font-weight: 700; color: var(--v2-t3); }
+.ce2-mini-v.or { color: var(--v2-warn-icon); }
+.ce2-mini-l { font-size: 9px; color: var(--v2-t6); margin-top: 2px; }
+
+.ce2-lines { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.ce2-line { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--v2-t5); min-width: 0; }
+.ce2-line span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ce2-line svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--v2-t8); }
+.ce2-line.faible { font-size: 11px; color: var(--v2-t6); }
+
+.ce2-cta {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; height: 34px; border-radius: var(--v2-r-chip); margin-top: auto;
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  color: var(--cc, #c6d3e6);
+  background: color-mix(in srgb, var(--cc, #ffffff) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cc, #ffffff) 28%, transparent);
+}
+.ce2-cta:hover { background: color-mix(in srgb, var(--cc, #ffffff) 20%, transparent); }
+.ce2-cta svg { width: 14px; height: 14px; }
+.ce2-icobar { display: flex; gap: 6px; margin-top: 10px; }
+.ce2-ico {
+  flex: 1; height: 30px; border-radius: 9px; cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+body.v2 .ce2-ico { color: var(--v2-t5); }
+.ce2-ico:hover { background: var(--v2-s-hover); color: #fff; }
+.ce2-ico[aria-disabled="true"] { opacity: .35; pointer-events: none; }
+.ce2-ico svg { width: 15px; height: 15px; }
+.ce2-ico.sup:hover { color: var(--v2-danger-text); }
+
+/* ── Deux colonnes de bas de page ─────────────────────────────────────── */
+.ce2-two   { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; }
+.ce2-two-b { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: start; }
+.ce2-two-c { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; align-items: start; }
+/* min-width:0 : sans cela, le tableau de conformité (min-width 460px) élargit
+   sa colonne au-delà de la fenêtre au lieu de défiler dans son propre cadre. */
+.ce2-two > *, .ce2-two-b > *, .ce2-two-c > * { min-width: 0; }
+@media (max-width: 1100px) {
+  .ce2-two, .ce2-two-b, .ce2-two-c { grid-template-columns: 1fr; }
+}
+
+/* ── Missions récentes ────────────────────────────────────────────────── */
+.ce2-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--v2-b-list); }
+.ce2-row:last-child { border-bottom: none; }
+.ce2-row-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.ce2-row-m { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.ce2-tag {
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  color: var(--tc, #8095b4); background: color-mix(in srgb, var(--tc, #8095b4) 11%, transparent);
+}
+
+/* ── Disponibilités de la semaine ─────────────────────────────────────── */
+.ce2-dispo-r { display: flex; align-items: center; gap: 10px; }
+.ce2-dispo-n {
+  width: 76px; flex-shrink: 0; font-size: 11.5px; font-weight: 600; color: var(--v2-t4);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ce2-dispo-j { display: flex; gap: 5px; flex: 1; min-width: 0; }
+.ce2-j {
+  flex: 1; min-width: 0; height: 26px; border-radius: 6px; font: inherit; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; border: none; cursor: default;
+}
+button.ce2-j { cursor: pointer; }
+.ce2-j-dispo   { background: var(--v2-ok);   color: #04160f; }
+.ce2-j-mission { background: var(--v2-warn); color: #1a1200; }
+.ce2-j-indispo { background: rgba(255,255,255,.10); color: var(--v2-t9); }
+.ce2-j-nr      { background: transparent; border: 1px dashed rgba(255,255,255,.13); color: var(--v2-t9); }
+.ce2-lg { display: flex; align-items: center; gap: 14px; margin-top: 6px; font-size: 10px; color: var(--v2-t6); flex-wrap: wrap; }
+.ce2-lg span { display: inline-flex; align-items: center; gap: 5px; }
+.ce2-lg i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+
+/* ── Suggestions (matching) ───────────────────────────────────────────── */
+.ce2-match {
+  background: linear-gradient(135deg, rgba(16,185,129,.13), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(16,185,129,.22); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.ce2-match-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.ce2-match-h svg { width: 15px; height: 15px; color: #34d399; flex-shrink: 0; }
+.ce2-match-t { font-size: 13.5px; font-weight: 700; color: #6ee7b7; }
+.ce2-score { font-family: var(--v2-display); font-size: 12px; font-weight: 800; color: var(--pc, #34d399); }
+.ce2-prop {
+  height: 28px; padding: 0 12px; border-radius: var(--v2-r-badge); border: none; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700;
+  color: #6ee7b7; background: rgba(16,185,129,.16);
+}
+.ce2-prop:hover { background: rgba(16,185,129,.26); }
+.ce2-form { font-size: 10.5px; color: var(--v2-t7); margin-top: 12px; line-height: 1.5; }
+
+/* ── Diffusion ────────────────────────────────────────────────────────── */
+.ce2-diff-btns { display: flex; gap: 8px; }
+.ce2-diff-b {
+  flex: 1; height: 36px; border-radius: var(--v2-r-chip); cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 11.5px; font-weight: 700;
+  color: var(--dc); background: color-mix(in srgb, var(--dc) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dc) 32%, transparent);
+}
+.ce2-diff-b:hover { background: color-mix(in srgb, var(--dc) 24%, transparent); }
+.ce2-diff-b svg { width: 13px; height: 13px; }
+.ce2-diff-r { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--v2-b-list); }
+.ce2-diff-r:last-child { border-bottom: none; }
+.ce2-diff-i { color: var(--rc); display: inline-flex; flex-shrink: 0; }
+.ce2-diff-i svg { width: 14px; height: 14px; }
+.ce2-diff-n { flex: 1; min-width: 0; font-size: 11.5px; color: var(--v2-t4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ce2-diff-rep {
+  font-size: 10.5px; font-weight: 700; color: var(--rc);
+  background: none; border: none; padding: 0; font-family: inherit; cursor: pointer;
+}
+
+/* ── Conformité des pièces ────────────────────────────────────────────── */
+.ce2-tbl-wrap { overflow-x: auto; }
+.ce2-tbl { width: 100%; border-collapse: collapse; min-width: 460px; }
+.ce2-tbl th {
+  padding: 0 0 10px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--v2-t8); text-align: center; background: none; border: none;
+}
+.ce2-tbl th:first-child { text-align: left; }
+.ce2-tbl td {
+  padding: 9px 0; font-size: 12px; color: var(--v2-t3);
+  border-top: 1px solid var(--v2-b-list); border-bottom: none; text-align: center;
+}
+.ce2-tbl td:first-child { text-align: left; }
+.ce2-piece {
+  width: 26px; height: 26px; border-radius: 8px; border: none; background: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--pc); padding: 0;
+}
+.ce2-piece:hover { background: rgba(255,255,255,.07); }
+.ce2-piece svg { width: 15px; height: 15px; }
+.ce2-alerte {
+  display: flex; align-items: center; gap: 6px; margin-top: 12px;
+  font-size: 10.5px; color: var(--v2-warn);
+}
+.ce2-alerte svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* ── Coût des remplacements ───────────────────────────────────────────── */
+.ce2-cout {
+  background: linear-gradient(135deg, rgba(234,88,12,.14), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(234,88,12,.22); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.ce2-cout-t { font-size: 13.5px; font-weight: 700; color: #fdba74; margin-bottom: 6px; }
+.ce2-cout-n { font-family: var(--v2-display); font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+.ce2-cout-s { font-size: 11px; color: var(--v2-t6); margin: 5px 0 16px; }
+.ce2-bars { display: flex; align-items: flex-end; gap: 9px; height: 96px; }
+.ce2-bar-c { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; }
+.ce2-bar { width: 100%; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #fb923c, #ea580c); min-height: 2px; }
+.ce2-bar-l { font-size: 9px; color: var(--v2-t6); }
+
+/* ── Contrat de vacation ──────────────────────────────────────────────── */
+.ce2-act {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-ctrl); padding: 12px 14px; cursor: pointer; font: inherit;
+}
+.ce2-act:hover { border-color: color-mix(in srgb, var(--ac2) 40%, transparent); background: var(--v2-s-sub); }
+.ce2-act-i {
+  width: 34px; height: 34px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; background: linear-gradient(135deg, var(--ac2), color-mix(in srgb, var(--ac2) 55%, #fff));
+}
+.ce2-act-i svg { width: 16px; height: 16px; }
+.ce2-act-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.ce2-act-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.ce2-act-x { width: 15px; height: 15px; flex-shrink: 0; color: var(--v2-t8); }
+
+/* ── Évaluations post-mission ─────────────────────────────────────────── */
+.ce2-ev { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--v2-b-list); }
+.ce2-ev:last-child { border-bottom: none; }
+.ce2-ev-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ce2-ev-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.ce2-ev-s { font-size: 11px; font-weight: 700; color: var(--v2-warn-icon); }
+.ce2-ev-c { font-size: 11px; color: var(--v2-t5); font-style: italic; margin-top: 3px; line-height: 1.5; }
+.ce2-ev-f {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap;
+  color: var(--fc); background: color-mix(in srgb, var(--fc) 11%, transparent);
+}
+
+/* ── Divers ───────────────────────────────────────────────────────────── */
+.ce2-gap { display: flex; flex-direction: column; gap: 10px; }
+.ce2-mt { margin-top: 18px; }
+.ce2-note-rgpd { font-size: 10.5px; color: var(--v2-t8); margin-top: 10px; line-height: 1.5; }
+.ce2-stars { display: flex; gap: 4px; }
+.ce2-star {
+  width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font: inherit; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t8);
+}
+.ce2-star.on { color: var(--v2-warn-icon); border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.12); }

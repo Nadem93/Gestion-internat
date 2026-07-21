@@ -28,6 +28,11 @@ function rcFillPosteSelect(selectEl, currentPoste) {
 }
 
 function renderRecrutement() {
+  // Design V2 : le rendu est délégué à js/recrutement-v2.js. Le rendu hérité
+  // ci-dessous n'est conservé que comme filet de sécurité si ce module n'est
+  // pas chargé.
+  if (typeof rc2Render === 'function') { rc2Render(); return; }
+
   const all = getCandidats();
 
   document.getElementById('rcStats').innerHTML = `

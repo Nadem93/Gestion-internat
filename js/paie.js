@@ -2,6 +2,14 @@ let _fpCache = [];
 let _fpEmployesCache = [];
 let _fpPointagesCache = [];
 
+// Un `let` de premier niveau ne crée PAS de propriété sur window : le module
+// de rendu V2 (js/paie-v2.js) lit ces caches via window, on les y publie.
+function _fpPublish() {
+  window._fpCache = _fpCache;
+  window._fpEmployesCache = _fpEmployesCache;
+  window._fpPointagesCache = _fpPointagesCache;
+}
+
 function getFichesPaie() { return _fpCache; }
 
 // ── Jours fériés français (fixes + mobiles liés à Pâques) ──
@@ -92,34 +100,40 @@ function openPaieMajorationConfig() {
   const c = paieMajoration();
   const old = document.getElementById('modalMajoration'); if (old) old.remove();
   const div = document.createElement('div');
-  div.innerHTML = `<div class="modal-overlay" id="modalMajoration" style="display:flex" onclick="closeModal('modalMajoration')">
-    <div class="modal" style="max-width:460px" onclick="event.stopPropagation()">
-      <div class="modal-header"><span class="modal-title">⚙️ Paramètres de paie (CCN 66)</span><button class="modal-close" onclick="closeModal('modalMajoration')">&times;</button></div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-        <div style="font-size:.78rem;color:var(--muted);background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.55rem .7rem">
+  // Gabarit de modale V2 (.v2-ov / .v2-md) — cf. css/v2.css
+  div.innerHTML = `<div class="v2-ov" id="modalMajoration" onclick="closeModal('modalMajoration')">
+    <div class="v2-md" style="--mc:#f59e0b;max-width:520px" onclick="event.stopPropagation()">
+      <div class="v2-md-h">
+        <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.73.86.3.18.64.28 1 .28H21a2 2 0 0 1 0 4h-.09c-.7 0-1.33.42-1.6 1.06z"/></svg></span>
+        <div><div class="v2-md-t">Paramètres de paie</div><div class="v2-md-s">Majorations CCN 66 &amp; taux de cotisations</div></div>
+        <button type="button" class="v2-md-x" onclick="closeModal('modalMajoration')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="v2-md-b">
+        <div class="v2-note pv-note-info pv-note-sm">
           Saisis les valeurs de <strong>ton dernier avenant salaires CCN 66</strong>. Indemnité = heures × points/heure × valeur du point.
         </div>
-        <div class="section-label">Majoration dimanche / jours fériés</div>
-        <div class="form-row">
-          <div class="form-group"><label>Points/heure — dimanche</label><input type="number" id="majPtsDim" class="form-input" min="0" step="0.01" value="${c.ptsDimanche || ''}"/></div>
-          <div class="form-group"><label>Points/heure — jour férié</label><input type="number" id="majPtsFer" class="form-input" min="0" step="0.01" value="${c.ptsFerie || ''}"/></div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="majPtsDim">Points/heure — dimanche</label><input type="number" id="majPtsDim" class="v2-fld" min="0" step="0.01" value="${c.ptsDimanche || ''}"/></div>
+          <div><label class="v2-fld-l" for="majPtsFer">Points/heure — jour férié</label><input type="number" id="majPtsFer" class="v2-fld" min="0" step="0.01" value="${c.ptsFerie || ''}"/></div>
         </div>
-        <div class="form-group"><label>Valeur du point (€)</label><input type="number" id="majValeur" class="form-input" min="0" step="0.0001" value="${c.valeurPoint || ''}"/></div>
-        <div class="section-label" style="margin-top:.4rem">Net estimé</div>
-        <div class="form-group">
-          <label>Taux de cotisations salariales (%)</label>
-          <input type="number" id="majCotis" class="form-input" min="0" max="100" step="0.1" value="${c.tauxCotisations ?? 22}"/>
-          <span style="font-size:.72rem;color:var(--muted)">≈ 22 % pour un non‑cadre. Déduit du brut pour estimer le net (indicatif — le net officiel reste celui du bulletin).</span>
+        <div><label class="v2-fld-l" for="majValeur">Valeur du point (€)</label><input type="number" id="majValeur" class="v2-fld" min="0" step="0.0001" value="${c.valeurPoint || ''}"/></div>
+        <div>
+          <label class="v2-fld-l" for="majCotis">Taux de cotisations salariales (%)</label>
+          <input type="number" id="majCotis" class="v2-fld" min="0" max="100" step="0.1" value="${c.tauxCotisations ?? 22}"/>
+          <div class="pv-hint">≈ 22 % pour un non‑cadre. Déduit du brut pour estimer le net (indicatif — le net officiel reste celui du bulletin).</div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modalMajoration')">Annuler</button>
-        <button class="btn btn-primary" onclick="savePaieMajoration()">Enregistrer</button>
+      <div class="v2-md-f">
+        <button type="button" class="v2-btn-sec" onclick="closeModal('modalMajoration')">Annuler</button>
+        <button type="button" class="v2-btn-pri" onclick="savePaieMajoration()">Enregistrer</button>
       </div>
     </div>
   </div>`;
   document.body.appendChild(div);
-  requestAnimationFrame(() => document.getElementById('modalMajoration')?.classList.add('open'));
+  // requestAnimationFrame ne se déclenche pas dans un onglet en arrière-plan :
+  // on force le reflow (pour que la transition joue) puis on ouvre tout de suite.
+  void document.getElementById('modalMajoration').offsetWidth;
+  openModal('modalMajoration');
 }
 
 function savePaieMajoration() {
@@ -134,6 +148,8 @@ function savePaieMajoration() {
   if (typeof sbSaveAppConfig === 'function') sbSaveAppConfig('paie_majoration', cfg).catch(e => console.warn('Sync majoration cloud', e));
   closeModal('modalMajoration');
   toast('Taux de majoration enregistrés', 'success');
+  // Le taux de cotisations entre dans le calcul des charges et du net affichés
+  renderPaie();
 }
 
 // Heures contractuelles théoriques du mois (heuresContrat hebdo proratisé sur les jours ouvrés)
@@ -153,7 +169,7 @@ function pieAutofill() {
   const periode = document.getElementById('pieFormPeriode').value;
   const emp = _fpEmployesCache.find(e => String(e.id) === String(employeId));
   const info = document.getElementById('pieAutoInfo');
-  if (!emp) { if (info) info.style.display = 'none'; return; }
+  if (!emp) { if (info) info.hidden = true; return; }
   // Toujours refléter le salarié sélectionné (vide s'il n'a pas de salaire de base)
   document.getElementById('pieBrut').value = emp.salaireBase ? Number(emp.salaireBase).toFixed(2) : '';
   if (info && periode) {
@@ -179,7 +195,7 @@ function pieAutofill() {
     const mai1Line = brk.mai1 > 0
       ? `<br>🔴 <strong>1er mai</strong> : <strong>${brk.mai1.toFixed(1)}h</strong> travaillées ${mai1Indem > 0 ? `→ payé double : <strong style="color:#16a34a">+${mai1Indem.toFixed(2)} €</strong> <span style="color:var(--muted)">(ajouté aux primes)</span>` : `<span style="color:#dc2626">— renseigne le salaire de base pour calculer le doublement</span>`}`
       : '';
-    info.style.display = '';
+    info.hidden = false;
     info.innerHTML = `💶 <strong>Salaire de base</strong> : ${emp.salaireBase ? Number(emp.salaireBase).toFixed(2) + ' €' : '<span style="color:#dc2626">non renseigné sur la fiche</span>'} <span style="color:var(--muted)">(annualisation — salaire fixe)</span>`
       + `<br>⏱ Heures validées ${paieFmtPeriode(periode)} : <strong>${brk.total.toFixed(1)}h</strong> · contractuel ≈ ${contract.toFixed(1)}h · récup : <strong style="color:${rc}">${recup >= 0 ? '+' : ''}${recup.toFixed(1)}h</strong>`
       + majLine + mai1Line;
@@ -190,7 +206,7 @@ function pieAutofill() {
 
 // En-tête interactif : sous-titre « Employé · Période » selon la sélection
 function pieModalSync() {
-  const sub = document.querySelector('#modalFichePaie .mdx-sub');
+  const sub = document.querySelector('#modalFichePaie .v2-md-s, #modalFichePaie .mdx-sub');
   if (!sub) return;
   const empSel = document.getElementById('pieFormEmploye');
   const empNom = (empSel && empSel.value && empSel.selectedIndex >= 0) ? empSel.options[empSel.selectedIndex].text : '';
@@ -234,10 +250,11 @@ async function initPaie() {
     console.error('[initPaie]', e);
     toast('Erreur de chargement', 'error');
   }
-  if (Auth.isAdmin()) {
-    const empSel = document.getElementById('pieFiltreEmploye');
-    if (empSel) empSel.style.display = '';
-  }
+  _fpPublish();
+  // Charge le cycle de paie / les statuts de bulletin (tables migration-paie.sql)
+  window._pvAll = _fpCache;
+  window._pvIsAdmin = Auth.isAdmin();
+  if (window.PaieV2) { try { await PaieV2.boot(); } catch (e) { console.warn('[initPaie] PaieV2.boot', e); } }
   renderPaie();
 }
 
@@ -250,7 +267,7 @@ function openFichePaieModal() {
   ['pieBrut','piePrimes','pieHeuresSup','pieRetenues'].forEach(id => document.getElementById(id).value = '');
   _pieExtracted = {};
   const _rd = document.getElementById('pieFileRead');
-  if (_rd) _rd.style.display = 'none';
+  if (_rd) _rd.hidden = true;
   pieUpdateNet();
   pieAutofill();
   openModal('modalFichePaie');
@@ -331,17 +348,23 @@ function _findLabeledAmount(lines, includeRes, excludeRes, pick) {
   }
   return null;
 }
+// V2 : la note de lecture du PDF suit le gabarit .v2-note (thème sombre).
+// La signature historique (couleurs pastel) est conservée mais seule la teinte
+// de fond sert désormais à choisir la variante.
+const _PIE_NOTE_KIND = { '#f0fdf4': 'v2-note-ok', '#fffbeb': 'v2-note-warn', '#fef2f2': 'v2-note-err', '#eff6ff': 'pv-note-info' };
 function _pieSetRead(note, bg, border, color, html) {
   if (!note) return;
-  note.style.display = 'block';
-  note.style.background = bg; note.style.border = '1px solid ' + border; note.style.color = color;
+  note.hidden = false;
+  note.className = 'v2-note pv-note-sm ' + (_PIE_NOTE_KIND[bg] || 'pv-note-info');
+  note.removeAttribute('style');
+  note.style.marginTop = '10px';
   note.innerHTML = html;
 }
 async function pieReadPdf(input) {
   const note = document.getElementById('pieFileRead');
   _pieExtracted = {};
   const file = input.files && input.files[0];
-  if (!file) { if (note) note.style.display = 'none'; return; }
+  if (!file) { if (note) note.hidden = true; return; }
   const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
   if (!isPdf) { _pieSetRead(note, '#fffbeb', '#fde68a', '#92400e', '📄 Lecture automatique réservée aux PDF — saisis le Brut manuellement.'); return; }
   if (typeof pdfjsLib === 'undefined') { _pieSetRead(note, '#fffbeb', '#fde68a', '#92400e', '⚠️ Lecteur PDF indisponible (connexion ?) — saisis le Brut manuellement.'); return; }
@@ -585,7 +608,16 @@ function renderPaie() {
 
   renderRecapAnnuel(filtered, isAdmin);
 
+  // Rendu délégué au module V2 (js/paie-v2.js) : les appelants historiques
+  // (onchange des filtres, initPaie, actions du formulaire) restent valables.
+  _fpPublish();
+  window._pvAll = list;
+  window._pvFiltered = filtered;
+  window._pvIsAdmin = isAdmin;
+  if (window.PaieV2) { PaieV2.render(); return; }
+
   const el = document.getElementById('pieList');
+  if (!el) return;
   if (!filtered.length) {
     el.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucune fiche de paie trouvée.</p></div>';
     return;

@@ -1,4 +1,14 @@
-const ENTRETIEN_TYPE_LABELS = { annuel: 'Entretien annuel', professionnel: 'Entretien professionnel', suivi: 'Entretien de suivi' };
+// Types d'entretien. « bilan6 » et « retour » sont les deux rendez-vous
+// réglementaires ajoutés avec le design V2 (état récapitulatif à 6 ans,
+// entretien de retour après absence longue — art. L.6315-1).
+const ENTRETIEN_TYPE_LABELS = {
+  annuel: 'Entretien annuel',
+  professionnel: 'Entretien professionnel',
+  suivi: 'Entretien de suivi',
+  bilan6: 'Bilan à 6 ans',
+  retour: 'Entretien de retour'
+};
+window.ENTRETIEN_TYPE_LABELS = ENTRETIEN_TYPE_LABELS;
 const ENTRETIEN_STATUT_STYLES = { planifie: { bg: '#d9770618', c: '#d97706', l: 'Planifié' }, realise: { bg: '#16a34a18', c: '#16a34a', l: 'Réalisé' } };
 
 // ── Grille de compétences ──

@@ -1,0 +1,264 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   ABSENCES & ACCIDENTS DU TRAVAIL — style spécifique V2
+   Complète css/v2.css (jamais modifié). Maquette de référence :
+   « Absences & AT (RH).dc.html ».
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Champs masqués qui restent lus par js/absences.js ───────────────── */
+.abv-hidden {
+  position: absolute !important; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* ── KPI ─────────────────────────────────────────────────────────────── */
+.abv-stats { margin-bottom: 16px; }
+.abv-stats .v2-k-n { font-size: 25px; }
+
+/* ── Alertes réglementaires ──────────────────────────────────────────── */
+.abv-alerts { display: flex; flex-direction: column; gap: 8px; }
+.abv-alerts:not(:empty) { margin-bottom: 16px; }
+.abv-alert {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 11px 14px; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 600; text-align: left;
+  color: var(--v2-t3);
+  background: color-mix(in srgb, var(--ac, #ef4444) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ac, #ef4444) 30%, transparent);
+}
+.abv-alert:hover { background: color-mix(in srgb, var(--ac, #ef4444) 18%, transparent); }
+.abv-alert svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--ac, #ef4444); }
+
+/* ── Barre de filtres ────────────────────────────────────────────────── */
+.abv-filters {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-bottom: 18px;
+}
+.abv-filters .v2-chips { flex: 1; min-width: 0; }
+.abv-sel {
+  height: 34px; padding: 0 34px 0 13px; font: inherit; font-size: 12.5px;
+  font-weight: 600; color: var(--v2-t4); cursor: pointer;
+  background-color: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-chip); max-width: 220px;
+}
+body.v2 .abv-sel { color: var(--v2-t4); }
+.abv-sel option { background: #101d31; color: var(--v2-t2); }
+
+/* ── Grille principale ───────────────────────────────────────────────── */
+.abv-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px; align-items: start;
+}
+.abv-main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.abv-rail { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 1180px) { .abv-grid { grid-template-columns: 1fr; } }
+
+/* ── Tableau des absences ────────────────────────────────────────────── */
+.abv-tblwrap {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: 18px; overflow: hidden;
+}
+.abv-scroll { overflow-x: auto; }
+.abv-tbl { width: 100%; border-collapse: collapse; min-width: 660px; }
+.abv-tbl th {
+  text-align: left; padding: 13px 16px; white-space: nowrap;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--v2-t7);
+  background: rgba(255,255,255,.03); border-bottom: 1px solid var(--v2-b);
+}
+.abv-tbl td { padding: 12px 16px; border-bottom: 1px solid var(--v2-b-list); vertical-align: middle; }
+.abv-tbl tbody tr:last-child td { border-bottom: none; }
+.abv-tbl tbody tr:hover td { background: rgba(255,255,255,.025); }
+.abv-who { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.abv-av {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0a1728;
+}
+.abv-av-sm { width: 30px; height: 30px; font-size: 10px; }
+.abv-av-xs { width: 26px; height: 26px; font-size: 9px; }
+.abv-who-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.abv-type {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  color: var(--tc, #f59e0b);
+  background: color-mix(in srgb, var(--tc, #f59e0b) 12%, transparent);
+}
+.abv-type svg { width: 12px; height: 12px; }
+.abv-per { font-size: 12px; color: var(--v2-t4); white-space: nowrap; }
+.abv-dur { font-size: 12px; color: var(--v2-t6); white-space: nowrap; }
+.abv-just { display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; white-space: nowrap; background: none;
+  border: none; padding: 0; font-family: inherit; }
+.abv-just svg { width: 12px; height: 12px; }
+.abv-just[role="button"] { cursor: pointer; }
+.abv-just[role="button"]:hover { filter: brightness(1.25); }
+.abv-st {
+  font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  white-space: nowrap; color: var(--sc, #f59e0b);
+  background: color-mix(in srgb, var(--sc, #f59e0b) 12%, transparent);
+}
+.abv-acts { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.abv-ico-btn {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.abv-ico-btn:hover { background: var(--v2-s-hover); color: #fff; }
+.abv-ico-btn.del:hover { background: rgba(239,68,68,.16); color: #fca5a5; border-color: rgba(239,68,68,.32); }
+.abv-ico-btn svg { width: 14px; height: 14px; }
+.abv-notes-row td { padding-top: 0; padding-bottom: 12px; font-size: 11.5px; color: var(--v2-t6); }
+.abv-vide { padding: 34px 22px; text-align: center; font-size: 12.5px; color: var(--v2-t7); }
+
+/* ── Cartes teintées ─────────────────────────────────────────────────── */
+.abv-tint-red {
+  background: linear-gradient(135deg, rgba(239,68,68,.13), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(239,68,68,.22); border-radius: 18px; padding: 20px;
+}
+.abv-tint-amber {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(252,211,77,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22); border-radius: 18px; padding: 18px 20px;
+}
+.abv-tint-orange {
+  background: linear-gradient(135deg, rgba(234,88,12,.14), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(234,88,12,.22); border-radius: 18px; padding: 20px;
+}
+.abv-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.abv-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.abv-h-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.abv-h-t.red { color: #fecaca; }
+.abv-h-t.amber { color: #fde68a; }
+.abv-h-t.orange { color: #fdba74; }
+.abv-h-x { margin-left: auto; font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 7px; color: var(--v2-warn-text);
+  background: rgba(245,158,11,.14); }
+
+/* Lignes génériques */
+.abv-line { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); min-width: 0; }
+.abv-line:last-child { border-bottom: none; }
+.abv-line-b { flex: 1; min-width: 0; }
+.abv-line-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; }
+.abv-line-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+.abv-line-tag { font-size: 10.5px; font-weight: 700; flex-shrink: 0;
+  padding: 3px 9px; border-radius: 7px; color: var(--sc, #f59e0b);
+  background: color-mix(in srgb, var(--sc, #f59e0b) 12%, transparent); }
+.abv-line-plain { font-size: 10.5px; font-weight: 700; flex-shrink: 0; color: var(--sc, #f59e0b); }
+.abv-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--sc, #f59e0b); }
+.abv-step-ico { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--sc, #f59e0b); background: color-mix(in srgb, var(--sc, #f59e0b) 14%, transparent); }
+.abv-step-ico svg { width: 14px; height: 14px; }
+
+/* Bouton pleine largeur en pied de carte */
+.abv-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 38px; margin-top: 14px; border-radius: 11px;
+  font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.32); color: #fca5a5;
+}
+.abv-cta:hover { background: rgba(239,68,68,.24); }
+.abv-cta svg { width: 15px; height: 15px; }
+.abv-cta-rose { height: 34px; font-size: 11.5px; margin-top: 12px;
+  background: rgba(225,29,72,.14); border-color: rgba(225,29,72,.3); color: #fda4af; }
+.abv-cta-rose:hover { background: rgba(225,29,72,.22); }
+
+/* ── Rail : taux d'absentéisme ───────────────────────────────────────── */
+.abv-rail-val { margin-left: auto; font-family: var(--v2-display);
+  font-size: 16px; font-weight: 800; color: #f87171; }
+.abv-chart { display: flex; align-items: flex-end; gap: 9px; height: 110px; }
+.abv-chart-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; height: 100%; justify-content: flex-end; }
+.abv-chart-b { width: 100%; border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #f87171, #dc2626); min-height: 2px; }
+.abv-chart-l { font-size: 9px; color: var(--v2-t7); }
+
+/* Rail : par motif */
+.abv-motif + .abv-motif { margin-top: 12px; }
+.abv-motif-h { display: flex; align-items: baseline; margin-bottom: 5px; gap: 10px; }
+.abv-motif-l { font-size: 12px; color: var(--v2-t3); }
+.abv-motif-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+
+/* ── Sections « fonctionnalités » ────────────────────────────────────── */
+.abv-feat2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 18px; align-items: start; }
+.abv-feat3 { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 20px; margin-top: 18px; align-items: start; }
+@media (max-width: 1180px) { .abv-feat2, .abv-feat3 { grid-template-columns: 1fr; } }
+
+.abv-cout-n { font-family: var(--v2-display); font-size: 26px; font-weight: 800;
+  color: #fff; line-height: 1; }
+.abv-cout-s { font-size: 11px; color: var(--v2-t6); margin: 5px 0 16px; }
+.abv-cout-r { display: flex; align-items: center; gap: 10px; }
+.abv-cout-r + .abv-cout-r { margin-top: 11px; }
+.abv-cout-l { flex: 1; font-size: 12px; color: var(--v2-t3); }
+.abv-cout-v { font-family: var(--v2-display); font-size: 12.5px; font-weight: 700; color: var(--sc, #fdba74); }
+.abv-score { font-family: var(--v2-display); font-size: 12px; font-weight: 800;
+  flex-shrink: 0; color: var(--sc, #34d399); }
+.abv-hint { font-size: 10.5px; color: var(--v2-t7); margin: -8px 0 12px; }
+
+/* ── Modale ──────────────────────────────────────────────────────────── */
+.abv-seg { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.abv-seg .v2-seg-o { height: 40px; font-size: 12px; padding: 0 6px; }
+@media (max-width: 560px) { .abv-seg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.abv-opt { color: var(--v2-t8); font-weight: 400; }
+
+.abv-chk {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: 12.5px; font-weight: 500; color: var(--v2-t3);
+  /* style.css met tous les <label> en majuscules : le gabarit V2 les veut
+     en casse normale, comme .v2-fld-l. */
+  text-transform: none; letter-spacing: normal;
+  padding: 11px 14px; border-radius: 11px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+/* Case à cocher redessinée : la case native reste blanche sur fond sombre. */
+body.v2 .abv-chk input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 18px; height: 18px; flex-shrink: 0; margin: 0; padding: 0;
+  cursor: pointer; position: relative;
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid var(--v2-b-ctrl) !important; border-radius: 5px;
+}
+body.v2 .abv-chk input[type="checkbox"]:checked {
+  background: var(--mc, #f59e0b) !important;
+  border-color: var(--mc, #f59e0b) !important;
+}
+body.v2 .abv-chk input[type="checkbox"]:checked::after {
+  content: ''; position: absolute; left: 5px; top: 1px;
+  width: 5px; height: 10px; border: solid #0a1728;
+  border-width: 0 2.4px 2.4px 0; transform: rotate(43deg);
+}
+body.v2 .abv-chk input[type="checkbox"]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mc, #f59e0b) 60%, transparent); outline-offset: 2px;
+}
+.abv-chk-danger { background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.28); }
+.abv-chk-danger b { color: #fca5a5; font-weight: 700; text-transform: none; }
+.abv-visite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.abv-visite .v2-fld { flex: 1; min-width: 150px; }
+.abv-visite .abv-chk { flex-shrink: 0; height: 44px; }
+
+.abv-up {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  padding: 14px; border-radius: 11px;
+  text-transform: none; letter-spacing: normal; font-weight: 400;
+  background: rgba(255,255,255,.04); border: 1px dashed rgba(255,255,255,.15);
+}
+.abv-up:hover { background: rgba(255,255,255,.07); }
+.abv-up svg { width: 20px; height: 20px; flex-shrink: 0; }
+.abv-up-t { flex: 1; min-width: 0; font-size: 12px; color: var(--v2-t4);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.abv-up-a { font-size: 11px; font-weight: 700; color: #67e8f9; flex-shrink: 0; }
+body.v2 .abv-up input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.abv-just-info { font-size: 11.5px; color: var(--v2-t6); margin-top: 7px; }
+.abv-just-info a { color: var(--v2-indigo-pale); text-decoration: underline; }
+
+.abv-del { flex: .8 !important; color: #fca5a5 !important;
+  background: rgba(239,68,68,.10) !important; border-color: rgba(239,68,68,.26) !important; }
+.abv-del:hover { background: rgba(239,68,68,.2) !important; color: #fff !important; }
+
+@media (max-width: 700px) {
+  .abv-filters .v2-chips { width: 100%; }
+  .abv-sel { max-width: none; width: 100%; }
+  .v2-md-f { flex-wrap: wrap; }
+}

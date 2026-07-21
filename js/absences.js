@@ -25,114 +25,11 @@ function abDureeJours(a) {
 function abEnCours(a) { return !a.fin || a.fin >= today(); }
 
 // ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/absences-v2.js (design V2). Cette fonction ne
+// fait plus que déléguer ; elle reste exposée pour les appels historiques.
 function renderAbsences() {
-  const all = getAbsences();
-  const fEmp  = document.getElementById('abFilterEmploye')?.value || '';
-  const fType = document.getElementById('abFilterType')?.value || '';
-
-  let list = all;
-  if (fEmp)  list = list.filter(a => String(a.employeId) === fEmp);
-  if (fType) list = list.filter(a => a.type === fType);
-  list = [...list].sort((a,b) => (b.debut||'').localeCompare(a.debut||''));
-
-  const monthPrefix = today().slice(0,7);
-  const joursMois = all.reduce((s,a) => {
-    const d0 = a.debut, d1 = a.fin || today();
-    if (d0.slice(0,7) > monthPrefix || d1.slice(0,7) < monthPrefix) return s;
-    return s + abDureeJours(a);
-  }, 0);
-  const enCours = all.filter(abEnCours);
-  const ats = all.filter(a => a.type === 'at');
-  // Visite de reprise obligatoire : arrêt terminé, non effectuée, et (visite déjà prévue OU ≥30 jours OU maladie pro)
-  const visitesAFaire = all.filter(a => !abEnCours(a) && !a.visiteFaite && (a.visiteDate || abDureeJours(a) >= 30 || a.type === 'maladie_pro'));
-  // Accidents du travail non encore déclarés à la CPAM (délai légal : 48 h)
-  const atsADeclarer = all.filter(a => a.type === 'at' && !a.declareeCpam);
-
-  document.getElementById('abStats').innerHTML = `
-    <div class="chx-stat" style="--c:#e85d04"><div class="chx-stat-top"><span class="chx-stat-lbl">Arrêts en cours</span></div><div class="chx-stat-num">${enCours.length}</div></div>
-    <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">AT à déclarer (CPAM)</span></div><div class="chx-stat-num">${atsADeclarer.length}</div></div>
-    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Jours d'absence (mois)</span></div><div class="chx-stat-num">${joursMois}</div></div>
-    <div class="chx-stat" style="--c:#8b5cf6"><div class="chx-stat-top"><span class="chx-stat-lbl">Visites reprise à faire</span></div><div class="chx-stat-num">${visitesAFaire.length}</div></div>`;
-
-  const alertsEl = document.getElementById('abAlerts');
-  const alerts = [];
-  atsADeclarer.forEach(a => {
-    const heures = Math.floor((Date.now() - new Date(a.debut + 'T00:00:00')) / 3600000);
-    const reste = 48 - heures;
-    const txt = reste > 0
-      ? `Déclaration CPAM sous 48 h pour l'AT de ${escHtml(abEmployeNom(a.employeId))} — reste ${reste} h`
-      : `Déclaration CPAM en retard pour l'AT de ${escHtml(abEmployeNom(a.employeId))}`;
-    alerts.push({ id: a.id, icon: '⚠️', color: '#dc2626', txt });
-  });
-  visitesAFaire.forEach(a => alerts.push({
-    id: a.id, icon: '🩺', color: '#8b5cf6',
-    txt: `Visite de reprise à planifier/faire pour ${escHtml(abEmployeNom(a.employeId))}${a.fin ? ' (retour le ' + formatDate(a.fin) + ')' : ''}`
-  }));
-  alertsEl.innerHTML = alerts.map(al => `
-    <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;background:${al.color}10;border:1px solid ${al.color}33;border-radius:10px;margin-bottom:.5rem;cursor:pointer" onclick="openAbsenceModal('${al.id}')">
-      <span style="font-size:1rem">${al.icon}</span><span style="font-size:.82rem;font-weight:600;color:${al.color}">${al.txt}</span>
-    </div>`).join('');
-
-  const el = document.getElementById('abList');
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">🩺</div><h3>Aucune absence enregistrée</h3><p>Déclarez un arrêt maladie ou un accident du travail.</p></div>`;
-    return;
-  }
-
-  el.innerHTML = `<div class="abx-grid">${list.map(abRow).join('')}</div>`;
-}
-
-function abRow(a) {
-  const t = AB_TYPES[a.type] || AB_TYPES.maladie;
-  const enCours = abEnCours(a);
-  const duree = abDureeJours(a);
-  const nom = escHtml(abEmployeNom(a.employeId));
-  const canEdit = abIsCanEdit();
-  const cpamLate = a.type === 'at' && !a.declareeCpam;
-
-  const pills = [];
-  pills.push(a.justifie
-    ? `<span class="abx-pill abx-pill-ok">✓ Justifié</span>`
-    : `<span class="abx-pill abx-pill-warn">À justifier</span>`);
-  if (a.prolongation) pills.push(`<span class="abx-pill">↻ Prolongation</span>`);
-  if (cpamLate)       pills.push(`<span class="abx-pill abx-pill-danger">⚠️ CPAM 48 h</span>`);
-
-  return `<article class="abx-card" style="--type:${t.color}">
-    <span class="abx-watermark">${t.icon}</span>
-    <header class="abx-head">
-      <div class="abx-badge">${t.icon}</div>
-      <div class="abx-head-text">
-        <div class="abx-name">${nom}</div>
-        <div class="abx-type">${t.label}</div>
-      </div>
-      <span class="abx-state ${enCours ? 'abx-state-encours' : 'abx-state-fini'}">${enCours ? 'En cours' : 'Terminé'}</span>
-    </header>
-
-    <div class="abx-duration">
-      <div class="abx-days"><span class="abx-days-num">${duree}</span><span class="abx-days-lbl">jour${duree > 1 ? 's' : ''}</span></div>
-      <div class="abx-tl">
-        <div class="abx-tl-track">
-          <span class="abx-tl-dot"></span>
-          <span class="abx-tl-line ${enCours ? 'encours' : ''}"></span>
-          <span class="abx-tl-dot end ${enCours ? 'encours' : ''}"></span>
-        </div>
-        <div class="abx-tl-dates"><span>${formatDate(a.debut)}</span><span>${a.fin ? formatDate(a.fin) : 'en cours'}</span></div>
-      </div>
-    </div>
-
-    <div class="abx-pills">${pills.join('')}</div>
-
-    ${a.visiteDate ? `<div class="abx-info abx-info-visite ${a.visiteFaite ? 'done' : ''}">🩺 Visite de reprise ${formatDate(a.visiteDate)} — ${a.visiteFaite ? 'effectuée' : 'à faire'}</div>` : ''}
-    ${a.justificatifPath ? `<div class="abx-info abx-info-piece" onclick="abOpenJustificatif('${a.id}')" title="Ouvrir la pièce jointe">📎 Justificatif joint<span class="u">voir</span></div>` : `<div class="abx-info" style="background:var(--g100);color:var(--muted)">📎 Aucun justificatif</div>`}
-    ${a.notes ? `<div class="abx-notes">${escHtml(a.notes)}</div>` : ''}
-
-    ${canEdit ? `<footer class="abx-foot">
-      <button class="abx-btn abx-btn-just ${a.justifie ? 'on' : ''}" onclick="abMarkJustifie('${a.id}',${a.justifie ? 'false' : 'true'})" title="${a.justifie ? 'Justifié — cliquer pour annuler' : 'Marquer comme justifié'}">${a.justifie ? '✓ Justifié' : 'Justifier'}</button>
-      <span class="abx-spacer"></span>
-      <button class="abx-btn abx-icbtn" onclick="openAbsenceModal('${a.id}')" title="Modifier">✎</button>
-      <button class="abx-btn abx-icbtn del" onclick="quickDeleteAbsence('${a.id}')" title="Supprimer">✕</button>
-    </footer>` : ''}
-  </article>`;
+  if (window.ABV && typeof window.ABV.render === 'function') { window.ABV.render(); return; }
+  console.warn('[absences] module de rendu V2 absent (js/absences-v2.js)');
 }
 
 // ── MODAL ──
@@ -174,8 +71,8 @@ function _abToggleDeclareeWrap() {
 
 // En-tête interactif : recolore selon le type d'arrêt + sous-titre « Type · Employé »
 function abModalSync() {
-  const modalEl = document.querySelector('#modalAbsence .modal');
-  const sub = document.querySelector('#modalAbsence .mdx-sub');
+  const modalEl = document.querySelector('#modalAbsence .v2-md');
+  const sub = document.getElementById('abModalSub');
   if (!modalEl || !sub) return;
   const t = AB_TYPES[document.getElementById('abType')?.value] || AB_TYPES.maladie;
   modalEl.style.setProperty('--mc', t.color);
@@ -212,9 +109,12 @@ async function saveAbsence() {
 
   try {
     if (file) {
-      const emp = _abEmployesCache.find(e => String(e.id) === String(employeId));
-      const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
-      data.justificatifPath = await sbUploadJustificatif(file, folder);
+      // RLS du bucket « justificatifs » : le 1er segment du chemin DOIT être
+      // auth.uid() (l'uploadeur), jamais le profil de l'employé ni l'id legacy
+      // de la session localStorage.
+      const uid = await sbAuthUid();
+      if (!uid) { toast('Session Supabase expirée — reconnectez-vous', 'error'); return; }
+      data.justificatifPath = await sbUploadJustificatif(file, uid);
     }
     const saved = await sbSaveAbsence(data);
     if (abEditId) {

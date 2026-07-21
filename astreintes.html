@@ -4,120 +4,234 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Astreintes — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-.ast-layout{display:flex;flex-direction:column;gap:1.25rem}
-.ast-nav{display:flex;align-items:center;gap:.6rem;background:#fff;border:1px solid var(--border);border-radius:10px;padding:.55rem .9rem;margin-bottom:1rem}
-.ast-nav button{background:none;border:1px solid var(--border);border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;color:var(--text)}
-.ast-nav button:hover{background:var(--g50)}
-#astWeekLabel{flex:1;text-align:center;font-size:.85rem;font-weight:700;color:var(--text)}
-.ast-today-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem}
-.ast-today-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.65rem}
-@media(max-width:700px){#astGrid{overflow-x:auto}}
-</style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-astreintes.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">📞 Astreintes</div>
-    </div>
-    <div class="header-right">
-      <button class="btn btn-accent btn-sm" onclick="openAstModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nouvelle astreinte
-      </button>
-    </div>
-  </header>
+  <div class="v2-shell" style="--v2-halo:rgba(124,58,237,.20)">
 
-  <main class="content" style="max-width:1400px">
-    <div class="ast-layout">
+    <!-- ══ BARRE DU HAUT ══════════════════════════════════════════════ -->
+    <div class="v2-top">
+      <a class="v2-logo" href="rh.html" title="Ressources humaines" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · RH</div>
+        <div class="v2-top-title">Astreintes</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="as2-nav">
+          <button type="button" id="astPrev" title="Mois précédent" aria-label="Mois précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="as2-nav-l" id="astWeekLabel">—</span>
+          <button type="button" id="astNext" title="Mois suivant" aria-label="Mois suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        <button type="button" class="v2-btn v2-btn-sm" id="astToday">Ce mois-ci</button>
+        <button type="button" class="v2-btn v2-btn-primary" onclick="openAstModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Planifier une astreinte
+        </button>
+      </div>
+    </div>
 
-      <!-- Garde du jour -->
-      <div class="ast-today-box">
-        <div class="ast-today-title">🔔 Astreintes aujourd'hui</div>
-        <div id="astTodayGuard" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+    <!-- ══ CORPS ═════════════════════════════════════════════════════ -->
+    <div class="v2-body">
+    <main class="content">
+
+      <!-- D'astreinte maintenant -->
+      <div id="astTodayGuard" style="margin-bottom:16px"></div>
+
+      <!-- Statistiques -->
+      <div class="as2-stats" id="astStats" style="margin-bottom:16px"></div>
+
+      <!-- Roulement + interventions récentes / rail -->
+      <div class="as2-body">
+        <div class="as2-main">
+          <div id="astGrid"></div>
+          <div class="as2-interv" id="astInterv"></div>
+        </div>
+        <div class="as2-rail">
+          <div class="v2-blk" id="astEquite"></div>
+          <div class="as2-ind" id="astIndem"></div>
+          <div class="v2-blk" id="astProchaines"></div>
+        </div>
+      </div>
+
+      <!-- Registre des interventions -->
+      <div id="astRegistre" style="margin-top:18px"></div>
+
+      <!-- Barème + cascade de contacts -->
+      <div class="as2-two" style="margin-top:18px">
+        <div class="as2-bareme" id="astBareme"></div>
+        <div class="v2-blk" id="astCascade"></div>
+      </div>
+
+      <!-- Lignes de garde + repos compensateur + consignes -->
+      <div class="as2-three" style="margin-top:18px">
+        <div class="v2-blk" id="astLignes"></div>
+        <div class="as2-repos" id="astRepos"></div>
+        <div class="v2-blk" id="astConsignes"></div>
+      </div>
+
+    </main>
+    </div>
+  </div>
+</div></div>
+
+<!-- ══ MODALE — PLANIFIER UNE ASTREINTE ═══════════════════════════════ -->
+<div class="v2-ov" id="modalAst">
+  <div class="v2-md" style="--mc:#a78bfa">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="astModalTitle">Planifier une astreinte</div>
+        <div class="v2-md-s">Cadre, période et ligne de garde</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAst')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+
+      <div>
+        <label class="v2-fld-l">Ligne de garde</label>
+        <input type="hidden" id="astModalType" value="medecin"/>
+        <div class="as2-seg-wrap" id="astTypeSeg"></div>
       </div>
 
       <div>
-        <!-- Navigation semaine -->
-        <div class="ast-nav">
-          <button id="astPrev">‹</button>
-          <span id="astWeekLabel">—</span>
-          <button id="astToday" style="font-size:.65rem;width:auto;padding:0 8px;font-weight:700;color:var(--accent)">Auj.</button>
-          <button id="astNext">›</button>
-        </div>
-
-        <!-- Grille hebdomadaire -->
-        <div id="astGrid" style="overflow-x:auto"></div>
-      </div>
-
-    </div>
-  </main>
-</div></div>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="modalAst">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <h3 id="astModalTitle">Nouvelle astreinte</h3>
-      <button class="modal-close" onclick="closeModal('modalAst')">&times;</button>
-    </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="form-group">
-          <label>Type d'astreinte *</label>
-          <select id="astModalType">
-            <option value="medecin">👨‍⚕️ Médecin de garde</option>
-            <option value="infirmier">🩺 Infirmier(e) d'astreinte</option>
-            <option value="cadre">👤 Cadre de permanence</option>
-            <option value="technique">🔧 Astreinte technique</option>
-            <option value="direction">🏛️ Direction</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Date *</label>
-          <input type="date" id="astModalDate"/>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Personnel de la liste</label>
-        <select id="astModalEmploye">
+        <label class="v2-fld-l" for="astModalEmploye">Cadre d'astreinte</label>
+        <select id="astModalEmploye" class="v2-fld">
           <option value="">— Saisir manuellement —</option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label>Nom et prénom *</label>
-        <input type="text" id="astModalNom" placeholder="Prénom Nom"/>
+      <div>
+        <label class="v2-fld-l" for="astModalNom">Nom et prénom *</label>
+        <input type="text" id="astModalNom" class="v2-fld" placeholder="Prénom Nom"/>
       </div>
 
-      <div class="form-group">
-        <label>Numéro de téléphone</label>
-        <input type="tel" id="astModalTel" placeholder="06 00 00 00 00"/>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="astModalDate">Du *</label>
+          <input type="date" id="astModalDate" class="v2-fld"/>
+        </div>
+        <div id="astModalFinBox">
+          <label class="v2-fld-l" for="astModalDateFin">Au (inclus)</label>
+          <input type="date" id="astModalDateFin" class="v2-fld"/>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Note / consigne</label>
-        <textarea id="astModalNote" rows="2" placeholder="Informations complémentaires…" style="resize:vertical"></textarea>
+      <div>
+        <label class="v2-fld-l" for="astModalTel">Numéro d'astreinte</label>
+        <input type="tel" id="astModalTel" class="v2-fld" placeholder="06 00 00 00 00"/>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="astModalNote">Note / consigne</label>
+        <textarea id="astModalNote" class="v2-fld" rows="2" placeholder="Informations complémentaires…"></textarea>
+      </div>
+
+      <div class="v2-note v2-note-ok" id="astModalHint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Une ligne d'astreinte est créée par jour de la période, pour alimenter le roulement et le calcul des indemnités.</span>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" style="color:#dc2626;margin-right:auto" onclick="deleteAst()">Supprimer</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalAst')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveAstreinte()">Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" id="astDeleteBtn" onclick="deleteAst()" style="display:none;flex:.8;color:#fca5a5">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAst')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveAstreinte()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Planifier l'astreinte
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE — INTERVENTION D'ASTREINTE ══════════════════════════════ -->
+<div class="v2-ov" id="modalAstInterv">
+  <div class="v2-md" style="--mc:#ef4444">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="astIntervTitle">Déclarer une intervention</div>
+        <div class="v2-md-s">Registre des déclenchements d'astreinte</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAstInterv')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="astIntervMotif">Motif *</label>
+        <input type="text" id="astIntervMotif" class="v2-fld" placeholder="Chute résident — nuit"/>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="astIntervDate">Date *</label>
+          <input type="date" id="astIntervDate" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="astIntervCadre">Cadre intervenu</label>
+          <input type="text" id="astIntervCadre" class="v2-fld" placeholder="Prénom Nom"/>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="astIntervAppel">Heure d'appel</label>
+          <input type="time" id="astIntervAppel" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="astIntervFin">Heure de fin</label>
+          <input type="time" id="astIntervFin" class="v2-fld"/>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="astIntervTrajet">Temps de trajet (minutes)</label>
+        <input type="number" id="astIntervTrajet" class="v2-fld" min="0" step="5" placeholder="0"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="astIntervNote">Note</label>
+        <textarea id="astIntervNote" class="v2-fld" rows="2" placeholder="Déroulé, suites données…"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" id="astIntervDelBtn" onclick="deleteAstInterv()" style="display:none;flex:.8;color:#fca5a5">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAstInterv')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveAstInterv()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE — CONSIGNE D'ASTREINTE ══════════════════════════════════ -->
+<div class="v2-ov" id="modalAstConsigne">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="astConsTitle">Consigne d'astreinte</div>
+        <div class="v2-md-s">Fiche réflexe</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAstConsigne')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b"><div class="as2-cons-txt" id="astConsBody"></div></div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAstConsigne')">Fermer</button>
     </div>
   </div>
 </div>
 
 <div id="toast-container" class="toast-container"></div>
+
 <script src="js/app.js"></script>
 <script>
   Auth.requireAuth();
   if (!Auth.isAdmin()) {
-    document.body.innerHTML = '<div style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé aux administrateurs.</p><a href="rh.html" class="btn btn-accent">← RH</a></div>';
+    document.querySelector('.v2-body').innerHTML =
+      '<div class="as2-deny"><h3>Accès réservé</h3><p>Ce module est réservé aux administrateurs.</p>' +
+      '<a href="rh.html" class="v2-btn v2-btn-primary" style="text-decoration:none">← Ressources humaines</a></div>';
+    document.querySelectorAll('.v2-top .as2-nav, .v2-top .v2-btn').forEach(function (n) { n.remove(); });
+    window.__astDenied = true;
   }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -126,5 +240,6 @@
 <script src="js/astreintes-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/astreintes.js"></script>
+<script src="js/astreintes-v2.js"></script>
 </body>
 </html>

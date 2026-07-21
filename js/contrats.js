@@ -312,8 +312,10 @@ async function saveContrat() {
 
   try {
     if (file) {
-      const emp = ctEmployes().find(e => String(e.id) === String(employeId));
-      const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+      // 1er segment du chemin Storage = auth.uid() : la RLS du bucket
+      // « justificatifs » rejette l'id legacy de Auth.getSession().userId.
+      const folder = await sbAuthUid();
+      if (!folder) { toast('Session Supabase expirée — reconnectez-vous', 'error'); return; }
       data.fichierPath = await sbUploadJustificatif(file, folder);
       data.fichierNom = file.name;
     }

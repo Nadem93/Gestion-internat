@@ -1,0 +1,298 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   RESSOURCES HUMAINES — V2 (maquette « RH - refonte (bento) »)
+   Coque à deux colonnes : navigation latérale groupée + panneau principal.
+   Ne dépend que des variables de css/v2.css (jamais modifié ici).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2 .rh-shell {
+  display: flex;
+  height: calc(100vh - 44px);
+  min-height: 620px;
+  background:
+    radial-gradient(1000px 520px at 80% -10%, rgba(79,70,229,.24), transparent 60%),
+    var(--v2-bg);
+}
+
+/* ── Navigation latérale ──────────────────────────────────────────────── */
+.rh-side {
+  width: 256px; flex-shrink: 0;
+  background: var(--v2-s-alt);
+  border-right: 1px solid var(--v2-b);
+  display: flex; flex-direction: column;
+  padding: 20px 14px;
+}
+.rh-side-brand { display: flex; align-items: center; gap: 11px; padding: 6px 6px 18px; }
+.rh-side-logo {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, #4f46e5, #818cf8);
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.rh-side-logo svg { width: 19px; height: 19px; }
+.rh-side-brand-t { font-size: 14px; font-weight: 800; color: #fff; }
+.rh-side-brand-s { font-size: 11px; color: var(--v2-t7); }
+
+.rh-side-nav { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.rh-grp { margin-bottom: 6px; }
+.rh-grp-l {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t9); padding: 12px 10px 6px;
+}
+.rh-it {
+  display: flex; align-items: center; gap: 11px;
+  padding: 8px 10px; border-radius: 10px; cursor: pointer; margin-bottom: 2px;
+  background: transparent; border: none; width: 100%; text-align: left;
+  font-family: inherit; outline: none;
+  transition: background .16s, transform .16s, box-shadow .16s;
+}
+.rh-it:hover { background: rgba(255,255,255,.09); transform: translateX(3px); }
+.rh-it:focus-visible { box-shadow: 0 0 0 2.5px rgba(129,140,248,.6); }
+.rh-it.on { background: var(--v2-s-active); }
+.rh-it-ic {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--rhc, #6366f1); box-shadow: 0 3px 8px var(--rhc-sh, rgba(99,102,241,.33));
+}
+.rh-it-ic svg { width: 15px; height: 15px; }
+.rh-it.on .rh-it-ic { animation: rhNavPulse 1.9s ease-in-out infinite; }
+@keyframes rhNavPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.09) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .rh-it.on .rh-it-ic { animation: none; } }
+.rh-it-l {
+  font-size: 12.5px; font-weight: 500; color: #aebbd0; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.rh-it.on .rh-it-l { font-weight: 700; color: #fff; }
+.rh-it-b {
+  margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; flex-shrink: 0;
+  background: var(--v2-danger); border-radius: 9px; color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.rh-side-user {
+  display: flex; align-items: center; gap: 11px; padding: 10px 8px 4px;
+  border-top: 1px solid var(--v2-b); margin-top: 8px;
+}
+.rh-side-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #818cf8, #22d3ee); color: #0a1728;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}
+.rh-side-nom { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.rh-side-role { font-size: 10.5px; color: var(--v2-t6); }
+
+/* ── Panneau principal ────────────────────────────────────────────────── */
+.rh-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rh-topbar {
+  height: 66px; flex-shrink: 0; border-bottom: 1px solid var(--v2-b);
+  display: flex; align-items: center; gap: 14px; padding: 0 30px;
+}
+.rh-topbar-t { font-size: 17px; font-weight: 700; color: #fff; }
+.rh-topbar-m { margin-left: auto; font-size: 12.5px; color: var(--v2-t7); }
+.rh-back {
+  display: none; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
+  border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.rh-back.on { display: inline-flex; }
+.rh-back:hover { background: var(--v2-s-hover); color: #fff; }
+.rh-back svg { width: 14px; height: 14px; }
+
+.rh-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#rhHome { flex: 1; overflow-y: auto; }
+#rhFrame { flex: 1; width: 100%; border: none; background: var(--v2-inset); }
+
+/* ── En-tête de contenu ───────────────────────────────────────────────── */
+.rh-hello { margin-bottom: 22px; }
+.rh-hello h1 {
+  margin: 0; font-family: var(--v2-display); font-size: 26px; font-weight: 700;
+  letter-spacing: -.02em; color: #fff;
+}
+.rh-hello-s { margin-top: 4px; font-size: 13.5px; color: var(--v2-t7); }
+
+/* ── KPI ──────────────────────────────────────────────────────────────── */
+.rh-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.rh-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.rh-kpi-ic {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.rh-kpi-ic svg { width: 21px; height: 21px; }
+.rh-kpi-n { font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; }
+.rh-kpi-l { font-size: 11.5px; color: var(--v2-t6); margin-top: 4px; }
+
+/* ── Modules RH ───────────────────────────────────────────────────────── */
+.rh-sec {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t9); margin-bottom: 12px;
+}
+.rh-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
+.rh-card {
+  position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-kpi); padding: 16px; cursor: pointer; overflow: hidden;
+  text-align: left; font-family: inherit; outline: none; display: block; width: 100%;
+  transition: transform .15s, box-shadow .3s, border-color .2s;
+}
+.rh-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--rhc, #6366f1) 40%, transparent);
+  box-shadow: 0 14px 30px -14px var(--rhc-sh, rgba(99,102,241,.4));
+}
+.rh-card:focus-visible { box-shadow: 0 0 0 2.5px var(--rhc-sh, rgba(99,102,241,.4)); }
+.rh-card-ic {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--rhc, #6366f1); box-shadow: 0 6px 14px var(--rhc-sh, rgba(99,102,241,.33));
+}
+.rh-card-ic svg { width: 20px; height: 20px; }
+.rh-card-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); margin-top: 12px; }
+.rh-card-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 3px; }
+.rh-card-b {
+  position: absolute; top: 14px; right: 14px;
+  min-width: 19px; height: 19px; padding: 0 5px;
+  background: var(--v2-danger); border-radius: 10px; color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+/* Bouton « à quoi ça sert ? » — ouvre le mode d'emploi du module */
+.rh-card-i {
+  position: absolute; bottom: 12px; right: 12px; width: 24px; height: 24px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t7);
+  font-family: inherit; font-size: 11px; font-weight: 700;
+}
+.rh-card-i:hover { background: var(--v2-s-active); color: #fff; }
+
+/* ── Bento du bas ─────────────────────────────────────────────────────── */
+/* minmax(0,1fr) : sans cela une ligne longue élargit la colonne et la carte
+   déborde de la coque (visible en une seule colonne, sur mobile). */
+.rh-bento { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
+.rh-bento:first-of-type { margin-top: 0; }
+.rh-blk {
+  min-width: 0;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 20px;
+}
+.rh-blk-warn {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(239,68,68,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22);
+}
+.rh-blk-cyan {
+  background: linear-gradient(135deg, rgba(34,211,238,.14), rgba(129,140,248,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(34,211,238,.22);
+}
+.rh-blk-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.rh-blk-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.rh-blk-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.rh-blk-t.warn { color: var(--v2-warn-text); }
+.rh-blk-t.cyan { color: var(--v2-cyan-pale); }
+.rh-blk-v { margin-left: auto; font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: var(--v2-indigo-light); }
+
+.rh-li {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list);
+}
+.rh-li:last-child { border-bottom: none; }
+.rh-li-ic {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.rh-li-ic svg { width: 15px; height: 15px; }
+.rh-li-b { flex: 1; min-width: 0; }
+.rh-li-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rh-li-s { font-size: 10.5px; color: var(--v2-t6);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rh-li-tag {
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  flex-shrink: 0; white-space: nowrap;
+}
+.rh-li-av {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #0a1728;
+}
+.rh-li-d { font-size: 10.5px; font-weight: 700; color: var(--v2-cyan); flex-shrink: 0; }
+.rh-vide { font-size: 12px; color: var(--v2-t7); padding: 6px 0; }
+
+/* Effectif par métier — barres */
+.rh-bars { display: flex; flex-direction: column; gap: 12px; }
+.rh-bar-h { display: flex; align-items: baseline; margin-bottom: 5px; }
+.rh-bar-l { font-size: 12px; color: var(--v2-t3); }
+.rh-bar-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+.rh-bar-r { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.rh-bar-f { height: 100%; border-radius: 4px; }
+
+/* Masse salariale — histogramme */
+.rh-chart { display: flex; align-items: flex-end; gap: 12px; height: 130px; }
+.rh-chart-c {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  height: 100%; justify-content: flex-end;
+}
+.rh-chart-b {
+  width: 100%; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #818cf8, #4f46e5);
+  min-height: 3px;
+}
+.rh-chart-l { font-size: 9.5px; color: var(--v2-t8); }
+
+/* ── Mode d'emploi (modale, gabarit v2-ov/v2-md) ──────────────────────── */
+.rh-tuto-h { font-size: 12.5px; font-weight: 700; color: var(--v2-t3); margin-bottom: 7px;
+  display: flex; align-items: center; gap: 7px; }
+.rh-tuto-p { font-size: 13px; color: var(--v2-t4); line-height: 1.55; }
+.rh-tuto-ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.rh-tuto-ol li { font-size: 12.5px; color: var(--v2-t4); line-height: 1.5; }
+.rh-tuto-ol li::marker { color: var(--mc, #818cf8); font-weight: 800; }
+.rh-tuto-box {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-sm); padding: 12px 14px;
+}
+.rh-tuto-ex {
+  background: var(--v2-s-sub); border-left: 3px solid var(--mc, #818cf8);
+  border-radius: var(--v2-r-badge); padding: 11px 13px;
+  font-size: 12.5px; color: var(--v2-t4); line-height: 1.55;
+}
+.rh-tuto-ex b, .rh-tuto-h b { color: var(--mc, #818cf8); }
+/* L'icône du module est un trait blanc sur fond dégradé coloré */
+.rh-md-ico { color: #fff; }
+.rh-md-ico svg { width: 22px; height: 22px; }
+
+/* ── Écran « accès réservé » ──────────────────────────────────────────── */
+.rh-deny { padding: 60px 30px; text-align: center; }
+.rh-deny h3 { font-family: var(--v2-display); font-size: 22px; color: #fff; margin: 0 0 8px; }
+.rh-deny p { font-size: 13.5px; color: var(--v2-t6); margin: 0 0 20px; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1320px) { .rh-cards { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 1120px) {
+  .rh-cards { grid-template-columns: repeat(3, 1fr); }
+  .rh-bento { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 960px) {
+  body.v2 .rh-shell { flex-direction: column; height: auto; }
+  .rh-side {
+    width: auto; border-right: none; border-bottom: 1px solid var(--v2-b);
+    flex-direction: row; align-items: center; padding: 12px 16px;
+  }
+  .rh-side-brand { padding: 0; flex: 1; min-width: 0; }
+  /* Sur mobile, les 15 tuiles « Modules RH » assurent déjà la navigation :
+     on masque la liste latérale plutôt que d'imposer un écran de liens. */
+  .rh-side-nav { display: none; }
+  /* l'identité connectée reste lisible dans l'appli, pas besoin ici */
+  .rh-side-user { display: none; }
+  .rh-kpis { grid-template-columns: repeat(2, 1fr); }
+  .rh-cards { grid-template-columns: repeat(2, 1fr); }
+  #rhFrame { min-height: 70vh; }
+}
+@media (max-width: 620px) {
+  .rh-cards { grid-template-columns: 1fr; }
+  .rh-kpi { padding: 13px 14px; gap: 11px; }
+  .rh-kpi-ic { width: 38px; height: 38px; border-radius: 11px; }
+  .rh-kpi-n { font-size: 20px; }
+  .rh-topbar { padding-left: 18px; padding-right: 18px; }
+  .rh-topbar-m { display: none; }
+}

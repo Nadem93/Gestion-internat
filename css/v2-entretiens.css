@@ -1,0 +1,223 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — ENTRETIENS PROFESSIONNELS (RH) — design V2
+   D'après la maquette « Entretien pro (RH) ».
+   Ne redéfinit rien de css/v2.css : uniquement le spécifique de cette page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tuiles statistiques (4 colonnes, icône carrée + valeur colorée) ───── */
+.et2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.et2-stat { display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi); }
+.et2-stat-ico { width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8); }
+.et2-stat-ico svg { width: 21px; height: 21px; }
+.et2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800;
+  line-height: 1; color: var(--pc, #fff); }
+.et2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+@media (max-width: 1100px) { .et2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .et2-stats { grid-template-columns: 1fr; } }
+
+/* ── Barre de filtres ─────────────────────────────────────────────────── */
+.et2-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.et2-filters #et2Chips { flex: 0 1 auto; }
+.et2-filters > span { flex: 0 0 auto; }
+.et2-sel { height: 34px; width: auto; min-width: 150px; max-width: 210px; flex: 0 0 auto;
+  padding: 0 34px 0 13px; border-radius: var(--v2-r-chip);
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--v2-t5); cursor: pointer;
+  background-color: var(--v2-s-alt); border: 1px solid var(--v2-b); }
+body.v2 .et2-sel { width: auto; background-color: var(--v2-s-alt);
+  border: 1px solid var(--v2-b); border-radius: var(--v2-r-chip); }
+.et2-sel option { background: #101d31; color: var(--v2-t2); }
+
+/* ── Corps : tableau + rail ───────────────────────────────────────────── */
+.et2-body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.et2-main, .et2-rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.et2-rail { gap: 16px; }
+@media (max-width: 1150px) { .et2-body { grid-template-columns: 1fr; } }
+
+/* ── Tableau des entretiens ───────────────────────────────────────────── */
+.et2-tw { background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden; }
+.et2-tscroll { overflow-x: auto; }
+.et2-tw table { width: 100%; min-width: 720px; border-collapse: collapse; }
+.et2-tw th { text-align: left; padding: 13px 18px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  background: var(--v2-s-alt); border-bottom: 1px solid var(--v2-b); white-space: nowrap; }
+.et2-tw td { padding: 11px 18px; font-size: 12px; color: var(--v2-t4);
+  border-bottom: 1px solid var(--v2-b-table); }
+.et2-tw tbody tr { cursor: pointer; }
+.et2-tw tbody tr:hover { background: rgba(255,255,255,.035); }
+.et2-tw tbody tr.on { background: rgba(219,39,119,.10); }
+.et2-tw tbody tr.on td:first-child { box-shadow: inset 3px 0 0 var(--v2-pink); }
+.et2-tw tbody tr:last-child td { border-bottom: none; }
+.et2-emp { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.et2-av { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0a1728; overflow: hidden; }
+.et2-av img { width: 100%; height: 100%; object-fit: cover; }
+.et2-av-sm { width: 30px; height: 30px; font-size: 10px; }
+.et2-av-xs { width: 28px; height: 28px; font-size: 9px; }
+.et2-emp-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.et2-emp-f { font-size: 10.5px; color: var(--v2-t6); }
+.et2-tag { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent); color: var(--pc, #818cf8); }
+.et2-st { display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+  font-weight: 600; color: var(--pc, #818cf8); white-space: nowrap; }
+.et2-st .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pc, #818cf8); flex-shrink: 0; }
+.et2-acts { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.et2-ib { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5); }
+.et2-ib:hover { background: var(--v2-s-hover); color: #fff; }
+.et2-ib.del:hover { background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35); color: #fca5a5; }
+.et2-ib svg { width: 14px; height: 14px; }
+
+/* ── Cartes teintées ──────────────────────────────────────────────────── */
+.et2-tint { border-radius: var(--v2-r-card2); padding: 20px;
+  background: linear-gradient(135deg, var(--ta, rgba(239,68,68,.12)), transparent 62%), var(--v2-s-alt);
+  border: 1px solid var(--tb, rgba(239,68,68,.2)); }
+.et2-tint-h { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; flex-wrap: wrap; }
+.et2-tint-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.et2-tint-t { font-size: 13.5px; font-weight: 700; }
+.et2-tint-s { font-size: 10.5px; color: var(--v2-t6); margin: -6px 0 12px; }
+
+/* ── Lignes de liste génériques ───────────────────────────────────────── */
+.et2-li { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-soft); }
+.et2-li:last-child { border-bottom: none; }
+.et2-li-b { flex: 1; min-width: 0; }
+.et2-li-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.et2-li-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.et2-li-x { font-size: 12px; color: var(--v2-t3); flex: 1; min-width: 0; }
+.et2-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--pc, #818cf8); }
+.et2-note { font-size: 10.5px; color: var(--v2-danger-text); margin-top: 12px;
+  display: flex; align-items: center; gap: 7px; }
+.et2-note svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* Petit bouton d'ajout en pied de bloc */
+.et2-add { margin-top: 12px; width: 100%; padding: 9px; border-radius: 11px; cursor: pointer;
+  font: inherit; font-size: 11.5px; font-weight: 600; color: var(--v2-t6);
+  background: none; border: 1.5px dashed rgba(255,255,255,.13);
+  display: flex; align-items: center; justify-content: center; gap: 7px; }
+.et2-add:hover { border-color: rgba(255,255,255,.26); color: var(--v2-t3); }
+.et2-add svg { width: 13px; height: 13px; }
+.et2-cta { margin-top: 13px; width: 100%; height: 36px; border-radius: 11px; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: var(--cc, #f9a8d4);
+  background: color-mix(in srgb, var(--cc, #db2777) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cc, #db2777) 34%, transparent); }
+.et2-cta:hover { filter: brightness(1.15); }
+.et2-cta svg { width: 14px; height: 14px; }
+
+/* ── Rail : taux de réalisation ───────────────────────────────────────── */
+.et2-rate-h { display: flex; align-items: center; margin-bottom: 13px; }
+.et2-rate-v { margin-left: auto; font-family: var(--v2-display); font-size: 16px;
+  font-weight: 800; color: var(--v2-pink); }
+
+/* ── Bas de page ──────────────────────────────────────────────────────── */
+.et2-feat1 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 18px; }
+.et2-feat2 { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 20px; margin-top: 18px; }
+@media (max-width: 1150px) { .et2-feat1, .et2-feat2 { grid-template-columns: 1fr; } }
+
+/* Trame : pastille d'état */
+.et2-tr-ico { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 15%, transparent); color: var(--pc, #818cf8); }
+.et2-tr-ico svg { width: 13px; height: 13px; }
+.et2-tr-tag { font-size: 10.5px; font-weight: 700; color: var(--pc, #818cf8); white-space: nowrap; }
+
+/* Objectifs N-1 : atteinte QUALITATIVE — aucune note, aucun pourcentage. */
+.et2-obj { display: flex; align-items: center; gap: 11px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-soft); }
+.et2-obj:last-of-type { border-bottom: none; }
+.et2-obj-l { flex: 1; min-width: 0; font-size: 12px; color: var(--v2-t3); line-height: 1.4; }
+.et2-obj-b { display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  font: inherit; font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  padding: 4px 10px; border-radius: 7px; color: var(--pc, #818cf8);
+  background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pc, #818cf8) 26%, transparent); }
+.et2-obj-b[disabled] { cursor: default; }
+.et2-obj-b:not([disabled]):hover { filter: brightness(1.2); }
+
+/* Campagne */
+.et2-camp-h { display: flex; align-items: center; margin-bottom: 6px; }
+.et2-camp-v { margin-left: auto; font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: #fff; }
+.et2-camp-bar { height: 8px; border-radius: 5px; background: rgba(255,255,255,.08);
+  overflow: hidden; margin-bottom: 13px; }
+.et2-camp-bar > span { display: block; height: 100%; border-radius: 5px;
+  background: linear-gradient(90deg, #22d3ee, #818cf8); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   VUE FORMULAIRE (plein écran) — le contrat DOM de js/entretiens.js est
+   conservé : mêmes ID, mêmes onclick. Seule la peau change.
+   ══════════════════════════════════════════════════════════════════════ */
+#etFormView { display: flex; flex-direction: column; gap: 18px; }
+.et2-form-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 16px 20px; border-radius: var(--v2-r-card2);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mc, #db2777) 13%, transparent), transparent 60%), var(--v2-s-alt);
+  border: 1px solid var(--v2-b); }
+.et2-form-h { min-width: 0; flex: 1; line-height: 1.2; }
+.et2-form-t { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.et2-form-s { font-size: 12px; color: var(--v2-t6); margin-top: 3px; }
+.et2-form-a { display: flex; gap: 9px; flex-wrap: wrap; }
+.et2-form-foot { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+.et2-form-foot .v2-btn-sec, .et2-form-foot .v2-btn-pri { flex: 0 0 auto; padding: 0 20px; }
+@media (max-width: 640px) { .et2-form-a .lbl { display: none; } }
+
+/* Référentiel métier : bandeau d'information */
+.et2-ref { font-size: 12px; font-weight: 600; color: var(--v2-indigo-pale); margin-bottom: 8px; }
+.et2-ref-note { font-size: 11.5px; color: var(--v2-t4); line-height: 1.55;
+  background: rgba(99,102,241,.10); border: 1px solid rgba(99,102,241,.24);
+  border-radius: 11px; padding: 11px 13px; margin-bottom: 14px; }
+.et2-ref-note strong { color: #fff; }
+
+/* ── Grille de positionnement (markup produit par js/entretiens.js) ───── */
+#etGrilleBody .etg-dom { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
+#etGrilleBody .etg-dom:last-child { margin-bottom: 0; }
+#etGrilleBody .etg-domhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 11px 14px; border-bottom: 1px solid var(--v2-b-soft);
+  background: rgba(255,255,255,.03); }
+#etGrilleBody .etg-domtitle { flex: 1; min-width: 160px; font-size: 12.5px; font-weight: 700;
+  color: var(--v2-t2); line-height: 1.35; }
+#etGrilleBody .etg-count { font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  color: var(--v2-indigo-pale); background: rgba(99,102,241,.14);
+  border: 1px solid rgba(99,102,241,.26); border-radius: 999px; padding: 3px 10px; }
+#etGrilleBody .etg-count.done { color: var(--v2-ok-light); background: rgba(16,185,129,.14);
+  border-color: rgba(16,185,129,.28); }
+#etGrilleBody .etg-comp { padding: 12px 14px; border-bottom: 1px solid var(--v2-b-list); }
+#etGrilleBody .etg-comp:last-child { border-bottom: 0; }
+/* style.css met tous les <label> en majuscules : la trame doit rester lisible
+   en casse normale (ce sont des phrases entières du référentiel métier). */
+#etGrilleBody .etg-lbl { display: block; font-size: 12.5px; line-height: 1.55;
+  color: var(--v2-t4); margin: 0 0 9px;
+  text-transform: none; letter-spacing: normal; font-weight: 500; }
+#etGrilleBody .etg-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+#etGrilleBody .etg-pill { cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 600;
+  line-height: 1; display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 12px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--pc) 45%, transparent);
+  background: color-mix(in srgb, var(--pc) 10%, transparent);
+  color: color-mix(in srgb, var(--pc) 72%, #fff);
+  transition: background .12s, color .12s, border-color .12s; }
+#etGrilleBody .etg-pill .etg-dot { width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--pc); flex-shrink: 0; }
+#etGrilleBody .etg-pill:hover { background: color-mix(in srgb, var(--pc) 22%, transparent); }
+#etGrilleBody .etg-pill.on { background: var(--pc); color: #06111f; border-color: var(--pc); }
+#etGrilleBody .etg-pill.on .etg-dot { background: #06111f; }
+#etGrilleBody .etg-pill:focus-visible { outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 40%, transparent); }
+
+@media print {
+  #etGrilleBody .etg-pill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #etGrilleBody .etg-pill:not(.on) { opacity: .35; }
+  #etGrilleBody .etg-dom { break-inside: avoid; }
+}
+
+/* ── Modale de la page : listes éditables (v2-ov / v2-md du gabarit) ──── */
+.et2-md-list { display: flex; flex-direction: column; }
+.et2-md-vide { font-size: 12px; color: var(--v2-t7); padding: 6px 0; }
