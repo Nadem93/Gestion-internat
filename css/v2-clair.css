@@ -259,6 +259,29 @@ html.clair body.v2 {
   --accent-h: #4338ca;
 }
 
+/* ── Boutons violets → bleu clair (THÈME CLAIR UNIQUEMENT) ─────────────────
+   Sur fond clair, le dégradé indigo→violet des boutons d'action (.btn-accent
+   = #6366f1→#a855f7, .v2-btn-pri = indigo) est trop saturé et jure avec la
+   palette. On les repasse à un bleu franc, plus calme et lisible (texte blanc
+   conservé). Le thème sombre garde son violet : ces règles sont sous
+   html.clair, donc sans effet en sombre. */
+html.clair body.v2 .btn-accent,
+html.clair body.v2 .v2-btn-pri,
+html.clair body.v2 .v2-btn-primary,
+html.clair body.v2 .v2-al-cta {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, .28);
+  /* `body.v2 .btn` (0-2-0) impose var(--v2-t4) — clair en sombre, mais SOMBRE
+     en thème clair : sur un bouton bleu, le texte doit rester blanc. */
+  color: #fff;
+}
+html.clair body.v2 .btn-accent:hover,
+html.clair body.v2 .v2-btn-pri:hover,
+html.clair body.v2 .v2-btn-primary:hover,
+html.clair body.v2 .v2-al-cta:hover {
+  box-shadow: 0 4px 16px rgba(37, 99, 235, .34);
+}
+
 html.clair body.v2 .header { background: rgba(255,255,255,.72) !important; }
 html.clair body.v2 .card-glass,
 html.clair body.v2 .wizard-card,
