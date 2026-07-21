@@ -6,27 +6,38 @@
 // messages-supabase.js, journal-supabase.js, ppe-supabase.js, incidents-supabase.js,
 // interventions-supabase.js, echeances-supabase.js, et app.js (Auth/toast).
 (function () {
+  // Stylée via les jetons v2 : la cloche suit le thème (sombre par défaut,
+  // clair via html.clair) au lieu des couleurs claires codées en dur d'avant.
+  // Le rouge du compteur reste fixe : c'est une couleur sémantique, lisible
+  // sur les deux fonds.
   const CSS = `
-  .nb-bell{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid rgba(15,23,42,.12);background:transparent;color:#334155;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
-  .nb-bell:hover{background:rgba(255,255,255,.45);color:#0f172a}
-  .nb-bell svg{width:21px;height:21px}
+  .nb-bell{position:relative;width:42px;height:42px;border-radius:12px;flex-shrink:0;
+    border:1px solid var(--v2-b-ctrl,rgba(255,255,255,.08));background:var(--v2-s-ctrl,rgba(255,255,255,.05));
+    color:var(--v2-t4,#c6d3e6);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
+  .nb-bell:hover{background:var(--v2-s-hover,rgba(255,255,255,.1));color:var(--v2-t1,#fff)}
+  .nb-bell svg{width:20px;height:20px}
   .nb-count{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
   .nb-count.hidden{display:none}
-  .nb-panel{position:absolute;top:52px;right:0;width:330px;max-width:92vw;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 12px 34px rgba(15,23,42,.16);overflow:hidden;z-index:200;display:none}
+  /* Fond OPAQUE (comme les modales v2) : --v2-s-card est un voile translucide,
+     le contenu de la page transparaîtrait à travers le panneau. */
+  .nb-panel{position:absolute;top:52px;right:0;width:330px;max-width:92vw;
+    background:#101d31;border:1px solid var(--v2-b-ctrl,rgba(255,255,255,.08));border-radius:14px;
+    box-shadow:0 20px 44px -18px rgba(0,0,0,.6);overflow:hidden;z-index:200;display:none}
+  html.clair .nb-panel{background:#fff;box-shadow:0 20px 44px -20px rgba(15,38,70,.35)}
   .nb-panel.open{display:block}
-  .nb-head{padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
-  .nb-head strong{font-size:.9rem;color:#0f172a}
-  .nb-head span{font-size:.75rem;color:#94a3b8}
-  .nb-row{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .12s}
-  .nb-row:hover{background:#f8fafc}
+  .nb-head{padding:.7rem .9rem;border-bottom:1px solid var(--v2-b,rgba(255,255,255,.07));display:flex;align-items:center;justify-content:space-between}
+  .nb-head strong{font-size:.9rem;color:var(--v2-t2,#eef3fb)}
+  .nb-head span{font-size:.75rem;color:var(--v2-t7,#7f93b3)}
+  .nb-row{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;border-bottom:1px solid var(--v2-b-list,rgba(255,255,255,.05));cursor:pointer;transition:background .12s}
+  .nb-row:hover{background:var(--v2-s-hover,rgba(255,255,255,.06))}
   .nb-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .nb-ic svg{width:18px;height:18px}
-  .nb-row .l1{font-size:.84rem;font-weight:600;color:#0f172a}
-  .nb-row .l2{font-size:.72rem;color:#64748b}
-  .nb-empty{padding:1.6rem .9rem;text-align:center;color:#94a3b8;font-size:.82rem}
-  .nb-foot{padding:.6rem;text-align:center;border-top:1px solid #f1f5f9}
-  .nb-foot button{background:none;border:none;color:#4f46e5;font-size:.78rem;font-weight:600;cursor:pointer;padding:.3rem .6rem;border-radius:7px}
-  .nb-foot button:hover{background:#eef2ff}`;
+  .nb-row .l1{font-size:.84rem;font-weight:600;color:var(--v2-t2,#eef3fb)}
+  .nb-row .l2{font-size:.72rem;color:var(--v2-t7,#7f93b3)}
+  .nb-empty{padding:1.6rem .9rem;text-align:center;color:var(--v2-t7,#7f93b3);font-size:.82rem}
+  .nb-foot{padding:.6rem;text-align:center;border-top:1px solid var(--v2-b,rgba(255,255,255,.07))}
+  .nb-foot button{background:none;border:none;color:var(--v2-indigo-light,#818cf8);font-size:.78rem;font-weight:600;cursor:pointer;padding:.3rem .6rem;border-radius:7px}
+  .nb-foot button:hover{background:var(--v2-s-hover,rgba(255,255,255,.06))}`;
 
   const DEFS = [
     { key:'messages',      l1:'Messages',        l2:'non lus',    c:'#3b82f6', svg:'<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/>', go:'messages.html' },
@@ -73,9 +84,16 @@
     const s = Auth.getSession(); if (!s) return;
     const uid = String(s.userId), me = [s.prenom, s.nom].filter(Boolean).join(' ');
     const todayStr = new Date().toISOString().slice(0, 10);
+    // Toutes les pages ne chargent pas tous les *-supabase.js : chaque source
+    // manquante retombe sur une valeur neutre au lieu de faire planter la
+    // cloche. Les pages « riches » (transmissions, dossiers…) chargent
+    // l'ensemble et affichent donc le compte complet.
+    const opt = (fn, vide) => (typeof window[fn] === 'function' ? window[fn]() : Promise.resolve(vide))
+      .catch(() => vide);
     try {
       const [msgs, convs, journal, ppe, incidents, interventions, echeances] = await Promise.all([
-        sbGetMessages(), sbGetConversations(), sbGetJournalEntries(), sbGetPpe(), sbGetIncidents(), sbGetInterventions(), sbGetEcheances()
+        opt('sbGetMessages', []), opt('sbGetConversations', {}), opt('sbGetJournalEntries', []),
+        opt('sbGetPpe', []), opt('sbGetIncidents', []), opt('sbGetInterventions', []), opt('sbGetEcheances', [])
       ]);
       const myConvIds = Object.values(convs).filter(c => (c.userIds || []).map(String).includes(uid)).map(c => c.id);
       _counts.messages = msgs.filter(m => myConvIds.includes(m.convId) && !(m.readBy || []).map(String).includes(uid) && String(m.from) !== uid).length;
@@ -118,13 +136,40 @@
     if (typeof toast === 'function') toast('Notifications marquées comme lues', 'success');
   };
 
+  // Trouve où poser la cloche, sans jamais la faire flotter (elle cohabiterait
+  // mal avec le bouton de thème et le badge hors-ligne).
+  // Ordre : .header-right (là où elle vivait déjà, ex. pilotage — on n'y touche
+  // pas) → la zone droite de la barre V2 → une barre de portail.
+  function trouverHote() {
+    var hr = document.querySelector('.header-right');
+    if (hr) return hr;
+    var top = document.querySelector('.v2-top');
+    if (top) {
+      var d = top.lastElementChild;
+      var interactif = d && /^(A|BUTTON|LABEL|SELECT)$/.test(d.tagName);
+      if (d && !interactif && d.children.length && getComputedStyle(d).display === 'flex') return d;
+      return top;
+    }
+    return document.querySelector('.vq-topbar, .ds-topbar, .pl-topbar, .rh-topbar');
+  }
+
   function init() {
     if (typeof Auth === 'undefined' || !Auth.getSession()) return;
-    const host = document.querySelector('.header-right');
-    if (!host || document.getElementById('nbBell')) return;
+    // Pas de cloche dans une page ouverte en iframe de portail (?embed=1) : le
+    // portail affiche déjà la sienne. Pas non plus si l'accueil a la sienne.
+    if (/[?&]embed=1\b/.test(location.search)) return;
+    if (document.getElementById('nbBell') || document.getElementById('accBell')) return;
+    const host = trouverHote();
+    if (!host) return;
     injectCss();
     host.style.position = 'relative';
-    host.insertAdjacentHTML('beforeend', bellHtml());
+    // Placée AVANT le bouton de thème s'il est déjà là : ordre [cloche][thème].
+    const thm = host.querySelector('#thmBtn');
+    const frag = document.createElement('div');
+    frag.style.cssText = 'display:contents';
+    frag.innerHTML = bellHtml();
+    if (thm) while (frag.firstChild) host.insertBefore(frag.firstChild, thm);
+    else host.insertAdjacentHTML('beforeend', bellHtml());
     document.addEventListener('click', e => {
       const p = document.getElementById('nbPanel'), b = document.getElementById('nbBell');
       if (p && p.classList.contains('open') && !p.contains(e.target) && b && !b.contains(e.target)) p.classList.remove('open');
