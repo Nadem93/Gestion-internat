@@ -1,0 +1,183 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — Page de connexion, design V2 « cockpit » (thème sombre)
+
+   Aucune maquette dédiée : on reprend le langage visuel V2 (fond #0a1728,
+   halo radial, surfaces en voiles blancs, Inter + Space Grotesk) appliqué à
+   la structure réelle de la page.
+   Chargé APRÈS css/v2.css. Ne redéfinit rien de css/v2.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2.lc-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 20px;
+  background: var(--v2-bg);
+}
+body.v2.lc-body input,
+body.v2.lc-body button { font-family: inherit; }
+
+/* ── Coque : deux volets (présentation | formulaire) ──────────────────── */
+.lc-shell {
+  width: 100%;
+  max-width: 940px;
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  background:
+    radial-gradient(900px 520px at 82% -12%, rgba(56,97,161,.3), transparent 62%),
+    var(--v2-bg);
+  border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-shell);
+  box-shadow: var(--v2-sh-shell);
+  overflow: hidden;
+  animation: lc-rise .5s cubic-bezier(.22,1,.36,1) backwards;
+}
+@keyframes lc-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* ── Volet gauche : identité de la structure ──────────────────────────── */
+.lc-side {
+  padding: 34px 30px;
+  background: var(--v2-s-alt);
+  border-right: 1px solid var(--v2-b);
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.lc-brand { min-width: 0; }
+.lc-logo {
+  width: 46px; height: 46px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  box-shadow: 0 10px 24px -10px rgba(79,70,229,.9);
+}
+.lc-logo svg { width: 21px; height: 21px; }
+.lc-brand-name {
+  font-family: var(--v2-display);
+  font-size: 25px; font-weight: 700;
+  letter-spacing: .13em; text-transform: uppercase;
+  background: linear-gradient(120deg, #ffffff, var(--v2-indigo-pale) 62%, var(--v2-cyan-pale));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  overflow-wrap: anywhere;
+}
+.lc-brand-sub {
+  font-size: 11px; color: var(--v2-t8);
+  letter-spacing: .22em; text-transform: uppercase;
+  margin-top: 8px; line-height: 1.5;
+}
+.lc-brand-logo { max-width: 100%; }
+
+.lc-feats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.lc-feat { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lc-feat-ico {
+  width: 34px; height: 34px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--fc, #818cf8) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fc, #818cf8) 30%, transparent);
+  color: var(--fc, #818cf8);
+}
+.lc-feat-ico svg { width: 16px; height: 16px; }
+.lc-feat-txt { min-width: 0; }
+.lc-feat-t { display: block; font-size: 12.5px; font-weight: 600; color: var(--v2-t3); line-height: 1.3; }
+.lc-feat-s { display: block; font-size: 11px; color: var(--v2-t7); margin-top: 2px; line-height: 1.35; }
+
+.lc-side-foot {
+  margin-top: auto;
+  font-size: 11px; line-height: 1.6; color: var(--v2-t8);
+  padding-top: 18px; border-top: 1px solid var(--v2-b-list);
+}
+
+/* ── Volet droit : formulaire ─────────────────────────────────────────── */
+.lc-main { padding: 34px 34px 26px; display: flex; flex-direction: column; min-width: 0; }
+.lc-card { min-width: 0; }
+.lc-title { font-family: var(--v2-display); font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.lc-lead { font-size: 12.5px; color: var(--v2-t7); margin-top: 5px; margin-bottom: 22px; }
+
+.lc-field { margin-bottom: 15px; }
+.lc-field label {
+  display: block; font-size: 12px; font-weight: 500; color: var(--v2-t6);
+  margin-bottom: 6px; text-transform: none; letter-spacing: normal;
+}
+/* Enveloppe : permet de poser le bouton œil dans le champ */
+.lc-input-wrap { position: relative; display: block; }
+body.v2 .lc-input-wrap .v2-fld { display: block; }
+body.v2 .lc-input-wrap.has-eye .v2-fld { padding-right: 46px; }
+.lc-eye {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 9px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer; color: var(--v2-t7);
+}
+.lc-eye:hover { background: var(--v2-s-hover); color: var(--v2-t2); }
+.lc-eye svg { width: 17px; height: 17px; display: block; }
+
+.lc-submit { width: 100%; margin-top: 6px; }
+
+/* Caps Lock : avertissement discret sous le champ mot de passe */
+.lc-caps { display: none; margin-top: 7px; font-size: 11.5px; color: var(--v2-warn-text); }
+.lc-caps.on { display: block; }
+
+/* Messages — le script bascule display:none/block, on garde ce contrat */
+.lc-error {
+  display: none; margin-top: 14px;
+  padding: 11px 14px; border-radius: 11px; font-size: 12.5px; text-align: center;
+  background: rgba(239,68,68,.10); border: 1px solid rgba(239,68,68,.26);
+  color: var(--v2-danger-text);
+}
+.lc-lock {
+  margin-top: 12px;
+  padding: 11px 14px; border-radius: 11px; font-size: 12px; line-height: 1.5; text-align: center;
+  background: rgba(245,158,11,.10); border: 1px solid rgba(245,158,11,.26);
+  color: var(--v2-warn-text);
+}
+
+/* Règles de mot de passe (carte de changement obligatoire) */
+#pwRules {
+  list-style: none; margin: -2px 0 14px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12px; color: var(--v2-t7);
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft); border-radius: 11px;
+}
+.lc-strength { margin: 0 0 14px; }
+.lc-strength-bar { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+.lc-strength-bar > span { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--v2-t8); transition: width .25s ease, background .25s ease; }
+.lc-strength-lbl { font-size: 11px; color: var(--v2-t7); margin-top: 6px; }
+
+.lc-footer { margin-top: auto; padding-top: 22px; text-align: center; font-size: 11px; color: var(--v2-t8); }
+.lc-footer a { color: var(--v2-t8); }
+.lc-footer a:hover { color: var(--v2-t5); text-decoration: underline; }
+
+/* ── Focus visible ────────────────────────────────────────────────────── */
+body.v2.lc-body .v2-fld:focus-visible,
+body.v2.lc-body .lc-eye:focus-visible,
+body.v2.lc-body .v2-btn-pri:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(129,140,248,.5);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .lc-shell { grid-template-columns: 1fr; max-width: 480px; }
+  .lc-side {
+    border-right: none; border-bottom: 1px solid var(--v2-b);
+    padding: 26px 24px 22px; gap: 18px;
+  }
+  .lc-feats, .lc-side-foot { display: none; }
+  .lc-main { padding: 26px 24px 20px; }
+}
+@media (max-width: 420px) {
+  body.v2.lc-body { padding: 0; align-items: stretch; }
+  /* Le volet d'identité reste compact ; le formulaire absorbe la hauteur
+     restante, sinon la grille répartit l'espace libre entre les deux. */
+  .lc-shell { border-radius: 0; border-left: none; border-right: none;
+              min-height: 100vh; max-width: none; grid-template-rows: auto 1fr; }
+  .lc-side { padding: 22px 22px 18px; gap: 14px; }
+  .lc-main { padding: 24px 22px 20px; }
+  .lc-brand-name { font-size: 21px; }
+  .lc-title { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-shell { animation: none; }
+}

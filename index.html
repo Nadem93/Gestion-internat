@@ -4,152 +4,109 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Connexion — INTERNALIS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      background:linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%);
-      font-family:'Inter',system-ui,sans-serif;
-      min-height:100vh;display:flex;align-items:center;justify-content:center;
-      overflow:hidden;
-    }
-    /* Champ d'aurores */
-    body::before,body::after{
-      content:'';position:fixed;z-index:0;border-radius:50%;pointer-events:none;filter:blur(70px);
-    }
-    body::before{
-      width:60vw;height:60vw;top:-20vw;right:-15vw;
-      background:radial-gradient(circle at 35% 35%,rgba(6,182,212,.14),rgba(99,102,241,.08) 55%,transparent 75%);
-      animation:aur-a 40s ease-in-out infinite alternate;
-    }
-    body::after{
-      width:50vw;height:50vw;bottom:-18vw;left:-12vw;
-      background:radial-gradient(circle at 60% 60%,rgba(168,85,247,.1),rgba(6,182,212,.06) 55%,transparent 75%);
-      animation:aur-b 52s ease-in-out infinite alternate;
-    }
-    @keyframes aur-a{from{transform:translate(0,0)}to{transform:translate(-8vw,6vh) scale(1.15)}}
-    @keyframes aur-b{from{transform:translate(0,0)}to{transform:translate(7vw,-5vh) scale(1.1)}}
-
-    input,button{border:none;outline:none;font-family:inherit}
-
-    .lc-wrap{width:100%;max-width:410px;padding:1.5rem;position:relative;z-index:1}
-    .lc-brand{text-align:center;margin-bottom:1.5rem;animation:lc-rise .6s cubic-bezier(.22,1,.36,1) backwards}
-    .lc-brand-name{
-      font-family:'Space Grotesk',sans-serif;font-size:1.9rem;font-weight:700;
-      letter-spacing:.14em;text-transform:uppercase;
-      background:linear-gradient(120deg,#0f2b4a,#6366f1 60%,#a855f7);
-      -webkit-background-clip:text;background-clip:text;color:transparent;
-    }
-    .lc-brand-sub{font-size:.75rem;color:#64748b;letter-spacing:.3em;text-transform:uppercase;margin-top:.3rem}
-
-    .lc-card{
-      background:rgba(255,255,255,.74);
-      backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
-      border:1px solid rgba(255,255,255,.85);
-      border-radius:24px;padding:2.5rem 2rem;
-      box-shadow:0 24px 60px rgba(15,43,74,.14);
-      position:relative;overflow:hidden;
-      animation:lc-rise .6s cubic-bezier(.22,1,.36,1) .12s backwards;
-    }
-    /* Scan-line en haut de la carte */
-    .lc-card::before{
-      content:'';position:absolute;top:0;left:0;right:0;height:3px;
-      background:linear-gradient(90deg,transparent,#06b6d4 20%,#6366f1 50%,#a855f7 80%,transparent);
-      background-size:220% 100%;animation:lc-scan 16s linear infinite;
-    }
-    @keyframes lc-scan{from{background-position:0% 0}to{background-position:220% 0}}
-    @keyframes lc-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-
-    .lc-title{
-      font-family:'Space Grotesk',sans-serif;color:#0f2b4a;font-weight:700;font-size:1.3rem;
-      text-align:center;margin-bottom:1.6rem;
-    }
-    .lc-field{margin-bottom:1.25rem}
-    .lc-field label{display:block;font-size:.7rem;font-weight:700;color:#475569;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.08em}
-    .lc-field input{
-      width:100%;padding:.8rem 1.1rem;border-radius:12px;
-      background:#fff;border:1px solid #e2e8f0;
-      font-size:.92rem;color:#1e293b;
-      transition:border-color .2s,box-shadow .2s;
-    }
-    .lc-field input:focus{
-      border-color:#06b6d4;
-      box-shadow:0 0 0 3px rgba(6,182,212,.14),0 0 12px rgba(6,182,212,.12);
-    }
-    .lc-btn{
-      display:block;width:100%;cursor:pointer;border-radius:12px;color:#fff;
-      background:linear-gradient(135deg,#6366f1,#a855f7);
-      padding:.85rem;font-size:.95rem;font-weight:600;
-      box-shadow:0 4px 16px rgba(124,58,237,.3);
-      transition:transform .15s,box-shadow .2s;
-      position:relative;overflow:hidden;
-    }
-    .lc-btn::after{
-      content:'';position:absolute;top:0;bottom:0;left:-80%;width:50%;
-      background:linear-gradient(105deg,transparent,rgba(255,255,255,.35),transparent);
-      transform:skewX(-18deg);transition:left .45s ease;
-    }
-    .lc-btn:hover{box-shadow:0 5px 18px rgba(124,58,237,.3);transform:translateY(-1px)}
-    .lc-btn:hover::after{left:130%}
-    .lc-btn:active{transform:scale(.98)}
-    .lc-error{
-      display:none;margin:1rem auto 0;padding:10px 16px;border-radius:12px;
-      background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:.82rem;text-align:center;
-    }
-    .lc-footer{text-align:center;font-size:.75rem;color:#94a3b8;margin-top:1.5rem;animation:lc-rise .6s cubic-bezier(.22,1,.36,1) .24s backwards}
-    .lc-footer a{color:#94a3b8;text-decoration:none}
-    .lc-footer a:hover{text-decoration:underline}
-    @media (prefers-reduced-motion: reduce){
-      body::before,body::after,.lc-card::before{animation:none!important}
-      .lc-brand,.lc-card,.lc-footer{animation:none!important}
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-index.css"/>
 </head>
-<body>
+<body class="v2 lc-body">
 
-<div class="lc-wrap">
-  <div class="lc-brand"><div class="lc-brand-name">INTERNALIS</div><div class="lc-brand-sub">Gestion médico-sociale</div></div>
+<div class="lc-shell">
 
-  <div class="lc-card" id="loginCard">
-    <div class="lc-title">Connexion</div>
-    <form id="loginForm">
-      <div class="lc-field">
-        <label for="login">Email</label>
-        <input type="email" id="login" placeholder="vous@exemple.fr" autocomplete="username"/>
-      </div>
-      <div class="lc-field">
-        <label for="pw">Mot de passe</label>
-        <input type="password" id="pw" placeholder="••••••••" autocomplete="current-password"/>
-      </div>
-      <button type="submit" class="lc-btn">Se connecter</button>
-      <div id="loginError" class="lc-error">Identifiant ou mot de passe incorrect.</div>
-      <div id="lockInfo" style="display:none;margin-top:.6rem;font-size:.8rem;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:.5rem .7rem;text-align:center">🔒 Session fermée après 15 min d'inactivité. Reconnectez-vous.</div>
-    </form>
+  <!-- ── Volet gauche : identité ─────────────────────────────────────── -->
+  <aside class="lc-side">
+    <div class="lc-brand">
+      <div class="lc-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+      <div class="lc-brand-name">INTERNALIS</div>
+      <div class="lc-brand-sub">Gestion médico-sociale</div>
+    </div>
+
+    <ul class="lc-feats">
+      <li class="lc-feat" style="--fc:#818cf8">
+        <span class="lc-feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+        <span class="lc-feat-txt"><span class="lc-feat-t">Dossiers usagers</span><span class="lc-feat-s">Projet personnalisé, suivi, documents</span></span>
+      </li>
+      <li class="lc-feat" style="--fc:#22d3ee">
+        <span class="lc-feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <span class="lc-feat-txt"><span class="lc-feat-t">Transmissions d'équipe</span><span class="lc-feat-s">Passation de relais tracée</span></span>
+      </li>
+      <li class="lc-feat" style="--fc:#f59e0b">
+        <span class="lc-feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        <span class="lc-feat-txt"><span class="lc-feat-t">Planning &amp; RH</span><span class="lc-feat-s">Congés, formations, fiches de paie</span></span>
+      </li>
+    </ul>
+
+    <div class="lc-side-foot">
+      Accès réservé aux professionnels autorisés. Les données consultées sont
+      protégées par le secret professionnel.
+    </div>
+  </aside>
+
+  <!-- ── Volet droit : formulaire ────────────────────────────────────── -->
+  <div class="lc-main">
+
+    <div class="lc-card" id="loginCard">
+      <div class="lc-title">Connexion</div>
+      <div class="lc-lead">Identifiez-vous pour accéder à votre espace.</div>
+      <form id="loginForm">
+        <div class="lc-field">
+          <label for="login">Email</label>
+          <span class="lc-input-wrap">
+            <input class="v2-fld" type="email" id="login" placeholder="vous@exemple.fr" autocomplete="username"/>
+          </span>
+        </div>
+        <div class="lc-field">
+          <label for="pw">Mot de passe</label>
+          <span class="lc-input-wrap has-eye">
+            <input class="v2-fld" type="password" id="pw" placeholder="••••••••" autocomplete="current-password"/>
+            <button type="button" class="lc-eye" id="pwEye" aria-label="Afficher le mot de passe" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </span>
+          <div class="lc-caps" id="pwCaps">Verrouillage majuscules activé.</div>
+        </div>
+        <button type="submit" class="v2-btn-pri lc-submit">Se connecter</button>
+        <div id="loginError" class="lc-error" role="alert">Identifiant ou mot de passe incorrect.</div>
+        <div id="lockInfo" class="lc-lock" style="display:none">🔒 Session fermée après 15 min d'inactivité. Reconnectez-vous.</div>
+      </form>
+    </div>
+
+    <div class="lc-card" id="pwChangeCard" style="display:none">
+      <div class="lc-title">Choisissez votre mot de passe</div>
+      <div class="lc-lead">Première connexion : définissez un mot de passe personnel.</div>
+      <form id="pwChangeForm">
+        <div class="lc-field">
+          <label for="newPw">Nouveau mot de passe</label>
+          <span class="lc-input-wrap has-eye">
+            <input class="v2-fld" type="password" id="newPw" placeholder="••••••••" autocomplete="new-password"/>
+            <button type="button" class="lc-eye" id="newPwEye" aria-label="Afficher le mot de passe" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </span>
+        </div>
+        <div class="lc-field">
+          <label for="newPw2">Confirmer</label>
+          <span class="lc-input-wrap">
+            <input class="v2-fld" type="password" id="newPw2" placeholder="••••••••" autocomplete="new-password"/>
+          </span>
+        </div>
+        <div class="lc-strength" id="pwStrength" hidden>
+          <div class="lc-strength-bar"><span id="pwStrengthFill"></span></div>
+          <div class="lc-strength-lbl" id="pwStrengthLbl">Robustesse</div>
+        </div>
+        <ul id="pwRules">
+          <li data-rule="len">○ Au moins 8 caractères</li>
+          <li data-rule="upper">○ Une majuscule</li>
+          <li data-rule="digit">○ Un chiffre</li>
+          <li data-rule="special">○ Un caractère spécial (! ? @ # …)</li>
+        </ul>
+        <button type="submit" class="v2-btn-pri lc-submit">Valider et continuer</button>
+        <div id="pwChangeError" class="lc-error" role="alert"></div>
+      </form>
+    </div>
+
+    <div class="lc-footer">© <span id="lcYear">2026</span> INTERNALIS</div>
   </div>
 
-  <div class="lc-card" id="pwChangeCard" style="display:none">
-    <div class="lc-title">Choisissez votre mot de passe</div>
-    <form id="pwChangeForm">
-      <div class="lc-field">
-        <label for="newPw">Nouveau mot de passe</label>
-        <input type="password" id="newPw" placeholder="••••••••" autocomplete="new-password"/>
-      </div>
-      <div class="lc-field">
-        <label for="newPw2">Confirmer</label>
-        <input type="password" id="newPw2" placeholder="••••••••" autocomplete="new-password"/>
-      </div>
-      <ul id="pwRules" style="list-style:none;font-size:.78rem;color:#94a3b8;margin:-.4rem 0 1.1rem;padding:0;display:flex;flex-direction:column;gap:.3rem">
-        <li data-rule="len">○ Au moins 8 caractères</li>
-        <li data-rule="upper">○ Une majuscule</li>
-        <li data-rule="digit">○ Un chiffre</li>
-        <li data-rule="special">○ Un caractère spécial (! ? @ # …)</li>
-      </ul>
-      <button type="submit" class="lc-btn">Valider et continuer</button>
-      <div id="pwChangeError" class="lc-error"></div>
-    </form>
-  </div>
-
-  <div class="lc-footer">© INTERNALIS</div>
 </div>
 
 <script src="js/app.js"></script>
@@ -261,5 +218,6 @@
     }
   });
 </script>
+<script src="js/index-v2.js"></script>
 </body>
 </html>
