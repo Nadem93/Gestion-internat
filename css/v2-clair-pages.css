@@ -1,0 +1,641 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   THÈME CLAIR — SURCHARGES PAR PAGE  (fichier GÉNÉRÉ, ne pas éditer à la main)
+   ──────────────────────────────────────────────────────────────────────────
+   Complète css/v2-clair.css pour les 63 feuilles `css/v2-<page>.css`, qui
+   contiennent leurs propres couleurs en dur.
+
+   Deux règles de classement, appliquées automatiquement :
+     · `color:#fff` → inversé UNIQUEMENT si le texte est posé sur une surface.
+       S'il est posé sur une couleur pleine ou un dégradé — dans sa propre
+       règle OU dans celle d'un ancêtre — il reste blanc (avatars, pastilles,
+       boutons pleins, icônes en dégradé).
+     · voiles `rgba(255,255,255,a)` → passés en `rgba(15,38,70,a)` seulement
+       si a ≤ .25. Au-delà c'est une surface blanche voulue, pas un voile.
+
+   Les règles sous @media sont volontairement ignorées : les recopier ici leur
+   ferait perdre leur point de rupture.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── v2-absences.css ── */
+html.clair .abv-tbl th { background: rgba(15,38,70,.03); }
+html.clair .abv-tbl tbody tr:hover td { background: rgba(15,38,70,.025); }
+html.clair .abv-ico-btn:hover { color: var(--v2-t1); }
+html.clair .abv-ico-btn.del:hover { color: #8e0b0b; }
+html.clair .abv-h-t.red { color: #8e0b0b; }
+html.clair .abv-h-t.amber { color: #8e740b; }
+html.clair .abv-h-t.orange { color: #8e4e0b; }
+html.clair .abv-motif-n { color: var(--v2-t1); }
+html.clair .abv-cout-n { color: var(--v2-t1); }
+html.clair body.v2 .abv-chk input[type="checkbox"] { background: rgba(15,38,70,.06); }
+html.clair .abv-chk-danger b { color: #8e0b0b; }
+html.clair .abv-up { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.15); }
+html.clair .abv-up:hover { background: rgba(15,38,70,.07); }
+html.clair .abv-up-a { color: #0b7e8e; }
+
+/* ── v2-activites.css ── */
+html.clair .ac2-act:hover { color: var(--v2-t1); }
+html.clair .ac2-pt-v { color: var(--v2-t1); }
+html.clair .ac2-ins-e:hover { color: var(--v2-t1); }
+html.clair .ac2-ins-note { background: rgba(15,38,70,.04); }
+html.clair .ac2-bi:hover .ac2-bi-n { color: var(--v2-t1); }
+html.clair .ac2-pm-b { background: rgba(15,38,70,.04); }
+
+/* ── v2-admin.css ── */
+html.clair .adm-side { background: rgba(15,38,70,.03); }
+html.clair .adm-side-t { color: var(--v2-t1); }
+html.clair .adm-nav:hover { background: rgba(15,38,70,.09); }
+html.clair .adm-nav-l { color: var(--v2-t5); }
+html.clair .adm-nav.on .adm-nav-l { color: var(--v2-t1); }
+html.clair .adm-donut-n { color: var(--v2-t1); }
+html.clair .adm-hero-eyebrow { color: #270b8e; }
+html.clair .adm-hero-n { color: var(--v2-t1); }
+html.clair .adm-leg-n { color: var(--v2-t1); }
+html.clair .adm-use-n { color: var(--v2-t1); }
+html.clair .adm-perm tr.adm-perm-grp td { background: rgba(15,38,70,.02); }
+html.clair .adm-sw { background: rgba(15,38,70,.1); }
+html.clair .adm-drop { border-color: rgba(15,38,70,.14); }
+html.clair .adm-ring-v { color: var(--v2-t1); }
+html.clair .adm-user-act button:hover,
+html.clair .adm-user-act a:hover { color: var(--v2-t1); }
+html.clair .c-avatar { background: rgba(15,38,70,.25); }
+html.clair .c-name { color: var(--v2-t1); }
+html.clair .c-role-badge { background: rgba(15,38,70,.22); }
+html.clair .c-status.conge { color: #8e690b; }
+html.clair .c-btn { border-color: rgba(15,38,70,.16); }
+html.clair .c-action-icon:hover { background: rgba(15,38,70,.1); }
+html.clair .emp-popup-action-btn:hover { color: var(--v2-t1); }
+
+/* ── v2-admissions.css ── */
+html.clair .ad2-search { background: rgba(15,38,70,.05); border-color: rgba(15,38,70,.1); }
+html.clair .ad2-stat { background: rgba(15,38,70,.04); }
+html.clair .ad2-col { background: rgba(15,38,70,.03); }
+html.clair .ad2-card:hover { background: rgba(15,38,70,.05); }
+html.clair .ad2-admettre:hover { color: var(--v2-t1); }
+html.clair .ad2-del:hover { color: var(--v2-t1); }
+
+/* ── v2-aide.css ── */
+html.clair .ai-hero-t { color: var(--v2-t1); }
+html.clair .ai-kpi-n { color: var(--v2-t1); }
+html.clair .ai-toc a.on { color: var(--v2-t1); }
+html.clair .ai-sec-t { color: var(--v2-t1); }
+html.clair .ai-tile { background: rgba(15,38,70,.045); }
+html.clair .ai-head { background: rgba(15,38,70,.045); }
+html.clair .ai-card { background: rgba(15,38,70,.045); }
+html.clair .ai-line { background: rgba(15,38,70,.09); }
+html.clair .ai-tip b,
+html.clair .ai-tip strong { color: var(--v2-t1); }
+
+/* ── v2-astreintes.css ── */
+html.clair .as2-nav button:hover { color: var(--v2-t1); }
+html.clair .as2-now-lbl { color: #270b8e; }
+html.clair .as2-now-n { color: var(--v2-t1); }
+html.clair .as2-now-r { color: #372277; }
+html.clair .as2-now-v { color: var(--v2-t1); }
+html.clair .as2-tbl-row:hover td { background: rgba(15,38,70,.03); }
+html.clair .as2-i-d { color: #270b8e; }
+html.clair .as2-eq-v { color: var(--v2-t1); }
+html.clair .as2-ind-t { color: #168358; }
+html.clair .as2-ind-n { color: var(--v2-t1); }
+html.clair .as2-ind-v { color: #1b7e5a; }
+html.clair .as2-bt td.tot { color: #1b7e5a; }
+html.clair .as2-export { color: #168358; }
+html.clair .as2-casc-bar { background: rgba(15,38,70,.12); }
+html.clair .as2-rp-v { color: #270b8e; }
+html.clair .as2-add:hover { color: var(--v2-t1); }
+html.clair .as2-deny h3 { color: var(--v2-t1); }
+
+/* ── v2-budget.css ── */
+html.clair .bg2-mini:hover { color: var(--v2-t1); }
+html.clair .bg2-mt { color: var(--v2-t1); }
+html.clair .bg2-annuel-t { color: #12873c; }
+html.clair .bg2-annuel-n { color: var(--v2-t1); }
+html.clair .bg2-rep-v { color: var(--v2-t1); }
+html.clair .bg2-fo-m { color: var(--v2-t1); }
+html.clair .bg2-reschip.on { color: var(--v2-t1); }
+
+/* ── v2-chambres.css ── */
+html.clair .ch2-stat { background: rgba(15,38,70,.04); }
+html.clair .ch2-room-n { color: var(--v2-t1); }
+html.clair .ch2-free { border-color: rgba(15,38,70,.14); }
+html.clair .ch2-act:hover { color: var(--v2-t1); }
+html.clair .ch2-occ-v { color: var(--v2-t1); }
+html.clair .ch2-occ-bar { background: rgba(15,38,70,.08); }
+html.clair .ch2-edl-d[open] .ch2-edl-r .ch2-edl-t { color: var(--v2-t1); }
+html.clair .ch2-panel-h > svg { color: #5b8811; }
+
+/* ── v2-confidentialite.css ── */
+html.clair .cf2-btn:hover { color: var(--v2-t1); }
+html.clair .cf2-toc-l.on { color: var(--v2-t1); }
+
+/* ── v2-conges.css ── */
+html.clair .cgv-ab.ok { color: #168358; }
+html.clair .cgv-ab.ko { color: #8e0b0b; }
+html.clair .cgv-flag { color: #8e0b0b; }
+html.clair .cgv-solde-v { color: var(--v2-t1); }
+html.clair .cgv-cal-c { background: rgba(15,38,70,.05); }
+html.clair .cgv-nav button:hover { color: var(--v2-t1); }
+html.clair .cgv-rank.top { color: #8e690b; }
+html.clair .cgv-wf-line { background: rgba(15,38,70,.12); }
+
+/* ── v2-contacts-externes.css ── */
+html.clair .ce2-besoins-t { color: #8e0b0b; }
+html.clair .ce2-besoin:hover { border-color: rgba(15,38,70,.14); }
+html.clair .ce2-besoin-add { border-color: rgba(15,38,70,.14); }
+html.clair .ce2-ico:hover { color: var(--v2-t1); }
+html.clair .ce2-j-indispo { background: rgba(15,38,70,.10); }
+html.clair .ce2-j-nr { border-color: rgba(15,38,70,.13); }
+html.clair .ce2-match-h svg { color: #1b7e5a; }
+html.clair .ce2-match-t { color: #168358; }
+html.clair .ce2-prop { color: #168358; }
+html.clair .ce2-piece:hover { background: rgba(15,38,70,.07); }
+html.clair .ce2-cout-t { color: #8e4e0b; }
+html.clair .ce2-cout-n { color: var(--v2-t1); }
+
+/* ── v2-contrats.css ── */
+html.clair .ct2-tr:hover { background: rgba(15,38,70,.035); }
+html.clair .ct2-ico-btn:hover { color: var(--v2-t1); }
+html.clair .ct2-bar-n { color: var(--v2-t1); }
+html.clair .ct2-histo-bar { background: rgba(15,38,70,.1); }
+html.clair .ct2-cout-tot b { color: var(--v2-t1); }
+html.clair .ct2-charge { color: #8e4e0b; }
+html.clair .ct2-reg-btn { color: #0b7e8e; }
+html.clair body.v2 input[type="file"].v2-fld::file-selector-button:hover { color: var(--v2-t1); }
+html.clair .ct2-det-n { color: var(--v2-t1); }
+
+/* ── v2-cvs.css ── */
+html.clair .cv2-sat-n { color: var(--v2-t1); }
+html.clair .cv2-next-t { color: var(--v2-t1); }
+html.clair .cv2-next-s { color: #224377; }
+html.clair .cv2-doc:hover .cv2-doc-n { color: var(--v2-t1); }
+
+/* ── v2-dashboard-resident.css ── */
+html.clair .v2-redir-dot { border-color: rgba(15,38,70,.18); }
+
+/* ── v2-diagnostic-droits.css ── */
+html.clair .dd2-ring-v { color: var(--v2-t1); }
+html.clair .dd2-score-t { color: #168358; }
+html.clair .dd2-act-l:hover { color: var(--v2-t1); }
+html.clair .dd2-vei:hover .dd2-vei-l { color: var(--v2-t1); }
+html.clair .dd2-q-b { border-color: rgba(15,38,70,.1); }
+html.clair .dd2-q-b.oui.on { color: var(--v2-t1); }
+html.clair .dd2-q-b.non.on { color: var(--v2-t1); }
+html.clair .dd2-chart-v { color: #168358; }
+html.clair .dd2-ref:hover .dd2-ref-r { color: var(--v2-t1); }
+html.clair .dd2-refus-t { color: var(--v2-t1); }
+
+/* ── v2-documentation.css ── */
+html.clair .dc2-search { background: rgba(15,38,70,.05); border-color: rgba(15,38,70,.08); }
+html.clair .dc2-stat { background: rgba(15,38,70,.04); }
+html.clair .dc2-doc:hover { background: rgba(15,38,70,.05); border-color: rgba(15,38,70,.12); }
+html.clair .dc2-act { background: rgba(15,38,70,.05); }
+html.clair .dc2-act:hover { background: rgba(15,38,70,.1); color: var(--v2-t1); }
+html.clair .dc2-act.rm:hover { color: var(--v2-t1); }
+html.clair .dc2-rec:hover .dc2-rec-n { color: var(--v2-t1); }
+html.clair .dc2-cat-o { background: rgba(15,38,70,.05); }
+html.clair .dc2-cat-o:hover { background: rgba(15,38,70,.08); }
+html.clair .dc2-cat-o.on { color: var(--v2-t1); }
+html.clair .dc2-drop { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.15); }
+
+/* ── v2-documents.css ── */
+html.clair .dg2-search { background: rgba(15,38,70,.05); border-color: rgba(15,38,70,.08); }
+html.clair .dg2-stat { background: rgba(15,38,70,.04); }
+html.clair .dg2-card { background: rgba(15,38,70,.035); }
+html.clair .dg2-act { background: rgba(15,38,70,.05); }
+html.clair .dg2-act:hover { background: rgba(15,38,70,.1); color: var(--v2-t1); }
+html.clair .dg2-mod:hover { background: rgba(15,38,70,.06); }
+html.clair .dg2-seg-o:hover { background: rgba(15,38,70,.06); }
+html.clair .dg2-seg-o:has(input:checked) { color: var(--v2-t1); }
+html.clair .dg2-cat-o { background: rgba(15,38,70,.05); }
+html.clair .dg2-cat-o:hover { background: rgba(15,38,70,.08); }
+html.clair .dg2-cat-o.on { color: var(--v2-t1); }
+html.clair .dg2-drop { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.15); }
+html.clair .dg2-fam-add:hover { background: rgba(15,38,70,.1); color: var(--v2-t1); }
+
+/* ── v2-dossiers.css ── */
+html.clair .ds-side-brand-t { color: var(--v2-t1); }
+html.clair .ds-it:hover { background: rgba(15,38,70,.09); }
+html.clair .ds-it-l { color: var(--v2-t5); }
+html.clair .ds-it.on .ds-it-l { color: var(--v2-t1); }
+html.clair .ds-topbar-t { color: var(--v2-t1); }
+html.clair .ds-back:hover { color: var(--v2-t1); }
+html.clair .ds-hello h1 { color: var(--v2-t1); }
+html.clair .ds-card-i:hover { color: var(--v2-t1); }
+html.clair .ds-blk-a:hover { color: var(--v2-t1); }
+
+/* ── v2-echeances.css ── */
+html.clair body.v2 .ec2-toggle input { border-color: rgba(15,38,70,.18); }
+html.clair .ec2-toggle:has(input:checked) { color: var(--v2-t1); }
+
+/* ── v2-eig.css ── */
+html.clair .eig2-t tbody tr:hover td { background: rgba(15,38,70,.02); }
+html.clair .eig2-bar-n { color: var(--v2-t1); }
+html.clair .eig2-prog { background: rgba(15,38,70,.08); }
+html.clair .eig2-ars-h svg { color: #1b7e5a; }
+html.clair .eig2-ars-t { color: #168358; }
+html.clair body.v2 .eig2-chk input[type="checkbox"] { border-color: rgba(15,38,70,.18); }
+
+/* ── v2-employe.css ── */
+html.clair body.v2 .v2-top .btn.btn-outline:hover,
+html.clair body.v2 .v2-top .btn.btn-ghost:hover { color: var(--v2-t1); }
+html.clair body.v2 .ev2-ico-btn:hover { color: var(--v2-t1); }
+html.clair body.v2 #employeContent table.table tbody tr:hover td { background: rgba(15,38,70,.025); }
+html.clair body.v2 #employeContent .btn-ghost:hover { color: var(--v2-t1); }
+html.clair body.v2 #employeContent .btn-outline:hover { color: var(--v2-t1); }
+
+/* ── v2-entretiens.css ── */
+html.clair .et2-tw tbody tr:hover { background: rgba(15,38,70,.035); }
+html.clair .et2-ib:hover { color: var(--v2-t1); }
+html.clair .et2-ib.del:hover { color: #8e0b0b; }
+html.clair .et2-add { border-color: rgba(15,38,70,.13); }
+html.clair .et2-camp-v { color: var(--v2-t1); }
+html.clair .et2-camp-bar { background: rgba(15,38,70,.08); }
+html.clair .et2-form-t { color: var(--v2-t1); }
+html.clair .et2-ref-note strong { color: var(--v2-t1); }
+html.clair #etGrilleBody .etg-domhead { background: rgba(15,38,70,.03); }
+
+/* ── v2-evaluations.css ── */
+html.clair .ev2-scale { border-color: rgba(15,38,70,.08); }
+html.clair .ev2-scale-c { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.07); }
+html.clair .ev2-row { border-color: rgba(15,38,70,.05); }
+html.clair .ev2-sel { background-color: rgba(15,38,70,.05); border-color: rgba(15,38,70,.08); }
+html.clair .ev2-item { border-color: rgba(15,38,70,.05); }
+html.clair .ev2-opt { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.08); }
+html.clair .ev2-opt:hover { background: rgba(15,38,70,.06); }
+html.clair #evLiveScore:not(.ob2-live) { border-color: rgba(15,38,70,.08); }
+html.clair .ev2-d-bar { background: rgba(15,38,70,.08); }
+html.clair .ev2-d-item { border-color: rgba(15,38,70,.05); }
+html.clair .ev2-vide { border-color: rgba(15,38,70,.08); }
+html.clair .ev2-row-ev { background: rgba(15,38,70,.035); border-color: rgba(15,38,70,.07); }
+html.clair .ev2-redir-c { background: rgba(15,38,70,.035); border-color: rgba(15,38,70,.07); }
+html.clair .ev2-redir-t { color: var(--v2-t1); }
+
+/* ── v2-facturation.css ── */
+html.clair .fc2-gauge-n { color: var(--v2-t1); }
+html.clair .fc2-gauge-t { color: #0b7e8e; }
+html.clair .fc2-recap-v { color: var(--v2-t1); }
+html.clair .fc2-tarif-p { color: var(--v2-t1); }
+html.clair .fc2-top-r { background: rgba(15,38,70,.06); }
+html.clair .fc2-top-m { color: var(--v2-t1); }
+html.clair .fc2-mini:hover { color: var(--v2-t1); }
+html.clair .fc2-mini-danger:hover { color: var(--v2-t1); }
+html.clair .fc2-t-num { color: var(--v2-t1); }
+
+/* ── v2-famille.css ── */
+html.clair .fam-hero h1.fam-hero-t { color: var(--v2-t1); }
+html.clair .fam-kpi-n { color: var(--v2-t1); }
+html.clair .fam-res-n { color: var(--v2-t1); }
+html.clair .fam-vide-ico { background: rgba(15,38,70,.05); }
+
+/* ── v2-fiche-liaison.css ── */
+html.clair .fl2-btn-sec:hover { color: var(--v2-t1); }
+html.clair .fl2-rchip { background: rgba(15,38,70,.04); }
+html.clair .fl2-rchip.on { color: var(--v2-t1); }
+html.clair .fl2-head-n { color: var(--v2-t1); }
+html.clair .fl2-head-m { color: #224377; }
+
+/* ── v2-finance.css ── */
+html.clair .fin2-mini-v { color: var(--v2-t1); }
+html.clair .fin2-ring-n { color: var(--v2-t1); }
+html.clair .fin2-gauge-x b { color: var(--v2-t1); }
+html.clair .fin2-yoy-v { color: var(--v2-t1); }
+html.clair .fin2-row-v { color: var(--v2-t1); }
+html.clair .fin2-rank { background: rgba(15,38,70,.06); }
+html.clair .fin2-deny h3 { color: var(--v2-t1); }
+
+/* ── v2-formations.css ── */
+html.clair .fr2-table tbody tr:hover { background: rgba(15,38,70,.025); }
+html.clair .fr2-btn:hover { color: var(--v2-t1); }
+html.clair .fr2-oblig-t { color: #8e0b0b; }
+html.clair .fr2-budget-t { color: #12873c; }
+html.clair .fr2-budget-n { color: var(--v2-t1); }
+html.clair .fr2-cat-n { color: var(--v2-t1); }
+html.clair .fr2-sess-j { color: var(--v2-t1); }
+html.clair .fr2-cpf-t { color: #0b808e; }
+html.clair .fr2-c-v { color: #0b7e8e; }
+html.clair .fr2-a-dl:hover { color: var(--v2-t1); }
+
+/* ── v2-guide-formation.css ── */
+html.clair .gf-btn:hover { color: var(--v2-t1); }
+html.clair .gf-kgrid .v2-k-ico { color: var(--v2-t1); }
+html.clair .gf-nav-i { color: var(--v2-t1); }
+html.clair .gf-nav-l.on .gf-nav-t { color: var(--v2-t1); }
+html.clair .gf-flow-n.on { color: var(--v2-t1); }
+html.clair .gf-mod-i { color: var(--v2-t1); }
+
+/* ── v2-incidents.css ── */
+html.clair body.v2 select.inc2-sel:focus { border-color: rgba(15,38,70,.2); }
+html.clair .inc2-t tbody tr:hover td { background: rgba(15,38,70,.02); }
+html.clair .inc2-bar-n { color: var(--v2-t1); }
+html.clair .inc2-prog { background: rgba(15,38,70,.08); }
+html.clair .inc2-ars-h svg { color: #1b7e5a; }
+html.clair .inc2-ars-t { color: #168358; }
+html.clair .inc2-ars-lien { color: #168358; }
+html.clair .inc2-mini:hover { color: var(--v2-t1); }
+
+/* ── v2-index.css ── */
+html.clair .lc-title { color: var(--v2-t1); }
+html.clair .lc-strength-bar { background: rgba(15,38,70,.08); }
+
+/* ── v2-interventions.css ── */
+html.clair .int2-stat-n { color: var(--v2-t1); }
+html.clair .int2-sec .n { background: rgba(15,38,70,.06); }
+html.clair .int2-lieu { color: var(--v2-t1); }
+html.clair .int2-btn-ok:hover { color: var(--v2-t1); }
+html.clair .int2-lieu-i { background: rgba(15,38,70,.06); }
+html.clair .int2-lieu-c { background: rgba(15,38,70,.06); }
+html.clair .int2-lock h3 { color: var(--v2-t1); }
+
+/* ── v2-inventaire.css ── */
+html.clair .iv2-table tbody tr:hover { background: rgba(15,38,70,.025); }
+html.clair .iv2-qte { color: var(--v2-t1); }
+html.clair .iv2-ib:hover { color: var(--v2-t1); }
+html.clair .iv2-reappro-t { color: #8e0b0b; }
+html.clair .iv2-cmd { color: #8e0b1c; }
+html.clair .iv2-cmd:hover { color: var(--v2-t1); }
+html.clair .iv2-brow-n { color: var(--v2-t1); }
+html.clair .iv2-valeur-t { color: #8e4e0b; }
+html.clair .iv2-valeur-n { color: var(--v2-t1); }
+html.clair .iv2-pline-v { color: #8e4e0b; }
+html.clair .iv2-comptage-t { color: #168358; }
+html.clair .iv2-comptage-b { color: #168358; }
+html.clair .iv2-comptage-b:hover { color: var(--v2-t1); }
+html.clair .iv2-gar-t { color: #0b258e; }
+html.clair .iv2-add:hover { color: var(--v2-t1); }
+
+/* ── v2-journee.css ── */
+html.clair .jn2-filters .v2-chip-f { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.08); }
+html.clair .jn2-filters .v2-chip-f.on { background: rgba(15,38,70,.1); border-color: rgba(15,38,70,.18); }
+html.clair .jn2-slot-line { background: rgba(15,38,70,.08); }
+html.clair .jn2-task { background: rgba(15,38,70,.035); border-color: rgba(15,38,70,.08); }
+html.clair .jn2-ico { color: var(--v2-t1); }
+html.clair .jn2-act { background: rgba(15,38,70,.05); border-color: rgba(15,38,70,.08); }
+html.clair .jn2-act:hover { background: rgba(15,38,70,.11); color: var(--v2-t1); }
+html.clair .jn2-act.on { background: rgba(15,38,70,.13); color: var(--v2-t1); }
+html.clair .jn2-check { border-color: rgba(15,38,70,.2); }
+html.clair .jn2-pill { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.08); }
+html.clair .jn2-pill:hover { background: rgba(15,38,70,.09); }
+html.clair .jn2-ring-p { color: var(--v2-t1); }
+html.clair .jn2-ring-x b { color: var(--v2-t1); }
+html.clair .jn2-next-i { color: var(--v2-t1); }
+html.clair .jn2-next-t { color: var(--v2-t1); }
+html.clair .jn2-done-all { color: #1b7e5a; }
+
+/* ── v2-medicaments.css ── */
+html.clair .v2-med-li-edit { background: rgba(15,38,70,.04); }
+html.clair .v2-med-opt { background: rgba(15,38,70,.04); }
+
+/* ── v2-mes-absences.css ── */
+html.clair .ma2-tbl tbody tr:hover td { background: rgba(15,38,70,.02); }
+html.clair .ma2-ib:hover { color: var(--v2-t1); }
+html.clair .ma2-empty-ico { background: rgba(15,38,70,.05); }
+html.clair .ma2-bar.z { background: rgba(15,38,70,.08); }
+html.clair .ma2-mot-n { color: var(--v2-t1); }
+html.clair .ma2-file { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.16); }
+html.clair .ma2-file-a { color: #0b7e8e; }
+
+/* ── v2-mes-conges.css ── */
+html.clair .mcv-sec-n { background: rgba(15,38,70,.06); }
+html.clair .mcv-p-cal-d { color: var(--v2-t1); }
+html.clair .mcv-x { color: #8e0b0b; }
+html.clair .mcv-x:hover { color: var(--v2-t1); }
+html.clair .v2-blk-vide code { background: rgba(15,38,70,.06); }
+html.clair .mcv-next-j { color: #0b7e8e; }
+html.clair .mcv-rep-v { color: var(--v2-t1); }
+html.clair .mcv-wf-bar { background: rgba(15,38,70,.12); }
+
+/* ── v2-mes-fiches-paie.css ── */
+html.clair .mfp-stat-n { color: var(--v2-t1); }
+html.clair .mfp-net-v .moneyx:hover { background: rgba(15,38,70,.09); }
+html.clair .mfp-dl:hover { color: var(--v2-t1); }
+
+/* ── v2-mes-formations.css ── */
+html.clair .mf2-act:hover { color: var(--v2-t1); }
+html.clair .mf2-act.ok { color: #128775; }
+html.clair .mf2-act.ok:hover { color: var(--v2-t1); }
+html.clair .mf2-act.ev { color: #8e740b; }
+html.clair .mf2-vide-ico { color: #18813e; }
+html.clair .mf2-rail-t.vert { color: #12873c; }
+html.clair .mf2-big { color: var(--v2-t1); }
+html.clair .mf2-dom-n { color: var(--v2-t1); }
+html.clair .mf2-ses-j { color: var(--v2-t1); }
+html.clair .mf2-ev:hover .mf2-ev-t { color: var(--v2-t1); }
+html.clair .mf2-ev-n { color: #8e740b; }
+html.clair .mf2-ev-n.vide { background: rgba(15,38,70,.06); }
+html.clair .mf2-warn code { color: var(--v2-t1); }
+
+/* ── v2-messages.css ── */
+html.clair .ms-unread-tag:not(:empty) { color: #12873c; }
+html.clair .ms-side-t { color: var(--v2-t1); }
+html.clair .ms-chips .v2-chip-f .n { color: var(--v2-t1); background: rgba(15,38,70,.1); }
+html.clair .ms-chips .v2-chip-f.on .n { background: rgba(15,38,70,.2); }
+html.clair .ms-conv-act button:hover { color: var(--v2-t1); background: rgba(15,38,70,.12); }
+html.clair .ms-th-n { color: var(--v2-t1); }
+html.clair .ms-ico-btn:hover { color: var(--v2-t1); }
+html.clair .ms-back:hover { color: var(--v2-t1); }
+html.clair .ms-date { border-color: rgba(15,38,70,.1); }
+html.clair .ms-m-rc.lu { color: #1b7e5a; }
+html.clair .ms-bubble { background: rgba(15,38,70,.06); }
+html.clair body.v2 .ms-cp-list .ck { border-color: rgba(15,38,70,.22); }
+html.clair body.v2 .ms-cp-list .ck.checked::after { color: var(--v2-t1); }
+
+/* ── v2-notes.css ── */
+html.clair .nt-kpi-n { color: var(--v2-t1); }
+html.clair .nt-ed-btn:hover { color: var(--v2-t1); }
+html.clair .nt-ph-t { color: var(--v2-t1); }
+
+/* ── v2-nuit.css ── */
+html.clair .nt2-ev-line { background: rgba(15,38,70,.08); }
+html.clair .nt2-ico-btn:hover { color: var(--v2-t1); }
+html.clair .nt2-ronde-box.todo { border-color: rgba(15,38,70,.2); }
+html.clair .nt2-add:hover { color: var(--v2-t1); }
+html.clair .nt2-histo-r:hover .nt2-histo-d { color: var(--v2-t1); }
+
+/* ── v2-objectifs.css ── */
+html.clair .ob2-ico-btn:hover { color: var(--v2-t1); }
+html.clair .ob2-rgauge .seg i { background: rgba(15,38,70,.1); }
+html.clair .ob2-obj-nom { color: var(--v2-t1); }
+html.clair .ob2-step { background: rgba(15,38,70,.1); }
+html.clair .ob2-conn-t { background: rgba(15,38,70,.1); }
+html.clair .ob2-sugg-b:hover,
+html.clair body.v2 .ax-chip:hover { color: var(--v2-t1); }
+html.clair body.v2 #evDetailBody [style*="background:#f1f5f9"] { background: rgba(15,38,70,.08); }
+
+/* ── v2-paie.css ── */
+html.clair .pv-monthnav button:hover { color: var(--v2-t1); }
+html.clair button.pv-step:hover .pv-step-l { color: var(--v2-t1); }
+html.clair .pv-step-line { background: rgba(15,38,70,.1); }
+html.clair .pv-table td.net { color: var(--v2-t1); }
+html.clair .pv-iconbtn:hover { color: var(--v2-t1); }
+html.clair .pv-t-green { color: #168358; }
+html.clair .pv-t-orange { color: #8e4e0b; }
+html.clair .pv-mass-v { color: var(--v2-t1); }
+html.clair .pv-vent-v { color: var(--v2-t1); }
+html.clair .pv-vent-bar { background: rgba(15,38,70,.08); }
+html.clair .pv-evo-v { color: #8e4e0b; }
+html.clair .pv-stc-btn { color: #8e0b1c; }
+html.clair .pv-stc-btn:hover { color: var(--v2-t1); }
+html.clair .pv-det .pyx-stat { background: rgba(15,38,70,.05); }
+html.clair body.v2 .moneyx:hover { background: rgba(15,38,70,.1); }
+
+/* ── v2-pilotage.css ── */
+html.clair .pl-side-brand-t { color: var(--v2-t1); }
+html.clair .pl-side-fold { border-color: rgba(15,38,70,.1); }
+html.clair .pl-side-fold:hover { color: var(--v2-t1); }
+html.clair .pl-it:hover { background: rgba(15,38,70,.09); }
+html.clair .pl-it-l { color: var(--v2-t5); }
+html.clair .pl-it.on .pl-it-l { color: var(--v2-t1); }
+html.clair .pl-topbar-t { color: var(--v2-t1); }
+html.clair .pl-back:hover { color: var(--v2-t1); }
+html.clair body.v2 .pl-bellbox .nb-bell:hover { color: var(--v2-t1); }
+html.clair .pl-hello h1 { color: var(--v2-t1); }
+html.clair .pl-stat-n { color: var(--v2-t1); }
+html.clair .pl-card-i:hover { color: var(--v2-t1); }
+html.clair .pl-blk-a:hover { color: var(--v2-t1); }
+html.clair .pl-msg:hover .pl-msg-n { color: var(--v2-t1); }
+html.clair .pl-doc-dl:hover { color: var(--v2-t1); }
+
+/* ── v2-plan-soins.css ── */
+html.clair .ps2-dnav:hover { color: var(--v2-t1); }
+html.clair .ps2-fait .ck { border-color: rgba(15,38,70,.22); }
+html.clair .ps2-susp { background: rgba(15,38,70,.06); }
+html.clair .ps2-acts button:hover { color: var(--v2-t1); }
+html.clair .ps2-empty { border-color: rgba(15,38,70,.12); }
+
+/* ── v2-planning-equipe.css ── */
+html.clair .pe2-nav button:hover { color: var(--v2-t1); }
+html.clair .pe2-seg button.on { color: var(--v2-t1); background: rgba(15,38,70,.14); }
+html.clair .pe2-table thead th { background: rgba(15,38,70,.03); }
+html.clair .pe2-h-day.today .pe2-h-num { color: var(--v2-t1); }
+html.clair .pe2-table td.pe2-cell.clic:hover { background: rgba(15,38,70,.045); }
+html.clair .pe2-sh-e { color: #270b8e; }
+html.clair .pe2-flag-cg { background: rgba(15,38,70,.06); }
+html.clair .pe2-row-meta td { background: rgba(15,38,70,.02); }
+html.clair .pe2-row-sum td { background: rgba(15,38,70,.035); }
+html.clair .pe2-drop { border-color: rgba(15,38,70,.16); }
+html.clair .pe2-code { background: rgba(15,38,70,.04); }
+
+/* ── v2-pointage.css ── */
+html.clair .pt2-clock { color: #168358; }
+html.clair .pt2-nav button:hover { color: var(--v2-t1); }
+html.clair .pt2-seg button.on { color: var(--v2-t1); }
+html.clair .pt2-t tbody tr.clic:hover { background: rgba(15,38,70,.035); }
+html.clair .pt2-reg:hover { background: rgba(15,38,70,.12); color: var(--v2-t1); }
+html.clair .pt2-blk-v { color: #1a7f72; }
+html.clair .pt2-bar { background: rgba(15,38,70,.08); }
+html.clair .pt2-bar .mid { background: rgba(15,38,70,.2); }
+html.clair .pt2-add { border-color: rgba(15,38,70,.12); }
+html.clair .pt2-add:hover { border-color: rgba(15,38,70,.24); }
+html.clair .pt2-vbtn { color: #168358; }
+html.clair .pt2-vbtn.locked { color: #8e740b; }
+html.clair .pt2-vbtn2:hover { color: var(--v2-t1); }
+html.clair .pt2-wt th.today { color: #1a7f72; }
+html.clair .pt2-plan { color: #0b808e; }
+html.clair .pt2-plan:hover { color: var(--v2-t1); }
+
+/* ── v2-ppe.css ── */
+html.clair .pp2-name { color: var(--v2-t1); }
+html.clair .pp2-fbtn-warn:hover { color: var(--v2-t1); }
+html.clair .pp2-fbtn-danger:hover { color: var(--v2-t1); }
+html.clair body.v2 .section-card .section-header:hover { background: rgba(15,38,70,.045); }
+html.clair body.v2 .badge-ppe.termine { background: rgba(15,38,70,.08); }
+
+/* ── v2-presences.css ── */
+html.clair .pr2-all { color: #1b7e5a; }
+html.clair .pr2-card:hover .pr2-edit,
+html.clair .pr2-edit:hover,
+html.clair .pr2-edit:focus-visible { color: var(--v2-t1); }
+html.clair .pr2-uchip { background: rgba(15,38,70,.04); border-color: rgba(15,38,70,.07); }
+html.clair .pr2-uchip:hover { background: rgba(15,38,70,.08); }
+html.clair .pr2-uchip.on { color: var(--v2-t1); background: rgba(15,38,70,.1); border-color: rgba(15,38,70,.18); }
+html.clair .pr2-uchip .n { background: rgba(15,38,70,.07); }
+html.clair .pr2-uchip.on .n { background: rgba(15,38,70,.16); color: var(--v2-t1); }
+
+/* ── v2-rapport.css ── */
+html.clair .rap2-inp { border-color: rgba(15,38,70,.1); }
+html.clair body.v2 select.rap2-inp,
+html.clair body.v2 input.rap2-inp { border-color: rgba(15,38,70,.1); }
+html.clair .rap2-chart-b.vide { background: rgba(15,38,70,.07); }
+html.clair .rap2-big { color: #18813e; }
+html.clair .rap2-cmp-v { color: var(--v2-t1); }
+html.clair .rap2-ech-d { color: var(--v2-t1); }
+html.clair .rap2-add:hover { color: var(--v2-t1); }
+
+/* ── v2-recrutement.css ── */
+html.clair .rc2-line:hover .rc2-line-t { color: var(--v2-t1); }
+html.clair .rc2-line-dj { color: var(--v2-t1); }
+html.clair .rc2-line-h { color: #0b7e8e; }
+html.clair .rc2-kpi-v { color: var(--v2-t1); }
+html.clair .rc2-onb-i:hover { background: rgba(15,38,70,.06); }
+html.clair .rc2-onb-i.on .rc2-onb-c { color: #1b7e5a; }
+html.clair .rc2-danger:hover { color: var(--v2-t1); }
+
+/* ── v2-repas.css ── */
+html.clair .rp2-stat-n { color: var(--v2-t1); }
+html.clair .rp2-menus-h { color: #8e510b; }
+html.clair body.v2 .rp2-minput { background: rgba(15,38,70,.04); }
+html.clair .rp2-bar { background: rgba(15,38,70,.05); }
+html.clair .rp2-leg b { color: var(--v2-t1); }
+html.clair .rp2-row:hover { background: rgba(15,38,70,.02); }
+
+/* ── v2-repertoire.css ── */
+html.clair .rp-star { background: rgba(15,38,70,.05); }
+
+/* ── v2-rh-dashboard.css ── */
+html.clair .rhv-blk-ic { background: rgba(15,38,70,.06); }
+html.clair .rhv-todo:hover .rhv-todo-t { color: var(--v2-t1); }
+html.clair .rhv-eff-n { color: var(--v2-t1); }
+html.clair .rhv-row:hover .rhv-row-t { color: var(--v2-t1); }
+
+/* ── v2-rh.css ── */
+html.clair .rh-side-brand-t { color: var(--v2-t1); }
+html.clair .rh-it:hover { background: rgba(15,38,70,.09); }
+html.clair .rh-it-l { color: var(--v2-t5); }
+html.clair .rh-it.on .rh-it-l { color: var(--v2-t1); }
+html.clair .rh-topbar-t { color: var(--v2-t1); }
+html.clair .rh-back:hover { color: var(--v2-t1); }
+html.clair .rh-hello h1 { color: var(--v2-t1); }
+html.clair .rh-card-i:hover { color: var(--v2-t1); }
+html.clair .rh-bar-n { color: var(--v2-t1); }
+html.clair .rh-bar-r { background: rgba(15,38,70,.08); }
+html.clair .rh-md-ico { color: var(--v2-t1); }
+html.clair .rh-deny h3 { color: var(--v2-t1); }
+
+/* ── v2-satisfaction.css ── */
+html.clair .v2-chip-f.active { color: var(--v2-t1); }
+html.clair .sa2-evo-b.vide { background: rgba(15,38,70,.07); }
+html.clair .sa2-gauge-n { color: var(--v2-t1); }
+html.clair .sa2-qi-tag { background: rgba(15,38,70,.06); }
+
+/* ── v2-serafinph.css ── */
+html.clair .sp2-kpi-n { color: var(--v2-t1); }
+html.clair .sp2-rep-b { background: rgba(15,38,70,.08); }
+html.clair .sp2-fold:hover { color: var(--v2-t1); }
+html.clair body.v2 .v2-body .empty h3 { color: var(--v2-t1); }
+
+/* ── v2-vehicules.css ── */
+html.clair .vh-k-n { color: var(--v2-t1); }
+html.clair .vh-chart-b.zero { background: rgba(15,38,70,.08); }
+
+/* ── v2-viatrajectoire.css ── */
+html.clair .vt2-kpi-n { color: var(--v2-t1); }
+html.clair .vt2-act:hover { color: var(--v2-t1); }
+html.clair .vt2-deny h3 { color: var(--v2-t1); }
+
+/* ── v2-vie-quotidienne.css ── */
+html.clair .vq-side-brand-t { color: var(--v2-t1); }
+html.clair .vq-it:hover { background: rgba(15,38,70,.09); }
+html.clair .vq-it-l { color: var(--v2-t5); }
+html.clair .vq-it.on .vq-it-l { color: var(--v2-t1); }
+html.clair .vq-topbar-t { color: var(--v2-t1); }
+html.clair .vq-back:hover { color: var(--v2-t1); }
+html.clair .vq-hello h1 { color: var(--v2-t1); }
+html.clair .vq-card-i:hover { color: var(--v2-t1); }
+
+/* ── v2-visites.css ── */
+html.clair a.vs2-nom:hover { color: var(--v2-t1); }
+html.clair .vs2-act:hover { color: var(--v2-t1); }
+html.clair .vs2-droits-t { color: #0b258e; }
+html.clair .vs2-d-p { color: #224377; }
+html.clair .vs2-d-mod { color: #224377; }
+html.clair .vs2-cr-btn { color: #0b7c8e; }
+html.clair .vs2-cr-btn:hover { color: #0b7e8e; }

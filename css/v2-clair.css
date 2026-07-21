@@ -1,0 +1,246 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   THÈME CLAIR V2 — surcouche de css/v2.css
+   ──────────────────────────────────────────────────────────────────────────
+   S'active par la classe `clair` sur la balise <html> — posée par js/theme.js.
+   Pourquoi <html> et pas <body> : le script s'exécute dans le <head>, avant
+   que le <body> existe. Le poser sur <html> permet d'appliquer la préférence
+   AVANT le premier rendu, donc sans flash sombre au chargement d'une page.
+
+   Ne modifie JAMAIS css/v2.css : tout est en surcharge, donc le thème sombre
+   reste le comportement par défaut et rien ne casse si ce fichier n'est pas
+   chargé.
+
+   Trois familles de correctifs, dans cet ordre :
+     1. les jetons  — 90 % du travail, le design system est variabilisé ;
+     2. les blancs écrits en dur — il y en a deux sortes, voir plus bas ;
+     3. la couche de compatibilité V1, qui force du sombre et qu'il faut rendre.
+
+   ⚠ Les `#fff` de css/v2.css jouent DEUX rôles opposés :
+     · texte posé sur une surface  → doit devenir sombre  (titres, valeurs)
+     · texte posé sur une couleur  → doit rester blanc    (avatars, boutons
+       pleins, pastilles de notification, jour courant du calendrier)
+   Une inversion globale casserait la seconde famille : elles sont donc
+   listées une par une ci-dessous.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1) Jetons ─────────────────────────────────────────────────────────── */
+html.clair body.v2 {
+  /* Fonds. La coquille est plus CLAIRE que la page : même rapport qu'en
+     sombre, où elle est plus claire que le fond, donc elle se détache pareil. */
+  --v2-bg: #e8edf5;
+  --v2-inset: #eef2f8;
+
+  /* Surfaces. En sombre ce sont des voiles blancs sur du bleu nuit ; en clair
+     ce sont des cartes blanches franches sur la coquille teintée — c'est ce
+     qui donne la profondeur, l'alpha seul rendrait tout gris et plat. */
+  --v2-s-card: #ffffff;
+  --v2-s-alt: #fbfcfe;
+  --v2-s-kpi: #ffffff;
+  --v2-s-ctrl: #ffffff;
+  --v2-s-hover: #f2f6fc;
+  --v2-s-sel: #eaf1fa;
+  --v2-s-active: #e0e9f7;
+  --v2-s-sub: #f4f7fc;        /* sous-carte : s'éloigne du blanc vers le gris */
+  --v2-s-sub-soft: #f8fafd;
+
+  /* Bordures : alphas sombres au lieu d'alphas blancs. */
+  --v2-b: rgba(15,38,70,.10);
+  --v2-b-ctrl: rgba(15,38,70,.13);
+  --v2-b-soft: rgba(15,38,70,.08);
+  --v2-b-list: rgba(15,38,70,.07);
+  --v2-b-table: rgba(15,38,70,.06);
+  --v2-b-active: rgba(15,38,70,.26);
+
+  /* Échelle de texte : t1 = le plus contrasté, t9 = le plus discret.
+     En clair on s'assombrit d'abord puis on se rapproche du fond. */
+  --v2-t1: #0a1a2f;
+  --v2-t2: #16283f;
+  --v2-t3: #1e3550;
+  --v2-t4: #33506f;
+  --v2-t5: #47617f;
+  --v2-t6: #566d8a;
+  --v2-t7: #5f7592;
+  --v2-t8: #6a7f9a;
+  --v2-t9: #7488a1;
+
+  /* Accents : les variantes « light » / « pale » servaient de texte lisible
+     sur fond sombre. Sur du blanc elles disparaissent : on les fonce. */
+  --v2-indigo-light: #4f46e5;
+  --v2-indigo-pale: #4338ca;
+  --v2-cyan: #0891b2;
+  --v2-cyan-pale: #0e7490;
+  --v2-ok-light: #047857;
+  --v2-warn-text: #b45309;
+  --v2-warn-icon: #d97706;
+  --v2-danger-text: #b91c1c;
+
+  /* Ombres : en clair l'élévation se voit, en sombre elle se devine. */
+  --v2-sh-shell: 0 24px 60px -32px rgba(15,38,70,.30);
+  --v2-sh-primary: 0 8px 18px -6px rgba(79,70,229,.42);
+
+  /* Halo coloré de la coquille : très atténué, sinon il grise le blanc. */
+  --v2-halo: rgba(99,102,241,.10);
+}
+
+/* Fond de page — la règle sombre est en !important, il faut la même force. */
+html.clair body.v2 { background: var(--v2-bg) !important; color: var(--v2-t3); }
+html.clair body.v2 ::-webkit-scrollbar-thumb { background: rgba(15,38,70,.20); }
+
+/* Coquille : surface propre, plus claire que la page. */
+html.clair body.v2 .v2-shell {
+  background:
+    radial-gradient(1200px 600px at 78% -10%, var(--v2-halo), transparent 60%),
+    #f7f9fd;
+}
+
+/* Élévation des cartes : sur fond clair, une bordure seule ne suffit pas à
+   décoller la carte de la coquille. */
+html.clair body.v2 .v2-card,
+html.clair body.v2 .v2-kpi,
+html.clair body.v2 .v2-tile,
+html.clair body.v2 .v2-k,
+html.clair body.v2 .v2-q,
+html.clair body.v2 .v2-mod-wrap { box-shadow: 0 1px 2px rgba(15,38,70,.06); }
+html.clair body.v2 .v2-mod-wrap:hover,
+html.clair body.v2 .v2-q:hover { box-shadow: 0 6px 16px -6px rgba(15,38,70,.18); }
+
+/* ── 2a) Blancs en dur — TEXTE SUR SURFACE → devient sombre ───────────── */
+html.clair body.v2 .v2-top-title,
+html.clair body.v2 .v2-h1,
+html.clair body.v2 .v2-brand,
+html.clair body.v2 .v2-hero-h1,
+html.clair body.v2 .v2-hero-nom,
+html.clair body.v2 .v2-det-nom,
+html.clair body.v2 .v2-kpi-val,
+html.clair body.v2 .v2-gauge-val,
+html.clair body.v2 .v2-k-n,
+html.clair body.v2 .v2-jr-sum-n,
+html.clair body.v2 .v2-pl-titre,
+html.clair body.v2 .v2-md-t,
+html.clair body.v2 .v2-stat b,
+html.clair body.v2 .modal-title { color: var(--v2-t1); }
+
+/* États « actif » : ils posaient du blanc sur un voile clair. */
+html.clair body.v2 .v2-chip.on,
+html.clair body.v2 .v2-chip-f.on,
+html.clair body.v2 .v2-tab.on,
+html.clair body.v2 .v2-seg-o.on,
+html.clair body.v2 .v2-al-cat.on .v2-al-cat-l { color: var(--v2-t1); }
+
+/* Survols qui viraient au blanc. */
+html.clair body.v2 .v2-md-x:hover,
+html.clair body.v2 .v2-btn-sec:hover,
+html.clair body.v2 .v2-back:hover,
+html.clair body.v2 .v2-datenav button:hover,
+html.clair body.v2 .v2-pl-nav-b:hover,
+html.clair body.v2 .v2-tr-act:hover,
+html.clair body.v2 .v2-al-ign:hover,
+html.clair body.v2 .v2-histo-r:hover .v2-histo-d,
+html.clair body.v2 .lg-chip:hover { color: var(--v2-t1); }
+
+/* 2b) TEXTE SUR COULEUR → reste blanc. Rien à faire, mais on le note pour
+   que personne ne « corrige » ces règles plus tard :
+   .v2-logo, .v2-btn-pri, .v2-al-cta, .notif-badge, .mg-cell.today,
+   .v2-av / .v2-res-av / .v2-det-av / .v2-tr-av / .v2-jr-av / .v2-jr-top-av,
+   .v2-det-f-foot > bouton plein. */
+
+/* ── 2c) Filets, jauges et voiles gris posés en alpha blanc ───────────── */
+html.clair body.v2 .v2-tl-body { border-left-color: rgba(15,38,70,.12); }
+html.clair body.v2 .v2-tl2-bar,
+html.clair body.v2 .v2-jr-line { background: rgba(15,38,70,.12); }
+html.clair body.v2 .v2-prog { background: rgba(15,38,70,.10); }
+html.clair body.v2 .v2-b-neutral,
+html.clair body.v2 .badge-gray { background: rgba(15,38,70,.06); color: var(--v2-t5); }
+html.clair body.v2 .btn-ghost { background: rgba(15,38,70,.05); color: var(--v2-t4); }
+html.clair body.v2 .btn-ghost:hover { background: rgba(15,38,70,.09); }
+html.clair body.v2 .v2-tr-rep-i { background: rgba(15,38,70,.04); }
+html.clair body.v2 .v2-col-add { border-color: rgba(15,38,70,.16); }
+html.clair body.v2 .v2-col-add:hover { border-color: rgba(15,38,70,.30); }
+html.clair body.v2 a.v2-ct:hover { border-color: rgba(15,38,70,.18); }
+html.clair body.v2 .v2-btn-focus { background: rgba(15,38,70,.05); border-color: rgba(15,38,70,.12); }
+
+/* Trame horaire de l'agenda : invisible en alpha blanc sur fond clair. */
+html.clair body.v2 .v2-calgrid {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent 51px, rgba(15,38,70,.07) 52px);
+}
+
+/* Relief des pastilles d'icône : en sombre le liseré est blanc et l'ombre
+   noire ; en clair on garde le liseré (il fait le bombé) et on allège
+   fortement l'ombre, sinon les pastilles paraissent sales. */
+html.clair body.v2 .v2-ico,
+html.clair body.v2 .v2-act-ico,
+html.clair body.v2 .v2-q-ico {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    inset 0 -1px 2px rgba(15,38,70,.07),
+    0 1px 2px rgba(15,38,70,.10);
+  border: 1px solid rgba(15,38,70,.06);
+}
+html.clair body.v2 .v2-ico > svg,
+html.clair body.v2 .v2-act-ico > svg,
+html.clair body.v2 .v2-q-ico > svg { filter: none; }
+
+/* Halo d'angle des tuiles de module. En sombre c'est une lueur qu'on devine ;
+   sur du blanc le flou s'étale et voile toute la carte — on le resserre et on
+   le baisse pour ne garder qu'un rappel de couleur dans l'angle. */
+html.clair body.v2 .v2-mod::after { opacity: .07; filter: blur(22px); }
+
+/* Modales — le gabarit .v2-md et la modale héritée. */
+html.clair body.v2 .v2-md { background: #ffffff; box-shadow: 0 40px 100px -40px rgba(15,38,70,.45); }
+html.clair body.v2 .v2-ov { background: rgba(15,30,55,.42); }
+html.clair body.v2 .modal { background: #ffffff !important; color: var(--v2-t3); }
+html.clair body.v2 .modal-overlay { background: rgba(15,30,55,.42); }
+
+/* ── 3) Couche de compatibilité V1 ─────────────────────────────────────── */
+/* La palette héritée de style.css, repointée vers le clair. */
+html.clair body.v2 {
+  --bg: #e8edf5;
+  --white: #ffffff;
+  --g50: #f8fafc;
+  --g100: #f1f5f9;
+  --g200: #e2e8f0;
+  --g300: #cbd5e1;
+  --g400: #64748b;
+  --g700: #334155;
+  --border: rgba(15,38,70,.10);
+  --muted: #566d8a;
+  --text: #16283f;
+  --primary: #16283f;
+  --accent: #4f46e5;
+  --accent-h: #4338ca;
+}
+
+html.clair body.v2 .header { background: rgba(255,255,255,.72) !important; }
+html.clair body.v2 .card-glass,
+html.clair body.v2 .wizard-card,
+html.clair body.v2 .stat-card,
+html.clair body.v2 .chx-stat { box-shadow: 0 1px 2px rgba(15,38,70,.06); }
+
+/* Le sombre convertissait tout fond blanc inline en surface sombre : on le
+   rend, sinon les blocs hérités restent gris. */
+html.clair body.v2 [style*="background:#fff"],
+html.clair body.v2 [style*="background: #fff"],
+html.clair body.v2 [style*="background:#ffffff"] { background: #ffffff !important; }
+html.clair body.v2 [style*="background:#f8fafc"],
+html.clair body.v2 [style*="background:#f1f5f9"] { background: #f4f7fc !important; }
+
+/* Pastels de statut : on revient à des voiles clairs et à des textes foncés
+   (le sombre les avait éclaircis pour rester lisibles sur fond nuit). */
+html.clair body.v2 [style*="#fef2f2"] { background: rgba(239,68,68,.08) !important; }
+html.clair body.v2 [style*="#f0fdf4"] { background: rgba(16,185,129,.10) !important; }
+html.clair body.v2 [style*="#fffbeb"],
+html.clair body.v2 [style*="#fef9c3"] { background: rgba(245,158,11,.12) !important; }
+html.clair body.v2 [style*="#ecfeff"] { background: rgba(34,211,238,.12) !important; }
+html.clair body.v2 [style*="#eef2ff"],
+html.clair body.v2 [style*="#f5f3ff"] { background: rgba(99,102,241,.09) !important; }
+
+html.clair body.v2 [style*="color:#dc2626"],
+html.clair body.v2 [style*="color:#ef4444"] { color: #dc2626 !important; }
+html.clair body.v2 [style*="color:#16a34a"],
+html.clair body.v2 [style*="color:#15803d"] { color: #15803d !important; }
+html.clair body.v2 [style*="color:#d97706"],
+html.clair body.v2 [style*="color:#b45309"],
+html.clair body.v2 [style*="color:#ea580c"] { color: #b45309 !important; }
+html.clair body.v2 [style*="color:#0891b2"],
+html.clair body.v2 [style*="color:#0284c7"] { color: #0e7490 !important; }
