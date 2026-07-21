@@ -1413,7 +1413,28 @@ function setCirc(barId, pct) {
 // (users / settings / categories / loginHistory ne sont pas migrés → restent en localStorage)
 let _statsData = { residents:[], journal:[], planning:[], incidents:[], ppe:[], messages:[], convs:{}, docs:[], satisfaction:[], presences:{} };
 
+// Au chargement, cette fonction était appelée DEUX fois pour l'onglet par
+// défaut : une fois par activateTab() et une fois par le setTimeout de 120 ms
+// du DOMContentLoaded. Les 10 mêmes tables partaient donc deux fois — et la
+// mutualisation de supabase-client.js n'y pouvait rien, les deux vagues ne se
+// chevauchant pas toujours.
+// On garde les deux appels (chacun a sa raison d'être ailleurs) et on rend la
+// fonction idempotente : un chargement déjà en cours est réutilisé, et un
+// chargement tout juste terminé n'est pas refait. Un changement d'onglet plus
+// tard rafraîchit normalement.
+let _statsEnCours = null;
+let _statsFiniA = 0;
+const STATS_FRAICHEUR_MS = 3000;
+
 async function refreshAllStats() {
+  if (_statsEnCours) return _statsEnCours;
+  if (Date.now() - _statsFiniA < STATS_FRAICHEUR_MS) return;
+  _statsEnCours = _refreshAllStats();
+  try { return await _statsEnCours; }
+  finally { _statsEnCours = null; _statsFiniA = Date.now(); }
+}
+
+async function _refreshAllStats() {
   const todayStr = today();
   const monthStart = todayStr.slice(0, 7) + '-01';
   const d7 = new Date(); d7.setDate(d7.getDate() - 7);
