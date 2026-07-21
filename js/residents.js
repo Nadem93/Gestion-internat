@@ -240,12 +240,142 @@ function renderResidents() {
     return;
   }
 
-  if (currentView === 'grid') {
+  if (typeof resRenderAnniversaires === 'function') resRenderAnniversaires();
+
+  if (currentView === 'trombi') {
+    container.innerHTML = `<div class="res-trombi">${list.map(residentTrombi).join('')}</div>`;
+  } else if (currentView === 'grid') {
     container.innerHTML = `<div class="res-grid" style="gap:14px">${list.map(residentCard).join('')}</div>`;
   } else {
     container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Résident</th><th>Âge / Naissance</th><th>Entrée</th><th>Chambre</th><th>Actions</th><th>Statut</th><th>Objectifs</th></tr></thead><tbody>${list.map(residentRow).join('')}</tbody></table></div>`;
   }
   if (typeof resRenderDetail === 'function') resRenderDetail();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANNIVERSAIRES À VENIR  (cohérent avec l'annuaire : connaître son groupe)
+// ══════════════════════════════════════════════════════════════════════════
+
+// Jours avant le prochain anniversaire + âge qu'il fêtera. null si pas de date.
+function _resAnnivInfo(dob) {
+  if (!dob) return null;
+  const d = new Date(String(dob).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  let prochain = new Date(now.getFullYear(), d.getMonth(), d.getDate());
+  if (prochain < now) prochain = new Date(now.getFullYear() + 1, d.getMonth(), d.getDate());
+  const jours = Math.round((prochain - now) / 86400000);
+  return { jours, date: prochain, ageAVenir: prochain.getFullYear() - d.getFullYear() };
+}
+
+const RES_ANNIV_FENETRE = 30;   // horizon du bloc (jours)
+const RES_ANNIV_BADGE   = 7;    // pastille 🎂 sur la carte si dans cette fenêtre
+
+// Résidents (hors sortis) dont l'anniversaire tombe dans les N prochains jours.
+function _resProchainsAnniv(fenetre) {
+  return (_residentsCache || [])
+    .filter(r => r.statut !== 'sorti' && r.dob)
+    .map(r => ({ r, info: _resAnnivInfo(r.dob) }))
+    .filter(x => x.info && x.info.jours <= (fenetre || RES_ANNIV_FENETRE))
+    .sort((a, b) => a.info.jours - b.info.jours);
+}
+
+function resRenderAnniversaires() {
+  const el = document.getElementById('resAnniv');
+  if (!el) return;
+  const prochains = _resProchainsAnniv(RES_ANNIV_FENETRE);
+  if (!prochains.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `<div class="res-anniv">
+    <div class="res-anniv-h"><span class="res-anniv-em">🎂</span><b>Anniversaires à venir</b>
+      <span class="res-anniv-n">${prochains.length}</span></div>
+    <div class="res-anniv-l">${prochains.map(({ r, info }) => {
+      const col = safeColor(r.color, 'var(--primary)');
+      const quand = info.jours === 0 ? 'aujourd\'hui 🎉'
+        : info.jours === 1 ? 'demain'
+        : 'dans ' + info.jours + ' jours';
+      const dateFr = info.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      return `<button type="button" class="res-anniv-i${info.jours === 0 ? ' today' : ''}" onclick="${(typeof resSelect === 'function') ? `resSelect('${r.id}')` : `window.location.href='resident.html?id=${r.id}'`}">
+        <span class="res-anniv-av" style="background:${col}">${r.photo ? `<img src="${sanitizeUrl(r.photo)}" alt=""/>` : initials(r.prenom, r.nom)}</span>
+        <span class="res-anniv-b">
+          <span class="res-anniv-nom">${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}</span>
+          <span class="res-anniv-m">${escHtml(quand)} · ${escHtml(dateFr)} · ${info.ageAVenir} ans</span>
+        </span>
+      </button>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TROMBINOSCOPE  (reconnaître les visages — cœur d'un annuaire)
+// ══════════════════════════════════════════════════════════════════════════
+
+function residentTrombi(r) {
+  const col = safeColor(r.color, 'var(--primary)');
+  const todayPresences = (DB.get(DB.keys.presences) || {})[today()] || {};
+  const st = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
+  const dotCol = { present: '#10b981', absent: '#ef4444', sortie: '#f59e0b', sorti: '#94a3b8' }[st] || '#94a3b8';
+  const action = (typeof resSelect === 'function') ? `resSelect('${r.id}')` : `window.location.href='resident.html?id=${r.id}'`;
+  const anniv = _resAnnivInfo(r.dob);
+  const fete = anniv && anniv.jours <= RES_ANNIV_BADGE;
+  return `<button type="button" class="res-tr" onclick="${action}" title="${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}">
+    <span class="res-tr-photo" style="background:${col}">
+      ${r.photo ? `<img src="${sanitizeUrl(r.photo)}" alt=""/>` : `<span class="res-tr-ini">${initials(r.prenom, r.nom)}</span>`}
+      <span class="res-tr-dot" style="background:${dotCol}" title="${escHtml(st || '')}"></span>
+      ${fete ? '<span class="res-tr-cake">🎂</span>' : ''}
+    </span>
+    <span class="res-tr-nom">${escHtml(r.prenom || '')}</span>
+    <span class="res-tr-sub">${escHtml(r.nom || '')}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</span>
+  </button>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANNUAIRE DU JOUR — IMPRIMABLE
+// ══════════════════════════════════════════════════════════════════════════
+
+function resImprimerAnnuaire() {
+  const list = getResidents();               // respecte le filtre/tri courant
+  const todayPresences = (DB.get(DB.keys.presences) || {})[today()] || {};
+  const stLabel = { present: 'Présent', absent: 'Absent', sortie: 'Sortie temp.', sorti: 'Sorti' };
+  const dateStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  let etab = ''; try { const e = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null; etab = e?.nom || ''; } catch (_) {}
+
+  const lignes = list.map(r => {
+    const st = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
+    return `<tr>
+      <td>${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}</td>
+      <td>${r.chambre ? escHtml(r.chambre) : '—'}</td>
+      <td>${r.dob ? _resAge(r.dob) + ' ans' : '—'}</td>
+      <td>${r.referent ? escHtml(r.referent) : '—'}</td>
+      <td>${stLabel[st] || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const zone = document.getElementById('resPrint');
+  if (!zone) return;
+  zone.innerHTML = `<div class="rp-doc">
+    <div class="rp-head">
+      <div><div class="rp-title">Annuaire des résidents</div>
+        <div class="rp-sub">${escHtml(etab)}${etab ? ' · ' : ''}${escHtml(dateStr)}</div></div>
+      <div class="rp-count">${list.length} résident${list.length > 1 ? 's' : ''}</div>
+    </div>
+    <table class="rp-table"><thead><tr>
+      <th>Résident</th><th>Chambre</th><th>Âge</th><th>Référent</th><th>Présence</th>
+    </tr></thead><tbody>${lignes}</tbody></table>
+    <div class="rp-foot">Document interne — secret professionnel. Imprimé le ${escHtml(dateStr)}.</div>
+  </div>`;
+  document.body.classList.add('rp-printing');
+  const nettoyer = () => { document.body.classList.remove('rp-printing'); window.removeEventListener('afterprint', nettoyer); };
+  window.addEventListener('afterprint', nettoyer);
+  window.print();
+}
+
+// Âge numérique (age() de app.js renvoie déjà « X ans » : on recalcule le nombre).
+function _resAge(dob) {
+  if (!dob) return '';
+  const d = new Date(String(dob).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return '';
+  return Math.floor((Date.now() - d.getTime()) / 31557600000);
 }
 
 function statusBadge(s) {
@@ -284,9 +414,13 @@ function residentCard(r) {
         : initials(r.prenom, r.nom)}</div>
       <div style="flex:1;min-width:0">
         <div class="v2-res-nom">${escHtml(r.prenom || '')} ${escHtml(r.nom || '')}</div>
-        <div class="v2-res-meta">${r.dob ? age(r.dob) + ' ans' : ''}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</div>
+        <div class="v2-res-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</div>
       </div>
-      ${statusBadge(presenceStatus)}
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        ${statusBadge(presenceStatus)}
+        ${(() => { const a = _resAnnivInfo(r.dob); return (a && a.jours <= RES_ANNIV_BADGE)
+          ? `<span class="res-cake-badge" title="Anniversaire ${a.jours === 0 ? "aujourd'hui" : 'dans ' + a.jours + ' j'}">🎂 ${a.jours === 0 ? "auj." : a.jours + ' j'}</span>` : ''; })()}
+      </div>
     </div>
 
     ${refNom ? `<div class="v2-res-ref">
@@ -604,10 +738,23 @@ async function initResidents() {
   if (filterObj) filterObj.addEventListener('change', renderResidents);
   const sortSel = document.getElementById('sortResidents');
   if (sortSel) sortSel.addEventListener('change', renderResidents);
+  const setVue = v => {
+    currentView = v;
+    try { localStorage.setItem('res_view', v); } catch (_) {}
+    ['viewGrid', 'viewList', 'viewTrombi'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.classList.toggle('on', id === ({ grid: 'viewGrid', list: 'viewList', trombi: 'viewTrombi' }[v]));
+    });
+    renderResidents();
+  };
   const viewGrid = document.getElementById('viewGrid');
-  if (viewGrid) viewGrid.addEventListener('click', () => { currentView='grid'; renderResidents(); });
+  if (viewGrid) viewGrid.addEventListener('click', () => setVue('grid'));
   const viewList = document.getElementById('viewList');
-  if (viewList) viewList.addEventListener('click', () => { currentView='list'; renderResidents(); });
+  if (viewList) viewList.addEventListener('click', () => setVue('list'));
+  const viewTrombi = document.getElementById('viewTrombi');
+  if (viewTrombi) viewTrombi.addEventListener('click', () => setVue('trombi'));
+  // reprise du dernier mode d'affichage
+  try { const v = localStorage.getItem('res_view'); if (v === 'grid' || v === 'list' || v === 'trombi') setVue(v); } catch (_) {}
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
   const modalRes = document.getElementById('modalResident');
   if (modalRes) modalRes.addEventListener('click', e => {

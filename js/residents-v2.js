@@ -141,7 +141,7 @@ function resRenderDetail() {
           <div class="v2-det-nom">${escHtml(r.prenom || '')} ${escHtml(r.nom || '')}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
             ${statusBadge(statut)}
-            ${r.dob ? `<span style="font-size:11.5px;color:var(--v2-t5)">${age(r.dob)} ans</span>` : ''}
+            ${r.dob ? `<span style="font-size:11.5px;color:var(--v2-t5)">${age(r.dob)}</span>` : ''}
           </div>
         </div>
       </div>
