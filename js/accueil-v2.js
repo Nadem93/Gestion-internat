@@ -77,7 +77,10 @@ async function initAccueilV2() {
   const call = async (fn, ...a) => { try { return (typeof window[fn] === 'function') ? await window[fn](...a) : null; } catch (e) { console.warn('[accV2]', fn, e); return null; } };
   const t = _av2Today();
 
-  host.innerHTML = _av2Hero() + _av2Grid() + `<div id="accV2Bas" style="margin-top:16px"></div>`;
+  host.innerHTML = _av2Hero() + _av2Grid()
+    + `<div class="v2-sep" style="margin:26px 0 14px"><span class="v2-sep-txt">Actions rapides</span><span class="v2-sep-line"></span></div>`
+    + _av2Actions()
+    + `<div id="accV2Bas" style="margin-top:26px"></div>`;
   if (typeof applyPermissions === 'function') { try { applyPermissions(); } catch (e) { console.warn(e); } }
   _av2Roles();
 
@@ -89,9 +92,7 @@ async function initAccueilV2() {
     transmissions: transmissions || [], journal: journal || [], conges: conges || [] };
 
   const b = document.getElementById('accV2Bas');
-  if (b) b.innerHTML = `<div class="v2-g v2-g2">${_av2Jour()}${_av2Activite()}</div>
-    <div class="v2-sep" style="margin-top:22px"><span class="v2-sep-txt">Actions rapides</span><span class="v2-sep-line"></span></div>
-    ${_av2Actions()}`;
+  if (b) b.innerHTML = `<div class="v2-g v2-g2">${_av2Jour()}${_av2Activite()}</div>`;
 }
 
 // Filtrage par rôle des tuiles rendues dynamiquement. Indispensable : les
