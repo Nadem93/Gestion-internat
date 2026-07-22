@@ -178,6 +178,7 @@ function renderEntryForm() {
             <span style="${HDR_LABEL}">Observation / Contenu</span>
           </div>
           <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="margin-bottom:1rem"/>
+          <div class="jr-modeles" id="jrModelesNew"></div>
           <textarea id="iContenu" class="form-control" placeholder="Décrivez l'événement, l'observation ou l'intervention…" style="height:220px;resize:vertical">${escHtml(currentContenu)}</textarea>
           <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #99e5dc55;border-radius:12px;padding:.8rem .9rem">
             <div style="font-size:.72rem;font-weight:700;color:#0f766e;margin-bottom:.5rem">🤝 Accompagnement apporté <span style="font-weight:400;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></div>
@@ -259,6 +260,7 @@ function renderEntryForm() {
 
   document.getElementById('entryFormContainer').innerHTML = html;
   renderInlineAttachList();
+  if (typeof jr2RenderModeles === 'function') jr2RenderModeles();
   document.addEventListener('click', function _closeRes(e) {
     if (!e.target.closest('#residentSearch') && !e.target.closest('#residentDropdown') && !e.target.closest('[onclick*="toggleResidentDropdown"]')) {
       const dd = document.getElementById('residentDropdown');

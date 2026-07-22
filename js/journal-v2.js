@@ -5,6 +5,13 @@
 // La lecture, les filtres et les actions restent celles de js/journal.js.
 
 let JR2_CAT = '';   // catégorie sélectionnée dans les chips
+let JR2_GROUP = 'jour';   // 'jour' (chronologique) ou 'objectif' (synthèse PPE)
+try { const g = localStorage.getItem('jr_group'); if (g === 'objectif') JR2_GROUP = 'objectif'; } catch (_) {}
+function jr2SetGroup(mode) {
+  JR2_GROUP = mode;
+  try { localStorage.setItem('jr_group', mode); } catch (_) {}
+  jr2Render();
+}
 
 const JR2_VIS = {
   equipe:       { l: 'Équipe',       c: '#22d3ee' },
@@ -44,6 +51,19 @@ function jr2Render() {
   jr2RenderCategories();
   jr2RenderTopResidents();
   jr2RenderSynthese();
+  jr2SyncGroupBtn();
+}
+
+// Bascule jour / objectif : le bouton affiche l'ÉTAT COURANT (« Par objectif »
+// quand on regroupe déjà par objectif), avec une pastille active.
+function jr2ToggleGroupUI() { jr2SetGroup(JR2_GROUP === 'objectif' ? 'jour' : 'objectif'); }
+function jr2SyncGroupBtn() {
+  const b = document.getElementById('btnGroupObj'), l = document.getElementById('btnGroupObjLbl');
+  if (!b) return;
+  const actif = JR2_GROUP === 'objectif';
+  b.classList.toggle('on', actif);
+  if (l) l.textContent = actif ? 'Par objectif' : 'Par objectif';
+  b.title = actif ? 'Revenir au fil chronologique' : 'Regrouper par objectif du projet personnalisé';
 }
 
 function jr2SetCat(id) { JR2_CAT = (JR2_CAT === id) ? '' : id; jr2Render(); }
@@ -78,6 +98,8 @@ function jr2RenderFil(liste) {
     return;
   }
 
+  if (JR2_GROUP === 'objectif') { jr2RenderParObjectif(el, liste); return; }
+
   const parJour = {};
   liste.forEach(e => {
     const d = (e.date || '').slice(0, 10);
@@ -93,6 +115,44 @@ function jr2RenderFil(liste) {
         <span class="v2-jr-day-n">${ents.length} entrée${ents.length > 1 ? 's' : ''}</span>
         <span class="v2-jr-day-s"></span>
       </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${ents.map((e, i) => jr2Entree(e, i < ents.length - 1)).join('')}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// Synthèse par objectif : regroupe le fil par objectif du projet personnalisé —
+// « pour cet objectif, voici ce qui a été observé ». Chaque groupe résume aussi
+// le niveau de soutien apporté. Les entrées sans objectif rattaché sont mises à
+// part, en fin de liste.
+function jr2RenderParObjectif(el, liste) {
+  const groupes = {};
+  liste.forEach(e => {
+    const cle = (e.objectif || '').trim() || '__sans';
+    (groupes[cle] = groupes[cle] || []).push(e);
+  });
+  // objectifs avant « sans objectif », puis par nombre d'entrées décroissant
+  const cles = Object.keys(groupes).sort((a, b) => {
+    if (a === '__sans') return 1; if (b === '__sans') return -1;
+    return groupes[b].length - groupes[a].length || a.localeCompare(b);
+  });
+
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">${cles.map(k => {
+    const ents = groupes[k].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const sansObj = k === '__sans';
+    // Répartition des niveaux de soutien du groupe.
+    const niv = {};
+    ents.forEach(e => { if (e.niveauSoutien) niv[e.niveauSoutien] = (niv[e.niveauSoutien] || 0) + 1; });
+    const nivChips = Object.keys(niv).sort((a, b) => niv[b] - niv[a])
+      .map(n => `<span class="v2-tr-tag" style="--pc:#8b5cf6">${escHtml(journalNiveauLabel(n))} · ${niv[n]}</span>`).join('');
+    return `<div class="v2-jr-grp">
+      <div class="v2-jr-obj-h${sansObj ? ' sans' : ''}">
+        ${_jr2Svg(sansObj ? JR2_IC.doc : JR2_IC.target)}
+        <span class="v2-jr-obj-t">${sansObj ? 'Sans objectif rattaché' : escHtml(k)}</span>
+        <span class="v2-jr-day-n">${ents.length} entrée${ents.length > 1 ? 's' : ''}</span>
+      </div>
+      ${nivChips ? `<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 0 12px 64px">${nivChips}</div>` : ''}
       <div style="display:flex;flex-direction:column;gap:12px">
         ${ents.map((e, i) => jr2Entree(e, i < ents.length - 1)).join('')}
       </div>
@@ -229,3 +289,49 @@ function jr2RenderSynthese() {
     ${bloc(JR2_IC.target, '#f59e0b', objectifs, 'Entrées liées à un objectif')}
   </div>`;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// MODÈLES D'ENTRÉE RAPIDE  (« moins d'écrits » : observations récurrentes)
+// ══════════════════════════════════════════════════════════════════════════
+const JR2_MODELES = [
+  'Rien à signaler (RAS).',
+  'A bien mangé.',
+  'Sieste calme.',
+  'A participé à l\'activité.',
+  'Bonne journée dans l\'ensemble.',
+  'Moment d\'agitation, apaisé·e.',
+  'Refus de soin / d\'activité.',
+  'Sortie extérieure.',
+  'Visite de la famille.',
+  'Bon contact avec l\'équipe.'
+];
+
+// Remplit les chips de modèles dans tous les hôtes présents :
+//  - #jrModelesNew : formulaire riche de NOUVELLE entrée (textarea #iContenu)
+//  - #jrModeles    : modale d'ÉDITION (textarea #eContenu)
+function jr2RenderModeles() {
+  const html = JR2_MODELES.map(m =>
+    `<button type="button" class="jr-modele" onclick="jr2InsererModele('${m.replace(/'/g, "\\'")}')">${escHtml(m)}</button>`
+  ).join('');
+  ['jrModelesNew', 'jrModeles'].forEach(id => {
+    const host = document.getElementById(id);
+    if (host) host.innerHTML = html;
+  });
+}
+
+// Insère (ou complète) le modèle choisi dans le textarea de contenu actif.
+// Le formulaire riche (#iContenu) prime sur la modale d'édition (#eContenu).
+function jr2InsererModele(txt) {
+  const ta = ['iContenu', 'eContenu']
+    .map(id => document.getElementById(id))
+    .find(el => el && el.offsetParent !== null)
+    || document.getElementById('eContenu');
+  if (!ta) return;
+  const actuel = ta.value.replace(/\s+$/, '');
+  ta.value = actuel ? actuel + (/[.!?…]$/.test(actuel) ? ' ' : '. ') + txt : txt;
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', jr2RenderModeles);
+else jr2RenderModeles();
