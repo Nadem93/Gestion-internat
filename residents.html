@@ -71,6 +71,13 @@
     .v2-res-ech-b{flex-shrink:0;font-size:11px;font-weight:700;color:var(--ec)}
     .v2-res-ech-n{font-size:10px;font-weight:700;color:var(--ec);background:color-mix(in srgb,var(--ec) 18%,transparent);border-radius:999px;padding:1px 5px;margin-left:3px}
 
+    /* Échéances dans le rail de détail (à droite) */
+    .v2-det-ech{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--v2-b-list,rgba(255,255,255,.05))}
+    .v2-det-ech:first-child{border-top:none}
+    .v2-det-ech-t{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--v2-t3,#dce6f3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .v2-det-ech-d{flex-shrink:0;font-size:11px;color:var(--v2-t7,#7f93b3)}
+    .v2-det-ech-b{flex-shrink:0;font-size:10.5px;font-weight:700;color:var(--ec);background:color-mix(in srgb,var(--ec) 15%,transparent);border-radius:999px;padding:2px 9px;white-space:nowrap}
+
     /* ── Trombinoscope ── */
     .res-trombi{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:14px}
     .res-tr{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border-radius:14px;cursor:pointer;font-family:inherit;

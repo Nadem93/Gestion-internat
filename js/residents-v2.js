@@ -123,6 +123,26 @@ function resRenderDetail() {
   const DMP = { actif: ['DMP actif', '#10b981'], en_attente: ['DMP en attente', '#f59e0b'], non_ouvert: ['DMP non ouvert', '#64748b'] };
   if (DMP[r.dmp]) med.push(rv2Chip(DMP[r.dmp][0], DMP[r.dmp][1]));
 
+  // Échéances ouvertes du résident (MDPH, mesure de protection, contrat…),
+  // de la plus proche à la plus lointaine. Rouge = dépassée, ambre = dans les
+  // 30 jours, gris = plus loin.
+  const echeances = (typeof _residentsEcheances !== 'undefined' ? _residentsEcheances : [])
+    .filter(e => String(e.residentId) === String(r.id) && !e.done && e.date)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const _t0 = today();
+  const echHtml = echeances.length ? echeances.slice(0, 6).map(e => {
+    const jours = Math.round((new Date(e.date + 'T00:00:00') - new Date(_t0 + 'T00:00:00')) / 86400000);
+    const col = jours < 0 ? '#ef4444' : (jours <= 30 ? '#f59e0b' : '#64748b');
+    const quand = jours < 0 ? (jours === -1 ? 'hier' : 'il y a ' + (-jours) + ' j')
+      : (jours === 0 ? "auj." : jours === 1 ? 'demain' : 'dans ' + jours + ' j');
+    const dateFr = new Date(e.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    return `<div class="v2-det-ech" style="--ec:${col}">
+      <span class="v2-det-ech-t">${escHtml(e.libelle || e.type || 'Échéance')}</span>
+      <span class="v2-det-ech-d">${dateFr}</span>
+      <span class="v2-det-ech-b">${jours < 0 ? 'En retard · ' : ''}${escHtml(quand)}</span>
+    </div>`;
+  }).join('') : `<div class="v2-blk-vide">Aucune échéance.</div>`;
+
   const tr = resDerniereTransmission(r);
   const trHtml = tr
     ? `<div class="v2-det-note">${escHtml(tr.content || '')}
@@ -161,6 +181,9 @@ function resRenderDetail() {
       <div class="v2-blk-sub">Suivi médical</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px">${
         med.length ? med.join('') : '<div class="v2-blk-vide">Rien de signalé.</div>'}</div>
+
+      <div class="v2-blk-sub">Échéances</div>
+      <div style="margin-bottom:22px">${echHtml}</div>
 
       <div class="v2-blk-sub">Dernière transmission</div>
       ${trHtml}
