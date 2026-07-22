@@ -26,6 +26,10 @@
       </div>
       <div class="jn2-topact">
         <div class="jn2-date"><span id="jrDateLabel"></span><span id="jrCharge"></span></div>
+        <button type="button" class="jn2-new jn2-print" onclick="jrPrintTournee()" title="Imprimer la feuille de tournée (remplaçant / coupure réseau)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimer
+        </button>
         <button type="button" class="jn2-new" id="jrAddBtn" onclick="openTacheModal()" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nouvelle tâche
@@ -39,6 +43,8 @@
         <!-- FIL DE LA TOURNÉE -->
         <div class="jn2-main">
           <div class="jn2-filters v2-chips" id="jn2Chips"></div>
+          <div class="jn2-resrail" id="jn2ResRail"></div>
+          <div id="jn2Reprise"></div>
           <div id="jrList"><div class="jn2-vide">Chargement…</div></div>
           <div class="jn2-foot">Ces moments sont des <strong>supports d'accompagnement</strong>, pas une cadence :
             l'équipe ajuste avec la personne, et son refus est un droit.</div>
@@ -163,6 +169,7 @@
         <select id="tcRecurrence" class="v2-fld" onchange="document.getElementById('tcJours').style.display=this.value==='jours'?'flex':'none'">
           <option value="quotidien">Tous les jours</option>
           <option value="jours">Certains jours</option>
+          <option value="ponctuel">Ponctuel (ce jour uniquement)</option>
         </select>
         <div id="tcJours" class="jn2-jours" style="display:none"></div>
       </div>
@@ -201,6 +208,9 @@
     </div>
   </div>
 </div>
+
+<!-- Zone imprimée pour la « Feuille de tournée » (masquée hors impression) -->
+<div id="jrPrintZone" class="jr-print-zone" aria-hidden="true"></div>
 
 <div id="toast-container" class="toast-container"></div>
 

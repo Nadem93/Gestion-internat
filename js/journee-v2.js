@@ -59,7 +59,9 @@ const JN2_IC = {
   hand:     '<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.6 0-4.4-.9-5.9-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/>',
   pencil:   '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
   reset:    '<path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.3-3.4L3 8"/>',
-  target:   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'
+  target:   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  person:   '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
+  print:    '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>'
 };
 function jn2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -68,6 +70,10 @@ function jn2Svg(d, w) {
 let _jn2Types = {};      // tacheId → nature
 let _jn2TypesOk = true;  // false = table absente / illisible
 let _jn2Filter = 'all';
+let _jn2ResFocus = '';       // focus sur un résident ('' = tous)
+let _jn2ReferesOnly = false; // filtre « Mes référés » (indépendant du filtre de nature)
+let _jn2MyReferes = null;    // Set des residentId dont je suis référent/co-référent (calculé une fois)
+let _jn2RepriseOpen = true;  // bandeau « À reprendre » déplié
 
 // ── Nature du moment (table satellite) ───────────────────────────────
 
@@ -191,10 +197,45 @@ function jn2InFilter(t) {
   return jn2TypeOf(t.id) === _jn2Filter;
 }
 
+// Visibilité d'un moment dans la timeline : filtre de nature ET focus résident
+// ET « Mes référés » — trois filtres indépendants, combinables.
+function jn2Visible(t) {
+  if (!jn2InFilter(t)) return false;
+  if (_jn2ResFocus && String(t.residentId) !== String(_jn2ResFocus)) return false;
+  if (_jn2ReferesOnly && !jn2MyReferes().has(String(t.residentId))) return false;
+  return true;
+}
+
 function jn2SetFilter(f) { _jn2Filter = f; jn2Render(); }
 // « Réinitialiser » de la maquette : remet l'affichage à plat. Les coches, elles,
 // sont des faits d'accompagnement — elles ne sont jamais effacées en masse.
-function jn2Reset() { _jn2Filter = 'all'; jn2Render(); }
+function jn2Reset() { _jn2Filter = 'all'; _jn2ResFocus = ''; _jn2ReferesOnly = false; jn2Render(); }
+
+// ── Mes référés (rapprochement par NOM : referent/coReferent sont des noms,
+// pas des userId) — même règle que le tableau de bord. ──
+function jn2MyName() {
+  try { const s = Auth.getSession(); return s ? `${s.prenom || ''} ${s.nom || ''}`.trim().toLowerCase().replace(/\s+/g, ' ') : ''; }
+  catch (e) { return ''; }
+}
+function jn2MyReferes() {
+  if (_jn2MyReferes) return _jn2MyReferes;
+  const me = jn2MyName();
+  const norm = x => (x || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const set = new Set();
+  if (me) (_jrResidents || []).forEach(r => { if (norm(r.referent) === me || norm(r.coReferent) === me) set.add(String(r.id)); });
+  _jn2MyReferes = set;
+  return set;
+}
+function jn2ToggleReferes() {
+  _jn2ReferesOnly = !_jn2ReferesOnly;
+  if (_jn2ReferesOnly) _jn2ResFocus = '';   // les deux périmètres résident ne se cumulent pas
+  jn2Render();
+}
+function jn2SetResFocus(rid) {
+  _jn2ResFocus = (_jn2ResFocus === rid) ? '' : rid;
+  if (_jn2ResFocus) _jn2ReferesOnly = false;
+  jn2Render();
+}
 
 // ── RENDU PRINCIPAL ──────────────────────────────────────────────────
 
@@ -202,6 +243,8 @@ function jn2Render() {
   const jour = jrTachesDuJour().slice().sort(jn2Order);
   jn2Charge();
   jn2Chips();
+  jn2ResRail(jour);
+  jn2Reprise(jour);
   jn2Timeline(jour);
   jn2Side(jour);
 }
@@ -222,10 +265,70 @@ function jn2Chips() {
     `<button type="button" class="v2-chip-f${_jn2Filter === c.id ? ' on' : ''}" onclick="jn2SetFilter('${c.id}')">
        <span class="dot" style="background:${c.dot}"></span>${escHtml(c.label)}
      </button>`).join('')
-    + `<button type="button" class="v2-chip-f jn2-reset" onclick="jn2Reset()" title="Réafficher toutes les natures">
+    + `<button type="button" class="v2-chip-f jn2-referes${_jn2ReferesOnly ? ' on' : ''}" onclick="jn2ToggleReferes()" title="N'afficher que mes résidents référés / co-référés">
+         ${jn2Svg(JN2_IC.person, 2.2)}Mes référés
+       </button>`
+    + `<button type="button" class="v2-chip-f jn2-reset" onclick="jn2Reset()" title="Réafficher toutes les natures et tous les résidents">
          ${jn2Svg(JN2_IC.reset, 2.2)}Réinitialiser
        </button>`;
 }
+
+// Rail de puces-résidents : focus sur une personne (« je suis avec Madame X »).
+// L'anneau de progression (jn2Side) reste GLOBAL — aucune statistique par résident.
+function jn2ResRail(jour) {
+  const el = document.getElementById('jn2ResRail');
+  if (!el) return;
+  const order = [];
+  const byId = {};
+  jour.forEach(t => {
+    const rid = String(t.residentId || '');
+    if (!rid) return;
+    if (!byId[rid]) { byId[rid] = { rid, nom: t.residentName || 'Résident', todo: 0 }; order.push(rid); }
+    if (!jrEtat(t)) byId[rid].todo++;
+  });
+  if (order.length < 2) { el.innerHTML = ''; return; }   // inutile s'il n'y a qu'une personne
+  order.sort((a, b) => (byId[a].nom || '').localeCompare(byId[b].nom || '', 'fr'));
+  const av = (rid, nom) => `<span class="jn2-rav" style="background:${_jrAvColor(rid)}">${escHtml(_jrInitiales(nom))}</span>`;
+  el.innerHTML = `<button type="button" class="jn2-rchip jn2-rall${!_jn2ResFocus ? ' on' : ''}" onclick="jn2SetResFocus('')">Tous</button>`
+    + order.map(rid => {
+      const r = byId[rid];
+      return `<button type="button" class="jn2-rchip${_jn2ResFocus === rid ? ' on' : ''}" onclick="jn2SetResFocus('${rid}')" title="${escHtml(r.nom)}">
+        ${av(rid, r.nom)}<span class="jn2-rname">${escHtml((r.nom || '').split(' ')[0])}</span>
+        ${r.todo ? `<span class="jn2-rtodo">${r.todo}</span>` : '<span class="jn2-rdone">✓</span>'}
+      </button>`;
+    }).join('');
+}
+
+// Bandeau « À reprendre » : les moments REPORTÉS du jour (tous postes confondus —
+// les coches ne distinguent pas l'équipe), reprenables en un tap.
+function jn2Reprise(jour) {
+  const el = document.getElementById('jn2Reprise');
+  if (!el) return;
+  const reportes = jour.filter(t => jrEtat(t) === 'reporte');
+  if (!reportes.length) { el.innerHTML = ''; return; }
+  const open = _jn2RepriseOpen;
+  const items = reportes.map(t => {
+    const c = _jrCoches[t.id] || {};
+    return `<div class="jn2-rep-i">
+      <div class="jn2-rep-x">
+        <div class="jn2-rep-t">${escHtml(t.libelle || '')}</div>
+        <div class="jn2-rep-s">${t.residentName ? '<b>' + escHtml(t.residentName) + '</b> · ' : ''}${escHtml(c.motif || 'Reporté')}${c.par ? ' · ' + escHtml(c.par) : ''}</div>
+      </div>
+      <button type="button" class="jn2-rep-do" onclick="jn2Reprendre('${t.id}')">Reprendre</button>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="jn2-rep">
+    <button type="button" class="jn2-rep-h" onclick="jn2ToggleReprise()" aria-expanded="${open}">
+      <span class="jn2-rep-ic">${jn2Svg(JN2_IC.skip, 2.2)}</span>
+      <span class="jn2-rep-l">À reprendre — ${reportes.length} moment${reportes.length > 1 ? 's' : ''} reporté${reportes.length > 1 ? 's' : ''} aujourd'hui</span>
+      <span class="jn2-rep-chev">${open ? '▾' : '▸'}</span>
+    </button>
+    ${open ? `<div class="jn2-rep-b">${items}</div>` : ''}
+  </div>`;
+}
+function jn2ToggleReprise() { _jn2RepriseOpen = !_jn2RepriseOpen; jn2Render(); }
+// jrFait réécrit l'état 'reporte' → 'fait' (upsert tache_id+date), donc reprendre = refaire.
+function jn2Reprendre(id) { jrFait(id); }
 
 function jn2Timeline(jour) {
   const el = document.getElementById('jrList');
@@ -238,22 +341,21 @@ function jn2Timeline(jour) {
     return;
   }
 
-  const shown = jour.filter(jn2InFilter);
+  const shown = jour.filter(jn2Visible);
   if (!shown.length) {
-    el.innerHTML = `<div class="jn2-vide">Aucun moment de cette nature aujourd'hui.</div>`;
+    el.innerHTML = `<div class="jn2-vide">Aucun moment ne correspond au filtre actif aujourd'hui.</div>`;
     return;
   }
 
   el.innerHTML = JN2_SLOTS.map(s => {
-    const tous = jour.filter(t => jn2Slot(t) === s.id);
-    const vus = tous.filter(jn2InFilter);
+    const vus = jour.filter(t => jn2Slot(t) === s.id && jn2Visible(t));
     if (!vus.length) return '';
-    const faits = tous.filter(t => jrEtat(t) === 'fait').length;
+    const faits = vus.filter(t => jrEtat(t) === 'fait').length;
     return `<section class="jn2-slot" style="--sc:${s.c}">
       <div class="jn2-slot-h">
         <span class="jn2-slot-l">${escHtml(s.label)}</span>
         <span class="jn2-slot-line"></span>
-        <span class="jn2-slot-n">${faits}/${tous.length}</span>
+        <span class="jn2-slot-n">${faits}/${vus.length}</span>
       </div>
       <div class="jn2-tasks">${vus.map(jn2Task).join('')}</div>
     </section>`;
@@ -426,4 +528,45 @@ function jn2Side(jour) {
       <span class="jn2-break-n">${r.n}</span>
     </div>`).join('');
   }
+}
+
+// ── FEUILLE DE TOURNÉE IMPRIMABLE (remplaçant / coupure réseau) ──
+// Liste chronologique du jour avec cases à cocher papier et mode d'emploi.
+// GARDE-FOU : aucun nom de professionnel imprimé (support, pas contrôle).
+function jrPrintTournee() {
+  const zone = document.getElementById('jrPrintZone');
+  if (!zone) return;
+  const jour = jrTachesDuJour().slice().sort(jn2Order);
+  const dateLbl = new Date((_jrDate || jrDateService()) + 'T12:00:00')
+    .toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const soutienLbl = k => (typeof JR_SOUTIEN !== 'undefined' && JR_SOUTIEN[k]) ? JR_SOUTIEN[k].l : '';
+  const rows = jour.map(t => {
+    const nat = jn2TypeDef(jn2TypeOf(t.id));
+    return `<tr>
+      <td class="jpt-check">☐</td>
+      <td class="jpt-h">${escHtml(t.heure || '—')}</td>
+      <td>
+        <div class="jpt-lib">${escHtml(t.libelle || '')}</div>
+        ${t.residentName ? `<div class="jpt-res">${escHtml(t.residentName)}</div>` : ''}
+        ${t.objectif ? `<div class="jpt-obj">🎯 ${escHtml(t.objectif)}</div>` : ''}
+        ${t.consigne ? `<div class="jpt-mode">📖 ${escHtml(t.consigne)}</div>` : ''}
+      </td>
+      <td class="jpt-nat">${nat ? escHtml(nat.l) : ''}</td>
+      <td class="jpt-sout">${t.soutienAttendu ? escHtml(soutienLbl(t.soutienAttendu)) : ''}</td>
+    </tr>`;
+  }).join('');
+  zone.innerHTML = `
+    <div class="jpt-head">
+      <div><div class="jpt-title">Feuille de tournée</div><div class="jpt-date">${escHtml(dateLbl)}</div></div>
+      <div class="jpt-brand">INTERNALIS</div>
+    </div>
+    <table class="jpt-tbl">
+      <thead><tr><th></th><th>Heure</th><th>Moment d'accompagnement</th><th>Nature</th><th>Soutien attendu</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:20px">Aucun moment prévu aujourd\'hui.</td></tr>'}</tbody>
+    </table>
+    <div class="jpt-foot">Support d'accompagnement — l'équipe ajuste avec la personne, son refus est un droit. Aucune évaluation du professionnel.</div>`;
+  document.body.classList.add('jr-printing');
+  const cleanup = () => { document.body.classList.remove('jr-printing'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
 }

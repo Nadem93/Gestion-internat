@@ -233,3 +233,97 @@ body.v2 .jn2-jours input[type="checkbox"] { width: auto; height: auto; margin: 0
 
 /* Le champ « objectif libre » n'apparaît que sur choix « saisie libre ». */
 #tcObjectifLibre { margin-top: 8px; }
+
+/* ══════════════════════════════════════════════════════════════
+   FONCTIONNALITÉS V2 (tournée) : rail résidents, filtre référés,
+   bandeau « À reprendre », feuille imprimable
+   ══════════════════════════════════════════════════════════════ */
+
+/* Bouton Imprimer dans la barre du haut (variante discrète de .jn2-new) */
+.jn2-print { background: var(--v2-s-sub); color: var(--v2-t3); border: 1px solid var(--v2-b-ctrl); }
+.jn2-print:hover { background: var(--v2-s-card); }
+
+/* Puce « Mes référés » — teinte teal cohérente avec la page */
+.v2-chip-f.jn2-referes.on { background: color-mix(in srgb, #14b8a6 22%, transparent); border-color: #14b8a6; color: #5eead4; }
+html.clair .v2-chip-f.jn2-referes.on { color: #0f766e; }
+.v2-chip-f.jn2-referes svg { width: 13px; height: 13px; }
+
+/* ── Rail de puces-résidents ── */
+.jn2-resrail { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 4px; scrollbar-width: thin; }
+.jn2-resrail:empty { display: none; }
+.jn2-rchip {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  height: 38px; padding: 0 12px 0 6px; border-radius: 999px; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t4); font: inherit; font-size: 12.5px; font-weight: 600;
+}
+.jn2-rchip.jn2-rall { padding: 0 14px; }
+.jn2-rchip:hover { border-color: #2dd4bf; }
+.jn2-rchip.on { background: color-mix(in srgb, #14b8a6 20%, transparent); border-color: #14b8a6; color: var(--v2-t2); }
+.jn2-rav {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 800; font-family: var(--v2-display);
+}
+.jn2-rname { white-space: nowrap; }
+.jn2-rtodo {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, #f59e0b 26%, transparent); color: #fbbf24;
+  font-size: 10.5px; font-weight: 800;
+}
+.jn2-rdone { color: #34d399; font-weight: 800; }
+
+/* ── Bandeau « À reprendre » ── */
+.jn2-rep {
+  border: 1px solid color-mix(in srgb, #f59e0b 40%, var(--v2-b));
+  background: color-mix(in srgb, #f59e0b 8%, var(--v2-s-card));
+  border-radius: var(--v2-r-card2); margin-bottom: 12px; overflow: hidden;
+}
+.jn2-rep-h {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 14px; background: none; border: 0; cursor: pointer;
+  color: var(--v2-t2); font: inherit; font-size: 12.5px; font-weight: 700; text-align: left;
+}
+.jn2-rep-ic { display: inline-flex; color: #f59e0b; }
+.jn2-rep-ic svg { width: 16px; height: 16px; }
+.jn2-rep-l { flex: 1; min-width: 0; }
+.jn2-rep-chev { color: var(--v2-t7); font-size: 12px; }
+.jn2-rep-b { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.jn2-rep-i {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px; border-radius: 11px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+.jn2-rep-x { flex: 1; min-width: 0; }
+.jn2-rep-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.jn2-rep-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.jn2-rep-s b { color: var(--v2-t4); }
+.jn2-rep-do {
+  flex-shrink: 0; height: 32px; padding: 0 14px; border-radius: 9px; cursor: pointer;
+  background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; border: 0;
+  font: inherit; font-size: 12px; font-weight: 700;
+}
+.jn2-rep-do:hover { filter: brightness(1.08); }
+
+/* ── Feuille de tournée imprimable ── */
+.jr-print-zone { display: none; }
+@media print {
+  body.jr-printing .app-layout, body.jr-printing #toast-container, body.jr-printing .modal-overlay { display: none !important; }
+  body.jr-printing #jrPrintZone { display: block !important; color: #000; font-family: Arial, Helvetica, sans-serif; }
+}
+.jr-print-zone .jpt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 14px; }
+.jr-print-zone .jpt-title { font-size: 22px; font-weight: 800; }
+.jr-print-zone .jpt-date { font-size: 13px; color: #555; margin-top: 2px; text-transform: capitalize; }
+.jr-print-zone .jpt-brand { font-size: 13px; font-weight: 800; letter-spacing: .1em; color: #0d9488; }
+.jr-print-zone .jpt-tbl { width: 100%; border-collapse: collapse; }
+.jr-print-zone .jpt-tbl th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: #444; border-bottom: 1px solid #999; padding: 5px 8px; }
+.jr-print-zone .jpt-tbl td { padding: 8px; border-bottom: 1px solid #e5e5e5; font-size: 12.5px; vertical-align: top; }
+.jr-print-zone .jpt-check { font-size: 18px; width: 26px; }
+.jr-print-zone .jpt-h { font-weight: 700; width: 52px; white-space: nowrap; }
+.jr-print-zone .jpt-lib { font-weight: 700; }
+.jr-print-zone .jpt-res { font-size: 11.5px; color: #333; margin-top: 1px; }
+.jr-print-zone .jpt-obj { font-size: 11px; color: #6366f1; margin-top: 2px; }
+.jr-print-zone .jpt-mode { font-size: 11px; color: #555; margin-top: 2px; }
+.jr-print-zone .jpt-nat, .jr-print-zone .jpt-sout { font-size: 11.5px; white-space: nowrap; }
+.jr-print-zone .jpt-foot { margin-top: 18px; font-size: 10.5px; color: #666; font-style: italic; }

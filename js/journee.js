@@ -97,10 +97,12 @@ async function initJournee() {
 
 // Tâches actives dont la récurrence tombe aujourd'hui
 function jrTachesDuJour() {
-  const dow = new Date((_jrDate || jrDateService()) + 'T12:00:00').getDay();
+  const dateStr = _jrDate || jrDateService();
+  const dow = new Date(dateStr + 'T12:00:00').getDay();
   return _jrTaches.filter(t => {
     if (t.actif === false) return false;
     const r = t.recurrence || {};
+    if (r.type === 'ponctuel') return r.date === dateStr;   // moment ponctuel : ce jour uniquement
     if (r.type === 'jours') return Array.isArray(r.jours) && r.jours.includes(dow);
     return true; // quotidien
   });
@@ -405,7 +407,7 @@ function openTacheModal(id) {
   document.getElementById('tcMoment').value = t ? t.moment : _jrQuart;
   document.getElementById('tcHeure').value = t ? t.heure : '';
   const rec = (t && t.recurrence) || { type: 'quotidien' };
-  document.getElementById('tcRecurrence').value = rec.type === 'jours' ? 'jours' : 'quotidien';
+  document.getElementById('tcRecurrence').value = rec.type === 'jours' ? 'jours' : rec.type === 'ponctuel' ? 'ponctuel' : 'quotidien';
   const joursEl = document.getElementById('tcJours');
   joursEl.style.display = rec.type === 'jours' ? 'flex' : 'none';
   joursEl.innerHTML = JR_JOURS.map((j, i) =>
@@ -465,7 +467,9 @@ async function saveTache() {
     ppeId: (objectif && objSel !== '__libre__') ? _tcPpeId : (existante ? existante.ppeId : null),
     moment: document.getElementById('tcMoment').value,
     heure: document.getElementById('tcHeure').value,
-    recurrence: recType === 'jours' ? { type: 'jours', jours } : { type: 'quotidien' },
+    recurrence: recType === 'jours' ? { type: 'jours', jours }
+      : recType === 'ponctuel' ? { type: 'ponctuel', date: _jrDate || jrDateService() }
+      : { type: 'quotidien' },
     consigne: document.getElementById('tcConsigne').value.trim(),
     soutienAttendu: document.getElementById('tcSoutien').value,
     createdBy: existante ? existante.createdBy : _jrUser().nom
