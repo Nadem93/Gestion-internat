@@ -120,8 +120,9 @@ function evDurMin(ev) {
 }
 
 // Assigne des colonnes (col/ncols) à un ensemble d'items selon le chevauchement
-// de l'intervalle [sKey, eKey], en regroupant par grappes.
-function assignColumns(items, sKey, eKey, colKey, nKey) {
+// de l'intervalle [sKey, eKey], en regroupant par grappes. Si clusterKey est
+// fourni, chaque item reçoit aussi l'indice de sa grappe (pour le plafonnement).
+function assignColumns(items, sKey, eKey, colKey, nKey, clusterKey) {
   const sorted = [...items].sort((a, b) => a[sKey] - b[sKey] || a[eKey] - b[eKey]);
   let clusters = [], cur = [], curEnd = -1;
   sorted.forEach(it => {
@@ -129,7 +130,7 @@ function assignColumns(items, sKey, eKey, colKey, nKey) {
     cur.push(it); curEnd = Math.max(curEnd, it[eKey]);
   });
   if (cur.length) clusters.push(cur);
-  clusters.forEach(cluster => {
+  clusters.forEach((cluster, ci) => {
     const colEnds = [];
     cluster.forEach(it => {
       let placed = false;
@@ -138,7 +139,7 @@ function assignColumns(items, sKey, eKey, colKey, nKey) {
       }
       if (!placed) { it[colKey] = colEnds.length; colEnds.push(it[eKey]); }
     });
-    cluster.forEach(it => it[nKey] = colEnds.length);
+    cluster.forEach(it => { it[nKey] = colEnds.length; if (clusterKey) it[clusterKey] = ci; });
   });
 }
 
@@ -146,14 +147,41 @@ function assignColumns(items, sKey, eKey, colKey, nKey) {
 //  - bandCol/bandN : empilement des fines bandes latérales (selon la durée totale)
 //  - contentCol/contentN : colonnes des blocs de contenu (selon la hauteur du texte seulement)
 // Ainsi un événement qui ne chevauche que la « traîne » (bande) d'un autre prend toute la largeur.
-function layoutDayEvents(evs) {
+// Au-delà de PL_MAX_COLS colonnes qui se chevauchent, les blocs deviennent
+// illisibles : on plafonne l'affichage et on regroupe le surplus dans un « +N ».
+const PL_MAX_COLS = 4;   // vue Semaine (colonnes étroites) : 3 blocs visibles + 1 « +N »
+
+// maxCols dépend de la vue : serré en Semaine, large en Jour (colonne pleine
+// largeur → on peut montrer beaucoup plus d'événements sans « +N »).
+function layoutDayEvents(evs, maxCols) {
+  maxCols = maxCols || PL_MAX_COLS;
   const items = evs.map(ev => {
     const start = evStartMin(ev);
     return { ev, start, end: start + evDurMin(ev), cStart: start, cEnd: start + PL_CONTENT_MIN };
   });
-  assignColumns(items, 'start', 'end', 'bandCol', 'bandN');       // bandes (durée réelle)
-  assignColumns(items, 'cStart', 'cEnd', 'contentCol', 'contentN'); // blocs (hauteur de texte)
-  return items.sort((a, b) => a.start - b.start);
+  assignColumns(items, 'start', 'end', 'bandCol', 'bandN');                       // bandes (durée réelle)
+  assignColumns(items, 'cStart', 'cEnd', 'contentCol', 'contentN', 'contentClu'); // blocs (hauteur de texte)
+
+  // Plafonnement par grappe : si une grappe dépasse maxCols colonnes, on
+  // masque les colonnes excédentaires et on prépare un chip « +N ».
+  const clusters = {};
+  items.forEach(it => { (clusters[it.contentClu] = clusters[it.contentClu] || []).push(it); });
+  const overflow = [];
+  Object.values(clusters).forEach(list => {
+    const n = list[0].contentN;
+    if (n <= maxCols) { list.forEach(it => { it.dispN = n; it.hidden = false; }); return; }
+    const visCols = maxCols - 1;                           // colonnes d'événements réellement affichées
+    const hidden = list.filter(it => it.contentCol >= visCols);
+    list.forEach(it => { it.dispN = maxCols; it.hidden = it.contentCol >= visCols; });
+    if (hidden.length) overflow.push({
+      start: Math.min(...hidden.map(h => h.start)),
+      end: Math.max(...hidden.map(h => h.end)),
+      col: visCols, dispN: maxCols, count: hidden.length
+    });
+  });
+
+  items.sort((a, b) => a.start - b.start);
+  return { items, overflow };
 }
 
 function getRecurDates(startDate, freq, until) {
@@ -240,8 +268,11 @@ function renderTimeline(days) {
     const dStr = dateStr(d);
     const dayEvents = events.filter(e => eventOnDay(e, dStr) && (e.heure || e.time));
     const conflictIds = getConflictIds(dayEvents);
-    const laid = layoutDayEvents(dayEvents);
+    // Vue Jour (1 colonne, pleine largeur) : plafond large ; vue Semaine : serré.
+    const maxCols = days.length === 1 ? 10 : PL_MAX_COLS;
+    const { items: laid, overflow } = layoutDayEvents(dayEvents, maxCols);
     const blocks = laid.map(it => {
+      if (it.hidden) return '';   // colonne excédentaire : représentée par le chip « +N »
       const ev = it.ev;
       const isConflict = conflictIds.has(ev.id);
       const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
@@ -252,7 +283,7 @@ function renderTimeline(days) {
       const stCls = (ev.statut && ev.statut !== 'prevu') ? ' pl-ev-' + ev.statut : '';
       const dragAttr = isVirt ? '' : ` draggable="true" ondragstart="plDragStart(event,'${ev.id}')" ondragend="plDragEnd(event)"`;
       const inset = 2;   // plus de gouttière : la barre est intégrée au bloc lui-même
-      const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
+      const colW = `((100% - ${inset + 2}px) / ${it.dispN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
       const cWidth = `calc(${colW} - 2px)`;
       // La bande de durée est INTÉGRÉE au carré : alignée sur son bord gauche, elle
@@ -271,8 +302,19 @@ function renderTimeline(days) {
         </div>
       </div>`;
     }).join('');
+    // Chips « +N » pour les colonnes masquées des grappes surchargées.
+    const moreChips = overflow.map(o => {
+      const top = Math.max(0, (o.start - PL_DAY_START * 60) / 60 * PL_HOUR_H);
+      const h = Math.max(24, (o.end - o.start) / 60 * PL_HOUR_H - 2);
+      const inset = 2;
+      const colW = `((100% - ${inset + 2}px) / ${o.dispN})`;
+      const cLeft = `calc(${inset}px + ${o.col} * ${colW})`;
+      const cWidth = `calc(${colW} - 2px)`;
+      const lbl = `${o.count} autre${o.count > 1 ? 's' : ''} événement${o.count > 1 ? 's' : ''} ce jour — cliquez pour la vue Jour`;
+      return `<div class="pl-ev-more" style="top:${top}px;height:${h}px;left:${cLeft};width:${cWidth}" title="${lbl}" onclick="event.stopPropagation();goToDate('${dStr}');switchView('day')">+${o.count}</div>`;
+    }).join('');
     const nowLine = (sameDay(d, todayD) && showNow) ? `<div class="pl-now" style="top:${nowTop}px"></div>` : '';
-    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDropTime(event,'${dStr}')">${nowLine}${blocks}</div>`;
+    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDropTime(event,'${dStr}')">${nowLine}${blocks}${moreChips}</div>`;
   }).join('');
 
   const html = `<div class="pl-week">
