@@ -30,10 +30,10 @@ const JN2_TYPES = {
 
 // Les quatre moments du fil, dans l'ordre de la maquette.
 const JN2_SLOTS = [
-  { id: 'matin', label: 'Matin',       c: '#fbbf24' },
-  { id: 'midi',  label: 'Midi',        c: '#fb923c' },
-  { id: 'aprem', label: 'Après-midi',  c: '#818cf8' },
-  { id: 'soir',  label: 'Soir',        c: '#38bdf8' }
+  { id: 'matin', label: 'Matin',       c: '#fbbf24', ic: 'sunrise' },
+  { id: 'midi',  label: 'Midi',        c: '#fb923c', ic: 'sun' },
+  { id: 'aprem', label: 'Après-midi',  c: '#818cf8', ic: 'sunset' },
+  { id: 'soir',  label: 'Soir',        c: '#38bdf8', ic: 'moon' }
 ];
 
 // Puces de filtre — exactement celles de la maquette.
@@ -61,7 +61,13 @@ const JN2_IC = {
   reset:    '<path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.3-3.4L3 8"/>',
   target:   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
   person:   '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
-  print:    '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>'
+  print:    '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  // Icônes des moments de la journée
+  grid2:    '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  sunrise:  '<path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/>',
+  sun:      '<circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+  sunset:   '<path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="16 5 12 9 8 5"/>',
+  moon:     '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
 };
 function jn2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -74,6 +80,7 @@ let _jn2ResFocus = '';       // focus sur un résident ('' = tous)
 let _jn2ReferesOnly = false; // filtre « Mes référés » (indépendant du filtre de nature)
 let _jn2MyReferes = null;    // Set des residentId dont je suis référent/co-référent (calculé une fois)
 let _jn2RepriseOpen = true;  // bandeau « À reprendre » déplié
+let _jn2Moment = '';         // onglet de moment actif ('' = toute la journée)
 
 // ── Nature du moment (table satellite) ───────────────────────────────
 
@@ -242,12 +249,30 @@ function jn2SetResFocus(rid) {
 function jn2Render() {
   const jour = jrTachesDuJour().slice().sort(jn2Order);
   jn2Charge();
+  jn2Moments(jour);
   jn2Chips();
   jn2ResRail(jour);
   jn2Reprise(jour);
   jn2Timeline(jour);
   jn2Side(jour);
 }
+
+// Onglets des moments de la journée (Matin ☀ / Midi / Après-midi / Soir 🌙) + « Tout ».
+// Sélectionner un moment filtre la timeline sur ce créneau ; l'anneau reste global.
+function jn2Moments(jour) {
+  const box = document.getElementById('jn2Moments');
+  if (!box) return;
+  const countFor = id => jour.filter(t => jn2Slot(t) === id && jn2Visible(t)).length;
+  const total = jour.filter(jn2Visible).length;
+  const tab = (id, label, icD, c, n, active) =>
+    `<button type="button" class="jn2-moment${active ? ' on' : ''}" style="--mc:${c}" aria-pressed="${active}" onclick="jn2SetMoment('${id}')">
+       ${icD ? jn2Svg(icD, 2) : ''}<span class="jn2-moment-l">${escHtml(label)}</span>
+       <span class="jn2-moment-n">${n}</span>
+     </button>`;
+  box.innerHTML = tab('', 'Tout', JN2_IC.grid2, '#94a3b8', total, !_jn2Moment)
+    + JN2_SLOTS.map(s => tab(s.id, s.label, JN2_IC[s.ic], s.c, countFor(s.id), _jn2Moment === s.id)).join('');
+}
+function jn2SetMoment(id) { _jn2Moment = id; jn2Render(); }
 
 // Bandeau du haut : « · Matin 7 h – 14 h » à la suite de la date de service.
 function jn2Charge() {
@@ -341,13 +366,17 @@ function jn2Timeline(jour) {
     return;
   }
 
-  const shown = jour.filter(jn2Visible);
+  const shown = jour.filter(t => jn2Visible(t) && (!_jn2Moment || jn2Slot(t) === _jn2Moment));
   if (!shown.length) {
-    el.innerHTML = `<div class="jn2-vide">Aucun moment ne correspond au filtre actif aujourd'hui.</div>`;
+    const nom = _jn2Moment ? ((JN2_SLOTS.find(s => s.id === _jn2Moment) || {}).label || '') : '';
+    el.innerHTML = `<div class="jn2-vide">${_jn2Moment
+      ? 'Aucun moment d\'accompagnement sur le créneau « ' + escHtml(nom) + ' ».'
+      : 'Aucun moment ne correspond au filtre actif aujourd\'hui.'}</div>`;
     return;
   }
 
   el.innerHTML = JN2_SLOTS.map(s => {
+    if (_jn2Moment && s.id !== _jn2Moment) return '';   // onglet de moment actif
     const vus = jour.filter(t => jn2Slot(t) === s.id && jn2Visible(t));
     if (!vus.length) return '';
     const faits = vus.filter(t => jrEtat(t) === 'fait').length;

@@ -327,3 +327,28 @@ html.clair .v2-chip-f.jn2-referes.on { color: #0f766e; }
 .jr-print-zone .jpt-mode { font-size: 11px; color: #555; margin-top: 2px; }
 .jr-print-zone .jpt-nat, .jr-print-zone .jpt-sout { font-size: 11.5px; white-space: nowrap; }
 .jr-print-zone .jpt-foot { margin-top: 18px; font-size: 10.5px; color: #666; font-style: italic; }
+
+/* ── Onglets des moments de la journée (Matin / Midi / Après-midi / Soir) ── */
+.jn2-moments {
+  display: flex; gap: 8px; margin-bottom: 16px;
+  overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin;
+}
+.jn2-moments:empty { display: none; }
+.jn2-moment {
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; white-space: nowrap;
+  padding: 9px 15px; border-radius: 13px; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  font: inherit; font-size: 13px; font-weight: 600;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.jn2-moment svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--v2-t7); transition: color .15s; }
+.jn2-moment:hover { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%, transparent); color: var(--v2-t3); }
+.jn2-moment:hover svg { color: var(--mc, #818cf8); }
+.jn2-moment.on { background: color-mix(in srgb, var(--mc, #818cf8) 15%, transparent); border-color: var(--mc, #818cf8); color: var(--v2-t2); }
+.jn2-moment.on svg { color: var(--mc, #818cf8); }
+.jn2-moment-n {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-card); color: var(--v2-t6); font-size: 11px; font-weight: 700;
+}
+.jn2-moment.on .jn2-moment-n { background: color-mix(in srgb, var(--mc, #818cf8) 26%, transparent); color: var(--mc, #818cf8); }
