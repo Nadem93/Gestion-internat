@@ -235,17 +235,17 @@
     const onAttente = isAdmin && CGV.tab === 'attente';
 
     if (box) {
-      if (!isAdmin) {
-        box.style.display = 'none';   // un seul panneau pour les non-admins
-      } else {
-        box.style.display = '';
-        const tab = (id, label, n, c) =>
-          '<button type="button" class="cgv-tab' + (CGV.tab === id ? ' on' : '') + '" style="--tc:' + c +
-          '" aria-pressed="' + (CGV.tab === id) + '" onclick="CGV.setTab(\'' + id + '\')">' +
-          esc(label) + '<span class="cgv-tab-n">' + n + '</span></button>';
-        box.innerHTML = tab('attente', 'À valider', nAttente, '#f59e0b') +
-                        tab('traitees', 'Demandes traitées', nTraitees, '#818cf8');
-      }
+      box.style.display = '';   // la barre d'onglets reste TOUJOURS visible
+      const tab = (id, label, n, c) =>
+        '<button type="button" class="cgv-tab' + (CGV.tab === id ? ' on' : '') + '" style="--tc:' + c +
+        '" aria-pressed="' + (CGV.tab === id) + '" onclick="CGV.setTab(\'' + id + '\')">' +
+        esc(label) + '<span class="cgv-tab-n">' + n + '</span></button>';
+      const tabs = [];
+      // L'onglet « À valider » (file de validation) n'a de sens que pour un
+      // gestionnaire qui peut accepter/refuser ; les autres voient « Demandes traitées ».
+      if (isAdmin) tabs.push(tab('attente', 'À valider', nAttente, '#f59e0b'));
+      tabs.push(tab('traitees', 'Demandes traitées', nTraitees, '#818cf8'));
+      box.innerHTML = tabs.join('');
     }
     const pend = document.getElementById('cgPendingCard');
     const trai = document.getElementById('cgTraiteesCard');
