@@ -71,7 +71,10 @@
 
 /* ── Carte candidat ───────────────────────────────────────────────────── */
 .ad2-card {
-  background: rgba(10,23,40,.5); border: 1px solid var(--v2-b);
+  /* --v2-s-sub : identique en thème sombre (rgba(10,23,40,.5)), gris clair (#f4f7fc)
+     en thème clair. Corrige la carte qui restait bleu nuit en mode clair — le CSS
+     clair généré n'avait pas converti cette couleur (motif dark-on-dark). */
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b);
   border-left: 3px solid var(--cc, #818cf8); border-radius: 14px;
   padding: 13px 14px; cursor: pointer; text-align: left; font: inherit; width: 100%;
   transition: background .15s, border-color .15s, transform .15s;
