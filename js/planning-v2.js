@@ -68,8 +68,10 @@ function pl2TeinterEvenements() {
     if (!c) return;
     el.style.setProperty('--ec', c);
     // planning.js pose la couleur pleine en inline : elle bat toute règle de
-    // feuille de style. On la remplace ici par la version teintée sombre.
-    el.style.background = `color-mix(in srgb, ${c} 17%, #0e1c31)`;
+    // feuille de style. On la remplace ici par la version teintée. La base de
+    // teinte est une variable CSS (--pl-ev-base) : sombre par défaut, blanche en
+    // thème clair (css/v2-clair.css) → le fond se recalcule même à la bascule.
+    el.style.background = `color-mix(in srgb, ${c} 17%, var(--pl-ev-base, #0e1c31))`;
     el.style.borderColor = `color-mix(in srgb, ${c} 34%, transparent)`;
     el.style.borderLeftColor = c;
     const t = el.querySelector('.pl-ev-time');

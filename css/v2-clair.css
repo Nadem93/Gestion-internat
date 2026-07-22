@@ -320,3 +320,10 @@ html.clair body.v2 [style*="color:#b45309"],
 html.clair body.v2 [style*="color:#ea580c"] { color: #b45309 !important; }
 html.clair body.v2 [style*="color:#0891b2"],
 html.clair body.v2 [style*="color:#0284c7"] { color: #0e7490 !important; }
+
+/* ── Vue timeline du planning (Jour/Semaine) — thème clair ──
+   Les blocs d'événement doivent être teintés vers le BLANC, pas vers le fond
+   sombre #0e1c31. La variable --pl-ev-base pilote aussi le fond posé en inline
+   par pl2TeinterEvenements() (planning-v2.js) → recalcul même à la bascule. */
+html.clair { --pl-ev-base: #ffffff; }
+html.clair body.v2 .pl-ev { background: color-mix(in srgb, var(--ec, #6366f1) 17%, #ffffff); }
