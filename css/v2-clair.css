@@ -271,7 +271,8 @@ html.clair body.v2 {
 html.clair body.v2 .btn-accent,
 html.clair body.v2 .v2-btn-pri,
 html.clair body.v2 .v2-btn-primary,
-html.clair body.v2 .v2-al-cta {
+html.clair body.v2 .v2-al-cta,
+html.clair body.v2 .v2-det-open {
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   box-shadow: 0 2px 10px rgba(37, 99, 235, .28);
   /* `body.v2 .btn` (0-2-0) impose var(--v2-t4) — clair en sombre, mais SOMBRE
@@ -281,7 +282,8 @@ html.clair body.v2 .v2-al-cta {
 html.clair body.v2 .btn-accent:hover,
 html.clair body.v2 .v2-btn-pri:hover,
 html.clair body.v2 .v2-btn-primary:hover,
-html.clair body.v2 .v2-al-cta:hover {
+html.clair body.v2 .v2-al-cta:hover,
+html.clair body.v2 .v2-det-open:hover {
   box-shadow: 0 4px 16px rgba(37, 99, 235, .34);
 }
 
