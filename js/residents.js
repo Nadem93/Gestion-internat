@@ -3,6 +3,7 @@ let editingId = null;
 let pendingPhoto = null;
 let pendingDocFile = null;
 let _residentsCache = [];
+let _residentsEcheances = [];   // échéances (MDPH, mesure de protection, contrat…) pour l'affichage sur les cartes
 
 async function loadAndRenderResidents() {
   _residentsCache = await sbGetResidents();
@@ -432,8 +433,35 @@ function residentCard(r) {
       <div class="v2-bar v2-bar-sm"><span style="width:${objPct}%;background:${coverColor}"></span></div>
     </div>
 
+    ${_resEcheanceCard(r)}
+
     ${tags.length ? `<div class="v2-res-tags">${tags.map(t =>
       `<span class="v2-res-tag" style="--pc:${t.c}">${escHtml(t.l)}</span>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+// Échéance sur la carte : la plus urgente encore ouverte (non faite) du
+// résident — MDPH, mesure de protection, contrat de séjour… En retard (rouge)
+// ou dans les 30 jours (ambre). Au-delà, rien : la carte reste calme.
+function _resEcheanceCard(r) {
+  const list = (_residentsEcheances || [])
+    .filter(e => String(e.residentId) === String(r.id) && !e.done && e.date);
+  if (!list.length) return '';
+  list.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const e = list[0];
+  const t0 = today();
+  const jours = Math.round((new Date(e.date + 'T00:00:00') - new Date(t0 + 'T00:00:00')) / 86400000);
+  const enRetard = jours < 0;
+  if (!enRetard && jours > 30) return '';           // trop lointaine
+  const col = enRetard ? '#ef4444' : '#f59e0b';
+  const quand = enRetard ? (jours === -1 ? 'hier' : 'il y a ' + (-jours) + ' j')
+    : (jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : 'dans ' + jours + ' j');
+  const lib = e.libelle || e.type || 'Échéance';
+  const autres = list.length > 1 ? ` <span class="v2-res-ech-n">+${list.length - 1}</span>` : '';
+  return `<div class="v2-res-ech" style="--ec:${col}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 13.5"/></svg>
+    <span class="v2-res-ech-t">${escHtml(lib)}${autres}</span>
+    <span class="v2-res-ech-b">${enRetard ? 'En retard · ' : ''}${escHtml(quand)}</span>
   </div>`;
 }
 
@@ -719,16 +747,18 @@ async function initResidents() {
   const _d3 = new Date(); _d3.setDate(_d3.getDate() - 3);
   const _opt = (nom, ...a) => (typeof window[nom] === 'function' ? window[nom](...a) : Promise.resolve(null));
   const _sr = (label, p) => Promise.resolve().then(() => p).catch(e => { console.warn('[annuaire] ' + label, e); return null; });
-  const [, presences, chambres, transmissions, residents] = await Promise.all([
+  const [, presences, chambres, transmissions, residents, echeances] = await Promise.all([
     _sr('documents', loadDocResCache()),
     _sr('présences', _opt('sbGetPresencesRange', _d3.toISOString().slice(0, 10), today())),
     _sr('chambres', _opt('sbGetChambres')),
     _sr('transmissions', _opt('sbGetTransmissions')),
-    _sr('résidents', sbGetResidents())
+    _sr('résidents', sbGetResidents()),
+    _sr('échéances', _opt('sbGetEcheances'))
   ]);
   if (presences) DB.set(DB.keys.presences, presences);
   _residentChambres = chambres || [];
   _residentsTransmissions = transmissions || [];
+  _residentsEcheances = echeances || [];
   _residentsCache = residents || [];
   renderResidents();
 

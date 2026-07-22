@@ -63,6 +63,14 @@
     /* Pastille 🎂 sur la carte */
     .res-cake-badge{font-size:10.5px;font-weight:700;color:#ec4899;background:color-mix(in srgb,#ec4899 15%,transparent);border-radius:999px;padding:2px 8px;white-space:nowrap}
 
+    /* Échéance sur la carte (rouge = en retard, ambre = à venir) */
+    .v2-res-ech{display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;border-radius:10px;
+      background:color-mix(in srgb,var(--ec) 12%,transparent);border:1px solid color-mix(in srgb,var(--ec) 26%,transparent)}
+    .v2-res-ech svg{width:15px;height:15px;flex-shrink:0;color:var(--ec)}
+    .v2-res-ech-t{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--v2-t2,#eef3fb);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .v2-res-ech-b{flex-shrink:0;font-size:11px;font-weight:700;color:var(--ec)}
+    .v2-res-ech-n{font-size:10px;font-weight:700;color:var(--ec);background:color-mix(in srgb,var(--ec) 18%,transparent);border-radius:999px;padding:1px 5px;margin-left:3px}
+
     /* ── Trombinoscope ── */
     .res-trombi{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:14px}
     .res-tr{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border-radius:14px;cursor:pointer;font-family:inherit;
@@ -416,6 +424,7 @@
 <script src="js/employes-supabase.js"></script>
 <script src="js/chambres-supabase.js"></script>
 <script src="js/transmissions-supabase.js"></script>
+<script src="js/echeances-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script src="js/resident-v2.js"></script>
 <script src="js/residents-v2.js"></script>
