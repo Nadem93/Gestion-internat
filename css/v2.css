@@ -1072,6 +1072,28 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 .v2-al-cta:hover { filter: brightness(1.1); }
 .v2-al-ign { color: var(--v2-t6); background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); }
 .v2-al-ign:hover { color: #fff; background: var(--v2-s-hover); }
+/* Prise en charge + reporter (ajout V2) */
+.v2-al-prendre, .v2-al-snz {
+  height: 32px; padding: 0 12px; border-radius: 9px; font: inherit;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  color: var(--v2-ok-light); background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.28);
+}
+.v2-al-prendre:hover, .v2-al-snz:hover { color: #fff; background: rgba(16,185,129,.24); }
+.v2-al-pris {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700;
+  color: var(--v2-ok-light); background: rgba(16,185,129,.14); border-radius: 999px; padding: 2px 9px;
+}
+.v2-al-grp-btn.on { color: #fff; background: var(--v2-s-active); border-color: var(--v2-b-active); }
+/* Regroupement par résident */
+.v2-al-grp { background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card2); padding: 14px; }
+.v2-al-grp-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.v2-al-grp-av { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--v2-steel), var(--v2-indigo)); }
+.v2-al-grp-n { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
+.v2-al-grp-c { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--v2-t7);
+  background: var(--v2-s-ctrl); border-radius: 999px; padding: 2px 9px; }
 
 /* Rail : répartition cliquable + échéances */
 .v2-al-cat { cursor: pointer; }

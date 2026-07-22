@@ -6,6 +6,24 @@
 
 let AL2_SEV = 'all';    // gravité sélectionnée dans les chips
 let AL2_TYPE = '';      // catégorie sélectionnée dans le rail
+let AL2_GROUP = false;  // regroupement par résident
+let _al2SnoozeOpen = null;   // id de l'alerte dont le menu « Reporter » est ouvert
+let _al2Prises = {};         // alerteId → { prisPar, prisParNom } (prise en charge partagée)
+let _al2PrisesCharge = false;
+
+// ── Reporter (snooze) : local, comme « Ignorer ». Une alerte reportée
+//    disparaît puis revient d'elle-même à la date choisie. ──────────────────
+const AL2_SNOOZE_KEY = 'ftr_al_snoozed';
+let _al2Snoozed = {};
+function _al2SnoozeLoad() {
+  try { _al2Snoozed = JSON.parse(localStorage.getItem(AL2_SNOOZE_KEY) || '{}'); } catch { _al2Snoozed = {}; }
+  // purge des reports expirés
+  const now = Date.now(); let change = false;
+  Object.keys(_al2Snoozed).forEach(k => { if (_al2Snoozed[k] <= now) { delete _al2Snoozed[k]; change = true; } });
+  if (change) _al2SnoozeSave();
+}
+function _al2SnoozeSave() { try { localStorage.setItem(AL2_SNOOZE_KEY, JSON.stringify(_al2Snoozed)); } catch (_) {} }
+function _al2EstReportee(id) { return _al2Snoozed[id] && _al2Snoozed[id] > Date.now(); }
 
 // Palette sombre : celle de AL_PRIOS est calibrée pour le thème clair.
 const AL2_SEV_DEFS = [
@@ -29,8 +47,11 @@ function _al2Svg(d, w) { return `<svg viewBox="0 0 24 24" fill="none" stroke="cu
 
 function al2Render() {
   _alLoadDismissed();
+  _al2SnoozeLoad();
+  al2ChargerPrises();   // au premier rendu : charge les prises en charge puis re-render
   const toutes = generateAlertes();
-  const actives = toutes.filter(a => !_alDismissed.includes(a.id));
+  // Ignorées ET reportées (jusqu'à leur échéance) sont retirées du décompte.
+  const actives = toutes.filter(a => !_alDismissed.includes(a.id) && !_al2EstReportee(a.id));
 
   let liste = actives;
   if (AL2_SEV !== 'all') liste = liste.filter(a => a.prio === AL2_SEV);
@@ -48,6 +69,49 @@ function al2Render() {
 
 function al2SetSev(s) { AL2_SEV = s; al2Render(); }
 function al2SetType(t) { AL2_TYPE = (AL2_TYPE === t) ? '' : t; al2Render(); }
+
+// Regroupement par résident (mémorisé).
+function al2ToggleGroup() {
+  AL2_GROUP = !AL2_GROUP;
+  try { localStorage.setItem('al_group', AL2_GROUP ? '1' : '0'); } catch (_) {}
+  al2Render();
+}
+
+// ── Reporter ──────────────────────────────────────────────────────────────
+function al2ToggleSnoozeMenu(id) { _al2SnoozeOpen = (_al2SnoozeOpen === id) ? null : id; al2Render(); }
+function al2Snooze(id, jours) {
+  _al2Snoozed[id] = Date.now() + jours * 86400000;
+  _al2SnoozeSave();
+  _al2SnoozeOpen = null;
+  if (typeof toast === 'function') toast('Alerte reportée', 'info');
+  al2Render();
+}
+
+// ── Prise en charge « je m'en occupe » (partagée via Supabase) ──────────────
+function al2ChargerPrises() {
+  if (_al2PrisesCharge || typeof sbGetAlertesPrises !== 'function') return;
+  _al2PrisesCharge = true;
+  sbGetAlertesPrises().then(list => {
+    _al2Prises = {};
+    (list || []).forEach(p => { _al2Prises[p.alerteId] = p; });
+    al2Render();
+  }).catch(() => {});
+}
+async function al2Prendre(id) {
+  if (typeof sbPrendreAlerte !== 'function') { if (typeof toast === 'function') toast('Prise en charge indisponible (SQL à exécuter)', 'info'); return; }
+  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : {};
+  const nom = [s.prenom, s.nom].filter(Boolean).join(' ') || s.username || 'Moi';
+  const r = await sbPrendreAlerte(id, nom);
+  if (r) { _al2Prises[id] = r; if (typeof toast === 'function') toast('Vous prenez en charge cette alerte', 'success'); }
+  else if (typeof toast === 'function') toast('Enregistrement impossible — exécutez migration-fonctionnalites-v2.sql', 'info');
+  al2Render();
+}
+async function al2Lacher(id) {
+  if (typeof sbLacherAlerte !== 'function') return;
+  const ok = await sbLacherAlerte(id);
+  if (ok) { delete _al2Prises[id]; if (typeof toast === 'function') toast('Prise en charge retirée', 'info'); }
+  al2Render();
+}
 
 // ── COMPTEURS ────────────────────────────────────────────────────────
 
@@ -75,8 +139,15 @@ function al2RenderChips(actives) {
     return `<button type="button" class="v2-chip-f${AL2_SEV === f.id ? ' on' : ''}" onclick="al2SetSev('${f.id}')">
       <span class="dot" style="background:${f.c}"></span>${f.l}<span class="n">${n}</span>
     </button>`;
-  }).join('');
+  }).join('')
+    // Bascule « Par résident », poussée à droite.
+    + `<button type="button" class="v2-chip-f v2-al-grp-btn${AL2_GROUP ? ' on' : ''}" style="margin-left:auto" onclick="al2ToggleGroup()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        Par résident</button>`;
 }
+
+// Reprise du regroupement mémorisé.
+try { if (localStorage.getItem('al_group') === '1') AL2_GROUP = true; } catch (_) {}
 
 // ── LISTE ────────────────────────────────────────────────────────────
 
@@ -93,31 +164,76 @@ function al2RenderListe(liste) {
   }
 
   const ordre = { critique: 0, urgent: 1, info: 2 };
-  el.innerHTML = [...liste]
-    .sort((a, b) => (ordre[a.prio] ?? 3) - (ordre[b.prio] ?? 3) || (a.date || '').localeCompare(b.date || ''))
-    .map(a => {
-      const t = AL_TYPES[a.type] || AL_TYPES.echeance;
-      const sc = AL2_SEV_C[a.prio] || '#64748b';
-      return `<article class="v2-al" style="--sc:${sc};--pc:${t.color}">
-        <span class="v2-al-ico">${t.icon}</span>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap">
-            <span class="v2-al-t">${escHtml(a.titre)}</span>
-            <span class="v2-al-sev">${AL2_SEV_L[a.prio] || a.prio}</span>
-          </div>
-          <div class="v2-al-d">${escHtml(a.msg || '')}</div>
-          <div class="v2-al-meta">
-            <span class="v2-al-type">${escHtml(t.label)}</span>
-            ${a.date ? `<span class="v2-al-ctx">${escHtml(_alFormatDate(a.date))}</span>` : ''}
-            ${a.date ? `<span class="v2-al-ctx" style="margin-left:auto">${escHtml(al2Reste(a.date))}</span>` : ''}
-          </div>
-        </div>
-        <div class="v2-al-act">
-          ${a.link ? `<a class="v2-al-cta" href="${sanitizeUrl(a.link)}">Traiter</a>` : ''}
-          <button type="button" class="v2-al-ign" onclick="dismissAl('${a.id}')">Ignorer</button>
-        </div>
-      </article>`;
-    }).join('');
+  const triees = [...liste].sort((a, b) =>
+    (ordre[a.prio] ?? 3) - (ordre[b.prio] ?? 3) || (a.date || '').localeCompare(b.date || ''));
+
+  if (!AL2_GROUP) { el.innerHTML = triees.map(al2Card).join(''); return; }
+
+  // Regroupement par résident : un résident cumulant plusieurs alertes saute
+  // aux yeux. Les alertes sans résident vont dans « Établissement ».
+  const groupes = {};
+  triees.forEach(a => {
+    const cle = a.residentId ? String(a.residentId) : '__etab';
+    (groupes[cle] = groupes[cle] || { nom: a.resName || (a.residentId ? 'Résident' : 'Établissement'), items: [] }).items.push(a);
+  });
+  // groupes triés par gravité max puis nombre d'alertes décroissant
+  const cles = Object.keys(groupes).sort((x, y) => {
+    const gx = groupes[x].items, gy = groupes[y].items;
+    const mx = Math.min(...gx.map(a => ordre[a.prio] ?? 3)), my = Math.min(...gy.map(a => ordre[a.prio] ?? 3));
+    return mx - my || gy.length - gx.length;
+  });
+  el.innerHTML = cles.map(k => {
+    const g = groupes[k];
+    const ini = g.nom.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '—';
+    return `<div class="v2-al-grp">
+      <div class="v2-al-grp-h">
+        <span class="v2-al-grp-av">${escHtml(ini)}</span>
+        <span class="v2-al-grp-n">${escHtml(g.nom)}</span>
+        <span class="v2-al-grp-c">${g.items.length} alerte${g.items.length > 1 ? 's' : ''}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">${g.items.map(al2Card).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// Carte d'une alerte, avec prise en charge et menu « Reporter ».
+function al2Card(a) {
+  const t = AL_TYPES[a.type] || AL_TYPES.echeance;
+  const sc = AL2_SEV_C[a.prio] || '#64748b';
+  const prise = _al2Prises[a.id];
+  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}) : {};
+  const peutLacher = prise && (String(prise.prisPar) === String(s.userId) || s.role === 'admin');
+
+  const actions = (_al2SnoozeOpen === a.id)
+    ? `<span style="font-size:11.5px;color:var(--v2-t6);align-self:center">Reporter à :</span>
+       <button type="button" class="v2-al-snz" onclick="al2Snooze('${a.id}',1)">Demain</button>
+       <button type="button" class="v2-al-snz" onclick="al2Snooze('${a.id}',3)">3 jours</button>
+       <button type="button" class="v2-al-snz" onclick="al2Snooze('${a.id}',7)">1 semaine</button>
+       <button type="button" class="v2-al-ign" onclick="al2ToggleSnoozeMenu('${a.id}')">Annuler</button>`
+    : `${a.link ? `<a class="v2-al-cta" href="${sanitizeUrl(a.link)}">Traiter</a>` : ''}
+       ${prise
+          ? (peutLacher ? `<button type="button" class="v2-al-ign" onclick="al2Lacher('${a.id}')">Me retirer</button>` : '')
+          : `<button type="button" class="v2-al-prendre" onclick="al2Prendre('${a.id}')">Je m'en occupe</button>`}
+       <button type="button" class="v2-al-ign" onclick="al2ToggleSnoozeMenu('${a.id}')">Reporter</button>
+       <button type="button" class="v2-al-ign" onclick="dismissAl('${a.id}')">Ignorer</button>`;
+
+  return `<article class="v2-al" style="--sc:${sc};--pc:${t.color}">
+    <span class="v2-al-ico">${t.icon}</span>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap">
+        <span class="v2-al-t">${escHtml(a.titre)}</span>
+        <span class="v2-al-sev">${AL2_SEV_L[a.prio] || a.prio}</span>
+        ${prise ? `<span class="v2-al-pris" title="Pris en charge par ${escHtml(prise.prisParNom || '')}">✋ ${escHtml(prise.prisParNom || 'Pris en charge')}</span>` : ''}
+      </div>
+      <div class="v2-al-d">${escHtml(a.msg || '')}</div>
+      <div class="v2-al-meta">
+        <span class="v2-al-type">${escHtml(t.label)}</span>
+        ${a.date ? `<span class="v2-al-ctx">${escHtml(_alFormatDate(a.date))}</span>` : ''}
+        ${a.date ? `<span class="v2-al-ctx" style="margin-left:auto">${escHtml(al2Reste(a.date))}</span>` : ''}
+      </div>
+    </div>
+    <div class="v2-al-act">${actions}</div>
+  </article>`;
 }
 
 // « dans 3 j », « aujourd'hui », « en retard de 2 j »
