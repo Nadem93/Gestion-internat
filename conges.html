@@ -60,8 +60,11 @@
       </div>
     </div>
 
-    <!-- Filtres -->
-    <div class="v2-chips cgv-filters">
+    <!-- Onglets : À valider / Demandes traitées (rendus par js/conges-v2.js) -->
+    <div class="cgv-tabs" id="cgTabs"></div>
+
+    <!-- Filtres (affichés sur l'onglet « Demandes traitées ») -->
+    <div class="v2-chips cgv-filters" id="cgFiltersRow">
       <div id="cgChips" class="v2-chips"></div>
       <!-- Contrat du JS de la page : la valeur de statut reste portée par ce <select>. -->
       <select id="cgFiltreStatut" onchange="renderConges()" hidden aria-hidden="true" tabindex="-1">
@@ -79,19 +82,13 @@
     <div class="cgv-grid">
       <div class="cgv-main">
 
+        <!-- Onglet « À valider » -->
         <div id="cgPendingCard" style="display:none">
-          <div class="cgv-sect">
-            <span style="color:#fbbf24;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-            <span class="cgv-sect-t">En attente de validation</span>
-          </div>
-          <div id="cgPendingList" style="margin-top:12px"></div>
+          <div id="cgPendingList"></div>
         </div>
 
-        <div>
-          <div class="cgv-sect">
-            <span style="color:#818cf8;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-            <span class="cgv-sect-t">Demandes traitées</span>
-          </div>
+        <!-- Onglet « Demandes traitées » -->
+        <div id="cgTraiteesCard">
           <div id="cgList" style="margin-top:12px"></div>
         </div>
 

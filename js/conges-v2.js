@@ -112,6 +112,9 @@
   CGV.reglesDispo = true;
   CGV.calMois = null;       // {y, m} du calendrier d'équipe
   CGV.wfId = null;          // demande affichée dans le workflow
+  // Onglet actif : 'attente' (file de validation) | 'traitees' (archive).
+  // Résolu dans renderTabs (défaut = 'attente' pour un admin s'il y a des demandes).
+  CGV.tab = (typeof localStorage !== 'undefined' && localStorage.getItem('cg_tab')) || null;
 
   /* ══ Chargements optionnels (dégradation douce) ═══════════════════ */
   CGV.loadSoldes = async function () {
@@ -218,6 +221,44 @@
     renderTraitees(list, nomDe, isAdmin);
     renderRail(list, employes, nomDe, parJour, isAdmin);
     renderFeatures(list, employes, nomDe, isAdmin);
+    // En dernier : résout l'onglet actif et pilote la visibilité des panneaux.
+    const nTraitees = list.filter(d => d.statut !== 'en_attente').length;
+    renderTabs(enAttente.length, nTraitees, isAdmin);
+  };
+
+  /* ── Onglets : À valider / Demandes traitées ─────────────────────── */
+  function renderTabs(nAttente, nTraitees, isAdmin) {
+    const box = document.getElementById('cgTabs');
+    // Résolution de l'onglet actif. Un non-admin ne valide pas → toujours « traitées ».
+    if (!isAdmin) CGV.tab = 'traitees';
+    else if (CGV.tab !== 'attente' && CGV.tab !== 'traitees') CGV.tab = nAttente ? 'attente' : 'traitees';
+    const onAttente = isAdmin && CGV.tab === 'attente';
+
+    if (box) {
+      if (!isAdmin) {
+        box.style.display = 'none';   // un seul panneau pour les non-admins
+      } else {
+        box.style.display = '';
+        const tab = (id, label, n, c) =>
+          '<button type="button" class="cgv-tab' + (CGV.tab === id ? ' on' : '') + '" style="--tc:' + c +
+          '" aria-pressed="' + (CGV.tab === id) + '" onclick="CGV.setTab(\'' + id + '\')">' +
+          esc(label) + '<span class="cgv-tab-n">' + n + '</span></button>';
+        box.innerHTML = tab('attente', 'À valider', nAttente, '#f59e0b') +
+                        tab('traitees', 'Demandes traitées', nTraitees, '#818cf8');
+      }
+    }
+    const pend = document.getElementById('cgPendingCard');
+    const trai = document.getElementById('cgTraiteesCard');
+    const filt = document.getElementById('cgFiltersRow');
+    if (pend) pend.style.display = onAttente ? '' : 'none';
+    if (trai) trai.style.display = onAttente ? 'none' : '';
+    if (filt) filt.style.display = onAttente ? 'none' : '';   // le filtre de statut concerne l'archive
+  }
+
+  CGV.setTab = function (t) {
+    CGV.tab = t;
+    try { localStorage.setItem('cg_tab', t); } catch (e) {}
+    if (typeof renderConges === 'function') renderConges();
   };
 
   /* ── KPI ─────────────────────────────────────────────────────────── */
@@ -249,11 +290,13 @@
     const box = document.getElementById('cgChips');
     if (!box) return;
     const sel = document.getElementById('cgFiltreStatut');
-    const courant = sel ? sel.value : '';
-    const n = s => s ? list.filter(d => d.statut === s).length : list.length;
+    let courant = sel ? sel.value : '';
+    if (courant === 'en_attente') courant = '';   // « en attente » a désormais son propre onglet
+    // « Toutes » = toutes les demandes TRAITÉES (l'onglet À valider porte les en_attente).
+    const processed = list.filter(d => d.statut !== 'en_attente');
+    const n = s => s ? list.filter(d => d.statut === s).length : processed.length;
     const defs = [
       { v: '', l: 'Toutes', c: '#818cf8' },
-      { v: 'en_attente', l: 'En attente', c: '#f59e0b' },
       { v: 'accepte', l: 'Acceptées', c: '#10b981' },
       { v: 'refuse', l: 'Refusées', c: '#ef4444' }
     ];
@@ -273,17 +316,16 @@
 
   /* ── En attente de validation ────────────────────────────────────── */
   function renderPending(enAttente, conflitsPar, nomDe, empById, isAdmin) {
-    const carte = document.getElementById('cgPendingCard');
     const cible = document.getElementById('cgPendingList');
-    if (!carte || !cible) return;
+    if (!cible) return;
 
     // Contrôle d'accès inchangé : seuls les admins voient la file de validation.
-    if (!isAdmin || !enAttente.length) {
-      carte.style.display = 'none';
-      cible.innerHTML = '';
+    // La visibilité du panneau est pilotée par les onglets (renderTabs).
+    if (!isAdmin) { cible.innerHTML = ''; return; }
+    if (!enAttente.length) {
+      cible.innerHTML = '<div class="v2-blk"><div class="v2-blk-vide">Aucune demande en attente de validation. 🎉</div></div>';
       return;
     }
-    carte.style.display = '';
 
     cible.innerHTML = '<div class="cgv-pend">' + enAttente.map(d => {
       const nom = nomDe(d);
@@ -321,7 +363,8 @@
   function renderTraitees(list, nomDe, isAdmin) {
     const el = document.getElementById('cgList');
     if (!el) return;
-    const fs = document.getElementById('cgFiltreStatut')?.value || '';
+    let fs = document.getElementById('cgFiltreStatut')?.value || '';
+    if (fs === 'en_attente') fs = '';   // les en_attente ont leur propre onglet
     const fe = document.getElementById('cgFiltreEmploye')?.value || '';
 
     let f = list;
@@ -340,7 +383,7 @@
 
     if (!f.length) {
       el.innerHTML = '<div class="v2-blk"><div class="v2-blk-vide">' +
-        (isAdmin ? 'Aucune demande traitée — voir « en attente de validation » ci-dessus.'
+        (isAdmin ? 'Aucune demande traitée pour l\'instant — les demandes à valider sont dans l\'onglet « À valider ».'
                  : 'Aucune demande à afficher.') + '</div></div>';
       return;
     }
