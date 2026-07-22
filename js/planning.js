@@ -248,6 +248,9 @@ function renderTimeline(days) {
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
       const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
+      const isVirt = String(ev.id).startsWith('act_');
+      const stCls = (ev.statut && ev.statut !== 'prevu') ? ' pl-ev-' + ev.statut : '';
+      const dragAttr = isVirt ? '' : ` draggable="true" ondragstart="plDragStart(event,'${ev.id}')" ondragend="plDragEnd(event)"`;
       const inset = 2;   // plus de gouttière : la barre est intégrée au bloc lui-même
       const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
@@ -259,9 +262,9 @@ function renderTimeline(days) {
       const band = (fullH - bandTop) > 12
         ? `<div class="pl-ev-band" style="left:calc(${cLeft} + 3px);top:${bandTop}px;background:${bg}"></div>`
         : '';
-      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escAttr(ev.residentName)+' — ':''}${escAttr(ev.titre)}${ev.vehicule?' — 🚗 '+escAttr(ev.vehicule):''}">
+      return `<div class="pl-ev-wrap${isVirt ? '' : ' pl-ev-drag'}"${dragAttr} style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escAttr(ev.residentName)+' — ':''}${escAttr(ev.titre)}${ev.vehicule?' — 🚗 '+escAttr(ev.vehicule):''}">
         ${band}
-        <div class="pl-ev${isConflict?' pl-ev-conflict':''}" style="left:${cLeft};width:${cWidth};background:${bg}">
+        <div class="pl-ev${isConflict?' pl-ev-conflict':''}${stCls}" style="left:${cLeft};width:${cWidth};background:${bg}">
           ${isConflict?'<span class="pl-ev-conflict-ic">⚠</span>':''}
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}${ev.recurId?' <span style="opacity:.75;font-size:.55rem">↻</span>':''}</div>
           <div class="pl-ev-title">${escHtml(ev.titre)}</div>
@@ -269,7 +272,7 @@ function renderTimeline(days) {
       </div>`;
     }).join('');
     const nowLine = (sameDay(d, todayD) && showNow) ? `<div class="pl-now" style="top:${nowTop}px"></div>` : '';
-    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')">${nowLine}${blocks}</div>`;
+    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDropTime(event,'${dStr}')">${nowLine}${blocks}</div>`;
   }).join('');
 
   const html = `<div class="pl-week">
@@ -406,7 +409,10 @@ function renderMonth() {
       const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const time = (ev.heure || ev.time || '').slice(0, 5);
       const label = (time ? time + ' ' : '') + escHtml(ev.titre);
-      return '<div class="plm-ev" onclick="event.stopPropagation();viewEvent(\'' + ev.id + '\')">'
+      const isVirt = String(ev.id).startsWith('act_');
+      const stCls = (ev.statut && ev.statut !== 'prevu') ? ' plm-ev-' + ev.statut : '';
+      const drag = isVirt ? '' : ` draggable="true" ondragstart="plDragStart(event,'${ev.id}')" ondragend="plDragEnd(event)"`;
+      return `<div class="plm-ev${isVirt ? '' : ' plm-ev-drag'}${stCls}"${drag} onclick="event.stopPropagation();viewEvent('${ev.id}')">`
         + '<span class="plm-ev-band" style="background:' + bg + '"></span>'
         + '<span class="plm-ev-txt">' + label + '</span>'
         + '</div>';
@@ -415,7 +421,7 @@ function renderMonth() {
     const dots = dayEvs.slice(0, 3).map(ev =>
       `<span class="plm-dot" style="background:${safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6'}"></span>`
     ).join('');
-    return `<div class="plm-cell${isTod ? ' plm-today' : ''}${ds === _plSelDay ? ' plm-sel' : ''}" onclick="plDayClick('${ds}')">
+    return `<div class="plm-cell${isTod ? ' plm-today' : ''}${ds === _plSelDay ? ' plm-sel' : ''}" onclick="plDayClick('${ds}')" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDropDay(event,'${ds}')">
       ${num}${evHtml}<div class="plm-dots">${dots}</div>
     </div>`;
   }).join('');
@@ -480,6 +486,7 @@ function renderListView() {
 
 function render() {
   document.getElementById('calContainer').style.display = '';
+  document.getElementById('calContainer').classList.remove('plm-ios'); // vue Mois seule la remet
   document.getElementById('listContainer').style.display = 'none';
   const sidebar = document.getElementById('planningSidebar');
   if (sidebar) {
@@ -587,6 +594,8 @@ function editEvent(id) {
   document.getElementById('evDesc').value = ev.desc || '';
   const accEd = document.getElementById('evAccompagnement'); if (accEd) accEd.value = ev.accompagnement || '';
   const nivEd = document.getElementById('evNiveauSoutien'); if (nivEd) nivEd.value = ev.niveauSoutien || '';
+  const stEd = document.getElementById('evStatut'); if (stEd) stEd.value = ev.statut || 'prevu';
+  const acpEd = document.getElementById('evAccompagnants'); if (acpEd) acpEd.value = ev.accompagnants || '';
   document.getElementById('btnDeleteEvent').style.display = '';
   // Masquer la récurrence en mode édition (on édite un seul événement)
   const recurRow = document.getElementById('evRecurRow');
@@ -624,6 +633,8 @@ async function saveEvent() {
     desc: document.getElementById('evDesc').value.trim(),
     accompagnement: (document.getElementById('evAccompagnement')?.value || '').trim(),
     niveauSoutien: document.getElementById('evNiveauSoutien')?.value || '',
+    statut: document.getElementById('evStatut')?.value || 'prevu',
+    accompagnants: (document.getElementById('evAccompagnants')?.value || '').trim(),
     serafin: (isSerafinDirect(document.getElementById('evNiveauSoutien')?.value) ? 'directe' : 'indirecte')
   };
   const vehCb = document.getElementById('evVehiculeCheck');
@@ -828,23 +839,249 @@ async function initPlanning() {
   await loadPlanningData();
   populateResidentSelect();
   await populateVehiculeList();
+  // Vue restaurée (Jour / Semaine / Mois / Liste) — mémorisée dans localStorage
+  currentView = localStorage.getItem('pl_view') || 'month';
+  setViewBtn('view' + currentView.charAt(0).toUpperCase() + currentView.slice(1));
   render();
   document.getElementById('prevBtn').onclick = () => navigate(-1);
   document.getElementById('nextBtn').onclick = () => navigate(1);
   document.getElementById('todayBtn').onclick = () => { currentDate = new Date(); sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); render(); };
   document.getElementById('filterEventResident').onchange = render;
+  ['day','week','month','list'].forEach(v => {
+    const btn = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+    if (btn) btn.onclick = () => switchView(v);
+  });
   const searchEl = document.getElementById('searchEvent');
   if (searchEl) searchEl.oninput = () => { searchQuery = searchEl.value.trim(); render(); };
-  // Vue unique : Mois (le sélecteur Jour/Semaine/Mois/Liste a été retiré)
-  currentView = 'month';
 }
 document.addEventListener('DOMContentLoaded', initPlanning);
 if (typeof registerPageInit === 'function') registerPageInit('planning', initPlanning);
 
+// Surligne le bouton de vue actif (via une classe CSS, compatible thèmes clair/sombre)
 function setViewBtn(active) {
   ['viewDay','viewWeek','viewMonth','viewList'].forEach(id => {
     const btn = document.getElementById(id);
-    if (id === active) { btn.style.background='#fff'; btn.style.boxShadow='var(--shadow-sm)'; btn.classList.remove('btn-ghost'); }
-    else { btn.style.background=''; btn.style.boxShadow=''; btn.classList.add('btn-ghost'); }
+    if (btn) btn.classList.toggle('active', id === active);
   });
+}
+
+// Change de vue (Jour / Semaine / Mois / Liste) et mémorise le choix
+function switchView(view) {
+  currentView = view;
+  try { localStorage.setItem('pl_view', view); } catch (_) {}
+  setViewBtn('view' + view.charAt(0).toUpperCase() + view.slice(1));
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// GLISSER-DÉPOSER — replanifier un événement en le déplaçant
+// ══════════════════════════════════════════════════════════════
+let _plDragId = null;
+
+function plDragStart(e, id) {
+  _plDragId = id;
+  if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', id); } catch (_) {} }
+  e.currentTarget.classList.add('pl-dragging');
+}
+function plDragEnd(e) {
+  _plDragId = null;
+  e.currentTarget.classList.remove('pl-dragging');
+  document.querySelectorAll('.pl-drop-hover').forEach(el => el.classList.remove('pl-drop-hover'));
+}
+function plDragOver(e) {
+  if (!_plDragId) return;      // ne pas capter un drag externe
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('pl-drop-hover');
+}
+function plDragLeave(e) { e.currentTarget.classList.remove('pl-drop-hover'); }
+
+function plDropDay(e, dStr) {   // vue Mois : on ne change que la date
+  e.preventDefault();
+  e.currentTarget.classList.remove('pl-drop-hover');
+  const id = _plDragId; _plDragId = null;
+  if (id) plMoveEvent(id, dStr, null);
+}
+function plDropTime(e, dStr) {  // vue timeline : date + heure d'après la position du drop
+  e.preventDefault();
+  const cell = e.currentTarget;
+  cell.classList.remove('pl-drop-hover');
+  const id = _plDragId; _plDragId = null;
+  if (!id) return;
+  const rect = cell.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  let mins = PL_DAY_START * 60 + Math.round((y / PL_HOUR_H) * 60 / 30) * 30;  // arrondi 30 min
+  mins = Math.max(PL_DAY_START * 60, Math.min((PL_DAY_END - 1) * 60, mins));
+  const hh = String(Math.floor(mins / 60)).padStart(2, '0');
+  const mm = String(mins % 60).padStart(2, '0');
+  plMoveEvent(id, dStr, hh + ':' + mm);
+}
+
+async function plMoveEvent(id, newDate, newHeure) {
+  if (String(id).startsWith('act_')) return;   // activité récurrente virtuelle : non éditable
+  const ev = _planningEventsCache.find(e => e.id === id);
+  if (!ev) return;
+  const sameDate = ev.date === newDate;
+  const sameHeure = newHeure == null || (ev.heure || ev.time || '') === newHeure;
+  if (sameDate && sameHeure) return;
+  const prev = { date: ev.date, heure: ev.heure, time: ev.time, dateEnd: ev.dateEnd, timeEnd: ev.timeEnd };
+  ev.date = newDate;
+  if (newHeure != null) { ev.heure = newHeure; ev.time = newHeure; }
+
+  // Réservation véhicule : vérifier qu'il n'y a pas de conflit sur le nouveau créneau
+  if (ev.vehicule) {
+    const heure = ev.heure || ev.time || '00:00';
+    const dateAllerISO = ev.date + 'T' + heure;
+    let dateRetourISO;
+    if (ev.duree === 'journee') dateRetourISO = ev.date + 'T23:59';
+    else { const d = new Date(dateAllerISO); d.setMinutes(d.getMinutes() + (parseInt(ev.duree) || 60)); dateRetourISO = toLocalDateTimeStr(d); }
+    const conflit = getVehiculeConflit(ev.vehicule, dateAllerISO, dateRetourISO, ev.id);
+    if (conflit) {
+      Object.assign(ev, prev);   // annuler le déplacement
+      toast('❌ Véhicule déjà réservé sur ce créneau', 'error');
+      render();
+      return;
+    }
+    ev.dateEnd = dateRetourISO.slice(0, 10);
+    ev.timeEnd = dateRetourISO.slice(11, 16);
+  }
+
+  try {
+    const saved = await sbSavePlanningEvent(ev);
+    const idx = _planningEventsCache.findIndex(e => e.id === id);
+    if (idx !== -1) _planningEventsCache[idx] = saved;
+    await syncEventToResidentRdv(saved);   // un RDV déplacé met à jour la fiche santé
+    toast('Événement replanifié');
+  } catch (err) {
+    Object.assign(ev, prev);
+    toast('Erreur lors du déplacement', 'error');
+    console.error(err);
+  }
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT iCalendar (.ics) — agenda importable dans Outlook / Google
+// ══════════════════════════════════════════════════════════════
+function _icsStamp(dStr, heure, addMin) {
+  const [y, m, d] = (dStr || '').split('-').map(Number);
+  const [hh, mm] = (heure || '09:00').split(':').map(Number);
+  const dt = new Date(y || 1970, (m || 1) - 1, d || 1, hh || 0, mm || 0);
+  if (addMin) dt.setMinutes(dt.getMinutes() + addMin);
+  const p = n => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}${p(dt.getMonth() + 1)}${p(dt.getDate())}T${p(dt.getHours())}${p(dt.getMinutes())}00`;
+}
+function _icsEsc(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+
+function plExportIcs() {
+  const events = getFilteredEvents().filter(e => e.date && !String(e.id).startsWith('act_'));
+  if (!events.length) { toast('Aucun événement à exporter', 'info'); return; }
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//INTERNALIS//Planning//FR', 'CALSCALE:GREGORIAN'];
+  events.forEach(e => {
+    const dur = e.duree === 'journee' ? (PL_DAY_END - PL_DAY_START) * 60 : (parseInt(e.duree) || 60);
+    const heure = (e.heure || e.time || '09:00').slice(0, 5);
+    const summary = (e.residentName ? e.residentName + ' — ' : '') + (e.titre || 'Événement');
+    const desc = [TYPE_LABELS[e.type] || e.type, e.desc, e.lieu ? 'Lieu : ' + e.lieu : '', e.accompagnants ? 'Accompagnant(s) : ' + e.accompagnants : '', (e.statut && e.statut !== 'prevu') ? 'Statut : ' + e.statut : ''].filter(Boolean).join(' · ');
+    lines.push('BEGIN:VEVENT', 'UID:' + e.id + '@internalis',
+      'DTSTART:' + _icsStamp(e.date, heure), 'DTEND:' + _icsStamp(e.date, heure, dur),
+      'SUMMARY:' + _icsEsc(summary));
+    if (desc) lines.push('DESCRIPTION:' + _icsEsc(desc));
+    if (e.lieu || e.destination) lines.push('LOCATION:' + _icsEsc(e.lieu || e.destination));
+    if (e.statut === 'annule') lines.push('STATUS:CANCELLED');
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'planning-internalis.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast(`${events.length} événement${events.length > 1 ? 's exportés' : ' exporté'} (.ics)`);
+}
+
+// ══════════════════════════════════════════════════════════════
+// DUPLICATION — recréer un événement à une nouvelle date
+// ══════════════════════════════════════════════════════════════
+function plDuplicateEvent(id) {
+  const ev = _planningEventsCache.find(e => e.id === id);
+  if (!ev) return;
+  closeModal('modalEventView');
+  quickAddEvent(ev.date || today(), (ev.heure || ev.time || '09:00'));   // nouvelle entrée (id vide)
+  // Le patch openModal réinitialise le multi-résidents à 30 ms : on repeuple après (60 ms).
+  setTimeout(() => {
+    const set = (i, v) => { const el = document.getElementById(i); if (el) el.value = v; };
+    set('evTitre', (ev.titre || '') + ' (copie)');
+    set('evType', ev.type || 'activite');
+    set('evDuree', ev.duree || '60');
+    set('evColor', ev.color || '#3b82f6');
+    set('evDesc', ev.desc || '');
+    set('evAccompagnement', ev.accompagnement || '');
+    set('evNiveauSoutien', ev.niveauSoutien || '');
+    set('evStatut', 'prevu');
+    set('evAccompagnants', ev.accompagnants || '');
+    set('evLieu', ev.lieu || '');
+    if (typeof _mevResSelected !== 'undefined') {
+      _mevResSelected = new Set((ev.residentIds && ev.residentIds.length) ? ev.residentIds : (ev.residentId ? [ev.residentId] : []));
+      if (typeof renderMevResChips === 'function') renderMevResChips();
+      if (typeof syncMevResHiddenSelect === 'function') syncMevResHiddenSelect();
+    }
+    if (typeof selectMevType === 'function') selectMevType(ev.type || 'activite');
+    if (typeof updateMevPreview === 'function') updateMevPreview();
+  }, 60);
+}
+
+// ══════════════════════════════════════════════════════════════
+// FICHE DE SORTIE imprimable (résidents, horaires, véhicule, accompagnants,
+// contacts d'urgence tirés de la fiche résident)
+// ══════════════════════════════════════════════════════════════
+const _PL_DUREE_LBL = { '30': '30 min', '60': '1h', '90': '1h30', '120': '2h', '180': '3h', 'journee': 'Journée' };
+
+function plFicheSortie(id) {
+  const ev = _planningEventsCache.find(e => e.id === id);
+  if (!ev) return;
+  const zone = document.getElementById('plPrintZone');
+  if (!zone) return;
+  const resIds = (ev.residentIds && ev.residentIds.length) ? ev.residentIds : (ev.residentId ? [ev.residentId] : []);
+  const residents = resIds.map(rid => _planningResidentsCache.find(r => String(r.id) === String(rid))).filter(Boolean);
+  const heure = (ev.heure || ev.time || '').slice(0, 5);
+  const retour = ev.timeEnd ? ev.timeEnd.slice(0, 5) : '';
+  const info = (lbl, val) => val ? `<tr><td class="pfs-l">${lbl}</td><td class="pfs-v">${escHtml(val)}</td></tr>` : '';
+
+  const resBlocks = residents.length ? residents.map(r => {
+    const nom = `${r.prenom || ''} ${r.nom || ''}`.trim();
+    return `<div class="pfs-res">
+      <div class="pfs-res-h">${escHtml(nom)}${r.chambre ? ` <span class="pfs-ch">Chambre ${escHtml(r.chambre)}</span>` : ''}</div>
+      <div class="pfs-res-u"><b>Contacts d'urgence :</b> ${r.contacts ? escHtml(r.contacts) : '<i>non renseignés dans la fiche résident</i>'}</div>
+    </div>`;
+  }).join('') : `<div class="pfs-res"><div class="pfs-res-h">Tous / Groupe</div></div>`;
+
+  zone.innerHTML = `
+    <div class="pfs-head">
+      <div>
+        <div class="pfs-title">Fiche de sortie</div>
+        <div class="pfs-sub">${escHtml(TYPE_LABELS[ev.type] || ev.type || '')} · ${escHtml(ev.titre || '')}</div>
+      </div>
+      <div class="pfs-brand">INTERNALIS</div>
+    </div>
+    <table class="pfs-tbl">
+      ${info('Date', ev.date ? formatDate(ev.date) : '')}
+      ${info('Départ', heure)}
+      ${info('Retour prévu', retour)}
+      ${info('Durée', _PL_DUREE_LBL[ev.duree] || (ev.duree ? ev.duree + ' min' : ''))}
+      ${info('Véhicule', ev.vehicule)}
+      ${info('Destination', ev.destination || ev.lieu)}
+      ${info('Motif', ev.motif || ev.desc)}
+      ${info('Accompagnant(s)', ev.accompagnants)}
+    </table>
+    <div class="pfs-sec">Résident(s) concerné(s)</div>
+    ${resBlocks}
+    <div class="pfs-foot">
+      <div class="pfs-sign">Signature accompagnant(s)<br><br>______________________</div>
+      <div class="pfs-sign">Heure de retour réelle<br><br>______________________</div>
+    </div>`;
+  document.body.classList.add('pl-printing');
+  const cleanup = () => { document.body.classList.remove('pl-printing'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
 }

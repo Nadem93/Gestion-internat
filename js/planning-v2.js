@@ -23,6 +23,7 @@ function pl2RenderUpcoming() {
   const maintenant = new Date();
   const list = (_planningEventsCache || [])
     .filter(e => {
+      if (e.statut === 'annule') return false;   // les événements annulés ne sont pas « à venir »
       const d = (e.date || '').slice(0, 10);
       if (!d || d < t0) return false;
       if (d > t0) return true;

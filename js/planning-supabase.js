@@ -30,7 +30,11 @@ function _pevToRow(e, etablissementId) {
     date_end: e.dateEnd || null,
     time_end: e.timeEnd || null,
     reserved_by: e.reservedBy || null,
-    reserved_prenom: e.reservedPrenom || null
+    reserved_prenom: e.reservedPrenom || null,
+    // Colonnes migration-planning-v2.sql (voir _PEV_OPTIONAL_COLS).
+    statut: e.statut || 'prevu',
+    accompagnants: e.accompagnants || null,
+    pieces_jointes: Array.isArray(e.piecesJointes) ? e.piecesJointes : []
   };
 }
 
@@ -48,34 +52,55 @@ function _pevFromRow(r) {
     lieu: r.lieu, serafin: r.serafin,
     residentIds: r.resident_ids || [], residentNames: r.resident_names || [],
     dateEnd: r.date_end, timeEnd: r.time_end,
-    reservedBy: r.reserved_by, reservedPrenom: r.reserved_prenom
+    reservedBy: r.reserved_by, reservedPrenom: r.reserved_prenom,
+    statut: r.statut || 'prevu',
+    accompagnants: r.accompagnants || '',
+    piecesJointes: Array.isArray(r.pieces_jointes) ? r.pieces_jointes : []
   };
 }
 
+// Colonnes ajoutées par migration-planning-v2.sql. Tant que la migration n'est
+// pas exécutée, ces colonnes sont absentes : on les retire et on réessaie, pour
+// que l'enregistrement d'un événement ne casse pas (dégradation défensive).
+const _PEV_OPTIONAL_COLS = ['statut', 'accompagnants', 'pieces_jointes'];
+function _pevStripOptional(row) {
+  const r = { ...row };
+  _PEV_OPTIONAL_COLS.forEach(k => delete r[k]);
+  return r;
+}
+function _pevIsMissingOptionalCol(error) {
+  if (!error) return false;
+  const m = ((error.message || '') + (error.hint || '') + (error.details || '')).toLowerCase();
+  const named = _PEV_OPTIONAL_COLS.some(c => m.includes(c));
+  return named && (m.includes('column') || m.includes('schema cache') || error.code === '42703' || error.code === 'PGRST204');
+}
+
 async function sbGetPlanningEvents() {
-  const { data, error } = await supabaseClient.from('planning_events').select('*');
-  if (error) { console.error(error); toast('Erreur de chargement du planning', 'error'); return []; }
-  return data.map(_pevFromRow);
+  try {
+    // Lecture paginée : au-delà de 1000 lignes PostgREST tronque en silence.
+    const data = await sbFetchAll(() => supabaseClient.from('planning_events').select('*').order('id', { ascending: true }));
+    return data.map(_pevFromRow);
+  } catch (error) { console.error(error); toast('Erreur de chargement du planning', 'error'); return []; }
 }
 
 async function sbSavePlanningEvent(ev) {
   const etablissementId = await sbGetEtablissementId();
   const row = _pevToRow(ev, etablissementId);
-  if (ev.id) {
-    const { data, error } = await supabaseClient.from('planning_events').update(row).eq('id', ev.id).select();
-    if (error) throw error;
-    if (!data || !data.length) throw new Error('Aucune ligne mise à jour (id introuvable ou accès refusé) — id=' + ev.id);
-    return _pevFromRow(data[0]);
-  }
-  const { data, error } = await supabaseClient.from('planning_events').insert(row).select();
+  const run = (r) => ev.id
+    ? supabaseClient.from('planning_events').update(r).eq('id', ev.id).select()
+    : supabaseClient.from('planning_events').insert(r).select();
+  let { data, error } = await run(row);
+  if (error && _pevIsMissingOptionalCol(error)) ({ data, error } = await run(_pevStripOptional(row)));
   if (error) throw error;
+  if (ev.id && (!data || !data.length)) throw new Error('Aucune ligne mise à jour (id introuvable ou accès refusé) — id=' + ev.id);
   return _pevFromRow(data[0]);
 }
 
 async function sbSavePlanningEventsBulk(events) {
   const etablissementId = await sbGetEtablissementId();
   const rows = events.map(e => _pevToRow(e, etablissementId));
-  const { data, error } = await supabaseClient.from('planning_events').insert(rows).select();
+  let { data, error } = await supabaseClient.from('planning_events').insert(rows).select();
+  if (error && _pevIsMissingOptionalCol(error)) ({ data, error } = await supabaseClient.from('planning_events').insert(rows.map(_pevStripOptional)).select());
   if (error) throw error;
   return data.map(_pevFromRow);
 }
@@ -90,4 +115,32 @@ async function sbDeletePlanningEventSeries(recurId) {
   const { data, error } = await supabaseClient.from('planning_events').delete().eq('recur_id', recurId).select();
   if (error) throw error;
   if (!data || !data.length) throw new Error('Aucune ligne supprimée (série introuvable ou accès refusé) — recurId=' + recurId);
+}
+
+// ── Session & pièces jointes (bucket privé "justificatifs") ──
+// Ces helpers ne sont pas chargés ailleurs sur planning.html : on les définit ici.
+// RÈGLE : le 1er dossier du chemin DOIT être auth.uid() (pas l'id legacy localStorage).
+async function sbAuthUid() {
+  try { const { data } = await supabaseClient.auth.getUser(); return (data && data.user && data.user.id) || null; }
+  catch (e) { console.error('[sbAuthUid]', e); return null; }
+}
+async function sbPlanningUpload(file) {
+  const uid = await sbAuthUid();
+  if (!uid) throw new Error('Session requise pour l\'upload');
+  const safe = (file.name || 'fichier').replace(/[^\w.\-]+/g, '_');
+  const path = `${uid}/${Date.now()}_${safe}`;
+  const { error } = await supabaseClient.storage.from('justificatifs')
+    .upload(path, file, { upsert: false, contentType: file.type || undefined });
+  if (error) throw error;
+  return path;
+}
+async function sbPlanningFileUrl(path) {
+  if (!path) return null;
+  const { data, error } = await supabaseClient.storage.from('justificatifs').createSignedUrl(path, 120);
+  if (error) { console.error(error); return null; }
+  return data?.signedUrl || null;
+}
+async function sbPlanningFileDelete(path) {
+  if (!path) return;
+  try { await supabaseClient.storage.from('justificatifs').remove([path]); } catch (e) { console.error(e); }
 }
