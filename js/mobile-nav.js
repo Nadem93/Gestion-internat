@@ -43,6 +43,13 @@
     '.mob-nav-i.on{color:var(--v2-indigo-light,#818cf8)}',
     // Dégager la barre : de la place en bas pour ne pas masquer le contenu.
     'body.v2{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))}',
+    // Bandeaux du haut : éviter que les contrôles se compriment / se chevauchent.
+    // La recherche passe pleine largeur, le bandeau s\'enroule proprement.
+    '.v2-top{flex-wrap:wrap;row-gap:10px}',
+    '.v2-top .search-box,.v2-top .pl-search-wrap{flex:1 1 100%;width:100%!important;max-width:100%!important;min-width:0}',
+    '.v2-top select{max-width:100%;min-width:0}',
+    // Tableaux de données : défilement horizontal interne plutôt que débordement de page.
+    'table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}',
     // Grille de modules (pages « hub ») en icônes 4 colonnes, style bento.
     '.v2-mods{grid-template-columns:repeat(4,1fr)!important;gap:16px 8px}',
     '.v2-mod-wrap{background:none!important;border:none!important;min-height:0}',
