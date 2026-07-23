@@ -1,4 +1,4 @@
-const CACHE = 'internalis-v72';
+const CACHE = 'internalis-v73';
 const ASSETS = [
   './',
   './accueil.html',
@@ -21,6 +21,8 @@ const ASSETS = [
   './css/v2.css',
   './css/v2-clair.css',
   './css/v2-clair-pages.css',
+  './css/v2-mobile.css',
+  './js/mobile-shell.js',
   './js/app.js',
   './js/theme.js',
   './js/supabase-client.js',
