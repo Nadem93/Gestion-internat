@@ -186,3 +186,10 @@ table.rp2-wk td.rp2-wk-name { display: flex; align-items: center; gap: 10px; tex
   body.v2 .rp2-blk, body.v2 .rp2-menus, body.v2 .rp2-stat { border-color: #cbd5e1 !important; background: #fff !important; }
   .rp2-list { max-height: none; overflow: visible; }
 }
+
+/* Mobile : la ligne de repas s'enroule au lieu de déborder (avatar + tags
+   régime + actions non compressibles dépassaient la largeur à 375px). */
+@media (max-width: 640px) {
+  .rp2-row { flex-wrap: wrap; }
+  .rp2-row .rp2-tags { max-width: none; justify-content: flex-start; }
+}

@@ -117,7 +117,7 @@ body.v2 .ec2-file-i { position: absolute; width: 1px; height: 1px; opacity: 0; p
   background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
 }
 .ec2-file-n {
-  font-size: 12.5px; color: var(--v2-t7);
+  min-width: 0; font-size: 12.5px; color: var(--v2-t7);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 body.v2 .ec2-file-i:focus-visible + .ec2-file,

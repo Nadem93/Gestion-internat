@@ -1157,7 +1157,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
   }
   if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      try { reg.update(); } catch (_) {}
+    }).catch(() => {});
+    // Recharge la page UNE fois quand un nouveau service worker prend le
+    // contrôle : évite de rester bloqué sur d'anciens CSS/JS en cache après
+    // un déploiement (plus besoin de vider le cache à la main). On ne le fait
+    // que pour un visiteur qui avait DÉJÀ un SW (mise à jour) — pas à la
+    // toute première installation, pour éviter un rechargement inutile.
+    if (navigator.serviceWorker.controller) {
+      let _swRefreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_swRefreshing) return;
+        _swRefreshing = true;
+        location.reload();
+      });
+    }
   }
   initAutoLock();
 });

@@ -450,6 +450,8 @@ body.v2 .v2-ov .v2-md { background: #101d31; }
   font-weight: 900; color: rgba(255,255,255,.15); line-height: 1;
   user-select: none; pointer-events: none; }
 .c-head { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+/* Le bloc intermédiaire enveloppant .c-name doit pouvoir rétrécir (ellipsis). */
+body.v2 .c-head > div { min-width: 0; }
 .c-avatar { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
   overflow: hidden; background: rgba(255,255,255,.25);
   display: flex; align-items: center; justify-content: center;
