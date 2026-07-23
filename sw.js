@@ -1,4 +1,4 @@
-const CACHE = 'internalis-v66';
+const CACHE = 'internalis-v67';
 const ASSETS = [
   './',
   './accueil.html',
@@ -28,6 +28,7 @@ const ASSETS = [
   './js/audit-supabase.js',
   './js/search-global.js',
   './js/notif-bell.js',
+  './js/mobile-nav.js',
   './manifest.json'
 ];
 
