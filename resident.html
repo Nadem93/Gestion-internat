@@ -127,6 +127,42 @@
       .eval-dom-btn{width:auto;flex:0 0 auto}
       .eval-main{max-height:none}
     }
+
+    /* ════════════════════════════════════════════════════════════════
+       Mobile (≤640px) : empêche les cartes de la fiche de déborder du
+       téléphone. N'affecte QUE ≤640px — le desktop reste identique.
+       (Audit d'overflow : textes longs non sécables + enfants flex/grid
+       qui refusent de rétrécir + grilles hebdo 7 colonnes.)
+       ════════════════════════════════════════════════════════════════ */
+    @media (max-width:640px){
+      /* Coupe les textes longs non sécables (emails, INS/n° sécu, IDs,
+         noms composés) au lieu de forcer la largeur de la carte. */
+      #residentContent,
+      .evm-card{ overflow-wrap:anywhere; word-break:break-word; }
+
+      /* Enfants flex/grid : autoriser le rétrécissement sous la largeur
+         du contenu (min-width:auto par défaut l'empêche). */
+      #residentContent .grid > *,
+      #residentContent .v2-kv-v,
+      #residentContent .stat-card-top .stat-label{ min-width:0; }
+
+      /* Nom de document (nowrap+ellipsis) : min-width:0 pour que
+         l'ellipsis s'active au lieu de déborder le rail. */
+      #residentContent .v2-doc-l{ min-width:0; flex:1 1 auto; }
+
+      /* Ligne de traitement : passe à la ligne au lieu de pousser. */
+      #residentContent .v2-line{ flex-wrap:wrap; }
+      #residentContent .v2-line-n{ min-width:0; }
+
+      /* Grilles hebdo 7 colonnes (jamais repliées) : garantir la coupure
+         du texte de cellule pour éviter le débordement à 375px. */
+      #residentContent div[style*="repeat(7,1fr)"] > div{
+        min-width:0; overflow-wrap:anywhere; word-break:break-word; }
+
+      /* Modale « vue événement » du planning résident. */
+      .evm-footer{ flex-wrap:wrap; row-gap:8px; }
+      .evm-header > div{ min-width:0; }
+    }
   </style>
 </head>
 <body class="v2">
