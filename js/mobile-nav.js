@@ -63,6 +63,15 @@
     '.v2-mod-sub{display:none}',
     '.v2-mod-racc{display:none}',
     '.v2-mod .notif-badge{top:-3px;right:calc(50% - 33px)}',
+    // ── Filet de sécurité anti-débordement (pages pas encore refondues) ──
+    // Empêche tout défilement latéral et fait rentrer les contenus larges.
+    'html,body.v2{overflow-x:hidden;max-width:100%}',
+    'body.v2 img,body.v2 svg,body.v2 video,body.v2 canvas{max-width:100%;height:auto}',
+    'body.v2 pre,body.v2 code,body.v2 .table-wrap{max-width:100%;overflow-x:auto}',
+    // Texte long non sécable (emails, n° sécu, IDs, noms composés) : on coupe.
+    'body.v2 .card-body,body.v2 .card,body.v2 .v2-card,body.v2 .v2-blk,body.v2 .v2-det,body.v2 .content{overflow-wrap:anywhere;word-break:break-word}',
+    // Enfants flex/grille : autoriser le rétrécissement (min-width:auto par défaut).
+    'body.v2 .grid>*,body.v2 [class*="grid-"]>*,body.v2 .v2-g>*{min-width:0}',
     '}'
   ].join('');
 
