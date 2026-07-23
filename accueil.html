@@ -920,6 +920,11 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
   #astSoirCard{bottom:1.4rem;right:.35rem;width:158px}
   #astSoirCard.ast-collapsed{width:30px}
 }
+/* Quand la barre de navigation mobile est visible (<=640px), remonter la carte
+   d'astreinte pour qu'elle ne soit pas masquée par la barre (~84px). */
+@media(max-width:640px){
+  #astSoirCard{bottom:calc(1.4rem + 88px)}
+}
 </style>
 
 <div id="astSoirCard" style="display:none">
