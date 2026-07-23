@@ -3,98 +3,58 @@
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Vie quotidienne — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    html,body{margin:0;height:100%}
-    .rh-layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden;background:#fbe8d4}
-    .rh-sidebar{width:max-content;max-width:226px;flex-shrink:0;background:#fdf2e9;border-right:1px solid #f8ddc2;color:#475569;height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:stretch;padding:1rem .5rem;transition:width .2s}
-    .rh-sidebar.collapsed{width:78px;align-items:center}
-    .rh-sidebar-top{display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem;width:100%}
-    .rh-sidebar-logo{display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;overflow:hidden;cursor:pointer;border-radius:9px;padding:.15rem}
-    .rh-sidebar-logo:hover{background:#fbe8d4}
-    .rh-sidebar-logo .rh-logo-badge{width:38px;height:38px;border-radius:11px;background:#0d9488;border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(13,148,136,.35)}
-    .rh-sidebar-logo .rh-logo-badge svg{width:18px;height:18px}
-    .rh-sidebar-logo .rh-logo-text{white-space:nowrap;min-width:0}
-    .rh-sidebar-logo h1{font-size:.85rem;font-weight:800;letter-spacing:-.2px;white-space:nowrap;color:#1e293b}
-    .rh-sidebar-logo p{font-size:.62rem;color:#94a3b8;margin-top:.1rem;white-space:nowrap}
-    .rh-collapse-btn{width:30px;height:30px;border-radius:9px;border:1px solid #e5e7eb;background:#fff;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-    .rh-collapse-btn:hover{background:#ecfdf5;color:#0d9488}
-    .rh-collapse-btn svg{width:14px;height:14px;transition:transform .2s}
-    .rh-sidebar.collapsed .rh-collapse-btn svg{transform:scaleX(-1)}
-    .rh-nav-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;padding:.6rem .6rem .3rem;white-space:nowrap;overflow:hidden}
-    .rh-nav-link{display:flex;align-items:center;gap:.65rem;padding:.5rem .6rem;color:#475569;text-decoration:none;font-size:.82rem;font-weight:500;transition:all .12s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-radius:9px;margin-bottom:2px;white-space:nowrap;overflow:hidden}
-    .rh-nav-link:hover{background:#fbe8d4;color:#1e293b}
-    .rh-nav-link.active{background:#fff;color:#1e293b;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.1)}
-    .rh-nav-icon{position:relative;width:30px;height:30px;border-radius:10px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;
-      box-shadow:0 3px 8px var(--ic2,rgba(99,102,241,.4)),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -2px 3px rgba(0,0,0,.15);
-      transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
-      transform-style:preserve-3d}
-    .rh-nav-icon svg{width:16px;height:16px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
-    .rh-nav-link:hover .rh-nav-icon{transform:scale(1.15) rotate(-8deg) translateY(-2px);box-shadow:0 6px 14px var(--ic2,rgba(99,102,241,.5)),inset 0 1px 1px rgba(255,255,255,.6),inset 0 -2px 3px rgba(0,0,0,.15)}
-    .rh-nav-link.active .rh-nav-icon{animation:rhIconPulse 1.8s ease-in-out infinite}
-    @keyframes rhIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08) rotate(3deg)}}
-    .rh-sidebar.collapsed .rh-nav-label{height:0;padding:0;margin:.55rem .4rem;border-top:1px solid #e5e7eb;overflow:hidden;text-indent:-9999px}
-    .rh-sidebar.collapsed .rh-nav-link span:not(.rh-nav-icon),.rh-sidebar.collapsed .rh-sidebar-logo .rh-logo-text{display:none}
-    .rh-sidebar.collapsed .rh-nav-link{justify-content:center;padding:.85rem .3rem;margin-bottom:.4rem}
-    .rh-sidebar.collapsed .rh-nav-icon{width:36px;height:36px}
-    .rh-sidebar.collapsed .rh-nav-icon svg{width:19px;height:19px}
-    .rh-sidebar.collapsed .rh-sidebar-top{justify-content:center}
-    .rh-sidebar.collapsed .rh-sidebar-logo{display:none}
-    .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;height:100%;position:relative}
-    #vqFrame{flex:1;width:100%;border:none;background:#fff}
-    .pl-burger{display:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:#fff;color:#475569;cursor:pointer;align-items:center;justify-content:center}
-    .pl-burger svg{width:18px;height:18px}
-    @media(max-width:700px){
-      .rh-sidebar{position:fixed;left:0;top:var(--header-h);height:calc(100vh - var(--header-h));z-index:50;transform:translateX(-100%);transition:transform .2s;box-shadow:0 8px 30px rgba(15,23,42,.18)}
-      .rh-sidebar.open{transform:translateX(0)}
-      .pl-burger{display:flex}
-    }
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-vie-quotidienne.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<header class="header">
-  <div class="header-info" style="display:flex;align-items:center;gap:.7rem">
-    <button class="pl-burger" id="vqBurger" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-    <div class="header-title" id="vqTitle">🏠 Vie quotidienne</div>
-  </div>
-  <div class="header-right"></div>
-</header>
+<body class="v2">
 
-<div class="rh-layout">
-  <nav class="rh-sidebar" id="vqSidebar">
-    <div class="rh-sidebar-top">
-      <div class="rh-sidebar-logo" id="vqHomeBtn" title="Accueil de la vie quotidienne">
-        <div class="rh-logo-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="rh-logo-text"><h1>Vie quotidienne</h1><p>Le quotidien du résident</p></div>
-      </div>
-      <button class="rh-collapse-btn" id="vqCollapseBtn" title="Réduire / agrandir le menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4 H5 a2 2 0 0 0 -2 2 V18 a2 2 0 0 0 2 2 H9 Z" fill="currentColor" stroke="none"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+<div class="v2-shell vq-shell">
+
+  <!-- Navigation latérale retirée : l'accès aux modules passe par les tuiles
+       « Accès rapides » de l'accueil du portail (vq2Cards). Le code de rendu du
+       rail a été supprimé avec lui. -->
+
+  <!-- ── Panneau principal ── -->
+  <div class="vq-main">
+    <div class="vq-topbar">
+      <a class="vq-back on" id="vqAccueil" href="accueil.html" title="Retour à l'accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5.5 10v10h13V10"/></svg>
+        Accueil
+      </a>
+      <button type="button" class="vq-back" id="vqBack" onclick="showHome()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Vie quotidienne
+      </button>
+      <div class="vq-topbar-t" id="vqTitle">Vie quotidienne</div>
+      <div class="vq-topbar-m" id="vqTopMeta"></div>
+    </div>
+    <div class="vq-scroll">
+      <main class="v2-body" id="vqHome"><div id="vqWelcome"></div></main>
+      <iframe id="vqFrame" title="Contenu de la vie quotidienne" style="display:none"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Mode d'emploi d'un module (gabarit de modale V2) ── -->
+<div class="v2-ov" id="vqTutoOv" role="dialog" aria-modal="true" aria-labelledby="vqTutoT">
+  <div class="v2-md" style="--mc:#0d9488">
+    <div class="v2-md-h">
+      <span class="v2-md-ico" id="vqTutoIco"></span>
+      <div><div class="v2-md-t" id="vqTutoT"></div><div class="v2-md-s" id="vqTutoS"></div></div>
+      <button class="v2-md-x" type="button" onclick="vq2CloseTuto()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
-
-    <div class="rh-nav-label">Suivi quotidien</div>
-    <button class="rh-nav-link" data-page="transmissions.html" data-perm="access_journal"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#3b82f6,#93c5fd);--ic2:#93c5fd88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v4l.586-.586z"/></svg></span><span>Transmissions</span></button>
-    <button class="rh-nav-link" data-page="presences.html" data-perm="access_presences"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#16a34a,#4ade80);--ic2:#4ade8088"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span>Présences</span></button>
-    <button class="rh-nav-link" data-page="nuit.html" data-perm="access_journal"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#312e81,#6366f1);--ic2:#6366f188"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span>Cahier de nuit</span></button>
-
-    <div class="rh-nav-label">Cadre de vie</div>
-    <button class="rh-nav-link" data-page="chambres.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#be185d,#f472b6);--ic2:#f472b688"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></span><span>Chambres</span></button>
-    <button class="rh-nav-link" data-page="repas.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#ea580c,#fb923c);--ic2:#fb923c88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></span><span>Repas &amp; régimes</span></button>
-    <button class="rh-nav-link" data-page="visites.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#65a30d,#a3e635);--ic2:#a3e63588"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span><span>Visites &amp; famille</span></button>
-    <button class="rh-nav-link" data-page="activites.html" data-perm="access_activites"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#6366f1,#a5b4fc);--ic2:#a5b4fc88"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg></span><span>Activités éducatives</span></button>
-
-    <div class="rh-nav-label">Soins</div>
-    <button class="rh-nav-link" data-page="medicaments.html" data-perm="access_medicaments"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#dc2626,#f87171);--ic2:#f8717188"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 21 10a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg></span><span>Médicaments</span></button>
-    <button class="rh-nav-link" data-page="plan-soins.html" data-perm="view_residents"><span class="rh-nav-icon" style="background:linear-gradient(135deg,#0891b2,#38bdf8);--ic2:#38bdf888"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></span><span>Plan de soins</span></button>
-  </nav>
-
-  <div class="rh-main">
-    <main class="content" id="vqHome" style="flex:1;overflow:auto;padding:1.75rem 1.5rem">
-      <div style="max-width:640px;margin:0 auto">
-        <div id="vqWelcome"></div>
-      </div>
-    </main>
-    <iframe id="vqFrame" title="Contenu de la vie quotidienne" style="display:none"></iframe>
+    <div class="v2-md-b" id="vqTutoB"></div>
+    <div class="v2-md-f">
+      <button class="v2-btn-sec" type="button" onclick="vq2CloseTuto()">Fermer</button>
+      <button class="v2-btn-pri" type="button" onclick="vq2OuvrirTuto()">Ouvrir le module</button>
+    </div>
   </div>
 </div>
 
@@ -102,6 +62,10 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/messages-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
@@ -109,37 +73,60 @@
 <script src="js/incidents-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
-<script src="js/notif-bell.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/repas-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
 <script>
   Auth.requireAuth();
 
-  const vqSidebar = document.getElementById('vqSidebar');
+  // ── Les modules de la vie quotidienne (mêmes data-page, couleurs et icônes qu'avant) ──
+  const VQ_NAV = [
+    { g:'Suivi quotidien', page:'journee.html', label:'Journée — Ma tournée', perm:'access_journal', c1:'#4f46e5', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2"/><path d="M9 17l2 2 4-4"/></svg>' },
+    { g:'Suivi quotidien', page:'transmissions.html', label:'Transmissions', perm:'access_journal', c1:'#3b82f6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a1.994 1.994 0 0 1-1.414-.586m0 0L11 14h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2v4l.586-.586z"/></svg>' },
+    { g:'Suivi quotidien', page:'presences.html', label:'Présences', perm:'access_presences', c1:'#16a34a', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
+    { g:'Suivi quotidien', page:'nuit.html', label:'Cahier de nuit', perm:'access_journal', c1:'#6366f1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' },
+    { g:'Cadre de vie', page:'repas.html', label:'Repas & régimes', perm:'view_residents', c1:'#ea580c', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>' },
+    { g:'Cadre de vie', page:'activites.html', label:'Activités éducatives', perm:'access_activites', c1:'#818cf8', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>' },
+    { g:'Soins', page:'medicaments.html', label:'Médicaments', perm:'access_medicaments', c1:'#dc2626', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 21 10a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg>' },
+    { g:'Soins', page:'plan-soins.html', label:'Plan de soins', perm:'view_residents', c1:'#0891b2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>' }
+  ];
+  const GROUPS = ['Suivi quotidien', 'Cadre de vie', 'Soins'];
+
+  const sess = Auth.getSession();
+  const allowed = e => {
+    if (!e.perm) return true;
+    return sess && (sess.role === 'admin' || sess.role === 'superadmin' || hasPermission(sess.userId, e.perm));
+  };
+  const entryOf = page => VQ_NAV.find(e => e.page === page);
+
   const vqFrame = document.getElementById('vqFrame');
   const vqHome = document.getElementById('vqHome');
   const vqTitle = document.getElementById('vqTitle');
-  const vqLinks = document.querySelectorAll('.rh-nav-link[data-page]');
-  const labelOf = l => (l.querySelector('span:not(.rh-nav-icon)')?.textContent || '').trim();
+  const vqBack = document.getElementById('vqBack');
 
-  // ── Navigation interne : la page s'ouvre dans le panneau, le menu reste visible ──
+  // ── Navigation interne : la page s'ouvre dans le panneau ──
   function showHome() {
     vqFrame.style.display = 'none';
     vqFrame.src = 'about:blank';
     vqHome.style.display = '';
-    vqLinks.forEach(l => l.classList.remove('active'));
-    vqTitle.textContent = '🏠 Vie quotidienne';
+    vqBack.classList.remove('on');
+    vqTitle.textContent = 'Vie quotidienne';
+    window.vqCurrentPage = null;
     sessionStorage.removeItem('vq_last_page');
+    renderVqHome();
   }
-  function loadPage(page, link) {
+  function loadPage(page, label) {
     vqHome.style.display = 'none';
     vqFrame.style.display = '';
     vqFrame.src = page + (page.includes('?') ? '&' : '?') + 'embed=1';
-    vqLinks.forEach(l => l.classList.toggle('active', l === link));
-    vqTitle.textContent = labelOf(link);
+    vqBack.classList.add('on');
+    vqTitle.textContent = label || '';
+    window.vqCurrentPage = page;
     sessionStorage.setItem('vq_last_page', page);
-    vqSidebar.classList.remove('open');
   }
-  vqLinks.forEach(l => l.addEventListener('click', () => loadPage(l.dataset.page, l)));
-  document.getElementById('vqHomeBtn').addEventListener('click', showHome);
 
   // Si une page chargée renvoie vers l'accueil ou la vie quotidienne, on sort de l'iframe
   vqFrame.addEventListener('load', () => {
@@ -150,39 +137,127 @@
     } catch (e) { /* origine différente, on ignore */ }
   });
 
+  // ── Mode d'emploi des modules (rôle · mode d'emploi · synchro · exemple) ──
+  // Contenu conservé de la version précédente : il est désormais consultable
+  // depuis le « ? » de chaque tuile d'accès rapide.
+  const VQ_TUTO = {
+    'journee.html': {
+      role: "Le fil de la journée, quart par quart : chaque geste d'accompagnement prévu au projet personnalisé (🎯) se coche d'un tap, horodaté, avec le niveau de soutien apporté.",
+      mode: [
+        "Choisissez le quart en haut : « ☀️ Matin », « 🌤 Après-midi » ou « 🌙 Soir & nuit ».",
+        "Repérez un résident dans le bandeau de pastilles (badge « n à faire ») ou faites défiler la liste.",
+        "Touchez le grand cercle « ✓ » à gauche d'un moment pour le marquer fait ; re-touchez pour annuler.",
+        "Après la coche, précisez le soutien apporté (Autonomie, Supervision, Aide partielle…).",
+        "Si le moment n'a pas lieu, touchez « ⏭ Reporter » et choisissez un motif."
+      ],
+      sync: "Projet personnalisé (objectifs) · Tableau de bord éducateur (carte « Journée des référés » et répartition des niveaux de soutien).",
+      ex:   "Ce matin, vous cochez « Préparer son petit-déjeuner » en « aide partielle » : la tâche passe en vert et le niveau remonte au tableau de bord."
+    },
+    'transmissions.html': {
+      role: "Raconter l'essentiel d'un moment — ce qui a été observé, dit, fait — en une note courte reliée au résident, au fil de la journée.",
+      mode: [
+        "Parcourez le tableau du jour, réparti en colonnes « Matin », « Après-midi » et « Nuit ».",
+        "Cliquez une carte floutée « Cliquer pour lire » pour l'afficher et la marquer comme lue.",
+        "Pour écrire : « Nouvelle transmission », choisissez catégorie, résident et priorité, rédigez l'observation, puis « Enregistrer ».",
+        "Sur une carte lue, répondez avec « 💬 » ou classez-la en « Journal » ou « Incident ».",
+        "Ouvrez une journée passée via « 🗂 Jours précédents »."
+      ],
+      sync: "Fil de vie du tableau de bord · Fiche du résident · Niveau de soutien indiqué (répartition du tableau de bord).",
+      ex:   "« Sieste agitée, s'est apaisé en musique » : la transmission apparaît aussitôt dans le fil de vie de ses référents."
+    },
+    'presences.html': {
+      role: "Pointer qui est présent, absent ou sorti, jour par jour — la photographie de qui est là.",
+      mode: [
+        "Vérifiez la date en haut ; changez de jour avec « ← » « → », le champ date ou « Aujourd'hui ».",
+        "Touchez la tuile d'un résident pour faire défiler son état : présent → absent → sortie → non pointé.",
+        "Pour un motif, faites un appui long sur la tuile (ou « ✎ »), choisissez le statut, puis « Enregistrer ».",
+        "Cliquez « ✓ Tous présents » pour pointer d'un coup ceux encore non pointés.",
+        "« 📥 Export » : renseignez la période puis « 📥 Exporter PDF »."
+      ],
+      sync: "Planning / Semaine type : les absences récurrentes saisies s'y répercutent automatiquement.",
+      ex:   "Vous notez M. B. « absent — hôpital » : l'absence apparaît sur son planning de la semaine."
+    },
+    'nuit.html': {
+      role: "Le relais du veilleur : levers, observations et incidents de la nuit, consignés pour l'équipe de jour.",
+      mode: [
+        "Choisissez la nuit puis cliquez « 🌙 Ouvrir le cahier de cette nuit ».",
+        "Ajustez l'« Effectif » présent et l'« Ambiance » (calme, agitée, très agitée).",
+        "Pour chaque ronde : saisissez l'heure, cochez « RAS » ou ajoutez une observation, puis « + Ronde ».",
+        "Signalez un incident avec « + Événement » ; notez un appel avec « + Appel astreinte ».",
+        "Rédigez « Transmission pour l'équipe du matin » : elle s'enregistre toute seule."
+      ],
+      sync: "Relais nuit → équipe de jour · Fiche du résident.",
+      ex:   "« Réveil à 3 h, a demandé un verre d'eau, s'est rendormi » : l'équipe du matin lit la nuit en un coup d'œil."
+    },
+    'repas.html': {
+      role: "Le régime, la texture et les précautions alimentaires de chaque résident — la référence à table et en cuisine.",
+      mode: [
+        "Choisissez le jour (champ date, flèches ou frise) ; « Aujourd'hui » revient au jour même.",
+        "Dans « 🍽 Menus du jour », saisissez « Menu 1 » et « Menu 2 » du midi et du soir.",
+        "Tous sont inscrits par défaut : cliquez la case d'un repas pour retirer (ou réinscrire) un absent.",
+        "Réglez le régime d'un présent via « 🍽 » puis « 💾 Enregistrer ».",
+        "« 🖨 Feuille cuisine » imprime le récapitulatif pour la cuisine."
+      ],
+      sync: "Fiche du résident (données de santé) · Service des repas.",
+      ex:   "M. R. : « texture mixée, sans porc » — l'information suit le résident à chaque service."
+    },
+    'activites.html': {
+      role: "Les activités proposées et réalisées, reliées aux objectifs du projet — la vie sociale et les apprentissages.",
+      mode: [
+        "« Nouvelle activité » : renseignez nom, catégorie, jour, horaires, lieu et « Places maximum », puis « 💾 Enregistrer ».",
+        "Filtrez avec « Toutes catégories » et « Tous les jours ».",
+        "« 👥 Participants » : choisissez un résident puis « + Inscrire » (ou « ↩ Désinscrire »).",
+        "« 📝 » : choisissez l'année, rédigez le bilan puis « 💾 Enregistrer le bilan ».",
+        "Gérez la carte : « ⏸ Suspendre » / « ▶ Réactiver », « ✎ » modifier, « ✕ » supprimer."
+      ],
+      sync: "Projet personnalisé (objectifs) · Suivi du résident.",
+      ex:   "Atelier cuisine du jeudi : vous notez la participation de Mme L., reliée à son objectif « gagner en autonomie »."
+    },
+    'medicaments.html': {
+      role: "Le circuit du médicament : tracer chaque distribution — qui, quoi, quand — pour sécuriser la prise.",
+      mode: [
+        "La date du jour s'affiche en haut à droite par défaut.",
+        "Choisissez le moment : « Matin », « Midi », « Soir » ou « Coucher ».",
+        "Tapez la tuile d'un résident pour marquer « Donné » ; re-tapez pour annuler.",
+        "Autre cas : « ✎ » (ou appui long) → « Confié », « Refusé », « Absent » ou « Reporté » + observation.",
+        "Filtrez « Présents seulement » ou imprimez « 🖨 Feuille du jour »."
+      ],
+      sync: "Prescriptions · Fiche de santé · Traçabilité horodatée de la distribution.",
+      ex:   "Distribution de 12 h validée pour M. T. : l'heure et l'intervenant sont enregistrés, la case ne peut plus être oubliée."
+    },
+    'plan-soins.html': {
+      role: "Les soins récurrents planifiés (pansement, surveillance, hygiène) — le fil conducteur soignant.",
+      mode: [
+        "« Nouveau soin » (en haut à droite) ouvre la fiche.",
+        "Choisissez le « Résident concerné », la « Catégorie » et la « Fréquence ».",
+        "Saisissez le « Libellé du soin » (obligatoire), puis détail, intervenant et note.",
+        "« Enregistrer » : le soin apparaît dans la frise du résident.",
+        "Filtrez par résident/catégorie ; sur chaque soin : « ✎ » modifier, « ⏸ » suspendre, « ✕ » supprimer."
+      ],
+      sync: "Fiche de santé du résident · Équipe soignante.",
+      ex:   "Réfection de pansement programmée tous les 2 jours : le plan rappelle l'échéance à l'équipe."
+    }
+  };
+
+  // Le rendu vit dans js/vie-quotidienne-v2.js (maquette V2) : tous les
+  // appelants historiques passent par ici.
+  function renderVqHome() { if (typeof vq2Render === 'function') vq2Render(); }
+
+  // Contrat avec le module de rendu V2
+  window.VQ_NAV = VQ_NAV;
+  window.VQ_TUTO = VQ_TUTO;
+  window.VQ_GROUPS = GROUPS;
+  window.vqAllowed = allowed;
+  window.loadPage = loadPage;
+  window.showHome = showHome;
+  window.vqCurrentPage = null;
+
   // Reprend la rubrique affichée avant un rafraîchissement
   const lastPage = sessionStorage.getItem('vq_last_page');
-  const lastLink = lastPage && Array.from(vqLinks).find(l => l.dataset.page === lastPage);
-  if (lastLink && lastLink.style.display !== 'none') loadPage(lastPage, lastLink);
-
-  // ── Menu : repli / déploiement (réduit par défaut, état mémorisé) ──
-  (function () {
-    const collapseBtn = document.getElementById('vqCollapseBtn');
-    const burger = document.getElementById('vqBurger');
-    if (localStorage.getItem('vq_sidebar_collapsed') !== '0') vqSidebar.classList.add('collapsed');
-    collapseBtn.addEventListener('click', () => {
-      vqSidebar.classList.toggle('collapsed');
-      localStorage.setItem('vq_sidebar_collapsed', vqSidebar.classList.contains('collapsed') ? '1' : '0');
-    });
-    burger.addEventListener('click', () => vqSidebar.classList.toggle('open'));
-  })();
-
-  // ── Accueil de la rubrique ──
-  (function () {
-    const s = Auth.getSession();
-    const el = document.getElementById('vqWelcome');
-    if (!el) return;
-    const prenom = (s && (s.prenom || s.username) || '').trim();
-    el.innerHTML = `
-      <div style="font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:-.02em">🏠 Vie quotidienne</div>
-      <div style="font-size:.86rem;color:var(--muted);margin-top:.25rem">${prenom ? 'Bonjour ' + escHtml(prenom) + ' — c' : 'C'}hoisissez une rubrique dans le menu à gauche — elle s'ouvre ici, sans quitter la page.</div>`;
-  })();
-
-  // ── Masquer les rubriques sans permission ──
-  document.querySelectorAll('.rh-nav-link[data-perm]').forEach(el => {
-    const s = Auth.getSession();
-    const ok = s && (s.role === 'admin' || s.role === 'superadmin' || hasPermission(s.userId, el.dataset.perm));
-    if (!ok) el.style.display = 'none';
-  });
+  const lastEntry = lastPage && entryOf(lastPage);
+  if (lastEntry && allowed(lastEntry)) loadPage(lastEntry.page, lastEntry.label);
 </script>
+<script src="js/vie-quotidienne-v2.js"></script>
+<script>renderVqHome();</script>
+<script src="js/mobile-nav.js"></script>
 </body></html>

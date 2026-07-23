@@ -5,8 +5,10 @@ async function initViaTrajectoire() {
   const _s = Auth.requireAuth();
   if (!_s) return;
   if (!Auth.isAdmin()) return;
-  await sbLoadResidentsCache();
-  await loadVTCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadVTCache()]);
   renderVT();
 }
 
@@ -26,6 +28,8 @@ const VT_STATUTS = {
 };
 
 function renderVT() {
+  // Design V2 : le rendu est délégué à js/viatrajectoire-v2.js dès qu'il est chargé.
+  if (typeof vt2Render === 'function') return vt2Render();
   const list = getVT();
   const residents = sbResidents();
 
@@ -72,6 +76,8 @@ function renderVT() {
 }
 
 function openVTDemande(data) {
+  // Design V2 : la modale du gabarit .v2-ov/.v2-md prend le relais.
+  if (typeof vt2Open === 'function') return vt2Open(data);
   try {
   const residents = sbResidents();
   const rOpts = residents.map(r => `<option value="${r.id}"${data && data.residentId === r.id ? ' selected' : ''}>${escHtml(r.prenom+' '+r.nom)}</option>`).join('');

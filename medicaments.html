@@ -1,71 +1,146 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Distribution des médicaments — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    .med-content{background:linear-gradient(135deg,#e6f2fc 0%,#d1e8fa 100%);border-radius:18px;padding:22px;margin-top:.5rem}
-    .med-stats-wrap{background:rgba(255,255,255,.95);border-radius:20px;padding:20px 24px;margin-bottom:20px;display:grid;grid-template-columns:repeat(4,1fr)}
-    .med-stat-sep{border-right:1px solid #e2e8f0}
-    .med-stat-sep:last-child{border-right:none}
-    .med-stat-num{font-size:34px;font-weight:700;margin-bottom:4px}
-    .med-stat-lbl{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;font-weight:600}
-    .med-patient-section{background:rgba(255,255,255,.97);border-radius:20px;padding:20px 22px;margin-bottom:16px}
-    .med-patient-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
-    .med-avatar{width:40px;height:40px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2563eb;font-size:13px;flex-shrink:0}
-    .med-patient-name{font-size:16px;font-weight:700;color:#1e293b}
-    .med-med-row{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;border:1px solid #e2e8f0;gap:12px;flex-wrap:wrap}
-    .med-med-name{font-size:14px;font-weight:600;color:#334155;margin-bottom:3px}
-    .med-med-meta{font-size:12px;color:#64748b}
-    .med-btn{padding:7px 16px;border-radius:20px;border:1.5px solid;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s;font-family:inherit}
-    .med-btn-ok{background:#f0fdf4;color:#166534;border-color:#bbf7d0}
-    .med-btn-ok.on{background:#10b981;color:#fff;border-color:#10b981}
-    .med-btn-ref{background:#fef2f2;color:#991b1b;border-color:#fecaca}
-    .med-btn-ref.on{background:#ef4444;color:#fff;border-color:#ef4444}
-    .med-btn-abs{background:#f8fafc;color:#475569;border-color:#e2e8f0}
-    .med-btn-abs.on{background:#6b7280;color:#fff;border-color:#6b7280}
-    .med-btn-rep{background:#fffbeb;color:#92400e;border-color:#fde68a}
-    .med-btn-rep.on{background:#d97706;color:#fff;border-color:#d97706}
-    .med-note-btn{padding:7px 10px;border-radius:20px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#94a3b8;cursor:pointer;font-size:13px;font-family:inherit}
-    .med-alert{background:#fef2f2;border-left:4px solid #ef4444;padding:9px 14px;border-radius:0 10px 10px 0;margin-top:8px;font-size:12px;color:#991b1b}
-    @media print{.med-content{background:none;padding:0}.med-patient-section,.med-stats-wrap{box-shadow:none}}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-medicaments.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">💊 Distribution des médicaments</div></div>
-      <div class="header-right">
-        <input type="date" id="medDate" style="width:auto"/>
-        <button class="btn btn-outline btn-sm" onclick="printMedSheet()">🖨 Feuille du jour</button>
-      </div>
-    </header>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell" style="--v2-halo:rgba(220,38,38,.16)">
 
-    <main class="content" style="max-width:1080px">
-      <div class="med-content">
-        <div id="medStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
-        <div id="medList"></div>
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#dc2626,#f87171)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7z"/><path d="m8.5 8.5 7 7"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+        <div class="v2-top-title">Distribution des médicaments</div>
       </div>
-    </main>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="v2-datenav">
+          <button type="button" onclick="med2ShiftDay(-1)" title="Jour précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="v2-datenav-l" id="medDateLabel" onclick="med2PickDate()" title="Choisir une date"></span>
+          <button type="button" onclick="med2ShiftDay(1)" title="Jour suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <input type="date" id="medDate" aria-label="Date de distribution" style="width:0;height:0;padding:0;margin:0;border:0;opacity:0;position:absolute;pointer-events:none"/>
+        </div>
+        <button type="button" class="v2-btn" onclick="med2Today()" title="Revenir à aujourd'hui">Aujourd'hui</button>
+        <button type="button" class="v2-btn" onclick="printMedSheet()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Feuille du jour
+        </button>
+      </div>
+    </div>
+
+    <div class="v2-body">
+      <div class="v2-med-stats" id="medStats"></div>
+      <div class="v2-med-panels" id="medPanels"></div>
+      <div class="v2-chips" id="medFilters" style="margin-bottom:16px"></div>
+      <div id="medList"></div>
+    </div>
+
+  </div>
+</div></div>
+
+<!-- MODALE OBSERVATION (gabarit V2) -->
+<div class="v2-ov modal-overlay" id="modalMedNote">
+  <div class="v2-md" style="--mc:#f59e0b;max-width:520px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+      <div><div class="v2-md-t">Observation</div><div class="v2-md-s">Motif de refus, remarque…</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalMedNote')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="mnTexte">Note</label>
+        <textarea class="v2-fld" id="mnTexte" rows="3" placeholder="Ex : médicament refusé, résident absent, prise reportée au soir…"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalMedNote')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveMedNote()">Enregistrer</button>
+    </div>
   </div>
 </div>
 
-<!-- MODAL OBSERVATION -->
-<div class="modal-overlay" id="modalMedNote">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">Observation</span>
-      <button class="modal-close" onclick="closeModal('modalMedNote')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- MODALE DÉTAIL D'UNE PRISE (gabarit V2) -->
+<div class="v2-ov modal-overlay" id="modalMedDetail">
+  <div class="v2-md" style="--mc:#dc2626;max-width:520px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7z"/><path d="m8.5 8.5 7 7"/></svg></span>
+      <div style="min-width:0"><div class="v2-md-t" id="mdTitle">Prise</div><div class="v2-md-s" id="mdSub">—</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalMedDetail')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="form-group"><label>Note (motif de refus, remarque…)</label><textarea id="mnTexte" rows="3" placeholder="Ex : médicament refusé, résident absent, prise reportée au soir…"></textarea></div>
+    <div class="v2-md-b">
+      <div>
+        <span class="v2-fld-l">Statut</span>
+        <div class="v2-seg" id="mdSeg"></div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="mdNote">Observation (motif de refus, remarque…)</label>
+        <textarea class="v2-fld" id="mdNote" rows="3" placeholder="Ex : médicament refusé, résident absent, prise reportée au soir…"></textarea>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalMedNote')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveMedNote()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="medDetailReset()">Réinitialiser</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalMedDetail')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="medSaveDetail()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE STOCK DE MÉDICAMENTS (gabarit V2) -->
+<div class="v2-ov modal-overlay" id="modalStockMed">
+  <div class="v2-md" style="--mc:#f59e0b;max-width:560px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+      <div style="min-width:0"><div class="v2-md-t" id="stkTitle">Ajouter un stock</div><div class="v2-md-s">Quantité restante, seuil d'alerte, péremption</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalStockMed')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="stkLibelle">Médicament</label>
+        <input class="v2-fld" id="stkLibelle" type="text" placeholder="Ex : Antihypertenseur 5 mg"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="stkResident">Rattachement</label>
+        <select class="v2-fld" id="stkResident"></select>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="stkInitiale">Quantité initiale</label>
+          <input class="v2-fld" id="stkInitiale" type="number" min="1" step="1" placeholder="Ex : 30"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="stkQuantite">Quantité restante</label>
+          <input class="v2-fld" id="stkQuantite" type="number" min="0" step="1" placeholder="Ex : 12"/>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="stkUnite">Unité</label>
+          <input class="v2-fld" id="stkUnite" type="text" placeholder="comprimés, ml, gélules…"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="stkSeuil">Seuil d'alerte</label>
+          <input class="v2-fld" id="stkSeuil" type="number" min="0" step="1" placeholder="Ex : 10"/>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="stkPeremption">Date de péremption</label>
+        <input class="v2-fld" id="stkPeremption" type="date"/>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" id="stkDelete" onclick="stockMedDelete()" style="display:none">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalStockMed')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="stockMedSave()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -74,8 +149,16 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
 <script src="js/medicaments-supabase.js"></script>
+<script src="js/stock-med-supabase.js"></script>
 <script src="js/medicaments.js"></script>
+<script src="js/medicaments-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

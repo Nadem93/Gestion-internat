@@ -1,120 +1,209 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Entretiens professionnels — FTR</title>
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
+  <title>Entretiens professionnels — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-entretiens.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info"><div class="header-title">Entretiens professionnels</div></div>
-    <div class="header-right"></div>
-  </header>
-  <main class="content" style="max-width:1280px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
-      <div>
-        <div style="font-weight:700;font-size:1rem">🧑‍💼 Entretiens & formations</div>
-        <div style="font-size:.78rem;color:var(--muted)">Suivi des entretiens professionnels, bilans et plans de formation</div>
-      </div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-primary admin-only" onclick="openEntretienModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nouvel entretien
-        </button>
-      </div>
-    </div>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(219,39,119,.16)">
 
-    <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;gap:1rem;padding:.75rem 1rem;flex-wrap:wrap">
-        <div style="flex:1;text-align:center;min-width:90px"><div id="etStatPlanifies" style="font-weight:800;font-size:1.4rem;color:#d97706">0</div><div style="font-size:.72rem;color:var(--muted)">Planifiés</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="etStatRealises" style="font-weight:800;font-size:1.4rem;color:#16a34a">0</div><div style="font-size:.72rem;color:var(--muted)">Réalisés</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="etStatTotal" style="font-weight:800;font-size:1.4rem;color:#0f2b4a">0</div><div style="font-size:.72rem;color:var(--muted)">Total</div></div>
+  <div class="v2-top">
+    <a class="v2-logo" href="rh.html" style="background:linear-gradient(135deg,#db2777,#f472b6)" title="Retour au portail RH">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · RH</div>
+      <div class="v2-top-title">Entretiens professionnels</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a href="rh.html" class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Portail RH
+      </a>
+      <button class="v2-btn v2-btn-primary admin-only" onclick="openEntretienModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Planifier un entretien
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <!-- ═══════════════ VUE LISTE ═══════════════ -->
+    <div id="etListView">
+
+      <!-- Tuiles statistiques -->
+      <div id="et2Stats" class="et2-stats"></div>
+
+      <!-- Filtres : chips de type + selects hérités (contrat de js/entretiens.js) -->
+      <div class="et2-filters">
+        <div id="et2Chips" class="v2-chips"></div>
+        <span id="et2FiltreEmpWrap" class="et2-rh-only" style="display:none">
+          <select id="etFiltreEmploye" class="et2-sel" aria-label="Filtrer par employé" onchange="renderEntretiens()">
+            <option value="">Tous les employés</option>
+          </select>
+        </span>
+        <select id="etFiltreStatut" class="et2-sel" aria-label="Filtrer par statut" onchange="renderEntretiens()">
+          <option value="">Tous les statuts</option>
+          <option value="planifie">Planifié</option>
+          <option value="realise">Réalisé</option>
+        </select>
+        <!-- Filtre de type : piloté par les chips, conservé comme contrat DOM -->
+        <select id="etFiltreType" hidden aria-hidden="true" tabindex="-1" onchange="renderEntretiens()">
+          <option value="">Tous les types</option>
+          <option value="annuel">Entretien annuel</option>
+          <option value="professionnel">Entretien professionnel</option>
+          <option value="suivi">Entretien de suivi</option>
+          <option value="bilan6">Bilan à 6 ans</option>
+          <option value="retour">Entretien de retour</option>
+        </select>
       </div>
-    </div>
 
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-      <select id="etFiltreEmploye" class="form-input admin-only" style="width:200px;display:none" onchange="renderEntretiens()"><option value="">Tous les employés</option></select>
-      <select id="etFiltreType" class="form-input" style="width:180px" onchange="renderEntretiens()">
-        <option value="">Tous les types</option>
-        <option value="annuel">Entretien annuel</option>
-        <option value="professionnel">Entretien professionnel</option>
-        <option value="suivi">Entretien de suivi</option>
-      </select>
-      <select id="etFiltreStatut" class="form-input" style="width:160px" onchange="renderEntretiens()">
-        <option value="">Tous les statuts</option>
-        <option value="planifie">Planifié</option>
-        <option value="realise">Réalisé</option>
-      </select>
-    </div>
-
-    <div id="etList"><div class="empty" style="padding:3rem;text-align:center"><p>Aucun entretien</p></div></div>
-  </main>
-</div></div>
-<div id="toast-container" class="toast-container"></div>
-
-<div class="modal-overlay" id="modalEntretien">
-  <div class="modal" style="max-width:540px;--mc:#9333ea">
-    <div class="mdx-hero">
-      <button class="mdx-close" onclick="closeModal('modalEntretien')" aria-label="Fermer">✕</button>
-      <div class="mdx-badge">🧑‍💼</div>
-      <div class="mdx-hero-txt">
-        <div class="mdx-title" id="etModalTitle">Nouvel entretien</div>
-        <div class="mdx-sub">Entretien professionnel</div>
+      <!-- Compteurs hérités, conservés pour les scripts qui les lisent -->
+      <div hidden aria-hidden="true">
+        <span id="etStatPlanifies">0</span><span id="etStatRealises">0</span><span id="etStatTotal">0</span>
       </div>
-    </div>
-    <div class="modal-body mdx-body">
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>🧑‍💼</span> L'entretien</div>
-        <div class="form-row">
-          <div class="form-group"><label>Employé *</label><select id="etFormEmploye" class="form-input" onchange="etModalSync()"></select></div>
-          <div class="form-group"><label>Date *</label><input type="date" id="etFormDate" class="form-input"/></div>
+
+      <!-- Tableau + échéances légales | rail -->
+      <div class="et2-body">
+        <div class="et2-main">
+          <div id="et2Table"></div>
+          <div id="et2Echeances" class="et2-rh-only"></div>
+          <!-- Liste héritée (vidée par le module V2, conservée comme contrat DOM) -->
+          <div id="etList" hidden aria-hidden="true"></div>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label>Type *</label>
-            <select id="etFormType" class="form-input" onchange="etModalSync()">
+        <div id="et2Rail" class="et2-rail"></div>
+      </div>
+
+      <!-- Trame, objectifs, récapitulatif 6 ans, signature, campagne -->
+      <div id="et2Features"></div>
+    </div><!-- /etListView -->
+
+    <!-- ═══════════ VUE FORMULAIRE (plein écran) ═══════════ -->
+    <div id="etFormView" style="display:none">
+      <div class="et2-form-bar">
+        <button class="v2-btn" onclick="closeEntretienForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span class="lbl">Retour</span>
+        </button>
+        <div class="et2-form-h">
+          <div class="et2-form-t" id="etFormTitle">Nouvel entretien</div>
+          <div class="et2-form-s" id="etFormSub">Entretien annuel</div>
+        </div>
+        <div class="et2-form-a">
+          <button class="v2-btn" id="etExportBtn" style="display:none" onclick="exportEntretienPdf(document.getElementById('etFormView').dataset.editId)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span class="lbl">Export PDF</span>
+          </button>
+          <button class="v2-btn v2-btn-primary" onclick="saveEntretien()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="lbl">Enregistrer</span>
+          </button>
+        </div>
+      </div>
+
+      <section class="v2-blk">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" style="width:15px;height:15px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="v2-blk-t">L’entretien</span>
+        </div>
+        <div class="v2-grid2">
+          <div><label class="v2-fld-l" for="etFormEmploye">Employé *</label>
+            <select id="etFormEmploye" class="v2-fld" onchange="etModalSync()"></select></div>
+          <div><label class="v2-fld-l" for="etFormDate">Date *</label>
+            <input type="date" id="etFormDate" class="v2-fld"/></div>
+        </div>
+        <div class="v2-grid2" style="margin-top:14px">
+          <div><label class="v2-fld-l" for="etFormType">Type *</label>
+            <select id="etFormType" class="v2-fld" onchange="etModalSync()">
               <option value="annuel">Entretien annuel</option>
               <option value="professionnel">Entretien professionnel</option>
               <option value="suivi">Entretien de suivi</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Statut *</label>
-            <select id="etFormStatut" class="form-input" onchange="etModalSync()">
+              <option value="bilan6">Bilan à 6 ans (état récapitulatif)</option>
+              <option value="retour">Entretien de retour (absence longue)</option>
+            </select></div>
+          <div><label class="v2-fld-l" for="etFormStatut">Statut *</label>
+            <select id="etFormStatut" class="v2-fld" onchange="etModalSync()">
               <option value="planifie">Planifié</option>
               <option value="realise">Réalisé</option>
-            </select>
-          </div>
+            </select></div>
         </div>
-        <div class="form-group"><label>Évaluateur</label><input type="text" id="etFormEvaluateur" class="form-input" placeholder="Nom du responsable"/></div>
-      </div>
+        <div style="margin-top:14px">
+          <label class="v2-fld-l" for="etFormEvaluateur">Évaluateur</label>
+          <input type="text" id="etFormEvaluateur" class="v2-fld" placeholder="Nom du responsable"/>
+        </div>
+      </section>
 
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>⭐</span> Grille de compétences</div>
-        <div id="etGrilleLive" style="padding:.5rem .75rem;background:#f8fafc;border-radius:8px;border:1px solid var(--border);text-align:center;font-size:.85rem">Notez chaque item ci-dessous…</div>
+      <section class="v2-blk" id="etGrilleSection">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          <span class="v2-blk-t">Positionnement — référentiel métier</span>
+        </div>
+        <div id="etGrilleMetier" class="et2-ref"></div>
+        <div class="et2-ref-note">Entretien annuel : positionnement qualitatif sur le référentiel du métier
+          (Acquis / En cours d’acquisition / À développer). <strong>Aucune note ni classement</strong> —
+          support de dialogue avec le salarié, à partager avec lui.</div>
         <div id="etGrilleBody"></div>
-      </div>
+      </section>
 
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>📝</span> Compte rendu</div>
-        <div class="form-group"><label>Bilan</label><textarea id="etFormBilan" class="form-input" rows="3" placeholder="Bilan de la période écoulée…"></textarea></div>
-        <div class="form-group"><label>Objectifs fixés</label><textarea id="etFormObjectifs" class="form-input" rows="3" placeholder="Objectifs pour la période à venir…"></textarea></div>
-        <div class="form-group"><label>Besoins en formation</label><textarea id="etFormFormations" class="form-input" rows="2" placeholder="Formations souhaitées ou prévues…"></textarea></div>
+      <section class="v2-blk">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" style="width:15px;height:15px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          <span class="v2-blk-t">Compte rendu</span>
+        </div>
+        <div><label class="v2-fld-l" for="etFormBilan">Bilan de la période écoulée</label>
+          <textarea id="etFormBilan" class="v2-fld" rows="4" placeholder="Bilan de la période écoulée…"></textarea></div>
+        <div style="margin-top:14px"><label class="v2-fld-l" for="etFormObjectifs">Objectifs fixés</label>
+          <textarea id="etFormObjectifs" class="v2-fld" rows="4" placeholder="Objectifs pour la période à venir…"></textarea></div>
+        <div style="margin-top:14px"><label class="v2-fld-l" for="etFormFormations">Besoins en formation</label>
+          <textarea id="etFormFormations" class="v2-fld" rows="3" placeholder="Formations souhaitées ou prévues…"></textarea></div>
+      </section>
+
+      <div class="et2-form-foot">
+        <button class="v2-btn-sec" onclick="closeEntretienForm()">Annuler</button>
+        <button class="v2-btn-pri" onclick="saveEntretien()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Enregistrer l’entretien
+        </button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="etExportBtn" style="margin-right:auto;display:none" onclick="exportEntretienPdf(document.getElementById('modalEntretien').dataset.editId)">🖨 Export PDF</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalEntretien')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEntretien()">💾 Enregistrer</button>
-    </div>
+    </div><!-- /etFormView -->
+
   </div>
 </div>
+
+<!-- Modale de la page (souhait, action de formation, objectif, relances) —
+     contenu rendu par js/entretiens-v2.js, gabarit V2 de css/v2.css. -->
+<div class="v2-ov" id="et2Modal"></div>
+
+<div id="toast-container" class="toast-container"></div>
 
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/entretiens-supabase.js"></script>
+<script src="js/entretiens-referentiels.js"></script>
 <script src="js/entretiens.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_entretiens')) { document.querySelector('.content').innerHTML = ''; }</script>
+<script src="js/entretiens-v2.js"></script>
+<script>
+  Auth.requireAuth();
+  if (!requireModule('access_entretiens')) {
+    const b = document.querySelector('.v2-body');
+    if (b) b.innerHTML = '';
+  }
+</script>
+<script src="js/mobile-nav.js"></script>
 </body></html>

@@ -25,7 +25,15 @@ function ceCardVars(hex) {
 
 let ceEditId = null;
 
+// Le rendu est assuré par js/contacts-externes-v2.js (maquette « Contacts
+// extérieurs (RH) » — vivier de remplaçants & vacataires). Le rendu d'origine
+// est conservé en repli si le module V2 n'est pas chargé.
 function renderContactsExternes() {
+  if (typeof ce2Render === 'function') return ce2Render();
+  return renderContactsExternesLegacy();
+}
+
+function renderContactsExternesLegacy() {
   const all = getContactsExternes().sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
   const q = (document.getElementById('ceSearch')?.value || '').trim().toLowerCase();
   const list = q
@@ -73,7 +81,7 @@ function renderContactsExternes() {
         <div class="c-actions">
           ${c.email ? `<a href="mailto:${escHtml(c.email)}" title="Envoyer un email" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg></a>` : `<span style="color:#d1d5db;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg></span>`}
           ${c.telephone ? `<a href="tel:${escHtml(c.telephone)}" title="Appeler" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>` : `<span style="color:#d1d5db;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>`}
-          <button onclick="deleteContactExterneCard('${c.id}','${escHtml(nom)}')" title="Supprimer" class="c-action-icon" style="color:var(--muted);background:none;border:none;cursor:pointer;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+          <button onclick="deleteContactExterneCard('${c.id}')" title="Supprimer" class="c-action-icon" style="color:var(--muted);background:none;border:none;cursor:pointer;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
         <button class="c-btn" onclick="openCeModal('${c.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Modifier</button>
       </div>
@@ -94,6 +102,8 @@ function openCeModal(id) {
   document.getElementById('ceEmail').value = c?.email || '';
   document.getElementById('ceNotes').value = c?.notes || '';
   document.getElementById('ceBtnDelete').style.display = c ? '' : 'none';
+  // Champs propres au design V2 (métier, statut, taux horaire, disponibilité)
+  if (typeof ce2FillModal === 'function') ce2FillModal(c);
   openModal('modalContactExterne');
 }
 
@@ -109,18 +119,24 @@ async function saveContactExterne() {
     email: document.getElementById('ceEmail').value.trim(),
     notes: document.getElementById('ceNotes').value.trim()
   };
+  let savedId = null;
   try {
     if (ceEditId) {
       const old = _ceCache.find(c => c.id === ceEditId) || {};
       const saved = await sbSaveContactExterne({ ...old, ...data, id: ceEditId });
       _ceCache = _ceCache.map(c => c.id === ceEditId ? saved : c);
+      savedId = saved.id;
       toast('Contact mis à jour', 'success');
     } else {
       const saved = await sbSaveContactExterne(data);
       _ceCache.push(saved);
+      savedId = saved.id;
       toast('Contact ajouté ✓', 'success');
     }
   } catch (e) { console.error('[saveContactExterne]', e); toast('Erreur : ' + (e?.message || e), 'error'); return; }
+  // Champs du design V2 : enregistrés dans un second temps, avec dégradation
+  // douce si migration-contacts-externes.sql n'a pas encore été exécuté.
+  if (typeof ce2AfterSave === 'function') await ce2AfterSave(savedId);
   if (typeof auditLog === 'function') auditLog('contact_externe_save', `${prenom} ${nom}`);
   closeModal('modalContactExterne');
   renderContactsExternes();
@@ -133,7 +149,9 @@ function deleteContactExterne() {
   closeModal('modalContactExterne');
 }
 
-function deleteContactExterneCard(id, nom) {
+function deleteContactExterneCard(id) {
+  const c = _ceCache.find(x => x.id === id);
+  const nom = c ? `${c.prenom||''} ${c.nom||''}`.trim() : '';
   if (!confirm(`Supprimer ${nom || 'ce contact'} ?`)) return;
   (async () => {
     try { await sbDeleteContactExterne(id); _ceCache = _ceCache.filter(c => c.id !== id); }
@@ -161,5 +179,11 @@ function seedDemoContactsExternes() {
   toast('Ajout de contacts de démo désactivé (base de production)', 'info');
 }
 
-document.addEventListener('DOMContentLoaded', async () => { await loadContactsExternesCache(); renderContactsExternes(); });
-if (typeof registerPageInit === 'function') registerPageInit('contacts-externes', async () => { await loadContactsExternesCache(); renderContactsExternes(); });
+async function loadContactsExternesPage() {
+  await loadContactsExternesCache();
+  if (typeof ce2Load === 'function') await ce2Load();
+  renderContactsExternes();
+}
+
+document.addEventListener('DOMContentLoaded', loadContactsExternesPage);
+if (typeof registerPageInit === 'function') registerPageInit('contacts-externes', loadContactsExternesPage);

@@ -1,0 +1,212 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — INVENTAIRE & MATÉRIEL (pilotage) — design V2
+   D'après la maquette « Inventaire (pilotage).dc.html ».
+   Toutes les classes sont préfixées « iv2- » et ne servent qu'à cette page.
+   Les composants génériques viennent de css/v2.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bandeau de statistiques (4 tuiles à icône) ──────────────────────── */
+.iv2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.iv2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.iv2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #d97706) 13%, transparent); color: var(--pc, #d97706);
+}
+.iv2-stat-ico svg { width: 21px; height: 21px; }
+.iv2-stat-n { font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; color: var(--pc, #d97706); }
+.iv2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+@media (max-width: 1100px) { .iv2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .iv2-stats { grid-template-columns: 1fr; } }
+
+/* ── Barre de filtres ────────────────────────────────────────────────── */
+.iv2-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.iv2-search {
+  height: 34px; flex: 0 1 260px; min-width: 190px; border-radius: var(--v2-r-chip);
+  padding: 0 12px; font: inherit; font-size: 12.5px;
+}
+body.v2 input.iv2-search {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t2);
+}
+body.v2 input.iv2-search:focus { outline: none; border-color: rgba(217,119,6,.5); }
+.iv2-fsep { width: 1px; align-self: stretch; background: var(--v2-b); margin: 0 4px; }
+
+/* ── Corps : colonne principale + rail ───────────────────────────────── */
+.iv2-main { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.iv2-col  { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.iv2-rail { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 1100px) { .iv2-main { grid-template-columns: 1fr; } }
+
+/* ── Tableau des articles ────────────────────────────────────────────── */
+.iv2-tablecard {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden;
+}
+.iv2-tablewrap { overflow-x: auto; }
+.iv2-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+.iv2-table th {
+  text-align: left; padding: 13px 20px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  background: var(--v2-s-alt); border-bottom: 1px solid var(--v2-b); white-space: nowrap;
+}
+.iv2-table td { padding: 12px 20px; border-bottom: 1px solid var(--v2-b-table); vertical-align: middle; }
+.iv2-table tbody tr:last-child td { border-bottom: none; }
+.iv2-table tbody tr:hover { background: rgba(255,255,255,.025); }
+.iv2-c { text-align: center; }
+.iv2-r { text-align: right; }
+.iv2-art { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.iv2-art-ico {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.iv2-art-ico svg { width: 16px; height: 16px; }
+.iv2-art-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.iv2-art-c { font-size: 10.5px; color: var(--v2-t6); }
+.iv2-lieu { font-size: 12px; color: var(--v2-t5); }
+.iv2-qte  { font-family: var(--v2-display); font-size: 13px; font-weight: 700; color: #fff; }
+.iv2-lvl  { display: block; width: 100%; max-width: 90px; }
+.iv2-lvl-na { font-size: 10.5px; color: var(--v2-t8); }
+.iv2-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.iv2-ib {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.iv2-ib:hover { background: var(--v2-s-hover); color: #fff; }
+.iv2-ib svg { width: 14px; height: 14px; }
+.iv2-ib-danger:hover { color: var(--v2-danger-text); border-color: rgba(239,68,68,.4); }
+
+/* ── Réapprovisionnement ─────────────────────────────────────────────── */
+.iv2-reappro {
+  background: linear-gradient(135deg, rgba(239,68,68,.12), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(239,68,68,.2); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.iv2-reappro-t { font-size: 13.5px; font-weight: 700; color: #fecaca; }
+.iv2-reappro svg.iv2-hdr-ico { width: 15px; height: 15px; color: #fca5a5; flex-shrink: 0; }
+.iv2-rline {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-soft);
+}
+.iv2-rline:last-child { border-bottom: none; }
+.iv2-cmd {
+  height: 28px; padding: 0 12px; border-radius: 8px; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: rgba(239,68,68,.16); color: #fda4af; font: inherit; font-size: 11px; font-weight: 700;
+}
+.iv2-cmd:hover { background: rgba(239,68,68,.26); color: #fff; }
+
+/* ── Rail : ventilation par catégorie / valeur / maintenance ─────────── */
+.iv2-brow { margin-bottom: 12px; }
+.iv2-brow:last-child { margin-bottom: 0; }
+.iv2-brow-h { display: flex; align-items: baseline; margin-bottom: 5px; gap: 10px; }
+.iv2-brow-l { font-size: 12px; color: var(--v2-t3); }
+.iv2-brow-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+
+.iv2-valeur {
+  background: linear-gradient(135deg, rgba(217,119,6,.14), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(217,119,6,.22); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.iv2-valeur-t { font-size: 13.5px; font-weight: 700; color: #fdba74; margin-bottom: 6px; }
+.iv2-valeur-n { font-family: var(--v2-display); font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+.iv2-valeur-s { font-size: 11px; color: var(--v2-t6); margin: 5px 0 14px; }
+.iv2-pline { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.iv2-pline:last-child { border-bottom: none; }
+.iv2-pline-l { flex: 1; font-size: 11.5px; color: var(--v2-t3); }
+.iv2-pline-v { font-family: var(--v2-display); font-size: 11.5px; font-weight: 700; color: #fdba74; }
+
+.iv2-mline { display: flex; align-items: center; gap: 11px; padding: 8px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.iv2-mline:last-child { border-bottom: none; }
+.iv2-mline-t { font-size: 11.5px; font-weight: 600; color: var(--v2-t2); }
+.iv2-mline-d { font-size: 10px; color: var(--v2-t6); }
+.iv2-mline-e { font-size: 10.5px; font-weight: 700; flex-shrink: 0; }
+
+/* ── Bas de page : mouvements / rotation ─────────────────────────────── */
+.iv2-feat1 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 18px; align-items: start; }
+.iv2-feat2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 18px; align-items: start; }
+@media (max-width: 1100px) { .iv2-feat1, .iv2-feat2 { grid-template-columns: 1fr; } }
+
+.iv2-mv { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-list); }
+.iv2-mv:last-child { border-bottom: none; }
+.iv2-mv-ico {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #34d399) 13%, transparent); color: var(--pc, #34d399);
+}
+.iv2-mv-ico svg { width: 14px; height: 14px; }
+.iv2-mv-n { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.iv2-mv-m { font-size: 10px; color: var(--v2-t6); }
+.iv2-mv-d { font-family: var(--v2-display); font-size: 12px; font-weight: 700; color: var(--pc, #34d399); flex-shrink: 0; }
+
+/* ── Inventaire annuel ───────────────────────────────────────────────── */
+.iv2-comptage {
+  background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(16,185,129,.2); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.iv2-comptage-t { font-size: 13px; font-weight: 700; color: #6ee7b7; }
+.iv2-comptage svg.iv2-hdr-ico { width: 15px; height: 15px; color: #34d399; flex-shrink: 0; }
+.iv2-comptage-s { font-size: 11px; color: var(--v2-t6); margin-bottom: 14px; }
+.iv2-comptage-m { font-size: 10.5px; color: var(--v2-t6); margin-top: 8px; }
+.iv2-comptage-b {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 36px; border-radius: 11px; margin-top: 14px; cursor: pointer;
+  background: rgba(16,185,129,.16); border: 1px solid rgba(16,185,129,.32);
+  color: #6ee7b7; font: inherit; font-size: 12px; font-weight: 700;
+}
+.iv2-comptage-b:hover { background: rgba(16,185,129,.26); color: #fff; }
+
+/* ── Fournisseurs ────────────────────────────────────────────────────── */
+.iv2-fo { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-list); }
+.iv2-fo:last-child { border-bottom: none; }
+.iv2-fo-tag {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 800; color: #0a1728; background: var(--pc, #ea580c);
+}
+.iv2-fo-n { font-size: 11.5px; font-weight: 600; color: var(--v2-t2); }
+.iv2-fo-d { font-size: 10px; color: var(--v2-t6); }
+.iv2-fo-delai { font-size: 10px; font-weight: 700; color: var(--v2-ok-light); flex-shrink: 0; }
+
+/* ── Garanties & contrats ────────────────────────────────────────────── */
+.iv2-gar {
+  background: linear-gradient(135deg, rgba(129,140,248,.14), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(129,140,248,.22); border-radius: var(--v2-r-card2); padding: 20px;
+}
+.iv2-gar-t { font-size: 13.5px; font-weight: 700; color: #c7d2fe; }
+.iv2-gar svg.iv2-hdr-ico { width: 15px; height: 15px; color: #a5b4fc; flex-shrink: 0; }
+.iv2-gline { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.iv2-gline:last-child { border-bottom: none; }
+.iv2-gline-t { font-size: 11.5px; font-weight: 600; color: var(--v2-t2); }
+.iv2-gline-d { font-size: 10px; color: var(--v2-t6); }
+
+/* ── Divers ──────────────────────────────────────────────────────────── */
+.iv2-hdr { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.iv2-grow { flex: 1; min-width: 0; }
+.iv2-add {
+  margin-left: auto; height: 26px; padding: 0 10px; border-radius: 8px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  font: inherit; font-size: 11px; font-weight: 600;
+}
+.iv2-add:hover { background: var(--v2-s-hover); color: #fff; }
+.iv2-add svg { width: 12px; height: 12px; }
+.iv2-hint { font-size: 11px; color: var(--v2-t7); margin-top: 10px; line-height: 1.5; }
+
+/* Comptage : lignes de saisie dans la modale */
+.iv2-cnt { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-list); }
+.iv2-cnt:last-child { border-bottom: none; }
+.iv2-cnt-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.iv2-cnt-m { font-size: 10.5px; color: var(--v2-t6); }
+.iv2-cnt-i { width: 84px; height: 36px; flex-shrink: 0; text-align: center; }
+body.v2 input.iv2-cnt-i {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  border-radius: 10px; color: var(--v2-t2); font: inherit; font-size: 13px;
+}
+.iv2-cnt-e { width: 52px; flex-shrink: 0; text-align: right; font-size: 11px; font-weight: 700; }
+
+/* Icônes SVG : bornées partout pour ne jamais remplir leur conteneur */
+.iv2-stat svg, .iv2-hdr svg, .iv2-table svg, .iv2-rline svg, .iv2-mv svg { max-width: 100%; }

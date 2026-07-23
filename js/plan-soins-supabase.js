@@ -62,4 +62,53 @@ async function sbDeletePlanSoins(id) {
     .from('plan_soins').delete().eq('id', id).select();
   if (error) throw error;
   if (!data || !data.length) throw new Error('Aucun soin supprimé — id=' + id);
+  // Nettoie les coches associées (pas de contrainte FK côté base)
+  try { await supabaseClient.from('plan_soins_coches').delete().eq('soin_id', String(id)); } catch (e) { /* table absente ou rien à supprimer */ }
+}
+
+// ── COCHES « FAIT » — traçabilité (qui, à quelle heure, historique par jour) ──
+// Table plan_soins_coches (clé : soin_id + date). Présence d'une ligne = soin fait ce jour-là.
+function _pscFromRow(r) {
+  return { soinId: r.soin_id, date: r.date, par: r.par || '', parId: r.par_id || '', doneAt: r.done_at };
+}
+
+async function sbGetPsCoches(date) {
+  const { data, error } = await supabaseClient
+    .from('plan_soins_coches').select('*').eq('date', date);
+  if (error) { console.error('[sbGetPsCoches]', error); return []; }   // lecture non critique
+  return (data || []).map(_pscFromRow);
+}
+
+// Plage de dates — pour l'historique / les agrégats.
+async function sbGetPsCochesRange(startDate, endDate) {
+  // Lecture paginée : une plage annuelle atteint le plafond PostgREST de 1000 lignes
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('plan_soins_coches').select('*').gte('date', startDate).lte('date', endDate)
+      .order('date').order('soin_id'));
+    return (data || []).map(_pscFromRow);
+  } catch (error) { console.error('[sbGetPsCochesRange]', error); return []; }
+}
+
+// Marque un soin « fait » un jour donné (avec l'auteur), unicité soin_id+date garantie côté SQL.
+async function sbSetPsCoche(c) {
+  const etablissementId = await sbGetEtablissementId();
+  const row = {
+    soin_id:  String(c.soinId),
+    date:     c.date,
+    par:      c.par || '',
+    par_id:   String(c.parId || ''),
+    done_at:  new Date().toISOString(),
+    etablissement_id: etablissementId
+  };
+  const { data, error } = await supabaseClient
+    .from('plan_soins_coches').upsert(row, { onConflict: 'soin_id,date' }).select();
+  if (error) throw error;
+  return _pscFromRow(data[0]);
+}
+
+async function sbClearPsCoche(soinId, date) {
+  const { error } = await supabaseClient
+    .from('plan_soins_coches').delete().eq('soin_id', String(soinId)).eq('date', date);
+  if (error) throw error;
 }

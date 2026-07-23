@@ -4,11 +4,23 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Planning — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     /* ── Layout agenda (sidebar + timeline) ── */
+    /* Fond aurora (identité INTERNALIS) — ressort à travers les cartes en verre */
+    body{background:
+      radial-gradient(55% 45% at 12% 6%, rgba(167,139,250,.40), transparent 62%),
+      radial-gradient(52% 55% at 92% 104%, rgba(56,189,248,.36), transparent 62%),
+      radial-gradient(44% 44% at 56% 46%, rgba(244,114,182,.22), transparent 60%),
+      linear-gradient(135deg,#f5f7ff,#e7effb) !important;
+      background-attachment:fixed !important;
+    }
     .pl-layout{display:flex;gap:1rem;align-items:flex-start}
-    .pl-sidebar{width:212px;flex-shrink:0;display:flex;flex-direction:column;gap:.85rem;transition:width .22s ease,opacity .22s ease,margin .22s ease}
+    .pl-sidebar{display:none}
     .pl-sidebar.pl-sidebar-hidden{width:0;overflow:hidden;opacity:0;margin:0;pointer-events:none}
     .pl-content{flex:1;min-width:0}
     @media(max-width:880px){.pl-sidebar{display:none}}
@@ -46,7 +58,7 @@
     .pl-days{display:grid;grid-template-columns:repeat(7,1fr)}
     .pl-day{position:relative;border-left:1px solid var(--border);cursor:pointer}
     .pl-day .pl-ev-wrap{position:absolute;pointer-events:none}
-    .pl-day .pl-ev-band{position:absolute;top:0;bottom:0;width:4px;border-radius:4px;pointer-events:auto;cursor:pointer}
+    .pl-day .pl-ev-band{position:absolute;bottom:0;width:4px;border-radius:0 0 6px 6px;opacity:.8;pointer-events:auto;cursor:pointer}
     .pl-day .pl-ev{position:absolute;top:0;border-radius:5px;color:#fff;padding:3px 5px 3px 8px;font-size:.66rem;line-height:1.2;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.35);pointer-events:auto;cursor:pointer}
     .pl-day .pl-ev .pl-ev-time{font-weight:400;opacity:.9}
     .pl-day .pl-ev .pl-ev-title{font-weight:700}
@@ -55,7 +67,8 @@
     .pl-day .pl-now::before{content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:#ef4444}
 
     /* ── Vue Mois ── */
-    .plm-head{display:grid;grid-template-columns:repeat(7,1fr);background:#f3f7fb;border-bottom:1px solid var(--border)}
+    /* Bande des jours de la semaine masquée (retirée à la demande) */
+    .plm-head{display:none}
     .plm-dow{text-align:center;padding:.5rem .25rem;font-size:.64rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-left:1px solid var(--border)}
     .plm-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(96px,auto)}
     .plm-cell{padding:.4rem .45rem;border:1px solid var(--border);cursor:pointer;transition:background .1s;min-width:0;overflow:hidden}
@@ -70,6 +83,9 @@
     .plm-ev-txt{padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);flex:1;min-width:0}
     .plm-ev-time{opacity:.7;font-weight:400}
     .plm-more{font-size:.65rem;color:var(--muted);padding:1px 0;margin-top:1px}
+    /* Pastilles + liste du jour (façon iOS) : masquées sur desktop, activées en mobile */
+    .plm-dots{display:none}
+    .plm-daylist{display:none}
 
     /* ── Recherche ── */
     .pl-search-wrap{position:relative;display:flex;align-items:center}
@@ -88,8 +104,68 @@
       .pl-week-body{grid-template-columns:36px 1fr!important}
       .pl-days{grid-template-columns:1fr!important}
       .plh-day .plh-dow{font-size:.55rem}
-      .pl-search-wrap input{width:110px}
       .btn-add-label{display:none}
+
+      /* Sélecteur de vue (Jour/Semaine/Mois/Liste) : pleine largeur, réparti */
+      .planning-view-switch{width:100%}
+      .planning-view-switch .btn{flex:1;padding:.3rem .35rem;font-size:.82rem}
+
+      /* Barre de navigation du calendrier : passe à la ligne, compacte */
+      .pl-nav{flex-wrap:wrap!important;gap:.5rem!important;margin-bottom:1rem!important}
+      .pl-nav #calTitle{min-width:0!important;flex:1;font-size:1.02rem;text-align:center}
+      .pl-nav #sidebarToggleBtn{display:none!important}
+      .pl-nav .pl-search-wrap{margin-left:0!important;flex:1 1 100%;order:10}
+      .pl-nav .pl-search-wrap input{width:100%!important}
+      .pl-nav #filterEventResident{flex:1 1 100%;order:11;width:100%!important}
+
+      .pl-content{overflow-x:hidden}
+    }
+
+    /* ── Vue Mois façon Calendrier iOS — activée par la classe .plm-ios que le JS
+       pose sur #calContainer selon la largeur (indépendant du cache CSS). ── */
+    .plm-ios .card{max-width:600px;margin:0 auto;background:rgba(255,255,255,.6);-webkit-backdrop-filter:blur(13px) saturate(150%);backdrop-filter:blur(13px) saturate(150%);border:1px solid rgba(255,255,255,.82);box-shadow:0 10px 30px rgba(80,90,200,.14);position:relative}
+    .plm-ios .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:plHolo 4s linear infinite;z-index:4;pointer-events:none}
+    .plm-ios .plm-head{background:transparent;border-bottom:none}
+    .plm-ios .plm-dow{border-left:none;font-size:.68rem;padding:.5rem 0 .35rem;color:var(--muted);text-transform:none;text-align:center}
+    .plm-ios .plm-grid{grid-auto-rows:minmax(54px,auto)}
+    .plm-ios .plm-cell{border:none;border-top:0.5px solid var(--border);padding:.35rem .1rem;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px;overflow:visible}
+    .plm-ios .plm-cell.plm-empty{background:transparent}
+    .plm-ios .plm-num{font-size:1rem;font-weight:500;width:32px;height:32px;margin-bottom:0}
+    .plm-ios .plm-num.is-today{background:linear-gradient(135deg,#a78bfa,#38bdf8)!important;color:#fff!important;box-shadow:0 2px 8px rgba(120,130,220,.4)}
+    .plm-ios .plm-sel .plm-num{box-shadow:inset 0 0 0 1.5px #818cf8;color:#6366f1}
+    .plm-ios .plm-today.plm-sel .plm-num{background:linear-gradient(135deg,#a78bfa,#38bdf8)!important;color:#fff!important;box-shadow:0 2px 8px rgba(120,130,220,.4)}
+    .plm-ios .plm-ev{display:none}
+    .plm-ios .plm-dots{display:flex;gap:3px;height:6px;justify-content:center}
+    .plm-ios .plm-dot{width:5px;height:5px;border-radius:50%}
+    .plm-ios .plm-daylist{display:block;margin:1rem auto 0;max-width:600px;background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);border:1px solid rgba(255,255,255,.72);border-radius:14px;padding:.35rem .9rem;box-shadow:0 8px 24px rgba(80,90,200,.1)}
+    .plm-ios .plm-dl-head{display:flex;align-items:center;gap:.5rem;padding:.5rem .1rem;border-bottom:0.5px solid var(--border)}
+    .plm-ios .plm-dl-title{font-size:.9rem;font-weight:800;color:var(--text);text-transform:capitalize}
+    .plm-ios .plm-dl-add{margin-left:auto;color:#6366f1;font-size:.8rem;font-weight:600;cursor:pointer;border-radius:999px;padding:.2rem .6rem;transition:background .13s}
+    .plm-ios .plm-dl-add:hover{background:rgba(99,102,241,.12)}
+    .plm-ios .plm-dl-ev{position:relative;display:flex;gap:.7rem;padding:.7rem 1.7rem .7rem .55rem;border-bottom:0.5px solid var(--border);align-items:flex-start;cursor:pointer;border-radius:11px;transition:background .13s,box-shadow .13s}
+    .plm-ios .plm-dl-ev:hover{background:rgba(99,102,241,.08);box-shadow:0 2px 10px rgba(99,102,241,.12)}
+    .plm-ios .plm-dl-ev:active{background:rgba(99,102,241,.15)}
+    .plm-ios .plm-dl-ev::after{content:'›';position:absolute;right:.7rem;top:50%;transform:translateY(-50%);color:#c3c8ea;font-size:1.2rem;line-height:1;transition:color .13s,right .13s}
+    .plm-ios .plm-dl-ev:hover::after{color:#6366f1;right:.5rem}
+    .plm-ios .plm-dl-time{width:48px;flex-shrink:0;text-align:right;font-size:.82rem;color:var(--muted);line-height:1.25}
+    .plm-ios .plm-dl-time b{color:var(--text);font-weight:700}
+    .plm-ios .plm-dl-bar{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:34px}
+    .plm-ios .plm-dl-body{min-width:0;flex:1}
+    .plm-ios .plm-dl-t{font-size:.92rem;color:var(--text);line-height:1.25}
+    .plm-ios .plm-dl-s{font-size:.8rem;color:var(--muted);margin-top:1px}
+    .plm-ios .plm-dl-empty{padding:1.75rem .1rem;text-align:center;color:var(--muted);font-size:.84rem;font-style:italic}
+
+    /* Grand écran : 2 colonnes (calendrier agrandi à gauche, liste du jour à droite) pour remplir la largeur */
+    @media(min-width:900px){
+      .plm-ios{display:flex;gap:1.75rem;align-items:flex-start;max-width:1500px;margin:0 auto}
+      .plm-ios .card{flex:1.6;max-width:none;margin:0}
+      .plm-ios .plm-daylist{flex:1;max-width:none;margin:0;position:sticky;top:1rem}
+      .plm-ios .plm-grid{grid-auto-rows:minmax(88px,auto)}
+      .plm-ios .plm-cell{min-height:88px;justify-content:flex-start;padding-top:.5rem}
+      .plm-ios .plm-num{font-size:1.05rem;width:34px;height:34px}
+      .plm-ios .plm-dow{font-size:.78rem;padding:.6rem 0 .45rem}
+      .plm-ios .plm-dl-title{font-size:1rem}
+      .plm-ios .plm-dl-ev{padding:.85rem 1.8rem .85rem .55rem}
     }
 
     /* Légende / filtre par type */
@@ -241,51 +317,141 @@
     .evm-btn-series{background:transparent;border:1.5px solid #ef4444;color:#ef4444}
     .evm-btn-close{background:#f1f5f9;color:#334155}
     .evm-btn-edit{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff}
+
+    /* ═══════════ Design « Verre holographique » (planning) ═══════════ */
+    @keyframes plHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    /* Fond aurora clair, identique à l'accueil et aux résidents */
+    body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
+    /* Mini-calendriers en verre + en-tête holographique */
+    .mini-cal{background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(80,90,200,.1)}
+    .mini-cal-head{background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6)}
+    .mini-grid .mg-inweek{background:rgba(56,189,248,.14)}
+    .mini-grid .mg-today,.mini-grid .mg-today.mg-inweek{background:linear-gradient(135deg,#a78bfa,#38bdf8);color:#fff}
+    /* Grille semaine en verre + liseré holographique animé */
+    .pl-week{position:relative;background:rgba(255,255,255,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.82);box-shadow:0 8px 24px rgba(80,90,200,.1)}
+    .pl-week::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:6;pointer-events:none;background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:plHolo 4s linear infinite}
+    .pl-week-head{background:rgba(243,247,251,.72)}
+    .pl-week-head .plh-day.is-today .plh-num{background:linear-gradient(135deg,#a78bfa,#38bdf8);box-shadow:0 2px 8px rgba(120,130,220,.4)}
+    /* Ligne « maintenant » en rose holographique lumineux */
+    .pl-day .pl-now{background:#f472b6;box-shadow:0 0 8px rgba(244,114,182,.7)}
+    .pl-day .pl-now::before{background:#f472b6;box-shadow:0 0 8px rgba(244,114,182,.8)}
+    /* Vue mois : aujourd'hui accordé au thème */
+    .plm-today{background:rgba(56,189,248,.08)}
+    .plm-num.is-today{background:linear-gradient(135deg,#a78bfa,#38bdf8);color:#fff}
+    @media(prefers-reduced-motion:reduce){.pl-week::before{animation:none}}
+
+    /* ── Sélecteur de vue (Jour / Semaine / Mois / Liste) ── */
+    .pl-viewswitch{display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)}
+    .pl-viewbtn{padding:5px 12px;border:0;background:transparent;color:var(--muted,#94a3b8);font-size:.8rem;font-weight:600;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
+    .pl-viewbtn:hover{color:var(--text,#e2e8f0)}
+    .pl-viewbtn.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.35)}
+    html.clair .pl-viewswitch{background:rgba(15,23,42,.05);border-color:rgba(15,23,42,.1)}
+    html.clair .pl-viewbtn.active{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff}
+
+    /* ── Statut d'événement ── */
+    .plm-ev-annule{opacity:.6}
+    .plm-ev-annule .plm-ev-txt{text-decoration:line-through}
+    .plm-ev-realise .plm-ev-txt::after{content:' ✓';color:#10b981;font-weight:700}
+    .plm-ev-reporte .plm-ev-txt::after{content:' ↪';opacity:.75}
+    .pl-ev-annule{opacity:.55;filter:grayscale(.4)}
+    .pl-ev-annule .pl-ev-title,.pl-ev-annule .pl-ev-time{text-decoration:line-through}
+
+    /* ── Glisser-déposer (replanification) ── */
+    .plm-ev-drag,.pl-ev-drag{cursor:grab}
+    .plm-ev-drag:active,.pl-ev-drag:active{cursor:grabbing}
+    .pl-dragging{opacity:.45}
+    .plm-cell.pl-drop-hover{outline:2px dashed #8b5cf6;outline-offset:-3px;background:rgba(139,92,246,.12)}
+    .pl-day.pl-drop-hover{box-shadow:inset 0 0 0 2px #8b5cf6}
+
+    /* ── « +N » : jours surchargés (colonnes masquées) ── */
+    .pl-ev-more{position:absolute;z-index:3;display:flex;align-items:center;justify-content:center;
+      border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.02em;
+      background:color-mix(in srgb, #94a3b8 20%, var(--pl-ev-base,#0e1c31));
+      color:var(--v2-t3,#cbd5e1);
+      border:1px dashed color-mix(in srgb, #94a3b8 46%, transparent);transition:background .12s}
+    .pl-ev-more:hover{background:color-mix(in srgb, #94a3b8 34%, var(--pl-ev-base,#0e1c31))}
+
+    /* ── Pièces jointes (modale) ── */
+    .pl-pj-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .pl-pj-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:.8rem}
+    .pl-pj-item a{color:#60a5fa;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+    .pl-pj-item .pl-pj-x{margin-left:auto;background:none;border:0;color:#ef4444;cursor:pointer;font-size:1.05rem;line-height:1;flex-shrink:0}
+    html.clair .pl-pj-item{background:rgba(15,23,42,.04);border-color:rgba(15,23,42,.08)}
+    html.clair .pl-pj-item a{color:#2563eb}
+
+    /* Boutons supplémentaires de la fenêtre détails */
+    .evm-btn-dup{background:rgba(255,255,255,.07);color:var(--text,#e2e8f0)}
+    .evm-btn-fiche{background:rgba(16,185,129,.16);color:#10b981}
+    html.clair .evm-btn-dup{background:rgba(15,23,42,.06);color:#334155}
+
+    /* ── Fiche de sortie imprimable ── */
+    .pl-print-zone{display:none}
+    @media print{
+      body.pl-printing .app-layout,body.pl-printing #toast-container,body.pl-printing .modal-overlay{display:none!important}
+      body.pl-printing #plPrintZone{display:block!important;color:#000;font-family:Arial,Helvetica,sans-serif}
+    }
+    .pl-print-zone .pfs-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:14px}
+    .pl-print-zone .pfs-title{font-size:22px;font-weight:800}
+    .pl-print-zone .pfs-sub{font-size:13px;color:#555;margin-top:2px}
+    .pl-print-zone .pfs-brand{font-size:13px;font-weight:800;letter-spacing:.1em;color:#6366f1}
+    .pl-print-zone .pfs-tbl{width:100%;border-collapse:collapse;margin-bottom:16px}
+    .pl-print-zone .pfs-tbl td{padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:13px;vertical-align:top}
+    .pl-print-zone .pfs-l{font-weight:700;width:150px;color:#333}
+    .pl-print-zone .pfs-sec{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#333;margin:12px 0 8px;border-bottom:1px solid #999;padding-bottom:3px}
+    .pl-print-zone .pfs-res{border:1px solid #ddd;border-radius:6px;padding:8px 10px;margin-bottom:8px}
+    .pl-print-zone .pfs-res-h{font-size:15px;font-weight:700}
+    .pl-print-zone .pfs-ch{font-size:12px;font-weight:400;color:#666}
+    .pl-print-zone .pfs-res-u{font-size:12.5px;margin-top:4px;white-space:pre-wrap}
+    .pl-print-zone .pfs-foot{display:flex;gap:30px;margin-top:26px}
+    .pl-print-zone .pfs-sign{flex:1;font-size:12px;color:#333}
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-        <div class="header-title">Planning</div>
-        <div class="planning-view-switch" style="display:flex;gap:.4rem;background:var(--g100);border-radius:var(--r-sm);padding:3px">
-          <button class="btn btn-ghost btn-sm" id="viewDay">Jour</button>
-          <button class="btn btn-sm" id="viewWeek" style="background:#fff;box-shadow:var(--shadow-sm)">Semaine</button>
-          <button class="btn btn-ghost btn-sm" id="viewMonth">Mois</button>
-          <button class="btn btn-ghost btn-sm" id="viewList">Liste</button>
-        </div>
+    <div class="v2-shell">
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Agenda</div>
+        <div class="v2-top-title">Planning</div>
       </div>
-      <div class="header-right">
-        <button class="btn btn-accent btn-add-resident" onclick="quickAddEvent(dateStr(currentDate),'')">
+      <div style="margin-left:auto;display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+        <div class="pl-search-wrap search-box" style="width:240px;max-width:100%">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="searchEvent" placeholder="Rechercher…" autocomplete="off"/>
+        </div>
+        <select id="filterEventResident" style="width:auto"><option value="">Tous les résidents</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="plExportIcs()" title="Exporter l'agenda filtré au format iCalendar (.ics)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="btn-add-label">Exporter</span>
+        </button>
+        <button class="btn btn-accent btn-sm btn-add-resident" onclick="quickAddEvent(dateStr(currentDate),'')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Nouvel événement</span>
         </button>
       </div>
-    </header>
+    </div>
 
-    <main class="content">
-      <!-- Nav calendrier -->
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
-        <button class="btn btn-outline btn-sm" id="prevBtn">&#8592;</button>
-        <h2 id="calTitle" style="font-size:1.1rem;font-weight:700;min-width:220px;text-align:center"></h2>
-        <button class="btn btn-outline btn-sm" id="nextBtn">&#8594;</button>
-        <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
-        <button class="btn btn-outline btn-sm" id="sidebarToggleBtn" onclick="togglePlSidebar()" title="Afficher / masquer les calendriers">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-          Calendriers
-        </button>
-        <div class="pl-search-wrap" style="margin-left:auto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" id="searchEvent" placeholder="Rechercher…" autocomplete="off"/>
+    <div class="v2-body">
+      <div class="v2-pl-nav">
+        <div style="display:flex;align-items:center;gap:4px">
+          <button class="v2-pl-nav-b" id="prevBtn" title="Précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="v2-pl-nav-b" id="nextBtn" title="Suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
-        <select id="filterEventResident" style="width:auto"><option value="">Tous les résidents</option></select>
+        <h2 class="v2-pl-titre" id="calTitle"></h2>
+        <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
+        <div class="pl-viewswitch" role="tablist" aria-label="Vue du planning">
+          <button class="pl-viewbtn" id="viewDay">Jour</button>
+          <button class="pl-viewbtn" id="viewWeek">Semaine</button>
+          <button class="pl-viewbtn" id="viewMonth">Mois</button>
+          <button class="pl-viewbtn" id="viewList">Liste</button>
+        </div>
+        <div class="pl-legend" id="typeLegend" style="margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap"></div>
       </div>
 
-      <div class="pl-layout">
-        <aside class="pl-sidebar" id="planningSidebar"></aside>
-        <div class="pl-content">
-          <div class="pl-legend" id="typeLegend"></div>
+      <div class="v2-pl-body">
+        <div style="min-width:0">
           <div id="calContainer"></div>
 
           <!-- Vue liste -->
@@ -296,8 +462,13 @@
             </div>
           </div>
         </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- Les 3 mini-calendriers ont été retirés : la colonne de droite ne porte plus que « Prochains événements ». -->
+          <div class="v2-blk" id="plUpcoming"></div>
+        </div>
       </div>
-    </main>
+    </div>
+    </div>
   </div>
 </div>
 
@@ -320,6 +491,8 @@
           Supprimer
         </button>
         <button class="evm-btn evm-btn-series" id="evViewDeleteSeries" style="display:none">↻ Série</button>
+        <button class="evm-btn evm-btn-dup" id="evViewDup">⧉ Dupliquer</button>
+        <button class="evm-btn evm-btn-fiche" id="evViewFiche" style="display:none">🖨️ Fiche de sortie</button>
       </div>
       <button class="evm-btn evm-btn-close" onclick="closeModal('modalEventView')">Fermer</button>
       <button class="evm-btn evm-btn-edit" id="evViewEdit">
@@ -354,7 +527,7 @@
         <p>👥 <span id="mevSumResTxt">Tous / Groupe</span></p>
         <p>⏱ <span id="mevSumDurTxt">1 heure</span></p>
         <p id="mevSumVeh" style="display:none">🚐 Véhicule requis</p>
-        <p id="mevSumSerafin">🔵 <span id="mevSumSerafinTxt">Prestation directe</span></p>
+        <p id="mevSumSerafin" title="Classification SERAFIN-PH calculée automatiquement : un niveau de soutien renseigné = prestation directe, sinon indirecte.">🟡 <span id="mevSumSerafinTxt">Prestation indirecte</span> <span style="font-size:.7rem;color:#94a3b8">(auto)</span></p>
       </div>
     </div>
 
@@ -421,24 +594,23 @@
           </select>
         </div>
 
+        <div class="mev-field">
+          <label>Statut</label>
+          <select id="evStatut">
+            <option value="prevu">🗓️ Prévu</option>
+            <option value="realise">✅ Réalisé</option>
+            <option value="annule">🚫 Annulé</option>
+            <option value="reporte">↪️ Reporté</option>
+          </select>
+        </div>
+
         <div class="mev-field full">
           <label>Lieu</label>
           <input type="text" id="evLieu" placeholder="Adresse ou lieu de l'événement"/>
         </div>
 
-        <div class="mev-field full">
-          <label>Prestation SERAFIN-PH</label>
-          <div class="mev-serafin-toggle">
-            <button type="button" class="mev-serafin-btn active-direct" data-serafin="directe" onclick="selectMevSerafin('directe')">🔵 Directe</button>
-            <button type="button" class="mev-serafin-btn" data-serafin="indirecte" onclick="selectMevSerafin('indirecte')">🟡 Indirecte</button>
-            <button type="button" class="mev-serafin-btn" data-serafin="nc" onclick="selectMevSerafin('nc')">⚪ Non comptabilisé</button>
-          </div>
-          <select id="evSerafin" style="display:none">
-            <option value="directe">Directe</option>
-            <option value="indirecte">Indirecte</option>
-            <option value="nc">Non comptabilisé</option>
-          </select>
-        </div>
+        <!-- Prestation SERAFIN-PH directe/indirecte : calculée automatiquement depuis le niveau de soutien (renseigné = directe, sinon indirecte). -->
+        <input type="hidden" id="evSerafin"/>
 
         <input type="hidden" id="evColor" value="#2563eb"/>
 
@@ -461,6 +633,34 @@
         <div class="mev-field full">
           <label>Description</label>
           <textarea id="evDesc" rows="4" placeholder="Détails, lieu, intervenants…"></textarea>
+        </div>
+
+        <div class="mev-field full">
+          <label>🤝 Accompagnement apporté <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></label>
+          <textarea id="evAccompagnement" rows="2" placeholder="Ex : incitation verbale, médiation avec un pair, reformulation des consignes, présence rassurante…"></textarea>
+          <select id="evNiveauSoutien" style="margin-top:8px" onchange="selectMevSerafin(this.value ? 'directe' : 'indirecte')">
+            <option value="">Niveau de soutien — non précisé</option>
+            <option value="autonomie">🟢 Autonomie — présence simple</option>
+            <option value="supervision">🔵 Supervision / veille</option>
+            <option value="verbal">🟡 Incitation / guidance verbale</option>
+            <option value="partiel">🟠 Aide partielle</option>
+            <option value="total">🔴 Aide totale</option>
+          </select>
+        </div>
+
+        <div class="mev-field full">
+          <label>🚶 Accompagnant(s) <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#64748b">— personnel présent (sortie / RDV), simple affectation</span></label>
+          <input type="text" id="evAccompagnants" placeholder="Noms séparés par des virgules — ex : Awa D., Marc L."/>
+        </div>
+
+        <div class="mev-field full">
+          <label>📎 Pièces jointes <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#64748b">— convocation, ordonnance du RDV, invitation…</span></label>
+          <input type="file" id="evPjInput" multiple style="display:none" onchange="plPjChoose(event)"/>
+          <button type="button" class="mev-veh-toggle full" onclick="document.getElementById('evPjInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px;flex-shrink:0"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          Ajouter un fichier
+          </button>
+          <div id="evPjList" class="pl-pj-list"></div>
         </div>
 
         <input type="checkbox" id="evVehiculeCheck" style="display:none"/>
@@ -488,14 +688,24 @@
   </div>
 </div>
 
+<!-- Zone imprimée pour la « Fiche de sortie » (masquée hors impression) -->
+<div id="plPrintZone" class="pl-print-zone" aria-hidden="true"></div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
 <script src="js/planning.js"></script>
+<script src="js/planning-v2.js"></script>
 <script>
 // ── Panneau gauche (aperçu) du modal « Nouvel évènement » ──
 const _MEV_ICONS = { activite:'🎨', rdv:'🏥', sortie:'🚶', reunion:'👥', avenant:'📄', projet:'⭐', evaluation:'📊', autre:'📌' };
@@ -693,6 +903,7 @@ window.saveEvent = async function() {
     ev.lieu          = lieu;
     ev.residentIds   = residentIds;
     ev.residentNames = residentNames;
+    ev.piecesJointes = _evPjList.slice();
     try {
       const saved = await sbSavePlanningEvent(ev);
       const idx = _planningEventsCache.findIndex(e => e.id === ev.id);
@@ -709,24 +920,62 @@ window.editEvent = function(id) {
   setTimeout(() => {
     const ev = _planningEventsCache.find(e => String(e.id) === String(id));
     if (ev) {
-      selectMevSerafin(ev.serafin || 'directe');
+      selectMevSerafin(ev.niveauSoutien ? 'directe' : 'indirecte');
       const lieu = document.getElementById('evLieu');
       if (lieu) lieu.value = ev.lieu || '';
       _mevResSelected = new Set(ev.residentIds || (ev.residentId ? [ev.residentId] : []));
       renderMevResChips();
       syncMevResHiddenSelect();
+      _evPjList = (ev.piecesJointes || []).slice();
+      plPjRenderModal();
     }
   }, 50);
 };
+
+// ── Pièces jointes de l'événement (bucket "justificatifs") ──
+let _evPjList = [];
+async function plPjChoose(e) {
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  for (const f of files) {
+    try {
+      toast('Envoi de « ' + f.name + ' »…', 'info');
+      const path = await sbPlanningUpload(f);
+      _evPjList.push({ path, name: f.name });
+    } catch (err) { console.error(err); toast('Échec de l\'envoi de « ' + f.name + ' »', 'error'); }
+  }
+  plPjRenderModal();
+}
+function plPjRenderModal() {
+  const el = document.getElementById('evPjList');
+  if (!el) return;
+  el.innerHTML = _evPjList.map((p, i) =>
+    `<div class="pl-pj-item"><span>📎</span><a href="#" onclick="event.preventDefault();plPjOpen('${escAttr(p.path)}')">${escHtml(p.name || 'fichier')}</a><button type="button" class="pl-pj-x" onclick="plPjRemoveModal(${i})" title="Retirer">×</button></div>`
+  ).join('');
+}
+function plPjRemoveModal(i) {
+  // On retire de la liste (le fichier reste dans le bucket ; il ne sera plus référencé).
+  _evPjList.splice(i, 1);
+  plPjRenderModal();
+}
+async function plPjOpen(path) {
+  const url = await sbPlanningFileUrl(path);
+  if (url) window.open(url, '_blank', 'noopener');
+  else toast('Fichier indisponible', 'error');
+}
 
 function resetModalEvent() {
   _mevResSelected = new Set();
   renderMevResChips();
   syncMevResHiddenSelect();
-  selectMevSerafin('directe');
+  selectMevSerafin('indirecte');
   selectMevType('activite');
   const lieu = document.getElementById('evLieu');
   if (lieu) lieu.value = '';
+  const st = document.getElementById('evStatut'); if (st) st.value = 'prevu';
+  const acp = document.getElementById('evAccompagnants'); if (acp) acp.value = '';
+  _evPjList = [];
+  plPjRenderModal();
   const cb  = document.getElementById('evVehiculeCheck');
   const btn = document.getElementById('evVehiculeToggle');
   const fields = document.getElementById('evVehiculeFields');
@@ -841,9 +1090,13 @@ function _evmRender({ iconEmoji, iconBg, titre, badgeLabel, badgeColor, rows, is
   const editBtn   = document.getElementById('evViewEdit');
   const delBtn    = document.getElementById('evViewDelete');
   const seriesBtn = document.getElementById('evViewDeleteSeries');
+  const dupBtn    = document.getElementById('evViewDup');
+  const ficheBtn  = document.getElementById('evViewFiche');
   if (editBtn)   editBtn.style.display   = isVirtual ? 'none' : '';
   if (delBtn)    delBtn.style.display    = isVirtual ? 'none' : '';
   if (seriesBtn && isVirtual) seriesBtn.style.display = 'none';
+  if (dupBtn)    dupBtn.style.display    = isVirtual ? 'none' : '';
+  if (ficheBtn && isVirtual) ficheBtn.style.display = 'none';   // (ré)affiché par viewEvent selon le type
   document.getElementById('evViewContent').innerHTML =
     `<div class="evm-header">
       <div class="evm-hicon" style="background:${iconBg}">${iconEmoji}</div>
@@ -883,7 +1136,7 @@ window.viewEvent = function(id) {
   // ── Événement normal ──
   const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
-  const color  = ev.color || (typeof TYPE_COLORS !== 'undefined' ? TYPE_COLORS[ev.type] : '') || '#3b82f6';
+  const color  = safeColor(ev.color) || (typeof TYPE_COLORS !== 'undefined' ? TYPE_COLORS[ev.type] : '') || '#3b82f6';
   const typeLabel = (typeof TYPE_LABELS !== 'undefined' ? TYPE_LABELS[ev.type] : '') || ev.type || 'Événement';
   const icon   = (typeof _MEV_ICONS !== 'undefined' ? _MEV_ICONS[ev.type] : '') || '📅';
   const dureeLabels = {'30':'30 min','60':'1h','90':'1h30','120':'2h','180':'3h','journee':'Journée'};
@@ -907,24 +1160,51 @@ window.viewEvent = function(id) {
     </div>`;
   })();
 
+  const _ST_LBL = { prevu:'🗓️ Prévu', realise:'✅ Réalisé', annule:'🚫 Annulé', reporte:'↪️ Reporté' };
+  const _ST_COL = { realise:'#10b981', annule:'#ef4444', reporte:'#f59e0b' };
+  const statutRow = (ev.statut && ev.statut !== 'prevu')
+    ? _evmRow('STATUT', _ST_LBL[ev.statut] || ev.statut, _ST_COL[ev.statut] || '#8b5cf6', 'calendar') : '';
+  const accompRow = ev.accompagnants ? _evmRow('ACCOMPAGNANT(S)', escHtml(ev.accompagnants), '#0ea5e9', 'people') : '';
+  const pjRow = (ev.piecesJointes && ev.piecesJointes.length) ? `<div class="evm-row">
+      <div class="evm-row-icon" style="background:#6366f11a;color:#6366f1">${_EVM_SVG.doc}</div>
+      <span class="evm-row-dot" style="background:#6366f1"></span>
+      <div class="evm-row-body">
+        <div class="evm-row-lbl" style="color:#6366f1">PIÈCES JOINTES</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px">${ev.piecesJointes.map(p =>
+          `<button type="button" onclick="plPjOpen('${escAttr(p.path)}')" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid #6366f155;background:#6366f114;color:#6366f1;border-radius:8px;font-size:.76rem;font-weight:600;cursor:pointer">📎 ${escHtml(p.name || 'fichier')}</button>`
+        ).join('')}</div>
+      </div>
+    </div>` : '';
+
   _evmRender({
     iconEmoji: icon, iconBg: color, titre: ev.titre || 'Événement',
     badgeLabel: typeLabel, badgeColor: color,
     isVirtual: false,
     rows: [
       resRowHtml,
+      statutRow,
       _evmRow('DATE',        ev.date ? (typeof formatDate==='function'?formatDate(ev.date):ev.date) : '', '#10b981', 'calendar'),
       _evmRow('HORAIRE',     horaire, '#8b5cf6', 'clock'),
       _evmRow('LIEU',        ev.lieu ? escHtml(ev.lieu) : '', '#f59e0b', 'location'),
       ev.vehicule ? _evmRow('VÉHICULE',    escHtml(ev.vehicule), '#6366f1', 'car') : '',
       ev.destination ? _evmRow('DESTINATION', escHtml(ev.destination), '#6366f1', 'pin') : '',
+      accompRow,
       _evmRow('DESCRIPTION', ev.desc ? escHtml(ev.desc) : '', '#6366f1', 'doc'),
+      pjRow,
     ]
   });
 
   const editBtn   = document.getElementById('evViewEdit');
   const delBtn    = document.getElementById('evViewDelete');
   const seriesBtn = document.getElementById('evViewDeleteSeries');
+  const dupBtn    = document.getElementById('evViewDup');
+  const ficheBtn  = document.getElementById('evViewFiche');
+  if (dupBtn)   dupBtn.onclick   = () => plDuplicateEvent(id);
+  if (ficheBtn) {
+    const showFiche = ['sortie','rdv'].includes(ev.type) || !!ev.vehicule;
+    ficheBtn.style.display = showFiche ? '' : 'none';
+    ficheBtn.onclick = () => plFicheSortie(id);
+  }
   if (editBtn)  editBtn.onclick  = () => { closeModal('modalEventView'); editEvent(id); };
   if (delBtn)   delBtn.onclick   = () => { document.getElementById('eventId').value = id; deleteEvent(); };
   if (seriesBtn) {
@@ -971,14 +1251,19 @@ window.openModal = function(id) {
         syncMevResHiddenSelect();
         const lieu = document.getElementById('evLieu');
         if (lieu) lieu.value = '';
+        const st = document.getElementById('evStatut'); if (st) st.value = 'prevu';
+        const acp = document.getElementById('evAccompagnants'); if (acp) acp.value = '';
+        _evPjList = [];
+        plPjRenderModal();
       }
       updateMevPreview();
       selectMevColor(document.getElementById('evColor')?.value || '#2563eb');
-      selectMevSerafin(document.getElementById('evSerafin')?.value || 'directe');
+      selectMevSerafin(document.getElementById('evNiveauSoutien')?.value ? 'directe' : 'indirecte');
       syncVehiculeToggle();
     }, 30);
   }
 };
 </script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

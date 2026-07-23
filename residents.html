@@ -4,6 +4,10 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Résidents — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* ── Cartes résidents : hauteur uniforme ── */
@@ -21,15 +25,110 @@
     /* Retire le contour neon coloré au survol, on garde juste l'ombre douce */
     .res-card:hover{box-shadow:0 6px 18px rgba(15,43,74,.1)}
     .res-card-body{position:relative;z-index:1}
+    /* Même fond que la page d'accueil (Aurora Glass clair) */
+    body{background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%) !important;background-attachment:fixed !important}
+
+    /* ═══ Cartes résident — design « Verre holographique » ═══ */
+    @keyframes rfSpin{to{transform:rotate(1turn)}}
+    @keyframes rfHolo{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    .res-card{border-radius:18px !important}
+    /* Bandeau holographique animé en haut de chaque carte */
+    .res-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:3;pointer-events:none;
+      background:linear-gradient(90deg,#a78bfa,#38bdf8,#f472b6,#a78bfa);background-size:200% 100%;animation:rfHolo 4s linear infinite}
+    .res-card:hover{box-shadow:0 12px 30px color-mix(in srgb, var(--card-color,#6366f1) 22%, rgba(15,43,74,.12)) !important}
+    /* Anneau iridescent tournant autour de l'avatar */
+    .res-av-ring{position:relative;display:inline-block;border-radius:16px;margin-bottom:.5rem}
+    .res-av-ring::before{content:'';position:absolute;inset:-3px;border-radius:19px;z-index:0;
+      background:conic-gradient(#a78bfa,#38bdf8,#f472b6,#22d3ee,#a78bfa);
+      filter:drop-shadow(0 0 7px rgba(120,140,255,.45));animation:rfSpin 6s linear infinite}
+    .res-av-ring .res-card-photo{position:relative;z-index:1;border:2px solid #fff !important;margin-bottom:0 !important;box-shadow:none !important}
+    @media(prefers-reduced-motion:reduce){.res-card::after,.res-av-ring::before{animation:none}}
+
+    /* ── Anniversaires à venir ── */
+    .res-anniv{margin-bottom:16px;border-radius:14px;overflow:hidden;background:var(--v2-s-card,rgba(255,255,255,.035));border:1px solid var(--v2-b,rgba(255,255,255,.07))}
+    .res-anniv-h{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid var(--v2-b,rgba(255,255,255,.07))}
+    .res-anniv-em{font-size:1.05rem}
+    .res-anniv-h b{font-size:13px;font-weight:700;color:var(--v2-t2,#eef3fb)}
+    .res-anniv-h .res-anniv-n{margin-left:auto;font-size:11px;font-weight:700;color:#ec4899;background:color-mix(in srgb,#ec4899 16%,transparent);border-radius:999px;padding:2px 9px}
+    .res-anniv-l{display:flex;gap:10px;overflow-x:auto;padding:12px 16px;scrollbar-width:thin}
+    .res-anniv-i{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:9px 13px 9px 9px;border-radius:12px;cursor:pointer;
+      background:var(--v2-s-ctrl,rgba(255,255,255,.05));border:1px solid var(--v2-b-ctrl,rgba(255,255,255,.08));text-align:left;font-family:inherit}
+    .res-anniv-i:hover{background:var(--v2-s-hover,rgba(255,255,255,.08))}
+    .res-anniv-i.today{border-color:color-mix(in srgb,#ec4899 55%,transparent);background:color-mix(in srgb,#ec4899 12%,transparent)}
+    .res-anniv-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.78rem;overflow:hidden}
+    .res-anniv-av img{width:100%;height:100%;object-fit:cover}
+    .res-anniv-nom{display:block;font-size:13px;font-weight:600;color:var(--v2-t2,#eef3fb);white-space:nowrap}
+    .res-anniv-m{display:block;font-size:11px;color:var(--v2-t7,#7f93b3);margin-top:1px;white-space:nowrap}
+
+    /* Pastille 🎂 sur la carte */
+    .res-cake-badge{font-size:10.5px;font-weight:700;color:#ec4899;background:color-mix(in srgb,#ec4899 15%,transparent);border-radius:999px;padding:2px 8px;white-space:nowrap}
+
+    /* Échéance sur la carte (rouge = en retard, ambre = à venir) */
+    .v2-res-ech{display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;border-radius:10px;
+      background:color-mix(in srgb,var(--ec) 12%,transparent);border:1px solid color-mix(in srgb,var(--ec) 26%,transparent)}
+    .v2-res-ech svg{width:15px;height:15px;flex-shrink:0;color:var(--ec)}
+    .v2-res-ech-t{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--v2-t2,#eef3fb);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .v2-res-ech-b{flex-shrink:0;font-size:11px;font-weight:700;color:var(--ec)}
+    .v2-res-ech-n{font-size:10px;font-weight:700;color:var(--ec);background:color-mix(in srgb,var(--ec) 18%,transparent);border-radius:999px;padding:1px 5px;margin-left:3px}
+
+    /* Échéances dans le rail de détail (à droite) */
+    .v2-det-ech{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--v2-b-list,rgba(255,255,255,.05))}
+    .v2-det-ech:first-child{border-top:none}
+    .v2-det-ech-t{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--v2-t3,#dce6f3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .v2-det-ech-d{flex-shrink:0;font-size:11px;color:var(--v2-t7,#7f93b3)}
+    .v2-det-ech-b{flex-shrink:0;font-size:10.5px;font-weight:700;color:var(--ec);background:color-mix(in srgb,var(--ec) 15%,transparent);border-radius:999px;padding:2px 9px;white-space:nowrap}
+
+    /* ── Trombinoscope ── */
+    .res-trombi{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:14px}
+    .res-tr{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border-radius:14px;cursor:pointer;font-family:inherit;
+      background:var(--v2-s-card,rgba(255,255,255,.035));border:1px solid var(--v2-b,rgba(255,255,255,.07));transition:transform .12s,border-color .12s,background .12s}
+    .res-tr:hover{transform:translateY(-2px);background:var(--v2-s-hover,rgba(255,255,255,.06));border-color:var(--v2-b-active,rgba(255,255,255,.18))}
+    .res-tr-photo{position:relative;width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden}
+    .res-tr-photo img{width:100%;height:100%;object-fit:cover}
+    .res-tr-ini{font-weight:800;font-size:1.35rem}
+    .res-tr-dot{position:absolute;right:3px;bottom:3px;width:15px;height:15px;border-radius:50%;border:2.5px solid var(--v2-s-card,#101d31)}
+    html.clair .res-tr-dot{border-color:#fff}
+    .res-tr-cake{position:absolute;left:-2px;top:-2px;font-size:.95rem;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+    .res-tr-nom{font-size:13px;font-weight:700;color:var(--v2-t2,#eef3fb);text-align:center;line-height:1.2}
+    .res-tr-sub{font-size:11px;color:var(--v2-t7,#7f93b3);text-align:center;line-height:1.2}
+    .res-tr-nom,.res-tr-sub{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #viewGrid.on,#viewList.on,#viewTrombi.on{background:var(--v2-s-active,rgba(255,255,255,.1));color:var(--v2-t1,#fff)}
+
+    /* ── Annuaire imprimable ── */
+    #resPrint{display:none}
+    @media print{
+      body.rp-printing *{visibility:hidden!important}
+      body.rp-printing #resPrint,body.rp-printing #resPrint *{visibility:visible!important}
+      body.rp-printing #resPrint{display:block!important;position:absolute;left:0;top:0;width:100%}
+    }
+    .rp-doc{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:8mm}
+    .rp-head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px}
+    .rp-title{font-size:20px;font-weight:800}
+    .rp-sub{font-size:12px;color:#555;margin-top:2px;text-transform:capitalize}
+    .rp-count{font-size:12px;font-weight:700;color:#555}
+    .rp-table{width:100%;border-collapse:collapse;font-size:12px}
+    .rp-table th{text-align:left;background:#f1f1f1;padding:7px 9px;border:1px solid #ccc;font-weight:700}
+    .rp-table td{padding:6px 9px;border:1px solid #ddd}
+    .rp-table tr:nth-child(even) td{background:#fafafa}
+    .rp-foot{margin-top:14px;font-size:10px;color:#888;font-style:italic}
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Résidents</div></div>
-      <div class="header-right">
-        <button class="btn btn-accent btn-sm admin-only btn-add-resident" onclick="openModal('modalResident')">
+    <div class="v2-shell">
+      <div class="v2-top">
+        <a class="v2-logo" href="accueil.html">I</a>
+        <div style="line-height:1.15;min-width:0">
+          <div class="v2-eyebrow">INTERNALIS · Annuaire</div>
+          <div class="v2-top-title">Résidents</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="search-box" style="width:300px;max-width:100%">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Rechercher un résident…"/>
+          </div>
+          <button class="btn btn-accent btn-sm admin-only btn-add-resident" onclick="openModal('modalResident')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span class="btn-add-label">Ajouter un résident</span>
         </button>
@@ -37,17 +136,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Tableau de bord
         </a>
+        </div>
       </div>
-    </header>
+      <div class="v2-body">
 
     <main class="content">
       <!-- TOOLBAR -->
-      <div class="toolbar" style="margin-bottom:1.5rem">
-        <div class="search-box">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="searchInput" placeholder="Rechercher un résident…"/>
-        </div>
-        <select id="filterObjectif" style="width:auto">
+      <div class="toolbar" style="margin-bottom:1.25rem;gap:.75rem">
+        <div class="v2-chips" id="resChips"></div>
+        <select id="filterObjectif" style="width:auto;margin-left:auto">
           <option value="">Tous les objectifs</option>
         </select>
         <select id="sortResidents" style="width:auto">
@@ -57,15 +154,27 @@
           <option value="entree">Trier : Date d'entrée</option>
           <option value="age">Trier : Âge</option>
         </select>
-        <div style="margin-left:auto;display:flex;gap:.5rem">
+        <div style="display:flex;gap:.5rem">
           <button class="btn btn-ghost btn-icon" id="viewGrid" title="Grille"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
           <button class="btn btn-ghost btn-icon" id="viewList" title="Liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+          <button class="btn btn-ghost btn-icon" id="viewTrombi" title="Trombinoscope"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></button>
+          <button class="btn btn-ghost btn-icon no-print" id="btnImprimerAnnuaire" title="Imprimer l'annuaire" onclick="resImprimerAnnuaire()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
         </div>
       </div>
 
-      <div id="residentCount" style="font-size:.8rem;color:var(--muted);margin-bottom:1rem"></div>
-      <div id="residentsContainer"></div>
+      <!-- Anniversaires à venir -->
+      <div id="resAnniv" class="no-print"></div>
+
+      <div class="v2-list">
+        <div style="min-width:0">
+          <div id="residentCount" style="font-size:12px;color:var(--v2-t7);margin-bottom:12px"></div>
+          <div id="residentsContainer"></div>
+        </div>
+        <div id="resDetail" class="no-print"></div>
+      </div>
     </main>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -311,11 +420,21 @@
 <script>Auth.requireAuth();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/absences-supabase.js"></script>
 <script src="js/documents-resident-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
+<script src="js/echeances-supabase.js"></script>
 <script src="js/residents.js"></script>
+<script src="js/resident-v2.js"></script>
+<script src="js/residents-v2.js"></script>
 <script>
 // Suivi du curseur pour la lueur des cartes résidents (délégation : robuste au re-render)
 document.addEventListener('mousemove', e => {
@@ -326,5 +445,9 @@ document.addEventListener('mousemove', e => {
   card.style.setProperty('--my', (e.clientY - r.top) + 'px');
 });
 </script>
+
+<!-- Zone d'impression de l'annuaire (masquée à l'écran, seule visible à l'impression) -->
+<div id="resPrint" aria-hidden="true"></div>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

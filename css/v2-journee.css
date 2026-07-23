@@ -1,0 +1,354 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   MA TOURNÉE — design V2, d'après la maquette
+   « Ma tournée (vie quotidienne).dc.html »
+
+   Ne contient QUE le style propre à cette page : les composants communs
+   (.v2-shell, .v2-top, .v2-body, .v2-blk, .v2-chips/.v2-chip-f, .v2-badge,
+   .v2-ov/.v2-md/.v2-fld/.v2-seg/.v2-note/.v2-btn-pri/.v2-btn-sec…) viennent
+   de css/v2.css, qui n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Halo de la coque : teinte sarcelle de la maquette. */
+body.v2 .jn2-shell { --v2-halo: rgba(13,148,136,.22); }
+
+/* ── Barre du haut ───────────────────────────────────────────────────── */
+.jn2-topact { margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.jn2-date { font-size: 12.5px; color: var(--v2-t7); }
+.jn2-new {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px;
+  border: none; border-radius: var(--v2-r-ctrl); cursor: pointer; font: inherit;
+  font-size: 13.5px; font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  box-shadow: 0 10px 24px -10px rgba(13,148,136,.8);
+}
+.jn2-new:hover { filter: brightness(1.08); }
+.jn2-new svg { width: 15px; height: 15px; }
+@media (max-width: 860px) {
+  .jn2-topact { margin-left: 0; width: 100%; }
+}
+
+/* ── Corps : fil de la tournée + rail de droite ──────────────────────── */
+.jn2-body { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+@media (max-width: 1100px) { .jn2-body { grid-template-columns: 1fr; } }
+.jn2-main { min-width: 0; }
+.jn2-side { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Rangée de puces de filtre ───────────────────────────────────────── */
+.jn2-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.jn2-filters .v2-chip-f {
+  height: 32px; padding: 0 13px; border-radius: 9px; font-size: 12px;
+  background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.08);
+}
+.jn2-filters .v2-chip-f.on { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.18); }
+.jn2-filters .v2-chip-f .dot { width: 8px; height: 8px; border-radius: 3px; }
+.jn2-reset { margin-left: auto; }
+.jn2-reset svg { width: 13px; height: 13px; }
+@media (max-width: 560px) { .jn2-reset { margin-left: 0; } }
+
+/* ── Groupe horaire (Matin / Midi / Après-midi / Soir) ───────────────── */
+.jn2-slot { margin-bottom: 22px; }
+.jn2-slot:last-child { margin-bottom: 0; }
+.jn2-slot-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.jn2-slot-l {
+  font-size: 12px; font-weight: 800; color: var(--sc, #fbbf24);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.jn2-slot-line { flex: 1; height: 1px; background: rgba(255,255,255,.08); }
+.jn2-slot-n { font-size: 11px; font-weight: 700; color: var(--v2-t7); }
+.jn2-tasks { display: flex; flex-direction: column; gap: 9px; }
+
+/* ── Carte d'un moment ───────────────────────────────────────────────── */
+.jn2-task {
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px; transition: background .15s, border-color .15s;
+}
+.jn2-task:hover { border-color: color-mix(in srgb, var(--tc, #818cf8) 40%, transparent); }
+.jn2-task.fait { background: rgba(16,185,129,.07); border-color: rgba(16,185,129,.28); }
+.jn2-task.reporte { background: rgba(245,158,11,.07); border-color: rgba(245,158,11,.28); }
+
+.jn2-row {
+  display: flex; align-items: center; gap: 14px; padding: 12px 15px; cursor: pointer;
+}
+.jn2-row:focus-visible { outline: 2px solid rgba(45,212,191,.55); outline-offset: -2px; border-radius: 14px; }
+.jn2-time {
+  width: 44px; flex-shrink: 0; font-family: var(--v2-display);
+  font-size: 12.5px; font-weight: 800; color: var(--v2-t4);
+}
+.jn2-task.fait .jn2-time, .jn2-task.reporte .jn2-time { color: var(--v2-t9); }
+.jn2-ico {
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.jn2-ico svg { width: 14px; height: 14px; }
+.jn2-tx { flex: 1; min-width: 0; }
+.jn2-t { font-size: 13px; font-weight: 600; color: var(--v2-t2); }
+.jn2-task.fait .jn2-t { color: var(--v2-t7); text-decoration: line-through; }
+.jn2-task.reporte .jn2-t { color: var(--v2-t7); }
+.jn2-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.jn2-s b { color: var(--v2-t5); font-weight: 600; }
+/* Les icônes en ligne n'ont pas d'attribut de taille : on les borne ici,
+   sinon un <svg> sans width remplit toute la largeur disponible. */
+.jn2-s svg { width: 12px; height: 12px; flex-shrink: 0; }
+.jn2-obj { display: inline-flex; align-items: center; gap: 4px; color: var(--v2-indigo-pale); vertical-align: -2px; }
+
+.jn2-late {
+  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  font-size: 9.5px; font-weight: 700; color: var(--v2-danger-text);
+  background: rgba(239,68,68,.13); padding: 3px 8px; border-radius: 6px;
+}
+.jn2-late i { width: 6px; height: 6px; border-radius: 50%; background: var(--v2-danger); }
+.jn2-tag {
+  flex-shrink: 0; font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+  color: var(--tgc, #9fb2ce); background: color-mix(in srgb, var(--tgb, #64748b) 15%, transparent);
+}
+
+/* Actions secondaires (reporter, soutien, mode d'emploi, modifier) */
+.jn2-acts { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.jn2-act {
+  width: 27px; height: 27px; border-radius: 8px; flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  color: var(--v2-t6); font: inherit; padding: 0;
+}
+.jn2-act:hover { background: rgba(255,255,255,.11); color: #fff; }
+.jn2-act.on { background: rgba(255,255,255,.13); color: #fff; }
+.jn2-act svg { width: 14px; height: 14px; }
+
+.jn2-check {
+  width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid rgba(255,255,255,.2); background: transparent; color: #0a1728;
+}
+.jn2-check svg { width: 13px; height: 13px; opacity: 0; }
+.jn2-task.fait .jn2-check { border-color: #10b981; background: #10b981; }
+.jn2-task.fait .jn2-check svg { opacity: 1; }
+.jn2-task.reporte .jn2-check { border-color: var(--v2-warn); background: rgba(245,158,11,.2); color: var(--v2-warn-text); }
+.jn2-task.reporte .jn2-check svg { opacity: 1; }
+
+/* Sur écran étroit, la ligne se replie : le libellé garde sa place, les
+   pastilles et les actions passent dessous (sinon le titre se coupe
+   caractère par caractère). */
+@media (max-width: 720px) {
+  .jn2-row { flex-wrap: wrap; gap: 10px 12px; }
+  .jn2-time, .jn2-ico { order: 1; }
+  .jn2-tx { order: 2; flex: 1 1 130px; }
+  .jn2-late, .jn2-tag { order: 3; }
+  .jn2-acts { order: 4; margin-left: auto; }
+  .jn2-check { order: 5; }
+}
+
+/* ── Dépliants (mode d'emploi, soutien apporté, motif de report) ─────── */
+.jn2-more {
+  padding: 0 15px 13px 73px; display: flex; flex-direction: column; gap: 9px;
+}
+@media (max-width: 640px) { .jn2-more { padding-left: 15px; } }
+.jn2-mode {
+  display: flex; gap: 9px; align-items: flex-start; padding: 10px 12px; border-radius: 11px;
+  background: rgba(129,140,248,.1); border: 1px solid rgba(129,140,248,.22);
+  font-size: 12px; color: var(--v2-t3); line-height: 1.5;
+}
+.jn2-mode svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: var(--v2-indigo-pale); }
+.jn2-strip { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jn2-strip-l { font-size: 11px; color: var(--v2-t7); }
+.jn2-pill {
+  height: 28px; padding: 0 11px; border-radius: 8px; cursor: pointer; font: inherit;
+  font-size: 11.5px; font-weight: 600; color: var(--v2-t5);
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+}
+.jn2-pill:hover { color: #fff; background: rgba(255,255,255,.09); }
+.jn2-pill.on { color: #fff; background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.45); }
+.jn2-pill.attendu { color: var(--v2-warn-text); border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.12); }
+
+/* ── Rail de droite ──────────────────────────────────────────────────── */
+.jn2-side .v2-blk-sub { color: var(--v2-t9); margin-bottom: 12px; }
+.jn2-ring-blk { text-align: center; padding: 22px; }
+.jn2-ring { position: relative; width: 132px; height: 132px; margin: 0 auto 6px; }
+.jn2-ring svg { transform: rotate(-90deg); display: block; }
+.jn2-ring-c {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.jn2-ring-p { font-family: var(--v2-display); font-size: 30px; font-weight: 800; color: #fff; line-height: 1; }
+.jn2-ring-l { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+.jn2-ring-x { font-size: 12.5px; color: var(--v2-t4); }
+.jn2-ring-x b { color: #fff; }
+.jn2-ring-r { font-size: 11px; color: var(--v2-warn-text); margin-top: 6px; }
+
+.jn2-next { display: flex; align-items: center; gap: 12px; }
+.jn2-next-i {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.jn2-next-i svg { width: 19px; height: 19px; }
+.jn2-next-t { font-size: 13px; font-weight: 700; color: #fff; }
+.jn2-next-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.jn2-done-all { font-size: 12.5px; color: #34d399; font-weight: 600; }
+
+.jn2-break { display: flex; flex-direction: column; gap: 11px; }
+.jn2-break-i { display: flex; align-items: center; gap: 10px; }
+.jn2-break-d { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+.jn2-break-l { font-size: 12px; color: var(--v2-t4); }
+.jn2-break-n { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--v2-t2); }
+
+.jn2-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 46px; border-radius: 13px; color: #fff; font-size: 13px; font-weight: 600;
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  box-shadow: 0 10px 24px -10px rgba(13,148,136,.8);
+}
+.jn2-cta:hover { filter: brightness(1.08); color: #fff; }
+.jn2-cta svg { width: 16px; height: 16px; }
+
+/* ── Bas de page : rappel éthique (conservé de la V1) ────────────────── */
+.jn2-foot {
+  margin-top: 18px; font-size: 11.5px; color: var(--v2-t7);
+  line-height: 1.6; text-align: center;
+}
+.jn2-foot strong { color: var(--v2-t5); font-weight: 600; }
+
+/* ── États vides / erreur (l'écran d'erreur de initJournee vit ici) ──── */
+.jn2-vide {
+  padding: 40px 22px; text-align: center; font-size: 12.5px; color: var(--v2-t7);
+  background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card2);
+}
+body.v2 #jrList .empty {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); color: var(--v2-t7);
+}
+body.v2 #jrList .empty strong { color: var(--v2-t3); }
+
+/* ── Modale : segment de nature sur plusieurs rangées ────────────────── */
+.jn2-seg-w { grid-auto-flow: row; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 560px) { .jn2-seg-w { grid-template-columns: repeat(2, 1fr); } }
+.jn2-seg-w .v2-seg-o { height: 40px; font-size: 12.5px; padding: 0 6px; }
+.jn2-jours { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.jn2-jours label {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  height: 34px; padding: 0 11px; border-radius: 9px;
+  font-size: 12px; font-weight: 600; color: var(--v2-t5);
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  text-transform: none; letter-spacing: normal;
+}
+body.v2 .jn2-jours input[type="checkbox"] { width: auto; height: auto; margin: 0; accent-color: #14b8a6; }
+
+/* Le champ « objectif libre » n'apparaît que sur choix « saisie libre ». */
+#tcObjectifLibre { margin-top: 8px; }
+
+/* ══════════════════════════════════════════════════════════════
+   FONCTIONNALITÉS V2 (tournée) : rail résidents, filtre référés,
+   bandeau « À reprendre », feuille imprimable
+   ══════════════════════════════════════════════════════════════ */
+
+/* Bouton Imprimer dans la barre du haut (variante discrète de .jn2-new) */
+.jn2-print { background: var(--v2-s-sub); color: var(--v2-t3); border: 1px solid var(--v2-b-ctrl); }
+.jn2-print:hover { background: var(--v2-s-card); }
+
+/* Puce « Mes référés » — teinte teal cohérente avec la page */
+.v2-chip-f.jn2-referes.on { background: color-mix(in srgb, #14b8a6 22%, transparent); border-color: #14b8a6; color: #5eead4; }
+html.clair .v2-chip-f.jn2-referes.on { color: #0f766e; }
+.v2-chip-f.jn2-referes svg { width: 13px; height: 13px; }
+
+/* ── Rail de puces-résidents ── */
+.jn2-resrail { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 4px; scrollbar-width: thin; }
+.jn2-resrail:empty { display: none; }
+.jn2-rchip {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  height: 38px; padding: 0 12px 0 6px; border-radius: 999px; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  color: var(--v2-t4); font: inherit; font-size: 12.5px; font-weight: 600;
+}
+.jn2-rchip.jn2-rall { padding: 0 14px; }
+.jn2-rchip:hover { border-color: #2dd4bf; }
+.jn2-rchip.on { background: color-mix(in srgb, #14b8a6 20%, transparent); border-color: #14b8a6; color: var(--v2-t2); }
+.jn2-rav {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 800; font-family: var(--v2-display);
+}
+.jn2-rname { white-space: nowrap; }
+.jn2-rtodo {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, #f59e0b 26%, transparent); color: #fbbf24;
+  font-size: 10.5px; font-weight: 800;
+}
+.jn2-rdone { color: #34d399; font-weight: 800; }
+
+/* ── Bandeau « À reprendre » ── */
+.jn2-rep {
+  border: 1px solid color-mix(in srgb, #f59e0b 40%, var(--v2-b));
+  background: color-mix(in srgb, #f59e0b 8%, var(--v2-s-card));
+  border-radius: var(--v2-r-card2); margin-bottom: 12px; overflow: hidden;
+}
+.jn2-rep-h {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 14px; background: none; border: 0; cursor: pointer;
+  color: var(--v2-t2); font: inherit; font-size: 12.5px; font-weight: 700; text-align: left;
+}
+.jn2-rep-ic { display: inline-flex; color: #f59e0b; }
+.jn2-rep-ic svg { width: 16px; height: 16px; }
+.jn2-rep-l { flex: 1; min-width: 0; }
+.jn2-rep-chev { color: var(--v2-t7); font-size: 12px; }
+.jn2-rep-b { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.jn2-rep-i {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px; border-radius: 11px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+}
+.jn2-rep-x { flex: 1; min-width: 0; }
+.jn2-rep-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.jn2-rep-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.jn2-rep-s b { color: var(--v2-t4); }
+.jn2-rep-do {
+  flex-shrink: 0; height: 32px; padding: 0 14px; border-radius: 9px; cursor: pointer;
+  background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; border: 0;
+  font: inherit; font-size: 12px; font-weight: 700;
+}
+.jn2-rep-do:hover { filter: brightness(1.08); }
+
+/* ── Feuille de tournée imprimable ── */
+.jr-print-zone { display: none; }
+@media print {
+  body.jr-printing .app-layout, body.jr-printing #toast-container, body.jr-printing .modal-overlay { display: none !important; }
+  body.jr-printing #jrPrintZone { display: block !important; color: #000; font-family: Arial, Helvetica, sans-serif; }
+}
+.jr-print-zone .jpt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 14px; }
+.jr-print-zone .jpt-title { font-size: 22px; font-weight: 800; }
+.jr-print-zone .jpt-date { font-size: 13px; color: #555; margin-top: 2px; text-transform: capitalize; }
+.jr-print-zone .jpt-brand { font-size: 13px; font-weight: 800; letter-spacing: .1em; color: #0d9488; }
+.jr-print-zone .jpt-tbl { width: 100%; border-collapse: collapse; }
+.jr-print-zone .jpt-tbl th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: #444; border-bottom: 1px solid #999; padding: 5px 8px; }
+.jr-print-zone .jpt-tbl td { padding: 8px; border-bottom: 1px solid #e5e5e5; font-size: 12.5px; vertical-align: top; }
+.jr-print-zone .jpt-check { font-size: 18px; width: 26px; }
+.jr-print-zone .jpt-h { font-weight: 700; width: 52px; white-space: nowrap; }
+.jr-print-zone .jpt-lib { font-weight: 700; }
+.jr-print-zone .jpt-res { font-size: 11.5px; color: #333; margin-top: 1px; }
+.jr-print-zone .jpt-obj { font-size: 11px; color: #6366f1; margin-top: 2px; }
+.jr-print-zone .jpt-mode { font-size: 11px; color: #555; margin-top: 2px; }
+.jr-print-zone .jpt-nat, .jr-print-zone .jpt-sout { font-size: 11.5px; white-space: nowrap; }
+.jr-print-zone .jpt-foot { margin-top: 18px; font-size: 10.5px; color: #666; font-style: italic; }
+
+/* ── Onglets des moments de la journée (Matin / Midi / Après-midi / Soir) ── */
+.jn2-moments {
+  display: flex; gap: 8px; margin-bottom: 16px;
+  overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin;
+}
+.jn2-moments:empty { display: none; }
+.jn2-moment {
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; white-space: nowrap;
+  padding: 9px 15px; border-radius: 13px; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  font: inherit; font-size: 13px; font-weight: 600;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.jn2-moment svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--v2-t7); transition: color .15s; }
+.jn2-moment:hover { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%, transparent); color: var(--v2-t3); }
+.jn2-moment:hover svg { color: var(--mc, #818cf8); }
+.jn2-moment.on { background: color-mix(in srgb, var(--mc, #818cf8) 15%, transparent); border-color: var(--mc, #818cf8); color: var(--v2-t2); }
+.jn2-moment.on svg { color: var(--mc, #818cf8); }
+.jn2-moment-n {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-card); color: var(--v2-t6); font-size: 11px; font-weight: 700;
+}
+.jn2-moment.on .jn2-moment-n { background: color-mix(in srgb, var(--mc, #818cf8) 26%, transparent); color: var(--mc, #818cf8); }

@@ -112,6 +112,8 @@ function resetForm() {
   document.getElementById('fType').value    = 'chute';
   document.getElementById('fResident').value = '';
   setDefaults();
+  // Le contrôle segmenté de gravité (V2) doit refléter la valeur remise à zéro
+  if (window.IncidentsV2 && typeof window.IncidentsV2.syncForm === 'function') window.IncidentsV2.syncForm();
 }
 
 // ─── Rendu liste ──────────────────────────────────────────────────────────────
@@ -142,6 +144,15 @@ function renderIncidents() {
 
   list.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   if (countEl) countEl.textContent = `${list.length} incident${list.length > 1 ? 's' : ''}`;
+
+  // ── Rendu V2 (js/incidents-v2.js) : tuiles + tableau + panneaux ──
+  if (window.IncidentsV2 && typeof window.IncidentsV2.render === 'function') {
+    const visibles = _incCache.filter(i => isAdmin || i.declaredById === session?.userId);
+    const canValidate = !!(session && (session.role === 'admin' || session.role === 'moderator'
+      || (typeof canValidateIncidents === 'function' && canValidateIncidents(session.userId))));
+    window.IncidentsV2.render(list, visibles, { isAdmin, session, canValidate });
+    return;
+  }
 
   if (!list.length) {
     container.innerHTML = '<div class="empty" style="padding:3rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><p>Aucun incident à afficher</p></div>';
@@ -453,12 +464,7 @@ function strSimilarity(a, b) {
   return matches / longer.length;
 }
 
-function escHtml(s) {
-  if (!s) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
+// escHtml est fourni globalement par js/app.js (chargé avant) — pas de redéfinition locale.
 
 document.addEventListener('DOMContentLoaded', () => {
   initIncidents();

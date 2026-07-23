@@ -2,7 +2,7 @@
 // Inscriptions midi/soir par jour + régimes alimentaires (stockés sur la fiche résident)
 let repasDate = null;
 let regimeEditId = null;
-let rpView = 'cartes';
+let rpView = 'tableau';   // « Planche de service » (design A) par défaut
 
 function rpSetView(v) {
   rpView = v;
@@ -12,8 +12,11 @@ function rpSetView(v) {
   renderRepas();
 }
 
+// Midi (T12:00) et non minuit : toISOString() bascule en UTC et, à l'est de
+// Greenwich, minuit local retombait sur la veille — la semaine affichée était
+// décalée d'un jour (lundi 20 → semaine du 18).
 function rpWeekStart(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(dateStr + 'T12:00:00');
   const dow = d.getDay();
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
   return d.toISOString().slice(0, 10);
@@ -22,7 +25,7 @@ function rpWeekStart(dateStr) {
 function rpWeekDays(dateStr) {
   const start = rpWeekStart(dateStr);
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start + 'T00:00:00');
+    const d = new Date(start + 'T12:00:00');
     d.setDate(d.getDate() + i);
     return d.toISOString().slice(0, 10);
   });
@@ -112,13 +115,13 @@ function rgBadge(r) {
   if (rg.type && rg.type !== 'normal') parts.push(`<span class="badge" style="background:${t.color}1a;color:${t.color};border:1px solid ${t.color}44">${t.label}${rg.type === 'autre' && rg.autreLabel ? ' : ' + escHtml(rg.autreLabel) : ''}</span>`);
   if (rg.texture && rg.texture !== 'normale') parts.push(`<span class="badge badge-purple">${TEXTURES[rg.texture]}</span>`);
   const allerg = (rg.allergiesAlim || r.allergies || '').trim();
-  if (allerg) parts.push(`<span class="badge badge-red" title="${escHtml(allerg)}">⚠ Allergie</span>`);
+  if (allerg) parts.push(`<span class="badge badge-red" title="${escAttr(allerg)}">⚠ Allergie</span>`);
   return parts.join(' ') || '<span style="font-size:.72rem;color:var(--g400)">Normal</span>';
 }
 
 function rpResidentCard(r, day, canEdit) {
   const rg = rgOf(r);
-  const color = r.color || '#6b7280';
+  const color = safeColor(r.color, '#6b7280');
   const nom = escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim());
   const chambre = r.chambre ? escHtml(r.chambre) : '—';
   const avatar = r.photo
@@ -158,9 +161,9 @@ function rpResidentCard(r, day, canEdit) {
     const menuChoice = m.key === 'midi' ? menuMidi : m.key === 'soir' ? menuSoir : null;
     const menuBtns = m.hasMenu ? `
       <div style="display:flex;gap:3px;margin-top:4px">
-        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','1')" title="${escHtml(getMenuTexte(repasDate, m.key, '1')) || 'Menu 1'}"
+        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','1')" title="${escAttr(getMenuTexte(repasDate, m.key, '1')) || 'Menu 1'}"
           style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='1'?'background:#16a34a;color:#fff;border-color:#16a34a':'background:#f0fdf4;color:#16a34a;border-color:#bbf7d0'}">Menu1</button>
-        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','2')" title="${escHtml(getMenuTexte(repasDate, m.key, '2')) || 'Menu 2'}"
+        <button onclick="event.stopPropagation();setMenuChoice('${repasDate}','${r.id}','${m.key}','2')" title="${escAttr(getMenuTexte(repasDate, m.key, '2')) || 'Menu 2'}"
           style="flex:1;font-size:.58rem;font-weight:700;padding:2px 4px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:inherit;transition:.12s;${menuChoice==='2'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:#eff6ff;color:#2563eb;border-color:#bfdbfe'}">Menu2</button>
       </div>` : '';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:center">
@@ -186,11 +189,18 @@ function rpResidentCard(r, day, canEdit) {
   </div>`;
 }
 
+// Rendu : délégué au module V2 (js/repas-v2.js) chargé après ce fichier.
+// renderRepasV1 reste en secours si le module n'est pas présent.
 function renderRepas() {
+  if (typeof rp2Render === 'function') return rp2Render();
+  return renderRepasV1();
+}
+
+function renderRepasV1() {
   const residents = repasResidents();
   const all = getRepas();
   const day = all[repasDate] || {};
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ((typeof canEditResidents === 'function') && canEditResidents(Auth.getSession()?.userId));
 
   const dEl = document.getElementById('rpDate');
   if (dEl && dEl.value !== repasDate) dEl.value = repasDate;
@@ -233,46 +243,55 @@ function renderRepas() {
       <p style="font-size:.72rem;color:var(--muted);margin-top:.65rem">Renseignez les deux menus proposés par la cuisine pour ce jour — les résidents/équipes choisissent ensuite via les boutons Menu1/Menu2 sur chaque fiche.</p>`;
   }
 
-  // Synthèse cuisine par régime (sur les inscrits du jour)
-  const cuisine = { matin: {}, midi: {}, soir: {} };
+  // ── Synthèse cuisine (design 2) : barre de répartition des régimes + panneaux par service ──
+  const dayReg = {};
   residents.forEach(r => {
-    const rg = rgOf(r);
-    const key = (rg.type && rg.type !== 'normal') ? rg.type : 'normal';
-    ['matin', 'midi', 'soir'].forEach(m => { if (isInscrit(day, m, r.id)) cuisine[m][key] = (cuisine[m][key] || 0) + 1; });
+    if (!['matin', 'midi', 'soir'].some(m => isInscrit(day, m, r.id))) return;
+    const key = (rgOf(r).type && rgOf(r).type !== 'normal') ? rgOf(r).type : 'normal';
+    dayReg[key] = (dayReg[key] || 0) + 1;
   });
-  const cuisineRow = m => Object.entries(cuisine[m]).sort((a, b) => b[1] - a[1]).map(([k, n]) => {
-    const t = REGIME_TYPES[k] || REGIME_TYPES.autre;
-    return `<span style="font-size:.78rem;color:${t.color};font-weight:600">${t.label} × ${n}</span>`;
-  }).join(' · ') || '<span style="color:var(--g400);font-size:.78rem">aucun inscrit</span>';
+  const regEntries = Object.entries(dayReg).sort((a, b) => b[1] - a[1]);
+  const dayTotal = regEntries.reduce((s, [, n]) => s + n, 0);
+  const regBar = regEntries.map(([k, n]) => { const t = REGIME_TYPES[k] || REGIME_TYPES.autre; return `<div title="${escAttr(t.label + ' × ' + n)}" style="flex:${n};background:${t.color};min-width:3px"></div>`; }).join('') || '<div style="flex:1;background:#e5e7eb"></div>';
+  const regLegend = regEntries.map(([k, n]) => { const t = REGIME_TYPES[k] || REGIME_TYPES.autre; return `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:${t.color}"></span>${t.label} <b style="font-weight:700;color:#0f2b4a">${n}</b></span>`; }).join('') || '<span style="color:var(--g400)">Aucun inscrit</span>';
 
-  // Compteurs de choix de menus par repas
+  // Choix de menu par repas (midi / soir)
   const choixMenu = (day['choixMenu'] || {});
   const menuCount = { midi: { '1': 0, '2': 0, none: 0 }, soir: { '1': 0, '2': 0, none: 0 } };
   residents.forEach(r => {
     ['midi', 'soir'].forEach(m => {
       if (!isInscrit(day, m, r.id)) return;
       const c = choixMenu[r.id]?.[m];
-      if (c === '1') menuCount[m]['1']++;
-      else if (c === '2') menuCount[m]['2']++;
-      else menuCount[m].none++;
+      if (c === '1') menuCount[m]['1']++; else if (c === '2') menuCount[m]['2']++; else menuCount[m].none++;
     });
   });
-  const menuTag = (m) => {
-    const t = menuCount[m];
-    const total = t['1'] + t['2'] + t.none;
-    if (!total) return '';
-    const txt1 = getMenuTexte(repasDate, m, '1');
-    const txt2 = getMenuTexte(repasDate, m, '2');
-    return `<span style="font-size:.78rem;color:#16a34a;font-weight:600" title="${escHtml(txt1)}">Menu1${txt1 ? ' — ' + escHtml(txt1) : ''} × ${t['1']}</span>
-            <span style="font-size:.78rem;color:#2563eb;font-weight:600" title="${escHtml(txt2)}"> · Menu2${txt2 ? ' — ' + escHtml(txt2) : ''} × ${t['2']}</span>
-            ${t.none ? `<span style="font-size:.78rem;color:var(--muted)"> · sans choix × ${t.none}</span>` : ''}`;
+  const countInscrit = m => residents.filter(r => isInscrit(day, m, r.id)).length;
+  const servicePanel = (m, label, color) => {
+    const t = menuCount[m], total = t['1'] + t['2'] + t.none;
+    const txt1 = getMenuTexte(repasDate, m, '1'), txt2 = getMenuTexte(repasDate, m, '2');
+    const line = (nm, txt, c, n) => `<div style="display:flex;justify-content:space-between;gap:.6rem;font-size:.78rem;padding:2px 0"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:${c};font-weight:600">${nm}</span>${txt ? ' — ' + escHtml(txt) : ' <span style="color:var(--g400)">à renseigner</span>'}</span><span style="color:var(--muted);flex-shrink:0;font-weight:600">${n}</span></div>`;
+    return `<div style="background:#f8fafc;border:1px solid var(--border);border-radius:9px;padding:.55rem .75rem">
+      <div style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;color:${color};margin-bottom:.35rem">${label}<span style="margin-left:auto;font-weight:400;color:var(--muted);font-size:.72rem">${total} couvert${total > 1 ? 's' : ''}</span></div>
+      ${line('Menu 1', txt1, '#16a34a', t['1'])}
+      ${line('Menu 2', txt2, '#2563eb', t['2'])}
+      ${t.none ? `<div style="font-size:.72rem;color:var(--muted);margin-top:3px">Sans choix · ${t.none}</div>` : ''}
+    </div>`;
   };
 
   document.getElementById('rpCuisine').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:.5rem">
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><strong style="font-size:.8rem;width:52px">🌅 Matin</strong>${cuisineRow('matin')}</div>
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><strong style="font-size:.8rem;width:52px">☀️ Midi</strong>${cuisineRow('midi')} ${menuTag('midi')}</div>
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><strong style="font-size:.8rem;width:52px">🌙 Soir</strong>${cuisineRow('soir')} ${menuTag('soir')}</div>
+    <div style="display:flex;flex-direction:column;gap:.85rem">
+      <div>
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.4rem">Répartition des régimes · ${dayTotal}</div>
+        <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px">${regBar}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px 14px;font-size:.72rem;color:var(--muted);margin-top:.45rem">${regLegend}</div>
+      </div>
+      <div style="display:flex;gap:1.3rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+        <span>🌅 Matin <b style="color:#0f2b4a;font-weight:700">${countInscrit('matin')}</b></span>
+        <span>☀️ Midi <b style="color:#0f2b4a;font-weight:700">${countInscrit('midi')}</b></span>
+        <span>🌙 Soir <b style="color:#0f2b4a;font-weight:700">${countInscrit('soir')}</b></span>
+      </div>
+      ${servicePanel('midi', '☀️ Midi', '#d97706')}
+      ${servicePanel('soir', '🌙 Soir', '#7c3aed')}
     </div>`;
 
   // Sync toggle buttons
@@ -298,21 +317,58 @@ function renderRepas() {
   if (rpView === 'cartes') {
     el.innerHTML = `<div class="rp-card-grid">${list.map(r => rpResidentCard(r, day, canEdit)).join('')}</div>`;
   } else {
-    el.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Résident</th><th>Chambre</th><th>Régime & allergies</th><th style="text-align:center">🌅 Matin</th><th style="text-align:center">☀️ Midi</th><th style="text-align:center">🌙 Soir</th><th class="no-print"></th></tr></thead>
-      <tbody>${list.map(r => {
-        const allerg = (rgOf(r).allergiesAlim || r.allergies || '').trim();
-        return `<tr>
-          <td style="font-weight:600">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</td>
-          <td>${r.chambre ? 'Ch. ' + escHtml(r.chambre) : '—'}</td>
-          <td><div style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">${rgBadge(r)}</div>${allerg ? `<div style="font-size:.7rem;color:#dc2626;margin-top:2px">⚠ ${escHtml(allerg)}</div>` : ''}</td>
-          <td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb" ${isInscrit(day, 'matin', r.id) ? 'checked' : ''} onchange="toggleRepas('${r.id}','matin',this.checked)"/></td>
-          <td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb" ${isInscrit(day, 'midi', r.id) ? 'checked' : ''} onchange="toggleRepas('${r.id}','midi',this.checked)"/></td>
-          <td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:#2563eb" ${isInscrit(day, 'soir', r.id) ? 'checked' : ''} onchange="toggleRepas('${r.id}','soir',this.checked)"/></td>
-          <td class="no-print" style="text-align:right">${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="openRegimeModal('${r.id}')">🍽 Régime</button>` : ''}</td>
-        </tr>`;
-      }).join('')}</tbody></table></div>`;
+    el.innerHTML = rpPlancheView(list, day, canEdit);
   }
+}
+
+// ── PLANCHE DE SERVICE (design A) : grille résidents × repas ──
+// Chaque case repas = une pastille de présence (clic = inscrire/retirer) ;
+// pour midi/soir, si présent, deux pastilles M1/M2 pour le choix de menu.
+// Réutilise toggleRepas() et setMenuChoice() (persistent + re-render).
+function rpPlancheView(list, day, canEdit) {
+  const MEALS = [
+    { key: 'matin', label: 'Matin', ic: '🌅', c: '#0891b2', hasMenu: false },
+    { key: 'midi',  label: 'Midi',  ic: '☀️', c: '#d97706', hasMenu: true  },
+    { key: 'soir',  label: 'Soir',  ic: '🌙', c: '#7c3aed', hasMenu: true  },
+  ];
+  const head = `<div class="rp-pl-head name">Résident</div>` +
+    MEALS.map(m => `<div class="rp-pl-head" style="color:${m.c}">${m.ic} ${m.label}</div>`).join('');
+
+  const rows = list.map(r => {
+    const color = safeColor(r.color, '#6b7280');
+    const nom = escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim());
+    const av = r.photo
+      ? `<img src="${sanitizeUrl(r.photo)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`
+      : `<span style="width:30px;height:30px;border-radius:50%;background:${color};color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(r.prenom, r.nom)}</span>`;
+    const allerg = (rgOf(r).allergiesAlim || r.allergies || '').trim();
+    const regChip = canEdit
+      ? `<button class="rp-pl-reg" onclick="openRegimeModal('${r.id}')" title="Modifier le régime">${rgBadge(r)}</button>`
+      : rgBadge(r);
+    const nameCell = `<div class="rp-pl-cell" style="gap:.5rem">
+      ${av}
+      <div style="min-width:0">
+        <div style="font-weight:700;font-size:.8rem;color:#0f2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nom}</div>
+        <div style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;margin-top:1px"><span style="font-size:.66rem;color:#94a3b8">Ch. ${escHtml(r.chambre || '—')}</span>${regChip}</div>
+        ${allerg ? `<div style="font-size:.62rem;color:#dc2626;margin-top:1px">⚠ ${escHtml(allerg)}</div>` : ''}
+      </div>
+    </div>`;
+
+    const cells = MEALS.map(m => {
+      const on = isInscrit(day, m.key, r.id);
+      const toggle = `<button class="rp-pl-toggle${on ? ' on' : ''}" style="${on ? `background:${m.c}18;border-color:${m.c};color:${m.c}` : ''}" ${canEdit ? `onclick="toggleRepas('${r.id}','${m.key}',${!on})"` : 'disabled'} title="${on ? 'Présent — cliquer pour retirer' : 'Absent — cliquer pour inscrire'}" aria-label="${escAttr(nom)} ${m.label} : ${on ? 'présent' : 'absent'}">${on ? '✓' : ''}</button>`;
+    let menu = '';
+      if (m.hasMenu && on) {
+        const ch = getMenuChoice(repasDate, r.id, m.key);
+        const pill = (n, col) => `<button class="rp-pl-menu${ch === n ? ' sel' : ''}" style="${ch === n ? `background:${col};color:#fff;border-color:${col}` : `color:${col};border-color:${col}66`}" ${canEdit ? `onclick="setMenuChoice('${repasDate}','${r.id}','${m.key}','${n}')"` : 'disabled'} title="Menu ${n}">M${n}</button>`;
+        menu = `<div class="rp-pl-menus">${pill('1', '#16a34a')}${pill('2', '#2563eb')}</div>`;
+      }
+      return `<div class="rp-pl-cell rp-pl-mealcell">${toggle}${menu}</div>`;
+    }).join('');
+
+    return nameCell + cells;
+  }).join('');
+
+  return `<div class="rp-planche">${head}${rows}</div>`;
 }
 
 function toggleRepas(rid, meal, checked, dateOverride) {
@@ -328,11 +384,11 @@ function toggleRepas(rid, meal, checked, dateOverride) {
 function rpCopyWeek(fromStart, toStart) {
   const all  = getRepas();
   const fromDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(fromStart + 'T00:00:00'); d.setDate(d.getDate() + i);
+    const d = new Date(fromStart + 'T12:00:00'); d.setDate(d.getDate() + i);
     return d.toISOString().slice(0, 10);
   });
   const toDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(toStart + 'T00:00:00'); d.setDate(d.getDate() + i);
+    const d = new Date(toStart + 'T12:00:00'); d.setDate(d.getDate() + i);
     return d.toISOString().slice(0, 10);
   });
   fromDays.forEach((fd, i) => {
@@ -372,6 +428,7 @@ function rpGoToday() {
 
 // Frise de dates sur 1 mois (commande des repas à l'avance)
 function renderDateStrip() {
+  if (typeof rp2DateStrip === 'function') return rp2DateStrip();
   const el = document.getElementById('rpDateStrip');
   if (!el) return;
   const todayS = today();
@@ -395,8 +452,11 @@ function renderDateStrip() {
     </button>`;
   }
   el.innerHTML = html;
+  // Centrer la date sélectionnée dans la frise HORIZONTALEMENT seulement.
+  // (scrollIntoView faisait aussi défiler la page verticalement → à chaque
+  //  clic sur une sélection, la page « remontait » vers la frise.)
   const sel = el.querySelector('.rp-date-chip.selected');
-  if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  if (sel) el.scrollLeft += sel.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - sel.offsetWidth) / 2;
 }
 
 function renderSemaineView(residents, canEdit) {
@@ -439,7 +499,7 @@ function renderSemaineView(residents, canEdit) {
 
   // Lignes résidents
   const rows = residents.map(r => {
-    const color = r.color || '#6b7280';
+    const color = safeColor(r.color, '#6b7280');
     const nom   = `${r.prenom || ''} ${r.nom || ''}`.trim();
     const av    = r.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid ${color}44;flex-shrink:0" alt=""/>`
@@ -556,8 +616,10 @@ async function initRepas() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await loadResidentsCache();
-  await loadRepasCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([loadResidentsCache(), loadRepasCache()]);
   repasDate = today();
   document.getElementById('rpDate')?.addEventListener('change', e => { if (e.target.value) { repasDate = e.target.value; renderRepas(); } });
   document.getElementById('rpSearch')?.addEventListener('input', renderRepas);

@@ -1,0 +1,123 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — V2 « Véhicules »
+   Langage visuel repris de la maquette « Portail - refonte (bento) » :
+   barre du haut, tuiles KPI à icône, chips de filtre, blocs bento, rail.
+   Ne dépend que de css/v2.css (aucune règle n'y est modifiée).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre du haut ───────────────────────────────────────────────────── */
+.vh-top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vh-top-actions .v2-btn svg,
+.vh-top-actions .v2-back svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ── Tuiles KPI (v2-k de la maquette bento) ──────────────────────────── */
+.vh-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.vh-k {
+  display: flex; align-items: center; gap: 14px; padding: 18px;
+  border-radius: var(--v2-r-kpi);
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+}
+.vh-k-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--kg, linear-gradient(135deg, #4f46e5, #818cf8));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--kc, #818cf8) 33%, transparent);
+}
+.vh-k-ico svg { width: 21px; height: 21px; flex-shrink: 0; }
+.vh-k-n { display: block; font-family: var(--v2-display); font-size: 26px; font-weight: 800; line-height: 1; color: #fff; }
+.vh-k-l { display: block; font-size: 12px; font-weight: 600; color: var(--v2-t3); margin-top: 6px; }
+.vh-k-s { display: block; font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Barre de filtres ────────────────────────────────────────────────── */
+.vh-filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.vh-count { font-size: 11.5px; color: var(--v2-t7); margin-left: auto; }
+
+/* ── Corps : liste + rail ────────────────────────────────────────────── */
+.vh-main { display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start; }
+.vh-col, .vh-rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* ── Ligne de réservation ────────────────────────────────────────────── */
+.vh-list { display: flex; flex-direction: column; }
+.vh-r {
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 0; border-bottom: 1px solid var(--v2-b-list);
+}
+.vh-r:last-child { border-bottom: none; }
+.vh-r-ico {
+  width: 40px; height: 40px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent);
+  color: var(--pc, #818cf8);
+}
+.vh-r-ico svg { width: 19px; height: 19px; flex-shrink: 0; }
+.vh-r-b { flex: 1; min-width: 0; }
+.vh-r-t { font-size: 13px; font-weight: 700; color: var(--v2-t2); }
+.vh-r-m { font-size: 11.5px; color: var(--v2-t6); margin-top: 3px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vh-r-m .sep { width: 3px; height: 3px; border-radius: 50%; background: var(--v2-t8); flex-shrink: 0; }
+/* L'épingle et le nom du lieu restent solidaires quand la ligne se replie. */
+.vh-r-dest { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.vh-r-dest svg { width: 12px; height: 12px; flex-shrink: 0; }
+.vh-r-who { font-size: 11px; color: var(--v2-t7); }
+.vh-r-tag {
+  font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.vh-x {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t6);
+  font: inherit; transition: background .15s, color .15s;
+}
+.vh-x:hover { background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.32); color: var(--v2-danger-text); }
+.vh-x svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── Rail : parc de véhicules ────────────────────────────────────────── */
+.vh-p {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-ctrl); margin-bottom: 9px;
+}
+.vh-p:last-child { margin-bottom: 0; }
+.vh-p-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc, #10b981) 16%, transparent); background: var(--pc, #10b981); }
+.vh-p-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vh-p-s { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+.vh-p-st { margin-left: auto; font-size: 10.5px; font-weight: 700; color: var(--pc, #10b981); white-space: nowrap; }
+
+/* ── Rail : occupation des 7 prochains jours ─────────────────────────── */
+.vh-chart { display: flex; align-items: flex-end; gap: 8px; height: 108px; }
+.vh-chart-c { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; }
+.vh-chart-v { font-size: 10px; font-weight: 700; color: var(--v2-t5); }
+.vh-chart-b { width: 100%; min-height: 3px; border-radius: 5px 5px 3px 3px;
+  background: linear-gradient(180deg, #818cf8, #4f46e5); }
+.vh-chart-b.zero { background: rgba(255,255,255,.08); }
+.vh-chart-l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--v2-t8); }
+
+/* ── Modale : rappel du réservataire ─────────────────────────────────── */
+#vReservataire { font-size: 12.5px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .vh-main { grid-template-columns: 1fr; }
+  .vh-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .vh-kpis { grid-template-columns: 1fr; }
+  /* Sur téléphone, la ligne devient une grille : le statut descend sur son
+     propre rang, sinon le nom du véhicule se coupe mot à mot. */
+  .vh-r {
+    display: grid; align-items: center;
+    grid-template-columns: 40px minmax(0, 1fr) 32px;
+    column-gap: 11px; row-gap: 8px;
+    grid-template-areas: "ico body x" "tag tag tag";
+  }
+  .vh-r-ico { grid-area: ico; }
+  .vh-r-b   { grid-area: body; }
+  .vh-x     { grid-area: x; }
+  .vh-r-tag { grid-area: tag; justify-self: start; }
+  .vh-count { margin-left: 0; }
+  .vh-top-actions { width: 100%; }
+  .vh-top-actions .v2-btn { flex: 1; justify-content: center; }
+}

@@ -1,0 +1,55 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — V2 · dashboard-resident.html
+   Cette page n'est plus qu'un relais : elle redirige immédiatement vers
+   resident.html (déjà migrée en V2) en conservant la query string.
+   Le seul rôle de cette feuille est d'habiller l'écran transitoire aux
+   couleurs V2, pour supprimer le flash blanc du navigateur pendant la
+   redirection. Aucune donnée, aucun contrôle d'accès ici : resident.html
+   porte le sien.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.v2-redir {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 60vh;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.v2-redir-dot {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;          /* borne l'indicateur : jamais étiré par le flex */
+  margin-bottom: .35rem;
+  border-radius: 50%;
+  border: 2px solid var(--v2-b-active, rgba(255,255,255,.18));
+  border-top-color: var(--v2-indigo-light, #818cf8);
+  animation: v2-redir-spin .9s linear infinite;
+}
+
+@keyframes v2-redir-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-redir-dot { animation: none; }
+}
+
+.v2-redir-t {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--v2-t2, #eef3fb);
+}
+
+.v2-redir-sub {
+  margin: .35rem 0 0;
+  font-size: .85rem;
+  color: var(--v2-t6, #8095b4);
+}
+
+.v2-redir-sub a {
+  color: var(--v2-indigo-pale, #a5b4fc);
+  text-decoration: underline;
+}

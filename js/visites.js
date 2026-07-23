@@ -38,7 +38,14 @@ function visResidents() {
 }
 
 // ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/visites-v2.js (design V2). La version historique
+// reste disponible ci-dessous pour les contextes où le module n'est pas chargé.
 function renderVisites() {
+  if (typeof vis2Render === 'function') return vis2Render();
+  return renderVisitesLegacy();
+}
+
+function renderVisitesLegacy() {
   const all = getVisites();
   const td = today();
   const fRes = document.getElementById('vFilterResident')?.value || '';
@@ -147,10 +154,16 @@ function openVisiteModal(id) {
 function vmTypeChanged() {
   const heb = document.getElementById('vmType').value === 'hebergement';
   document.getElementById('vmRetourWrap').style.display = heb ? '' : 'none';
+  if (typeof vis2SegSync === 'function') vis2SegSync('vmType');
 }
 
 // Affiche le cadre des droits du résident sélectionné dans le modal
 function vmShowDroits() {
+  if (typeof vis2ShowDroits === 'function') return vis2ShowDroits();
+  return vmShowDroitsLegacy();
+}
+
+function vmShowDroitsLegacy() {
   const rid = document.getElementById('vmResident').value;
   const box = document.getElementById('vmDroitsInfo');
   const r = residentsList().find(x => String(x.id) === String(rid));
@@ -158,14 +171,18 @@ function vmShowDroits() {
   if (!rid) { box.innerHTML = ''; return; }
   box.innerHTML = droits.length
     ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:.25rem">Cadre défini pour ce résident :</div>` +
-      droits.map(d => `<span class="badge" style="background:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color}1a;color:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color};margin:0 .25rem .25rem 0;cursor:pointer" onclick="vmUseDroit('${escHtml(d.personne)}','${escHtml(d.lien || '')}','${d.type}')" title="${escHtml(d.modalites || '')}">${(VIS_TYPES[d.type] || VIS_TYPES.libre).icon} ${escHtml(d.personne)}${d.lien ? ' (' + escHtml(d.lien) + ')' : ''}</span>`).join('')
+      droits.map(d => `<span class="badge" style="background:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color}1a;color:${(VIS_TYPES[d.type] || VIS_TYPES.libre).color};margin:0 .25rem .25rem 0;cursor:pointer" onclick="vmUseDroitById('${d.id}')" title="${escAttr(d.modalites || '')}">${(VIS_TYPES[d.type] || VIS_TYPES.libre).icon} ${escHtml(d.personne)}${d.lien ? ' (' + escHtml(d.lien) + ')' : ''}</span>`).join('')
     : `<div style="font-size:.72rem;color:#d97706;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:.35rem .6rem">Aucun droit de visite défini pour ce résident — pensez à renseigner le cadre (bouton « Droits de visite »).</div>`;
 }
 
-function vmUseDroit(personne, lien, type) {
-  document.getElementById('vmPersonne').value = personne;
-  document.getElementById('vmLien').value = lien;
-  document.getElementById('vmType').value = type;
+function vmUseDroitById(id) {
+  const rid = document.getElementById('vmResident').value;
+  const r = residentsList().find(x => String(x.id) === String(rid));
+  const d = ((r && r.droitsVisite) || []).find(x => String(x.id) === String(id));
+  if (!d) return;
+  document.getElementById('vmPersonne').value = d.personne || '';
+  document.getElementById('vmLien').value = d.lien || '';
+  document.getElementById('vmType').value = d.type || 'libre';
   vmTypeChanged();
 }
 
@@ -250,10 +267,16 @@ function openDroitsModal() {
     visResidents().map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   if (droitsResidentId) sel.value = droitsResidentId;
   renderDroitsList();
+  if (typeof vis2SegSync === 'function') vis2SegSync('drType');
   openModal('modalDroits');
 }
 
 function renderDroitsList() {
+  if (typeof vis2DroitsList === 'function') return vis2DroitsList();
+  return renderDroitsListLegacy();
+}
+
+function renderDroitsListLegacy() {
   droitsResidentId = document.getElementById('drResident').value || null;
   const box = document.getElementById('drList');
   if (!droitsResidentId) { box.innerHTML = '<div style="font-size:.8rem;color:var(--g400);padding:.5rem 0">Sélectionnez un résident pour gérer son cadre de visites.</div>'; return; }
@@ -306,8 +329,10 @@ async function initVisites() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await loadResidentsCache();
-  await loadVisitesCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([loadResidentsCache(), loadVisitesCache()]);
   const opts = visResidents().map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   document.getElementById('vFilterResident').innerHTML = '<option value="">Tous les résidents</option>' + opts;
   document.getElementById('vmResident').innerHTML = '<option value="">— Choisir —</option>' + opts;

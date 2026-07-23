@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Données démo (Supabase) — Internalis</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+  .wrap{max-width:780px;margin:0 auto;padding:2rem 1rem 4rem}
+  h1{font-size:1.4rem;font-weight:800;color:#0f2b4a;margin-bottom:.2rem}
+  .sub{font-size:.82rem;color:#64748b;margin-bottom:1.5rem}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);padding:1.4rem;margin-bottom:1rem}
+  .card-title{font-weight:700;font-size:.9rem;margin-bottom:.9rem;color:#0f2b4a}
+  .warn-banner{background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:.85rem 1rem;font-size:.82rem;color:#991b1b;margin-bottom:1rem;line-height:1.5}
+  .etab-info{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:8px;padding:.7rem .9rem;font-size:.82rem;color:#0369a1;line-height:1.6}
+  .stat-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.3rem}
+  .stat{text-align:center;flex:1;min-width:72px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.55rem .3rem}
+  .stat-n{font-size:1.25rem;font-weight:800;color:#0f2b4a}
+  .stat-l{font-size:.66rem;color:#64748b;margin-top:.1rem}
+  .btn{padding:.65rem 1.4rem;border-radius:9px;font-weight:700;font-size:.88rem;cursor:pointer;border:none;transition:.15s}
+  .btn-go{background:#0f2b4a;color:#fff}
+  .btn-go:hover{background:#1e3a5f}
+  .btn-go:disabled{background:#94a3b8;cursor:not-allowed}
+  .btn-del{background:#fee2e2;color:#dc2626;margin-left:.5rem}
+  .btn-del:hover{background:#fecaca}
+  .btn-del:disabled{opacity:.5;cursor:not-allowed}
+  .check-row{display:flex;align-items:flex-start;gap:.5rem;font-size:.82rem;color:#475569;margin-bottom:1rem;line-height:1.4}
+  .log{background:#0f172a;color:#94a3b8;border-radius:10px;padding:1rem;font-family:ui-monospace,monospace;font-size:.75rem;line-height:1.65;max-height:360px;overflow-y:auto;margin-top:1rem;white-space:pre-wrap}
+  .log .ok{color:#4ade80}.log .info{color:#60a5fa}.log .warn{color:#fbbf24}.log .err{color:#f87171}
+  progress{width:100%;height:8px;border-radius:4px;margin-top:.85rem;accent-color:#0f2b4a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧪 Données de démonstration</h1>
+  <p class="sub">Peuple <b>Supabase</b> de façon <b>intégrale</b> avec <b>un an d'historique</b> (365 jours jusqu'à aujourd'hui), comme si l'établissement tournait depuis un an : 50 résidents à la fiche entièrement remplie, une douzaine de salariés avec toute leur RH (paie et facturation sur 12 mois), les soins, la vie institutionnelle — <b>toutes les pages du site reçoivent des données</b>. Rien n'est créé avant l'entrée d'un résident ni l'embauche d'un salarié. Les référés sont répartis sur les comptes existants (6 référés + 6 co-référés chacun). ⏱ Comptez plusieurs minutes.</p>
+
+  <div class="warn-banner">
+    ⚠️ <b>À utiliser sur un établissement de démonstration.</b> Ce générateur ajoute de vraies lignes dans votre base Supabase (établissement de la session connectée). Toutes les données créées sont marquées <b>[démo]</b> et peuvent être retirées avec le bouton « Supprimer les données de démonstration ».
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cible</div>
+    <div id="etabInfo" class="etab-info">Vérification de la session…</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ce qui sera généré (fiche complète)</div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-n">50</div><div class="stat-l">Résidents</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Médical</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Administratif</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Objectifs</div></div>
+      <div class="stat"><div class="stat-n">50</div><div class="stat-l">Avenants PPE</div></div>
+      <div class="stat"><div class="stat-n">~150</div><div class="stat-l">Documents</div></div>
+      <div class="stat"><div class="stat-n">50</div><div class="stat-l">Évaluations</div></div>
+    </div>
+    <div class="stat-row" style="margin-top:.55rem">
+      <div class="stat"><div class="stat-n">~650</div><div class="stat-l">Journal</div></div>
+      <div class="stat"><div class="stat-n">~500</div><div class="stat-l">Transmissions</div></div>
+      <div class="stat"><div class="stat-n">~400</div><div class="stat-l">Agenda</div></div>
+      <div class="stat"><div class="stat-n">365 j</div><div class="stat-l">Présences</div></div>
+      <div class="stat"><div class="stat-n">~30</div><div class="stat-l">Incidents</div></div>
+      <div class="stat"><div class="stat-n">8</div><div class="stat-l">Activités</div></div>
+    </div>
+    <div class="stat-row" style="margin-top:.55rem">
+      <div class="stat"><div class="stat-n">12</div><div class="stat-l">Salariés</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Contrats / paie</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Congés / absences</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Planning / pointages</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Entretiens</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Formations</div></div>
+    </div>
+    <div class="stat-row" style="margin-top:.55rem">
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Plan de soins</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Médicaments</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Tâches / nuit</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Repas / visites</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Budget / factures</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">CVS / satisfaction</div></div>
+    </div>
+    <div class="stat-row" style="margin-top:.55rem">
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Admissions</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Candidats</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Répertoire</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Interventions</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Inventaire</div></div>
+      <div class="stat"><div class="stat-n">✓</div><div class="stat-l">Documentation</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Actions</div>
+    <div class="check-row">
+      <input type="checkbox" id="chkConfirm"/>
+      <label for="chkConfirm">Je confirme vouloir ajouter ces données de démonstration à l'établissement ci-dessus.</label>
+    </div>
+    <button class="btn btn-go" id="btnRun" onclick="runSeed()" disabled>▶ Générer les données</button>
+    <button class="btn btn-del" id="btnDel" onclick="deleteDemo()" disabled>🗑 Supprimer les données de démonstration</button>
+    <button class="btn" id="btnRedis" onclick="redistribuerReferes()" style="background:#e0f2fe;color:#0369a1;margin-left:.5rem" disabled>👥 Réattribuer les référés (6 + 6 par éducateur)</button>
+    <progress id="prog" value="0" max="100" style="display:none"></progress>
+    <div id="logBox" class="log" style="display:none"></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/documents-resident-supabase.js"></script>
+<script src="js/evaluations-supabase.js"></script>
+<!-- Couches ajoutées pour un remplissage intégral du site -->
+<script src="js/profiles-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
+<script src="js/taches-supabase.js"></script>
+<script src="js/visites-supabase.js"></script>
+<script src="js/echeances-supabase.js"></script>
+<script src="js/viatrajectoire-supabase.js"></script>
+<script src="js/repas-supabase.js"></script>
+<script src="js/nuit-supabase.js"></script>
+<script src="js/satisfaction-supabase.js"></script>
+<script src="js/cvs-supabase.js"></script>
+<script src="js/repertoire-supabase.js"></script>
+<script src="js/contacts-externes-supabase.js"></script>
+<script src="js/admissions-supabase.js"></script>
+<script src="js/candidats-supabase.js"></script>
+<script src="js/interventions-supabase.js"></script>
+<script src="js/inventaire-supabase.js"></script>
+<script src="js/documentation-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
+<script src="js/contrats-supabase.js"></script>
+<script src="js/absences-supabase.js"></script>
+<script src="js/conges-supabase.js"></script>
+<script src="js/pointages-supabase.js"></script>
+<script src="js/astreintes-supabase.js"></script>
+<script src="js/entretiens-supabase.js"></script>
+<script src="js/formations-supabase.js"></script>
+<script src="js/fiches-paie-supabase.js"></script>
+<script src="js/budget-supabase.js"></script>
+<script src="js/facturation-supabase.js"></script>
+<script src="js/planning-equipe-supabase.js"></script>
+<script src="js/documents-employe-supabase.js"></script>
+<script>
+// ═══════════════════════ Utilitaires ═══════════════════════
+let logEl, progEl;
+function log(msg, cls='info'){ if(!logEl) return; logEl.style.display=''; const d=document.createElement('div'); d.className=cls; d.textContent='▸ '+msg; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }
+function setProgress(v){ if(progEl){ progEl.style.display=''; progEl.value=Math.min(100,Math.round(v)); } }
+function rnd(n){ return Math.floor(Math.random()*n); }
+function pick(a){ return a[rnd(a.length)]; }
+function pickN(a,n){ const s=[...a],o=[]; while(o.length<n&&s.length) o.push(s.splice(rnd(s.length),1)[0]); return o; }
+function clamp(x,lo,hi){ return Math.max(lo,Math.min(hi,x)); }
+function shuffle(a){ const s=[...a]; for(let i=s.length-1;i>0;i--){ const j=rnd(i+1); [s[i],s[j]]=[s[j],s[i]]; } return s; }
+function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function phone(){ return '0'+pick(['6','7'])+' '+Array.from({length:4},()=>String(10+rnd(90))).join(' '); }
+function dISO(daysAgo,h,m){ const d=new Date(); d.setDate(d.getDate()-daysAgo); d.setHours(h==null?9+rnd(9):h, m==null?(Math.random()<.5?0:30):m, 0, 0); return d.toISOString(); }
+function dDay(daysAgo){ const d=new Date(); d.setDate(d.getDate()-daysAgo); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; } // date LOCALE (toISOString ferait reculer d'un jour entre minuit et ~2 h)
+async function pool(items, worker, size, onTick){
+  size = size || 6; let i=0, done=0; const results=new Array(items.length);
+  async function run(){ while(i<items.length){ const idx=i++; try{ results[idx]=await worker(items[idx],idx); }catch(e){ results[idx]=null; log('Erreur sur un élément : '+(e&&e.message||e),'err'); } done++; if(onTick) onTick(done,items.length); } }
+  await Promise.all(Array.from({length:Math.min(size,items.length||1)}, run));
+  return results;
+}
+const DEMO_TAG = '[démo]';
+
+// ═══════════════════════ Niveau de soutien ═══════════════════════
+const NIVEAUX = ['total','partiel','verbal','supervision','autonomie']; // score 1..5 -> index 0..4
+function scoreKey(score){ return NIVEAUX[clamp(Math.round(score)-1,0,4)]; }
+function niveauAt(spec, f){
+  if(!spec._assessed) return '';
+  const s = spec._start + (spec._end - spec._start)*f + (Math.random()-0.5)*0.7;
+  return scoreKey(s);
+}
+
+// ═══════════════════════ Fenêtre de simulation : 1 an ═══════════════════════
+// Tout l'historique généré couvre les 365 jours précédant aujourd'hui, comme si
+// l'établissement tournait depuis un an. Rien n'est créé avant l'entrée d'un
+// résident ni avant l'embauche d'un salarié (cohérence de la simulation).
+const SIM_DAYS = 365;
+// Fenêtre réellement couverte par un résident (bornée par sa date d'entrée)
+function windowOf(spec){ return Math.min(SIM_DAYS, (spec && spec._entreeOff != null) ? spec._entreeOff : SIM_DAYS); }
+// Tire n offsets (en jours passés) dans un pool, en ne gardant que ceux situés
+// APRÈS l'entrée du résident ; les offsets négatifs (futur) passent toujours.
+function offsWithin(spec, poolOffs, n){ const w = windowOf(spec); return pickN(poolOffs.filter(o => o <= Math.max(1, w - 1)), n); }
+
+// ═══════════════════════ Pools de contenu ═══════════════════════
+const PRENOMS_M = ['Antoine','Rayan','Kevin','Dylan','Mathieu','Samir','Lucas','Hugo','Théo','Nathan','Enzo','Yanis','Mehdi','Bilal','Adrien','Quentin','Maxime','Florian','Jordan','Killian','Bastien','Anthony','Jérémy','Sofiane','Alexandre'];
+const PRENOMS_F = ['Emma','Lucie','Jade','Sarah','Pauline','Laura','Manon','Chloé','Léa','Inès','Camille','Sabrina','Nadia','Yasmine','Océane','Marine','Elodie','Amandine','Sonia','Julie','Aurélie','Fatima','Clara','Maëva','Noémie'];
+const NOMS = ['Girard','Petit','Mansouri','Fontaine','Lebrun','Moreau','Rousseau','Benali','Garnier','Vidal','Karim','Martin','Dubois','Bernard','Lefèvre','Roux','Fournier','Morel','Giraud','André','Mercier','Blanc','Guerin','Muller','Henry','Chevalier','Robin','Masson','Simon','Gauthier','Perrin','Clément','Da Silva','Riva','Sanchez','Lopez','Nguyen','Traoré','Diallo','Bouhadi'];
+const REFERENTS = ['Marie Lefebvre','Thomas Bernard','Lucas Petit','Inès Chabrier','Karim Saïdi','Aurélie Fontaine','Bastien Collignon','Sara Lemoine'];
+const COLORS = ['#3b82f6','#6366f1','#0ea5e9','#8b5cf6','#ec4899','#f59e0b','#10b981','#14b8a6','#ef4444','#f97316','#06b6d4','#84cc16'];
+const STATUTS = [['permanent',38],['temporaire',7],['stage',3],['urgence',2]];
+
+// -- médical --
+const BLOOD=['A+','A-','B+','B-','AB+','O+','O-'];
+const MEDECINS=['Dr Durand','Dr Lemaire','Dr Nguyen','Dr Fabre','Dr Rossi','Dr Bianchi','Dr Leroy'];
+const ALLERGIES=['Aucune connue','Arachides','Pénicilline','Pollen, acariens','Lactose','Aucune connue','Fruits à coque','Aucune connue'];
+const TRAIT_POOL=[
+  {nom:'Rispéridone 1mg',posologie:'1 cp matin et soir',frequence:'quotidien',moments:['matin','soir']},
+  {nom:'Ventoline 100µg',posologie:'2 bouffées si besoin',frequence:'en cas de crise',moments:[]},
+  {nom:'Dépakine 500mg',posologie:'1 cp',frequence:'le matin',moments:['matin']},
+  {nom:'Lévothyrox 75µg',posologie:'1 cp à jeun',frequence:'le matin',moments:['matin']},
+  {nom:'Doliprane 1000mg',posologie:'1 cp si douleur',frequence:'si besoin',moments:[]},
+  {nom:'Mélatonine 2mg',posologie:'1 cp au coucher',frequence:'le soir',moments:['coucher']},
+  {nom:'Abilify 10mg',posologie:'1 cp',frequence:'le matin',moments:['matin']},
+];
+const RDV_TYPES=['Dentiste','Ophtalmologue','Psychiatre','Médecin traitant','Kinésithérapeute','Dermatologue','Podologue','Orthophoniste'];
+const PRATICIENS=['Dr Martin','Dr Dubois','Dr Petit','Dr Roche','Dr Simon','Dr Faure'];
+const LIEUX_MED=['Cabinet médical','CMP Secteur 3','Centre hospitalier','Maison de santé','Cabinet dentaire'];
+const VACCINS=[{nom:'DTP (Diphtérie-Tétanos-Polio)',rappelY:5},{nom:'ROR',rappelY:0},{nom:'Hépatite B',rappelY:0},{nom:'Grippe saisonnière',rappelY:1},{nom:'Covid-19',rappelY:1}];
+const NOTES_MED=['Suivi psychologique hebdomadaire au CMP.','RAS. Bonne santé générale.','Asthme léger, traitement de fond en place.','Suivi diététique en cours.','Épilepsie stabilisée sous traitement.',''];
+
+// -- administratif --
+const PROTECTIONS=['','tutelle','curatelle','curatelle_renforcee','sauvegarde','curatelle_renforcee',''];
+const PROT_ORG=['UDAF 34','ATMP Occitanie','Association tutélaire de l\'Hérault','UNAF'];
+const SIT_PRO=['emploi','formation','recherche','inactif'];
+const SIT_ADMIN=['francais','francais','francais','ue','titre_sejour'];
+const RESSOURCES=['aah','rsa','salaire','apl'];
+const ORG_A=['siao','mdph','ccas',''];
+// Semaine type « travailleur ESAT » : tous les résidents travaillent du lundi au vendredi 8h30–16h.
+// Format attendu par r.planningHebdo : { jour: [{label,debut,fin}, …] } (absences récurrentes = « sortie »).
+const WORK_HEBDO = {
+  lundi:    [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  mardi:    [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  mercredi: [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  jeudi:    [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+  vendredi: [{ label:'Travail (ESAT)', debut:'08:30', fin:'16:00' }],
+};
+
+// -- contenu quotidien --
+const JOURNAL_TXT = [
+  n => `Entretien individuel avec ${n} : évoque son projet et ses difficultés du moment. Écoute active et reformulation.`,
+  n => `${n} a participé à l'atelier collectif. Bonne implication, échanges positifs avec le groupe.`,
+  n => `Accompagnement de ${n} à un rendez-vous extérieur. Trajet et démarche se sont bien déroulés.`,
+  n => `Point sur les objectifs du projet personnalisé avec ${n}. Progrès notés sur l'autonomie quotidienne.`,
+  n => `${n} a préparé son repas avec étayage. Gestes techniques mieux maîtrisés qu'auparavant.`,
+  n => `Gestion d'une tension avec ${n} suite à un désaccord. Retour au calme après médiation.`,
+  n => `${n} a réalisé seul·e sa toilette ce matin. Encouragements apportés, satisfaction exprimée.`,
+  n => `Aide aux démarches administratives de ${n} (CAF, dossier MDPH). Compréhension progressive.`,
+  n => `${n} exprime de la fatigue et des difficultés de sommeil. Transmis à l'équipe soignante.`,
+  n => `Activité extérieure avec ${n} : sortie appréciée, participation active aux échanges.`,
+];
+const ACCOMP_TXT = [
+  'Incitation verbale et reformulation des consignes.',
+  'Présence rassurante tout au long de l\'activité.',
+  'Guidage gestuel pour les étapes techniques.',
+  'Médiation avec un pair pour apaiser la situation.',
+  'Aide partielle puis encouragement à faire seul·e.',
+  'Accompagnement physique pour le déplacement.',
+  'Supervision à distance, intervention ponctuelle.',
+  'Étayage verbal pour la gestion des émotions.',
+  'Stimulation et valorisation des réussites.',
+];
+const TR_TXT = ['Journée calme, bonne participation aux temps collectifs.','A bien mangé au repas. Humeur stable.','Moment de tension en fin d\'après-midi, apaisé rapidement.','Fatigue observée, sieste proposée et acceptée.','A sollicité de l\'aide pour ses démarches, accompagnement fait.','Bon investissement dans l\'activité du jour.','Repli en matinée, échanges renoués l\'après-midi.','Nuit reposante d\'après le relais du matin.'];
+const TR_CATS = ['sante','comportement','alimentation','hygiene','activite','famille','sortie','administratif'];
+const TR_SHIFTS = ['matin','aprem','nuit'];
+const JOURNAL_CATS = ['1','2','3','4','5','9','10'];
+const PLAN_TYPES = ['activite','rdv','sortie'];
+const PLAN_TITRES = {
+  activite:['Atelier cuisine','Atelier créatif','Groupe de parole','Activité sportive','Médiation animale'],
+  rdv:['Rendez-vous médical','Consultation psychologue','Entretien éducatif','Bilan orthophonie','RDV dentiste'],
+  sortie:['Sortie piscine','Courses accompagnées','Sortie culturelle','Marche en extérieur','Sortie médiathèque'],
+};
+const INCIDENT_TYPES = ['chute','agression','fugue','violence','medical','materiel','accident','autre'];
+const INCIDENT_GRAV = ['leger','moyen','grave'];
+const INCIDENT_DESC = {
+  chute:'Chute sans gravité dans le couloir, pas de blessure. Surveillance mise en place.',
+  agression:'Altercation verbale entre deux résidents. Médiation effectuée, retour au calme.',
+  fugue:'Absence non signalée en soirée. Contact établi, retour au foyer dans la soirée.',
+  violence:'Geste d\'énervement sur du mobilier. Aucun blessé. Entretien de recadrage.',
+  medical:'Malaise passager, prise en charge immédiate. Récupération complète.',
+  materiel:'Dégradation involontaire de matériel commun. Constat effectué.',
+  accident:'Légère coupure lors d\'un atelier. Soins prodigués sur place.',
+  autre:'Événement inhabituel consigné pour suivi de l\'équipe.',
+};
+const ACTIVITES = [
+  {nom:'Atelier cuisine',categorie:'autonomie',jour:'Lundi',heureDebut:'10:00',heureFin:'12:00',lieu:'Cuisine pédagogique',placesMax:8},
+  {nom:'Groupe sportif',categorie:'sportive',jour:'Mardi',heureDebut:'14:00',heureFin:'16:00',lieu:'Gymnase municipal',placesMax:12},
+  {nom:'Atelier créatif',categorie:'creative',jour:'Mercredi',heureDebut:'14:30',heureFin:'16:30',lieu:'Salle d\'activités',placesMax:10},
+  {nom:'Médiation animale',categorie:'autre',jour:'Jeudi',heureDebut:'10:30',heureFin:'11:30',lieu:'Jardin',placesMax:6},
+  {nom:'Groupe de parole',categorie:'citoyennete',jour:'Jeudi',heureDebut:'16:00',heureFin:'17:00',lieu:'Salle de réunion',placesMax:10},
+  {nom:'Sortie culturelle',categorie:'sortie',jour:'Vendredi',heureDebut:'14:00',heureFin:'17:00',lieu:'Extérieur',placesMax:8},
+  {nom:'Atelier informatique',categorie:'scolaire',jour:'Ponctuel',heureDebut:'09:30',heureFin:'11:00',lieu:'Salle multimédia',placesMax:6},
+  {nom:'Piscine',categorie:'sportive',jour:'Samedi',heureDebut:'10:00',heureFin:'12:00',lieu:'Piscine municipale',placesMax:8},
+];
+
+// ── Bilans annuels COMPLETS par activité (alimentent la section « Activités éducatives » du rapport) ──
+// Le rapport lit act.bilansAnnuels[année] = { texte, auteur, date }. On seede les 2 années couvertes.
+const BILAN_ACT = {
+  'Atelier cuisine': {
+    objectifs: `développer l'autonomie alimentaire, la lecture d'une recette simple, le respect des règles d'hygiène et la coopération autour d'un repas partagé`,
+    acquis: `La plupart des participants réalisent désormais une recette simple avec un étayage verbal léger. Les gestes techniques — épluchage, dosage, utilisation sécurisée des appareils — se sont nettement affinés, et le rangement du poste de travail est mieux intégré.` },
+  'Groupe sportif': {
+    objectifs: `entretenir la condition physique, canaliser les tensions, respecter les règles collectives et renforcer l'estime de soi`,
+    acquis: `On note une meilleure endurance et une acceptation plus sereine de la victoire comme de la défaite. Le respect des consignes et de l'arbitrage a progressé, avec moins de sorties de cadre.` },
+  'Atelier créatif': {
+    objectifs: `favoriser l'expression personnelle, la motricité fine, la concentration et la valorisation des réalisations`,
+    acquis: `Les productions gagnent en soin et en originalité. Plusieurs résidents osent davantage proposer leurs idées et mènent un projet créatif à son terme sans se décourager.` },
+  'Médiation animale': {
+    objectifs: `apaiser les angoisses, stimuler la relation et la communication non verbale, et responsabiliser autour du soin à l'animal`,
+    acquis: `Le contact avec l'animal a un effet apaisant marqué chez les résidents les plus anxieux. On observe une attention et une douceur accrues, ainsi qu'un sens des responsabilités dans les gestes de soin.` },
+  'Groupe de parole': {
+    objectifs: `favoriser l'expression des ressentis, l'écoute mutuelle, la gestion des conflits et la participation à la vie collective`,
+    acquis: `La parole circule plus librement et le tour de parole est mieux respecté. Les résidents verbalisent davantage leurs émotions et sollicitent le groupe pour dénouer des désaccords.` },
+  'Sortie culturelle': {
+    objectifs: `ouvrir sur l'extérieur, travailler les codes sociaux, l'utilisation des transports et l'accès à la culture`,
+    acquis: `Les déplacements en extérieur se déroulent plus sereinement, avec un meilleur repérage dans l'espace public. La curiosité culturelle s'éveille et les échanges au retour d'activité sont riches.` },
+  'Atelier informatique': {
+    objectifs: `développer les compétences numériques de base, l'autonomie dans les démarches en ligne et un usage responsable des outils`,
+    acquis: `Les participants maîtrisent mieux la navigation, la messagerie et la recherche d'information. La vigilance face aux risques du numérique s'est renforcée grâce aux mises en situation.` },
+  'Piscine': {
+    objectifs: `favoriser l'aisance aquatique, la détente corporelle, le respect des règles de sécurité et le dépassement de soi`,
+    acquis: `L'appréhension de l'eau a diminué pour la plupart des participants. Les progrès en flottaison et en déplacement sont notables, dans un cadre sécurisé et valorisant.` },
+  _default: {
+    objectifs: `favoriser l'autonomie, la socialisation et l'épanouissement des résidents à travers une activité régulière`,
+    acquis: `La participation et l'implication du groupe ont progressé au fil des séances, avec des acquis concrets sur les plans relationnel et personnel.` }
+};
+function genBilansAnnuels(act){
+  const now = new Date(); const y2 = now.getFullYear(), y1 = y2 - 1;
+  const b = BILAN_ACT[act.nom] || BILAN_ACT._default;
+  const auteur = act.animateur || 'Équipe éducative';
+  const PHASE = {
+    [y1]: { part: 'progressive, en montée au fil des séances', date: `${y1}-12-15`,
+      persp: 'consolider les acquis de base, stabiliser le groupe et enrichir la palette des supports proposés.' },
+    [y2]: { part: 'soutenue et de plus en plus autonome', date: `${y2}-06-30`,
+      persp: `viser une autonomie accrue et une ouverture vers l'extérieur (valorisation des réalisations, échanges inter-établissements).` }
+  };
+  const mk = (annee) => { const ph = PHASE[annee]; return {
+    texte:
+`Bilan annuel de l'activité « ${act.nom} » — ${annee}
+
+Objectifs : ${b.objectifs}.
+
+Déroulement : l'activité s'est tenue de façon régulière sur l'année, animée par ${auteur}. La participation du groupe a été ${ph.part}, avec une assiduité globalement bonne et un cadre bien identifié par les résidents.
+
+Acquis observés : ${b.acquis}
+
+Dynamique de groupe : les échanges entre pairs se sont enrichis ; l'entraide et le respect mutuel constituent de solides points d'appui pour l'accompagnement individualisé.
+
+Perspectives : ${ph.persp}`,
+    auteur, date: ph.date }; };
+  return { [String(y1)]: mk(y1), [String(y2)]: mk(y2) };
+}
+
+// -- objectifs / PPE / documents / évaluations --
+const OBJ_IDS=['1','2','3','4','5','6'];
+const OBJ_STATUTS=['non_commence','en_cours','en_cours','atteint'];
+const OBJ_NOTES=['Progrès réguliers observés.','Accompagnement soutenu nécessaire.','Objectif bien investi par le résident.','Évolution positive ce trimestre.',''];
+const PPE_DOMAINES=['autonomie','sante','vieSociale','logement','budget'];
+const PPE_OBJ={
+  autonomie:['Gérer seul son linge','Préparer un repas simple','Utiliser les transports en commun'],
+  sante:['Assurer le suivi de son traitement','Prendre ses rendez-vous médicaux','Adopter une hygiène de vie équilibrée'],
+  vieSociale:['Participer à une activité collective','Développer son réseau relationnel','Gérer les conflits avec les pairs'],
+  logement:['Entretenir son espace de vie','Constituer un dossier de logement autonome'],
+  budget:['Établir un budget mensuel','Gérer ses dépenses courantes'],
+};
+const PPE_MOYENS=['Accompagnement éducatif hebdomadaire','Guidance et supports visuels','Mise en situation encadrée','Rendez-vous de suivi mensuel'];
+const DOCS=[
+  {name:'Contrat de séjour',fileName:'contrat-sejour.pdf',category:'contrat',mime:'application/pdf',size:245760},
+  {name:'Notification MDPH',fileName:'notification-mdph.pdf',category:'administratif',mime:'application/pdf',size:189440,due:true},
+  {name:'Certificat médical',fileName:'certificat-medical.pdf',category:'medical',mime:'application/pdf',size:98304},
+  {name:'Attestation de droits CPAM',fileName:'attestation-cpam.pdf',category:'administratif',mime:'application/pdf',size:120000,due:true},
+  {name:'Projet personnalisé signé',fileName:'ppe-signe.pdf',category:'administratif',mime:'application/pdf',size:310000},
+];
+const EVAL_KEYS=['toilette','habillage','sante','preparation','repas','chambre','linge','courrier','budget','relations','activites','deplacements','expression'];
+const MIF_KEYS=['alimentation','toilette','bain','habillage_haut','habillage_bas','soins_perinee','vesicale','anale','lit_chaise','toilettes','bain_douche','marche_fauteuil','escaliers','comprehension','expression','interaction','resolution','memoire'];
+
+// ═══════════════════════ Générateurs de sections ═══════════════════════
+function genNss(spec){
+  const y = spec.dob.slice(2,4), m = spec.dob.slice(5,7);
+  return `${spec.genre==='F'?2:1} ${y} ${m} 34 ${100+rnd(900)} ${10+rnd(90)}`;
+}
+function santeFor(spec){
+  const w = windowOf(spec||{});
+  // TOUS les résidents prennent un traitement : au moins un traitement PLANIFIÉ (avec des moments,
+  // donc visible au pilulier / suivi médicaments), + éventuellement 0-1 traitement « si besoin ».
+  const planifies = TRAIT_POOL.filter(t=>t.moments && t.moments.length);
+  const seen = new Set();
+  const traitements = [pick(planifies), ...pickN(TRAIT_POOL, rnd(2))]
+    .filter(t=>t && !seen.has(t.nom) && seen.add(t.nom))
+    .map(t=>({ id:gid(), nom:t.nom, posologie:t.posologie, frequence:t.frequence, debut:dDay(120+rnd(400)), fin:'', moments:t.moments }));
+  const rdv=[]; const nr=1+rnd(2);
+  // RDV « fait » forcément pendant le séjour ; les autres à venir
+  for(let i=0;i<nr;i++){ const off = i===0 ? Math.max(2, Math.min(w-2, 5+rnd(320))) : -(5+rnd(50)); rdv.push({ id:gid(), date:dDay(off), heure:`${9+rnd(8)}:${pick(['00','30'])}`, type:pick(RDV_TYPES), praticien:pick(PRATICIENS), lieu:pick(LIEUX_MED), notes:'', fait: off>0 }); }
+  // rappel calculé depuis la date du vaccin (négatif = à venir, positif = en retard)
+  const vaccins = pickN(VACCINS, 1+rnd(2)).map(v=>{ const offV=200+rnd(2000); return { id:gid(), nom:v.nom, date:dDay(offV), rappel: v.rappelY ? dDay(offV - v.rappelY*365) : '' }; });
+  return { groupeSanguin:pick(BLOOD), notesMedicales:pick(NOTES_MED), traitements, rdv, vaccins };
+}
+function objectifsFor(spec){
+  const w = windowOf(spec||{});
+  const ids = pickN(OBJ_IDS, 3+rnd(2));
+  const objectifsSuivi = {};
+  ids.forEach(id=>{ objectifsSuivi[id] = { statut:pick(OBJ_STATUTS), note:pick(OBJ_NOTES), dateMaj:dISO(Math.max(1, Math.min(w-1, 10+rnd(200)))), axes:[], evaluations:[] }; });
+  return { objectifs:ids, objectifsSuivi };
+}
+function evalScores(base){ const s={}; EVAL_KEYS.forEach(k=>{ s[k]=clamp(Math.round(base + (Math.random()-0.5)*2), 0, 4); }); return s; }
+function evaluationsFor(spec){
+  // 1 à 3 évaluations réparties sur l'année de présence (progression _start → _end)
+  const w = windowOf(spec);
+  const endB = clamp((spec._end||3)-1, 0, 4), startB = clamp((spec._start||3)-1, 0, 4);
+  const offs = [20+rnd(35), 150+rnd(45), 290+rnd(50)].filter(o=>o<=w-5);
+  return offs.map(off=>({ id:gid(), date:dDay(off), evaluateur:spec.referent||'Équipe éducative',
+    note:pick(['Autonomie en progression sur l\'hygiène.','Accompagnement maintenu pour la gestion du budget.','Bonne évolution globale ce semestre.','Étayage encore nécessaire sur les démarches.']),
+    scores:evalScores(endB + (startB-endB)*(off/SIM_DAYS)) }));
+}
+function mifScores(end){ const b=clamp(3 + ((end||3)-3)*1.1, 1, 7); const s={}; MIF_KEYS.forEach(k=>s[k]=clamp(Math.round(b + (Math.random()-0.5)*2),1,7)); return s; }
+function activitesFor(actCatalog, spec){
+  if(!actCatalog.length) return [];
+  const w = windowOf(spec||{});
+  const chosen = pickN(actCatalog, 1+rnd(2));
+  return chosen.map((a,i)=>{
+    const active = i===0 || Math.random()<0.6;
+    // inscription et bilans forcément APRÈS l'admission
+    const enr = { id:gid(), activiteId:a.id, dateInscription:dDay(Math.max(2, Math.min(w-2, 60+rnd(120)))), statut: active?'active':'terminee',
+      bilans:[ { id:gid(), date:dDay(Math.max(1, Math.min(w-3, 20+rnd(30)))), texte:pick(['Bonne participation, intégré au groupe.','Progrès sur le respect des consignes.','Investissement variable selon les séances.','Autonomie grandissante dans l\'activité.']), auteur:'Équipe éducative' } ] };
+    if(!active) enr.dateFin = dDay(Math.max(0, Math.min(w-3, 5+rnd(20))));
+    return enr;
+  });
+}
+function ppeFor(r){
+  const doms = pickN(PPE_DOMAINES, 2+rnd(2));
+  const sections={};
+  doms.forEach(d=>{
+    sections[d] = { bilan:pick(['Bonne progression sur ce domaine.','Accompagnement soutenu nécessaire.','Autonomie partielle, étayage régulier.']),
+      objectifs: pickN(PPE_OBJ[d], 1+rnd(2)).map(o=>({ objectif:o, moyens:pick(PPE_MOYENS), echeance:dDay(-(90+rnd(200))), evaluation:pick(['En cours','Partiellement atteint','Non commencé']) })),
+      expression:'' };
+  });
+  // PPE rédigé peu après l'admission (dans la limite de l'année simulée), révision à venir
+  const w = windowOf(r._spec);
+  const drOff = Math.max(3, w - 12 - rnd(15));
+  const refName = r._spec.referent || 'Équipe éducative';
+  return { residentId:r.id, residentName:`${r.prenom} ${r.nom}`, dateRedaction:dDay(drOff), dateRevision:dDay(-(200+rnd(60))),
+    referent:refName, protection:r._spec.protection||'', statut:'actif', sections,
+    conclusion:`Projet co-construit avec le résident. ${DEMO_TAG}`, serafin:{},
+    signatures:{ resident:r.prenom, referent:refName, direction:'Direction', representant:'', date:dDay(drOff) } };
+}
+function docsFor(r){
+  return pickN(DOCS, 2+rnd(2)).map(d=>({ residentId:r.id, name:`${d.name} ${DEMO_TAG}`, fileName:d.fileName, size:d.size, mimeType:d.mime,
+    category:d.category, docDate:dDay(Math.max(1, Math.min(windowOf(r._spec)-1, 15+rnd(340)))), dueDate: d.due?dDay(-(30+rnd(200))):null, fichierPath:null, type:'resident', uploadedBy:'Secrétariat', partageFamille:false }));
+}
+function weightedStatut(){ const bag=[]; STATUTS.forEach(([v,w])=>{ for(let i=0;i<w;i++) bag.push(v); }); return pick(bag); }
+
+// Budget personnel du résident (travailleur ESAT) : salaire ~600 € + AAH ~500 € (MDPH) mensuels,
+// retrait d'argent de poche chaque semaine, remboursements d'activités. Stocké dans r.budget.operations.
+function budgetFor(spec){
+  const p = n => String(n).padStart(2,'0');
+  const now = new Date();
+  const eo = (spec && spec._entreeOff!=null) ? spec._entreeOff : SIM_DAYS; // offset d'entrée BRUT
+  const w  = windowOf(spec);
+  const ops = [];
+  const op = (type, montant, date, categorie, libelle) => ops.push({ id:gid(), type, montant:Math.round(montant*100)/100, date, categorie, libelle, notes:'' });
+  // Salaire ESAT (~600 €) + AAH perçue via la MDPH (~500 €), une fois par mois de présence
+  for(let mo=1; mo<=12; mo++){
+    const d = new Date(now.getFullYear(), now.getMonth()-mo, 1);
+    const off = Math.round((now.getTime()-d.getTime())/86400000);
+    if(eo < off) continue; // pas encore admis ce mois-là
+    op('recette', 580+rnd(50), `${d.getFullYear()}-${p(d.getMonth()+1)}-03`, 'Salaire', 'Salaire ESAT');
+    op('recette', 490+rnd(25), `${d.getFullYear()}-${p(d.getMonth()+1)}-06`, 'AAH', 'AAH (MDPH)');
+  }
+  // Filet de sécurité : un résident admis très récemment (aucun mois plein révolu) reçoit quand même
+  // son premier salaire + AAH, datés juste après son entrée.
+  if(!ops.some(o=>o.categorie==='Salaire')){
+    const off = Math.max(1, Math.min(w-1, 8+rnd(12)));
+    op('recette', 580+rnd(50), dDay(off), 'Salaire', 'Salaire ESAT');
+    op('recette', 490+rnd(25), dDay(Math.max(1, off-2)), 'AAH', 'AAH (MDPH)');
+  }
+  // Retrait d'argent de poche, une fois par semaine (sortie de caisse gérée)
+  for(let k=0; k*7+3 < w; k++){ op('depense', 20+rnd(15), dDay(3+k*7), 'Autre', 'Retrait argent de poche'); }
+  // Remboursements d'activités (sorties avancées puis remboursées au résident)
+  const nRemb = 3 + rnd(4);
+  for(let i=0;i<nRemb;i++){ const off = Math.max(1, Math.min(w-2, 15+rnd(320)));
+    op('recette', 8+rnd(32), dDay(off), 'Autre', `Remboursement activité — ${pick(['sortie piscine','cinéma','sortie mer','bowling','médiathèque','sortie culturelle','parc animalier'])}`); }
+  return { operations: ops };
+}
+
+// ═══════════════════════ Pools & générateurs — remplissage intégral ═══════════════════════
+// (Ces sections complètent le seed : RH, finances, soins, vie institutionnelle.)
+
+// -- RH --
+const POSTES=['Éducateur spécialisé','Moniteur-éducateur','Accompagnant éducatif et social','Aide médico-psychologique','Aide-soignant','Infirmier','Psychologue','Conseillère en économie sociale','Maîtresse de maison','Surveillant de nuit','Chef de service éducatif','Agent de service intérieur'];
+const CONTRAT_TYPES=['cdi','cdi','cdi','cdi','cdd','cdd'];
+const ABS_TYPES=['maladie','maladie','accident_travail','maladie','enfant_malade'];
+const CONGE_TYPES=['cp','cp','cp','rtt','formation','autre']; // types connus de conges-card.js
+const CONGE_STATUTS=['accepte','accepte','accepte','en_attente','refuse']; // vocabulaire de conges.js
+const FORM_DOMAINES=['Bientraitance','Handicap psychique','Premiers secours','Autisme / TSA','Manutention','Gestion des conflits','Droits des usagers','Snoezelen'];
+const FORM_TITRES={
+  'Bientraitance':'Prévention de la maltraitance et bientraitance',
+  'Handicap psychique':'Accompagner le handicap psychique au quotidien',
+  'Premiers secours':'Formation SST — Sauveteur Secouriste du Travail',
+  'Autisme / TSA':'Communication adaptée et TSA',
+  'Manutention':'Gestes et postures / manutention des personnes',
+  'Gestion des conflits':'Prévention et gestion des situations de violence',
+  'Droits des usagers':'Loi 2002-2 et droits des personnes accompagnées',
+  'Snoezelen':'Approche Snoezelen et stimulation sensorielle',
+};
+const FORM_ORG=['IRTS','GRETA','Croix-Rouge Compétence','ANFH','Infipp','Ceméa'];
+const ENTRETIEN_TYPES=['annuel','professionnel'];
+const ENTRETIEN_BILANS=[
+  'Année marquée par un investissement constant auprès des résidents. Posture éducative affirmée, bonne coopération en équipe.',
+  'Montée en compétence sur l\'accompagnement des situations complexes. Souhaite se former davantage sur le handicap psychique.',
+  'Professionnel(le) fiable et rigoureux(se) sur les écrits. Point de vigilance : mieux répartir la charge sur les temps forts.',
+  'Bonne dynamique de projet cette année. Objectif : consolider la co-construction des projets personnalisés.',
+];
+const ENTRETIEN_OBJECTIFS=[
+  'Poursuivre l\'appropriation des outils de la loi 2002-2.',
+  'Développer l\'animation d\'ateliers collectifs.',
+  'Consolider la traçabilité des accompagnements (transmissions, PPA).',
+  'S\'inscrire dans une formation qualifiante sur l\'année à venir.',
+];
+
+// -- Soins (plan de soins) --
+const SOINS_POOL=[
+  {cat:'hygiene',libelle:'Aide à la douche complète',detail:'Avec chaise de douche, surveillance debout',freq:'quotidien',intervenant:'AES / AS'},
+  {cat:'hygiene',libelle:'Aide à la toilette du haut du corps',detail:'Guidance verbale, laisse faire le bas',freq:'matin',intervenant:'AES'},
+  {cat:'medication',libelle:'Distribution du traitement du matin',detail:'Vérifier la bonne prise, tracer',freq:'matin',intervenant:'IDE / AS'},
+  {cat:'medication',libelle:'Distribution du traitement du soir',detail:'Contrôle de la prise avant le coucher',freq:'soir',intervenant:'IDE / AS'},
+  {cat:'mobilite',libelle:'Transfert lit-fauteuil',detail:'Aide technique, verticalisation progressive',freq:'quotidien',intervenant:'AS'},
+  {cat:'mobilite',libelle:'Mobilisation / prévention d\'escarres',detail:'Changements de position réguliers',freq:'quotidien',intervenant:'AS / IDE'},
+  {cat:'alimentation',libelle:'Aide à la prise du repas',detail:'Texture mixée, installation adaptée',freq:'quotidien',intervenant:'AES'},
+  {cat:'alimentation',libelle:'Surveillance de l\'hydratation',detail:'Proposer à boire régulièrement',freq:'quotidien',intervenant:'Équipe'},
+  {cat:'soins_infirm',libelle:'Réfection de pansement',detail:'Protocole IDE, réévaluation hebdomadaire',freq:'semaine',intervenant:'IDE'},
+  {cat:'soins_infirm',libelle:'Contrôle de la glycémie',detail:'Avant les repas, tracer les valeurs',freq:'quotidien',intervenant:'IDE'},
+  {cat:'psy',libelle:'Temps d\'apaisement / gestion de l\'angoisse',detail:'Repérer les signes, proposer un retrait au calme',freq:'si_besoin',intervenant:'Éducateur / Psy'},
+  {cat:'social',libelle:'Accompagnement aux démarches',detail:'Étayage pour le courrier et les rendez-vous',freq:'semaine',intervenant:'Éducateur / CESF'},
+];
+// -- Médicaments (distribution) --
+const MED_STATUTS=['donne','donne','donne','donne','refuse','report']; // slugs de js/medicaments.js (pas d'accents)
+const MED_MOMENTS=['matin','midi','soir'];
+// -- Tâches (projet d'accompagnement) --
+const TACHES_POOL=[
+  {libelle:'Ranger sa chambre',objectif:'Entretenir son espace de vie',moment:'matin',soutienAttendu:'supervision'},
+  {libelle:'Préparer son sac pour l\'activité',objectif:'Anticiper et s\'organiser',moment:'matin',soutienAttendu:'verbal'},
+  {libelle:'Participer au débarrassage du repas',objectif:'Participer à la vie collective',moment:'midi',soutienAttendu:'partiel'},
+  {libelle:'Prendre sa douche en autonomie',objectif:'Gérer son hygiène',moment:'soir',soutienAttendu:'supervision'},
+  {libelle:'Préparer ses affaires du lendemain',objectif:'Se projeter dans le temps',moment:'soir',soutienAttendu:'verbal'},
+  {libelle:'Gérer son argent de poche de la semaine',objectif:'Gérer un budget simple',moment:'matin',soutienAttendu:'partiel'},
+];
+const TACHE_CONSIGNES=['Laisser l\'initiative, n\'intervenir qu\'en cas de blocage.','Découper la tâche en étapes et valoriser chaque réussite.','Rappel verbal en début de séquence, puis retrait.','Accompagnement rapproché puis estompage progressif.'];
+// -- Visites / droits de visite --
+const VISITE_TYPES=['famille','sortie','permission','libre'];
+const VISITE_LIENS=['Mère','Père','Frère','Sœur','Tuteur','Ami','Grand-parent'];
+// -- Échéances --
+const ECHEANCE_TYPES=[
+  {type:'mdph',libelle:'Renouvellement notification MDPH'},
+  {type:'sejour',libelle:'Révision du contrat de séjour'},
+  {type:'ppa',libelle:'Actualisation du projet personnalisé'},
+  {type:'medical',libelle:'Visite médicale annuelle'},
+  {type:'administratif',libelle:'Renouvellement titre de séjour'},
+];
+// -- ViaTrajectoire --
+const VT_TYPES=['orientation','reorientation','admission'];
+const VT_STATUTS=['brouillon','envoye','recu','accepte','liste_attente'];
+const MDPH_LIST=['MDPH 34','MDPH 30','MDPH 31','MDPH 66'];
+// -- Repas : menus du jour --
+const MENUS_MIDI_1=['Rôti de dinde, haricots verts','Sauté de bœuf, purée de pommes de terre','Filet de poisson, riz pilaf','Blanquette de veau, carottes','Poulet basquaise, semoule'];
+const MENUS_MIDI_2=['Omelette, ratatouille','Gratin de courgettes','Quiche aux légumes, salade','Lasagnes végétariennes','Galette de céréales, poêlée'];
+const MENUS_SOIR_1=['Soupe de légumes, jambon','Velouté de potiron, fromage','Potage, œufs durs','Bouillon, gratin de pâtes','Soupe, croque-monsieur'];
+const MENUS_SOIR_2=['Salade composée','Taboulé, yaourt','Assiette de crudités','Purée, compote','Riz au lait, fruit'];
+// -- Nuit --
+const NUIT_AMB=['calme','calme','calme','agitee','tres_agitee']; // ambiances connues de js/nuit.js
+const NUIT_RONDE_NOTES=['RAS, tout le monde dort.','Couloir calme, portes fermées.','Vérification des présences OK.','Un résident réveillé, rapidement rendormi.'];
+const NUIT_EVT=[
+  {type:'reveil',description:'Réveil nocturne, accompagné pour se rendormir.'},
+  {type:'angoisse',description:'Montée d\'angoisse vers 2h, temps de présence et retour au calme.'},
+  {type:'soin',description:'Demande d\'antalgique, prise tracée.'},
+  {type:'retour',description:'Retour tardif de permission, accueil au foyer.'},
+];
+// -- Satisfaction --
+const SAT_QUESTIONS=[
+  {label:'Qualité de l\'accompagnement au quotidien',cat:'Accompagnement'},
+  {label:'Qualité et variété des repas',cat:'Restauration'},
+  {label:'Propreté et confort des locaux',cat:'Cadre de vie'},
+  {label:'Écoute et disponibilité des équipes',cat:'Relation'},
+  {label:'Respect de l\'intimité et des droits',cat:'Droits'},
+  {label:'Activités et vie sociale proposées',cat:'Vie sociale'},
+];
+const SAT_LIENS=['Résident','Parent','Tuteur','Fratrie','Représentant légal'];
+const SAT_COMMENTS=['Globalement très satisfait de l\'accompagnement proposé.','Équipe à l\'écoute, quelques progrès possibles sur l\'information.','Bon suivi, merci pour l\'implication au quotidien.','Satisfait, souhaiterait davantage de sorties.',''];
+// -- Répertoire / partenaires --
+const REPERTOIRE_POOL=[
+  {organisme:'MDPH 34',nom:'Accueil MDPH',fonction:'Instruction des dossiers',tel:'04 67 67 69 30',email:'contact@mdph34.fr'},
+  {organisme:'CMP Secteur 3',nom:'Dr Lemaire',fonction:'Psychiatre référent',tel:'04 67 12 34 56',email:'cmp3@ch.fr'},
+  {organisme:'UDAF 34',nom:'Service tutelles',fonction:'Mandataire judiciaire',tel:'04 67 34 56 78',email:'tutelles@udaf34.fr'},
+  {organisme:'Centre hospitalier',nom:'Urgences',fonction:'Service des urgences',tel:'04 67 33 00 00',email:''},
+  {organisme:'Pharmacie du Centre',nom:'Mme Roux',fonction:'Pharmacienne',tel:'04 67 55 12 12',email:'pharmacie.centre@orange.fr'},
+  {organisme:'ESAT Les Ateliers',nom:'M. Bernard',fonction:'Chargé d\'insertion',tel:'04 67 88 20 20',email:'contact@esat-ateliers.fr'},
+  {organisme:'Transport Adapté 34',nom:'Réservations',fonction:'Transport PMR',tel:'04 67 20 20 20',email:''},
+  {organisme:'Mairie — CCAS',nom:'Service social',fonction:'Aide sociale',tel:'04 67 34 70 00',email:'ccas@ville.fr'},
+];
+// -- Contacts externes (vacataires / intervenants) --
+const CONTACTS_EXT_POOL=[
+  {prenom:'Sophie',nom:'Marchand',type:'vacataire',fonction:'Psychomotricienne'},
+  {prenom:'Julien',nom:'Faure',type:'intervenant',fonction:'Intervenant sport adapté'},
+  {prenom:'Nadia',nom:'Belkacem',type:'vacataire',fonction:'Art-thérapeute'},
+  {prenom:'Marc',nom:'Olivier',type:'benevole',fonction:'Bénévole médiathèque'},
+  {prenom:'Claire',nom:'Dumont',type:'intervenant',fonction:'Musicothérapeute'},
+  {prenom:'Karim',nom:'Haddad',type:'vacataire',fonction:'Éducateur sportif'},
+];
+// -- Interventions techniques --
+const INTERV_POOL=[
+  {lieu:'Chambre 102',desc:'Volet roulant bloqué',urgence:'normale'},
+  {lieu:'Salle de bain aile B',desc:'Fuite sous le lavabo',urgence:'haute'},
+  {lieu:'Cuisine',desc:'Réfrigérateur qui ne refroidit plus',urgence:'haute'},
+  {lieu:'Couloir RDC',desc:'Néon à remplacer',urgence:'basse'},
+  {lieu:'Salle commune',desc:'Poignée de porte cassée',urgence:'normale'},
+  {lieu:'Extérieur',desc:'Portail automatique capricieux',urgence:'normale'},
+  {lieu:'Chambre 205',desc:'Chasse d\'eau qui fuit',urgence:'normale'},
+  {lieu:'Buanderie',desc:'Sèche-linge en panne',urgence:'haute'},
+];
+const INTERV_STATUTS=['ouverte','ouverte','ouverte','traitee','traitee']; // interventions.html ne connaît que ouverte/traitee
+// -- Inventaire --
+const INV_POOL=[
+  {cat:'mobilier',nom:'Lit médicalisé',etat:'bon'},
+  {cat:'mobilier',nom:'Fauteuil roulant',etat:'bon'},
+  {cat:'mobilier',nom:'Table de salle à manger',etat:'usage'},
+  {cat:'electromenager',nom:'Lave-linge professionnel',etat:'bon'},
+  {cat:'electromenager',nom:'Réfrigérateur cuisine',etat:'bon'},
+  {cat:'informatique',nom:'Ordinateur portable bureau',etat:'bon'},
+  {cat:'informatique',nom:'Imprimante multifonction',etat:'usage'},
+  {cat:'medical',nom:'Lève-personne',etat:'bon'},
+  {cat:'medical',nom:'Tensiomètre',etat:'bon'},
+  {cat:'vehicule',nom:'Minibus 9 places',etat:'usage'},
+  {cat:'securite',nom:'Extincteurs (lot)',etat:'bon'},
+  {cat:'mobilier',nom:'Armoire de chambre',etat:'a_reparer'},
+];
+const INV_LIEUX=['Réserve','Cuisine','Bureau','Aile A','Aile B','Buanderie','Garage'];
+// -- Documentation --
+const DOCU_POOL=[
+  {titre:'Projet d\'établissement 2024-2029',categorie:'Institutionnel'},
+  {titre:'Règlement de fonctionnement',categorie:'Institutionnel'},
+  {titre:'Livret d\'accueil',categorie:'Institutionnel'},
+  {titre:'Protocole de gestion des situations de violence',categorie:'Protocole'},
+  {titre:'Protocole canicule',categorie:'Protocole'},
+  {titre:'Procédure de signalement des EIG',categorie:'Protocole'},
+  {titre:'Charte des droits et libertés',categorie:'Droits'},
+  {titre:'Plan bleu',categorie:'Sécurité'},
+  {titre:'Document unique d\'évaluation des risques',categorie:'Sécurité'},
+  {titre:'Note de service — organisation des congés',categorie:'RH'},
+];
+// -- Budget --
+const BUDGET_ENV=[
+  {nom:'Activités & sorties',montant:6000,description:'Financement des sorties et activités des résidents'},
+  {nom:'Vêture / trousseau',montant:3000,description:'Achats de vêtements et effets personnels'},
+  {nom:'Projets personnalisés',montant:4500,description:'Dépenses liées aux projets individuels'},
+  {nom:'Vie collective',montant:2500,description:'Fêtes, repas à thème, décoration'},
+  {nom:'Fournitures pédagogiques',montant:1800,description:'Matériel d\'atelier et supports éducatifs'},
+];
+const BUDGET_MOTIFS=['Sortie au zoo','Achat de vêtements d\'hiver','Matériel atelier cuisine','Places de cinéma','Repas de Noël','Abonnement médiathèque','Sortie mer','Matériel Snoezelen','Chaussures de sport','Sortie bowling'];
+// -- Facturation --
+const FACT_ORGANISMES=['Conseil Départemental 34','Conseil Départemental 30','ARS Occitanie','Aide sociale à l\'hébergement'];
+const FACT_CATS=[{id:'hebergement',label:'Hébergement permanent'},{id:'accueil_jour',label:'Accueil de jour'},{id:'temporaire',label:'Accueil temporaire'}];
+// -- Admissions / candidats --
+const ADM_ORIGINES=['Domicile','IME','Foyer d\'hébergement','Hôpital psychiatrique','Autre établissement','ESAT'];
+const ADM_STATUTS=['en_attente','en_attente','etude','admis','abandon','refuse']; // vocabulaire de js/admissions.js
+const CAND_STATUTS=['recu','recu','entretien_planifie','accepte','refuse']; // colonnes du kanban js/recrutement.js
+
+// ========== Générateurs ==========
+function genChambres(){
+  const out=[]; const unites=['Aile A','Aile B','Unité protégée'];
+  for(let u=0;u<unites.length;u++){
+    for(let n=1;n<=6;n++){
+      out.push({ nom:`${['A','B','P'][u]}${String(n).padStart(2,'0')}`, unite:unites[u], capacite:1, notes:`Chambre individuelle ${DEMO_TAG}` });
+    }
+  }
+  return out;
+}
+function genEmployes(){
+  const used=new Set(); const out=[];
+  for(let i=0;i<12;i++){
+    const isF=Math.random()<0.55; let prenom,nom,full,g=0;
+    do{ prenom=pick(isF?PRENOMS_F:PRENOMS_M); nom=pick(NOMS); full=prenom+' '+nom; g++; }while(used.has(full)&&g<40);
+    used.add(full);
+    const heures=pick([35,35,35,28,20,17.5]);
+    const embOff=200+rnd(2500); // certains embauchés au cours de l'année simulée
+    out.push({ prenom, nom, poste:POSTES[i%POSTES.length], telephone:phone(), email:`${prenom}.${nom}`.toLowerCase().normalize('NFD').replace(/[^a-z.]/g,'')+'@foyer-demo.fr',
+      statut:'actif', dateEmbauche:dDay(embOff), color:pick(COLORS), heuresContrat:heures, salaireBase:1800+rnd(1400),
+      notes:`Salarié de démonstration ${DEMO_TAG}.`, _embOff:embOff });
+  }
+  return out;
+}
+function genContrats(employes){
+  return employes.map(e=>{
+    const embOff=(e._embOff!=null?e._embOff:9999);
+    const type= embOff<=540 ? pick(CONTRAT_TYPES) : 'cdi'; // pas de CDD de plusieurs années
+    const debut=e.dateEmbauche;
+    return { employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type, debut,
+      fin: type==='cdd'? dDay(-(30+rnd(300))) : '', temps: e.heuresContrat>=35?'plein':'partiel',
+      heures:e.heuresContrat, essai: type==='cdi'?dDay(Math.max(0, embOff-60-rnd(45))) : '', poste:e.poste, statut:'actif', // fin d'essai ~2-3 mois après l'embauche
+      notes:`Contrat de démonstration ${DEMO_TAG}`, avenants:[] };
+  });
+}
+function genAbsences(employes){
+  const out=[]; const sample=pickN(employes, Math.min(8,employes.length));
+  sample.forEach(e=>{
+    const start=5+rnd(Math.max(6, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))); const dur=2+rnd(20);
+    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type:pick(ABS_TYPES),
+      debut:dDay(start), fin:dDay(Math.max(0,start-dur)), prolongation:Math.random()<0.2,
+      visiteDate: Math.random()<0.4?dDay(start-1):'', visiteFaite:Math.random()<0.5,
+      declareeCpam:true, justifie:Math.random()<0.8, notes:`Arrêt de démonstration ${DEMO_TAG}`, justificatifPath:null });
+  });
+  return out;
+}
+function genConges(employes){
+  const out=[];
+  employes.forEach(e=>{
+    const n=2+rnd(3); // une année de demandes
+    for(let i=0;i<n;i++){
+      const fut=Math.random()<0.4; const base= fut? -(10+rnd(60)) : (10+rnd(Math.max(11, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))));
+      const st=pick(CONGE_STATUTS);
+      out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type:pick(CONGE_TYPES),
+        debut:dDay(base), fin:dDay(base-(2+rnd(10))), statut:st,
+        motif:`Congés de démonstration ${DEMO_TAG}`,
+        reponseMotif: st==='refuse'?'Effectif insuffisant sur la période':'',
+        traitePar: st==='en_attente'?'':'Chef de service', traiteParId:null,
+        dateTraitement: st==='en_attente'?null:dISO(Math.max(0,base+3)) });
+    }
+  });
+  return out;
+}
+function genPointages(employes){
+  const out=[];
+  for(let d=SIM_DAYS-1; d>=0; d--){ // un an de badgeage
+    const day=dDay(d); const dow=new Date(day+'T12:00:00').getDay();
+    if(dow===0) continue; // dimanche : peu de monde
+    employes.forEach(e=>{
+      if((e._embOff!=null?e._embOff:9999) < d) return; // pas encore embauché ce jour-là
+      if(Math.random()<0.25) return; // pas tout le monde chaque jour (temps partiels, repos)
+      const ah=6+rnd(4), am=pick([0,15,30]);
+      const dur=e.heuresContrat>=35? 7+rnd(2) : 4+rnd(3);
+      const dep=ah+dur;
+      out.push({ employeId:e.id, date:day,
+        arrivee:`${String(ah).padStart(2,'0')}:${String(am).padStart(2,'0')}`,
+        depart:`${String(Math.min(22,dep)).padStart(2,'0')}:${String(am).padStart(2,'0')}`,
+        pauseMin:pick([30,45,60]), valide: d>2 });
+    });
+  }
+  return out;
+}
+function genAstreintes(employes){
+  const out=[]; const cadres=employes.filter(e=>/chef|infirmier|éduc/i.test(e.poste)); const src=cadres.length?cadres:employes;
+  for(let i=0;i<52;i++){ // une astreinte par semaine sur l'année
+    const cand=src.filter(x=>(x._embOff!=null?x._embOff:9999)>=3+i*7);
+    const dispo=cand.length?cand:employes.filter(x=>(x._embOff!=null?x._embOff:9999)>=3+i*7);
+    if(!dispo.length) continue;
+    const e=pick(dispo);
+    out.push({ type:pick(['semaine','week-end','nuit','ferie']), date:dDay(3+i*7), nom:`${e.prenom} ${e.nom}`, tel:e.telephone, note:`Astreinte de démonstration ${DEMO_TAG}` });
+  }
+  return out;
+}
+function genEntretiens(employes){
+  // Entretien annuel/professionnel : positionnement qualitatif, JAMAIS de note chiffrée.
+  const out=[]; const sample=[...employes]; // campagne annuelle : tout le monde
+  sample.forEach((e,i)=>{
+    const done=i<Math.ceil(sample.length*0.6);
+    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(Math.max(31, Math.min(300,(e._embOff!=null?e._embOff:9999)-30)))):dDay(-(20+rnd(90))),
+      type:pick(ENTRETIEN_TYPES), statut: done?'realise':'planifie', evaluateur:'Chef de service éducatif',
+      bilan: done?pick(ENTRETIEN_BILANS):'', objectifs: done?pickN(ENTRETIEN_OBJECTIFS,2).join(' • '):'',
+      formations: done?'Souhait exprimé : formation sur le handicap psychique.':'', grille:{} });
+  });
+  return out;
+}
+function genFormations(employes){
+  const doms=pickN(FORM_DOMAINES, 8); // plan de formation sur l'année
+  return doms.map((dom,i)=>{
+    const past=i<5; const base= past? (30+i*65) : -(15+(i-5)*30);
+    // participants d'une formation passée : uniquement des salariés déjà embauchés à sa date
+    const eligibles = past ? employes.filter(e=>(e._embOff!=null?e._embOff:9999)>=base+2) : employes;
+    const parts=pickN(eligibles, Math.min(eligibles.length, 2+rnd(4))).map(e=>({ id:String(e.id), nom:`${e.prenom} ${e.nom}` }));
+    return { titre:FORM_TITRES[dom], organisme:pick(FORM_ORG), domaine:dom,
+      dateDebut:dDay(base), dateFin:dDay(base-1-rnd(2)), dureeHeures:pick([7,14,21]), cout:400+rnd(1600),
+      maxParticipants:pick([8,10,12]), statut: past?'terminee':'planifiee', participants:parts,
+      notes:`Formation de démonstration ${DEMO_TAG}` };
+  });
+}
+function genFichesPaie(employes){
+  const out=[]; const now=new Date();
+  for(let mo=1;mo<=12;mo++){ // 12 mois de bulletins
+    const d=new Date(now.getFullYear(), now.getMonth()-mo, 1);
+    const periode=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const offDays=Math.round((now.getTime()-d.getTime())/86400000);
+    employes.forEach(e=>{
+      if((e._embOff!=null?e._embOff:9999) < offDays) return; // pas encore embauché sur cette période
+      const brut=Math.round(e.salaireBase*(e.heuresContrat/35));
+      const primes=Math.random()<0.4?pick([50,80,120]):0;
+      const hsup=Math.random()<0.3?pick([1,2,4]):0;
+      const retenues=Math.round(brut*0.23);
+      const net=brut+primes+hsup*15-retenues;
+      out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, periode, brut, primes, heuresSup:hsup,
+        retenues, net, details:{ base:brut, prime:primes, heuresSup:hsup, cotisations:retenues },
+        fichierPath:null, fichierNom:'', ajoutePar:'Service RH (démo)' });
+    });
+  }
+  return out;
+}
+function genPeShifts(employes){
+  const out=[]; const shifts=[['07:00','14:30'],['14:00','21:30'],['09:00','17:00'],['21:00','07:00']];
+  for(let d=SIM_DAYS-1; d>=-7; d--){ // un an d'historique + la semaine à venir
+    const day=dDay(d);
+    employes.forEach(e=>{
+      if(d>0 && (e._embOff!=null?e._embOff:9999) < d) return; // pas encore embauché
+      if(Math.random()<0.45) return; // repos / rotation
+      const s=pick(shifts);
+      out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date:day, debut:s[0], fin:s[1] });
+    });
+  }
+  return out;
+}
+function genDocsEmploye(employes){
+  const cats=[['Contrat','contrat-travail.pdf'],['Diplôme','diplome.pdf'],['Pièce d\'identité','cni.pdf'],['RIB','rib.pdf']];
+  const out=[];
+  employes.forEach(e=>{
+    pickN(cats, 2+rnd(2)).forEach(c=>{
+      out.push({ employeId:e.id, name:`${c[0]} — ${e.prenom} ${e.nom}`, fileName:c[1], size:80000+rnd(300000),
+        mimeType:'application/pdf', category:c[0], docDate:dDay(Math.max(1, Math.min((e._embOff!=null?e._embOff:9999)-1, 60+rnd(600)))), fichierPath:null });
+    });
+  });
+  return out;
+}
+
+// ---- Résident : soins / médicaments / tâches / visites / échéances / viatrajectoire / factures ----
+function genPlanSoins(residents){
+  const out=[];
+  residents.forEach(r=>{
+    pickN(SOINS_POOL, 2+rnd(3)).forEach(s=>{
+      out.push({ _rid:r.id, residentId:r.id, cat:s.cat, freq:s.freq, libelle:s.libelle, detail:s.detail,
+        intervenant:s.intervenant, note:`Soin de démonstration ${DEMO_TAG}`, actif:Math.random()<0.9 });
+    });
+  });
+  return out;
+}
+function genMedicaments(residents, author){
+  const out=[];
+  residents.forEach(r=>{
+    const full=`${r.prenom} ${r.nom}`;
+    const traits=(r.sante&&r.sante.traitements)||[];
+    if(!traits.length) return;
+    for(let d=Math.min(20, windowOf(r._spec)-1); d>=0; d--){ // 3 semaines de distribution tracée
+      traits.forEach(t=>{
+        if(!(t.moments||[]).length) return; // « si besoin » : pas de prise prévue, donc rien à tracer
+        t.moments.forEach(mom=>{
+          const st=pick(MED_STATUTS);
+          out.push({ date:dDay(d), residentId:r.id, residentName:full, traitementId:t.id, medicament:t.nom,
+            posologie:t.posologie, moment:mom, statut:st, heure: mom==='matin'?'08:00':mom==='midi'?'12:30':mom==='coucher'?'21:30':'19:30',
+            auteur:author, observation: st==='refuse'?'A refusé la prise, retenté plus tard.':'' });
+        });
+      });
+    }
+  });
+  return out;
+}
+function genTaches(residents){
+  const out=[];
+  residents.forEach(r=>{
+    if(Math.random()<0.25) return; // pas tous les résidents
+    const full=`${r.prenom} ${r.nom}`;
+    pickN(TACHES_POOL, 1+rnd(3)).forEach(t=>{
+      out.push({ _rid:r.id, residentId:String(r.id), residentName:full, libelle:t.libelle, objectif:t.objectif,
+        ppeId:null, moment:t.moment, heure: t.moment==='matin'?'08:30':t.moment==='midi'?'12:45':'20:00',
+        recurrence:{ type:'quotidien' }, consigne:pick(TACHE_CONSIGNES), soutienAttendu:t.soutienAttendu,
+        actif:true, createdBy:'Équipe éducative (démo)' });
+    });
+  });
+  return out;
+}
+function genVisites(residents){
+  const out=[];
+  residents.forEach(r=>{
+    if(Math.random()<0.35) return;
+    const full=`${r.prenom} ${r.nom}`; const n=3+rnd(3); const w=windowOf(r._spec);
+    for(let i=0;i<n;i++){
+      const fut=Math.random()<0.35; const base= fut? -(3+rnd(20)) : (3+rnd(Math.max(4, w-4)));
+      const type=pick(VISITE_TYPES);
+      out.push({ residentId:r.id, residentName:full, type, personne:`${pick(PRENOMS_M.concat(PRENOMS_F))} ${r.nom}`,
+        lien:pick(VISITE_LIENS), date:dDay(base), heure:`${13+rnd(5)}:00`,
+        dateRetour: type==='permission'?dDay(base-2):'', heureRetour: type==='permission'?'18:00':'',
+        lieu: type==='sortie'?'Extérieur':'Foyer', notes:`Visite de démonstration ${DEMO_TAG}`,
+        statut: fut?'prevue':pick(['realisee','realisee','annulee']), statutAt: fut?null:dISO(base),
+        createdBy:'Équipe (démo)' });
+    }
+  });
+  return out;
+}
+function genEcheances(residents){
+  const out=[];
+  residents.forEach(r=>{
+    if(Math.random()<0.4) return;
+    const full=`${r.prenom} ${r.nom}`; const w=windowOf(r._spec);
+    pickN(ECHEANCE_TYPES, 1+rnd(2)).forEach(e=>{
+      const fut=Math.random()<0.7; const base= fut? -(15+rnd(180)) : Math.max(1, Math.min(w-2, 10+rnd(300)));
+      const done=!fut && Math.random()<0.6;
+      out.push({ type:e.type, libelle:e.libelle, date:dDay(base), residentId:r.id, residentName:full,
+        notes:`Échéance de démonstration ${DEMO_TAG}`, done, doneAt: done?dISO(base-1):null,
+        author:'Secrétariat (démo)', sourceId:null });
+    });
+  });
+  return out;
+}
+function genViaTrajectoire(residents){
+  const sample=pickN(residents, Math.min(15, residents.length));
+  return sample.map(r=>({ residentId:r.id, type:pick(VT_TYPES), mdph:pick(MDPH_LIST), date:dDay(Math.max(1, Math.min(windowOf(r._spec)-2, 10+rnd(340)))),
+    statut:pick(VT_STATUTS), commentaire:`Dossier ViaTrajectoire de démonstration ${DEMO_TAG}` }));
+}
+function genFactures(residents){
+  const now=new Date(); const out=[];
+  for(let mo=1;mo<=12;mo++){ // 12 mois de facturation
+    const d=new Date(now.getFullYear(), now.getMonth()-mo, 1);
+    const periode=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const offDays=Math.round((now.getTime()-d.getTime())/86400000);
+    residents.forEach(r=>{
+      // offset d'entrée BRUT (pas windowOf, plafonné à 365 : le 12e mois serait vide pour tous)
+      if((r._spec && r._spec._entreeOff!=null ? r._spec._entreeOff : Infinity) < offDays) return; // pas encore admis sur cette période
+      const cat=pick(FACT_CATS); const prix= cat.id==='hebergement'?pick([180,195,210]):pick([90,110,130]);
+      const nb= cat.id==='accueil_jour'?pick([18,20,22]):pick([28,29,30]);
+      const st=pick(['brouillon','envoyee','envoyee','payee','payee']);
+      out.push({ periode, residentId:r.id, residentNom:`${r.prenom} ${r.nom}`, organisme:pick(FACT_ORGANISMES),
+        categorieId:cat.id, categorieLabel:cat.label, nbJours:nb, prixJour:prix, montant:nb*prix, statut:st,
+        dateEnvoi: st!=='brouillon'?dDay(mo*30-5):null, datePaiement: st==='payee'?dDay(mo*30-15):null });
+    });
+  }
+  return out;
+}
+
+// ---- Institution : repas / nuit / satisfaction / cvs / répertoire / contacts / admissions / candidats / interventions / inventaire / documentation / budget ----
+function genRepasDays(residents){
+  const out=[];
+  for(let d=SIM_DAYS-1; d>=0; d--){ // un an de menus et de choix
+    const date=dDay(d);
+    const menus={ midi:{ '1':pick(MENUS_MIDI_1), '2':pick(MENUS_MIDI_2) }, soir:{ '1':pick(MENUS_SOIR_1), '2':pick(MENUS_SOIR_2) } };
+    const choixMenu={};
+    const present=residents.filter(r=>windowOf(r._spec)>=d+1); // seuls les résidents déjà admis choisissent
+    pickN(present, Math.ceil(present.length*0.7)).forEach(r=>{
+      choixMenu[r.id]={ midi:pick(['1','2']), soir:pick(['1','2']) };
+    });
+    out.push({ date, dayData:{ menus, choixMenu, _demo:true } });
+  }
+  return out;
+}
+function genNuits(employes, residents){
+  const veilleurs=employes.filter(e=>/nuit/i.test(e.poste)); const src=veilleurs.length?veilleurs:employes;
+  const out=[];
+  for(let d=SIM_DAYS-1; d>=0; d--){ // un an de cahier de nuit
+    const cand=src.filter(x=>(x._embOff!=null?x._embOff:9999)>=d);
+    const dispo=cand.length?cand:employes.filter(x=>(x._embOff!=null?x._embOff:9999)>=d);
+    if(!dispo.length) continue; // personne d'embauché à cette date : pas de cahier antidaté
+    const e=pick(dispo); const nbR=3+rnd(3);
+    const rondes=[]; const heures=['22:30','00:30','02:30','04:30','06:00'];
+    pickN(heures,nbR).sort().forEach(h=>rondes.push({ id:gid(), heure:h, ras:Math.random()<0.8, note:pick(NUIT_RONDE_NOTES) }));
+    const evenements=[];
+    if(Math.random()<0.5){ const adm=residents.filter(x=>windowOf(x._spec)>=d+1); // seulement des résidents déjà admis cette nuit-là
+      if(adm.length){ const ev=pick(NUIT_EVT); const r=pick(adm);
+        evenements.push({ id:gid(), type:ev.type, heure:`0${1+rnd(4)}:${pick(['00','15','30','45'])}`, residentId:r.id, residentName:`${r.prenom} ${r.nom}`, description:ev.description }); } }
+    const astreintes=[];
+    if(Math.random()<0.15){ astreintes.push({ id:gid(), heure:'03:10', cadre:'Cadre d\'astreinte', motif:'Avis médical', decision:'Surveillance simple, RAS au matin.' }); }
+    out.push({ date:dDay(d), veilleur:`${e.prenom} ${e.nom}`, veilleurId:e.id, ambiance:pick(NUIT_AMB), effectif:1+rnd(2),
+      rondes, evenements, astreintes, transmission:`Nuit consignée (démonstration ${DEMO_TAG}).` });
+  }
+  return out;
+}
+function genRepertoire(){ return REPERTOIRE_POOL.map(c=>({ ...c, adresse:'34000 Montpellier', notes:`Partenaire de démonstration ${DEMO_TAG}` })); }
+function genContactsExternes(){ return CONTACTS_EXT_POOL.map(c=>({ ...c, telephone:phone(), email:`${c.prenom}.${c.nom}`.toLowerCase()+'@intervenant-demo.fr', notes:`Intervenant de démonstration ${DEMO_TAG}` })); }
+function genAdmissions(){
+  const out=[];
+  for(let i=0;i<8;i++){
+    const isF=Math.random()<0.5; const prenom=pick(isF?PRENOMS_F:PRENOMS_M), nom=pick(NOMS);
+    const st=pick(ADM_STATUTS);
+    // chronologie : demande → décision → entrée (offsets dérivés, jamais inversés)
+    const offDem=30+rnd(320);
+    const offDec=Math.max(2, offDem-10-rnd(40));
+    const offEnt=Math.max(1, offDec-10-rnd(30));
+    out.push({ prenom, nom, dateNaissance:dDay((20+rnd(30))*365), dateDemande:dDay(offDem),
+      dateEntree: st==='admis'?dDay(offEnt):'', dateDecision: /admis|refuse/.test(st)?dDay(offDec):'',
+      dossier:'complet', origine:pick(ADM_ORIGINES), statut:st, contactNom:`${pick(PRENOMS_F)} ${nom}`, contactTel:phone(),
+      notes:`Admission de démonstration ${DEMO_TAG}`, residentId:null });
+  }
+  return out;
+}
+function genCandidats(){
+  const out=[];
+  for(let i=0;i<8;i++){
+    const isF=Math.random()<0.5; const prenom=pick(isF?PRENOMS_F:PRENOMS_M), nom=pick(NOMS); const st=pick(CAND_STATUTS);
+    const offC=5+rnd(330); // entretien forcément APRÈS la candidature
+    out.push({ prenom, nom, poste:pick(POSTES), tel:phone(), email:`${prenom}.${nom}`.toLowerCase()+'@candidat-demo.fr',
+      date:dDay(offC), dateEntretien: /entretien_planifie|entretien_fait|accepte|refuse/.test(st)?dDay(Math.max(1, offC-5-rnd(15))):'',
+      notes:`Candidature de démonstration ${DEMO_TAG}`, statut:st });
+  }
+  return out;
+}
+function genInterventions(employes){
+  return INTERV_POOL.map((it,i)=>{
+    const st=INTERV_STATUTS[i%INTERV_STATUTS.length]; const done=/traitee/.test(st);
+    const e=pick(employes);
+    return { lieu:it.lieu, desc:`${it.desc} ${DEMO_TAG}`, urgence:it.urgence, statut:st,
+      demandePar:`${e.prenom} ${e.nom}`, traitePar: done?'Agent technique':'', dateTraitement: done?dDay(2+rnd(200)):null,
+      photoTravaux:null, commentaireTravaux: done?'Réparation effectuée, testée et fonctionnelle.':'' };
+  });
+}
+function genInventaire(){
+  return INV_POOL.map(it=>({ cat:it.cat, nom:it.nom, ref:`INV-${1000+rnd(9000)}`, quantite:1+rnd(6), etat:it.etat,
+    lieu:pick(INV_LIEUX), dateAchat:dDay(200+rnd(2000)), dateMaintenance: Math.random()<0.5?dDay(-(30+rnd(200))):null,
+    notes:`Bien de démonstration ${DEMO_TAG}` }));
+}
+function genDocumentation(){
+  return DOCU_POOL.map(d=>({ titre:`${d.titre} ${DEMO_TAG}`, categorie:d.categorie, fichierNom:d.titre.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.pdf',
+    fichierMime:'application/pdf', fichierTaille:120000+rnd(800000), fichierPath:null, ajoutePar:'Direction (démo)' }));
+}
+function genBudgetDemandes(enveloppes, employes, residents){
+  const out=[];
+  for(let i=0;i<24;i++){ // dépenses réparties sur l'année
+    const env=pick(enveloppes); const e=pick(employes); const st=pick(['en_attente','en_attente','accepte','accepte','refuse','justifie']); // vocabulaire de js/budget.js
+    const rs=pickN(residents, 1+rnd(2));
+    // borné par l'embauche du demandeur ET l'admission des résidents bénéficiaires
+    const lim = Math.min((e._embOff!=null?e._embOff:9999), ...rs.map(r=>windowOf(r._spec))) - 2;
+    const off = Math.max(1, Math.min(lim, st==='en_attente' ? (1+rnd(15)) : (5+rnd(335)))); // les demandes en attente sont récentes
+    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, enveloppeId:env.id, enveloppeNom:env.nom,
+      montant:20+rnd(280), motif:`${pick(BUDGET_MOTIFS)} ${DEMO_TAG}`, dateDepense:dDay(off), dateDemande:dISO(off+2),
+      residentIds:rs.map(r=>r.id), residentNoms:rs.map(r=>`${r.prenom} ${r.nom}`), partage50:false, partFoyer:0, partResident:0,
+      remboursements:[], projetDocuments:[], justificatifs:[], statut:st,
+      reponseMotif: st==='refuse'?'Hors enveloppe disponible':'', traitePar: st==='en_attente'?'':'Chef de service',
+      dateTraitement: st==='en_attente'?null:dISO(Math.max(0,off-1)), dateJustifie: st==='justifie'?dISO(Math.max(0,off-3)):null });
+  }
+  return out;
+}
+function genSatReponses(questions, residents){
+  const out=[]; const qids=questions.map(q=>q.id);
+  for(let i=0;i<30;i++){ // questionnaires répartis sur l'année
+    const r=Math.random()<0.6?pick(residents):null;
+    const reponses={}; qids.forEach(id=>{ reponses[id]=1+rnd(5); });
+    const date = r ? dDay(5+rnd(Math.max(6, windowOf(r._spec)-5))) : dDay(5+rnd(350));
+    out.push({ repondant: r?`${r.prenom} ${r.nom}`:`Famille ${pick(NOMS)}`, lienResident:pick(SAT_LIENS),
+      residentId: r?r.id:null, date, commentaire:`${pick(SAT_COMMENTS)} ${DEMO_TAG}`, reponses });
+  }
+  return out;
+}
+function genCvsData(residents){
+  const membres=[];
+  const colleges=['residents','residents','familles','familles','personnel','personnel','direction','exterieur'];
+  colleges.forEach((col)=>{
+    let nom, rid=null;
+    if(col==='residents'){ const r=pick(residents); nom=`${r.prenom} ${r.nom}`; rid=r.id; }
+    else nom=`${pick(PRENOMS_F.concat(PRENOMS_M))} ${pick(NOMS)}`;
+    membres.push({ id:gid(), college:col, nom, residentId:rid, mandatDebut:dDay(380+rnd(250)), mandatFin:dDay(-(100+rnd(300))), statut:'actif', createdAt:dISO(300) });
+  });
+  const seances=[];
+  for(let i=0;i<5;i++){ // 4 séances trimestrielles passées + 1 à venir
+    const fut=i===0; const base= fut? -(20+rnd(30)) : (i*88 - 40 + rnd(20));
+    seances.push({ id:gid(), date:dDay(base), heure:'14:00',
+      ordreDuJour:'Vie quotidienne · Repas · Activités · Questions diverses',
+      presents: fut?'':'Membres du CVS, direction, équipe éducative',
+      compteRendu: fut?'':`Échanges constructifs sur la qualité des repas et les projets de sorties. ${DEMO_TAG}`,
+      resolutions:[], createdAt:dISO(base>0?base:30) });
+  }
+  const thematiques=[
+    { id:gid(), libelle:'Amélioration des repas', catIds:[], statut:'en_cours' },
+    { id:gid(), libelle:'Programme de sorties', catIds:[], statut:'en_cours' },
+  ];
+  return { membres, seances, thematiques, _demo:true };
+}
+
+// ═══════════════════════ Session / init ═══════════════════════
+let AUTHOR = { id:null, name:'Démo' };
+window.addEventListener('DOMContentLoaded', async () => {
+  logEl = document.getElementById('logBox');
+  progEl = document.getElementById('prog');
+  const info = document.getElementById('etabInfo');
+  const chk = document.getElementById('chkConfirm');
+  const btn = document.getElementById('btnRun');
+  const btnDel = document.getElementById('btnDel');
+  const btnRedis = document.getElementById('btnRedis');
+
+  const sess = (typeof Auth!=='undefined' && Auth.getSession) ? Auth.getSession() : null;
+  if(sess){ AUTHOR.id = sess.userId || null; AUTHOR.name = [sess.prenom, sess.nom].filter(Boolean).join(' ') || sess.username || 'Démo'; }
+
+  try{
+    if(typeof supabaseClient==='undefined') throw new Error('Client Supabase non chargé.');
+    try{ const { data:{ user } } = await supabaseClient.auth.getUser(); if(user && user.id) AUTHOR.id = user.id; }catch(_){}
+    const etabId = await sbGetEtablissementId();
+    // Nom convivial (renommable depuis Admin → Paramètres) ≠ identifiant technique (etablissement_id, permanent).
+    let etabNom = '';
+    try {
+      if(typeof sbGetAppConfig==='function'){ const cfg = await sbGetAppConfig(); etabNom = (cfg && cfg.settings && cfg.settings.etablissement) || ''; }
+      if(!etabNom && typeof DB!=='undefined' && DB.keys && DB.keys.settings){ etabNom = (DB.get(DB.keys.settings)||{}).etablissement || ''; }
+    } catch(_){}
+    const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    info.innerHTML = `📍 Établissement (session) : <b>${etabNom ? esc(etabNom) : etabId}</b>`
+      + (etabNom ? `<br><span style="opacity:.7;font-size:.78rem">Identifiant technique : <code>${etabId}</code> — permanent, ne change pas quand vous renommez le foyer</span>` : '')
+      + `<br>👤 Auteur des écritures : <b>${esc(AUTHOR.name)}</b>`;
+    chk.addEventListener('change', () => { btn.disabled = !chk.checked; });
+    btnDel.disabled = false;
+    if(btnRedis) btnRedis.disabled = false;
+  }catch(e){
+    info.innerHTML = `⚠️ Impossible de déterminer l'établissement : ${e.message}.<br>Connectez-vous à l'application (même onglet/domaine) avant d'ouvrir cette page.`;
+  }
+});
+
+// ═══════════════════════ Génération ═══════════════════════
+async function runSeed(){
+  const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel');
+  btn.disabled=true; btnDel.disabled=true; logEl.innerHTML=''; setProgress(1);
+  const t0=Date.now();
+  try{
+    log('Démarrage de la génération — 1 an d\'historique, comptez plusieurs minutes…','info');
+
+    // ── 0. Catalogue d'activités (d'abord : les inscriptions le référencent) ──
+    log('Création du catalogue d\'activités…','info');
+    const savedAct = await pool(ACTIVITES, a=>{ const act={...a, animateur:'Animateur (démo)'}; return sbSaveActivite({...act, bilansAnnuels: genBilansAnnuels(act)}); }, 4, (d,t)=>setProgress(1+d/t*3));
+    const actCatalog = savedAct.filter(Boolean).map(a=>({ id:a.id, nom:a.nom, categorie:a.categorie }));
+    log(`✓ ${actCatalog.length} activités créées`,'ok');
+
+    // ── 1. Résidents avec fiche COMPLÈTE ──
+    const usedNames=new Set();
+    const specs=[];
+    for(let i=0;i<50;i++){
+      const isF = Math.random()<0.5;
+      let prenom, nom, full, guard=0;
+      do{ prenom=pick(isF?PRENOMS_F:PRENOMS_M); nom=pick(NOMS); full=prenom+' '+nom; guard++; }while(usedNames.has(full)&&guard<30);
+      usedNames.add(full);
+      const y=1972+rnd(34), mo=1+rnd(12), da=1+rnd(28);
+      const rgT=pick(['normal','normal','normal','sans_sel','diabetique','sans_porc','hypocalorique']);
+      const rgX=pick(['normale','normale','normale','hachee','mixee']);
+      // ~2/3 présents depuis plus d'un an, ~1/3 admis au fil de l'année simulée
+      const entreeOff = Math.random()<0.65 ? (SIM_DAYS+30+rnd(1200)) : (15+rnd(SIM_DAYS-20));
+      specs.push({ prenom, nom, genre:isF?'F':'M', dob:`${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}`,
+        chambre:'', referent:'', coReferent:'', color:pick(COLORS), protection:pick(PROTECTIONS),
+        regime:{ type:rgT, texture:rgX }, _entreeOff:entreeOff, entree:dDay(entreeOff) });
+    }
+    specs.forEach((s,i)=>{ s.chambre = String(100 + Math.floor(i/12)*100 + (i%12) + 1); });
+    // trajectoires d'autonomie variées
+    const endsPool = shuffle([ ...Array(6).fill(1), ...Array(11).fill(2), ...Array(12).fill(3), ...Array(12).fill(4), ...Array(9).fill(5) ]);
+    specs.forEach((s,i)=>{ s._assessed = i>=5; s._end = endsPool[i]||3; s._start = clamp(s._end + pick([-2,-1,-1,0,0,1]),1,5); });
+
+    // ── Répartition des référents : 6 référés + 6 co-référés par COMPTE EXISTANT ──
+    // On lit les comptes de connexion (profiles) et on leur attribue des résidents ;
+    // les créneaux non attribués restent VIDES pour les futurs comptes (auto-assignation admin).
+    let userNames=[];
+    try{
+      if(typeof sbGetProfiles==='function'){
+        const profs = await sbGetProfiles();
+        userNames = (profs||[]).map(p=>`${p.prenom||''} ${p.nom||''}`.trim()).filter(Boolean);
+      }
+    }catch(e){ log('Lecture des comptes existants impossible : '+(e.message||e),'warn'); }
+    if(!userNames.length){ userNames = REFERENTS.slice(); log('Aucun compte existant trouvé → référents fictifs utilisés.','warn'); }
+    else log(`${userNames.length} compte(s) existant(s) → 6 référés + 6 co-référés chacun.`,'info');
+    const REF_PER=6, CO_PER=6;
+    // référents : 6 résidents libres par compte
+    let cursor=0; const orderRef=shuffle(specs.map((_,i)=>i));
+    userNames.forEach(name=>{
+      for(let k=0;k<REF_PER && cursor<orderRef.length;k++,cursor++){ specs[orderRef[cursor]].referent = name; }
+    });
+    // co-référents : 6 résidents par compte, dont le référent n'est pas ce compte et sans co-réf encore
+    userNames.forEach(name=>{
+      let n=0;
+      for(const idx of shuffle(specs.map((_,i)=>i))){
+        if(n>=CO_PER) break;
+        const s=specs[idx];
+        if(!s.coReferent && s.referent!==name){ s.coReferent=name; n++; }
+      }
+    });
+
+    log('Création de 50 résidents (fiche complète)…','info');
+    const savedRes = await pool(specs, async (s) => {
+      const prot = s.protection;
+      const { objectifs, objectifsSuivi } = objectifsFor(s);
+      const saved = await sbSaveResident({
+        prenom:s.prenom, nom:s.nom, genre:s.genre, dob:s.dob, entree:s.entree, statut:weightedStatut(),
+        chambre:s.chambre, referent:s.referent, coReferent:s.coReferent, regime:s.regime, color:s.color, notes:`Résident de démonstration ${DEMO_TAG}.`,
+        contacts:`Mère : ${phone()} · Frère/Sœur : ${phone()}`,
+        medecin:pick(MEDECINS), medecinTel:phone().replace(/^0[67]/,'04'), allergies:pick(ALLERGIES), nss:genNss(s), ins:'',
+        dmp:pick(['actif','en_attente','non_ouvert']), consent:pick(['oui','oui','en_attente']), consentDate:dDay(Math.max(1, s._entreeOff - rnd(8))), // consentement signé à l'admission
+        tuteur: prot ? `Me ${pick(NOMS)}` : '', tuteurTel: prot ? phone() : '',
+        protection:prot, protectionNom: prot ? pick(PROT_ORG) : '', protectionTel: prot ? phone() : '',
+        situationPro:'emploi', situationAdmin:pick(SIT_ADMIN), planningHebdo:WORK_HEBDO,
+        ressources: 'salaire, aah', organismeA:pick(ORG_A), dossierA:`D-${1000+rnd(9000)}`,
+        objectifs, objectifsSuivi,
+        sante: santeFor(s),
+        budget: budgetFor(s),
+        evaluations: evaluationsFor(s),
+        activites: activitesFor(actCatalog, s)
+      });
+      return saved ? { ...saved, _spec:s } : null;
+    }, 6, (d,t)=>setProgress(4 + d/t*20));
+    const residents = savedRes.filter(Boolean);
+    log(`✓ ${residents.length} résidents créés (médical, admin, objectifs, évaluations, activités remplis)`,'ok');
+    if(!residents.length){ throw new Error('Aucun résident créé — arrêt.'); }
+
+    // ── 2. Journal de bord ──
+    log('Génération du journal de bord…','info');
+    const journalTasks=[];
+    const OFFS_J=[360,335,310,285,260,235,210,185,160,140,120,100,85,70,56,42,30,21,14,10,7,4,2];
+    residents.forEach(r=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
+      const offs=offsWithin(spec, OFFS_J, 10+rnd(6)).sort((a,b)=>b-a);
+      offs.forEach(off=>{
+        const niv=niveauAt(spec, 1-off/w);
+        journalTasks.push({ residentId:r.id, resident:full, residentColor:r._spec.color||'',
+          categorie:pick(JOURNAL_CATS), date:dISO(off), contenu:pick(JOURNAL_TXT)(full),
+          accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv, visibilite:'equipe',
+          serafinphType: niv?'direct':'indirect', author:AUTHOR.name, authorId:AUTHOR.id,
+          readBy: AUTHOR.id?[String(AUTHOR.id)]:[], createdAt:dISO(off) });
+      });
+    });
+    await pool(journalTasks, t=>sbSaveJournalEntry(t), 8, (d,tot)=>setProgress(24 + d/tot*16));
+    log(`✓ ${journalTasks.length} entrées de journal créées`,'ok');
+
+    // ── 3. Transmissions ──
+    log('Génération des transmissions…','info');
+    const trTasks=[];
+    const OFFS_T=[350,320,290,255,225,195,165,135,105,80,60,45,32,21,14,9,6,3,1];
+    residents.forEach(r=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
+      const offs=offsWithin(spec, OFFS_T, 8+rnd(5)).sort((a,b)=>b-a);
+      offs.forEach(off=>{
+        const niv=niveauAt(spec, 1-off/w);
+        trTasks.push({ date:dDay(off), shift:pick(TR_SHIFTS), cat:pick(TR_CATS), priority: Math.random()<.12?'urgent':'normal',
+          content:pick(TR_TXT), residentId:r.id, residentName:full, authorId:AUTHOR.id, authorName:AUTHOR.name,
+          readBy: AUTHOR.id?[String(AUTHOR.id)]:[], soutien: niv?pick(ACCOMP_TXT):'', soutienNiveau:niv, createdAt:dISO(off) });
+      });
+    });
+    await pool(trTasks, t=>sbSaveTransmission(t), 8, (d,tot)=>setProgress(40 + d/tot*14));
+    log(`✓ ${trTasks.length} transmissions créées`,'ok');
+
+    // ── 4. Agenda ──
+    log('Génération de l\'agenda…','info');
+    const planEvents=[];
+    const OFFS_P=[340,300,265,230,195,160,125,95,65,40,22,10,-3,-8,-15];
+    residents.forEach(r=>{
+      const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
+      offsWithin(spec, OFFS_P, 6+rnd(4)).forEach(off=>{
+        const type=pick(PLAN_TYPES);
+        const niv = spec._assessed ? niveauAt(spec, off<=0?1:1-off/w) : '';
+        planEvents.push({ titre:pick(PLAN_TITRES[type]), residentId:r.id, residentName:full, type, date:dDay(off),
+          heure:`${9+rnd(8)}:${Math.random()<.5?'00':'30'}`, duree:pick(['30','60','90','120']), color:r._spec.color||'#2563eb',
+          desc:`Activité de démonstration ${DEMO_TAG}`, accompagnement: niv?pick(ACCOMP_TXT):'', niveauSoutien:niv, serafin: isSerafinDirect(niv)?'directe':'indirecte' });
+      });
+    });
+    for(let i=0;i<planEvents.length;i+=100){ await sbSavePlanningEventsBulk(planEvents.slice(i,i+100)); setProgress(54 + (i/planEvents.length)*6); }
+    log(`✓ ${planEvents.length} événements d'agenda créés`,'ok');
+
+    // ── 5. Présences (365 j — un an d'historique) ──
+    log('Génération des présences (365 jours, cela peut prendre une minute)…','info');
+    const dayOffs=[]; for(let d=SIM_DAYS-1; d>=0; d--) dayOffs.push(d);
+    await pool(dayOffs, async (d)=>{
+      const pids=residents.filter(r=>windowOf(r._spec)>=d+1).map(r=>r.id); // présent seulement après son entrée
+      if(!pids.length) return;
+      const day=dDay(d);
+      await sbSetPresencesBulk(pids, day, 'present');
+      const absents=pickN(pids, Math.min(pids.length, 1+rnd(3)));
+      for(const rid of absents){ const st = Math.random()<.5?'absent':'sortie'; await sbSetPresence(rid, day, st, st==='absent'?'Motif familial':'Sortie encadrée'); }
+    }, 5, (done,tot)=>setProgress(60 + done/tot*10));
+    log(`✓ Présences de l'année écoulée créées (${SIM_DAYS} jours)`,'ok');
+
+    // ── 6. Incidents ──
+    log('Génération des incidents…','info');
+    const incTasks=[];
+    for(let i=0;i<30;i++){ // ~30 incidents répartis sur l'année
+      const r=pick(residents), full=`${r.prenom} ${r.nom}`, type=pick(INCIDENT_TYPES), off=2+rnd(Math.max(3, windowOf(r._spec)-2));
+      incTasks.push({ titre:`${type[0].toUpperCase()+type.slice(1)} — ${full}`, type, gravite:pick(INCIDENT_GRAV),
+        date:dDay(off), heure:`${9+rnd(11)}:${Math.random()<.5?'00':'30'}`, residentId:r.id, residentName:full,
+        lieu:pick(['Salle commune','Chambre','Couloir','Extérieur','Réfectoire']), description:`${INCIDENT_DESC[type]||''} ${DEMO_TAG}`,
+        statut:pick(['declare','cours','valide']), declaredBy:AUTHOR.name, declaredById:AUTHOR.id, declaredAt:dISO(off) });
+    }
+    await pool(incTasks, t=>sbSaveIncident(t), 6, (d,tot)=>setProgress(70 + d/tot*4));
+    log(`✓ ${incTasks.length} incidents créés`,'ok');
+
+    // ── 7. Avenants PPE (1 par résident) ──
+    log('Génération des avenants PPE…','info');
+    await pool(residents, r=>sbSavePpe(ppeFor(r)), 6, (d,tot)=>setProgress(74 + d/tot*3));
+    log(`✓ ${residents.length} avenants PPE créés`,'ok');
+
+    // ── 8. Documents (métadonnées) ──
+    log('Génération des documents…','info');
+    const docTasks = residents.flatMap(r=>docsFor(r));
+    await pool(docTasks, d=>sbSaveDocumentResident(d), 8, (dn,tot)=>setProgress(77 + dn/tot*3));
+    log(`✓ ${docTasks.length} documents créés`,'ok');
+
+    // ── 9. Évaluations (table + page bilan/IA) ──
+    log('Génération des évaluations (grille MIF)…','info');
+    // Jusqu'à 3 points de mesure sur l'année : progression _start → _end visible sur les courbes
+    const evalTasks=[];
+    residents.forEach(r=>{
+      const w=windowOf(r._spec);
+      const pts=[{off:Math.max(2, Math.min(w-2, 15+rnd(35))), lvl:r._spec._end}];
+      if(w>225) pts.push({off:170+rnd(50), lvl:(r._spec._start+r._spec._end)/2});
+      if(w>350) pts.push({off:300+rnd(45), lvl:r._spec._start});
+      pts.forEach(p=>evalTasks.push({ residentId:r.id, grille:'mif', date:dDay(p.off),
+        note:`Évaluation de démonstration ${DEMO_TAG}`, scores:mifScores(p.lvl) }));
+    });
+    await pool(evalTasks, e=>sbSaveEvaluation(e), 6, (d,tot)=>setProgress(80 + d/tot*3));
+    log(`✓ ${evalTasks.length} évaluations créées`,'ok');
+
+    // ══════════ SECTIONS SUPPLÉMENTAIRES — remplissage intégral du site ══════════
+    let _np=0; const _NPT=24; const npTick=()=>{ _np++; setProgress(83 + Math.min(1,_np/_NPT)*16); };
+
+    // ── Chambres ──
+    if(typeof sbSaveChambre==='function'){
+      log('Création des chambres…','info');
+      await pool(genChambres(), c=>sbSaveChambre(c), 6);
+      log('✓ Chambres créées','ok');
+    } npTick();
+
+    // ── Salariés (RH) — requis pour contrats/paie/planning/nuit ──
+    let employes=[];
+    if(typeof sbSaveEmploye==='function'){
+      log('Création des salariés…','info');
+      employes=(await pool(genEmployes(), async e=>{ const saved=await sbSaveEmploye(e); return saved?{...saved,_embOff:e._embOff}:null; }, 6)).filter(Boolean);
+      log(`✓ ${employes.length} salariés créés`,'ok');
+    } npTick();
+
+    if(employes.length){
+      if(typeof sbSaveContrat==='function'){ const x=genContrats(employes); await pool(x, c=>sbSaveContrat(c), 6); log(`✓ ${x.length} contrats créés`,'ok'); } npTick();
+      if(typeof sbSaveAbsence==='function'){ const x=genAbsences(employes); await pool(x, a=>sbSaveAbsence(a), 6); log(`✓ ${x.length} absences / arrêts créés`,'ok'); } npTick();
+      if(typeof sbSaveConge==='function'){ const x=genConges(employes); await pool(x, c=>sbSaveConge(c), 6); log(`✓ ${x.length} demandes de congés créées`,'ok'); } npTick();
+      if(typeof sbUpsertPointage==='function'){ const x=genPointages(employes); await pool(x, p=>sbUpsertPointage(p), 8); log(`✓ ${x.length} pointages créés`,'ok'); } npTick();
+      if(typeof sbSaveAstreinte==='function'){ const x=genAstreintes(employes); await pool(x, a=>sbSaveAstreinte(a), 6); log(`✓ ${x.length} astreintes créées`,'ok'); } npTick();
+      if(typeof sbSaveEntretien==='function'){ const x=genEntretiens(employes); await pool(x, e=>sbSaveEntretien(e), 6); log(`✓ ${x.length} entretiens professionnels créés`,'ok'); } npTick();
+      if(typeof sbSaveFormation==='function'){ const x=genFormations(employes); await pool(x, f=>sbSaveFormation(f), 4); log(`✓ ${x.length} formations créées`,'ok'); } npTick();
+      if(typeof sbSaveFichePaie==='function'){ const x=genFichesPaie(employes); await pool(x, f=>sbSaveFichePaie(f), 8); log(`✓ ${x.length} fiches de paie créées`,'ok'); } npTick();
+      if(typeof sbBulkInsertPeShifts==='function'){
+        const x=genPeShifts(employes);
+        for(let i=0;i<x.length;i+=200){ await sbBulkInsertPeShifts(x.slice(i,i+200)); }
+        log(`✓ ${x.length} créneaux de planning équipe créés (1 an)`,'ok');
+      } else if(typeof sbSavePeShift==='function'){ const x=genPeShifts(employes); await pool(x, s=>sbSavePeShift(s), 8); log(`✓ ${x.length} créneaux de planning équipe créés`,'ok'); } npTick();
+      if(typeof sbSaveDocEmploye==='function'){ const x=genDocsEmploye(employes); await pool(x, d=>sbSaveDocEmploye(d), 8); log(`✓ ${x.length} documents salariés créés`,'ok'); } npTick();
+    } else { log('Aucun salarié créé → sections RH ignorées.','warn'); }
+
+    // ── Plans de soins (+ coches « fait ») ──
+    if(typeof sbSavePlanSoins==='function'){
+      log('Génération des plans de soins…','info');
+      const savedSoins=(await pool(genPlanSoins(residents), s=>sbSavePlanSoins(s), 8)).filter(Boolean);
+      log(`✓ ${savedSoins.length} soins créés`,'ok');
+      if(typeof sbSetPsCoche==='function'){
+        const cc=[]; savedSoins.forEach(s=>{ if(Math.random()<0.7) for(let d=0;d<14;d++){ if(Math.random()<0.65) cc.push({soinId:s.id, date:dDay(d)}); } });
+        await pool(cc, c=>sbSetPsCoche({soinId:c.soinId, date:c.date, par:AUTHOR.name, parId:AUTHOR.id}), 8);
+        log(`✓ ${cc.length} coches de soins « fait » créées`,'ok');
+      }
+    } npTick();
+
+    // ── Médicaments (distribution) ──
+    if(typeof sbSaveMedDistrib==='function'){
+      const x=genMedicaments(residents, AUTHOR.name); await pool(x, m=>sbSaveMedDistrib(m), 10);
+      log(`✓ ${x.length} distributions de médicaments créées`,'ok');
+    } npTick();
+
+    // ── Tâches d'accompagnement (+ coches) ──
+    if(typeof sbSaveTache==='function'){
+      const savedT=(await pool(genTaches(residents), t=>sbSaveTache(t), 8)).filter(Boolean);
+      log(`✓ ${savedT.length} tâches d'accompagnement créées`,'ok');
+      if(typeof sbSetCoche==='function'){
+        const cc=[]; savedT.forEach(t=>{ for(let d=0;d<14;d++){ if(Math.random()<0.6) cc.push({tacheId:t.id, date:dDay(d), statut:Math.random()<0.85?'fait':'reporte'}); } });
+        await pool(cc, c=>sbSetCoche({tacheId:c.tacheId, date:c.date, statut:c.statut, motif: c.statut==='reporte'?pick(['Fatigue','Refus','Absent du foyer']):'', par:AUTHOR.name, parId:AUTHOR.id}), 8);
+        log(`✓ ${cc.length} coches de tâches créées`,'ok');
+      }
+    } npTick();
+
+    // ── Visites / droits de visite ──
+    if(typeof sbSaveVisite==='function'){ const x=genVisites(residents); await pool(x, v=>sbSaveVisite(v), 8); log(`✓ ${x.length} visites créées`,'ok'); } npTick();
+    // ── Échéances ──
+    if(typeof sbSaveEcheance==='function'){ const x=genEcheances(residents); await pool(x, e=>sbSaveEcheance(e), 8); log(`✓ ${x.length} échéances créées`,'ok'); } npTick();
+    // ── ViaTrajectoire ──
+    if(typeof sbSaveViaTrajectoire==='function'){ const x=genViaTrajectoire(residents); await pool(x, d=>sbSaveViaTrajectoire(d), 6); log(`✓ ${x.length} dossiers ViaTrajectoire créés`,'ok'); } npTick();
+    // ── Facturation ──
+    if(typeof sbSaveFacture==='function'){ const x=genFactures(residents); await pool(x, f=>sbSaveFacture(f), 10); log(`✓ ${x.length} factures créées`,'ok'); } npTick();
+    // ── Repas (menus + choix) ──
+    if(typeof sbSaveRepasJour==='function'){
+      let repasDates=new Set();
+      try{ if(typeof sbGetRepasAll==='function'){ repasDates=new Set(Object.keys(await sbGetRepasAll()||{})); } }catch(_){}
+      const x=genRepasDays(residents).filter(r=> !repasDates.has(r.date)); // ne pas écraser un jour de repas déjà renseigné
+      await pool(x, r=>sbSaveRepasJour(r.date, r.dayData), 6); log(`✓ ${x.length} jours de repas créés${repasDates.size?` (${repasDates.size} jour(s) existant(s) conservé(s))`:''}`,'ok');
+    } npTick();
+    // ── Cahier de nuit ── (nuits : contrainte unique etab+date, pas d'upsert dans la couche →
+    //    on récupère les dates déjà présentes pour les METTRE À JOUR au lieu d'insérer en double)
+    if(typeof sbSaveNuit==='function' && employes.length){
+      let nuitDates=new Set();
+      try{ if(typeof sbGetNuits==='function'){ (await sbGetNuits()||[]).forEach(n=>{ if(n && n.date) nuitDates.add(n.date); }); } }catch(_){}
+      const x=genNuits(employes, residents).filter(n=> !nuitDates.has(n.date)); // ne JAMAIS écraser une nuit déjà saisie
+      await pool(x, n=>sbSaveNuit(n), 6); log(`✓ ${x.length} nuits consignées${nuitDates.size?` (${nuitDates.size} date(s) existante(s) conservée(s))`:''}`,'ok');
+    } npTick();
+
+    // ── Satisfaction (questions + questionnaires) ──
+    if(typeof sbSaveSatQuestion==='function' && typeof sbSaveSatisfaction==='function'){
+      const savedQ=(await pool(SAT_QUESTIONS.map(q=>({label:`${q.label} ${DEMO_TAG}`, cat:q.cat})), q=>sbSaveSatQuestion(q), 4)).filter(Boolean);
+      const x=genSatReponses(savedQ, residents); await pool(x, s=>sbSaveSatisfaction(s), 8);
+      log(`✓ ${savedQ.length} questions + ${x.length} questionnaires de satisfaction créés`,'ok');
+    } npTick();
+
+    // ── CVS (membres, séances, thématiques) ──
+    if(typeof sbSaveCvs==='function'){
+      let cvsExiste=false;
+      try{ if(typeof sbGetCvs==='function'){ const c=await sbGetCvs(); cvsExiste = !!(c && ((c.membres&&c.membres.length)||(c.seances&&c.seances.length))); } }catch(_){}
+      if(cvsExiste){ log('CVS déjà renseigné → conservé (non écrasé)','warn'); }
+      else { await sbSaveCvs(genCvsData(residents)); log('✓ CVS renseigné (membres, séances, thématiques)','ok'); }
+    } npTick();
+    // ── Répertoire partenaires ──
+    if(typeof sbSaveRepertoire==='function'){ const x=genRepertoire(); await pool(x, c=>sbSaveRepertoire(c), 6); log(`✓ ${x.length} contacts répertoire créés`,'ok'); } npTick();
+    // ── Contacts externes / intervenants ──
+    if(typeof sbSaveContactExterne==='function'){ const x=genContactsExternes(); await pool(x, c=>sbSaveContactExterne(c), 6); log(`✓ ${x.length} intervenants externes créés`,'ok'); } npTick();
+    // ── Admissions ──
+    if(typeof sbSaveAdmission==='function'){ const x=genAdmissions(); await pool(x, a=>sbSaveAdmission(a), 6); log(`✓ ${x.length} dossiers d'admission créés`,'ok'); } npTick();
+    // ── Candidats (recrutement) ──
+    if(typeof sbSaveCandidat==='function'){ const x=genCandidats(); await pool(x, c=>sbSaveCandidat(c), 6); log(`✓ ${x.length} candidatures créées`,'ok'); } npTick();
+    // ── Interventions techniques ──
+    if(typeof sbSaveIntervention==='function' && employes.length){ const x=genInterventions(employes); await pool(x, i=>sbSaveIntervention(i), 6); log(`✓ ${x.length} interventions techniques créées`,'ok'); } npTick();
+    // ── Inventaire ──
+    if(typeof sbSaveInventaire==='function'){ const x=genInventaire(); await pool(x, i=>sbSaveInventaire(i), 6); log(`✓ ${x.length} biens d'inventaire créés`,'ok'); } npTick();
+    // ── Documentation ──
+    if(typeof sbSaveDocumentation==='function'){ const x=genDocumentation(); await pool(x, d=>sbSaveDocumentation(d), 6); log(`✓ ${x.length} documents institutionnels créés`,'ok'); } npTick();
+    // ── Budget (enveloppes + demandes) ──
+    if(typeof sbSaveBudgetEnveloppe==='function'){
+      const savedEnv=(await pool(BUDGET_ENV.map(e=>({...e, description:`${e.description} ${DEMO_TAG}`})), e=>sbSaveBudgetEnveloppe(e), 4)).filter(Boolean);
+      log(`✓ ${savedEnv.length} enveloppes budgétaires créées`,'ok');
+      if(typeof sbSaveBudgetDemande==='function' && savedEnv.length && employes.length){
+        const x=genBudgetDemandes(savedEnv, employes, residents); await pool(x, d=>sbSaveBudgetDemande(d), 8);
+        log(`✓ ${x.length} demandes de budget créées`,'ok');
+      }
+    } npTick();
+
+    setProgress(100);
+    log('','info');
+    log('═══════════════════════════════════════','info');
+    log(`✅ Terminé en ${Math.round((Date.now()-t0)/1000)} s — rechargez l'application.`,'ok');
+    log(`   1 an d'historique · 50 résidents (fiche complète) · ${employes.length} salariés · référés répartis · RH, finances, soins, vie institutionnelle remplis`,'info');
+    log('═══════════════════════════════════════','info');
+  }catch(e){
+    log('ERREUR : '+(e&&e.message||e),'err'); console.error(e);
+  }finally{
+    btn.disabled=false; btnDel.disabled=false;
+  }
+}
+
+// ═══════════════════════ Réattribution des référés (6 + 6 par éducateur) ═══════════════════════
+// Corrige une accumulation (relances multiples) sans rien supprimer : recalcule referent/co_referent
+// des résidents [démo] pour que chaque compte éducateur ait EXACTEMENT 6 référés + 6 co-référés.
+async function redistribuerReferes(){
+  if(!confirm('Réattribuer les référents des résidents [démo] : exactement 6 référés + 6 co-référés par compte éducateur existant.\n\nAucun résident n\'est supprimé — seuls les champs référent / co-référent des résidents [démo] sont recalculés. Vos vrais résidents (non [démo]) ne sont pas touchés.')) return;
+  const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel'), btnRedis=document.getElementById('btnRedis');
+  btn.disabled=true; btnDel.disabled=true; if(btnRedis) btnRedis.disabled=true; logEl.innerHTML=''; setProgress(1);
+  try{
+    // 1. Comptes éducateurs (connexion)
+    let userNames=[];
+    if(typeof sbGetProfiles==='function'){ const p=await sbGetProfiles(); userNames=(p||[]).map(x=>`${x.prenom||''} ${x.nom||''}`.trim()).filter(Boolean); }
+    if(!userNames.length){ log('Aucun compte de connexion trouvé — rien à réattribuer.','warn'); return; }
+    log(`${userNames.length} compte(s) éducateur.`,'info');
+    // 2. Résidents [démo] actifs
+    const all=await sbGetResidents();
+    const demo=all.filter(r => (r.notes||'').includes(DEMO_TAG) && r.statut!=='sorti');
+    if(!demo.length){ log('Aucun résident [démo] trouvé.','warn'); return; }
+    log(`${demo.length} résidents [démo] — remise à 6 référés + 6 co-référés par éducateur…`,'info');
+    // 3. Cible recalculée (par défaut : plus aucun référent → on repart de zéro pour la démo)
+    const target=new Map(); demo.forEach(r=>target.set(String(r.id), { referent:'', coReferent:'' }));
+    const REF_PER=6, CO_PER=6;
+    const ids=demo.map(r=>String(r.id));
+    // référents : 6 par éducateur
+    let cursor=0; const order=shuffle(ids);
+    userNames.forEach(name=>{ for(let k=0;k<REF_PER && cursor<order.length;k++,cursor++){ target.get(order[cursor]).referent=name; } });
+    // co-référents : 6 par éducateur (résident dont le référent n'est pas ce compte et sans co-réf)
+    userNames.forEach(name=>{ let n=0; for(const id of shuffle(ids)){ if(n>=CO_PER) break; const t=target.get(id); if(!t.coReferent && t.referent!==name){ t.coReferent=name; n++; } } });
+    // 4. N'écrire QUE les résidents dont référent/co-référent change réellement (update ciblé 2 colonnes)
+    const _n=s=>(s||'').trim();
+    const changed=demo.filter(r=>{ const t=target.get(String(r.id)); return _n(r.referent)!==_n(t.referent) || _n(r.coReferent)!==_n(t.coReferent); });
+    if(!changed.length){ setProgress(100); log('✅ Rien à changer : la répartition est déjà à 6 + 6 par éducateur.','ok'); return; }
+    log(`${changed.length} résident(s) à mettre à jour…`,'info');
+    await pool(changed, async r=>{
+      const t=target.get(String(r.id));
+      const { error } = await supabaseClient.from('residents')
+        .update({ referent: t.referent||null, co_referent: t.coReferent||null, updated_at: new Date().toISOString() })
+        .eq('id', r.id);
+      if(error) throw error;
+    }, 8, (d,tot)=>setProgress(1+d/tot*98));
+    setProgress(100);
+    const perEdu = Math.min(REF_PER, Math.floor(demo.length/Math.max(1,userNames.length)));
+    log(`✅ Terminé — chaque éducateur a désormais 6 référés + 6 co-référés (12 au total).`,'ok');
+    log(`   ${changed.length} fiche(s) mise(s) à jour · ${demo.length - REF_PER*userNames.length > 0 ? (demo.length - REF_PER*userNames.length) : 0} résident(s) [démo] laissés sans référent (surplus des relances).`,'info');
+    log('   Rechargez le tableau de bord de l\'éducateur pour voir « Mes référés · 12 ».','info');
+  }catch(e){ log('ERREUR : '+(e&&e.message||e),'err'); console.error(e); }
+  finally{ btn.disabled=false; btnDel.disabled=false; if(btnRedis) btnRedis.disabled=false; }
+}
+
+// ═══════════════════════ Suppression des données démo ═══════════════════════
+async function deleteDemo(){
+  if(!confirm('Supprimer toutes les données de démonstration [démo] ?\n\n• Résidents et tout leur dossier (journal, transmissions, agenda, incidents, PPE, documents, évaluations, soins, médicaments, tâches, visites, échéances, ViaTrajectoire, factures)\n• Salariés [démo] et leur RH (contrats, absences, congés, entretiens, paie, planning, documents)\n• Vie institutionnelle (répertoire, intervenants, admissions, candidats, interventions, inventaire, documentation, satisfaction, CVS, budget, chambres, astreintes, formations)\n\nLes vraies données ne sont pas touchées.')) return;
+  const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel');
+  btn.disabled=true; btnDel.disabled=true; logEl.innerHTML=''; setProgress(1);
+  try{
+    log('Recherche des données de démonstration…','info');
+    const [residents, journal, transmissions, planning, incidents, ppe, docs, evals, activites] = await Promise.all([
+      sbGetResidents(), sbGetJournalEntries(), sbGetTransmissions(), sbGetPlanningEvents(), sbGetIncidents(),
+      (typeof sbGetPpe==='function'?sbGetPpe():Promise.resolve([])),
+      (typeof sbGetDocumentsResident==='function'?sbGetDocumentsResident():Promise.resolve([])),
+      (typeof sbGetEvaluations==='function'?sbGetEvaluations():Promise.resolve([])),
+      (typeof sbGetActivites==='function'?sbGetActivites():Promise.resolve([]))
+    ]);
+    const demoRes = residents.filter(r => (r.notes||'').includes(DEMO_TAG));
+    if(!demoRes.length){ log('Aucun résident [démo] trouvé.','warn'); btn.disabled=false; btnDel.disabled=false; return; }
+    const ids = new Set(demoRes.map(r=>String(r.id)));
+    log(`${demoRes.length} résidents [démo] trouvés — suppression des données liées…`, 'info');
+
+    const jDel=journal.filter(e=>ids.has(String(e.residentId)));
+    const tDel=transmissions.filter(e=>ids.has(String(e.residentId)));
+    const pDel=planning.filter(e=>ids.has(String(e.residentId)));
+    const iDel=incidents.filter(e=>ids.has(String(e.residentId)));
+    const ppDel=(ppe||[]).filter(e=>ids.has(String(e.residentId)));
+    const dDel=(docs||[]).filter(e=>ids.has(String(e.residentId)));
+    const eDel=(evals||[]).filter(e=>ids.has(String(e.residentId)));
+    const aDel=(activites||[]).filter(a=>(a.animateur||'').includes('démo') || (a.nom||'').includes(DEMO_TAG));
+
+    await pool(jDel, e=>sbDeleteJournalEntry(e.id), 8, (d,t)=>setProgress(3+d/t*14));
+    log(`✓ ${jDel.length} entrées de journal supprimées`,'ok');
+    await pool(tDel, e=>sbDeleteTransmission(e.id), 8, (d,t)=>setProgress(17+d/t*14));
+    log(`✓ ${tDel.length} transmissions supprimées`,'ok');
+    await pool(pDel, e=>sbDeletePlanningEvent(e.id), 8, (d,t)=>setProgress(31+d/t*10));
+    log(`✓ ${pDel.length} événements d'agenda supprimés`,'ok');
+    await pool(iDel, e=>sbDeleteIncident(e.id), 6, (d,t)=>setProgress(41+d/t*8));
+    log(`✓ ${iDel.length} incidents supprimés`,'ok');
+    await pool(ppDel, e=>sbDeletePpe(e.id), 6, (d,t)=>setProgress(49+d/t*10));
+    log(`✓ ${ppDel.length} avenants PPE supprimés`,'ok');
+    await pool(dDel, e=>sbDeleteDocumentResident(e.id), 8, (d,t)=>setProgress(59+d/t*12));
+    log(`✓ ${dDel.length} documents supprimés`,'ok');
+    await pool(eDel, e=>sbDeleteEvaluation(e.id), 6, (d,t)=>setProgress(71+d/t*8));
+    log(`✓ ${eDel.length} évaluations supprimées`,'ok');
+    await pool(aDel, a=>sbDeleteActivite(a.id), 4, (d,t)=>setProgress(79+d/t*3));
+    log(`✓ ${aDel.length} activités [démo] supprimées`,'ok');
+
+    // ── Nettoyage étendu : soins, RH, finances, vie institutionnelle ──
+    log('Nettoyage des données liées (soins, RH, finances, vie institutionnelle)…','info');
+    const _tag = s => (s||'').includes(DEMO_TAG);
+    const _byRid = e => ids.has(String(e.residentId));
+    const _delBy = async (getFn, delFn, pred, label) => {
+      if(typeof window[getFn]!=='function' || typeof window[delFn]!=='function') return;
+      try{
+        const all = await window[getFn]();
+        const del = (all||[]).filter(pred);
+        await pool(del, e=>window[delFn](e.id), 8);
+        if(del.length) log(`✓ ${del.length} ${label} supprimé(s)`,'ok');
+      }catch(e){ log(`Nettoyage ${label} ignoré : ${e.message||e}`,'warn'); }
+    };
+    // Salariés [démo] et leurs ids (pour les tables RH liées)
+    let demoEmp=[], empIds=new Set();
+    if(typeof sbGetEmployes==='function'){
+      try{ const emps=await sbGetEmployes(); demoEmp=(emps||[]).filter(e=>_tag(e.notes)); empIds=new Set(demoEmp.map(e=>String(e.id))); }catch(_){}
+    }
+    const _byEid = e => empIds.has(String(e.employeId));
+
+    // Résident-lié
+    await _delBy('sbGetPlanSoins','sbDeletePlanSoins',_byRid,'soins');
+    await _delBy('sbGetMedDistrib','sbDeleteMedDistrib',_byRid,'distributions médicaments');
+    await _delBy('sbGetVisites','sbDeleteVisite',_byRid,'visites');
+    await _delBy('sbGetEcheances','sbDeleteEcheance',_byRid,'échéances');
+    await _delBy('sbGetViaTrajectoire','sbDeleteViaTrajectoire',_byRid,'dossiers ViaTrajectoire');
+    await _delBy('sbGetFactures','sbDeleteFacture',_byRid,'factures');
+    // Tâches : pas de suppression → archivage (retire de l'affichage)
+    if(typeof sbGetTaches==='function' && typeof sbArchiveTache==='function'){
+      try{ const all=await sbGetTaches(); const del=(all||[]).filter(_byRid); await pool(del, t=>sbArchiveTache(t.id), 8); if(del.length) log(`✓ ${del.length} tâches [démo] archivées`,'ok'); }catch(_){}
+    }
+    setProgress(82);
+    // Salarié-lié
+    await _delBy('sbGetContrats','sbDeleteContrat',_byEid,'contrats');
+    await _delBy('sbGetAbsences','sbDeleteAbsence',_byEid,'absences');
+    await _delBy('sbGetConges','sbDeleteConge',_byEid,'congés');
+    await _delBy('sbGetEntretiens','sbDeleteEntretien',_byEid,'entretiens');
+    await _delBy('sbGetFichesPaie','sbDeleteFichePaie',_byEid,'fiches de paie');
+    await _delBy('sbGetPeShifts','sbDeletePeShift',_byEid,'créneaux planning');
+    if(typeof sbGetDocsEmploye==='function' && typeof sbDeleteDocEmploye==='function' && demoEmp.length){
+      try{ let n=0; for(const e of demoEmp){ const ds=await sbGetDocsEmploye(e.id); for(const d of (ds||[])){ await sbDeleteDocEmploye(d.id); n++; } } if(n) log(`✓ ${n} documents salariés supprimés`,'ok'); }catch(_){}
+    }
+    // Étab-niveau (marqués [démo])
+    await _delBy('sbGetRepertoire','sbDeleteRepertoire',e=>_tag(e.notes),'contacts répertoire');
+    await _delBy('sbGetContactsExternes','sbDeleteContactExterne',e=>_tag(e.notes),'intervenants externes');
+    await _delBy('sbGetAdmissions','sbDeleteAdmission',e=>_tag(e.notes),'admissions');
+    await _delBy('sbGetCandidats','sbDeleteCandidat',e=>_tag(e.notes),'candidatures');
+    await _delBy('sbGetInterventions','sbDeleteIntervention',e=>_tag(e.desc)||_tag(e.description),'interventions');
+    await _delBy('sbGetInventaire','sbDeleteInventaire',e=>_tag(e.notes),'biens inventaire');
+    await _delBy('sbGetDocumentation','sbDeleteDocumentation',e=>_tag(e.titre),'documents institutionnels');
+    await _delBy('sbGetSatisfaction','sbDeleteSatisfaction',e=>_tag(e.commentaire),'questionnaires satisfaction');
+    await _delBy('sbGetSatQuestions','sbDeleteSatQuestion',e=>_tag(e.label),'questions satisfaction');
+    await _delBy('sbGetBudgetDemandes','sbDeleteBudgetDemande',e=>_tag(e.motif),'demandes budget');
+    await _delBy('sbGetBudgetEnveloppes','sbDeleteBudgetEnveloppe',e=>_tag(e.description),'enveloppes budget');
+    await _delBy('sbGetAstreintes','sbDeleteAstreinte',e=>_tag(e.note),'astreintes');
+    await _delBy('sbGetFormations','sbDeleteFormation',e=>_tag(e.notes),'formations');
+    await _delBy('sbGetChambres','sbDeleteChambre',e=>_tag(e.notes),'chambres');
+    // Nuits : pas de fonction de suppression dans la couche → suppression directe des nuits [démo]
+    if(typeof sbGetNuits==='function' && typeof supabaseClient!=='undefined'){
+      try{
+        const ns=(await sbGetNuits()||[]).filter(n=>_tag(n.transmission));
+        await pool(ns, n=>supabaseClient.from('nuits').delete().eq('id', n.id), 8);
+        if(ns.length) log(`✓ ${ns.length} nuits [démo] supprimées`,'ok');
+      }catch(e){ log('Nettoyage nuits ignoré : '+(e.message||e),'warn'); }
+    }
+    // Salariés en dernier (après leurs tables liées)
+    if(demoEmp.length && typeof sbDeleteEmploye==='function'){
+      await pool(demoEmp, e=>sbDeleteEmploye(e.id), 6); log(`✓ ${demoEmp.length} salariés [démo] supprimés`,'ok');
+    }
+    setProgress(84);
+
+    await pool(demoRes, r=>sbDeleteResident(r.id), 6, (d,t)=>setProgress(85+d/t*15));
+    log(`✓ ${demoRes.length} résidents [démo] supprimés`,'ok');
+
+    setProgress(100);
+    log('✅ Données de démonstration supprimées. (Les présences liées, sans fonction de suppression, deviennent orphelines et n\'apparaissent plus.)','ok');
+  }catch(e){
+    log('ERREUR : '+(e&&e.message||e),'err'); console.error(e);
+  }finally{
+    btn.disabled=false; btnDel.disabled=false;
+  }
+}
+</script>
+</body>
+</html>

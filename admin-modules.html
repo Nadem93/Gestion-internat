@@ -4,9 +4,31 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Administration</title>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-admin-modules.css"/>
   <!-- La grille de modules est remplacée par le menu latéral de admin.html : on y redirige. -->
   <meta http-equiv="refresh" content="0;url=admin.html"/>
   <script>location.replace('admin.html' + (location.search || ''));</script>
 </head>
-<body></body>
+<body class="v2">
+  <!-- Repli visible uniquement si la redirection est bloquée (JS off, meta refresh filtré). -->
+  <div class="v2-redir">
+    <div class="v2-redir-card" role="status">
+      <div class="v2-redir-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </div>
+      <div class="v2-redir-eyebrow">INTERNALIS · ADMIN</div>
+      <div class="v2-redir-title">Redirection en cours…</div>
+      <div class="v2-redir-sub">La grille de modules a été remplacée par le menu latéral de l'administration.</div>
+      <a class="v2-redir-link" href="admin.html">Ouvrir l'administration</a>
+    </div>
+  </div>
+<script src="js/mobile-nav.js"></script>
+</body>
 </html>

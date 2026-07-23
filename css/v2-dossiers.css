@@ -1,0 +1,243 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   DOSSIERS & SUIVI — V2 (maquette « Dossiers & suivi - refonte (bento) »)
+   Coque à deux colonnes : navigation latérale groupée + panneau principal.
+   Ne dépend que des variables de css/v2.css (jamais modifié ici).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2 .ds-shell {
+  display: flex;
+  height: calc(100vh - 44px);
+  min-height: 620px;
+  background:
+    radial-gradient(1000px 520px at 80% -10%, rgba(99,102,241,.22), transparent 60%),
+    var(--v2-bg);
+}
+
+/* ── Panneau principal ────────────────────────────────────────────────── */
+/* min-height:0 : sans lui, dans la coque mobile `height:100dvh` en colonne,
+   .ds-main grandit à son contenu et #dsHome ne défile plus (cf. vie-quotidienne). */
+.ds-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.ds-topbar {
+  height: 66px; flex-shrink: 0; border-bottom: 1px solid var(--v2-b);
+  display: flex; align-items: center; gap: 14px; padding: 0 30px;
+}
+.ds-topbar-t { font-size: 17px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ds-topbar-m { margin-left: auto; font-size: 12.5px; color: var(--v2-t7);
+  white-space: nowrap; flex-shrink: 0; }
+.ds-back {
+  display: none; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
+  border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  flex-shrink: 0;
+}
+.ds-back.on { display: inline-flex; }
+.ds-back:hover { background: var(--v2-s-hover); color: #fff; }
+.ds-back svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+.ds-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* le rembourrage vient de .v2-body (css/v2.css) */
+#dsHome { flex: 1; overflow-y: auto; }
+#dsFrame { flex: 1; width: 100%; border: none; background: var(--v2-inset); }
+
+/* ── En-tête de contenu ───────────────────────────────────────────────── */
+.ds-hello { margin-bottom: 22px; }
+.ds-hello h1 {
+  margin: 0; font-family: var(--v2-display); font-size: 26px; font-weight: 700;
+  letter-spacing: -.02em; color: #fff;
+}
+.ds-hello-s { margin-top: 4px; font-size: 13.5px; color: var(--v2-t7); }
+
+/* ── KPI ──────────────────────────────────────────────────────────────── */
+.ds-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.ds-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.ds-kpi-ic {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ds-kpi-ic svg { width: 21px; height: 21px; }
+.ds-kpi-n { font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; }
+.ds-kpi-l { font-size: 11.5px; color: var(--v2-t6); margin-top: 4px; }
+
+/* ── Accès rapides ────────────────────────────────────────────────────── */
+.ds-sec {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t9); margin-bottom: 12px;
+}
+.ds-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.ds-card {
+  position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-kpi); padding: 18px; cursor: pointer; overflow: hidden;
+  text-align: left; font-family: inherit; outline: none; display: block; width: 100%;
+  transition: transform .15s, box-shadow .3s, border-color .2s;
+}
+.ds-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--dsc, #818cf8) 40%, transparent);
+  box-shadow: 0 14px 30px -14px var(--dsc-sh, rgba(129,140,248,.4));
+}
+.ds-card:focus-visible { box-shadow: 0 0 0 2.5px var(--dsc-sh, rgba(129,140,248,.4)); }
+.ds-card-ic {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--dsc, #818cf8); box-shadow: 0 6px 14px var(--dsc-sh, rgba(129,140,248,.33));
+}
+.ds-card-ic svg { width: 22px; height: 22px; }
+.ds-card-l { font-size: 13px; font-weight: 600; color: var(--v2-t2); margin-top: 14px; }
+.ds-card-s { font-size: 11px; color: var(--v2-t6); margin-top: 3px; }
+/* Bouton « à quoi ça sert ? » — ouvre le mode d'emploi du module */
+.ds-card-i {
+  position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t7);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+}
+.ds-card-i:hover { background: var(--v2-s-active); color: #fff; }
+
+/* ── Bas de page : échéances + complétude ─────────────────────────────── */
+.ds-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.ds-blk {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 20px;
+}
+.ds-blk-ech {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(239,68,68,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22);
+}
+.ds-blk-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.ds-blk-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.ds-blk-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.ds-blk-ech .ds-blk-t { color: var(--v2-warn-text); }
+.ds-blk-a {
+  margin-left: auto; height: 28px; padding: 0 11px; border-radius: 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+  font-size: 11px; font-weight: 600; color: var(--v2-t5);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.ds-blk-a:hover { background: var(--v2-s-hover); color: #fff; }
+.ds-blk-a svg { width: 13px; height: 13px; flex-shrink: 0; }
+.ds-vide { font-size: 12px; color: var(--v2-t7); padding: 6px 0; line-height: 1.55; }
+
+/* Échéance : pastille de date + intitulé + reste à courir */
+.ds-ech { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-soft); }
+.ds-ech:last-child { border-bottom: none; }
+.ds-ech-d {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 11%, transparent); color: var(--pc, #818cf8);
+}
+.ds-ech-j { font-family: var(--v2-display); font-size: 14px; font-weight: 800; line-height: 1; }
+.ds-ech-m { font-size: 8.5px; font-weight: 700; }
+.ds-ech-b { flex: 1; min-width: 0; }
+.ds-ech-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-ech-s { font-size: 10.5px; color: var(--v2-t6);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-ech-l { font-size: 10.5px; font-weight: 700; color: var(--pc, #818cf8);
+  white-space: nowrap; flex-shrink: 0; }
+
+/* Complétude d'un dossier */
+.ds-cpl { display: flex; flex-direction: column; gap: 13px; }
+.ds-cpl-h { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.ds-cpl-av {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: #0a1728;
+}
+.ds-cpl-n { font-size: 12px; color: var(--v2-t3); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-cpl-p { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.ds-cpl-miss { font-size: 10px; color: var(--v2-danger-text); margin-top: 4px; line-height: 1.45; }
+
+/* ── Configuration des pièces requises (modale) ───────────────────────── */
+.ds-pc-l { display: flex; flex-direction: column; gap: 8px; }
+.ds-pc {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft); border-radius: 11px;
+}
+.ds-pc-b { flex: 1; min-width: 0; }
+.ds-pc-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.ds-pc-s { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+.ds-pc-x {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t6);
+}
+.ds-pc-x:hover { background: rgba(239,68,68,.16); color: var(--v2-danger-text); }
+.ds-pc-x svg { width: 14px; height: 14px; }
+
+/* ── Mode d'emploi (modale, gabarit v2-ov/v2-md) ──────────────────────── */
+.ds-tuto-h { font-size: 12.5px; font-weight: 700; color: var(--v2-t3); margin-bottom: 7px;
+  display: flex; align-items: center; gap: 7px; }
+.ds-tuto-p { font-size: 13px; color: var(--v2-t4); line-height: 1.55; }
+.ds-tuto-ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.ds-tuto-ol li { font-size: 12.5px; color: var(--v2-t4); line-height: 1.5; }
+.ds-tuto-ol li::marker { color: var(--mc, #818cf8); font-weight: 800; }
+.ds-tuto-box {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-sm); padding: 12px 14px;
+}
+.ds-tuto-ex {
+  background: var(--v2-s-sub); border-left: 3px solid var(--mc, #818cf8);
+  border-radius: var(--v2-r-badge); padding: 11px 13px;
+  font-size: 12.5px; color: var(--v2-t4); line-height: 1.55;
+}
+.ds-tuto-ex b, .ds-tuto-h b { color: var(--mc, #818cf8); }
+.ds-md-ico svg { width: 22px; height: 22px; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .ds-cards { grid-template-columns: repeat(3, 1fr); }
+  .ds-bento { grid-template-columns: 1fr; }
+}
+@media (max-width: 960px) {
+  body.v2 .ds-shell { flex-direction: column; height: auto; }
+  .ds-kpis { grid-template-columns: repeat(2, 1fr); }
+  .ds-cards { grid-template-columns: repeat(2, 1fr); }
+  #dsFrame { min-height: 70vh; }
+}
+@media (max-width: 620px) {
+  .ds-kpis, .ds-cards { grid-template-columns: 1fr; }
+  .ds-topbar { padding-left: 18px; padding-right: 18px; }
+  .ds-topbar-m { display: none; }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────
+   Ajouté avec le passage bord à bord de css/v2.css. Placé en fin de fichier :
+   les règles ci-dessus ont la même specificité, c'est l'ordre qui tranche. */
+@media (max-width: 960px) {
+  /* Le rail supprimé, la coquille n'est plus qu'une colonne. En `height:auto`
+     l'iframe du module (flex:1) n'a aucune base de calcul et se réduit à une
+     hauteur arbitraire : on redonne une hauteur réelle. dvh d'abord pour ne
+     pas compter la barre d'URL mobile, vh en repli. */
+  body.v2 .ds-shell { height: 100vh; height: 100dvh; min-height: 0; }
+}
+@media (max-width: 860px) {
+  .ds-topbar {
+    height: auto; min-height: 58px; flex-wrap: wrap;
+    padding: 10px 14px; gap: 8px;
+  }
+  /* Sans troncature, le titre pousse la méta hors de l'écran. */
+  .ds-topbar-t {
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* La méta passe à la ligne plutôt que de disparaître : l'information
+     (date, effectif) reste lisible. */
+  /* `order` élevé : la méta occupant toute la ligne, sans ça elle
+     repousserait le bouton de thème sur une troisième ligne. */
+  .ds-topbar-m {
+    order: 10; display: block; margin-left: 0; flex-basis: 100%;
+    font-size: 11.5px; white-space: normal;
+  }
+  .ds-topbar #thmBtn { margin-left: auto; }
+}
+@media (max-width: 640px) {
+  /* Dégager la barre de navigation mobile fixe (js/mobile-nav.js, ~86px) :
+     #dsHome défile en interne, le padding-bottom du body ne l'atteint pas. */
+  #dsHome { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}

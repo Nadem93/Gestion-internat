@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Journée — Ma tournée — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-journee.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell jn2-shell">
+
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="vie-quotidienne.html" style="background:linear-gradient(135deg,#0d9488,#22d3ee)" aria-label="Vie quotidienne">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polyline points="20 6 9 17 4 12"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+        <div class="v2-top-title">Ma tournée</div>
+      </div>
+      <div class="jn2-topact">
+        <div class="jn2-date"><span id="jrDateLabel"></span><span id="jrCharge"></span></div>
+        <button type="button" class="jn2-new jn2-print" onclick="jrPrintTournee()" title="Imprimer la feuille de tournée (remplaçant / coupure réseau)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimer
+        </button>
+        <button type="button" class="jn2-new" id="jrAddBtn" onclick="openTacheModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle tâche
+        </button>
+      </div>
+    </div>
+
+    <div class="v2-body">
+      <div class="jn2-body">
+
+        <!-- FIL DE LA TOURNÉE -->
+        <div class="jn2-main">
+          <!-- Onglets des moments de la journée (Matin / Midi / Après-midi / Soir) -->
+          <div class="jn2-moments" id="jn2Moments"></div>
+          <div class="jn2-filters v2-chips" id="jn2Chips"></div>
+          <div class="jn2-resrail" id="jn2ResRail"></div>
+          <div id="jn2Reprise"></div>
+          <div id="jrList"><div class="jn2-vide">Chargement…</div></div>
+          <div class="jn2-foot">Ces moments sont des <strong>supports d'accompagnement</strong>, pas une cadence :
+            l'équipe ajuste avec la personne, et son refus est un droit.</div>
+        </div>
+
+        <!-- RAIL : progression, prochaine tâche, répartition -->
+        <div class="jn2-side">
+
+          <div class="v2-blk jn2-ring-blk">
+            <div class="jn2-ring">
+              <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+                <circle cx="66" cy="66" r="58" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+                <circle id="jn2RingArc" cx="66" cy="66" r="58" fill="none" stroke="#2dd4bf" stroke-width="12"
+                        stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+              </svg>
+              <div class="jn2-ring-c">
+                <div class="jn2-ring-p" id="jn2Pct">0%</div>
+                <div class="jn2-ring-l">tournée</div>
+              </div>
+            </div>
+            <div class="jn2-ring-x" id="jn2Count"></div>
+            <div class="jn2-ring-r" id="jn2Reports"></div>
+          </div>
+
+          <div class="v2-blk v2-rail-blk">
+            <div class="v2-blk-sub">Prochaine tâche</div>
+            <div id="jn2Next"></div>
+          </div>
+
+          <div class="v2-blk v2-rail-blk">
+            <div class="v2-blk-sub">Répartition</div>
+            <div class="jn2-break" id="jn2Break"></div>
+          </div>
+
+          <a class="jn2-cta" href="transmissions.html" title="La coche garde la trace — la transmission raconte l'essentiel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v4l4-4"/></svg>
+            Clôturer &amp; transmettre
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteneurs hérités : contrat d'ID avec renderTournee() (rendu V1 de
+         secours). Ils restent dans le DOM mais ne sont plus affichés. -->
+    <div id="jrLegacy" hidden>
+      <div id="jrQuarts"></div><div id="jrRail"></div><div id="jrTriBar"></div>
+      <div id="jrBarFill"></div><div id="jrBarLabel"></div>
+      <span id="jrDone"></span><span id="jrTotal"></span>
+    </div>
+
+  </div>
+</div></div>
+
+<!-- ── MODALE CRÉATION / ÉDITION DE TÂCHE ── -->
+<div class="modal-overlay v2-ov" id="modalTache">
+  <div class="v2-md" style="--mc:#0d9488">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="tacheModalTitle">Nouvelle tâche</div>
+        <div class="v2-md-s">Un moment du projet personnalisé</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalTache')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <input type="hidden" id="tcEditId"/>
+    <input type="hidden" id="tcType" value=""/>
+
+    <div class="v2-md-b">
+
+      <div>
+        <label class="v2-fld-l" for="tcResident">Résident *</label>
+        <select id="tcResident" class="v2-fld" onchange="tcSyncObjectifs()"></select>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcLibelle">Tâche *</label>
+        <input type="text" id="tcLibelle" class="v2-fld" placeholder="Ex : Trier son linge et lancer une machine"/>
+      </div>
+
+      <div>
+        <label class="v2-fld-l">Nature du moment</label>
+        <div class="v2-seg jn2-seg-w" id="tcTypeSeg">
+          <button type="button" class="v2-seg-o on" data-val="" onclick="jn2SetType('')">Non précisée</button>
+          <button type="button" class="v2-seg-o" data-val="soin" onclick="jn2SetType('soin')">Soin</button>
+          <button type="button" class="v2-seg-o" data-val="repas" onclick="jn2SetType('repas')">Repas</button>
+          <button type="button" class="v2-seg-o" data-val="activite" onclick="jn2SetType('activite')">Activité</button>
+          <button type="button" class="v2-seg-o" data-val="transmission" onclick="jn2SetType('transmission')">Transmission</button>
+          <button type="button" class="v2-seg-o" data-val="accompagnement" onclick="jn2SetType('accompagnement')">Accompagnement</button>
+          <button type="button" class="v2-seg-o" data-val="rdv" onclick="jn2SetType('rdv')">RDV ext.</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcObjectif">Objectif du projet relié</label>
+        <select id="tcObjectif" class="v2-fld"></select>
+        <input type="text" id="tcObjectifLibre" class="v2-fld" placeholder="Ou saisissez l'objectif librement…" style="display:none"/>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="tcMoment">Moment *</label>
+          <select id="tcMoment" class="v2-fld">
+            <option value="matin">Matin — 7 h à 14 h</option>
+            <option value="aprem">Après-midi — 14 h à 22 h</option>
+            <option value="soir">Soir &amp; nuit — 22 h à 7 h</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="tcHeure">Heure indicative</label>
+          <input type="time" id="tcHeure" class="v2-fld"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcRecurrence">Récurrence</label>
+        <select id="tcRecurrence" class="v2-fld" onchange="document.getElementById('tcJours').style.display=this.value==='jours'?'flex':'none'">
+          <option value="quotidien">Tous les jours</option>
+          <option value="jours">Certains jours</option>
+          <option value="ponctuel">Ponctuel (ce jour uniquement)</option>
+        </select>
+        <div id="tcJours" class="jn2-jours" style="display:none"></div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcConsigne">Mode d'emploi (pour les remplaçants)</label>
+        <textarea id="tcConsigne" class="v2-fld" rows="2" placeholder="Ex : proposer 2 tenues maximum, la laisser trancher ; machine de l'étage 2, la laisser doser la lessive…"></textarea>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="tcSoutien">Niveau de soutien attendu</label>
+        <select id="tcSoutien" class="v2-fld">
+          <option value="">Non précisé</option>
+          <option value="autonomie">Autonomie — présence simple</option>
+          <option value="supervision">Supervision / veille</option>
+          <option value="verbal">Incitation / guidance verbale</option>
+          <option value="partiel">Aide partielle</option>
+          <option value="total">Aide totale</option>
+        </select>
+      </div>
+
+      <div class="v2-note v2-note-warn" id="tcTypeWarn" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <span>La nature du moment ne sera pas enregistrée : exécutez <strong>migration-journee.sql</strong> dans Supabase.</span>
+      </div>
+
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" id="tcArchiveBtn" style="display:none" onclick="archiveTache()">Retirer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalTache')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveTache()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Zone imprimée pour la « Feuille de tournée » (masquée hors impression) -->
+<div id="jrPrintZone" class="jr-print-zone" aria-hidden="true"></div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/taches-supabase.js"></script>
+<script src="js/journee.js"></script>
+<script src="js/journee-v2.js"></script>
+<script>Auth.requireAuth(); if (!requireModule('access_journal')) { const c = document.querySelector('.v2-shell'); if (c) c.innerHTML = ''; } else { initJournee(); }</script>
+<script src="js/mobile-nav.js"></script>
+</body>
+</html>

@@ -2,202 +2,148 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Diagnostic des droits — FTR</title>
+  <meta name="theme-color" content="#0a1728"/>
+  <title>Diagnostic des droits &amp; obligations — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    .dd-pill{display:inline-flex;align-items:center;font-size:.68rem;font-weight:600;padding:2px 9px;border-radius:99px;background:#eef2ff;color:#4338ca;margin:2px}
-    .dd-table{width:100%;border-collapse:collapse;font-size:.82rem}
-    .dd-table th{text-align:left;padding:.5rem .65rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--border)}
-    .dd-table td{padding:.55rem .65rem;border-bottom:1px solid var(--border);vertical-align:top}
-    .dd-ok{color:#16a34a;font-weight:700}
-    .dd-bad{color:#dc2626;font-weight:700}
-    .dd-warn{color:#d97706;font-weight:700}
-    .dd-row{display:flex;align-items:flex-start;gap:.6rem;padding:.6rem .85rem;border-radius:10px;margin-bottom:.5rem}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-diagnostic-droits.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Diagnostic des droits</div></div>
-      <div class="header-right">
-        <a href="rh.html" class="btn btn-ghost btn-sm">RH</a>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(71,85,105,.28)">
+
+  <div class="v2-top">
+    <a class="v2-logo" href="rh.html" style="background:linear-gradient(135deg,#475569,#94a3b8)" title="Retour au portail RH">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · RH</div>
+      <div class="v2-top-title">Diagnostic des droits &amp; obligations</div>
+    </div>
+    <div class="dd2-top-act" id="dd2TopActions">
+      <a href="rh.html" class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Portail RH
+      </a>
+      <button type="button" id="dd2BtnRapport" class="v2-btn v2-btn-primary" onclick="dd2Rapport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Rapport de conformité
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body" id="dd2Body">
+
+    <!-- ══ Score global + tuiles de synthèse ══════════════════════════════ -->
+    <div class="dd2-head">
+      <div class="dd2-score" id="dd2Score"></div>
+      <div class="dd2-stats" id="dd2Stats"></div>
+    </div>
+
+    <!-- ══ Domaines de conformité + rail ══════════════════════════════════ -->
+    <div class="dd2-main">
+      <div>
+        <div class="dd2-titre">Domaines de conformité</div>
+        <div class="dd2-liste" id="dd2Domaines"></div>
       </div>
-    </header>
 
-    <main class="content" style="max-width:1000px">
-      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.25rem">Cet outil lit le stockage local et explique, établissement par établissement, pourquoi un utilisateur a (ou n'a pas) accès aux modules.</p>
+      <div class="dd2-rail">
+        <div class="v2-blk dd2-blk-alerte">
+          <div class="v2-blk-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2" style="width:15px;height:15px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+            <span class="v2-blk-t">Points de vigilance</span>
+          </div>
+          <div id="dd2Vigilance"></div>
+        </div>
 
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-header"><span class="card-title">👤 Utilisateur à analyser</span></div>
-        <div class="card-body" style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-          <select id="who" style="width:280px"></select>
-          <button class="btn btn-accent btn-sm" onclick="run()">🔍 Analyser</button>
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" style="width:15px;height:15px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span class="v2-blk-t">Plan d'action</span>
+            <button type="button" class="dd2-lien" id="dd2BtnAction" onclick="dd2OpenAction()">+ Action</button>
+          </div>
+          <div id="dd2Actions"></div>
+        </div>
+
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="v2-blk-t">Veille réglementaire</span>
+            <button type="button" class="dd2-lien" id="dd2BtnVeille" onclick="dd2OpenVeille()">+ Texte</button>
+          </div>
+          <div id="dd2Veille"></div>
         </div>
       </div>
+    </div>
 
-      <div id="ddStats" class="grid grid-3" style="margin-bottom:1.25rem;display:none"></div>
+    <!-- ══ Auto-diagnostic + évolution du score ═══════════════════════════ -->
+    <div class="dd2-g2">
+      <div class="v2-blk" id="dd2QBlock">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" style="width:15px;height:15px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="v2-blk-t" id="dd2QTitre">Auto-diagnostic</span>
+          <span class="dd2-meta" id="dd2QMeta"></span>
+        </div>
+        <div id="dd2Questions"></div>
+      </div>
 
-      <div id="out"></div>
-    </main>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Évolution du score</span>
+          <span class="dd2-meta" id="dd2Delta" style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:800"></span>
+        </div>
+        <div id="dd2Evolution"></div>
+        <div style="margin-top:14px;display:flex">
+          <button type="button" class="v2-btn v2-btn-sm" id="dd2BtnReleve" onclick="dd2Releve()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            Enregistrer le relevé du trimestre
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Risques · Échéancier · Référents ═══════════════════════════════ -->
+    <div class="dd2-g3">
+      <div class="v2-blk dd2-blk-alerte">
+        <div class="v2-blk-h"><span class="v2-blk-t">Exposition aux risques</span></div>
+        <div id="dd2Risques"></div>
+      </div>
+
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" style="width:15px;height:15px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+          <span class="v2-blk-t">Échéancier légal</span>
+        </div>
+        <div id="dd2Echeancier"></div>
+      </div>
+
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Référents désignés</span></div>
+        <div id="dd2Referents"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<script src="js/app.js"></script>
-<script>
-  function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
-  function read(key){ try{ return JSON.parse(localStorage.getItem(key)||'null'); }catch{ return null; } }
-  function norm(s){ return (s||'').toLowerCase().trim(); }
+<!-- Modales du module V2 (action, veille, référent) — gabarit .v2-ov/.v2-md -->
+<div class="v2-ov" id="dd2Modal"></div>
 
-  function allKnownUsers() {
-    const etabs = read('ftr_etablissements') || [];
-    const map = {};
-    etabs.forEach(e => (read(`ftr_users__${e.id}`) || []).forEach(u => { if (u.username) map[u.username] = u; }));
-    (read('ftr_users') || []).forEach(u => { if (u.username && !map[u.username]) map[u.username] = u; });
-    return Object.values(map);
-  }
-
-  function populateUserSelect() {
-    const sel = document.getElementById('who');
-    const users = allKnownUsers();
-    const current = sel.value;
-    sel.innerHTML = users
-      .slice()
-      .sort((a,b) => `${a.prenom||''} ${a.nom||''}`.localeCompare(`${b.prenom||''} ${b.nom||''}`,'fr'))
-      .map(u => `<option value="${esc(u.username)}">${esc((u.prenom||'')+' '+(u.nom||''))} — ${esc(u.username)}${u.role==='admin'?' (admin)':''}</option>`)
-      .join('');
-    if (current) sel.value = current;
-  }
-
-  function run() {
-    const username = document.getElementById('who').value.trim();
-    const etabs = read('ftr_etablissements') || [];
-    const globalUsers = allKnownUsers();
-    const gu = globalUsers.find(u => u.username === username);
-    let html = '';
-    const statsEl = document.getElementById('ddStats');
-
-    // 1) Présence globale
-    html += `<div class="card" style="margin-bottom:1.25rem"><div class="card-header"><span class="card-title">1. Compte (tous établissements confondus)</span></div><div class="card-body">`;
-    if (!gu) {
-      html += `<p class="dd-bad">❌ Aucun compte « ${esc(username)} » dans la liste globale. La connexion elle-même échouerait.</p>`;
-    } else {
-      html += `<table class="dd-table"><tr><th>Champ</th><th>Valeur</th></tr>
-        <tr><td>id</td><td>${esc(gu.id)} <span style="color:var(--muted)">(type ${typeof gu.id})</span></td></tr>
-        <tr><td>role</td><td>${esc(gu.role)||'<span class="dd-bad">vide</span>'}</td></tr>
-        <tr><td>fonction</td><td>${gu.fonction?esc(gu.fonction):'<span class="dd-bad">VIDE — cause fréquente du « accès à rien »</span>'}</td></tr>
-        <tr><td>super</td><td>${gu.super?'oui':'non'}</td></tr></table>`;
-      if (gu.role === 'admin' || gu.role === 'superadmin' || gu.super)
-        html += `<p class="dd-warn" style="margin-top:.5rem">⚠️ Ce compte est admin/superadmin : il devrait tout voir sans permissions. Si ce n'est pas le cas, le souci est ailleurs (session).</p>`;
-    }
-    html += `</div></div>`;
-
-    if (!etabs.length) {
-      html += `<div class="card"><div class="card-body"><p class="dd-bad">Aucun établissement défini.</p></div></div>`;
-      document.getElementById('out').innerHTML = html;
-      statsEl.style.display = 'none';
-      return;
-    }
-
-    // 2) Analyse par établissement
-    html += `<div class="card" style="margin-bottom:1.25rem"><div class="card-header"><span class="card-title">2. Résolution des droits par établissement</span></div>
-      <div class="card-body">
-      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Pour chaque établissement : le compte est-il présent ? sa fonction correspond-elle à un rôle ? combien de droits en résultent ?</p>
-      <table class="dd-table"><tr><th>Établissement</th><th>Compte présent</th><th>Fonction</th><th>Rôle correspondant</th><th>Droits</th></tr>`;
-
-    const problems = [];
-    let totalPerms = 0;
-    etabs.forEach(e => {
-      const users = read(`ftr_users__${e.id}`) || [];
-      const roles = read(`ftr_fonction_colors__${e.id}`) || [];
-      const u = gu ? users.find(x => String(x.id) === String(gu.id)) : users.find(x => x.username === username);
-      const present = !!u;
-      const fonction = (u && u.fonction) || (gu && gu.fonction) || '';
-      let match = null;
-      if (fonction) {
-        match = roles.find(r => norm(r.fonction) === norm(fonction))
-             || roles.find(r => { const rn = norm(r.fonction); return rn && (norm(fonction).includes(rn) || rn.includes(norm(fonction))); });
-      }
-      const permCount = match ? (match.permissions||[]).length : 0;
-      totalPerms += permCount;
-      let etat;
-      if (!present) { etat = '<span class="dd-bad">❌ absent</span>'; problems.push(`Absent de « ${e.nom} »`); }
-      else etat = '<span class="dd-ok">✓</span>';
-      let mtxt;
-      if (!fonction) { mtxt = '<span class="dd-bad">aucune fonction</span>'; if(present) problems.push(`Pas de fonction dans « ${e.nom} »`); }
-      else if (!match) { mtxt = '<span class="dd-bad">aucun rôle ne correspond</span>'; problems.push(`Fonction « ${fonction} » sans rôle correspondant dans « ${e.nom} »`); }
-      else mtxt = `<span class="dd-ok">${esc(match.fonction)}</span>`;
-
-      html += `<tr>
-        <td><strong>${esc(e.nom||e.id)}</strong></td>
-        <td>${etat}</td>
-        <td>${fonction?esc(fonction):'<span class="dd-bad">—</span>'}</td>
-        <td>${mtxt}</td>
-        <td>${match ? `<span class="${permCount?'dd-ok':'dd-bad'}">${permCount} droit(s)</span>` : '<span class="dd-bad">0</span>'}</td>
-      </tr>`;
-      if (match && permCount) {
-        html += `<tr><td colspan="5" style="padding-top:0">${(match.permissions||[]).map(p=>`<span class="dd-pill">${esc(p)}</span>`).join('')}</td></tr>`;
-      }
-    });
-    html += `</table></div></div>`;
-
-    // Stats résumé
-    statsEl.style.display = '';
-    statsEl.innerHTML = `
-      <div class="stat-card" style="border-left:3px solid #6366f1"><div class="stat-card-top"><span class="stat-label">Établissements</span></div><div class="stat-num">${etabs.length}</div></div>
-      <div class="stat-card" style="border-left:3px solid ${problems.length?'#dc2626':'#16a34a'}"><div class="stat-card-top"><span class="stat-label">Problèmes détectés</span></div><div class="stat-num">${problems.length}</div></div>
-      <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Droits cumulés</span></div><div class="stat-num">${totalPerms}</div></div>`;
-
-    // 3) Verdict + réparation
-    html += `<div class="card"><div class="card-header"><span class="card-title">3. Verdict</span></div><div class="card-body">`;
-    if (!problems.length && gu) {
-      html += `<p class="dd-ok">✓ Aucun problème de résolution détecté. Si l'accès est toujours refusé, vide le cache (Ctrl/Cmd + Shift + R) car le service worker peut servir une ancienne version de l'app.</p>`;
-    } else {
-      html += `<ul style="color:var(--muted);margin:0 0 0 1.2rem">${problems.map(p=>`<li class="dd-bad">${esc(p)}</li>`).join('')}</ul>`;
-      const anyRoles = (read(`ftr_fonction_colors__${etabs[0].id}`) || []);
-      html += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
-        <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem">🔧 Réparer</div>
-        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">Assigne une fonction valide à « ${esc(username)} » dans tous les établissements où il est présent (et resynchronise la liste globale).</p>
-        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-          <select id="fixFonction" style="width:auto">${anyRoles.map(r=>`<option value="${esc(r.fonction)}">${esc(r.fonction)} (${(r.permissions||[]).length} droits)</option>`).join('')}</select>
-          <button class="btn btn-primary btn-sm" onclick="repair()">Appliquer la fonction</button>
-        </div>
-      </div>`;
-    }
-    html += `</div></div>`;
-
-    document.getElementById('out').innerHTML = html;
-  }
-
-  function repair() {
-    const username = document.getElementById('who').value.trim();
-    const fonction = document.getElementById('fixFonction').value;
-    const etabs = read('ftr_etablissements') || [];
-    let touched = 0;
-    etabs.forEach(e => {
-      const k = `ftr_users__${e.id}`;
-      const users = read(k) || [];
-      let changed = false;
-      users.forEach(u => { if (u.username === username) { u.fonction = fonction; changed = true; } });
-      if (changed) { localStorage.setItem(k, JSON.stringify(users)); touched++; }
-    });
-    // Resynchronise la liste globale (union de tous les établissements)
-    const map = {};
-    etabs.forEach(e => (read(`ftr_users__${e.id}`) || []).forEach(u => { map[u.id] = u; }));
-    const g = read('ftr_users') || [];
-    g.forEach(u => { if (!map[u.id]) map[u.id] = u; });
-    g.forEach(u => { if (u.username === username) u.fonction = fonction; });
-    Object.values(map).forEach(u => { if (u.username === username) u.fonction = fonction; });
-    localStorage.setItem('ftr_users', JSON.stringify(Object.values(map)));
-    toast(`Fonction « ${fonction} » appliquée dans ${touched} établissement(s). Reconnecte-toi avec ${username} pour que la session prenne effet.`, 'success');
-    run();
-  }
-
-  Auth.requireAuth();
-  populateUserSelect();
-  document.addEventListener('DOMContentLoaded', run);
-</script>
 <div id="toast-container" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/absences-supabase.js"></script>
+<script src="js/diagnostic-droits.js"></script>
+<script src="js/diagnostic-droits-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

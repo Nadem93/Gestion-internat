@@ -2,105 +2,228 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Recrutement — FTR</title>
+  <meta name="theme-color" content="#0a1728"/>
+  <title>Recrutement — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    .rc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;align-items:start}
-    @media(max-width:900px){.rc-board{grid-template-columns:1fr;}}
-    .rc-col-head{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.5rem .25rem;display:flex;align-items:center;gap:.4rem}
-    .rc-col-body{display:flex;flex-direction:column;gap:.6rem;min-height:60px}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-recrutement.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Recrutement</div></div>
-      <div class="header-right">
-        <button id="btnAddCandidat" class="btn btn-accent btn-sm" onclick="openCandidatModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nouveau candidat
-        </button>
-        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(2,132,199,.18)">
 
-    <main class="content" style="max-width:1150px">
-      <div id="rcStats" class="grid grid-4" style="margin-bottom:1.5rem"></div>
-      <div id="rcBoard" class="rc-board"></div>
-    </main>
+  <div class="v2-top">
+    <a class="v2-logo" href="rh.html" style="background:linear-gradient(135deg,#0284c7,#38bdf8)" title="Retour au portail RH">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · RH</div>
+      <div class="v2-top-title">Recrutement</div>
+    </div>
+    <div class="rc2-top-act">
+      <a href="rh.html" class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Portail RH
+      </a>
+      <button type="button" id="btnAddOffre" class="v2-btn" onclick="rc2OpenOffre()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle offre
+      </button>
+      <button type="button" id="btnAddCandidat" class="v2-btn v2-btn-primary" onclick="openCandidatModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau candidat
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <!-- Tuiles statistiques -->
+    <div id="rcStats" class="rc2-stats"></div>
+
+    <!-- Pipeline -->
+    <div class="rc2-pipe-head">
+      <div class="v2-blk-t" id="rc2PipeTitre">Pipeline</div>
+      <select id="rc2OffreFilter" class="rc2-sel" aria-label="Filtrer le pipeline par offre" onchange="rc2Render()">
+        <option value="">Toutes les offres</option>
+      </select>
+    </div>
+    <div id="rcBoard" class="rc2-board"></div>
+
+    <!-- Offres publiées · Entretiens à venir · Indicateurs -->
+    <div class="rc2-g3">
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Offres publiées</span>
+          <span class="v2-blk-lien" id="rc2OffresMeta"></span>
+        </div>
+        <div id="rc2Offres"></div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="rc2-hico" style="color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></span>
+          <span class="v2-blk-t">Entretiens à venir</span>
+        </div>
+        <div id="rc2Entretiens"></div>
+      </div>
+      <div class="v2-blk rc2-blk-blue" id="rc2KpisBlk">
+        <div class="v2-blk-h"><span class="v2-blk-t" style="color:#7dd3fc">Indicateurs de recrutement</span></div>
+        <div id="rc2Kpis"></div>
+      </div>
+    </div>
+
+    <!-- Intégration · Scorecard -->
+    <div class="rc2-g-onb">
+      <div class="v2-blk rc2-blk-green" id="rc2OnbBlk">
+        <div class="v2-blk-h">
+          <span class="rc2-hico" style="color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-1.5-1.5"/></svg></span>
+          <span class="v2-blk-t" id="rc2OnbTitre" style="color:#6ee7b7">Intégration</span>
+          <span class="v2-blk-lien" id="rc2OnbCompteur" style="color:#34d399"></span>
+        </div>
+        <div id="rc2Onboarding"></div>
+      </div>
+      <div class="v2-blk" id="rc2ScoreBlk">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t" id="rc2ScoreTitre">Scorecard</span>
+          <span class="v2-blk-lien" id="rc2ScoreMoy"></span>
+        </div>
+        <div id="rc2Scorecard"></div>
+      </div>
+    </div>
+
+    <!-- Origine · CV-thèque · Diffusion -->
+    <div class="rc2-g3">
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Origine des candidatures</span></div>
+        <div id="rc2Canaux"></div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="rc2-hico" style="color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <span class="v2-blk-t">CV-thèque</span>
+        </div>
+        <div id="rc2Vivier"></div>
+        <div class="rc2-foot" id="rc2VivierMeta"></div>
+      </div>
+      <div class="v2-blk rc2-blk-blue" id="rc2DiffBlk">
+        <div class="v2-blk-h">
+          <span class="rc2-hico" style="color:#7dd3fc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+          <span class="v2-blk-t" style="color:#7dd3fc">Diffusion multi-canal</span>
+        </div>
+        <div id="rc2Diffusion"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- MODAL CANDIDAT -->
-<div class="modal-overlay" id="modalCandidat">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <span class="modal-title" id="rcModalTitle">Nouveau candidat</span>
-      <button class="modal-close" onclick="closeModal('modalCandidat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ══ MODALE CANDIDAT ══════════════════════════════════════════════════ -->
+<div class="v2-ov" id="modalCandidat">
+  <div class="v2-md" style="--mc:#0284c7">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
+      <div>
+        <div class="v2-md-t" id="rcModalTitle">Nouveau candidat</div>
+        <div class="v2-md-s">Suivi de la candidature dans le pipeline</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCandidat')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div class="form-row">
-        <div class="form-group"><label class="required">Prénom</label><input type="text" id="rcPrenom"/></div>
-        <div class="form-group"><label class="required">Nom</label><input type="text" id="rcNom"/></div>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="rcPrenom">Prénom *</label><input class="v2-fld" type="text" id="rcPrenom"/></div>
+        <div><label class="v2-fld-l" for="rcNom">Nom *</label><input class="v2-fld" type="text" id="rcNom"/></div>
       </div>
-      <div class="form-group"><label class="required">Poste visé</label><select id="rcPoste"><option value="">— Sélectionner un poste —</option></select></div>
-      <div class="form-row">
-        <div class="form-group"><label>Téléphone</label><input type="tel" id="rcTel"/></div>
-        <div class="form-group"><label>Email</label><input type="email" id="rcEmail"/></div>
+      <div><label class="v2-fld-l" for="rcPoste">Poste visé *</label><select class="v2-fld" id="rcPoste"><option value="">— Sélectionner un poste —</option></select></div>
+      <div><label class="v2-fld-l" for="rc2CandOffre">Offre rattachée</label><select class="v2-fld" id="rc2CandOffre"><option value="">— Aucune —</option></select></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="rc2CandCanal">Origine de la candidature</label><input class="v2-fld" type="text" id="rc2CandCanal" placeholder="Indeed, France Travail, cooptation…"/></div>
+        <div><label class="v2-fld-l" for="rc2CandDispo">Disponibilité</label><input class="v2-fld" type="text" id="rc2CandDispo" placeholder="Immédiate, septembre…"/></div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label>Date de candidature</label><input type="date" id="rcDate"/></div>
-        <div class="form-group"><label>Date d'entretien</label><input type="date" id="rcDateEntretien"/></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="rcTel">Téléphone</label><input class="v2-fld" type="tel" id="rcTel"/></div>
+        <div><label class="v2-fld-l" for="rcEmail">Email</label><input class="v2-fld" type="email" id="rcEmail"/></div>
       </div>
-      <div class="form-group"><label>Notes / impressions d'entretien</label><textarea id="rcNotes" rows="3" placeholder="Profil, ressenti, points à vérifier…"></textarea></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="rcDate">Date de candidature</label><input class="v2-fld" type="date" id="rcDate"/></div>
+        <div><label class="v2-fld-l" for="rcDateEntretien">Date d'entretien</label><input class="v2-fld" type="date" id="rcDateEntretien"/></div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="rc2CandVivier">Conserver en CV-thèque (vivier)</label>
+        <div class="v2-seg" id="rc2CandVivier">
+          <button type="button" class="v2-seg-o on" data-v="0" onclick="rc2SegPick(this)">Non</button>
+          <button type="button" class="v2-seg-o" data-v="1" onclick="rc2SegPick(this)">Oui</button>
+        </div>
+      </div>
+      <div><label class="v2-fld-l" for="rcNotes">Notes / impressions d'entretien</label><textarea class="v2-fld" id="rcNotes" rows="3" placeholder="Profil, ressenti, points à vérifier…"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" style="color:#dc2626;margin-right:auto" id="rcDeleteBtn" onclick="deleteCandidat()">Supprimer</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalCandidat')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveCandidat()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec rc2-danger" id="rcDeleteBtn" onclick="deleteCandidat()">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCandidat')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveCandidat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL CRÉATION DE COMPTE (depuis un candidat accepté) -->
-<div class="modal-overlay" id="modalRcCompte">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <span class="modal-title">🔑 Créer le compte utilisateur</span>
-      <button class="modal-close" onclick="closeModal('modalRcCompte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ══ MODALE CRÉATION DE COMPTE (candidat accepté) ══════════════════════ -->
+<div class="v2-ov" id="modalRcCompte">
+  <div class="v2-md" style="--mc:#10b981">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></span>
+      <div>
+        <div class="v2-md-t">Créer le compte utilisateur</div>
+        <div class="v2-md-s">Fiche salarié + accès de connexion</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalRcCompte')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
+    <div class="v2-md-b">
       <input type="hidden" id="rcCompteCandId"/>
-      <div style="font-size:.76rem;color:var(--muted);line-height:1.5">Crée la fiche salarié <strong>et</strong> son compte de connexion. Un mot de passe temporaire est généré ; le salarié devra le changer à sa première connexion.</div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Prénom</label><input type="text" id="rcComptePrenom"/></div>
-        <div class="form-group"><label class="required">Nom</label><input type="text" id="rcCompteNom"/></div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Crée la fiche salarié <strong>et</strong> son compte de connexion. Un mot de passe temporaire est généré ; le salarié devra le changer à sa première connexion.</span>
       </div>
-      <div class="form-group"><label class="required">Email (identifiant de connexion)</label><input type="email" id="rcCompteEmail"/></div>
-      <div class="form-group"><label>Poste / fonction</label><select id="rcComptePoste"><option value="">— Sélectionner un poste —</option></select></div>
-      <div class="form-group"><label>Rôle du compte</label><select id="rcCompteRole">
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="rcComptePrenom">Prénom *</label><input class="v2-fld" type="text" id="rcComptePrenom"/></div>
+        <div><label class="v2-fld-l" for="rcCompteNom">Nom *</label><input class="v2-fld" type="text" id="rcCompteNom"/></div>
+      </div>
+      <div><label class="v2-fld-l" for="rcCompteEmail">Email (identifiant de connexion) *</label><input class="v2-fld" type="email" id="rcCompteEmail"/></div>
+      <div><label class="v2-fld-l" for="rcComptePoste">Poste / fonction</label><select class="v2-fld" id="rcComptePoste"><option value="">— Sélectionner un poste —</option></select></div>
+      <div><label class="v2-fld-l" for="rcCompteRole">Rôle du compte</label><select class="v2-fld" id="rcCompteRole">
         <option value="educateur">Éducateur — accès de base</option>
         <option value="rh">Encadrement / RH — accès aux données RH</option>
         <option value="admin">Administrateur — accès complet</option>
       </select></div>
-      <div id="rcCompteResult" style="display:none;font-size:.78rem;padding:.6rem .75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;line-height:1.6"></div>
+      <div id="rcCompteResult" class="rc2-result" style="display:none"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalRcCompte')">Fermer</button>
-      <button class="btn btn-primary" id="rcCompteBtn" onclick="rcSaveCompte()">🔑 Créer le compte</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalRcCompte')">Fermer</button>
+      <button type="button" class="v2-btn-pri" id="rcCompteBtn" onclick="rcSaveCompte()">Créer le compte</button>
     </div>
   </div>
 </div>
 
+<!-- Modales du module V2 (offre, scorecard, intégration, diffusion) -->
+<div class="v2-ov" id="rc2Modal"></div>
+
 <div id="toast-container" class="toast-container"></div>
+
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/candidats-supabase.js"></script>
 <script src="js/recrutement.js"></script>
+<script src="js/recrutement-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

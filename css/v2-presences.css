@@ -1,0 +1,133 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PRÉSENCES — style spécifique, d'après la maquette
+   « Présences (vie quotidienne).dc.html ».
+   Complète css/v2.css (jamais modifié ici). Toutes les classes sont pr2-.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre du haut ────────────────────────────────────────────────────── */
+.pr2-logo { background: linear-gradient(135deg, #16a34a, #4ade80); }
+.pr2-logo svg { width: 20px; height: 20px; }
+.pr2-topbtn { height: 38px; border-radius: 11px; font-size: 12.5px; }
+.pr2-topbtn svg { width: 14px; height: 14px; }
+
+/* L'input date reste dans le DOM (contrat avec js/presences.js) mais la
+   maquette n'affiche qu'un libellé : on ouvre le sélecteur natif au clic. */
+.pr2-date-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── Feuille de présence ──────────────────────────────────────────────── */
+.pr2-sheet {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: 18px; overflow: hidden;
+}
+.pr2-sheet-h {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 16px 22px; border-bottom: 1px solid var(--v2-b);
+}
+.pr2-sheet-t { font-size: 14px; font-weight: 700; color: var(--v2-t2); }
+.pr2-sheet-d { font-size: 12px; color: var(--v2-t7); }
+.pr2-lg { margin-left: auto; display: flex; gap: 14px; flex-wrap: wrap; }
+.pr2-lg-i { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--v2-t5); }
+.pr2-lg-c { width: 11px; height: 11px; border-radius: 3px; }
+
+.pr2-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 14px 22px; border-bottom: 1px solid var(--v2-b-soft);
+}
+.pr2-all {
+  margin-left: auto; height: 32px; padding: 0 14px; border-radius: 9px;
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 700; color: #34d399;
+  background: rgba(16,185,129,.14); border: 1px solid rgba(16,185,129,.35);
+}
+.pr2-all:hover { background: rgba(16,185,129,.22); }
+.pr2-all svg { width: 14px; height: 14px; }
+
+.pr2-scroll { max-height: 470px; overflow-y: auto; padding: 18px 22px; }
+.pr2-hint { font-size: 11px; color: var(--v2-t7); margin-bottom: 14px; }
+
+/* ── Grille de cartes résident ────────────────────────────────────────── */
+.pr2-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+@media (max-width: 1250px) { .pr2-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 920px)  { .pr2-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .pr2-grid { grid-template-columns: 1fr; } }
+
+.pr2-card {
+  position: relative; border-radius: 16px; padding: 16px; cursor: pointer;
+  outline: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  background: color-mix(in srgb, var(--sc, #7f93b3) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc, #7f93b3) 23%, transparent);
+  transition: transform .12s, background .15s, border-color .15s;
+}
+.pr2-card:hover { transform: translateY(-2px); }
+.pr2-card:active { transform: scale(.97); }
+.pr2-card:focus-visible { box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--sc, #7f93b3) 40%, transparent); }
+.pr2-card.off { border-style: dashed; }
+.pr2-card.lock { cursor: not-allowed; opacity: .6; }
+.pr2-card-bar {
+  position: absolute; top: 0; left: 16px; right: 16px; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--sc, #7f93b3);
+}
+
+.pr2-head { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.pr2-av {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #0a1728;
+}
+.pr2-av img { width: 100%; height: 100%; object-fit: cover; }
+.pr2-id { min-width: 0; flex: 1; }
+.pr2-nom { display: block; font-size: 13px; font-weight: 700; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr2-meta { display: block; font-size: 10.5px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pr2-st {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; border-radius: 11px; font-size: 14px; font-weight: 800;
+  background: color-mix(in srgb, var(--sc, #7f93b3) 13%, transparent);
+  color: var(--sc, #7f93b3);
+}
+.pr2-st svg { width: 17px; height: 17px; }
+
+.pr2-plan {
+  display: block; font-size: 10.5px; color: var(--v2-cyan-pale);
+  background: rgba(34,211,238,.11); border-radius: 7px; padding: 3px 8px;
+  margin-top: 9px; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pr2-note { font-size: 10.5px; color: var(--v2-t6); font-style: italic; margin-top: 9px;
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Saisie du motif : bouton discret, la carte entière restant le pointage */
+.pr2-edit {
+  position: absolute; top: 11px; right: 11px; width: 24px; height: 24px;
+  border-radius: 8px; padding: 0; cursor: pointer; opacity: .5;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  transition: opacity .15s, color .15s;
+}
+.pr2-card:hover .pr2-edit, .pr2-edit:hover, .pr2-edit:focus-visible { opacity: 1; color: #fff; }
+.pr2-edit svg { width: 13px; height: 13px; }
+
+/* ── Rang de filtres par unité (au-dessus des filtres d'état) ─────────── */
+.pr2-bar-u { padding-bottom: 12px; }
+.pr2-bar-u[hidden] { display: none; }
+.pr2-uchips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pr2-uchip {
+  height: 32px; padding: 0 14px; border-radius: 9px; cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; color: var(--v2-t5);
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pr2-uchip:hover { background: rgba(255,255,255,.08); color: var(--v2-t4); }
+.pr2-uchip.on { color: #fff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.18); }
+.pr2-uchip .n {
+  font-size: 10.5px; font-weight: 700; line-height: 1;
+  padding: 3px 6px; border-radius: 6px;
+  background: rgba(255,255,255,.07); color: var(--v2-t6);
+}
+.pr2-uchip.on .n { background: rgba(255,255,255,.16); color: #fff; }

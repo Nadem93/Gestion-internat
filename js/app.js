@@ -160,6 +160,13 @@ function _isDarkColor(hex) {
 }
 
 function applyEtabBackground() {
+  // Pages migrées au design V2 (body.v2) : le thème sombre possède le fond.
+  // Sans cette sortie, le dégradé clair posé ici en inline « !important »
+  // l'emporterait sur toute règle de css/v2.css.
+  if (document.body.classList.contains('v2')) {
+    document.body.style.removeProperty('background');
+    return;
+  }
   const etab = getCurrentEtab();
   if (!etab) return;
   document.body.classList.remove('etab-dark-bg');
@@ -290,7 +297,7 @@ const DEFAULTS = {
   ],
   settings: { etablissement:'Foyer d\'Hébergement Les Trois Rivières', ville:'', tel:'', email:'', capacite:'' },
   branding: { primaryColor:'#0f2b4a', accentColor:'#e85d04', logo:'' },
-  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'admin123', role:'admin', super:true }],
+  users: [{ id:1, prenom:'Admin', nom:'', username:'admin', password:'', role:'admin', super:true }],
   vehicules: ['Renault Kangoo', 'Citroën Berlingo', 'Peugeot Partner', 'Volkswagen Caddy'],
   fonctionColors: [
     { id: 1, fonction: 'Éducateur spécialisé', color: '#3b82f6', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules'] },
@@ -333,7 +340,6 @@ function initDefaults() {
   if (!DB.get(DB.keys.documents)) DB.set(DB.keys.documents, {});
   if (!DB.get(DB.keys.incidents)) DB.set(DB.keys.incidents, []);
   if (!DB.get(DB.keys.ppe)) DB.set(DB.keys.ppe, []);
-  if (!localStorage.getItem('ftr_conges')) localStorage.setItem('ftr_conges', '[]');
   if (!DB.get(DB.keys.viatrajectoire)) DB.set(DB.keys.viatrajectoire, []);
   if (!DB.get(DB.keys.fonctionColors)) DB.set(DB.keys.fonctionColors, DEFAULTS.fonctionColors);
   else migrateFonctionColors();
@@ -377,22 +383,34 @@ function requireModule(perm) {
 }
 
 // ── AUDIT LOG ──
-function auditLog(action, details) {
+// 3e argument facultatif : residentId, pour rattacher l'entrée à un dossier
+// (traçabilité RGPD « qui a consulté/modifié ce résident »).
+function auditLog(action, details, residentId) {
   try {
     const session = Auth?.getSession?.();
     if (!session) return;
+    const user = [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username;
+
+    // 1) Trace locale — conservée telle quelle (la vue admin actuelle la lit).
     const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
     log.unshift({
       id: genId(),
       date: new Date().toISOString(),
       userId: session.userId,
-      user: [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username,
+      user,
       role: session.role,
       action,
       details: details || ''
     });
     if (log.length > 1000) log.length = 1000;
     localStorage.setItem('ftr_audit_log', JSON.stringify(log));
+
+    // 2) Trace centralisée — durable et partagée (audit-supabase.js). « Au
+    //    mieux » : jamais bloquante, et si le module ou la table manquent,
+    //    la trace locale reste. Passe par la file hors-ligne au besoin.
+    if (typeof sbLogAudit === 'function') {
+      sbLogAudit({ action, details, residentId, userId: session.userId, userName: user, role: session.role });
+    }
   } catch {}
 }
 
@@ -461,6 +479,10 @@ const Auth = {
   requireAuth() {
     const s = this.getSession();
     if (!s) { window.location.href = 'index.html'; return null; }
+    // Compte famille : cantonné à l'espace famille, aucune autre page du site
+    if (s.role === 'famille' && location.pathname.split('/').pop() !== 'famille.html') {
+      window.location.href = 'famille.html'; return null;
+    }
     // Vérifier qu'un établissement est sélectionné
     const etabId = sessionStorage.getItem('ftr_current_etab');
     const etabs = getEtabs();
@@ -513,11 +535,6 @@ const Auth = {
   }
 };
 
-// Lit les données d'un établissement précis (clé suffixée), pour la console groupe
-function getEtabData(etabId, key) {
-  return JSON.parse(localStorage.getItem(`${key}__${etabId}`) || 'null');
-}
-
 // S'assure qu'au moins un super administrateur existe (drapeau super:true sur l'admin par défaut)
 function migrateSuperAdmin() {
   const users = DB.get(DB.keys.users) || [];
@@ -555,7 +572,7 @@ function residentPhoto(r, size = 48) {
   if (r && r.photo) {
     return `<img src="${escHtml(r.photo)}" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"/>`;
   }
-  const bg = r?.color || 'var(--blue)';
+  const bg = safeColor(r?.color, 'var(--blue)');
   const fs = size < 36 ? '.65rem' : size < 48 ? '.75rem' : size < 64 ? '1rem' : '1.4rem';
   return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fs};color:#fff;flex-shrink:0">${initials(r?.prenom||'', r?.nom||'')}</div>`;
 }
@@ -641,6 +658,11 @@ function shortName(fullName) {
 
 // ── DATE HELPERS ──
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// SERAFIN-PH — un niveau de soutien avec intervention active de l'accompagnant
+// (incitation/guidance verbale, aide partielle, aide totale) = prestation DIRECTE ;
+// présence simple (autonomie) et supervision/veille = INDIRECTE ; non renseigné = indirecte.
+const SERAFIN_DIRECT_NIVEAUX = ['verbal', 'partiel', 'total'];
+function isSerafinDirect(niveau) { return SERAFIN_DIRECT_NIVEAUX.includes(niveau); }
 function formatDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
@@ -661,12 +683,13 @@ function sanitizeUrl(url) {
   return url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// ── CATEGORY BADGE ──
-function categoryBadge(catId) {
-  const cats = DB.get(DB.keys.categories) || [];
-  const cat = cats.find(c => c.id == catId);
-  if (!cat) return '<span class="badge badge-gray">—</span>';
-  return `<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${escHtml(cat.name)}</span>`;
+// Les couleurs stockées en base (residents.color, planning.color, employes.color,
+// catégories de la config…) sont modifiables par PATCH REST par tout membre de
+// l'établissement : la RLS n'impose aucun format. Sans validation, une chaîne
+// forgée ferme l'attribut style et injecte du HTML (XSS stocké).
+// N'accepte que l'hexadécimal #rgb → #rrggbbaa ; sinon renvoie le fallback.
+function safeColor(c, fallback) {
+  return /^#[0-9a-fA-F]{3,8}$/.test(c || '') ? c : (fallback || '');
 }
 
 // ── CONFIRM DIALOG ──
@@ -677,7 +700,6 @@ function confirmDialog(msg, cb) {
 // ── RENDER USER INFO ──
 function renderUserInfo() {
   const session = Auth.getSession();
-  const settings = DB.get(DB.keys.settings) || {};
   const nameEl = document.getElementById('headerUserName');
   const avEl = document.getElementById('headerUserAvatar');
   const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';
@@ -938,8 +960,18 @@ function escHtml(s) {
   if (!s) return '';
   const d = document.createElement('div');
   d.textContent = s;
-  return d.innerHTML;
+  // On échappe AUSSI " et ' pour que la sortie soit sûre à la fois dans le CORPS
+  // de la page ET dans un ATTRIBUT HTML (title="", value="", alt="", href="", …).
+  // Les entités s'affichent à l'identique dans le corps, donc aucune régression
+  // visuelle. ⚠️ Ne protège PAS une donnée placée dans une chaîne JS d'un onclick
+  // inline : le navigateur décode l'entité AVANT le parseur JS — dans ces cas,
+  // passer un id à la fonction et relire la valeur depuis le cache.
+  return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+
+// Alias explicite pour les contextes d'attribut. Identique à escHtml (qui échappe
+// désormais les guillemets) ; conservé comme marqueur d'intention à l'appel.
+function escAttr(s) { return escHtml(s); }
 
 // ── Nom de famille toujours en MAJUSCULES (convention « Prénom NOM ») ──
 function nomMaj(n) { return (n == null ? '' : String(n)).toUpperCase(); }
@@ -1125,7 +1157,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
   }
   if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      try { reg.update(); } catch (_) {}
+    }).catch(() => {});
+    // Recharge la page UNE fois quand un nouveau service worker prend le
+    // contrôle : évite de rester bloqué sur d'anciens CSS/JS en cache après
+    // un déploiement (plus besoin de vider le cache à la main). On ne le fait
+    // que pour un visiteur qui avait DÉJÀ un SW (mise à jour) — pas à la
+    // toute première installation, pour éviter un rechargement inutile.
+    if (navigator.serviceWorker.controller) {
+      let _swRefreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_swRefreshing) return;
+        _swRefreshing = true;
+        location.reload();
+      });
+    }
   }
   initAutoLock();
 });

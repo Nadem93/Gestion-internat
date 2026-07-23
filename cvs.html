@@ -1,241 +1,331 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Conseil de la Vie Sociale — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-.cvs-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
-.cvs-section-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.cvs-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem}
-.cvs-dash{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;margin-bottom:1rem}
-.cvs-col{display:flex;flex-direction:column;gap:1rem}
-.cvs-section{background:transparent;padding:.9rem 0}
-@media(max-width:780px){.cvs-dash{grid-template-columns:1fr}}
-#modalCvsMembre .modal-header,#modalCvsSeance .modal-header,#modalCvsResolutions .modal-header,#modalCvsThematique .modal-header{background:#fff;border-bottom-color:var(--border)}
-#modalCvsMembre .modal-title,#modalCvsSeance .modal-title,#modalCvsResolutions .modal-title,#modalCvsThematique .modal-title{color:var(--text)}
-#modalCvsMembre .modal-body,#modalCvsSeance .modal-body,#modalCvsResolutions .modal-body,#modalCvsThematique .modal-body{background:#fff}
-#modalCvsMembre .modal-footer,#modalCvsSeance .modal-footer,#modalCvsThematique .modal-footer{background:#fff;border-top-color:var(--border)}
-#modalCvsMembre input,#modalCvsMembre select,#modalCvsMembre textarea,
-#modalCvsSeance input,#modalCvsSeance select,#modalCvsSeance textarea,
-#modalCvsResolutions input,#modalCvsResolutions select,#modalCvsResolutions textarea,
-#modalCvsThematique input,#modalCvsThematique select,#modalCvsThematique textarea{border-color:var(--border);background:#fff;color:var(--text)}
-#modalCvsMembre input:focus,#modalCvsMembre select:focus,#modalCvsMembre textarea:focus,
-#modalCvsSeance input:focus,#modalCvsSeance select:focus,#modalCvsSeance textarea:focus,
-#modalCvsResolutions input:focus,#modalCvsResolutions select:focus,#modalCvsResolutions textarea:focus,
-#modalCvsThematique input:focus,#modalCvsThematique select:focus,#modalCvsThematique textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.12)}
-#modalCvsMembre .modal,#modalCvsSeance .modal,#modalCvsResolutions .modal,#modalCvsThematique .modal{border-color:var(--border)}
-</style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-cvs.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">🤝 Conseil de la Vie Sociale</div></div>
-      <div class="header-right">
-        <button class="btn btn-outline btn-sm no-cvs-edit" onclick="openMembreModal()">+ Membre</button>
-        <button class="btn btn-outline btn-sm no-cvs-edit" onclick="openThematiqueModal()">+ Thématique</button>
-        <button class="btn btn-accent btn-sm no-cvs-edit" onclick="openSeanceModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nouvelle séance
-        </button>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell">
 
-    <main class="content" style="max-width:1150px">
+  <!-- ── BANDEAU ─────────────────────────────────────────────────────── -->
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" title="Retour à l'accueil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Participation</div>
+      <div class="v2-top-title">Conseil de la Vie Sociale</div>
+    </div>
+    <div class="cv2-top-acts">
+      <button type="button" class="v2-btn no-cvs-edit" onclick="openMembreModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Membre
+      </button>
+      <button type="button" class="v2-btn no-cvs-edit" onclick="openThematiqueModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Thématique
+      </button>
+      <button type="button" class="v2-btn v2-btn-primary no-cvs-edit" onclick="openSeanceModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle séance
+      </button>
+    </div>
+  </div>
 
-      <!-- ── Stats ── -->
-      <div id="cvsStats" class="grid grid-5" style="margin-bottom:1.25rem"></div>
+  <div class="v2-body">
 
-      <!-- ── Galerie membres résidents ── -->
-      <div id="cvsMembresGallery" style="margin-bottom:1.25rem"></div>
+    <!-- ── STATISTIQUES ──────────────────────────────────────────────── -->
+    <div id="cvsStats" class="cv2-stats"></div>
 
-      <!-- ── Dashboard 2 colonnes ── -->
-      <div class="cvs-dash">
+    <!-- ── MEMBRES DU CONSEIL ────────────────────────────────────────── -->
+    <div id="cvsMembresGallery" style="margin-bottom:18px"></div>
 
-        <!-- Colonne gauche : Satisfaction + Thématiques -->
-        <div class="cvs-col">
+    <!-- ── TABLEAU DE BORD DEUX COLONNES ─────────────────────────────── -->
+    <div class="cv2-dash">
 
-          <!-- Analyse satisfaction -->
-          <div class="cvs-section">
-            <div class="cvs-section-head">
-              <span class="cvs-section-title">⭐ Satisfaction résidents</span>
-              <a href="satisfaction.html" style="font-size:.72rem;color:var(--primary);text-decoration:none;font-weight:600">Voir le détail →</a>
-            </div>
-            <div id="cvsSatAnalysis"></div>
+      <div class="cv2-col">
+        <!-- Satisfaction résidents -->
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="cv2-blk-ico" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+            <span class="v2-blk-t">Satisfaction résidents</span>
+            <a class="v2-blk-lien" href="satisfaction.html">Voir le détail →</a>
           </div>
-
-          <!-- Thématiques -->
-          <div class="cvs-section">
-            <div class="cvs-section-head">
-              <span class="cvs-section-title">🎯 Thématiques</span>
-              <button class="btn btn-ghost btn-sm no-cvs-edit" onclick="openThematiqueModal()" style="font-size:.72rem">+ Ajouter</button>
-            </div>
-            <div id="cvsThematiquesList"></div>
-          </div>
-
+          <div id="cvsSatAnalysis"></div>
         </div>
 
-        <!-- Colonne droite : Séances + Résolutions -->
-        <div class="cvs-col">
-
-          <!-- Séances -->
-          <div class="cvs-section">
-            <div class="cvs-section-head">
-              <span class="cvs-section-title">📅 Séances & comptes-rendus</span>
-              <button class="btn btn-ghost btn-sm no-cvs-edit" onclick="openSeanceModal()" style="font-size:.72rem">+ Ajouter</button>
-            </div>
-            <div id="cvsSeancesList"></div>
+        <!-- Thématiques -->
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="cv2-blk-ico" style="color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+            <span class="v2-blk-t">Thématiques</span>
+            <button type="button" class="cv2-add no-cvs-edit" onclick="openThematiqueModal()">+ Ajouter</button>
           </div>
-
-          <!-- Résolutions actives -->
-          <div class="cvs-section">
-            <div class="cvs-section-head">
-              <span class="cvs-section-title">✅ Résolutions en cours</span>
-              <button class="btn btn-ghost btn-sm" id="cvsResAllBtn" onclick="cvsToggleAllResolutions()" style="font-size:.72rem;display:none">Voir tout</button>
-            </div>
-            <div id="cvsResolutionsList"></div>
-          </div>
-
+          <div id="cvsThematiquesList"></div>
         </div>
       </div>
 
+      <div class="cv2-col">
+        <!-- Séances -->
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="cv2-blk-ico" style="color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span class="v2-blk-t">Séances &amp; comptes-rendus</span>
+            <button type="button" class="cv2-add no-cvs-edit" onclick="openSeanceModal()">+ Ajouter</button>
+          </div>
+          <div id="cvsSeancesList"></div>
+        </div>
 
-    </main>
+        <!-- Résolutions -->
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="cv2-blk-ico" style="color:#22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+            <span class="v2-blk-t">Résolutions en cours</span>
+            <button type="button" class="cv2-add" id="cvsResAllBtn" onclick="cvsToggleAllResolutions()" style="display:none">Voir tout</button>
+          </div>
+          <div id="cvsResolutionsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROCHAINE SÉANCE + PARTICIPATION ──────────────────────────── -->
+    <div class="cv2-g14">
+      <div id="cvsProchaine"></div>
+      <div class="v2-blk">
+        <div class="v2-blk-h"><span class="v2-blk-t">Participation aux séances</span></div>
+        <div id="cvsParticipation"></div>
+      </div>
+    </div>
+
+    <!-- ── BOÎTE À IDÉES + COMPTES-RENDUS ────────────────────────────── -->
+    <div class="cv2-g14">
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="cv2-blk-ico" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
+          <span class="v2-blk-t">Boîte à idées des résidents</span>
+          <span class="cv2-meta" id="cvsIdeesCount"></span>
+          <button type="button" class="cv2-add" style="margin-left:12px" onclick="cv2OpenIdeeModal()">+ Proposer</button>
+        </div>
+        <div id="cvsIdeesList"></div>
+      </div>
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <span class="cv2-blk-ico" style="color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <span class="v2-blk-t">Comptes-rendus</span>
+        </div>
+        <div id="cvsDocsList"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- MODAL MEMBRE -->
-<div class="modal-overlay" id="modalCvsMembre">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="cmTitle">Nouveau membre</span>
-      <button class="modal-close" onclick="closeModal('modalCvsMembre')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ── MODALE MEMBRE ───────────────────────────────────────────────── -->
+<div class="v2-ov" id="modalCvsMembre">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <div><div class="v2-md-t" id="cmTitle">Nouveau membre</div><div class="v2-md-s">Composition du conseil : collège, qualité et mandat</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCvsMembre')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label>Collège</label><select id="cmCollege" onchange="cvsOnCollegeChange(this.value)"></select></div>
-        <div class="form-group"><label>Qualité</label><select id="cmRole"></select></div>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="cmCollege">Collège</label>
+          <select id="cmCollege" class="v2-fld" onchange="cvsOnCollegeChange(this.value)"></select></div>
+        <div><label class="v2-fld-l" for="cmRole">Qualité</label>
+          <select id="cmRole" class="v2-fld"></select></div>
       </div>
-      <div class="form-group" id="cmResidentBox" style="display:none">
-        <label>Résident (membre du CVS)</label>
-        <select id="cmResidentId" onchange="cvsOnResidentSelect(this.value)" style="width:100%">
+      <div id="cmResidentBox" style="display:none">
+        <label class="v2-fld-l" for="cmResidentId">Résident (membre du CVS)</label>
+        <select id="cmResidentId" class="v2-fld" onchange="cvsOnResidentSelect(this.value)">
           <option value="">— Sélectionner un résident —</option>
         </select>
-        <div id="cmResidentPreview" style="margin-top:.5rem;display:flex;align-items:center;gap:.6rem"></div>
+        <div id="cmResidentPreview" style="margin-top:10px;display:flex;align-items:center;gap:10px"></div>
       </div>
-      <div class="form-group"><label class="required">Nom</label><input type="text" id="cmNom" placeholder="Nom du membre ou de l'organisme"/></div>
-      <div class="form-group"><label>Contact</label><input type="text" id="cmContact" placeholder="Email ou téléphone (optionnel)"/></div>
-      <div class="form-row">
-        <div class="form-group"><label>Début de mandat</label><input type="date" id="cmMandatDebut"/></div>
-        <div class="form-group"><label>Fin de mandat</label><input type="date" id="cmMandatFin"/></div>
+      <div><label class="v2-fld-l" for="cmNom">Nom *</label>
+        <input type="text" id="cmNom" class="v2-fld" placeholder="Nom du membre ou de l'organisme"/></div>
+      <div><label class="v2-fld-l" for="cmContact">Contact</label>
+        <input type="text" id="cmContact" class="v2-fld" placeholder="Email ou téléphone (optionnel)"/></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="cmMandatDebut">Début de mandat</label>
+          <input type="date" id="cmMandatDebut" class="v2-fld"/></div>
+        <div><label class="v2-fld-l" for="cmMandatFin">Fin de mandat</label>
+          <input type="date" id="cmMandatFin" class="v2-fld"/></div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Une fin de mandat renseignée crée automatiquement une échéance de renouvellement.
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalCvsMembre')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveMembre()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCvsMembre')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveMembre()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL SÉANCE -->
-<div class="modal-overlay" id="modalCvsSeance">
-  <div class="modal lg">
-    <div class="modal-header">
-      <span class="modal-title" id="csTitle">Nouvelle séance</span>
-      <button class="modal-close" onclick="closeModal('modalCvsSeance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ── MODALE SÉANCE ───────────────────────────────────────────────── -->
+<div class="v2-ov" id="modalCvsSeance">
+  <div class="v2-md v2-md-lg" style="--mc:#10b981">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <div><div class="v2-md-t" id="csTitle">Nouvelle séance</div><div class="v2-md-s">Convocation, présents et compte-rendu des échanges</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCvsSeance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label class="required">Date</label><input type="date" id="csDate"/></div>
-        <div class="form-group"><label>Heure</label><input type="time" id="csHeure"/></div>
-        <div class="form-group"><label>Lieu</label><input type="text" id="csLieu" placeholder="Salle commune…"/></div>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="csDate">Date *</label><input type="date" id="csDate" class="v2-fld"/></div>
+        <div><label class="v2-fld-l" for="csHeure">Heure</label><input type="time" id="csHeure" class="v2-fld"/></div>
       </div>
-      <div class="form-group"><label>Présents</label><textarea id="csPresents" rows="2" placeholder="Liste des présents…"></textarea></div>
-      <div class="form-group"><label>Excusés</label><textarea id="csExcuses" rows="2" placeholder="Liste des excusés…"></textarea></div>
-      <div class="form-group"><label>Ordre du jour</label><textarea id="csOrdreDuJour" rows="2" placeholder="Points à aborder…"></textarea></div>
-      <div class="form-group"><label>Compte-rendu des échanges</label><textarea id="csCompteRendu" rows="5" placeholder="Synthèse des discussions, décisions, remarques des résidents et familles…"></textarea></div>
+      <div><label class="v2-fld-l" for="csLieu">Lieu</label>
+        <input type="text" id="csLieu" class="v2-fld" placeholder="Salle commune…"/></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="csPresents">Présents</label>
+          <textarea id="csPresents" class="v2-fld" rows="3" placeholder="Un nom par ligne — alimente le taux de participation"></textarea></div>
+        <div><label class="v2-fld-l" for="csExcuses">Excusés</label>
+          <textarea id="csExcuses" class="v2-fld" rows="3" placeholder="Un nom par ligne"></textarea></div>
+      </div>
+      <div><label class="v2-fld-l" for="csOrdreDuJour">Ordre du jour</label>
+        <textarea id="csOrdreDuJour" class="v2-fld" rows="4" placeholder="Un point par ligne — affiché numéroté sur la carte « prochaine séance »"></textarea></div>
+      <div><label class="v2-fld-l" for="csCompteRendu">Compte-rendu des échanges</label>
+        <textarea id="csCompteRendu" class="v2-fld" rows="6" placeholder="Synthèse des discussions, décisions, remarques des résidents et familles…"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalCvsSeance')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveSeance()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCvsSeance')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveSeance()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL RÉSOLUTIONS -->
-<div class="modal-overlay" id="modalCvsResolutions">
-  <div class="modal lg">
-    <div class="modal-header">
-      <span class="modal-title" id="rmTitle">Résolutions</span>
-      <button class="modal-close" onclick="closeModal('modalCvsResolutions')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ── MODALE RÉSOLUTIONS ──────────────────────────────────────────── -->
+<div class="v2-ov" id="modalCvsResolutions">
+  <div class="v2-md v2-md-lg" style="--mc:#22c55e">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+      <div><div class="v2-md-t" id="rmTitle">Résolutions</div><div class="v2-md-s">Décisions adoptées en séance et suivi de leur réalisation</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCvsResolutions')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="section-label">Résolutions adoptées</div>
-      <div id="rmList" style="display:flex;flex-direction:column;gap:.45rem;margin-bottom:1rem"></div>
-      <div class="divider"></div>
+    <div class="v2-md-b">
+      <div>
+        <div class="v2-blk-sub">Résolutions adoptées</div>
+        <div id="rmList"></div>
+      </div>
       <div id="rmAddBox">
-        <div class="section-label">Ajouter une résolution</div>
-        <div class="form-group"><label>Texte de la résolution</label><textarea id="rmTexte" rows="2" placeholder="Décision ou action décidée en séance…"></textarea></div>
-        <div class="form-row">
-          <div class="form-group"><label>Responsable</label><input type="text" id="rmResponsable" placeholder="Personne ou service en charge"/></div>
-          <div class="form-group"><label>Échéance</label><input type="date" id="rmEcheance"/></div>
-          <div class="form-group" style="flex:0;align-self:flex-end"><button class="btn btn-accent btn-sm" onclick="addResolution(cvsResolutionsSeanceId)">+ Ajouter</button></div>
+        <div class="v2-blk-sub">Ajouter une résolution</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label class="v2-fld-l" for="rmTexte">Texte de la résolution</label>
+            <textarea id="rmTexte" class="v2-fld" rows="2" placeholder="Décision ou action décidée en séance…"></textarea></div>
+          <div class="v2-grid2">
+            <div><label class="v2-fld-l" for="rmResponsable">Responsable</label>
+              <input type="text" id="rmResponsable" class="v2-fld" placeholder="Personne ou service en charge"/></div>
+            <div><label class="v2-fld-l" for="rmEcheance">Échéance</label>
+              <input type="date" id="rmEcheance" class="v2-fld"/></div>
+          </div>
         </div>
       </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCvsResolutions')">Fermer</button>
+      <button type="button" class="v2-btn-pri" onclick="addResolution(cvsResolutionsSeanceId)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter la résolution
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MODAL THÉMATIQUE -->
-<div class="modal-overlay" id="modalCvsThematique">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header">
-      <span class="modal-title" id="ctTitle">Nouvelle thématique</span>
-      <button class="modal-close" onclick="closeModal('modalCvsThematique')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ── MODALE THÉMATIQUE ───────────────────────────────────────────── -->
+<div class="v2-ov" id="modalCvsThematique">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+      <div><div class="v2-md-t" id="ctTitle">Nouvelle thématique</div><div class="v2-md-s">Sujet suivi par le conseil, adossé aux scores de satisfaction</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCvsThematique')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label class="required">Titre</label>
-        <input type="text" id="ctTitre" placeholder="Ex : Amélioration de la restauration…"/>
+    <div class="v2-md-b">
+      <div><label class="v2-fld-l" for="ctTitre">Titre *</label>
+        <input type="text" id="ctTitre" class="v2-fld" placeholder="Ex : Amélioration de la restauration…"/></div>
+      <div><label class="v2-fld-l" for="ctDescription">Description / contexte</label>
+        <textarea id="ctDescription" class="v2-fld" rows="2" placeholder="Problème identifié, objectif visé…"></textarea></div>
+      <div>
+        <label class="v2-fld-l">Catégories satisfaction liées</label>
+        <div id="ctCatsBox"></div>
       </div>
-      <div class="form-group">
-        <label>Description / contexte</label>
-        <textarea id="ctDescription" rows="2" placeholder="Problème identifié, objectif visé…" style="resize:vertical"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Catégories satisfaction liées</label>
-        <p style="font-size:.72rem;color:var(--muted);margin:.2rem 0 .5rem">Sélectionnez les catégories — le score s'affiche automatiquement.</p>
-        <div id="ctCatsBox" style="display:flex;flex-wrap:wrap;gap:.4rem"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Priorité</label>
-          <select id="ctPriorite">
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="ctPriorite">Priorité</label>
+          <select id="ctPriorite" class="v2-fld">
             <option value="normale">Normale</option>
-            <option value="haute">🔴 Haute</option>
-            <option value="basse">🟢 Basse</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Statut</label>
-          <select id="ctStatut">
+            <option value="haute">Haute</option>
+            <option value="basse">Basse</option>
+          </select></div>
+        <div><label class="v2-fld-l" for="ctStatut">Statut</label>
+          <select id="ctStatut" class="v2-fld">
             <option value="ouvert">Ouvert</option>
             <option value="en_cours">En cours</option>
             <option value="resolu">Résolu</option>
             <option value="clos">Clos</option>
-          </select>
-        </div>
+          </select></div>
       </div>
-      <div class="form-group">
-        <label>Séance associée</label>
-        <select id="ctSeanceId"><option value="">— Aucune —</option></select>
+      <div><label class="v2-fld-l" for="ctSeanceId">Séance associée</label>
+        <select id="ctSeanceId" class="v2-fld"><option value="">— Aucune —</option></select></div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCvsThematique')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveThematique()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALE BOÎTE À IDÉES ────────────────────────────────────────── -->
+<div class="v2-ov" id="modalCvsIdee">
+  <div class="v2-md" style="--mc:#fbbf24">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
+      <div><div class="v2-md-t" id="ciTitle">Nouvelle proposition</div><div class="v2-md-s">Idée déposée par un résident ou une famille</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCvsIdee')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <input type="hidden" id="ciId"/>
+      <div><label class="v2-fld-l" for="ciTexte">Proposition *</label>
+        <textarea id="ciTexte" class="v2-fld" rows="3" placeholder="Ex : installer un potager partagé dans le jardin…"></textarea></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="ciAuteur">Proposé par</label>
+          <input type="text" id="ciAuteur" class="v2-fld" placeholder="Nom du résident ou de la famille"/></div>
+        <div><label class="v2-fld-l" for="ciStatut">Statut</label>
+          <select id="ciStatut" class="v2-fld">
+            <option value="nouvelle">Nouvelle</option>
+            <option value="etude">À l'étude</option>
+            <option value="retenue">Retenue</option>
+            <option value="rejetee">Non retenue</option>
+          </select></div>
+      </div>
+      <div class="v2-note v2-note-warn" id="ciNote" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Table « cvs_idees » absente : exécutez migration-cvs.sql pour pouvoir enregistrer.
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalCvsThematique')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveThematique()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCvsIdee')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="cv2SaveIdee()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
@@ -244,10 +334,16 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
 <script src="js/satisfaction-supabase.js"></script>
 <script src="js/cvs-supabase.js"></script>
 <script src="js/cvs.js"></script>
+<script src="js/cvs-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

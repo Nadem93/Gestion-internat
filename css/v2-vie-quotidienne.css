@@ -1,0 +1,198 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   VIE QUOTIDIENNE — V2 (maquette « Vie quotidienne - refonte (bento) »)
+   Coque à deux colonnes : navigation latérale + panneau principal.
+   Ne dépend que des variables de css/v2.css (jamais modifié ici).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2 .vq-shell {
+  display: flex;
+  height: calc(100vh - 44px);
+  min-height: 620px;
+  background:
+    radial-gradient(1000px 520px at 80% -10%, rgba(13,148,136,.22), transparent 60%),
+    radial-gradient(800px 460px at 6% 110%, rgba(234,88,12,.12), transparent 60%),
+    var(--v2-bg);
+}
+
+/* ── Panneau principal ────────────────────────────────────────────────── */
+/* min-height:0 indispensable : sans lui, dans la coque `height:100dvh` en
+   colonne (mobile), .vq-main grandit à la hauteur de son contenu au lieu de se
+   contraindre — #vqHome ne peut alors plus défiler (son overflow-y:auto ne se
+   déclenche jamais) et les cartes du bas deviennent inaccessibles. */
+.vq-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.vq-topbar {
+  height: 66px; flex-shrink: 0; border-bottom: 1px solid var(--v2-b);
+  display: flex; align-items: center; gap: 14px; padding: 0 30px;
+}
+.vq-topbar-t { font-size: 17px; font-weight: 700; color: #fff; }
+.vq-topbar-m { margin-left: auto; font-size: 12.5px; color: var(--v2-t7); }
+.vq-back {
+  display: none; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
+  border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.vq-back.on { display: inline-flex; }
+.vq-back:hover { background: var(--v2-s-hover); color: #fff; }
+.vq-back svg { width: 14px; height: 14px; }
+
+.vq-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* le rembourrage vient de .v2-body (css/v2.css) */
+#vqHome { flex: 1; overflow-y: auto; }
+#vqFrame { flex: 1; width: 100%; border: none; background: var(--v2-inset); }
+
+/* ── En-tête de contenu ───────────────────────────────────────────────── */
+.vq-hello { margin-bottom: 22px; }
+.vq-hello h1 {
+  margin: 0; font-family: var(--v2-display); font-size: 26px; font-weight: 700;
+  letter-spacing: -.02em; color: #fff;
+}
+.vq-hello-s { margin-top: 4px; font-size: 13.5px; color: var(--v2-t7); }
+
+/* ── KPI ──────────────────────────────────────────────────────────────── */
+.vq-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.vq-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.vq-kpi-ic {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.vq-kpi-ic svg { width: 21px; height: 21px; }
+.vq-kpi-n { font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; }
+.vq-kpi-l { font-size: 11.5px; color: var(--v2-t6); margin-top: 4px; }
+
+/* ── Accès rapides ────────────────────────────────────────────────────── */
+.vq-sec {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t9); margin-bottom: 12px;
+}
+.vq-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.vq-card {
+  position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-kpi); padding: 18px; cursor: pointer; overflow: hidden;
+  text-align: left; font-family: inherit; outline: none; display: block; width: 100%;
+  transition: transform .15s, box-shadow .3s, border-color .2s;
+}
+.vq-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--vqc, #6366f1) 40%, transparent);
+  box-shadow: 0 14px 30px -14px var(--vqc-sh, rgba(99,102,241,.4));
+}
+.vq-card:focus-visible { box-shadow: 0 0 0 2.5px var(--vqc-sh, rgba(99,102,241,.4)); }
+.vq-card-ic {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--vqc, #6366f1); box-shadow: 0 6px 14px var(--vqc-sh, rgba(99,102,241,.33));
+}
+.vq-card-ic svg { width: 22px; height: 22px; }
+.vq-card-l { font-size: 13.5px; font-weight: 600; color: var(--v2-t2); margin-top: 14px; }
+.vq-card-s { font-size: 11px; color: var(--v2-t6); margin-top: 3px; }
+/* Bouton « à quoi ça sert ? » — ouvre le mode d'emploi du module */
+.vq-card-i {
+  position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t7);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+}
+.vq-card-i:hover { background: var(--v2-s-active); color: #fff; }
+
+/* ── Bento du jour ────────────────────────────────────────────────────── */
+.vq-bento { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+.vq-blk {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 20px;
+}
+.vq-blk-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.vq-blk-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.vq-blk-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.vq-li {
+  display: flex; align-items: center; gap: 11px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list);
+}
+.vq-li:last-child { border-bottom: none; }
+.vq-li-h { font-size: 11px; font-weight: 700; width: 42px; flex-shrink: 0; color: var(--v2-t5); }
+.vq-li-b { flex: 1; min-width: 0; }
+.vq-li-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vq-li-s { font-size: 10.5px; color: var(--v2-t6);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vq-li-n { font-size: 11px; font-weight: 700; color: var(--v2-t4); flex-shrink: 0; }
+.vq-li-dot {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.vq-li-dot svg { width: 12px; height: 12px; }
+.vq-vide { font-size: 12px; color: var(--v2-t7); padding: 6px 0; }
+
+/* ── Mode d'emploi (modale, gabarit v2-ov/v2-md) ──────────────────────── */
+.vq-tuto-h { font-size: 12.5px; font-weight: 700; color: var(--v2-t3); margin-bottom: 7px;
+  display: flex; align-items: center; gap: 7px; }
+.vq-tuto-p { font-size: 13px; color: var(--v2-t4); line-height: 1.55; }
+.vq-tuto-ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.vq-tuto-ol li { font-size: 12.5px; color: var(--v2-t4); line-height: 1.5; }
+.vq-tuto-ol li::marker { color: var(--mc, #818cf8); font-weight: 800; }
+.vq-tuto-box {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-sm); padding: 12px 14px;
+}
+.vq-tuto-ex {
+  background: var(--v2-s-sub); border-left: 3px solid var(--mc, #818cf8);
+  border-radius: var(--v2-r-badge); padding: 11px 13px;
+  font-size: 12.5px; color: var(--v2-t4); line-height: 1.55;
+}
+.vq-tuto-ex b, .vq-tuto-h b { color: var(--mc, #818cf8); }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .vq-cards { grid-template-columns: repeat(3, 1fr); }
+  .vq-bento { grid-template-columns: 1fr; }
+}
+@media (max-width: 960px) {
+  body.v2 .vq-shell { flex-direction: column; height: auto; }
+  .vq-kpis { grid-template-columns: repeat(2, 1fr); }
+  .vq-cards { grid-template-columns: repeat(2, 1fr); }
+  #vqFrame { min-height: 70vh; }
+}
+@media (max-width: 620px) {
+  .vq-kpis, .vq-cards { grid-template-columns: 1fr; }
+  .vq-topbar { padding-left: 18px; padding-right: 18px; }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────
+   Ajouté avec le passage bord à bord de css/v2.css. Placé en fin de fichier :
+   les règles ci-dessus ont la même specificité, c'est l'ordre qui tranche. */
+@media (max-width: 960px) {
+  /* Le rail supprimé, la coquille n'est plus qu'une colonne. En `height:auto`
+     l'iframe du module (flex:1) n'a aucune base de calcul et se réduit à une
+     hauteur arbitraire : on redonne une hauteur réelle. dvh d'abord pour ne
+     pas compter la barre d'URL mobile, vh en repli. */
+  body.v2 .vq-shell { height: 100vh; height: 100dvh; min-height: 0; }
+}
+@media (max-width: 860px) {
+  .vq-topbar {
+    height: auto; min-height: 58px; flex-wrap: wrap;
+    padding: 10px 14px; gap: 8px;
+  }
+  /* Sans troncature, le titre pousse la méta hors de l'écran. */
+  .vq-topbar-t {
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* La méta passe à la ligne plutôt que de disparaître : l'information
+     (date, effectif) reste lisible. */
+  /* `order` élevé : la méta occupant toute la ligne, sans ça elle
+     repousserait le bouton de thème sur une troisième ligne. */
+  .vq-topbar-m {
+    order: 10; display: block; margin-left: 0; flex-basis: 100%;
+    font-size: 11.5px; white-space: normal;
+  }
+  .vq-topbar #thmBtn { margin-left: auto; }
+}
+@media (max-width: 640px) {
+  /* Dégager la barre de navigation mobile fixe (js/mobile-nav.js, ~86px) :
+     comme #vqHome défile en interne (la coque est en height:100dvh), le
+     `padding-bottom` du body n'atteint pas ce conteneur — la dernière carte
+     d'action rapide resterait cachée derrière la barre. On l'ajoute ici. */
+  #vqHome { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}

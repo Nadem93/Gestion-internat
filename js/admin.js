@@ -247,7 +247,7 @@ function saveObj() {
     objs.push({ id: newId, name, description });
     toast('Objectif ajouté');
   }
-  DB.set(DB.keys.objectives, objs);
+  (typeof persistObjectives === 'function' ? persistObjectives(objs) : DB.set(DB.keys.objectives, objs));
   closeAllModals();
   resetObjForm();
   renderObjs();
@@ -258,7 +258,7 @@ function deleteObj() {
   confirmDialog('Supprimer cet objectif ?', () => {
     let objs = DB.get(DB.keys.objectives) || [];
     objs = objs.filter(o => String(o.id) !== String(id));
-    DB.set(DB.keys.objectives, objs);
+    (typeof persistObjectives === 'function' ? persistObjectives(objs) : DB.set(DB.keys.objectives, objs));
     closeAllModals();
     resetObjForm();
     renderObjs();
@@ -354,7 +354,7 @@ function renderPermLeft() {
   if (!el) return;
   const list = getFonctions();
   el.innerHTML = list.map(f => `<div class="perm2-role ${String(f.id) === String(_permSel) ? 'active' : ''}" onclick="permSelect(${f.id})">
-    <span class="perm2-dot" style="background:${f.color || '#6366f1'}"></span>
+    <span class="perm2-dot" style="background:${safeColor(f.color, '#6366f1')}"></span>
     <span class="perm2-role-name">${escHtml(f.fonction)}</span>
     <span class="perm2-role-count">${(f.permissions || []).length}</span>
   </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:1rem">Aucun rôle</div>';
@@ -386,14 +386,14 @@ function renderPermDetail() {
 
   el.innerHTML = `
     <div class="perm2-head">
-      <input type="color" value="${f.color || '#6366f1'}" style="width:30px;height:30px;padding:0;border:none;background:none;cursor:pointer" onchange="permSetColor(this.value)" title="Couleur du rôle"/>
-      <input type="text" value="${escHtml(f.fonction)}" onchange="permRename(this.value)" style="flex:1;min-width:0;font-size:.92rem;font-weight:700;border:none;background:none;padding:.2rem 0;outline:none" aria-label="Nom du rôle"/>
+      <input type="color" value="${safeColor(f.color, '#6366f1')}" style="width:30px;height:30px;padding:0;border:none;background:none;cursor:pointer" onchange="permSetColor(this.value)" title="Couleur du rôle"/>
+      <input type="text" value="${escAttr(f.fonction)}" onchange="permRename(this.value)" style="flex:1;min-width:0;font-size:.92rem;font-weight:700;border:none;background:none;padding:.2rem 0;outline:none" aria-label="Nom du rôle"/>
       <span class="perm2-saved" id="permSaved">✓ Enregistré</span>
       ${permRecommendedFor(f.fonction) ? `<button class="btn btn-ghost btn-sm" onclick="permApplyRecommended()" title="Réappliquer les droits recommandés pour ce rôle">↺ Recommandés</button>` : ''}
       <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="permDeleteRole()" title="Supprimer ce rôle">🗑</button>
     </div>
     <div class="perm2-body">
-      <input type="text" placeholder="Filtrer un accès…" value="${escHtml(_permFilter)}" oninput="permSetFilter(this.value)" style="width:100%;box-sizing:border-box;margin-bottom:.3rem"/>
+      <input type="text" placeholder="Filtrer un accès…" value="${escAttr(_permFilter)}" oninput="permSetFilter(this.value)" style="width:100%;box-sizing:border-box;margin-bottom:.3rem"/>
       ${groupsHtml}
     </div>`;
   applyPermFilter();
@@ -545,7 +545,7 @@ function renderEducateurs() {
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.875rem">${escHtml([u.prenom, u.nom].filter(Boolean).join(' ') || u.username)}</div>
         <div style="font-size:.75rem;color:var(--muted)">${u.fonction ? escHtml(u.fonction)+' · ' : ''}@${escHtml(u.username)}</div>
-        ${userEtabs.length ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">${userEtabs.map(e => `<span class="badge" style="background:${e.color||'#0f2b4a'}22;color:${e.color||'#0f2b4a'};font-size:.65rem">${escHtml(e.nom)}</span>`).join('')}</div>` : ''}
+        ${userEtabs.length ? `<div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">${userEtabs.map(e => `<span class="badge" style="background:${safeColor(e.color,'#0f2b4a')}22;color:${safeColor(e.color,'#0f2b4a')};font-size:.65rem">${escHtml(e.nom)}</span>`).join('')}</div>` : ''}
       </div>
       <button class="btn btn-ghost btn-sm" onclick="editEducateur(${u.id})">Modifier</button>
     </div>`;
@@ -703,7 +703,21 @@ async function saveCredentials() {
 // Clés DB.keys exclues du backup : état de session/navigateur, pas des données métier.
 const BACKUP_EXCLUDE_KEYS = ['session', 'etablissements', 'onboarded'];
 
-function exportData(type) {
+const _BACKUP_SB = { residents:'sbGetResidents', journal:'sbGetJournalEntries', planning:'sbGetPlanningEvents', incidents:'sbGetIncidents', ppe:'sbGetPpe', repertoire:'sbGetRepertoire', echeances:'sbGetEcheances', visites:'sbGetVisites', nuits:'sbGetNuits', activites:'sbGetActivites', chambres:'sbGetChambres', employes:'sbGetEmployes', interventions:'sbGetInterventions', contrats:'sbGetContrats', fichesPaie:'sbGetFichesPaie', satisfaction:'sbGetSatisfaction', evaluations:'sbGetEvaluations', messages:'sbGetMessages',
+  documents:'sbGetDocumentsResident', vehicules:'sbGetVehiculesListe', edl:'sbGetEdl', repas:'sbGetRepasAll', cvs:'sbGetCvs', medicaments:'sbGetMedDistrib', planningEquipe:'sbGetPeShifts', viatrajectoire:'sbGetViaTrajectoire', budgetEnveloppes:'sbGetBudgetEnveloppes', budgetDemandes:'sbGetBudgetDemandes', entretiens:'sbGetEntretiens', documentation:'sbGetDocumentation', admissions:'sbGetAdmissions', tarifs:'sbGetTarifs', factures:'sbGetFactures', formations:'sbGetFormations', transmissions:'sbGetTransmissions', planSoins:'sbGetPlanSoins', astreintes:'sbGetAstreintes', inventaire:'sbGetInventaire', satQuestions:'sbGetSatQuestions', absencesAT:'sbGetAbsences', pointages:'sbGetPointages', candidats:'sbGetCandidats', rapportContributions:'sbGetRapportContributions', contactsExternes:'sbGetContactsExternes' };
+async function _hydrateBackupStores(type) {
+  const wanted = type === 'all' ? Object.keys(_BACKUP_SB) : (type === 'residents' ? ['residents'] : type === 'journal' ? ['journal'] : []);
+  await Promise.all(wanted.map(async key => {
+    const fn = window[_BACKUP_SB[key]];
+    if (typeof fn !== 'function') return;
+    try { const d = await fn(); if (d != null) DB.set(DB.keys[key], d); } catch (e) { console.error('[backup]', key, e); }
+  }));
+  if (type === 'all' && typeof sbGetPresencesRange === 'function') {
+    try { const _f = new Date(); _f.setDate(_f.getDate() - 180); DB.set(DB.keys.presences, await sbGetPresencesRange(_f.toISOString().slice(0,10), today())); } catch (e) { console.error('[backup] presences', e); }
+  }
+}
+async function exportData(type) {
+  await _hydrateBackupStores(type);
   let data = {};
   const k = DB.keys;
   if (type === 'residents' || type === 'all') data.residents = DB.get(k.residents) || [];
@@ -714,7 +728,7 @@ function exportData(type) {
       const val = DB.get(k[name]);
       if (val !== null) data[name] = val;
     });
-    data.conversations = JSON.parse(localStorage.getItem('ftr_conversations') || '{}');
+    data.conversations = (typeof sbGetConversations === 'function') ? await sbGetConversations() : {};
     data._exportedAt   = new Date().toISOString();
     data._version      = '2.0';
   }

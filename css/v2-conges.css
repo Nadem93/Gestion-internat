@@ -1,0 +1,249 @@
+/* ══════════════════════════════════════════════════════════════════════
+   DEMANDES DE CONGÉS (RH) — styles spécifiques V2
+   Maquette : « Demandes congés (RH).dc.html »
+   Les composants génériques viennent de css/v2.css (jamais modifié ici).
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── KPI (5 tuiles) ──────────────────────────────────────────────────── */
+.cgv-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 18px; }
+.cgv-k {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: 16px;
+}
+.cgv-k-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.cgv-k-ico svg { width: 21px; height: 21px; }
+.cgv-k-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; }
+.cgv-k-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Barre de filtres ────────────────────────────────────────────────── */
+.cgv-filters { margin-bottom: 18px; }
+.cgv-filters select {
+  width: auto; min-width: 170px; max-width: 100%; flex: 0 0 auto;
+  height: 36px; padding: 0 34px 0 13px; font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--v2-t5); background-color: var(--v2-s-ctrl);
+  border: 1px solid var(--v2-b-ctrl); border-radius: var(--v2-r-badge);
+  cursor: pointer; appearance: none; background-position: right 11px center; background-size: 14px;
+}
+.cgv-filters select option { background: #101d31; color: var(--v2-t2); }
+
+/* ── Grille principale : liste + rail ────────────────────────────────── */
+.cgv-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+.cgv-main, .cgv-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Titre de section (icône + libellé) */
+.cgv-sect { display: flex; align-items: center; gap: 9px; margin-bottom: 2px; }
+.cgv-sect svg { width: 15px; height: 15px; flex-shrink: 0; }
+.cgv-sect-t { font-size: 14px; font-weight: 700; color: var(--v2-t2); }
+.cgv-sect-n { margin-left: auto; font-size: 11.5px; color: var(--v2-t7); }
+
+/* ── Ligne « en attente de validation » ──────────────────────────────── */
+.cgv-pend { display: flex; flex-direction: column; gap: 12px; }
+.cgv-p {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl); border-radius: 14px;
+  padding: 15px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.cgv-p-who { min-width: 0; width: 180px; }
+.cgv-p-nom { font-size: 13px; font-weight: 700; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cgv-p-fn { font-size: 11px; color: var(--v2-t6); }
+.cgv-p-per { flex: 1; min-width: 140px; }
+.cgv-p-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); }
+.cgv-p-d { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.cgv-p-motif { font-size: 11px; color: var(--v2-t7); margin-top: 3px; font-style: italic; }
+.cgv-p-acts { display: flex; gap: 8px; margin-left: auto; }
+.cgv-ab {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; background: transparent;
+}
+.cgv-ab svg { width: 17px; height: 17px; }
+.cgv-ab.ok { background: rgba(16,185,129,.16); border: 1px solid rgba(16,185,129,.32); color: #6ee7b7; }
+.cgv-ab.ko { background: rgba(239,68,68,.14); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; }
+.cgv-ab.del { background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t7); }
+.cgv-ab:hover { filter: brightness(1.25); }
+
+/* Drapeau sous-effectif */
+.cgv-flag {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  font-size: 10.5px; font-weight: 700; color: #fca5a5;
+  background: rgba(239,68,68,.11); padding: 3px 9px; border-radius: 7px;
+}
+.cgv-flag svg { width: 12px; height: 12px; }
+
+/* ── Tableau des demandes traitées ───────────────────────────────────── */
+/* min-width : sous cette largeur le tableau défile dans .cgv-scroll au lieu
+   de compresser les colonnes de dates. */
+.cgv-tbl { width: 100%; min-width: 620px; border-collapse: collapse; }
+.cgv-tbl td { padding: 11px 18px; border-bottom: 1px solid var(--v2-b-list); font-size: 12px; vertical-align: middle; }
+.cgv-tbl tr:last-child td { border-bottom: none; }
+.cgv-tbl .c-nom { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.cgv-tbl .c-mid { color: var(--v2-t3); }
+.cgv-tbl .c-dim { color: var(--v2-t5); }
+.cgv-tbl .c-act { text-align: right; white-space: nowrap; }
+
+/* Avatar rond coloré (initiales) */
+.cgv-av {
+  border-radius: 50%; flex-shrink: 0; display: inline-flex;
+  align-items: center; justify-content: center;
+  color: #0a1728; font-weight: 700; width: 30px; height: 30px; font-size: 10px;
+}
+.cgv-av.xs { width: 22px; height: 22px; font-size: 8.5px; }
+.cgv-av.sm { width: 26px; height: 26px; font-size: 9px; }
+.cgv-av.md { width: 28px; height: 28px; font-size: 9px; }
+.cgv-av.lg { width: 40px; height: 40px; font-size: 12px; }
+
+.cgv-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+/* ── Rail : soldes ───────────────────────────────────────────────────── */
+.cgv-solde-h { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.cgv-solde-n { font-size: 12px; color: var(--v2-t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cgv-solde-v { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+/* Rail : absents actuellement (carte teintée cyan) */
+.cgv-tint-cy {
+  background: linear-gradient(135deg, rgba(34,211,238,.14), rgba(129,140,248,.05)), var(--v2-s-alt);
+  border-color: rgba(34,211,238,.22);
+}
+.cgv-tint-cy .v2-blk-t { color: #a5f3fc; }
+.cgv-tint-rd {
+  background: linear-gradient(135deg, rgba(239,68,68,.12), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border-color: rgba(239,68,68,.22);
+}
+.cgv-tint-rd .v2-blk-t { color: #fecaca; }
+.cgv-tint-gr {
+  background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border-color: rgba(16,185,129,.22);
+}
+.cgv-tint-gr .v2-blk-t { color: #6ee7b7; }
+
+.cgv-li {
+  display: flex; align-items: center; gap: 11px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list);
+}
+.cgv-li:last-child { border-bottom: none; }
+.cgv-li-t { font-size: 12px; font-weight: 600; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cgv-li-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.cgv-li-v { margin-left: auto; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.cgv-li-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.cgv-li svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* Rail : histogramme des congés posés */
+.cgv-bars { display: flex; align-items: flex-end; gap: 10px; height: 100px; }
+.cgv-bar-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; height: 100%; justify-content: flex-end; }
+.cgv-bar-n { font-size: 9.5px; font-weight: 700; color: var(--v2-indigo-pale); }
+.cgv-bar { width: 100%; border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #fcd34d, #f59e0b); min-height: 2px; }
+.cgv-bar-l { font-size: 9.5px; color: var(--v2-t8); }
+
+/* ── Calendrier d'équipe ─────────────────────────────────────────────── */
+.cgv-cal { display: flex; flex-direction: column; gap: 8px; }
+.cgv-cal-row { display: flex; align-items: center; gap: 8px; }
+.cgv-cal-name { width: 132px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+.cgv-cal-name span:last-child { font-size: 11px; color: var(--v2-t3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cgv-cal-cells { display: flex; gap: 3px; flex: 1; min-width: 0; }
+.cgv-cal-cells > span { flex: 1; min-width: 0; }
+.cgv-cal-d { text-align: center; font-size: 8.5px; color: var(--v2-t6); }
+.cgv-cal-d.we { color: var(--v2-t8); }
+.cgv-cal-c { height: 22px; border-radius: 4px; background: rgba(255,255,255,.05); }
+.cgv-legend { margin-left: auto; display: flex; align-items: center; gap: 14px;
+  font-size: 10px; color: var(--v2-t6); flex-wrap: wrap; }
+.cgv-legend span { display: flex; align-items: center; gap: 5px; }
+.cgv-legend i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.cgv-nav { display: flex; align-items: center; gap: 6px; }
+.cgv-nav button {
+  width: 30px; height: 30px; border-radius: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.cgv-nav button:hover { background: var(--v2-s-hover); color: #fff; }
+.cgv-nav button svg { width: 15px; height: 15px; }
+
+/* ── Compteurs détaillés ─────────────────────────────────────────────── */
+.cgv-cpt { width: 100%; border-collapse: collapse; }
+.cgv-cpt th {
+  padding: 12px 18px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--v2-t7); text-align: center;
+  border-bottom: 1px solid var(--v2-b);
+}
+.cgv-cpt th:first-child { text-align: left; }
+.cgv-cpt td { padding: 10px 18px; font-size: 12px; font-weight: 600;
+  color: var(--v2-t3); text-align: center; border-bottom: 1px solid var(--v2-b-list); }
+.cgv-cpt td:first-child { text-align: left; font-weight: 400; }
+.cgv-cpt tr:last-child td { border-bottom: none; }
+.cgv-cpt .warn { color: var(--v2-warn); }
+
+/* ── Ordre des départs ───────────────────────────────────────────────── */
+.cgv-rank { width: 22px; flex-shrink: 0; text-align: center; font-family: var(--v2-display);
+  font-size: 13px; font-weight: 800; color: var(--v2-t3); }
+.cgv-rank.top { color: #fbbf24; }
+
+/* ── Workflow de validation ──────────────────────────────────────────── */
+.cgv-wf { display: flex; gap: 12px; }
+.cgv-wf-col { display: flex; flex-direction: column; align-items: center; }
+.cgv-wf-dot {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.cgv-wf-dot svg { width: 13px; height: 13px; }
+.cgv-wf-line { flex: 1; width: 2px; background: rgba(255,255,255,.12); margin: 2px 0; }
+.cgv-wf-b { padding-bottom: 14px; min-width: 0; }
+.cgv-wf:last-child .cgv-wf-b { padding-bottom: 0; }
+.cgv-wf-t { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.cgv-wf-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+
+/* ── Grilles des blocs bas de page ───────────────────────────────────── */
+.cgv-b2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-top: 18px; }
+.cgv-b3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 18px; }
+.cgv-features { margin-top: 20px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1250px) {
+  .cgv-kpis { grid-template-columns: repeat(3, 1fr); }
+  .cgv-grid { grid-template-columns: 1fr; }
+  .cgv-b2, .cgv-b3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .cgv-kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .cgv-k { padding: 13px 14px; gap: 11px; }
+  .cgv-k-ico { width: 38px; height: 38px; border-radius: 11px; }
+  .cgv-k-ico svg { width: 18px; height: 18px; }
+  .cgv-k-n { font-size: 21px; }
+  .cgv-k-l { font-size: 11px; line-height: 1.25; }
+  .cgv-p { align-items: flex-start; }
+  .cgv-p-who { width: 100%; }
+  .cgv-p-acts { margin-left: 0; }
+  .cgv-cal-name { width: 96px; }
+  .cgv-tbl td { padding: 10px 12px; }
+  .cgv-cpt th, .cgv-cpt td { padding: 9px 10px; }
+}
+@media (max-width: 360px) {
+  .cgv-kpis { grid-template-columns: 1fr; }
+}
+
+/* Débordement horizontal maîtrisé pour les deux tableaux */
+.cgv-scroll { overflow-x: auto; }
+
+/* ── Onglets : À valider / Demandes traitées ─────────────────────────── */
+.cgv-tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--v2-b); }
+.cgv-tab {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+  background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  color: var(--v2-t6); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+}
+.cgv-tab:hover { color: var(--v2-t3); }
+.cgv-tab.on { color: var(--v2-t2); border-bottom-color: var(--tc, #f59e0b); }
+.cgv-tab-n {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--v2-s-sub); color: var(--v2-t6); font-size: 11.5px; font-weight: 700;
+}
+.cgv-tab.on .cgv-tab-n {
+  background: color-mix(in srgb, var(--tc, #f59e0b) 22%, transparent);
+  color: var(--tc, #f59e0b);
+}

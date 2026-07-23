@@ -1,5 +1,25 @@
 const EV_KEY = DB.keys.evaluations;
 
+// ─── Design V2 (sombre) ───────────────────────────────────────────────────────
+// La feuille et le module de rendu sont injectés ici pour que toute page
+// chargeant js/evaluations.js (objectifs.html, fiche-liaison.html) hérite du
+// thème sombre sans que le HTML ait à être modifié.
+(function () {
+  const base = (document.currentScript && document.currentScript.src || '')
+    .replace(/js\/evaluations\.js.*$/, '');
+  if (!document.querySelector('link[href$="css/v2-evaluations.css"]')) {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = base + 'css/v2-evaluations.css';
+    document.head.appendChild(l);
+  }
+  if (!document.querySelector('script[src$="js/evaluations-v2.js"]')) {
+    const s = document.createElement('script');
+    s.src = base + 'js/evaluations-v2.js';
+    s.async = false; // exécution ordonnée, après ce fichier
+    document.head.appendChild(s);
+  }
+})();
+
 // ─── Grilles disponibles ──────────────────────────────────────────────────────
 const EV_GRILLES = {
   mif: {
@@ -96,13 +116,46 @@ const EV_GRILLES = {
         ]
       }
     ]
+  },
+  serafin: {
+    label: 'SERAFIN-PH — Niveaux de besoin (nomenclature nationale)',
+    short: 'SERAFIN-PH',
+    icon: '🧩',
+    color: '#7c3aed',
+    scoreMin: 0, scoreMax: 44,
+    // Le total exprime l'INTENSITÉ GLOBALE DES BESOINS (plus il est haut, plus
+    // l'accompagnement requis est important) — lecture inverse de la MIF.
+    // Bornes calées sur la moyenne des 11 niveaux : ≤1 faible, ≤2 modéré, ≤3 important
+    niveaux: [
+      { min:0,  max:11, label:'Besoins faibles',         color:'#16a34a' },
+      { min:12, max:24, label:'Besoins modérés',         color:'#d97706' },
+      { min:25, max:36, label:'Besoins importants',      color:'#ea580c' },
+      { min:37, max:44, label:'Besoins très importants', color:'#dc2626' }
+    ],
+    // Dimensions dérivées de la nomenclature des besoins SERAFIN-PH
+    // (SP_BESOINS, js/serafin-codage.js — chargé avant ce fichier).
+    dimensions: (typeof SP_BESOINS !== 'undefined' ? [
+      { id: 'sante',         label: '1.1 — Santé somatique ou psychique',
+        items: SP_BESOINS.filter(b => b.code.indexOf('1.1') === 0).map(b => ({ id: b.code, label: `${b.code} · ${b.label}` })) },
+      { id: 'autonomie',     label: '1.2 — Autonomie',
+        items: SP_BESOINS.filter(b => b.code.indexOf('1.2') === 0).map(b => ({ id: b.code, label: `${b.code} · ${b.label}` })) },
+      { id: 'participation', label: '1.3 — Participation sociale',
+        items: SP_BESOINS.filter(b => b.code.indexOf('1.3') === 0).map(b => ({ id: b.code, label: `${b.code} · ${b.label}` })) }
+    ] : []),
+    scaleItems: [
+      { val: 0, label: 'Aucun besoin' },
+      { val: 1, label: 'Besoin faible' },
+      { val: 2, label: 'Besoin modéré' },
+      { val: 3, label: 'Besoin important' },
+      { val: 4, label: 'Besoin très important' }
+    ]
   }
 };
 
 // Source = Supabase. Cache mémoire chargé au démarrage.
 let _evCache = [];
 function getEv()       { return _evCache; }
-async function loadEvCache() { _evCache = await sbGetEvaluations(); }
+async function loadEvCache() { _evCache = (typeof sbGetEvaluations === 'function') ? await sbGetEvaluations() : []; }
 
 let _evResidentId = '';
 let _evGrille     = 'mif';
@@ -112,8 +165,10 @@ let _evEditId     = '';
 async function initEvaluations() {
   const s = Auth.requireAuth();
   if (!s) return;
-  await sbLoadResidentsCache();
-  await loadEvCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadEvCache()]);
   const params = new URLSearchParams(window.location.search);
   _evResidentId = params.get('residentId') || params.get('id') || '';
 
@@ -131,7 +186,8 @@ async function initEvaluations() {
     const sel = document.getElementById('evResident');
     if (sel) sel.value = _evResidentId;
   }
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
+  const canEdit = ['admin', 'moderator', 'superadmin'].includes(s.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   if (!canEdit) { const b = document.getElementById('btnAddEv'); if (b) b.style.display = 'none'; }
   renderEvList();
 }
@@ -150,66 +206,45 @@ function renderEvList() {
   const container = document.getElementById('evList');
   if (!container) return;
 
+  // Repli sombre : sur objectifs.html c'est ob2RenderEv (js/objectifs-v2.js)
+  // qui prend la main. Ce rendu sert aux pages sans ce module.
   const grilleFilter = document.getElementById('evGrille')?.value || '';
   const residents    = sbResidents();
-  let list = getEv();
+  const all          = getEv();
+  let list = all;
   if (_evResidentId) list = list.filter(e => e.residentId === _evResidentId);
   if (grilleFilter)  list = list.filter(e => e.grille === grilleFilter);
-  list = list.slice().sort((a,b) => b.date.localeCompare(a.date));
+  list = list.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 
-  const all = getEv();
-  const monthPrefix = today().slice(0,7);
-  const ceMois = all.filter(e => (e.date||'').slice(0,7) === monthPrefix).length;
-  const avgPct = all.length ? Math.round(all.reduce((s,e) => {
-    const g = EV_GRILLES[e.grille]; if (!g) return s;
-    return s + (_evScore(e) / g.scoreMax * 100);
-  }, 0) / all.length) : 0;
-
-  document.getElementById('evStats').innerHTML = `
-    <div class="chx-stat" style="--c:#2563eb"><div class="chx-stat-top"><span class="chx-stat-lbl">Évaluations</span></div><div class="chx-stat-num">${all.length}</div></div>
-    <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Résidents évalués</span></div><div class="chx-stat-num">${new Set(all.map(e=>e.residentId).filter(Boolean)).size}</div></div>
-    <div class="chx-stat" style="--c:#16a34a"><div class="chx-stat-top"><span class="chx-stat-lbl">Ce mois</span></div><div class="chx-stat-num">${ceMois}</div></div>
-    <div class="chx-stat" style="--c:#0d9488"><div class="chx-stat-top"><span class="chx-stat-lbl">Score moyen</span></div><div class="chx-stat-bar"><i style="width:${avgPct}%"></i></div><div class="chx-stat-num">${avgPct}%</div></div>`;
+  const stats = document.getElementById('evStats');
+  if (stats) {
+    const monthPrefix = today().slice(0, 7);
+    const ceMois = all.filter(e => (e.date || '').slice(0, 7) === monthPrefix).length;
+    const nbRes  = new Set(all.map(e => e.residentId).filter(Boolean)).size;
+    const kpi = (n, l, c) => `<div class="v2-kpi" style="--c:${c}"><div style="min-width:0">
+      <div class="v2-kpi-n">${n}</div><div class="v2-kpi-l">${l}</div></div></div>`;
+    stats.innerHTML = kpi(all.length, 'Évaluations', '#a5b4fc')
+      + kpi(nbRes, 'Résidents évalués', '#818cf8')
+      + kpi(ceMois, 'Ce mois', '#10b981');
+  }
 
   if (!list.length) {
-    container.innerHTML = `<div class="empty" style="padding:2.5rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div><h3>${_evResidentId?'Aucune évaluation pour ce résident':'Aucune évaluation'}</h3><p>Créez une évaluation MIF ou Barthel pour suivre l'autonomie des résidents.</p></div>`;
+    container.innerHTML = `<div class="v2-blk"><div class="v2-blk-t">Évaluations</div>
+      <div class="v2-blk-vide">${_evResidentId || grilleFilter
+        ? 'Aucune évaluation ne correspond à ce filtre.'
+        : 'Aucune évaluation enregistrée. Créez une évaluation MIF, Barthel ou SERAFIN-PH pour suivre l\'autonomie des résidents.'}</div></div>`;
     return;
   }
 
-  // Grouper par résident
-  const byRes = {};
-  list.forEach(e => {
-    const k = e.residentId || '__';
-    if (!byRes[k]) byRes[k] = [];
-    byRes[k].push(e);
-  });
-
-  container.innerHTML = Object.entries(byRes).map(([rid, evals]) => {
-    const r = residents.find(x => x.id === rid);
-    const col = r?.color || '#6366f1';
-    const nom = r ? `${r.prenom||''} ${r.nom||''}`.trim() : 'Inconnu';
-    const av = r?.photo
-      ? `<img src="${sanitizeUrl(r.photo)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${col}44" alt=""/>`
-      : `<div style="width:32px;height:32px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;color:#fff;flex-shrink:0">${initials(r?.prenom,r?.nom)}</div>`;
-    return `<div style="margin-bottom:1.75rem">
-      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;padding:.55rem .85rem;background:#fff;border-radius:10px;border:1.5px solid ${col}33">
-        ${av}
-        <a href="resident.html?id=${rid}" style="font-weight:700;font-size:.92rem;color:${col};text-decoration:none">${escHtml(nom)}</a>
-        <span style="margin-left:auto;font-size:.75rem;color:var(--muted)">${evals.length} évaluation${evals.length>1?'s':''}</span>
-        <button class="btn btn-accent btn-sm" onclick="openEvModal('','${rid}')">+ Évaluer</button>
-      </div>
-      <div class="grid grid-3" style="gap:.85rem">
-        ${evals.map(e => _evCard(e, col)).join('')}
-      </div>
-    </div>`;
-  }).join('');
+  container.innerHTML = '<div class="ev2-list">'
+    + list.map(e => _evCard(e, residents)).join('') + '</div>';
 }
 
 function _evScore(e) {
   const g = EV_GRILLES[e.grille];
   if (!g) return 0;
   let total = 0;
-  if (e.grille === 'mif') {
+  if (e.grille === 'mif' || e.grille === 'serafin') {
     g.dimensions.forEach(dim => dim.items.forEach(it => { total += Number(e.scores?.[it.id] || 0); }));
   } else if (e.grille === 'barthel') {
     g.dimensions[0].items.forEach(it => { total += Number(e.scores?.[it.id] || 0); });
@@ -223,54 +258,56 @@ function _evNiveau(grille, score) {
   return g.niveaux.find(n => score >= n.min && score <= n.max) || g.niveaux[0];
 }
 
-function _evCard(e, resColor) {
+// Libellé court d'un niveau pour l'échelle du design (ex. « Besoins modérés » → « Modérés »)
+function _evShort(label) {
+  if (/^Indépendance/i.test(label || '')) return 'Autonome';
+  let s = (label || '').replace(/^Besoins\s+/i, '').replace(/^Dépendance\s+/i, '');
+  s = s.replace(/très importants?/i, 'Très imp.');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Échelle de niveau segmentée : une case par bande de la grille, remplies jusqu'à
+// la bande courante (avec la couleur de chaque bande), les suivantes en gris.
+function _evScale(g, niveau) {
+  const nivs = (g && g.niveaux) || [];
+  if (!nivs.length) return '';
+  const cur = nivs.indexOf(niveau);
+  const segs = nivs.map((n, i) => `<span style="flex:1;height:8px;border-radius:3px;background:${i <= cur ? n.color : 'rgba(255,255,255,.08)'}"></span>`).join('');
+  const lbls = nivs.map((n, i) => `<span style="flex:1;text-align:center;line-height:1.2;${i === cur ? `color:${n.color};font-weight:700` : ''}">${escHtml(_evShort(n.label))}</span>`).join('');
+  return `<div style="margin-top:.55rem">
+    <div style="display:flex;gap:3px">${segs}</div>
+    <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--muted);margin-top:.3rem">${lbls}</div>
+  </div>`;
+}
+
+function _evCard(e, residents) {
   const g   = EV_GRILLES[e.grille];
-  const col = g?.color || resColor;
-  const icon = g?.icon || '📊';
-  const score   = _evScore(e);
-  const scoreMax = g?.scoreMax || 100;
-  const niveau  = _evNiveau(e.grille, score);
-  const pct     = Math.round(score / scoreMax * 100);
-  const dateStr = e.date ? new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '—';
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin();
-  const ringCol = niveau?.color || col;
-  const R = 26, C = 2 * Math.PI * R;
-  const donut = `<svg width="64" height="64" viewBox="0 0 64 64" style="flex-shrink:0;transform:rotate(-90deg)">
-    <circle cx="32" cy="32" r="${R}" fill="none" stroke="var(--g100)" stroke-width="6"/>
-    <circle cx="32" cy="32" r="${R}" fill="none" stroke="${ringCol}" stroke-width="6" stroke-linecap="round"
-            stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"
-            style="transition:stroke-dashoffset .5s ease"/>
-  </svg>`;
-  return `<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .12s" onmouseover="this.style.boxShadow='0 6px 20px rgba(15,23,42,.1)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(15,23,42,.06)'">
-    <div style="background:linear-gradient(135deg,${col}22,${col}08);border-bottom:1px solid ${col}22;padding:.9rem 1rem .75rem;display:flex;align-items:center;gap:.65rem">
-      <div style="width:38px;height:38px;border-radius:10px;background:${col}18;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${icon}</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(g?.short||e.grille)}</div>
-        <div style="font-size:.68rem;font-weight:600;color:${col};margin-top:1px">${dateStr}</div>
-      </div>
+  const r   = (residents || []).find(x => String(x.id) === String(e.residentId));
+  const nom = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : 'Résident inconnu';
+  const col = safeColor(r?.color, '#818cf8');
+  const gc  = g?.color || '#818cf8';
+  const score = _evScore(e), max = g?.scoreMax || 100;
+  const pct = max ? Math.round(score / max * 100) : 0;
+  const niveau = _evNiveau(e.grille, score);
+  const dateStr = e.date
+    ? new Date(e.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+  return `<div class="ev2-row-ev" role="button" tabindex="0" onclick="openEvDetail('${e.id}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEvDetail('${e.id}')}"
+      aria-label="Évaluation ${escHtml(g?.short || e.grille)} de ${escHtml(nom)}">
+    <span style="width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0a1728;background:${col}">${initials(r?.prenom, r?.nom)}</span>
+    <div style="width:150px;flex-shrink:0;min-width:0">
+      <div class="nom">${escHtml(nom)}</div><div class="date">${dateStr}</div>
     </div>
-    <div style="padding:.85rem 1rem;flex:1;display:flex;flex-direction:column;gap:.4rem">
-      <div style="display:flex;align-items:center;gap:.85rem">
-        <div style="position:relative;width:64px;height:64px;flex-shrink:0">
-          ${donut}
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-            <span style="font-size:1.05rem;font-weight:800;color:${ringCol};line-height:1">${pct}%</span>
-          </div>
-        </div>
-        <div style="min-width:0;flex:1">
-          <div><span style="font-size:1.25rem;font-weight:800;color:${ringCol}">${score}</span><span style="font-size:.76rem;color:var(--muted)"> / ${scoreMax}</span></div>
-          <div style="font-size:.72rem;font-weight:600;color:${ringCol};margin-top:1px">${niveau?.label||''}</div>
-        </div>
+    <span class="v2-badge" style="color:${gc};background:${gc}1c">${escHtml(g?.short || e.grille)}</span>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:baseline;margin-bottom:5px">
+        <span style="font-size:11px;color:var(--v2-t6,#8095b4)">Score</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:800;color:${gc};font-family:var(--v2-display,'Space Grotesk',sans-serif)">${score} / ${max}</span>
       </div>
-      ${e.note ? `<div style="font-size:.73rem;color:var(--muted);line-height:1.5;margin-top:.1rem;font-style:italic">${escHtml(e.note.slice(0,80))}${e.note.length>80?'…':''}</div>` : ''}
-      <div style="margin-top:auto;padding-top:.5rem;display:flex">
-        <button class="btn btn-ghost btn-sm" onclick="openEvDetail('${e.id}')">👁 Détail</button>
-      </div>
+      <div class="v2-prog"><span style="width:${pct}%;background:${gc}"></span></div>
     </div>
-    ${canEdit?`<div style="display:flex;gap:.3rem;justify-content:flex-end;border-top:1px solid var(--border);padding:.5rem .75rem;background:var(--g50)">
-      <button class="btn btn-ghost btn-sm" onclick="openEvModal('${e.id}')">✎</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEv('${e.id}')">✕</button>
-    </div>`:''}
+    ${niveau ? `<span class="v2-badge" style="color:${niveau.color};background:${niveau.color}1c">${escHtml(niveau.label)}</span>` : ''}
   </div>`;
 }
 
@@ -341,6 +378,31 @@ function _renderEvForm(scores) {
         </div>
       </div>`;
     }).join('');
+  } else if (grille === 'serafin') {
+    if (!g.dimensions.length) {
+      container.innerHTML = '<div class="empty" style="padding:1.5rem;text-align:center"><p>Nomenclature SERAFIN-PH non chargée sur cette page.</p></div>';
+      return;
+    }
+    const scaleHtml = `<div style="margin-bottom:1rem;padding:.6rem .8rem;background:#faf5ff;border-radius:8px;border:1px solid #ede9fe">
+      <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em">Niveau de besoin (0 → 4)</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.2rem">${g.scaleItems.map(s=>`<div style="text-align:center;padding:.3rem .2rem;background:#fff;border-radius:4px;border:0.5px solid #ede9fe"><div style="font-size:.85rem;font-weight:800;color:#7c3aed">${s.val}</div><div style="font-size:.58rem;color:var(--muted);line-height:1.2">${s.label}</div></div>`).join('')}</div>
+      <div style="font-size:.66rem;color:var(--muted);margin-top:.4rem">Positionnement du résident sur la nomenclature nationale des besoins SERAFIN-PH — support d'échange en équipe pluridisciplinaire.</div>
+    </div>`;
+    container.innerHTML = scaleHtml + g.dimensions.map(dim =>
+      `<div style="margin-bottom:.85rem">
+        <div style="font-size:.78rem;font-weight:700;color:${g.color};margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em">${dim.label}</div>
+        ${dim.items.map(it => {
+          const val = scores?.[it.id] ?? '';
+          return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;padding:.35rem .5rem;background:#faf5ff;border-radius:6px">
+            <label style="flex:1;font-size:.8rem;color:var(--text)">${it.label}</label>
+            <select name="score_${it.id}" style="font-size:.76rem;padding:.2rem .35rem;border:1px solid var(--border);border-radius:6px;width:190px;flex-shrink:0">
+              <option value="">—</option>
+              ${g.scaleItems.map(s=>`<option value="${s.val}"${val !== '' && Number(val)===s.val?' selected':''}>${s.val} — ${s.label}</option>`).join('')}
+            </select>
+          </div>`;
+        }).join('')}
+      </div>`
+    ).join('');
   }
 
   // Score live
@@ -437,6 +499,23 @@ function openEvDetail(id) {
       return `<div style="display:flex;justify-content:space-between;padding:.3rem .5rem;border-radius:4px;background:#f8fafc;margin-bottom:.25rem">
         <span style="font-size:.78rem">${it.label}</span>
         <span style="font-size:.78rem;font-weight:700;color:${v>=10?'#16a34a':v>=5?'#d97706':'#dc2626'}">${v} — ${opt?.l||''}</span>
+      </div>`;
+    }).join('');
+  } else if (ev.grille === 'serafin') {
+    // Lecture inverse de la MIF : plus le niveau de besoin est HAUT, plus la couleur alerte
+    detailHtml = g.dimensions.map(dim => {
+      const dimItems = dim.items.filter(it => ev.scores?.[it.id] !== undefined);
+      if (!dimItems.length) return '';
+      return `<div style="margin-bottom:.75rem">
+        <div style="font-size:.75rem;font-weight:700;color:${g.color};text-transform:uppercase;margin-bottom:.3rem">${dim.label}</div>
+        ${dimItems.map(it => {
+          const v = ev.scores[it.id];
+          const sc = g.scaleItems.find(s=>s.val===v);
+          return `<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.25rem .5rem;border-radius:4px;background:#faf5ff;margin-bottom:.2rem">
+            <span style="font-size:.78rem">${it.label}</span>
+            <span style="font-size:.78rem;font-weight:700;white-space:nowrap;color:${v>=3?'#dc2626':v===2?'#d97706':'#16a34a'}">${v} — ${sc?.label||''}</span>
+          </div>`;
+        }).join('')}
       </div>`;
     }).join('');
   }

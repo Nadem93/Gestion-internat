@@ -2,6 +2,16 @@
 // Fait le pont entre le format utilisé par residents.js (camelCase, comme avant)
 // et les colonnes de la table Postgres (snake_case).
 
+// Semaine type : un jour peut contenir PLUSIEURS absences récurrentes (ex. Sport après
+// le Travail). Retourne toujours un tableau normalisé [{label,debut,fin}, …].
+// Compatible avec l'ancien format d'un jour : { actif, label, debut, fin }.
+function phDayAbsences(dayVal) {
+  if (!dayVal) return [];
+  if (Array.isArray(dayVal)) return dayVal.filter(a => a && (a.label || a.debut || a.fin));
+  if (dayVal.actif) return [{ label: dayVal.label || '', debut: dayVal.debut || '', fin: dayVal.fin || '' }];
+  return [];
+}
+
 let _sbEtablissementId = null;
 
 async function sbGetEtablissementId() {
@@ -25,7 +35,7 @@ function _sbToRow(r) {
     dob: r.dob || null, genre: r.genre, entree: r.entree || null,
     date_sortie: r.dateSortie || null,
     statut: r.statut, chambre: r.chambre, referent: r.referent, co_referent: r.coReferent || null,
-    color: r.color, notes: r.notes, contacts: r.contacts,
+    color: safeColor(r.color, ''), notes: r.notes, contacts: r.contacts,
     objectifs: r.objectifs || [],
     medecin: r.medecin, medecin_tel: r.medecinTel,
     allergies: r.allergies, nss: r.nss, ins: r.ins,
@@ -37,10 +47,13 @@ function _sbToRow(r) {
     situation_pro: r.situationPro, ressources: r.ressources,
     organisme_a: r.organismeA, dossier_a: r.dossierA,
     situation_admin: r.situationAdmin, protection: r.protection,
+    protection_nom: r.protectionNom, protection_tel: r.protectionTel,
     sante: r.sante || {}, sorties: r.sorties || [], trousseau: r.trousseau || [],
     activites: r.activites || [], budget: r.budget || {},
     objectifs_suivi: r.objectifsSuivi || {}, evaluations: r.evaluations || [],
+    regime: r.regime || {}, droits_visite: r.droitsVisite || [],
     serafinph: r.serafinph || {},
+    planning_hebdo: r.planningHebdo || {},
     updated_at: new Date().toISOString()
   };
 }
@@ -52,7 +65,9 @@ function _sbFromRow(row) {
     dob: row.dob, genre: row.genre, entree: row.entree,
     dateSortie: row.date_sortie,
     statut: row.statut, chambre: row.chambre, referent: row.referent, coReferent: row.co_referent,
-    color: row.color, notes: row.notes, contacts: row.contacts,
+    // safeColor : la RLS laisse tout membre écrire cette colonne par PATCH REST,
+    // on ne fait donc jamais confiance à sa valeur au retour de la base.
+    color: safeColor(row.color, ''), notes: row.notes, contacts: row.contacts,
     objectifs: row.objectifs || [],
     medecin: row.medecin, medecinTel: row.medecin_tel,
     allergies: row.allergies, nss: row.nss, ins: row.ins,
@@ -64,10 +79,13 @@ function _sbFromRow(row) {
     situationPro: row.situation_pro, ressources: row.ressources,
     organismeA: row.organisme_a, dossierA: row.dossier_a,
     situationAdmin: row.situation_admin, protection: row.protection,
+    protectionNom: row.protection_nom, protectionTel: row.protection_tel,
     sante: row.sante || {}, sorties: row.sorties || [], trousseau: row.trousseau || [],
     activites: row.activites || [], budget: row.budget || {},
     objectifsSuivi: row.objectifs_suivi || {}, evaluations: row.evaluations || [],
+    regime: row.regime || {}, droitsVisite: row.droits_visite || [],
     serafinph: row.serafinph || {},
+    planningHebdo: row.planning_hebdo || {},
     createdAt: row.created_at, updatedAt: row.updated_at
   };
 }

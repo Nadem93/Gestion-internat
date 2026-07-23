@@ -141,7 +141,7 @@ function ctCard(c) {
       ${chips.length ? `<div class="ctx-chips">${chips.join('')}</div>` : ''}
     </div>
     ${canEdit ? `<div class="ctx-foot">
-      ${c.fichierPath ? `<button class="ctx-btn" onclick="ctOpenFichier('${c.id}')" title="${escHtml(c.fichierNom || 'Document joint')}">📎 Contrat</button>` : ''}
+      ${c.fichierPath ? `<button class="ctx-btn" onclick="ctOpenFichier('${c.id}')" title="${escAttr(c.fichierNom || 'Document joint')}">📎 Contrat</button>` : ''}
       <span class="sp"></span>
       <button class="ctx-btn primary" onclick="openContratDetail('${c.id}')">📑 Détail</button>
     </div>` : ''}
@@ -312,8 +312,10 @@ async function saveContrat() {
 
   try {
     if (file) {
-      const emp = ctEmployes().find(e => String(e.id) === String(employeId));
-      const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+      // 1er segment du chemin Storage = auth.uid() : la RLS du bucket
+      // « justificatifs » rejette l'id legacy de Auth.getSession().userId.
+      const folder = await sbAuthUid();
+      if (!folder) { toast('Session Supabase expirée — reconnectez-vous', 'error'); return; }
       data.fichierPath = await sbUploadJustificatif(file, folder);
       data.fichierNom = file.name;
     }

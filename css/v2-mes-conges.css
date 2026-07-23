@@ -1,0 +1,175 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   MES CONGÉS — style spécifique V2 (complète css/v2.css, ne le modifie pas)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Grille générale ─────────────────────────────────────────────────── */
+.mcv-stats { margin-bottom: 16px; }
+.mcv-k .v2-k-n { font-size: 25px; }
+.mcv-chips { margin-bottom: 18px; }
+
+/* Le rail court sur les deux rangées : le bas de page comble la colonne
+   principale au lieu de laisser un vide sous le tableau. */
+.mcv-grid {
+  display: grid; grid-template-columns: 1fr 340px;
+  grid-template-areas: "main rail" "bottom rail";
+  gap: 20px; align-items: start;
+}
+.mcv-main { grid-area: main; min-width: 0; }
+.mcv-rail { grid-area: rail; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* Une colonne : le calendrier occupe toute la largeur utile et n'a pas
+   besoin de défiler sur un écran de bureau. */
+.mcv-bottom { grid-area: bottom; display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: 20px; align-items: start; min-width: 0; }
+.mcv-bottom > .v2-blk { min-width: 0; }
+
+@media (max-width: 1180px) {
+  .mcv-grid { grid-template-columns: 1fr; grid-template-areas: "main" "rail" "bottom"; }
+}
+
+/* ── En-tête de section ──────────────────────────────────────────────── */
+.mcv-sec { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; }
+.mcv-sec + .mcv-pend, .mcv-sec + .v2-blk { margin-bottom: 22px; }
+.mcv-sec-i { display: inline-flex; flex-shrink: 0; }
+.mcv-sec-i svg { width: 15px; height: 15px; display: block; }
+.mcv-sec-t { font-size: 14px; font-weight: 700; color: var(--v2-t2); }
+.mcv-sec-n { font-size: 11px; font-weight: 700; color: var(--v2-t7);
+  background: rgba(255,255,255,.06); border-radius: 20px; padding: 2px 9px; }
+.mcv-vide { padding: 16px 18px; }
+
+/* ── Cartes « en attente » ───────────────────────────────────────────── */
+.mcv-pend { display: flex; flex-direction: column; gap: 12px; }
+.mcv-p {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b-ctrl);
+  border-left: 3px solid var(--tc, #22d3ee);
+  border-radius: 14px; padding: 13px 16px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.mcv-p-cal {
+  width: 46px; flex-shrink: 0; border-radius: var(--v2-r-chip); text-align: center;
+  padding: 6px 0; background: color-mix(in srgb, var(--tc, #22d3ee) 14%, transparent);
+}
+.mcv-p-cal-m { display: block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--tc, #22d3ee); }
+.mcv-p-cal-d { display: block; font-family: var(--v2-display); font-size: 17px;
+  font-weight: 800; line-height: 1.1; color: #fff; }
+.mcv-p-id { width: 150px; min-width: 0; flex-shrink: 0; }
+.mcv-p-t { font-size: 13px; font-weight: 700; color: var(--v2-t2); }
+.mcv-p-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcv-p-mid { flex: 1; min-width: 140px; }
+.mcv-p-per { font-size: 12.5px; font-weight: 600; color: var(--v2-t4); }
+
+.mcv-pill { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px; }
+.mcv-pill svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.mcv-x {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--v2-r-chip); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(239,68,68,.14); border: 1px solid rgba(239,68,68,.3); color: #fca5a5;
+}
+.mcv-x:hover { background: rgba(239,68,68,.24); color: #fff; }
+.mcv-x svg { width: 16px; height: 16px; display: block; }
+
+/* ── Tableau des demandes traitées ───────────────────────────────────── */
+.mcv-scroll { overflow-x: auto; }
+.mcv-tbl { min-width: 620px; }
+.mcv-tbl th:first-child, .mcv-tbl td:first-child { padding-left: 18px; }
+.mcv-tbl th:last-child, .mcv-tbl td:last-child { padding-right: 18px; }
+.mcv-td-type { display: inline-flex; align-items: center; gap: 9px;
+  font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.mcv-td-m { font-size: 12px; color: var(--v2-t5); }
+.mcv-refus { font-size: 11px; color: var(--v2-danger-text); margin-top: 3px; }
+.mcv-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+/* ── Rail : compteurs ────────────────────────────────────────────────── */
+.mcv-cpt { display: flex; flex-direction: column; }
+.mcv-cpt-i { display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--v2-b-list); }
+.mcv-cpt-i:last-child { border-bottom: none; }
+.mcv-cpt-l { font-size: 12px; color: var(--v2-t4); }
+.mcv-cpt-v { margin-left: auto; font-family: var(--v2-display); font-size: 15px; font-weight: 800; }
+.mcv-cpt-u { font-size: 10.5px; color: var(--v2-t7); }
+.v2-blk-vide code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; color: var(--v2-t5); background: rgba(255,255,255,.06);
+  padding: 1px 5px; border-radius: 5px; }
+
+/* ── Rail : prochains congés (carte teintée) ─────────────────────────── */
+.mcv-blk-cyan {
+  background: linear-gradient(135deg, rgba(34,211,238,.12), rgba(129,140,248,.04)), var(--v2-s-alt);
+  border-color: rgba(34,211,238,.22);
+}
+.mcv-next { display: flex; flex-direction: column; }
+.mcv-next-i { display: flex; align-items: center; gap: 11px;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+.mcv-next-i:last-child { border-bottom: none; }
+.mcv-next-b { flex: 1; min-width: 0; }
+.mcv-next-t { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.mcv-next-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.mcv-next-j { font-size: 11px; font-weight: 700; color: #67e8f9; flex-shrink: 0; }
+
+/* ── Rail : graphique mensuel ────────────────────────────────────────── */
+.mcv-chart { display: flex; align-items: flex-end; gap: 4px; height: 108px; }
+.mcv-chart-c { flex: 1; min-width: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; gap: 5px; height: 100%; }
+.mcv-chart-n { font-size: 9px; font-weight: 700; color: var(--v2-indigo-pale);
+  height: 11px; line-height: 11px; }
+.mcv-chart-b { display: block; width: 100%; border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(180deg, #fcd34d, #f59e0b); flex-shrink: 0; }
+.mcv-chart-l { font-size: 9px; color: var(--v2-t8); }
+
+/* ── Rail : répartition ──────────────────────────────────────────────── */
+.mcv-rep { margin-bottom: 13px; }
+.mcv-rep:last-child { margin-bottom: 0; }
+.mcv-rep-h { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.mcv-rep-l { font-size: 12px; color: var(--v2-t3); }
+.mcv-rep-v { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+
+/* ── Calendrier personnel ────────────────────────────────────────────── */
+.mcv-leg { margin-left: auto; display: flex; align-items: center; gap: 12px;
+  font-size: 10px; color: var(--v2-t6); flex-wrap: wrap; }
+.mcv-leg-i { display: inline-flex; align-items: center; gap: 5px; }
+.mcv-leg-c { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.mcv-cal { display: flex; gap: 4px; min-width: 500px; }
+.mcv-cal-d {
+  flex: 1; min-width: 20px; height: 34px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; border: 1px solid transparent;
+}
+.mcv-cal-d.now { box-shadow: 0 0 0 2px rgba(129,140,248,.65); }
+.mcv-cal-d.ko { text-decoration: line-through; opacity: .55; }
+
+/* ── Suivi (workflow) ────────────────────────────────────────────────── */
+.mcv-wf-sub { font-size: 11px; color: var(--v2-t6); margin: -8px 0 14px; }
+.mcv-wf { display: flex; gap: 12px; }
+.mcv-wf-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.mcv-wf-dot { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff; }
+.mcv-wf-dot svg { width: 13px; height: 13px; display: block; }
+.mcv-wf-bar { flex: 1; width: 2px; background: rgba(255,255,255,.12); margin: 2px 0; }
+.mcv-wf-b { padding-bottom: 14px; min-width: 0; }
+.mcv-wf-t { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.mcv-wf-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Bandeau d'information (fiche salarié non reliée) ────────────────── */
+.mcv-info { margin-bottom: 16px; }
+
+/* ── Modale : segmenté sur deux lignes (5 types) ─────────────────────── */
+#mcSeg { display: grid; grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+#mcSeg .v2-seg-o { height: 42px; padding: 0 6px; }
+@media (max-width: 560px) { #mcSeg { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── Mobile ──────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .mcv-p { gap: 10px; }
+  .mcv-p-id { width: auto; flex: 1; }
+  .mcv-p-mid { flex-basis: 100%; }
+  .mcv-x { margin-left: auto; }
+}
+@media (max-width: 520px) {
+  .mcv-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .mcv-k { padding: 14px; gap: 10px; }
+  .mcv-k .v2-k-ico { width: 36px; height: 36px; }
+  .mcv-k .v2-k-n { font-size: 21px; }
+  .mcv-k .v2-k-l { font-size: 11px; }
+}

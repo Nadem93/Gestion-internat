@@ -1,0 +1,149 @@
+/* ══════════════════════════════════════════════════════════════════════
+   ÉCHÉANCIER ADMINISTRATIF — V2
+   D'après la maquette « Échéancier (dossiers) ».
+   Ne surcharge que cette page ; css/v2.css n'est pas modifié.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Tuiles statistiques (4 colonnes, icône + gros chiffre coloré) ───── */
+.ec2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.ec2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.ec2-stat-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.ec2-stat-ico svg { width: 21px; height: 21px; display: block; }
+.ec2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--pc); }
+.ec2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Barre de filtres : chips de type + résident + « traitées » ──────── */
+.ec2-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.ec2-sel {
+  flex: 0 0 auto; width: auto; max-width: 250px;
+  height: 34px; padding: 0 34px 0 13px; font: inherit;
+  font-size: 12.5px; font-weight: 600; color: var(--v2-t5); cursor: pointer;
+  border-radius: var(--v2-r-chip); background-color: var(--v2-s-alt);
+  border: 1px solid var(--v2-b); appearance: none;
+}
+body.v2 select.ec2-sel {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f93b3' stroke-width='2.2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; background-size: 15px;
+}
+.ec2-sel option { background: #101d31; color: var(--v2-t2); }
+
+/* Interrupteur « afficher les traitées » : chip portant une vraie case */
+.ec2-toggle {
+  display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px;
+  border-radius: var(--v2-r-chip); cursor: pointer;
+  font-size: 12.5px; font-weight: 600; color: var(--v2-t5);
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  text-transform: none; letter-spacing: normal; margin: 0;
+}
+.ec2-toggle:hover { background: var(--v2-s-hover); color: var(--v2-t3); }
+/* Case dessinée à la main : la case native reste blanche sur fond sombre */
+body.v2 .ec2-toggle input {
+  appearance: none; -webkit-appearance: none;
+  width: 15px; height: 15px; margin: 0; padding: 0; flex-shrink: 0; cursor: pointer;
+  border-radius: 4px; background: rgba(10,23,40,.5); border: 1px solid rgba(255,255,255,.18);
+  background-repeat: no-repeat; background-position: center; background-size: 11px;
+}
+body.v2 .ec2-toggle input:checked {
+  background-color: var(--v2-indigo); border-color: var(--v2-indigo);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+}
+.ec2-toggle:has(input:checked) { color: #fff; background: var(--v2-s-active); border-color: var(--v2-b-active); }
+
+/* ── Ligne d'échéance ────────────────────────────────────────────────── */
+.ec2-list { display: flex; flex-direction: column; gap: 11px; }
+.ec2-row {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-left: 4px solid var(--uc); border-radius: 15px; padding: 14px 18px;
+}
+.ec2-row.done { opacity: .62; }
+.ec2-d {
+  width: 52px; height: 52px; border-radius: 13px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--uc) 11%, transparent); color: var(--uc);
+}
+.ec2-d-j { font-family: var(--v2-display); font-size: 17px; font-weight: 800; line-height: 1; }
+.ec2-d-m { font-size: 9px; font-weight: 700; margin-top: 2px; text-transform: uppercase; }
+.ec2-mid { flex: 1; min-width: 0; }
+.ec2-h { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 3px; }
+.ec2-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
+.ec2-ty {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  color: var(--tc); background: color-mix(in srgb, var(--tc) 11%, transparent);
+}
+.ec2-sub { font-size: 11.5px; color: var(--v2-t6); overflow: hidden; text-overflow: ellipsis; }
+.ec2-sub a { color: var(--v2-indigo-light); cursor: pointer; }
+.ec2-sub a:hover { color: var(--v2-indigo-pale); }
+.ec2-left {
+  font-size: 11.5px; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+  padding: 5px 12px; border-radius: 9px;
+  color: var(--uc); background: color-mix(in srgb, var(--uc) 11%, transparent);
+}
+.ec2-acts { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ec2-act {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  font: inherit; font-size: 13px;
+  background: color-mix(in srgb, var(--ac, #8095b4) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ac, #8095b4) 30%, transparent);
+  color: var(--ac, #8095b4);
+}
+.ec2-act:hover { background: color-mix(in srgb, var(--ac, #8095b4) 24%, transparent); }
+.ec2-act svg { width: 15px; height: 15px; display: block; }
+
+/* ── Champ fichier de la modale de renouvellement ────────────────────
+   Classe dédiée plutôt que .v2-fld : celle-ci pose `appearance:none` et
+   `display:flex`, ce qui écrase le bouton natif en carré blanc sans libellé. */
+body.v2 .ec2-file-i { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.ec2-file {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; height: 44px; padding: 0 12px; cursor: pointer; margin: 0;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); border-radius: 11px;
+  /* style.css met les <label> en majuscules : la maquette les veut en casse normale */
+  font: inherit; text-transform: none; letter-spacing: normal;
+}
+.ec2-file:hover { background: var(--v2-s-hover); }
+.ec2-file-b {
+  flex-shrink: 0; height: 30px; padding: 0 13px; border-radius: 8px;
+  display: inline-flex; align-items: center;
+  font-size: 12px; font-weight: 600; color: var(--v2-t3);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.ec2-file-n {
+  min-width: 0; font-size: 12.5px; color: var(--v2-t7);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+body.v2 .ec2-file-i:focus-visible + .ec2-file,
+.ec2-file:focus-within { border-color: rgba(16,185,129,.55); }
+
+/* ── Vide ────────────────────────────────────────────────────────────── */
+.ec2-empty {
+  padding: 46px 22px; text-align: center;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card2);
+}
+.ec2-empty svg { width: 34px; height: 34px; color: var(--v2-t8); margin-bottom: 12px; }
+.ec2-empty-t { font-size: 14px; font-weight: 700; color: var(--v2-t3); }
+.ec2-empty-s { font-size: 12.5px; color: var(--v2-t7); margin-top: 6px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1100px) { .ec2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 760px) {
+  .ec2-row { flex-wrap: wrap; gap: 12px; }
+  /* La ligne passe sur deux rangs : on garde l'ordre du bureau
+     (compte à rebours d'abord, actions calées à droite). */
+  .ec2-mid { flex: 1 1 60%; }
+  .ec2-left { order: 3; }
+  .ec2-acts { order: 4; margin-left: auto; }
+  .ec2-sel { max-width: 100%; }
+}
+@media (max-width: 560px) {
+  .ec2-stats { grid-template-columns: 1fr; }
+  .ec2-t { font-size: 13px; }
+}

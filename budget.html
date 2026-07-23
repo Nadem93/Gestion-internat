@@ -3,145 +3,237 @@
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Budget & dépenses — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-budget.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info"><div class="header-title">Budget & dépenses</div></div>
-    <div class="header-right"></div>
-  </header>
-  <main class="content">
-    <div style="max-width:1000px;margin:0 auto">
-    <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-outline btn-sm admin-only" onclick="openEnveloppeModal()">📁 Nouvelle enveloppe</button>
-        <button class="btn btn-primary" onclick="openNouvelleDemandeBudget()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Demande de budget
-        </button>
-      </div>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(22,163,74,.18)">
+
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#16a34a,#4ade80)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · PILOTAGE</div>
+      <div class="v2-top-title">Budget &amp; dépenses</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button type="button" class="v2-btn admin-only" onclick="openEnveloppeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Nouvelle enveloppe
+      </button>
+      <button type="button" class="v2-btn v2-btn-primary" onclick="openNouvelleDemandeBudget()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Demande de budget
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <!-- Statistiques -->
+    <div class="bg2-stats">
+      <div class="bg2-stat"><div class="bg2-stat-n" id="bgStatEnAttente" style="color:#f59e0b">0</div><div class="bg2-stat-l">En attente</div></div>
+      <div class="bg2-stat"><div class="bg2-stat-n" id="bgStatAcceptes" style="color:#22d3ee">0</div><div class="bg2-stat-l">Justificatif attendu</div></div>
+      <div class="bg2-stat"><div class="bg2-stat-n" id="bgStatJustifiees" style="color:#10b981">0</div><div class="bg2-stat-l">Justifiées</div></div>
+      <div class="bg2-stat"><div class="bg2-stat-n" id="bgStatRefuses" style="color:#ef4444">0</div><div class="bg2-stat-l">Refusées</div></div>
+      <div class="bg2-stat"><div class="bg2-stat-n" id="bgStatTotal" style="color:#4ade80">0,00 €</div><div class="bg2-stat-l">Total engagé</div></div>
     </div>
 
-    <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;gap:1rem;padding:.75rem 1rem;flex-wrap:wrap">
-        <div style="flex:1;text-align:center;min-width:90px"><div id="bgStatEnAttente" style="font-weight:800;font-size:1.4rem;color:#d97706">0</div><div style="font-size:.72rem;color:var(--muted)">En attente</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="bgStatAcceptes" style="font-weight:800;font-size:1.4rem;color:#0891b2">0</div><div style="font-size:.72rem;color:var(--muted)">Justificatif attendu</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="bgStatJustifiees" style="font-weight:800;font-size:1.4rem;color:#16a34a">0</div><div style="font-size:.72rem;color:var(--muted)">Justifiées</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="bgStatRefuses" style="font-weight:800;font-size:1.4rem;color:#ef4444">0</div><div style="font-size:.72rem;color:var(--muted)">Refusées</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="bgStatTotal" style="font-weight:800;font-size:1.4rem;color:#0f2b4a">0,00 €</div><div style="font-size:.72rem;color:var(--muted)">Total engagé</div></div>
-      </div>
-    </div>
+    <div class="bg2-main">
+      <!-- Colonne principale -->
+      <div class="bg2-col">
 
-    <div id="bgAlertsRow" style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1rem;flex-wrap:wrap">
-      <div class="card" id="bgPendingCard" style="flex:1;min-width:280px;display:none;border:1px solid #d9770640">
-        <div style="padding:.6rem .85rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.82rem;color:#d97706">⏳ Demandes en attente de validation</div>
-        <div id="bgPendingList" style="padding:.4rem .6rem;max-height:340px;overflow-y:auto"></div>
-      </div>
+        <!-- Enveloppes -->
+        <div id="bgEnveloppesCard">
+          <div class="bg2-sec-h"><span class="bg2-sec-t">Enveloppes budgétaires <span id="bg2Annee"></span></span></div>
+          <div class="bg2-envs" id="bgEnveloppesList"></div>
+        </div>
 
-      <div class="card" id="bgJustifCard" style="flex:1;min-width:280px;display:none;border:1px solid #93c5fd">
-        <div style="padding:.6rem .85rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.82rem;color:#1d4ed8">📎 Vos demandes acceptées — justificatif à fournir</div>
-        <div id="bgJustifList" style="padding:.4rem .6rem;max-height:340px;overflow-y:auto"></div>
-      </div>
-    </div>
-
-    <div id="bgEnveloppesCard" style="margin-bottom:1rem">
-      <div style="font-weight:700;font-size:.9rem;margin-bottom:.75rem">📁 Enveloppes budgétaires</div>
-      <div id="bgEnveloppesList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:.85rem"></div>
-    </div>
-
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-      <select id="bgFiltreStatut" class="form-input" style="width:160px" onchange="renderBudget()">
-        <option value="">Tous les statuts</option>
-        <option value="en_attente">En attente</option>
-        <option value="accepte">Justificatif attendu</option>
-        <option value="justifie">Justifiées</option>
-        <option value="refuse">Refusées</option>
-      </select>
-      <select id="bgFiltreEnveloppe" class="form-input" style="width:200px" onchange="renderBudget()"><option value="">Toutes les enveloppes</option></select>
-      <select id="bgFiltreEmploye" class="form-input admin-only" style="width:200px;display:none" onchange="renderBudget()"><option value="">Tous les employés</option></select>
-    </div>
-
-    <div id="bgList"><div class="empty" style="padding:3rem;text-align:center"><p>Aucune demande de budget</p></div></div>
-    </div>
-  </main>
-</div></div>
-<div id="toast-container" class="toast-container"></div>
-
-<div class="modal-overlay" id="modalBudgetDemande">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header">
-      <span class="modal-title" style="display:flex;align-items:center;gap:.6rem">
-        <span style="width:38px;height:38px;border-radius:10px;background:#eef2ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">📋</span>
-        Nouvelle demande de budget
-      </span>
-      <button class="modal-close" onclick="closeModal('modalBudgetDemande')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-      <div class="form-group"><label class="required">Enveloppe</label><select id="bgFormEnveloppe" class="form-input"><option value="">Sélectionner une enveloppe</option></select></div>
-      <div class="form-row">
-        <div class="form-group"><label class="required">Montant (€)</label>
-          <div style="position:relative">
-            <input type="number" id="bgFormMontant" class="form-input" min="0" step="0.01" placeholder="0,00" oninput="updateBgPrixParPersonne()" style="padding-right:2.2rem"/>
-            <span style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none">€</span>
+        <!-- Alertes -->
+        <div id="bgAlertsRow" class="bg2-alerts">
+          <div class="v2-blk" id="bgPendingCard" style="display:none;border-color:rgba(245,158,11,.24)">
+            <div class="v2-blk-h"><span class="v2-blk-t" style="color:var(--v2-warn-text)">Demandes en attente de validation</span></div>
+            <div id="bgPendingList" class="bg2-alist"></div>
+          </div>
+          <div class="v2-blk" id="bgJustifCard" style="display:none;border-color:rgba(34,211,238,.24)">
+            <div class="v2-blk-h"><span class="v2-blk-t" style="color:var(--v2-cyan-pale)">Vos demandes acceptées — justificatif à fournir</span></div>
+            <div id="bgJustifList" class="bg2-alist"></div>
           </div>
         </div>
-        <div class="form-group"><label class="required">Date de la dépense</label><input type="date" id="bgFormDate" class="form-input"/></div>
+
+        <!-- Demandes -->
+        <div>
+          <div class="bg2-sec-h">
+            <span class="bg2-sec-t">Demandes récentes</span>
+            <div class="v2-chips" id="bg2Filtres" style="margin-left:auto">
+              <button type="button" class="v2-chip-f on" data-st="" onclick="bg2SetStatut('')">Tout</button>
+              <button type="button" class="v2-chip-f" data-st="en_attente" onclick="bg2SetStatut('en_attente')">En attente</button>
+              <button type="button" class="v2-chip-f" data-st="accepte" onclick="bg2SetStatut('accepte')">Justif.</button>
+              <button type="button" class="v2-chip-f" data-st="justifie" onclick="bg2SetStatut('justifie')">Justifiées</button>
+              <button type="button" class="v2-chip-f" data-st="refuse" onclick="bg2SetStatut('refuse')">Refusées</button>
+            </div>
+          </div>
+          <div class="v2-chips" style="margin-bottom:12px">
+            <select id="bgFiltreStatut" class="v2-fld" style="display:none;width:1px" onchange="renderBudget()">
+              <option value="">Tous les statuts</option>
+              <option value="en_attente">En attente</option>
+              <option value="accepte">Justificatif attendu</option>
+              <option value="justifie">Justifiées</option>
+              <option value="refuse">Refusées</option>
+            </select>
+            <select id="bgFiltreEnveloppe" class="v2-fld" style="width:230px" onchange="renderBudget()"><option value="">Toutes les enveloppes</option></select>
+            <select id="bgFiltreEmploye" class="v2-fld admin-only" style="width:230px;display:none" onchange="renderBudget()"><option value="">Tous les employés</option></select>
+          </div>
+          <div id="bgList"></div>
+        </div>
       </div>
-      <div id="bgPrixParPersonne" style="display:none;align-items:center;gap:.6rem;background:#eef2ff;border-radius:10px;padding:.6rem .8rem">
-        <span style="width:30px;height:30px;border-radius:50%;background:#fff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">💰</span>
-        <span style="font-size:.84rem;color:var(--text)">Prix par personne : <strong></strong></span>
+
+      <!-- Rail -->
+      <div class="bg2-rail">
+        <div id="bg2Annuel"></div>
+        <div class="v2-blk" style="padding:20px">
+          <div class="v2-blk-h"><span class="v2-blk-t">Dépenses / mois</span></div>
+          <div id="bg2Mois"></div>
+        </div>
+        <div id="bg2ATraiter"></div>
       </div>
-      <div class="form-group">
-        <label class="required">Motif</label>
-        <textarea id="bgFormMotif" class="form-input" rows="2" maxlength="200" placeholder="Ex : Achat de matériel pour l'atelier cuisine…" oninput="document.getElementById('bgMotifCount').textContent=this.value.length"></textarea>
-        <div style="text-align:right;font-size:.68rem;color:var(--muted)"><span id="bgMotifCount">0</span>/200</div>
-      </div>
-      <div class="form-group">
-        <label>Joindre un projet (programme, devis…)</label>
-        <input type="file" id="bgFormProjetInput" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx" onchange="handleBudgetProjetSelect(event)"/>
-        <div id="bgFormProjetFiles" style="margin-top:.5rem"></div>
-      </div>
-      <div class="form-group">
-        <label>Résidents concernés (optionnel)</label>
-        <div id="bgFormResidents" style="display:flex;flex-wrap:wrap;gap:.4rem;max-height:140px;overflow-y:auto;padding:.2rem"></div>
-        <span class="form-hint">Cliquez sur un ou plusieurs résidents concernés par cette dépense.</span>
-      </div>
-      <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;cursor:pointer;padding:.5rem .7rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px">
-        <input type="checkbox" id="bgFormPartage50" style="width:16px;height:16px;flex-shrink:0" onchange="updateBgPrixParPersonne()"/>
-        🏠 Activité éducative / séjour — partage 50% foyer / 50% résident(s)
-      </label>
-      <div id="bgPartageDetail" style="display:none;font-size:.8rem;background:var(--g50);border-radius:8px;padding:.6rem .8rem"></div>
-      <p style="font-size:.74rem;color:var(--muted)">📎 Le justificatif (ticket/facture) se fournit une fois la demande acceptée, depuis la carte « justificatif à fournir ».</p>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalBudgetDemande')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveBudgetDemande()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+
+    <!-- Répartition + partage -->
+    <div class="bg2-feat2">
+      <div class="v2-blk" style="padding:20px">
+        <div class="v2-blk-h"><span class="v2-blk-t">Répartition par poste de dépense</span></div>
+        <div id="bg2Repartition"></div>
+      </div>
+      <div class="v2-blk bg2-tint-indigo" style="padding:20px">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="v2-blk-t" style="color:#c7d2fe">Partage foyer / résident (50-50)</span>
+        </div>
+        <div id="bg2Partage"></div>
+      </div>
+    </div>
+
+    <!-- Prévisionnel + justificatifs + fournisseurs -->
+    <div class="bg2-feat3">
+      <div class="v2-blk" style="padding:20px">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Réalisé vs prévisionnel</span>
+          <button type="button" class="bg2-mini admin-only" style="margin-left:auto" onclick="bg2OpenPrevModal()">Définir</button>
+        </div>
+        <div id="bg2Previsionnel"></div>
+      </div>
+      <div class="v2-blk bg2-tint-cyan" style="padding:20px">
+        <div class="v2-blk-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="v2-blk-t" style="color:#a5f3fc">Justificatifs</span>
+        </div>
+        <div id="bg2Justifs"></div>
+      </div>
+      <div class="v2-blk" style="padding:20px">
+        <div class="v2-blk-h">
+          <span class="v2-blk-t">Top fournisseurs</span>
+          <button type="button" class="bg2-mini admin-only" style="margin-left:auto" onclick="bg2OpenFournisseurModal()">Ajouter</button>
+        </div>
+        <div id="bg2Fournisseurs"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ── MODALE : nouvelle demande de budget ─────────────────────────── -->
+<div class="v2-ov" id="modalBudgetDemande">
+  <div class="v2-md" style="--mc:#4ade80">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg></span>
+      <div><div class="v2-md-t">Nouvelle demande de budget</div><div class="v2-md-s">Le justificatif se fournit une fois la demande acceptée</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalBudgetDemande')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="bgFormEnveloppe">Enveloppe *</label>
+        <select id="bgFormEnveloppe" class="v2-fld"><option value="">Sélectionner une enveloppe</option></select>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="bgFormMontant">Montant (€) *</label>
+          <input type="number" id="bgFormMontant" class="v2-fld" min="0" step="0.01" placeholder="0,00" oninput="updateBgPrixParPersonne()"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="bgFormDate">Date de la dépense *</label>
+          <input type="date" id="bgFormDate" class="v2-fld"/>
+        </div>
+      </div>
+      <div id="bgPrixParPersonne" class="v2-note v2-note-ok" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8m-3-5h6"/></svg>
+        <span>Prix par personne : <strong></strong></span>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="bgFormMotif">Motif *</label>
+        <textarea id="bgFormMotif" class="v2-fld" rows="2" maxlength="200" placeholder="Ex : Achat de matériel pour l'atelier cuisine…" oninput="document.getElementById('bgMotifCount').textContent=this.value.length"></textarea>
+        <div style="text-align:right;font-size:11px;color:var(--v2-t7);margin-top:4px"><span id="bgMotifCount">0</span>/200</div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="bgFormProjetInput">Joindre un projet (programme, devis…)</label>
+        <input type="file" id="bgFormProjetInput" class="v2-fld" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx" onchange="handleBudgetProjetSelect(event)"/>
+        <div id="bgFormProjetFiles" style="margin-top:8px"></div>
+      </div>
+      <div>
+        <label class="v2-fld-l">Résidents concernés (optionnel)</label>
+        <div id="bgFormResidents" class="bg2-reschips"></div>
+        <div class="bg2-hint" style="margin-top:6px">Cliquez sur un ou plusieurs résidents concernés par cette dépense.</div>
+      </div>
+      <label class="bg2-check">
+        <input type="checkbox" id="bgFormPartage50" onchange="updateBgPrixParPersonne()"/>
+        Activité éducative / séjour — partage 50 % foyer / 50 % résident(s)
+      </label>
+      <div id="bgPartageDetail" class="bg2-note" style="display:none"></div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalBudgetDemande')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveBudgetDemande()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Envoyer la demande
       </button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalBudgetJustif">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header">
-      <span class="modal-title" id="bgJustifTitle">Justificatif</span>
-      <button class="modal-close" onclick="closeModal('modalBudgetJustif')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ── MODALE : consultation d'un justificatif ─────────────────────── -->
+<div class="v2-ov" id="modalBudgetJustif">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+      <div><div class="v2-md-t" id="bgJustifTitle">Justificatif</div><div class="v2-md-s">Pièce jointe à la demande</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalBudgetJustif')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body" id="bgJustifBody" style="text-align:center"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalBudgetJustif')">Fermer</button>
+    <div class="v2-md-b" id="bgJustifBody" style="text-align:center"></div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalBudgetJustif')">Fermer</button>
     </div>
   </div>
 </div>
 
 <script src="js/app.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_budget')) { document.querySelector('.content').innerHTML = ''; }</script>
+<script>Auth.requireAuth(); if (!requireModule('access_budget')) { document.querySelector('.v2-body').innerHTML = ''; }</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/budget-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
 <script src="js/budget.js"></script>
+<script src="js/budget-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body></html>

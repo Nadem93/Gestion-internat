@@ -216,6 +216,8 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
   background:rgba(255,255,255,.4);
   border-radius:var(--r-lg) var(--r-lg) 0 0;
 }
+/* En-têtes teintés (fond inline) : bande resserrée à la hauteur du texte */
+.card-header[style*="background"]{padding-top:.45rem;padding-bottom:.45rem}
 .card-title{font-size:.9rem;font-weight:700;color:var(--text)}
 .card-body{padding:1.5rem}
 .card-footer{
@@ -335,7 +337,7 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
 .grid-4{grid-template-columns:repeat(4,1fr)}
 .grid-5{grid-template-columns:repeat(5,1fr)}
 .grid-auto{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
-.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;max-width:1050px;margin:0 auto}
 .flex{display:flex;gap:.75rem}
 .flex-1{flex:1}
 .items-center{align-items:center}
@@ -391,7 +393,7 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
 /* Outline */
 .btn-outline{
   background:rgba(255,255,255,.8);color:var(--text);
-  border:1px solid rgba(15,43,74,.15);
+  border:1px solid rgba(15,43,74,.4);
   backdrop-filter:var(--blur-sm);
 }
 .btn-outline:hover{
@@ -717,16 +719,20 @@ tbody tr:hover .table-actions{opacity:1}
   box-shadow:0 2px 12px rgba(15,43,74,.06);
   min-width:0;
 }
-.res-card .res-card-body{display:flex;flex-direction:row;align-items:center;padding:.55rem .75rem;gap:.7rem}
+.res-card .res-card-body{display:flex;flex-direction:column;align-items:center;text-align:center;padding:1rem .55rem .85rem;gap:.1rem}
 .res-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,43,74,.1),0 0 0 2.5px var(--card-color,var(--primary))}
 .res-card-cover{display:none}
-.res-card-photo{width:84px;height:84px;border-radius:12px;border:2px solid var(--card-color,rgba(232,93,4,.4));flex-shrink:0;object-fit:cover;align-self:center;transition:filter .18s ease}
+.res-card-photo{width:62px;height:62px;border-radius:14px;border:2px solid var(--card-color,rgba(232,93,4,.4));flex-shrink:0;object-fit:cover;margin-bottom:.5rem;box-shadow:0 5px 12px rgba(15,43,74,.16);transition:filter .18s ease}
 .res-card:hover .res-card-photo{filter:brightness(1.08);box-shadow:0 0 8px 2px rgba(0,0,0,.08)}
-.res-card-body .res-card-info{display:flex;flex-direction:column;gap:.12rem;flex:1;min-width:0}
+.res-card-body .res-card-info{display:flex;flex-direction:column;align-items:center;gap:.15rem;width:100%;min-width:0}
 .res-card-name{font-weight:650;font-size:.78rem;color:var(--text)}
 .res-card-meta{font-size:.65rem;color:var(--muted)}
 .res-card-ref{font-size:.6rem;color:var(--muted);font-weight:500}
 .res-card-footer{display:none}
+.res-card-ico{display:flex;gap:.4rem;margin-top:.65rem;list-style:none;padding:0}
+.res-card-ico a{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--bc,var(--card-color,var(--primary)));background:color-mix(in srgb, var(--bc,var(--card-color,var(--primary))) 12%, #fff);box-shadow:0 2px 6px rgba(15,43,74,.14);transition:background .25s,color .25s,transform .25s;text-decoration:none}
+.res-card-ico a svg{width:15px;height:15px}
+.res-card-ico a:hover{background:var(--bc,var(--card-color,var(--primary)));color:#fff;transform:translateY(-2px)}
 
 /* ══════════════════════════════════════════
    JOURNAL ENTRY
@@ -917,15 +923,24 @@ tbody tr:hover .table-actions{opacity:1}
   .toast-container{bottom:.75rem;right:.75rem;left:.75rem}
   .toast{min-width:0;max-width:100%;width:100%}
 
-  /* Accueil grid */
-  .accueil-home-grid{grid-template-columns:repeat(3,1fr);gap:.875rem}
+  /* Accueil grid — !important nécessaire : la règle de base (non-media) de
+     .accueil-home-grid est plus loin dans ce fichier (section "ACCUEIL HOME")
+     et gagnerait sinon la cascade à spécificité égale, quelle que soit la
+     largeur d'écran (ordre source, pas le media query, qui décide) */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.875rem}
   .menu-popup-body{grid-template-columns:repeat(3,1fr)}
 
   /* Calendar — scroll horizontally */
   .calendar-grid{overflow-x:auto}
 
-  /* FAB stack */
-  .accueil-fab-stack{top:auto;bottom:5.5rem;right:.875rem;transform:none}
+  /* FAB stack sur mobile : rangée horizontale centrée juste sous le header.
+     !important partout car la règle de base (top:50%, right:1rem, colonne…),
+     plus loin dans ce fichier, gagnerait sinon la cascade. */
+  .accueil-fab-stack{position:static !important;inset:auto !important;transform:none !important;flex-direction:row !important;justify-content:center !important;gap:.5rem !important;margin:0 auto 1.1rem !important;width:auto !important}
+  /* Contenu de l'accueil : écoulement depuis le haut (pas de centrage vertical
+     qui, avec une grille plus haute que l'écran, la ferait déborder sous les
+     FAB) + réserve la place en haut pour la rangée de FAB */
+  .accueil-home-main{display:block;padding-top:calc(var(--header-h) + .5rem)}
 
   /* Entry layout — stack vertically */
   .entry-detail{height:auto}
@@ -998,9 +1013,10 @@ tbody tr:hover .table-actions{opacity:1}
   .card-header{flex-wrap:wrap;gap:.5rem}
   .presence-actions{width:100%;justify-content:flex-start!important}
 
-  /* Accueil — 2 colonnes pour que les labels ne wrappent pas */
-  .accueil-home-grid{grid-template-columns:repeat(4,1fr);gap:.5rem;max-width:100%}
-  .accueil-home-main{padding:.75rem;padding-top:calc(var(--header-h) + .75rem)}
+  /* Accueil — 3 colonnes ; padding-right réservé pour les FAB fixes. !important :
+     voir explication plus haut (règle de base plus loin dans le fichier) */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.5rem;max-width:100%}
+  .accueil-home-main{padding:.75rem;padding-top:calc(var(--header-h) + .5rem)}
   .accueil-home-card{padding:.6rem .25rem;border-radius:14px}
   .accueil-home-icon{width:40px;height:40px;border-radius:10px}
   .accueil-home-icon svg{width:20px;height:20px}
@@ -1029,8 +1045,9 @@ tbody tr:hover .table-actions{opacity:1}
   /* Photos résidents */
   .res-card-photo{width:44px;height:44px;border-radius:7px}
 
-  /* Accueil grid — 2 cols */
-  .accueil-home-grid{grid-template-columns:repeat(4,1fr);gap:.4rem;max-width:100%}
+  /* Accueil grid — 3 cols ; padding-right réservé pour les FAB fixes. !important : idem */
+  .accueil-home-grid{grid-template-columns:repeat(3,1fr) !important;gap:.4rem;max-width:100%}
+  .accueil-home-main{padding-top:calc(var(--header-h) + .5rem)}
   .accueil-home-icon{width:36px;height:36px;border-radius:9px}
   .accueil-home-icon svg{width:18px;height:18px}
   .accueil-home-card{padding:.5rem .2rem;border-radius:12px}
@@ -1046,7 +1063,7 @@ tbody tr:hover .table-actions{opacity:1}
   .wizard-card{border-radius:16px}
 
   /* FAB */
-  .accueil-fab-stack{bottom:4.5rem;right:.625rem}
+  .accueil-fab-stack{gap:.4rem !important}
   .accueil-fab{width:46px;height:46px;border-radius:12px}
 
   /* Toast */
@@ -1220,6 +1237,9 @@ tbody tr:hover .table-actions{opacity:1}
 
 /* Page ouverte dans un hub (portail / vie quotidienne / dossiers) : titre masqué (le hub l'affiche déjà) */
 .is-embedded .header-title{display:none}
+/* L'iframe du hub descend jusqu'en bas de l'écran (aucune ligne de coupe) : c'est le CONTENU
+   de la page embarquée qui réserve l'espace du dock flottant, pour scroller au-dessus de lui. */
+.is-embedded .content{padding-bottom:110px}
 @keyframes badgePop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 
 /* ══════════════════════════════════════════

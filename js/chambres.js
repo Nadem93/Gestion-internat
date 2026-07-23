@@ -10,6 +10,51 @@ function getEdl() { return _edlCache; }
 async function loadChambresCache() { _chCache = await sbGetChambres(); }
 async function loadEdlCache() { _edlCache = await sbGetEdl(); }
 
+// ── Date d'attribution ────────────────────────────────────────────────────
+// La colonne chambres.date_attribution est lue et écrite ici, hors de
+// js/chambres-supabase.js (couche partagée, non modifiée). Tant que la
+// migration n'est pas passée, la lecture échoue silencieusement et la page
+// reste utilisable : aucune ancienneté n'est affichée, et toute tentative
+// d'écriture nomme le fichier SQL à exécuter.
+const CH_SQL_FILE = 'migration-chambres-edl.sql';
+let _chDateAttrOk = true;
+
+function chDateAttrDisponible() { return _chDateAttrOk; }
+
+// Ne fait plus AUCUNE requête : sbGetChambres() lit déjà la table avec
+// `select('*')`, donc date_attribution est arrivée avec le reste et
+// _chFromRow la conserve désormais. Cette fonction relisait toute la table
+// une seconde fois, séquentiellement, pour cette seule colonne.
+function loadChambresDatesAttribution() {
+  _chDateAttrOk = (typeof supabaseClient !== 'undefined' && !!supabaseClient)
+    && (typeof sbChambresDateAttrPresente === 'undefined' || sbChambresDateAttrPresente);
+  if (!_chDateAttrOk) {
+    _chCache.forEach(c => { c.dateAttribution = ''; });
+    console.warn(`[chambres] colonne date_attribution absente — exécutez ${CH_SQL_FILE} ; l'ancienneté d'occupation ne sera pas affichée.`);
+  }
+}
+
+// Écrit la date d'attribution d'une chambre. Renvoie true si l'écriture est
+// passée, false si la colonne n'existe pas encore (toast explicite).
+async function chSetDateAttribution(id, valeur) {
+  const c = _chCache.find(x => String(x.id) === String(id));
+  const val = /^\d{4}-\d{2}-\d{2}$/.test(String(valeur || '')) ? valeur : null;
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) return false;
+  try {
+    const { error } = await supabaseClient.from('chambres')
+      .update({ date_attribution: val }).eq('id', id);
+    if (error) throw error;
+    if (c) c.dateAttribution = val || '';
+    _chDateAttrOk = true;
+    return true;
+  } catch (e) {
+    _chDateAttrOk = false;
+    console.warn('[chSetDateAttribution]', e?.message || e);
+    toast(`Date d'attribution non enregistrée : exécutez ${CH_SQL_FILE} dans Supabase`, 'error');
+    return false;
+  }
+}
+
 // ── Résidents : source = Supabase (lecture via sbGetResidents, écriture via sbSaveResident) ──
 let _residentsCache = [];
 function residentsList() { return _residentsCache; }
@@ -40,8 +85,12 @@ function chOccupants(room) {
 }
 
 function renderChambres() {
+  // Design V2 : js/chambres-v2.js prend le rendu en charge. Tous les appelants
+  // existants continuent d'appeler renderChambres().
+  if (typeof ch2Render === 'function') { ch2Render(); return; }
   const rooms = getChambres();
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
   const totalLits = rooms.reduce((a, c) => a + (parseInt(c.capacite) || 1), 0);
   let occupes = 0;
   rooms.forEach(c => { occupes += chOccupants(c).length; });
@@ -92,11 +141,14 @@ function chRoomCard(c, canEdit) {
   const over = occ.length > cap;
   const stateColor = over ? '#dc2626' : full ? '#d97706' : '#16a34a';
   const stateLabel = over ? 'Sur-occupée' : full ? 'Complète' : occ.length ? `${cap - occ.length} lit(s) libre(s)` : 'Libre';
-  const chips = occ.map(r => `
-    <div onclick="event.stopPropagation();location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche" style="display:flex;align-items:center;gap:.4rem;padding:.25rem .55rem .25rem .3rem;border-radius:99px;background:${(r.color || '#3b82f6')}14;border:1px solid ${(r.color || '#3b82f6')}33;cursor:pointer;max-width:100%">
-      <span style="width:20px;height:20px;border-radius:50%;background:${r.color || '#3b82f6'};color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(r.prenom, r.nom)}</span>
+  const chips = occ.map(r => {
+    const rc = safeColor(r.color, '#3b82f6');
+    return `
+    <div onclick="event.stopPropagation();location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche" style="display:flex;align-items:center;gap:.4rem;padding:.25rem .55rem .25rem .3rem;border-radius:99px;background:${rc}14;border:1px solid ${rc}33;cursor:pointer;max-width:100%">
+      <span style="width:20px;height:20px;border-radius:50%;background:${rc};color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(r.prenom, r.nom)}</span>
       <span style="font-size:.72rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="card" style="border-left:3px solid ${stateColor}">
     <div class="card-body" style="padding:.9rem 1rem;display:flex;flex-direction:column;gap:.55rem">
       <div style="display:flex;align-items:center;gap:.5rem">
@@ -125,6 +177,10 @@ function openChambreModal(id) {
   document.getElementById('chUnite').value = c.unite || '';
   document.getElementById('chCapacite').value = c.capacite || 1;
   document.getElementById('chNotes').value = c.notes || '';
+  const da = document.getElementById('chDateAttribution');
+  if (da) da.value = c.dateAttribution || '';
+  const daNote = document.getElementById('chDateAttributionNote');
+  if (daNote) daNote.style.display = chDateAttrDisponible() ? 'none' : '';
   openModal('modalChambre');
 }
 
@@ -137,6 +193,10 @@ async function saveChambre() {
     capacite: Math.max(parseInt(document.getElementById('chCapacite').value) || 1, 1),
     notes: document.getElementById('chNotes').value.trim()
   };
+  const dateAttribution = (document.getElementById('chDateAttribution')?.value || '').trim();
+  const dateAttributionAvant = chEditId
+    ? (getChambres().find(x => x.id === chEditId)?.dateAttribution || '') : '';
+  let cibleId = chEditId;
   try {
     if (chEditId) {
       const old = getChambres().find(x => x.id === chEditId);
@@ -146,17 +206,24 @@ async function saveChambre() {
         for (const r of cible) await persistResident({ ...r, chambre: data.nom });
       }
       const saved = await sbSaveChambre({ id: chEditId, ...data });
+      saved.dateAttribution = dateAttributionAvant;
       _chCache = _chCache.map(x => x.id === chEditId ? saved : x);
       toast('Chambre mise à jour');
     } else {
       const saved = await sbSaveChambre(data);
+      saved.dateAttribution = '';
       _chCache.push(saved);
+      cibleId = saved.id;
       toast('Chambre créée');
     }
   } catch (e) {
     console.error('[saveChambre]', e);
     toast('Erreur enregistrement : ' + (e?.message || e), 'error');
     return;
+  }
+  // Écriture séparée : sbSaveChambre() ne connaît pas date_attribution.
+  if (cibleId && dateAttribution !== dateAttributionAvant) {
+    await chSetDateAttribution(cibleId, dateAttribution);
   }
   if (typeof auditLog === 'function') auditLog('chambre_save', `Chambre ${data.nom}`);
   closeModal('modalChambre');
@@ -204,10 +271,12 @@ function openAssignModal(id) {
   // Liste des occupants avec retrait
   const occList = chOccupants(c);
   document.getElementById('asOccupants').innerHTML = occList.length ? occList.map(r => `
-    <div style="display:flex;align-items:center;gap:.6rem;padding:.5rem .7rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm)">
-      <span style="flex:1;font-size:.85rem;font-weight:600">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</span>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="unassignResident('${r.id}')">Retirer</button>
-    </div>`).join('') : '<div style="font-size:.8rem;color:var(--g400);padding:.4rem 0">Aucun occupant</div>';
+    <div class="v2-line">
+      <span class="v2-line-n" style="flex:1">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</span>
+      <button type="button" class="ch2-act danger" onclick="unassignResident('${r.id}')">Retirer</button>
+    </div>`).join('') : '<div class="v2-blk-vide">Aucun occupant</div>';
+  const ad = document.getElementById('asDate');
+  if (ad) ad.value = c.dateAttribution || (typeof today === 'function' ? today() : '');
   openModal('modalAssign');
 }
 
@@ -217,6 +286,8 @@ async function assignResident() {
   if (!rid || !c) { toast('Choisissez un résident', 'error'); return; }
   const r = residentsList().find(x => String(x.id) === String(rid));
   if (r) await persistResident({ ...r, chambre: c.nom });
+  const dAttr = (document.getElementById('asDate')?.value || '').trim();
+  if (dAttr && dAttr !== (c.dateAttribution || '')) await chSetDateAttribution(c.id, dAttr);
   if (typeof auditLog === 'function') auditLog('chambre_assign', `Attribution Ch. ${c.nom}`);
   toast('Lit attribué ✓');
   openAssignModal(chEditId);
@@ -232,8 +303,30 @@ async function unassignResident(rid) {
 }
 
 // ── États des lieux ──
-const EDL_ITEMS = [['murs', 'Murs / peinture'], ['sol', 'Sol'], ['mobilier', 'Mobilier'], ['literie', 'Literie'], ['sanitaires', 'Sanitaires']];
+// 8 postes, comme la maquette. Les 5 premiers existaient déjà (leurs clés ne
+// changent pas, sinon les relevés enregistrés deviendraient illisibles) :
+// « mobilier » couvre le placard / rangement de la maquette et « literie » son
+// lit & matelas. Les 3 postes réellement manquants sont ajoutés en fin de
+// liste : fenêtre & volet, électricité / prises, chauffage.
+// etats_lieux.etat étant du jsonb, cet ajout est purement applicatif.
+const EDL_ITEMS = [
+  ['murs', 'Murs / peinture'],
+  ['sol', 'Sol'],
+  ['mobilier', 'Mobilier / rangement'],
+  ['literie', 'Literie'],
+  ['sanitaires', 'Sanitaires'],
+  ['fenetre', 'Fenêtre & volet'],
+  ['elec', 'Électricité / prises'],
+  ['chauffage', 'Chauffage']
+];
 const EDL_NIVEAUX = ['Bon', 'Moyen', 'Dégradé'];
+// Un relevé enregistré avant l'ajout d'un poste ne contient pas sa clé : on
+// l'affiche « Non évalué » plutôt que de lui prêter un état.
+const EDL_NON_EVAL = 'Non évalué';
+function edlNiveau(e, k) {
+  const v = ((e && e.etat) || {})[k];
+  return EDL_NIVEAUX.includes(v) ? v : EDL_NON_EVAL;
+}
 
 function openEdlModal(id) {
   const c = getChambres().find(x => x.id === id);
@@ -262,7 +355,7 @@ function renderEdlHistory(c) {
         ${formatDate(e.date)} · ${escHtml(e.residentName || '—')}
       </summary>
       <div style="font-size:.76rem;color:var(--g700);margin-top:.4rem;line-height:1.7">
-        ${EDL_ITEMS.map(([k, label]) => `${label} : <strong>${escHtml((e.etat || {})[k] || '—')}</strong>`).join(' · ')}
+        ${EDL_ITEMS.map(([k, label]) => `${label} : <strong>${escHtml(edlNiveau(e, k))}</strong>`).join(' · ')}
         ${e.observations ? `<br>📝 ${escHtml(e.observations)}` : ''}
         <br><span style="color:var(--muted)">Par ${escHtml(e.author || '?')}</span>
       </div>
@@ -304,11 +397,12 @@ async function initChambres() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await loadResidentsCache();
-  await Promise.all([loadChambresCache(), loadEdlCache()]);
+  await Promise.all([loadResidentsCache(), loadChambresCache(), loadEdlCache()]);
+  loadChambresDatesAttribution();   // purement local désormais
   const added = await seedChambresFromResidents();
   if (added) toast(`${added} chambre(s) importée(s) depuis les fiches résidents`, 'info');
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(s.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   const addBtn = document.getElementById('btnAddChambre');
   if (addBtn && !canEdit) addBtn.style.display = 'none';
   const d = document.getElementById('edlDate');

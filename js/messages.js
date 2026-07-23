@@ -1,6 +1,6 @@
 // ── DATA ── (source = Supabase, caches dans messages-supabase.js)
 function getMessages() { return _msgCache; }
-function getUsers() { return DB.get(DB.keys.users) || []; }
+function getUsers() { return sbProfiles(); }
 
 let currentConvId = null;
 let composeSelected = [];
@@ -231,7 +231,12 @@ function renderComposeUsers() {
   }).join('');
 
   if (!html) {
-    html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem"><p style="margin:0">${q ? 'Aucun utilisateur trouvé' : 'Aucun autre utilisateur'}</p></div>`;
+    html = q
+      ? `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem"><p style="margin:0">Aucun utilisateur trouvé</p></div>`
+      : `<div style="padding:1.5rem 1.25rem;text-align:center;color:var(--muted);font-size:.82rem;line-height:1.5">
+          <p style="margin:0 0 .4rem;font-weight:600;color:var(--text)">Aucun collègue avec un compte de connexion</p>
+          <p style="margin:0">Seules les personnes ayant un compte peuvent être contactées.<br>Créez un accès depuis <strong>Administration → Employés → « 🔑 Créer un compte »</strong>.</p>
+        </div>`;
   }
   document.getElementById('composeList').innerHTML = html;
   document.getElementById('composeStartBtn').disabled = composeSelected.length === 0;
@@ -288,8 +293,18 @@ async function addUsersToConv(targetConvId, newUserIds) {
 }
 
 // ── RENDER CHAT ──
+// Mobile : bascule liste ↔ conversation (retour à la liste)
+function backToList() {
+  currentConvId = null;
+  renderConvs();
+  renderChat();
+}
+
 function renderChat() {
   const session = Auth.getSession();
+  // Mobile (master/detail) : affiche le panneau conversation dès qu'une conv est ouverte
+  const wrap = document.querySelector('.msg-wrap');
+  if (wrap) wrap.classList.toggle('show-chat', !!currentConvId);
   const msgsEl = document.getElementById('chatMsgs');
   const headerEl = document.getElementById('chatMainHeader');
   const headerAvatar = document.getElementById('chatMainAvatar');
@@ -414,11 +429,6 @@ function renderChat() {
   msgsEl.innerHTML = html;
   msgsEl.scrollTop = msgsEl.scrollHeight;
   updateChips();
-  // Store unread count for accueil
-  const sessionId = session?.userId;
-  const allM = getMessages();
-  const unreadTotal = allM.filter(m => String(m.from) !== String(sessionId) && !(m.readBy || []).map(String).includes(String(sessionId))).length;
-  localStorage.setItem('ftr_notif_msg_unread_' + sessionId, unreadTotal);
   updateConvCount();
 }
 
@@ -427,7 +437,6 @@ function updateConvCount() {
   const allMsgs = getMessages();
   const unread = allMsgs.filter(m => m.from !== session.userId && !m.readBy?.includes(session.userId)).length;
   document.getElementById('convCount').textContent = unread ? `${unread} non lu${unread>1?'s':''}` : '';
-  localStorage.setItem('ftr_notif_msg_unread_' + session.userId, unread);
   // Mise à jour compteur onglet
   const convMsgs = currentConvId ? getConvMessages(currentConvId) : [];
   const ctEl = document.getElementById('tabAllCt');
@@ -507,6 +516,7 @@ async function initMessages() {
     chatInput.addEventListener('input', () => autoResizeTextarea(chatInput));
   }
   await loadMessagesData();
+  await sbLoadProfilesCache();
   renderConvs();
   renderChat();
 }

@@ -1,0 +1,176 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — FACTURATION & TARIFICATION — design V2
+   D'après la maquette « Finance (pilotage).dc.html » : bandeau de 5 tuiles,
+   jauge + récapitulatif, tendance 12 périodes, enveloppes en barres,
+   classement, tableau des dernières opérations.
+   Toutes les classes sont préfixées « fc2- » et ne servent qu'à cette page.
+   Les composants génériques viennent de css/v2.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bandeau de statistiques (5 tuiles) ──────────────────────────────── */
+.fc2-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 18px; }
+.fc2-stat {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 15px 16px; min-width: 0;
+}
+.fc2-stat-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 14%, transparent); color: var(--pc, #818cf8);
+}
+.fc2-stat-ico svg { width: 15px; height: 15px; display: block; }
+.fc2-stat-n {
+  font-family: var(--v2-display); font-size: 20px; font-weight: 800; line-height: 1.1;
+  color: var(--pc, #fff); overflow-wrap: anywhere;
+}
+.fc2-stat-l { font-size: 11px; color: var(--v2-t6); margin-top: 6px; }
+@media (max-width: 1100px) { .fc2-stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px)  { .fc2-stats { grid-template-columns: repeat(2, 1fr); } .fc2-stat-n { font-size: 17px; } }
+
+/* ── Grilles de la page ──────────────────────────────────────────────── */
+.fc2-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
+.fc2-g-top { display: grid; grid-template-columns: 310px 1fr; gap: 20px; margin-bottom: 18px; align-items: start; }
+/* Sans min-width:0, une colonne de grille ne descend pas sous la largeur de
+   son contenu : le tableau (min-width 900px) débordait au lieu de défiler. */
+.fc2-g2 > *, .fc2-g-top > * { min-width: 0; }
+@media (max-width: 1080px) { .fc2-g2, .fc2-g-top { grid-template-columns: 1fr; } }
+.fc2-blk { margin-bottom: 18px; }
+
+/* ── Jauge de recouvrement ───────────────────────────────────────────── */
+.fc2-gauge-card {
+  background: linear-gradient(135deg, rgba(8,145,178,.14), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(8,145,178,.22); border-radius: var(--v2-r-card2);
+  padding: 22px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+}
+.fc2-gauge {
+  position: relative; width: 120px; height: 120px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(#22d3ee 0turn var(--gp, 0turn), rgba(255,255,255,.09) var(--gp, 0turn) 1turn);
+}
+.fc2-gauge-in {
+  width: 92px; height: 92px; border-radius: 50%; background: var(--v2-inset);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fc2-gauge-n { font-family: var(--v2-display); font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+.fc2-gauge-s { font-size: 9px; color: var(--v2-t6); margin-top: 3px; }
+.fc2-gauge-t { font-size: 13px; font-weight: 700; color: #67e8f9; margin-bottom: 8px; }
+.fc2-gauge-x { font-size: 11.5px; color: var(--v2-t5); line-height: 1.6; }
+
+/* ── Récapitulatif par statut (colonnes de la maquette « YoY ») ──────── */
+.fc2-recap { display: flex; flex-direction: column; gap: 10px; }
+.fc2-recap-i {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--v2-s-sub-soft); border-radius: 11px; padding: 10px 14px;
+}
+.fc2-recap-d { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--pc, #818cf8); }
+.fc2-recap-l { flex: 1; min-width: 90px; font-size: 12px; color: var(--v2-t3); }
+.fc2-recap-v { font-family: var(--v2-display); font-size: 13px; font-weight: 700; color: #fff; }
+.fc2-recap-n {
+  width: 72px; text-align: right; font-size: 11px; font-weight: 700; color: var(--pc, #818cf8);
+}
+
+/* ── Tendance (barres jumelées) ──────────────────────────────────────── */
+.fc2-leg { margin-left: auto; display: flex; gap: 16px; font-size: 10.5px; color: var(--v2-t6); flex-wrap: wrap; }
+.fc2-leg span { display: inline-flex; align-items: center; gap: 5px; }
+.fc2-leg i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.fc2-trend { display: flex; align-items: flex-end; gap: 8px; height: 150px; }
+.fc2-trend-c {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; height: 100%; justify-content: flex-end;
+}
+.fc2-trend-b { display: flex; align-items: flex-end; gap: 3px; width: 100%; height: 100%; justify-content: center; }
+.fc2-trend-b i { width: 9px; border-radius: 3px 3px 0 0; display: block; min-height: 2px; }
+.fc2-trend-b i.f { background: linear-gradient(180deg, #4ade80, #16a34a); }
+.fc2-trend-b i.e { background: linear-gradient(180deg, #818cf8, #4f46e5); }
+.fc2-trend-l { font-size: 8.5px; color: var(--v2-t8); white-space: nowrap; }
+
+/* ── Répartition par organisme (barres) ──────────────────────────────── */
+.fc2-orgs { display: flex; flex-direction: column; gap: 14px; }
+.fc2-org-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 5px; }
+.fc2-org-l { font-size: 12px; color: var(--v2-t3); min-width: 0; overflow-wrap: anywhere; }
+.fc2-org-v { margin-left: auto; font-size: 11px; color: var(--v2-t6); white-space: nowrap; }
+
+/* ── Tarifs (catégories) ─────────────────────────────────────────────── */
+.fc2-tarif {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px; flex-wrap: wrap;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-ctrl); margin-bottom: 8px;
+}
+.fc2-tarif:last-child { margin-bottom: 0; }
+.fc2-tarif-d { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--pc, #818cf8); }
+.fc2-tarif-n { flex: 1; min-width: 110px; font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.fc2-tarif-p { font-family: var(--v2-display); font-size: 12.5px; font-weight: 700; color: #fff; white-space: nowrap; }
+.fc2-tarif-p em { font-style: normal; font-family: var(--v2-font); font-size: 10.5px; font-weight: 500; color: var(--v2-t7); }
+
+/* ── Classement (top résidents) ──────────────────────────────────────── */
+.fc2-top-i {
+  display: flex; align-items: center; gap: 11px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list);
+}
+.fc2-top-i:last-child { border-bottom: none; }
+.fc2-top-r {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; background: rgba(255,255,255,.06); color: var(--v2-t4);
+}
+.fc2-top-i:first-child .fc2-top-r { color: var(--v2-warn-icon); }
+.fc2-top-l { flex: 1; min-width: 0; font-size: 12px; color: var(--v2-t3); overflow-wrap: anywhere; }
+.fc2-top-m { font-family: var(--v2-display); font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; }
+.fc2-top-n { font-size: 10.5px; color: var(--v2-t7); }
+
+/* ── Boutons d'action de ligne ───────────────────────────────────────── */
+.fc2-mini {
+  height: 28px; padding: 0 11px; border-radius: 9px; flex-shrink: 0;
+  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t4);
+}
+.fc2-mini:hover { background: var(--v2-s-hover); color: #fff; }
+.fc2-mini svg { width: 13px; height: 13px; flex-shrink: 0; }
+.fc2-mini-ico { width: 28px; padding: 0; justify-content: center; }
+.fc2-mini-danger { color: var(--v2-danger-text); }
+.fc2-mini-danger:hover { background: rgba(239,68,68,.16); color: #fff; }
+.fc2-acts { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; }
+.fc2-tablewrap .v2-table td:last-child { white-space: nowrap; }
+
+/* ── Tableau des factures ────────────────────────────────────────────── */
+.fc2-tablewrap { overflow-x: auto; }
+.fc2-tablewrap .v2-table { min-width: 900px; }
+.fc2-tablewrap .v2-table th, .fc2-tablewrap .v2-table td { padding: 10px 12px; vertical-align: middle; }
+.fc2-tablewrap .v2-table th:nth-child(2), .fc2-tablewrap .v2-table td:nth-child(2) { min-width: 230px; }
+.fc2-t-num { font-family: var(--v2-display); font-weight: 700; color: #fff; text-align: right; white-space: nowrap; }
+.fc2-t-res { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); white-space: nowrap; }
+.fc2-t-sub {
+  font-size: 10.5px; color: var(--v2-t7); margin-top: 2px;
+  max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fc2-tag {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px; white-space: nowrap;
+  color: var(--pc, #818cf8); background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent);
+}
+
+/* ── Génération + filtres ────────────────────────────────────────────── */
+.fc2-gen { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.fc2-gen .fc2-f { width: 180px; }
+.fc2-gen-x { flex: 1; min-width: 220px; font-size: 11.5px; color: var(--v2-t7); line-height: 1.5; }
+.fc2-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+.fc2-f { width: 172px; height: 34px; font-size: 12px; border-radius: var(--v2-r-chip); }
+.fc2-f-lbl { display: block; font-size: 11px; color: var(--v2-t6); margin-bottom: 6px; }
+@media (max-width: 700px) { .fc2-filters { margin-left: 0; } .fc2-f, .fc2-gen .fc2-f { width: 100%; } }
+
+/* ── Affectations ────────────────────────────────────────────────────── */
+.fc2-affs { display: flex; flex-direction: column; gap: 8px; }
+.fc2-aff {
+  display: flex; align-items: center; gap: 11px; flex-wrap: wrap; padding: 10px 12px;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft); border-radius: var(--v2-r-ctrl);
+}
+.fc2-aff-av {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #0a1728;
+}
+.fc2-aff-n { flex: 1; min-width: 130px; font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.fc2-aff select { flex-shrink: 0; }
+.fc2-aff select:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 700px) { .fc2-aff select { width: 100%; } }

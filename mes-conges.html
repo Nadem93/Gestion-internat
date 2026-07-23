@@ -1,65 +1,119 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Mes congés — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-mes-conges.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Mes congés</div></div>
-      <div class="header-right">
-        <button id="btnAddConge" class="btn btn-accent btn-sm" onclick="openMesCongeModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nouvelle demande
-        </button>
-        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(245,158,11,.16)">
 
-    <main class="content" style="max-width:1200px">
-      <div id="mcInfo" style="margin-bottom:1rem"></div>
-      <div id="mcStats" class="grid grid-3" style="margin-bottom:1.25rem"></div>
-      <div id="mcList"></div>
-    </main>
+  <div class="v2-top">
+    <a class="v2-logo" href="pilotage.html" style="background:linear-gradient(135deg,#f59e0b,#fcd34d);color:#0a1728" title="Retour au portail">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Espace personnel</div>
+      <div class="v2-top-title">Mes congés</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <button id="btnAddConge" type="button" class="v2-btn v2-btn-primary" onclick="openMesCongeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle demande
+      </button>
+      <a href="pilotage.html" class="v2-btn">Portail</a>
+    </div>
+  </div>
+
+  <div class="v2-body">
+    <div id="mcInfo" class="mcv-info"></div>
+    <div id="mcStats" class="v2-kgrid mcv-stats"></div>
+    <div id="mcChips" class="v2-chips mcv-chips"></div>
+
+    <div class="mcv-grid">
+      <div class="mcv-main"><div id="mcList"></div></div>
+      <aside class="mcv-rail" id="mcRail"></aside>
+      <div class="mcv-bottom" id="mcBottom"></div>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalMesConge">
-  <div class="modal" style="max-width:460px;--mc:#0891b2">
-    <div class="mdx-hero">
-      <button class="mdx-close" onclick="closeModal('modalMesConge')" aria-label="Fermer">✕</button>
-      <div class="mdx-badge">🗓</div>
-      <div class="mdx-hero-txt">
-        <div class="mdx-title">Nouvelle demande de congés</div>
-        <div class="mdx-sub">Votre demande</div>
+<!-- ══ MODALE — gabarit V2 de référence ══════════════════════════════ -->
+<div class="v2-ov" id="modalMesConge">
+  <div class="v2-md" style="--mc:#22d3ee;max-width:560px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Nouvelle demande de congé</div>
+        <div class="v2-md-s">Type, période et motif</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalMesConge')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l">Salarié</label>
+        <div class="v2-fld" id="mcSalarie">—</div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="mcType">Type</label>
+        <div class="v2-seg" id="mcSeg">
+          <button type="button" class="v2-seg-o on" data-t="cp"            onclick="MCV.pickType('cp')">Congés payés</button>
+          <button type="button" class="v2-seg-o"    data-t="rtt"           onclick="MCV.pickType('rtt')">RTT</button>
+          <button type="button" class="v2-seg-o"    data-t="enfant_malade" onclick="MCV.pickType('enfant_malade')">Enfant malade</button>
+          <button type="button" class="v2-seg-o"    data-t="formation"     onclick="MCV.pickType('formation')">Formation</button>
+          <button type="button" class="v2-seg-o"    data-t="autre"         onclick="MCV.pickType('autre')">Autre</button>
+        </div>
+        <!-- Contrat du JS de la page : la valeur reste portée par ce <select>. -->
+        <select id="mcType" onchange="MCV.syncSeg();mcModalSync()" hidden aria-hidden="true" tabindex="-1">
+          <option value="cp">Congés payés</option>
+          <option value="rtt">RTT</option>
+          <option value="enfant_malade">Enfant malade</option>
+          <option value="formation">Formation</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="mcDebut">Du</label>
+          <input type="date" id="mcDebut" class="v2-fld" onchange="MCV.syncDuree()"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="mcFin">Au</label>
+          <input type="date" id="mcFin" class="v2-fld" onchange="MCV.syncDuree()"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="mcMotif">Motif</label>
+        <textarea id="mcMotif" class="v2-fld" rows="2" placeholder="Raison de la demande…"></textarea>
+      </div>
+
+      <div id="mcDuree" class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Choisissez une date de début et de fin.</span>
       </div>
     </div>
-    <div class="modal-body mdx-body">
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>📋</span> Type &amp; période</div>
-        <div class="form-group"><label class="required">Type</label>
-          <select id="mcType" onchange="mcModalSync()">
-            <option value="cp">Congés payés</option>
-            <option value="rtt">RTT</option>
-            <option value="enfant_malade">Enfant malade</option>
-            <option value="formation">Formation</option>
-            <option value="autre">Autre</option>
-          </select>
-        </div>
-        <div class="grid grid-2" style="gap:.75rem">
-          <div class="form-group"><label class="required">Date début</label><input type="date" id="mcDebut"/></div>
-          <div class="form-group"><label class="required">Date fin</label><input type="date" id="mcFin"/></div>
-        </div>
-        <div class="form-group"><label>Motif</label><textarea id="mcMotif" rows="2" placeholder="Raison de la demande…"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalMesConge')">Annuler</button>
-      <button class="btn btn-primary" id="mcSaveBtn" onclick="saveMesConge()">Envoyer la demande</button>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalMesConge')">Annuler</button>
+      <button type="button" class="v2-btn-pri" id="mcSaveBtn" onclick="saveMesConge()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Envoyer la demande
+      </button>
     </div>
   </div>
 </div>
@@ -68,6 +122,10 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/conges-supabase.js"></script>
@@ -92,56 +150,59 @@ async function initMesConges() {
   try {
     const employes = await sbGetEmployes();
     _mcFiche = employes.find(e => String(e.profileId) === String(s.userId)) || null;
+    window._mcFiche = _mcFiche;
     if (!_mcFiche) {
-      document.getElementById('btnAddConge').style.display = 'none';
-      info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--muted)">Votre compte n'est pas encore relié à une fiche salarié.<br>Contactez votre administrateur pour pouvoir faire une demande de congés.</div>`;
+      // Le bouton reste visible : le message d'explication apparaît au clic (voir openMesCongeModal).
+      info.innerHTML = `<div class="v2-blk"><div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Votre compte n'est pas encore relié à une fiche salarié. Contactez votre administrateur pour pouvoir faire une demande de congés.</span>
+      </div></div>`;
+      renderMesConges();
       return;
     }
     _mcCache = (await sbGetConges()).filter(c => String(c.employeId) === String(_mcFiche.id));
+    window._mcCache = _mcCache;
+    if (window.MCV) await MCV.loadSoldes(_mcFiche);
     renderMesConges();
   } catch (e) {
     console.error('[initMesConges]', e);
-    info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--red)">Erreur de chargement : ${escHtml(e?.message || e)}</div>`;
+    info.innerHTML = `<div class="v2-blk"><div class="v2-note v2-note-err">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Erreur de chargement : ${escHtml(e?.message || e)}</span></div></div>`;
   }
 }
 
+// Le rendu est délégué au module V2 (js/mes-conges-v2.js).
 function renderMesConges() {
-  const year = new Date().getFullYear();
-  const joursPris = _mcCache
-    .filter(c => c.statut === 'accepte' && new Date(c.debut).getFullYear() === year)
-    .reduce((sum, c) => sum + mcJours(c), 0);
-  const enAttente = _mcCache.filter(c => c.statut === 'en_attente').length;
-  const refuses = _mcCache.filter(c => c.statut === 'refuse').length;
-
-  document.getElementById('mcStats').innerHTML = `
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="stat-card-top"><span class="stat-label">Jours pris (${year})</span></div><div class="stat-num">${joursPris}</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="stat-card-top"><span class="stat-label">En attente</span></div><div class="stat-num">${enAttente}</div></div>
-    <div class="stat-card" style="border-left:3px solid #ef4444"><div class="stat-card-top"><span class="stat-label">Refusées</span></div><div class="stat-num">${refuses}</div></div>`;
-
-  const el = document.getElementById('mcList');
-  const list = [..._mcCache].sort((a, b) => (b.dateDemande || '').localeCompare(a.dateDemande || ''));
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">🗓</div><h3>Aucune demande</h3><p>Cliquez sur « Nouvelle demande » pour poser des congés.</p></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="cgx-grid">` + list.map(c => congeCardHtml(c, 'portal')).join('') + `</div>`;
+  window._mcCache = _mcCache;
+  window._mcFiche = _mcFiche;
+  if (window.MCV) { MCV.render(); return; }
+  console.warn('[mes-conges] module V2 absent — rendu ignoré.');
 }
 
 function mcModalSync() {
-  const modalEl = document.querySelector('#modalMesConge .modal');
-  const sub = document.querySelector('#modalMesConge .mdx-sub');
+  const modalEl = document.querySelector('#modalMesConge .v2-md');
+  const sub = document.querySelector('#modalMesConge .v2-md-s');
   if (!modalEl || !sub) return;
   const type = document.getElementById('mcType').value || 'cp';
-  const meta = (typeof CONGE_TYPE_META !== 'undefined' && CONGE_TYPE_META[type]) ? CONGE_TYPE_META[type] : { label: type, color: '#0891b2' };
-  modalEl.style.setProperty('--mc', meta.color);
+  const meta = (typeof CONGE_TYPE_META !== 'undefined' && CONGE_TYPE_META[type]) ? CONGE_TYPE_META[type] : { label: type };
+  const color = (window.MCV ? MCV.typeColor(type) : meta.color) || '#22d3ee';
+  modalEl.style.setProperty('--mc', color);
   sub.textContent = meta.label;
 }
 
 function openMesCongeModal() {
+  if (!_mcFiche) {
+    toast("Votre compte n'est pas encore relié à une fiche salarié. Contactez votre administrateur pour pouvoir faire une demande de congés.", 'error');
+    return;
+  }
   document.getElementById('mcType').value = 'cp';
   document.getElementById('mcDebut').value = '';
   document.getElementById('mcFin').value = '';
   document.getElementById('mcMotif').value = '';
+  const nom = document.getElementById('mcSalarie');
+  if (nom) nom.textContent = `${_mcFiche.prenom || ''} ${_mcFiche.nom || ''}`.trim() || 'Moi';
+  if (window.MCV) { MCV.syncSeg(); MCV.syncDuree(); }
   mcModalSync();
   openModal('modalMesConge');
 }
@@ -156,7 +217,7 @@ async function saveMesConge() {
   if (debut > fin) { toast('La date de fin doit être après la date de début', 'error'); return; }
 
   const btn = document.getElementById('mcSaveBtn');
-  btn.disabled = true; const lbl = btn.textContent; btn.textContent = '⏳ Envoi…';
+  btn.disabled = true; const lbl = btn.innerHTML; btn.textContent = '⏳ Envoi…';
   try {
     const saved = await sbSaveConge({
       employeId: _mcFiche.id,
@@ -172,7 +233,7 @@ async function saveMesConge() {
     toast('Erreur : ' + msg, 'error');
     console.error('[saveMesConge]', e);
   } finally {
-    btn.disabled = false; btn.textContent = lbl;
+    btn.disabled = false; btn.innerHTML = lbl;
   }
 }
 
@@ -192,5 +253,7 @@ function cancelMesConge(id) {
 
 document.addEventListener('DOMContentLoaded', initMesConges);
 </script>
+<script src="js/mes-conges-v2.js?v=1"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

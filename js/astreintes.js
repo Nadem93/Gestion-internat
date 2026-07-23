@@ -5,22 +5,36 @@ const AST_TYPES = [
   { id:'technique',  label:'Astreinte technique',   icon:'🔧', color:'#d97706' },
   { id:'direction',  label:'Direction',             icon:'🏛️', color:'#0f2b4a' }
 ];
+// Un `const` de premier niveau ne crée pas de propriété sur window : le module
+// de rendu V2 et les onclick en ligne ont besoin d'une référence explicite.
+window.AST_TYPES = AST_TYPES;
 
 let _astCache = [];
 function getAst()       { return _astCache; }
 function _astType(id)   { return AST_TYPES.find(t => t.id === id) || AST_TYPES[0]; }
 
-let _astWeekOffset = 0;
 let _astEditId = '';
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function initAstreintes() {
   Auth.requireAuth();
+  if (window.__astDenied) return;
+
+  if (typeof sbGetEmployes === 'function') { try { DB.set(DB.keys.employes, await sbGetEmployes()); } catch(e){ console.error(e); } }
   _populateAstEmployes();
-  document.getElementById('astPrev')?.addEventListener('click', () => { _astWeekOffset--; renderAstreintes(); });
-  document.getElementById('astNext')?.addEventListener('click', () => { _astWeekOffset++; renderAstreintes(); });
-  document.getElementById('astToday')?.addEventListener('click', () => { _astWeekOffset = 0; renderAstreintes(); });
-  _astCache = await sbGetAstreintes();
+
+  // Navigation de mois (le rendu V2 raisonne en mois, pas en semaine).
+  document.getElementById('astPrev')?.addEventListener('click', () => window.ast2PrevMois?.());
+  document.getElementById('astNext')?.addEventListener('click', () => window.ast2NextMois?.());
+  document.getElementById('astToday')?.addEventListener('click', () => window.ast2MoisCourant?.());
+
+  window.ast2RenderSeg?.();
+
+  const [ast] = await Promise.all([
+    sbGetAstreintes(),
+    window.AST2 ? window.AST2.loadExtra() : Promise.resolve()
+  ]);
+  _astCache = ast;
   renderAstreintes();
 }
 
@@ -29,7 +43,7 @@ function _populateAstEmployes() {
   const sel = document.getElementById('astModalEmploye');
   if (!sel) return;
   sel.innerHTML = '<option value="">— Saisir manuellement —</option>' +
-    emp.map(e => `<option value="${escHtml(e.nom||'')+' '+(e.prenom||'')}">${escHtml((e.prenom||'')+' '+(e.nom||''))}</option>`).join('');
+    emp.map(e => `<option value="${escAttr((e.prenom||'')+' '+(e.nom||''))}">${escHtml((e.prenom||'')+' '+(e.nom||''))}</option>`).join('');
   sel.addEventListener('change', e => {
     if (e.target.value) {
       document.getElementById('astModalNom').value = e.target.value.trim();
@@ -37,97 +51,11 @@ function _populateAstEmployes() {
   });
 }
 
-// ─── Semaine courante ─────────────────────────────────────────────────────────
-function _astLocalStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
-function _weekDates() {
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  const dow  = (now.getDay() + 6) % 7; // lundi = 0
-  const lun  = new Date(now.getTime() - dow * 86400000 + _astWeekOffset * 7 * 86400000);
-  return Array.from({length:7}, (_,i) => {
-    const d = new Date(lun.getTime() + i * 86400000);
-    return _astLocalStr(d);
-  });
-}
-
-function _isToday(dateStr) {
-  return dateStr === today();
-}
-
 // ─── Rendu principal ──────────────────────────────────────────────────────────
+// Toute la mise en page est portée par js/astreintes-v2.js (maquette V2).
 function renderAstreintes() {
-  const days   = _weekDates();
-  const list   = getAst();
-  const todayStr = today();
-  const JOURS  = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-
-  // En-tête semaine
-  const lun = new Date(days[0]).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
-  const dim = new Date(days[6]).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-  const labEl = document.getElementById('astWeekLabel');
-  if (labEl) labEl.textContent = `Semaine du ${lun} au ${dim}`;
-
-  // Garde du jour (côté info)
-  const gardesAujourdHui = list.filter(a => a.date === todayStr);
-  const guardEl = document.getElementById('astTodayGuard');
-  if (guardEl) {
-    if (gardesAujourdHui.length) {
-      guardEl.innerHTML = gardesAujourdHui.map(a => {
-        const t = _astType(a.type);
-        return `<div style="display:flex;align-items:center;gap:.5rem;padding:.35rem .6rem;background:${t.color}10;border-radius:7px;border-left:3px solid ${t.color}">
-          <span>${t.icon}</span>
-          <div>
-            <div style="font-size:.78rem;font-weight:700;color:${t.color}">${t.label}</div>
-            <div style="font-size:.82rem;font-weight:600;color:var(--text)">${escHtml(a.nom||'—')}</div>
-            ${a.tel ? `<div style="font-size:.75rem;color:var(--muted)">📞 ${escHtml(a.tel)}</div>` : ''}
-          </div>
-        </div>`;
-      }).join('');
-    } else {
-      guardEl.innerHTML = '<span style="font-size:.8rem;color:var(--muted);font-style:italic">Aucune astreinte saisie pour aujourd\'hui</span>';
-    }
-  }
-
-  // Grille hebdomadaire
-  const gridEl = document.getElementById('astGrid');
-  if (!gridEl) return;
-
-  gridEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:100px repeat(7,minmax(90px,1fr));gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff">
-
-      <!-- Header jours -->
-      <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:.65rem .5rem;font-size:.72rem;font-weight:700;color:var(--muted);text-align:center">Type</div>
-      ${days.map((d,i) => {
-        const isT = _isToday(d);
-        const dayNum = new Date(d).toLocaleDateString('fr-FR',{day:'numeric'});
-        return `<div style="background:${isT?'#3b82f615':'#f8fafc'};border-bottom:1px solid var(--border);border-left:1px solid var(--border);padding:.65rem .5rem;text-align:center">
-          <div style="font-size:.74rem;font-weight:700;color:${isT?'#3b82f6':'var(--muted)'}">${JOURS[i]}</div>
-          <div style="font-size:.95rem;font-weight:800;color:${isT?'#3b82f6':'var(--text)'}">${dayNum}</div>
-        </div>`;
-      }).join('')}
-
-      <!-- Lignes par type -->
-      ${AST_TYPES.map(type => `
-        <div style="padding:.65rem .85rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:.45rem;background:#fafafa">
-          <span style="font-size:1.05rem">${type.icon}</span>
-          <span style="font-size:.62rem;font-weight:600;color:${type.color};line-height:1.2">${type.label}</span>
-        </div>
-        ${days.map(d => {
-          const gardes = list.filter(a => a.date === d && a.type === type.id);
-          const isT    = _isToday(d);
-          return `<div style="padding:.5rem .45rem;border-top:1px solid var(--border);border-left:1px solid var(--border);background:${isT?'#3b82f608':'#fff'};min-height:72px;position:relative">
-            ${gardes.map(a => `<div style="background:${type.color}18;border:1px solid ${type.color}44;border-radius:6px;padding:.3rem .5rem;margin-bottom:.25rem;cursor:pointer" onclick="openAstModal('${a.id}')">
-              <div style="font-size:.74rem;font-weight:700;color:${type.color};white-space:normal;word-break:break-word">${escHtml(a.nom||'—')}</div>
-              ${a.tel ? `<div style="font-size:.68rem;color:var(--muted)">📞 ${escHtml(a.tel)}</div>` : ''}
-            </div>`).join('')}
-            <button onclick="openAstModal('','${type.id}','${d}')" style="position:absolute;bottom:2px;right:2px;background:none;border:none;color:${type.color}88;cursor:pointer;font-size:.9rem;padding:1px 3px;line-height:1;border-radius:4px;opacity:.6" title="Ajouter" onmouseenter="this.style.opacity=1;this.style.background='${type.color}15'" onmouseleave="this.style.opacity=.6;this.style.background='none'">+</button>
-          </div>`;
-        }).join('')}
-      `).join('')}
-    </div>`;
+  if (window.AST2 && typeof window.AST2.render === 'function') { window.AST2.render(); return; }
+  console.warn('[astreintes] js/astreintes-v2.js absent — aucun rendu.');
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
@@ -136,16 +64,44 @@ function openAstModal(id, presetType, presetDate) {
   const list = getAst();
   const a    = id ? list.find(x => x.id === id) : null;
 
-  document.getElementById('astModalTitle').textContent = a ? 'Modifier l\'astreinte' : 'Nouvelle astreinte';
+  document.getElementById('astModalTitle').textContent = a ? 'Modifier l\'astreinte' : 'Planifier une astreinte';
   document.getElementById('astModalType').value  = a?.type || presetType || 'medecin';
   document.getElementById('astModalDate').value  = a?.date || presetDate || today();
   document.getElementById('astModalNom').value   = a?.nom  || '';
   document.getElementById('astModalTel').value   = a?.tel  || '';
   document.getElementById('astModalNote').value  = a?.note || '';
 
+  const fin = document.getElementById('astModalDateFin');
+  if (fin) fin.value = '';
+  // La période « du → au » n'a de sens qu'à la création : une ligne existante
+  // porte un seul jour.
+  const finBox = document.getElementById('astModalFinBox');
+  if (finBox) finBox.style.display = a ? 'none' : '';
+  const hint = document.getElementById('astModalHint');
+  if (hint) hint.style.display = a ? 'none' : '';
+  const del = document.getElementById('astDeleteBtn');
+  if (del) del.style.display = a ? '' : 'none';
+
   const sel = document.getElementById('astModalEmploye');
   if (sel) sel.value = '';
+
+  window.ast2RenderSeg?.();
   openModal('modalAst');
+}
+
+// Liste des jours d'une période, bornes incluses (30 jours maximum).
+function _astJours(debut, fin) {
+  if (!fin || fin <= debut) return [debut];
+  const out = [];
+  const p = debut.split('-');
+  let d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  for (let i = 0; i < 31; i++) {
+    const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    out.push(s);
+    if (s >= fin) break;
+    d = new Date(d.getTime() + 86400000);
+  }
+  return out;
 }
 
 async function saveAstreinte() {
@@ -154,21 +110,28 @@ async function saveAstreinte() {
   const type = document.getElementById('astModalType').value;
   if (!date || !nom) { toast('Date et nom obligatoires', 'error'); return; }
 
-  const data = {
-    type, date, nom,
+  const base = {
+    type, nom,
     tel:  document.getElementById('astModalTel').value.trim(),
     note: document.getElementById('astModalNote').value.trim()
   };
+
   try {
     if (_astEditId) {
-      const saved = await sbSaveAstreinte({ ...data, id: _astEditId });
+      const saved = await sbSaveAstreinte({ ...base, date, id: _astEditId });
       const idx = _astCache.findIndex(x => x.id === _astEditId);
       if (idx !== -1) _astCache[idx] = saved;
       toast('Astreinte modifiée');
     } else {
-      const saved = await sbSaveAstreinte(data);
-      _astCache.push(saved);
-      toast('Astreinte enregistrée', 'success');
+      const fin   = document.getElementById('astModalDateFin')?.value || '';
+      const jours = _astJours(date, fin);
+      for (const j of jours) {
+        const saved = await sbSaveAstreinte({ ...base, date: j });
+        _astCache.push(saved);
+      }
+      toast(jours.length > 1
+        ? `Astreinte planifiée sur ${jours.length} jours`
+        : 'Astreinte enregistrée', 'success');
     }
   } catch (e) {
     toast('Erreur lors de l\'enregistrement', 'error');

@@ -1,63 +1,218 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Cahier de nuit — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-nuit.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Cahier de nuit & astreinte</div></div>
-      <div class="header-right">
-        <a href="journal.html" class="btn btn-outline btn-sm">📔 Journal de bord</a>
-      </div>
-    </header>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell nt2-shell">
 
-    <main class="content" style="max-width:1080px">
-      <div class="toolbar" style="margin-bottom:1.25rem;align-items:center">
-        <button class="btn btn-ghost btn-icon" onclick="nuitShift(-1)" title="Nuit précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <input type="date" id="ntDate" style="width:auto"/>
-        <button class="btn btn-ghost btn-icon" onclick="nuitShift(1)" title="Nuit suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="9 18 15 12 9 6"/></svg></button>
-        <span id="ntLabel" style="font-weight:700;color:var(--primary)"></span>
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="vie-quotidienne.html" style="background:linear-gradient(135deg,#312e81,#6366f1)" aria-label="Vie quotidienne">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+        <div class="v2-top-title">Cahier de nuit &amp; astreinte</div>
       </div>
 
-      <div id="ntBody"></div>
+      <div class="nt2-topact">
+        <div class="nt2-veilleur" id="ntVeilleur" hidden>
+          <span class="nt2-veilleur-av" id="ntVeilleurIni">?</span>
+          <span class="nt2-veilleur-t">
+            <span class="nt2-veilleur-n" id="ntVeilleurNom">—</span>
+            <span class="nt2-veilleur-r">Veilleur de nuit</span>
+          </span>
+        </div>
 
-      <div class="section-label" style="margin:1.75rem 0 .75rem">🗂 Nuits précédentes</div>
-      <div id="ntHisto" style="display:flex;flex-direction:column;gap:.5rem"></div>
-    </main>
+        <div class="v2-datenav nt2-datenav">
+          <button type="button" onclick="nuitShift(-1)" title="Nuit précédente" aria-label="Nuit précédente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="v2-datenav-l" id="ntLabel" onclick="nt2PickDate()" title="Choisir une nuit"></span>
+          <input type="date" id="ntDate" class="nt2-datepick" aria-label="Date de la nuit"/>
+          <button type="button" onclick="nuitShift(1)" title="Nuit suivante" aria-label="Nuit suivante">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <a href="journal.html" class="v2-btn v2-btn-sm nt2-lien">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Journal
+        </a>
+
+        <button type="button" class="nt2-new" id="ntBtnEvt" onclick="openNuitEvtModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Événement
+        </button>
+      </div>
+    </div>
+
+    <div class="v2-body">
+      <!-- STATISTIQUES DE LA NUIT -->
+      <div class="nt2-stats" id="ntStats"></div>
+
+      <!-- CORPS : timeline des événements + rail -->
+      <div class="nt2-body">
+        <div id="ntBody"></div>
+        <div class="nt2-rail" id="ntRail"></div>
+      </div>
+    </div>
+
+  </div>
+</div></div>
+
+<!-- MODALE ÉVÉNEMENT DE NUIT -->
+<div class="modal-overlay v2-ov" id="modalNuitEvt">
+  <div class="v2-md" style="--mc:#6366f1">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="modalNuitEvtTitle">Événement de la nuit</div>
+        <div class="v2-md-s">Ce qui s'est passé, ce qui a été fait</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalNuitEvt')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="neType">Type d'événement</label>
+          <select id="neType" class="v2-fld">
+            <option value="reveil">😴 Réveil / insomnie</option>
+            <option value="angoisse">😰 Angoisse / crise</option>
+            <option value="soin">🩺 Soin / santé</option>
+            <option value="conflit">⚡ Conflit / agitation</option>
+            <option value="fugue">🚨 Absence / fugue</option>
+            <option value="retour">🌙 Retour tardif</option>
+            <option value="autre">📌 Autre</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="neHeure">Heure</label>
+          <input type="time" id="neHeure" class="v2-fld"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="neResident">Résident concerné</label>
+        <select id="neResident" class="v2-fld"></select>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="neDesc">Description *</label>
+        <textarea id="neDesc" class="v2-fld" rows="4" placeholder="Ce qui s'est passé, ce qui a été fait…"></textarea>
+      </div>
+
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Consigné dans le cahier de nuit : lisible par l'équipe de jour à la relève.
+      </div>
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalNuitEvt')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveNuitEvt()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- MODAL ÉVÉNEMENT DE NUIT -->
-<div class="modal-overlay" id="modalNuitEvt">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">⚡ Événement de la nuit</span>
-      <button class="modal-close" onclick="closeModal('modalNuitEvt')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label>Type</label><select id="neType">
-          <option value="reveil">😴 Réveil / insomnie</option>
-          <option value="angoisse">😰 Angoisse / crise</option>
-          <option value="soin">🩺 Soin / santé</option>
-          <option value="conflit">⚡ Conflit / agitation</option>
-          <option value="fugue">🚨 Absence / fugue</option>
-          <option value="retour">🌙 Retour tardif</option>
-          <option value="autre">📌 Autre</option>
-        </select></div>
-        <div class="form-group"><label>Heure</label><input type="time" id="neHeure"/></div>
+<!-- MODALE CONSIGNE DE VEILLE -->
+<div class="modal-overlay v2-ov" id="modalVeilleConsigne">
+  <div class="v2-md" style="--mc:#f59e0b">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Consigne de veille</div>
+        <div class="v2-md-s">Rappelée chaque nuit jusqu'à son retrait</div>
       </div>
-      <div class="form-group"><label>Résident concerné</label><select id="neResident"></select></div>
-      <div class="form-group"><label class="required">Description</label><textarea id="neDesc" rows="3" placeholder="Ce qui s'est passé, ce qui a été fait…"></textarea></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalVeilleConsigne')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalNuitEvt')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveNuitEvt()">💾 Enregistrer</button>
+
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="vcResident">Résident concerné *</label>
+        <select id="vcResident" class="v2-fld"></select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="vcTexte">Consigne *</label>
+        <textarea id="vcTexte" class="v2-fld" rows="3" placeholder="Ce que le veilleur doit surveiller ou faire…"></textarea>
+      </div>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Permanente : affichée toutes les nuits tant qu'elle n'est pas retirée par son auteur ou un administrateur.
+      </div>
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalVeilleConsigne')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveVeilleConsigne()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+        Ajouter la consigne
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE ÉTAT DU SOMMEIL -->
+<div class="modal-overlay v2-ov" id="modalSommeil">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">État du sommeil</div>
+        <div class="v2-md-s" id="smNom">—</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalSommeil')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="v2-md-b">
+      <input type="hidden" id="smResidentId"/>
+      <div>
+        <label class="v2-fld-l" for="smEtat">État de la nuit</label>
+        <select id="smEtat" class="v2-fld">
+          <option value="calme">Calme</option>
+          <option value="agite">Agité</option>
+          <option value="reveil">Réveil</option>
+          <option value="absent">Absent</option>
+        </select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="smNote">Précision</label>
+        <textarea id="smNote" class="v2-fld" rows="3" placeholder="Ce qui a été observé cette nuit…"></textarea>
+      </div>
+    </div>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalSommeil')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveSommeil()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
@@ -66,8 +221,16 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
 <script src="js/nuit-supabase.js"></script>
+<script src="js/veille-supabase.js"></script>
 <script src="js/nuit.js"></script>
+<script src="js/nuit-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

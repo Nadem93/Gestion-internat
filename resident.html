@@ -4,8 +4,25 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Fiche résident — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
+    /* Boutons de navigation par catégorie (carte Documents) */
+    .docnav-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+    .docnav{display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .9rem;border-radius:999px;border:1px solid var(--border);background:var(--white,#fff);color:var(--muted);font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .docnav:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,#fff)}
+    .docnav.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 32%,transparent)}
+    .docnav.active .badge{background:rgba(255,255,255,.28);color:#fff}
+    /* Onglets internes (cartes Médical & Plan de soins) */
+    .itab-bar{display:flex;gap:.1rem;border-bottom:1px solid var(--border);flex-wrap:wrap;--itab-color:var(--accent)}
+    .itab{font:inherit;font-size:.74rem;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;padding:.35rem .6rem;cursor:pointer;margin-bottom:-1px;white-space:nowrap}
+    .itab:hover{color:var(--text)}
+    .itab.active{color:var(--itab-color);border-bottom-color:var(--itab-color)}
+    .itab .badge{margin-left:.25rem}
+    @media print{.sante-sec,[data-pscat]{display:block !important}.itab-bar{display:none}}
     /* Chips de filtre du Fil de vie */
     .fv-chip{font:inherit;font-size:.74rem;font-weight:600;padding:.28rem .7rem;border-radius:999px;border:1px solid var(--border);background:var(--white,#fff);color:var(--muted);cursor:pointer;transition:all .15s}
     .fv-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -90,27 +107,94 @@
     .evm-btn-series{background:transparent;border:1.5px solid #ef4444;color:#ef4444}
     .evm-btn-close{background:#f1f5f9;color:#334155}
     .evm-btn-agenda{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff}
+    /* Modal éval : panneau bleu de sélection des domaines + grille adaptative */
+    #evalModal .modal-body{padding:0;overflow:hidden}
+    .eval-layout{display:flex;height:min(62vh,520px)}
+    .eval-side{width:206px;flex-shrink:0;background:#fff;border-right:0.5px solid var(--border);padding:1rem .75rem;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto}
+    .eval-side-h{color:var(--muted);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:.1rem .45rem .55rem}
+    .eval-dom-btn{display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;border:none;background:transparent;color:var(--g700);padding:.55rem .6rem;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:600;transition:background .15s,color .15s;font-family:inherit}
+    .eval-dom-btn:hover{background:#eef1f5}
+    .eval-dom-btn.active{background:color-mix(in srgb,var(--bc,#6366f1) 14%,#fff);color:var(--bc,#6366f1)}
+    .eval-dom-btn .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .eval-dom-btn .nm{flex:1;line-height:1.15}
+    .eval-dom-btn .cnt{font-size:.64rem;font-weight:700;opacity:.6}
+    .eval-main{flex:1;min-width:0;padding:1.25rem 1.4rem;overflow-y:auto}
+    .eval-dom-title{font-size:.92rem;font-weight:700;margin:.2rem 0 .7rem}
+    @media(max-width:680px){
+      .eval-layout{flex-direction:column;height:auto;max-height:78vh}
+      .eval-side{width:auto;flex-direction:row;flex-wrap:wrap;gap:.4rem}
+      .eval-side-h{width:100%}
+      .eval-dom-btn{width:auto;flex:0 0 auto}
+      .eval-main{max-height:none}
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       Mobile (≤640px) : empêche les cartes de la fiche de déborder du
+       téléphone. N'affecte QUE ≤640px — le desktop reste identique.
+       (Audit d'overflow : textes longs non sécables + enfants flex/grid
+       qui refusent de rétrécir + grilles hebdo 7 colonnes.)
+       ════════════════════════════════════════════════════════════════ */
+    @media (max-width:640px){
+      /* Coupe les textes longs non sécables (emails, INS/n° sécu, IDs,
+         noms composés) au lieu de forcer la largeur de la carte. */
+      #residentContent,
+      .evm-card{ overflow-wrap:anywhere; word-break:break-word; }
+
+      /* Enfants flex/grid : autoriser le rétrécissement sous la largeur
+         du contenu (min-width:auto par défaut l'empêche). */
+      #residentContent .grid > *,
+      #residentContent .v2-kv-v,
+      #residentContent .stat-card-top .stat-label{ min-width:0; }
+
+      /* Nom de document (nowrap+ellipsis) : min-width:0 pour que
+         l'ellipsis s'active au lieu de déborder le rail. */
+      #residentContent .v2-doc-l{ min-width:0; flex:1 1 auto; }
+
+      /* Ligne de traitement : passe à la ligne au lieu de pousser. */
+      #residentContent .v2-line{ flex-wrap:wrap; }
+      #residentContent .v2-line-n{ min-width:0; }
+
+      /* Grilles hebdo 7 colonnes (jamais repliées) : garantir la coupure
+         du texte de cellule pour éviter le débordement à 375px. */
+      #residentContent div[style*="repeat(7,1fr)"] > div{
+        min-width:0; overflow-wrap:anywhere; word-break:break-word; }
+
+      /* Modale « vue événement » du planning résident. */
+      .evm-footer{ flex-wrap:wrap; row-gap:8px; }
+      .evm-header > div{ min-width:0; }
+    }
   </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout">
   <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title" id="pageTitle">Fiche résident</div></div>
-      <div class="header-right">
+    <div class="v2-shell">
+      <div class="v2-top no-print">
+        <a class="v2-back" href="residents.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>Résidents
+        </a>
+        <div style="line-height:1.15;min-width:0">
+          <div class="v2-eyebrow">INTERNALIS · Dossier usager</div>
+          <div class="v2-top-title" id="pageTitle">Fiche résident</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm btn-add-resident" id="btnIaSynthese" onclick="iaOuvrirSynthese(currentResidentId)" title="Synthèse de période assistée par IA (relecture obligatoire avant insertion)">✨<span class="btn-add-label"> Synthèse IA</span></button>
         <button class="btn btn-ghost btn-sm btn-add-resident" id="btnDownload" onclick="printResident()" title="Télécharger la fiche">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span class="btn-add-label"> Télécharger</span>
         </button>
         <button class="btn btn-accent btn-sm btn-add-resident" id="btnEdit" onclick="togglePageEdit()">✎<span class="btn-add-label"> Modifier</span></button>
+        </div>
       </div>
-    </header>
-    <div id="printHeader">
-      <div class="ph-etab" id="phEtab"></div>
-      <div class="ph-title" id="phTitle">Fiche résident</div>
-      <div class="ph-meta" id="phMeta"></div>
+      <div id="printHeader">
+        <div class="ph-etab" id="phEtab"></div>
+        <div class="ph-title" id="phTitle">Fiche résident</div>
+        <div class="ph-meta" id="phMeta"></div>
+      </div>
+      <div class="v2-body">
+        <main class="content" id="residentContent"></main>
+      </div>
     </div>
-    <main class="content" id="residentContent"></main>
   </div>
 </div>
 
@@ -328,18 +412,48 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="planningHebdoModal">
+  <div class="modal lg">
+    <div class="modal-header">
+      <span class="modal-title">🗓 Semaine type — absences récurrentes</span>
+      <button class="modal-close" onclick="closeModal('planningHebdoModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="phModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('planningHebdoModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="savePlanningHebdo()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/absences-supabase.js"></script>
 <script src="js/documents-resident-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
+<script src="js/ia-assistant.js"></script>
 <script src="js/presences-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/nuit-supabase.js"></script>
+<script src="js/visites-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/chambres-supabase.js"></script>
 <script src="js/residents.js"></script>
+<script src="js/resident-v2.js"></script>
 <script>
 let currentResidentId = null;
 let pageEditMode = false;
@@ -347,6 +461,7 @@ let _residentDetailCache = [];
 let _residentJournalAll = [];
 let _residentPresencesRange = {};
 let _residentPlanningCache = [];
+let _residentTransmissionsAll = [];
 
 function getResident(id) {
   return _residentDetailCache.find(x => x.id === (id || currentResidentId));
@@ -354,7 +469,8 @@ function getResident(id) {
 
 function canEditResident() {
   const session = Auth.getSession();
-  return session && (session.role === 'admin' || session.role === 'moderator');
+  // Tout le personnel peut éditer la fiche ; la famille reste en lecture seule.
+  return !!session && session.role !== 'famille';
 }
 
 function exportResidentData() {
@@ -374,12 +490,28 @@ function anonymizeResident() {
   const r = getResident();
   if (!r) return;
   confirmDialog('Anonymiser définitivement ce résident ? Ses données personnelles (nom, prénom, photo, contacts, NIR, INS) seront effacées. Les données médicales et d\'activité seront conservées anonymement.', async () => {
-    const data = { ...r, prenom: 'Résident', nom: 'Anonyme', photo: '', notes: '', contacts: '', medecin: '', medecinTel: '', allergies: '', nss: '', ins: '', dmp: '', tuteur: '', tuteurTel: '', ecole: '', classe: '', organisme: '', dossier: '', organismeA: '', dossierA: '', protectionNom: '', color: '#94a3b8', consent: 'non', updatedAt: new Date().toISOString() };
+    // L'effacement est fait côté base par anonymiser_resident(), qui vérifie le
+    // rôle du compte : masquer le bouton ne suffirait pas (appel possible depuis
+    // la console). Voir migration-anonymisation-admin.sql.
     try {
-      const updated = await sbSaveResident(data);
+      const { data: row, error } = await supabaseClient.rpc('anonymiser_resident', { p_id: currentResidentId });
+      if (error) {
+        // Fonction absente = migration pas encore exécutée. On ne retombe PAS
+        // sur l'ancien chemin (non contrôlé) : on le dit clairement.
+        if (error.code === 'PGRST202') {
+          toast('Anonymisation indisponible : exécutez migration-anonymisation-admin.sql', 'error');
+        } else if (error.code === '42501') {
+          toast('Seul un administrateur peut anonymiser un résident', 'error');
+        } else {
+          toast('Erreur lors de l\'anonymisation', 'error');
+        }
+        console.error('[anonymiser_resident]', error);
+        return;
+      }
+      const updated = _sbFromRow(Array.isArray(row) ? row[0] : row);
       const idx = _residentDetailCache.findIndex(x => x.id === currentResidentId);
       if (idx !== -1) _residentDetailCache[idx] = updated;
-    } catch (e) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(e); return; }
+    } catch (e) { toast('Erreur lors de l\'anonymisation', 'error'); console.error(e); return; }
     if (typeof auditLog === 'function') auditLog('anonymize', 'Résident anonymisé — '+r.prenom+' '+r.nom);
     toast('Résident anonymisé', 'info');
     loadResident();
@@ -395,7 +527,8 @@ function loadResident() {
 
   const r = getResident();
   if (!r) { document.getElementById('residentContent').innerHTML = '<div class="empty"><h3>Résident introuvable</h3><p>Ce résident n\'existe pas ou a été supprimé.</p><a href="residents.html" class="btn btn-accent">← Retour aux résidents</a></div>'; return; }
-  document.getElementById('pageTitle').textContent = `${r.prenom||''} ${r.nom||''}`;
+  // Le nom occupe le bandeau d'identité (maquette V2) : la barre du haut reste « Fiche résident ».
+  document.title = `${r.prenom||''} ${r.nom||''} — Fiche résident`;
 
   const editBtn = document.getElementById('btnEdit');
   if (editBtn) {
@@ -403,108 +536,142 @@ function loadResident() {
     else { editBtn.style.display = ''; editBtn.textContent = pageEditMode ? '✕ Annuler' : '✎ Modifier'; }
   }
 
-  if (pageEditMode) { renderEditMode(r); return; }
-  renderViewMode(r);
+  try {
+    if (pageEditMode) { renderEditMode(r); return; }
+    renderViewMode(r);
+  } catch (e) {
+    console.error('[loadResident] erreur de rendu de la fiche', e);
+    document.getElementById('residentContent').innerHTML = '<div class="empty"><h3>⚠️ Erreur d\'affichage de la fiche</h3><p style="white-space:pre-wrap;text-align:left;font-size:.8rem;color:#dc2626">' + escHtml((e && (e.stack || e.message)) || String(e)) + '</p><a href="residents.html" class="btn btn-accent">← Retour aux résidents</a></div>';
+  }
 }
 
 function renderViewMode(r) {
   const type = getStructureType();
   const docs = docResByResident(currentResidentId);
-  const genderLabel = r.genre==='M'?'Masculin':r.genre==='F'?'Féminin':'Autre';
-  const todayPresences = _residentPresencesRange[today()] || {};
-  const presenceStatus = todayPresences[currentResidentId] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-
-  const photoEl = r.photo
-    ? `<img src="${sanitizeUrl(r.photo)}" style="width:96px;height:96px;border-radius:12px;object-fit:cover;border:3px solid #fff;box-shadow:var(--shadow-md)" alt=""/>`
-    : `<div style="width:96px;height:96px;border-radius:12px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.8rem;color:#fff;box-shadow:var(--shadow-md)">${initials(r.prenom,r.nom)}</div>`;
-
-  const infoRow = (label, value) => value ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${escHtml(value)}</div></div>` : '';
-
-  const infoCard = (color, title, rows) => {
-    const content = rows.filter(Boolean).join('');
-    if (!content) return '';
-    return `<div class="card" style="border-left:3px solid #${color};background:linear-gradient(135deg,#${color}0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem"><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#${color}">${title}</div><div class="grid grid-2" style="gap:.75rem">${content}</div></div></div>`;
-  };
-
   const isEnfant = type === 'enfants' || type === 'mixte';
   const isAdulte = type === 'adultes' || type === 'mixte';
 
+  const infoRow = (label, value) => value ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${escHtml(value)}</div></div>` : '';
+  const infoCard = (color, title, rows) => {
+    const content = rows.filter(Boolean).join('');
+    if (!content) return '';
+    return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #${color} 12%, #fff)"><span class="card-title" style="color:#${color}">${title}</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem"><div class="grid grid-2" style="gap:.75rem">${content}</div></div></div>`;
+  };
+
+  // ── Blocs repris de la maquette V2 ──
+  const projetV2  = rv2Projet(r);
+  const medicalV2 = rv2Medical(r);
+  const transV2   = rv2Transmissions(r);
+
+  // ── Cartes historiques, réparties dans les onglets ──
+  const sejour = infoCard('d97706', '🏠 Séjour', [
+    infoRow('Date d\'entrée', r.entree ? formatDate(r.entree) : ''),
+    infoRow('Statut', r.statut), infoRow('Chambre / Unité', r.chambre),
+    infoRow('Référent principal', r.referent), infoRow('Co-référent', r.coReferent)
+  ]);
+  const enfant = isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
+    infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
+    infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
+    infoRow('Organisme', r.organisme), infoRow('N° dossier', r.dossier)
+  ]) : '';
+  const adulte = isAdulte ? infoCard('3b82f6', '💼 Situation administrative & professionnelle', [
+    infoRow('Situation professionnelle', r.situationPro),
+    infoRow('Ressources', (r.ressources || '').toUpperCase()),
+    infoRow('Organisme prescripteur', r.organismeA),
+    infoRow('Situation administrative', r.situationAdmin),
+    infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
+    infoRow('Tuteur / Curateur', r.protectionNom),
+    infoRow('Tél. tuteur / curateur', r.protectionTel)
+  ]) : '';
+  const notes = r.notes ? infoCard('6366f1', '📝 Notes', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.notes)}</p></div>`]) : '';
+  const paire = (a, b) => (a && b) ? `<div class="grid grid-2" style="gap:1rem;align-items:start">${a}${b}</div>` : (a || b);
+
+  // ── Contenu de chaque onglet ──
+  const ONGLETS = {
+    apercu:     () => projetV2 + medicalV2 + transV2 + residentHeaderCard(r) + radarSignauxCard(r),
+    projet:     () => projetV2 + paire(objectifsCard(r), evaluationsCard(r)),
+    medical:    () => medicalV2 + paire(santeCard(r), planSoinsCard(r)),
+    quotidien:  () => planningResidentCard(r) + planningHebdoCard(r)
+                    + paire(sortiesCard(r), activitesCard(r))
+                    + paire(trousseauCard(r), budgetCard(r)),
+    historique: () => transV2 + filDeVieCard(r) + autonomieCard(r),
+    admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
+                    + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r) + accesCard(r)
+  };
+  const rendu = (ONGLETS[RV2_TAB] || ONGLETS.apercu)();
+
   document.getElementById('residentContent').innerHTML = `
-    <div style="background:linear-gradient(135deg,${r.color||'var(--primary)'},${r.color||'var(--primary-dark)'}22);border-radius:var(--r);padding:2rem 2rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:center">
-      ${photoEl}
-      <div style="flex:1">
-        <h1 style="font-size:1.8rem;font-weight:800;color:#fff;margin:0;text-shadow:0 1px 3px rgba(0,0,0,.15)">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</h1>
-        <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap">
-          ${statusBadge(presenceStatus)}
-          ${r.genre ? `<span class="badge" style="background:rgba(255,255,255,.2);color:#fff">${genderLabel}</span>` : ''}
-          ${r.dob ? `<span class="badge" style="background:rgba(255,255,255,.2);color:#fff">${age(r.dob)} ans</span>` : ''}
-        </div>
-        ${r.referent ? `<div style="color:rgba(255,255,255,.8);font-size:.85rem;margin-top:.5rem">Référent : <strong style="color:#fff">${escHtml(r.referent)}</strong></div>` : ''}
-      </div>
-    </div>
-    <div class="grid grid-4" style="margin-bottom:1.5rem">
-      <div class="stat-card" style="background:linear-gradient(135deg,#3b82f625,#93c5fd15)"><div class="stat-card-top"><span class="stat-label">Naissance</span><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div></div><div class="stat-num">${r.dob ? formatDate(r.dob) : '—'}</div><div class="stat-change">${r.dob ? age(r.dob)+' ans' : ''}</div></div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#10b98125,#34d39915)"><div class="stat-card-top"><span class="stat-label">Entrée</span><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div><div class="stat-num">${r.entree ? formatDate(r.entree) : '—'}</div><div class="stat-change">Date d'admission</div></div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#e85d0425,#fb923c15)"><div class="stat-card-top"><span class="stat-label">Chambre</span><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div></div><div class="stat-num">${r.chambre||'—'}</div><div class="stat-change">Espace de vie</div></div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf625,#a78bfa15)"><div class="stat-card-top"><span class="stat-label">Genre</span><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div></div><div class="stat-num">${genderLabel}</div><div class="stat-change">${r.dob ? 'Né(e) le '+formatDate(r.dob) : ''}</div></div>
-    </div>
-    ${renderStatCards(r)}
-    ${radarSignauxCard(r)}
-    <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
-      ${(() => {
-        const sejour  = infoCard('d97706', '🏠 Séjour', [
-          infoRow('Date d\'entrée', r.entree ? formatDate(r.entree) : ''),
-          infoRow('Statut', r.statut), infoRow('Chambre / Unité', r.chambre),
-          infoRow('Référent principal', r.referent),
-          infoRow('Co-référent', r.coReferent)
-        ]);
-        const enfant  = isEnfant ? infoCard('8b5cf6', '🧒 Enfant', [
-          infoRow('Tuteur légal', r.tuteur), infoRow('Tél. tuteur', r.tuteurTel),
-          infoRow('Établissement scolaire', r.ecole), infoRow('Classe', r.classe),
-          infoRow('Organisme', r.organisme), infoRow('N° dossier', r.dossier)
-        ]) : '';
-        const adulte  = isAdulte ? infoCard('3b82f6', '💼 Situation administrative & professionnelle', [
-          infoRow('Situation professionnelle', r.situationPro),
-          infoRow('Ressources', (r.ressources||'').toUpperCase()),
-          infoRow('Organisme prescripteur', r.organismeA),
-          infoRow('Situation administrative', r.situationAdmin),
-          infoRow('Mesure de protection', PROTECTION_LABELS ? (PROTECTION_LABELS[r.protection] || r.protection) : r.protection),
-          infoRow('Tuteur / Curateur', r.protectionNom)
-        ]) : '';
-        // Séjour | Enfant ou Adulte (premier dispo), l'autre en dessous si mixte
-        if (enfant)
-          return `<div class="grid grid-2" style="gap:1rem;align-items:stretch">${sejour}${enfant}</div>${adulte}`;
-        if (adulte)
-          return `<div class="grid grid-2" style="gap:1rem;align-items:stretch">${sejour}${adulte}</div>`;
-        return sejour;
-      })()}
-      ${planningResidentCard(r)}
-      ${santeCard(r)}
-      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${sortiesCard(r)}${budgetCard(r)}</div>
-      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${trousseauCard(r)}${activitesCard(r)}</div>
-      <div class="grid grid-2" style="gap:1rem;align-items:stretch">${objectifsCard(r)}${evaluationsCard(r)}</div>
-      ${(() => {
-        const notes    = r.notes    ? infoCard('6366f1', '📝 Notes',            [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.notes)}</p></div>`]) : '';
-        const contacts = r.contacts ? infoCard('6366f1', '📞 Contacts d\'urgence', [`<div style="grid-column:1/-1"><p style="white-space:pre-wrap;line-height:1.8;font-size:.875rem;margin:0">${escHtml(r.contacts)}</p></div>`]) : '';
-        return (notes && contacts)
-          ? `<div class="grid grid-2" style="gap:1rem;align-items:stretch">${notes}${contacts}</div>`
-          : notes + contacts;
-      })()}
-      ${rgpdCard(r)}
-    </div>
-    <div class="no-print" style="display:flex;align-items:center;gap:.75rem;margin:1.5rem 0 1rem;padding:.5rem 0">
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap">TABLEAU DE BORD DU RÉSIDENT</span>
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-    </div>
-    <div class="no-print">${filDeVieCard(r)}</div>
-    <div class="no-print">${residentTransmissionsCard(r)}</div>
-    <div class="no-print">${renderDataCards(r)}</div>
-    <div class="no-print tabs" style="margin-bottom:1rem">
-      <button class="tab active" data-tab="documents">📎 Documents ${docs.length ? `<span class="badge badge-gray" style="margin-left:.3rem">${docs.length}</span>` : ''}</button>
-    </div>
-    <div class="no-print" id="tab-documents">${docsHtml(docs)}</div>`;
+    ${residentHeroV2(r)}
+    ${rv2TabBar()}
+    <div class="v2-fiche">
+      <div class="v2-fiche-main">${rendu}</div>
+      <div class="v2-fiche-rail no-print">${rv2Rail(r)}</div>
+    </div>`;
   initPageTabs();
+  initPageDocUpload(currentResidentId);
+
+  // Traçabilité RGPD (pas pendant l'assemblage d'impression) :
+  if (!_rv2Printing) {
+    // consultation journalisée UNE FOIS par ouverture de fiche, pas à chaque
+    // changement d'onglet
+    if (!pageEditMode && window._accesLogged !== currentResidentId) {
+      window._accesLogged = currentResidentId;
+      if (typeof auditLog === 'function') auditLog('acces_dossier', 'Consultation de la fiche', currentResidentId);
+    }
+    // l'historique n'existe que dans l'onglet Administration (admin only)
+    if (document.getElementById('accesHistoBody')) _remplirAccesHisto(r);
+  }
+}
+
+let _rv2Printing = false;
+
+// Historique des accès au dossier — carte réservée aux administrateurs, dans
+// l'onglet Administration. Le corps est rempli en asynchrone après le rendu.
+function accesCard(r) {
+  if (!Auth.isAdmin()) return '';
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #6366f1 12%, #fff)">
+      <span class="card-title" style="color:#4f46e5">🕓 Historique des accès</span>
+      <span style="margin-left:auto;font-size:.72rem;color:var(--muted)">Traçabilité RGPD</span>
+    </div><div class="card-body">
+      <div id="accesHistoBody"><div style="padding:.8rem 0;color:var(--muted);font-size:.82rem">Chargement…</div></div>
+      <div style="font-size:.72rem;color:var(--muted);line-height:1.5;padding:.4rem 0 0">
+        Qui a consulté ou modifié ce dossier, et quand. Trace centralisée et durable — nécessite la table <code>audit_log</code>.
+      </div>
+    </div></div>`;
+}
+
+const _ACCES_LIB = {
+  acces_dossier: ['👁', 'Consultation'],
+  resident_update: ['✎', 'Modification'],
+  export: ['⬇', 'Export des données'],
+  anonymisation: ['🕶', 'Anonymisation'],
+  resident_create: ['＋', 'Création']
+};
+
+async function _remplirAccesHisto(r) {
+  const hote = document.getElementById('accesHistoBody');
+  if (!hote) return;
+  if (typeof sbGetAuditForResident !== 'function') {
+    hote.innerHTML = '<div style="padding:.8rem 0;color:var(--muted);font-size:.82rem">Historique indisponible (module non chargé).</div>';
+    return;
+  }
+  const lignes = await sbGetAuditForResident(currentResidentId, 40);
+  if (!lignes.length) {
+    hote.innerHTML = '<div style="padding:.8rem 0;color:var(--muted);font-size:.82rem">Aucun accès enregistré pour l\'instant.</div>';
+    return;
+  }
+  hote.innerHTML = lignes.map(l => {
+    const d = new Date(l.ts);
+    const quand = d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const def = _ACCES_LIB[l.action] || ['•', l.action || 'Action'];
+    return `<div style="display:flex;align-items:flex-start;gap:.6rem;padding:.5rem 0;border-top:1px solid var(--border,rgba(15,38,70,.08))">
+      <span style="font-size:1rem;line-height:1.2;flex-shrink:0">${def[0]}</span>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:.83rem;font-weight:600;color:var(--text,#16283f)">${escHtml(def[1])}${l.details ? ' — ' + escHtml(l.details) : ''}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${escHtml(l.user_name || 'Utilisateur')}${l.role ? ' · ' + escHtml(l.role) : ''} · ${quand}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── SANTÉ (intégré à la carte Médical) ──
@@ -557,11 +724,10 @@ function serafinphCard(r) {
     </div>`;
   }).join('') || '<div style="font-size:.78rem;color:var(--g400);padding:.5rem 0">Aucune prestation sélectionnée. Cliquez sur « Modifier » pour configurer le profil SERAFIN-PH de ce résident.</div>';
 
-  return `<div class="card" style="border-left:3px solid #8b5cf6;background:linear-gradient(135deg,#8b5cf60d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
-    <div style="display:flex;align-items:center;gap:.5rem">
-      <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8b5cf6">📊 SERAFIN-PH</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #8b5cf6 12%, #fff)">
+      <span class="card-title" style="color:#8b5cf6">📊 SERAFIN-PH</span>
       ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSerafinphModal()">✎ Modifier</button>` : ''}
-    </div>
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
     <div style="display:flex;gap:1rem;padding:.5rem 0">
       <div style="text-align:center;flex:1">
         <div style="font-weight:800;font-size:1.2rem;color:#8b5cf6">${gmps}</div>
@@ -586,16 +752,19 @@ function serafinphCard(r) {
 const _medRow = (label, value) => `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">${label}</div><div style="font-weight:600;font-size:.85rem">${value ? escHtml(value) : '<span style="color:var(--g400)">—</span>'}</div></div>`;
 
 function rgpdCard(r) {
+  // Réservée aux administrateurs : elle expose l'export intégral des données du
+  // résident et son anonymisation. Le filtrage est fait ici, pas au point d'appel,
+  // pour qu'aucun autre rendu ne puisse la faire réapparaître.
+  if (!Auth.isAdmin()) return '';
   const created = r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '—';
   const updated = r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('fr-FR') : '—';
-  return `<div class="card" style="border-left:3px solid #78716c;background:linear-gradient(135deg,#78716c0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
-    <div style="display:flex;align-items:center;gap:.5rem">
-      <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#78716c">🔐 RGPD / Données</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #78716c 12%, #fff)">
+      <span class="card-title" style="color:#78716c">🔐 RGPD / Données</span>
       <div style="margin-left:auto;display:flex;gap:.35rem">
         <button class="btn btn-ghost btn-sm no-print" onclick="exportResidentData()" title="Exporter les données">⬇ Export</button>
         <button class="btn btn-ghost btn-sm no-print" style="color:var(--red)" onclick="anonymizeResident()" title="Anonymiser">🕶 Anonymiser</button>
       </div>
-    </div>
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
     <div class="grid grid-4" style="gap:.5rem">
       ${_medRow('Consent. données santé', r.consent ? ({oui:'✅ Donné',non:'❌ Refusé',en_attente:'⏳ En attente'}[r.consent]||r.consent) : '—')}
       ${_medRow('Date consentement', r.consentDate || '—')}
@@ -607,6 +776,46 @@ function rgpdCard(r) {
       <a href="confidentialite.html" target="_blank" style="color:var(--primary);text-decoration:underline">Politique de confidentialité →</a>
     </div>
   </div></div>`;
+}
+
+// Carte Plan de soins (lecture) — édition sur plan-soins.html. Données hydratées au bootstrap.
+const _PS_CATS = { hygiene:{label:'Hygiène corporelle',color:'#0ea5e9',icon:'🚿'}, medication:{label:'Médicaments',color:'#ef4444',icon:'💊'}, mobilite:{label:'Mobilité & posture',color:'#f97316',icon:'🦽'}, alimentation:{label:'Alimentation & repas',color:'#f59e0b',icon:'🍽️'}, soins_infirm:{label:'Soins infirmiers',color:'#8b5cf6',icon:'🩺'}, psy:{label:'Accompagnement psy',color:'#6366f1',icon:'🧠'}, social:{label:'Accompagnement social',color:'#10b981',icon:'🤝'}, autre:{label:'Autre',color:'#64748b',icon:'📋'} };
+const _PS_FREQ = { quotidien:'Quotidien', matin:'Matin', midi:'Midi', soir:'Soir', nuit:'Nuit', semaine:'Hebdomadaire', mensuel:'Mensuel', si_besoin:'Si besoin' };
+function planSoinsCard(r) {
+  const canEdit = canEditResident();
+  const all = (DB.get(DB.keys.planSoins) || []).filter(s => String(s.residentId) === String(r.id) && s.actif !== false);
+  const rows = all.length ? all.map(s => {
+    const c = _PS_CATS[s.cat] || _PS_CATS.autre;
+    return `<div data-pscat="${escHtml(s.cat || 'autre')}" style="display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .8rem;border-radius:var(--r-sm);background:${c.color}0f;border:1px solid ${c.color}30">
+      <span style="font-size:1.05rem;flex-shrink:0;line-height:1.3">${c.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.83rem">${escHtml(s.libelle || 'Soin')}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:1px"><span style="color:${c.color};font-weight:600">${escHtml(c.label)}</span> · ${escHtml(_PS_FREQ[s.freq] || s.freq || '')}${s.intervenant ? ' · ' + escHtml(s.intervenant) : ''}</div>
+        ${s.detail ? `<div style="font-size:.72rem;color:var(--g700);margin-top:2px">${escHtml(s.detail)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="padding:.85rem;font-size:.8rem;color:var(--g400)">Aucun soin planifié pour ce résident.</div>';
+  const cats = [...new Set(all.map(s => s.cat || 'autre'))];
+  const tabBar = (all.length && cats.length > 1) ? `<div class="itab-bar" style="--itab-color:#8b5cf6">
+      <button class="itab active" onclick="psTab(this,'')">Tous <span class="badge badge-gray">${all.length}</span></button>
+      ${cats.map(cat => { const c = _PS_CATS[cat] || _PS_CATS.autre; const n = all.filter(s => (s.cat || 'autre') === cat).length; return `<button class="itab" onclick="psTab(this,'${escHtml(cat)}')">${escHtml(c.label)} <span class="badge badge-gray">${n}</span></button>`; }).join('')}
+    </div>` : '';
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #8b5cf6 12%, #fff)">
+      <span class="card-title" style="color:#8b5cf6">🩹 Plan de soins${all.length ? ` <span class="badge" style="margin-left:.3rem;background:#ede9fe;color:#8b5cf6">${all.length}</span>` : ''}</span>
+      <a href="plan-soins.html?residentId=${currentResidentId}" class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)">${canEdit ? '✎ Gérer' : 'Voir tout'} →</a>
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">${tabBar}${rows}</div></div>`;
+}
+
+// Onglets internes des cartes Médical et Plan de soins
+function santeTab(btn, key) {
+  const card = btn.closest('.card'); if (!card) return;
+  card.querySelectorAll('.itab').forEach(b => b.classList.toggle('active', b === btn));
+  card.querySelectorAll('.sante-sec').forEach(sec => sec.style.display = (sec.id === 'sante-tab-' + key) ? '' : 'none');
+}
+function psTab(btn, cat) {
+  const card = btn.closest('.card'); if (!card) return;
+  card.querySelectorAll('.itab').forEach(b => b.classList.toggle('active', b === btn));
+  card.querySelectorAll('[data-pscat]').forEach(row => row.style.display = (!cat || row.getAttribute('data-pscat') === cat) ? '' : 'none');
 }
 
 function santeCard(r) {
@@ -659,28 +868,32 @@ function santeCard(r) {
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune vaccination enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #16a34a;background:linear-gradient(135deg,#16a34a0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.7rem">
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#16a34a">🏥 Médical</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #16a34a 12%, #fff)">
+        <span class="card-title" style="color:#16a34a">🏥 Médical</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSanteModal('medical')">✎ Modifier</button>` : ''}
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.55rem">
+      <div class="itab-bar" style="--itab-color:#16a34a">
+        <button class="itab active" onclick="santeTab(this,'infos')">Infos</button>
+        <button class="itab" onclick="santeTab(this,'traitement')">Traitements${s.traitements.length ? ` <span class="badge badge-gray">${s.traitements.length}</span>` : ''}</button>
+        <button class="itab" onclick="santeTab(this,'rdv')">RDV${s.rdv.length ? ` <span class="badge badge-gray">${s.rdv.length}</span>` : ''}</button>
+        <button class="itab" onclick="santeTab(this,'vaccin')">Vaccins${s.vaccins.length ? ` <span class="badge badge-gray">${s.vaccins.length}</span>` : ''}</button>
       </div>
-      <div class="grid grid-4" style="gap:.75rem">
-        ${medRow('Groupe sanguin', s.groupeSanguin)}
-        ${medRow('Médecin traitant', r.medecin)}
-        ${medRow('Tél. médecin', r.medecinTel)}
-        ${medRow('Allergies / CI', r.allergies)}
-        ${medRow('NIR (Sécu)', r.nss)}
-        ${medRow('INS', r.ins)}
-        ${medRow('DMP', r.dmp ? ({actif:'✅ Actif',en_attente:'⏳ En attente',non_ouvert:'⬜ Non ouvert'}[r.dmp]||r.dmp) : '—')}
-        ${medRow('Consent. données', r.consent ? ({oui:'✅ Donné',non:'❌ Refusé',en_attente:'⏳ En attente'}[r.consent]||r.consent) : '—')}
+      <div id="sante-tab-infos" class="sante-sec">
+        <div class="grid grid-2" style="gap:.55rem">
+          ${medRow('Groupe sanguin', s.groupeSanguin)}
+          ${medRow('Médecin traitant', r.medecin)}
+          ${medRow('Tél. médecin', r.medecinTel)}
+          ${medRow('Allergies / CI', r.allergies)}
+          ${medRow('NIR (Sécu)', r.nss)}
+          ${medRow('INS', r.ins)}
+          ${medRow('DMP', r.dmp ? ({actif:'✅ Actif',en_attente:'⏳ En attente',non_ouvert:'⬜ Non ouvert'}[r.dmp]||r.dmp) : '—')}
+          ${medRow('Consent. données', r.consent ? ({oui:'✅ Donné',non:'❌ Refusé',en_attente:'⏳ En attente'}[r.consent]||r.consent) : '—')}
+        </div>
+        ${s.notesMedicales ? `<div style="margin-top:.6rem"><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">Notes médicales</div><p style="white-space:pre-wrap;line-height:1.6;font-size:.83rem;margin:0">${escHtml(s.notesMedicales)}</p></div>` : ''}
       </div>
-      ${s.notesMedicales ? `<div><div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:2px">Notes médicales</div><p style="white-space:pre-wrap;line-height:1.6;font-size:.83rem;margin:0">${escHtml(s.notesMedicales)}</p></div>` : ''}
-      ${SANTE_SEP}
-      <div>${subHeader('💊', 'Traitements en cours', 'traitement')}${wrap(traitList)}</div>
-      ${SANTE_SEP}
-      <div>${subHeader('📅', 'Rendez-vous médicaux', 'rdv')}${wrap(rdvList)}</div>
-      ${SANTE_SEP}
-      <div>${subHeader('💉', 'Vaccinations', 'vaccin')}${wrap(vaccList)}</div>
+      <div id="sante-tab-traitement" class="sante-sec" style="display:none">${subHeader('💊', 'Traitements en cours', 'traitement')}${wrap(traitList)}</div>
+      <div id="sante-tab-rdv" class="sante-sec" style="display:none">${subHeader('📅', 'Rendez-vous médicaux', 'rdv')}${wrap(rdvList)}</div>
+      <div id="sante-tab-vaccin" class="sante-sec" style="display:none">${subHeader('💉', 'Vaccinations', 'vaccin')}${wrap(vaccList)}</div>
     </div></div>`;
 }
 const SANTE_SEP = '<div style="height:2px;border-radius:2px;background:#e2e8f0;box-shadow:inset 0 1px 2px rgba(15,43,74,.18),0 1px 0 rgba(255,255,255,.8);margin:.15rem 0"></div>';
@@ -953,29 +1166,40 @@ function sortiesCard(r) {
   const sorted = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.heure || '').localeCompare(a.heure || ''));
   const enCours = list.filter(s => !s.retourEffectif).length;
 
+  const _durTxt = (d1, d2) => { if (!d1 || !d2) return ''; const n = Math.round((new Date(d2) - new Date(d1)) / 86400000); return n <= 0 ? 'même jour' : n === 1 ? '1 jour' : n + ' jours'; };
   const rows = sorted.length ? sorted.map((s, i) => {
     const st = sortieStatut(s);
-    const retourTxt = s.retourEffectif
-      ? 'Rentré(e) le ' + formatDateTime(s.retourEffectif)
-      : (s.retourPrevuDate ? 'Retour prévu : ' + formatDate(s.retourPrevuDate) + (s.retourPrevuHeure ? ' à ' + s.retourPrevuHeure : '') : '');
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(s.destination || 'Sortie')} <span class="badge ${st.cls}">${st.label}</span>${s.motif ? `<span class="badge badge-gray">${escHtml(s.motif)}</span>` : ''}</div>
-        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">Départ ${formatDate(s.date)}${s.heure ? ' à ' + s.heure : ''}${s.accompagnement ? ' · ' + escHtml(s.accompagnement) : ''}</div>
-        ${retourTxt ? `<div style="font-size:.73rem;color:${st.key === 'retard' ? '#ef4444' : 'var(--muted)'};margin-top:1px">${retourTxt}</div>` : ''}
-        ${s.autorisePar ? `<div style="font-size:.72rem;color:var(--g400);margin-top:1px">Autorisé par ${escHtml(s.autorisePar)}</div>` : ''}
-        ${s.notes ? `<div style="font-size:.73rem;color:var(--g700);margin-top:2px">${escHtml(s.notes)}</div>` : ''}
+    const retDate = s.retourEffectif ? String(s.retourEffectif).slice(0, 10) : s.retourPrevuDate;
+    const retTime = s.retourEffectif ? String(s.retourEffectif).slice(11, 16) : (s.retourPrevuHeure || '');
+    const retDotColor = s.retourEffectif ? '#16a34a' : (st.key === 'retard' ? '#ef4444' : '#f59e0b');
+    const midTxt = [_durTxt(s.date, retDate), s.accompagnement].filter(Boolean).map(escHtml).join(' · ');
+    return `<div style="padding:.7rem .9rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.6rem;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:.85rem">${escHtml(s.destination || 'Sortie')}</span>
+        <span style="display:flex;gap:.35rem;align-items:center">${s.motif ? `<span class="badge badge-gray">${escHtml(s.motif)}</span>` : ''}<span class="badge ${st.cls}">${st.label}</span></span>
       </div>
-      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">${!s.retourEffectif ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer le retour" onclick="marquerRetour('${s.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="openSortieModal('${s.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSortie('${s.id}')">✕</button></div>` : ''}
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="text-align:center;flex-shrink:0;min-width:66px"><div style="font-size:.64rem;color:var(--muted)">Départ</div><div style="font-weight:600;font-size:.78rem">${s.date ? formatDate(s.date) : '—'}</div>${s.heure ? `<div style="font-size:.68rem;color:var(--muted)">${s.heure}</div>` : ''}</div>
+        <div style="flex:1;display:flex;align-items:center;gap:.25rem;min-width:0">
+          <span style="width:9px;height:9px;border-radius:50%;background:#0d9488;flex-shrink:0"></span>
+          <div style="flex:1;height:2px;background:var(--border);position:relative">${midTxt ? `<span style="position:absolute;left:50%;top:-9px;transform:translateX(-50%);white-space:nowrap;font-size:.64rem;color:var(--muted);background:#fff;padding:0 .4rem">${midTxt}</span>` : ''}</div>
+          <span style="width:9px;height:9px;border-radius:50%;background:${retDotColor};flex-shrink:0"></span>
+        </div>
+        <div style="text-align:center;flex-shrink:0;min-width:66px"><div style="font-size:.64rem;color:var(--muted)">${s.retourEffectif ? 'Rentré(e)' : 'Retour prévu'}</div><div style="font-weight:600;font-size:.78rem">${retDate ? formatDate(retDate) : '—'}</div>${retTime ? `<div style="font-size:.68rem;color:var(--muted)">${retTime}</div>` : ''}</div>
+      </div>
+      ${s.notes ? `<div style="font-size:.72rem;color:var(--g700);margin-top:.55rem">📝 ${escHtml(s.notes)}</div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.5rem">
+        <span style="font-size:.7rem;color:var(--g400)">${s.autorisePar ? 'Autorisé par ' + escHtml(s.autorisePar) : ''}</span>
+        ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">${!s.retourEffectif ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer le retour" onclick="marquerRetour('${s.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" onclick="openSortieModal('${s.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSortie('${s.id}')">✕</button></div>` : ''}
+      </div>
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune sortie enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #0d9488;background:linear-gradient(135deg,#0d94880d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0d9488">🚪 Sorties & permissions${enCours ? ` <span class="badge badge-amber" style="margin-left:.3rem">${enCours} en cours</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #0d9488 12%, #fff)">
+        <span class="card-title" style="color:#0d9488">🚪 Sorties & permissions${enCours ? ` <span class="badge badge-amber" style="margin-left:.3rem">${enCours} en cours</span>` : ''}</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openSortieModal()">+ Nouvelle sortie</button>` : ''}
-      </div>
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:${sorted.length > 3 ? 'calc(3 * 72px)' : 'none'};overflow-y:${sorted.length > 3 ? 'auto' : 'visible'};scrollbar-width:thin;scrollbar-color:#0d948866 transparent">${rows}</div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:${sorted.length > 2 ? '380px' : 'none'};overflow-y:${sorted.length > 2 ? 'auto' : 'visible'};scrollbar-width:thin;scrollbar-color:#0d948866 transparent">${rows}</div>
     </div></div>`;
 }
 
@@ -1068,33 +1292,33 @@ function trousseauCard(r) {
   const restitues = items.filter(i => i.restitue);
   const sorted = [...items].sort((a, b) => (a.restitue ? 1 : 0) - (b.restitue ? 1 : 0) || (b.dateAjout || '').localeCompare(a.dateAjout || ''));
 
-  const rows = sorted.length ? sorted.map((it, i) => `
-    <div style="display:flex;align-items:center;gap:.75rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''};${it.restitue ? 'opacity:.55' : ''}">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-          ${escHtml(it.designation || 'Article')}${(it.quantite || 1) > 1 ? ` <span class="badge badge-gray">× ${it.quantite}</span>` : ''}
-          ${it.categorie ? `<span class="badge badge-gray">${escHtml(it.categorie)}</span>` : ''}
-          ${it.etat ? `<span class="badge" style="background:${it.etat === 'Abîmé' ? '#fee2e2' : it.etat === 'Usé' ? '#fef9c3' : '#dcfce7'};color:${it.etat === 'Abîmé' ? '#dc2626' : it.etat === 'Usé' ? '#a16207' : '#16a34a'}">${it.etat}</span>` : ''}
-          ${it.restitue ? '<span class="badge badge-gray">↩ Restitué</span>' : ''}
-        </div>
-        <div style="font-size:.72rem;color:var(--muted);margin-top:1px">Déposé le ${formatDate(it.dateAjout)}${it.restitue && it.dateRestitution ? ' · restitué le ' + formatDate(it.dateRestitution) : ''}${it.notes ? ' · ' + escHtml(it.notes) : ''}</div>
+  const _trIcon = { 'Vêtements':'👕', 'Linge de maison':'🛏️', 'Hygiène':'🧴', 'Multimédia':'📺', 'Papiers':'📄', 'Objets de valeur':'💎', 'Mobilier personnel':'🛋️', 'Autre':'📦' };
+  const _trEtat = { 'Neuf':{ bg:'#dcfce7', color:'#16a34a' }, 'Bon':{ bg:'#dbeafe', color:'#2563eb' }, 'Usé':{ bg:'#fef9c3', color:'#a16207' }, 'Abîmé':{ bg:'#fee2e2', color:'#dc2626' } };
+  const tiles = sorted.map(it => {
+    const et = _trEtat[it.etat] || { bg:'#dcfce7', color:'#16a34a' };
+    return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column;${it.restitue ? 'opacity:.6' : ''}">
+      <div style="height:54px;background:#7c3aed12;display:flex;align-items:center;justify-content:center;position:relative">
+        <span style="font-size:1.55rem">${_trIcon[it.categorie] || '📦'}</span>
+        ${it.etat ? `<span style="position:absolute;top:6px;right:6px;font-size:.6rem;font-weight:600;background:${et.bg};color:${et.color};padding:1px 7px;border-radius:20px">${it.etat}</span>` : ''}
+        ${it.restitue ? `<span style="position:absolute;top:6px;left:6px;font-size:.58rem;background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:20px">↩ Restitué</span>` : ''}
       </div>
-      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem">
-        ${!it.restitue ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme restitué" onclick="restituerTrousseauItem('${it.id}')">↩</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="openTrousseauModal('${it.id}')">✎</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTrousseauItem('${it.id}')">✕</button>
-      </div>` : ''}
-    </div>`).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun article inventorié</div>';
+      <div style="padding:.5rem .65rem;flex:1;display:flex;flex-direction:column;gap:.12rem">
+        <div style="font-weight:600;font-size:.82rem;line-height:1.2">${escHtml(it.designation || 'Article')}${(it.quantite || 1) > 1 ? ` <span style="font-size:.66rem;color:var(--muted)">× ${it.quantite}</span>` : ''}</div>
+        <div style="font-size:.68rem;color:var(--muted)">${escHtml(it.categorie || '—')} · ${formatDate(it.dateAjout)}</div>
+        ${it.notes ? `<div style="font-size:.66rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(it.notes)}">${escHtml(it.notes)}</div>` : ''}
+        ${canEdit ? `<div class="no-print" style="display:flex;gap:.1rem;justify-content:flex-end;margin-top:auto;padding-top:.3rem">${!it.restitue ? `<button class="btn btn-ghost btn-sm" style="padding:2px 6px;color:var(--green)" title="Marquer comme restitué" onclick="restituerTrousseauItem('${it.id}')">↩</button>` : ''}<button class="btn btn-ghost btn-sm" style="padding:2px 6px" onclick="openTrousseauModal('${it.id}')">✎</button><button class="btn btn-ghost btn-sm" style="padding:2px 6px;color:var(--red)" onclick="deleteTrousseauItem('${it.id}')">✕</button></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
-  return `<div class="card" style="border-left:3px solid #7c3aed;background:linear-gradient(135deg,#7c3aed0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7c3aed">🧳 Trousseau & effets personnels${enDepot.length ? ` <span class="badge" style="background:#7c3aed1a;color:#7c3aed;margin-left:.3rem">${enDepot.length} en dépôt</span>` : ''}${restitues.length ? ` <span class="badge badge-gray">${restitues.length} restitué(s)</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #7c3aed 12%, #fff)">
+        <span class="card-title" style="color:#7c3aed">🧳 Trousseau & effets personnels${enDepot.length ? ` <span class="badge" style="background:#7c3aed1a;color:#7c3aed;margin-left:.3rem">${enDepot.length} en dépôt</span>` : ''}${restitues.length ? ` <span class="badge badge-gray">${restitues.length} restitué(s)</span>` : ''}</span>
         <span class="no-print" style="margin-left:auto;display:flex;gap:.3rem">
           ${items.length ? `<button class="btn btn-ghost btn-sm" onclick="printTrousseau()">🖨 Inventaire</button>` : ''}
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openTrousseauModal()">+ Article</button>` : ''}
         </span>
-      </div>
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+      ${sorted.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;${sorted.length > 8 ? 'max-height:360px;overflow-y:auto;padding-right:.2rem' : ''}">${tiles}</div>` : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucun article inventorié</div>'}
     </div></div>`;
 }
 
@@ -1215,12 +1439,18 @@ const _actCategories = {
 };
 let activiteBilanInscrId = null;
 
+// Catalogue des activités : source = Supabase (table activites), comme le
+// module activites.html. Chargé au démarrage de la fiche. Les inscriptions du
+// résident (r.activites) restent sur le résident lui-même.
+let _residentActCatalogue = [];
+function actCatalogue() { return _residentActCatalogue; }
+
 function getResidentActivites(r) { return r.activites || []; }
 
 function activitesCard(r) {
   const inscriptions = getResidentActivites(r);
   const canEdit = canEditResident();
-  const catalogue = DB.get(DB.keys.activites) || [];
+  const catalogue = actCatalogue();
   const actives = inscriptions.filter(i => i.statut === 'active');
   const sorted = [...inscriptions].sort((a, b) => (a.statut === 'active' ? 0 : 1) - (b.statut === 'active' ? 0 : 1) || (b.dateInscription || '').localeCompare(a.dateInscription || ''));
 
@@ -1246,14 +1476,13 @@ function activitesCard(r) {
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune activité éducative</div>';
 
-  return `<div class="card" style="border-left:3px solid #6366f1;background:linear-gradient(135deg,#6366f10d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6366f1">🎨 Activités éducatives${actives.length ? ` <span class="badge" style="background:#6366f11a;color:#6366f1;margin-left:.3rem">${actives.length} en cours</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #6366f1 12%, #fff)">
+        <span class="card-title" style="color:#6366f1">🎨 Activités éducatives${actives.length ? ` <span class="badge" style="background:#6366f11a;color:#6366f1;margin-left:.3rem">${actives.length} en cours</span>` : ''}</span>
         <span class="no-print" style="margin-left:auto;display:flex;gap:.3rem">
           <a href="activites.html" class="btn btn-ghost btn-sm">📋 Catalogue</a>
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openActiviteInscrModal()">+ Inscrire</button>` : ''}
         </span>
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 6 ? 'max-height:280px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
     </div></div>`;
 }
@@ -1262,7 +1491,7 @@ function openActiviteInscrModal() {
   if (!canEditResident()) return;
   const r = getResident();
   if (!r) return;
-  const catalogue = (DB.get(DB.keys.activites) || []).filter(a => a.actif !== false);
+  const catalogue = actCatalogue().filter(a => a.actif !== false);
   const inscritIds = new Set(getResidentActivites(r).filter(i => i.statut === 'active').map(i => i.activiteId));
   const opts = catalogue.filter(a => !inscritIds.has(a.id));
   document.getElementById('aiDate').value = today();
@@ -1309,7 +1538,7 @@ function openActiviteBilanModal(inscriptionId) {
   activiteBilanInscrId = inscriptionId;
   const r = getResident();
   const i = getResidentActivites(r).find(x => x.id === inscriptionId);
-  const catalogue = DB.get(DB.keys.activites) || [];
+  const catalogue = actCatalogue();
   const act = catalogue.find(a => a.id === i?.activiteId);
   document.getElementById('abmTitle').textContent = `Bilan — ${act ? act.nom : 'Activité'}`;
   document.getElementById('abmDate').value = today();
@@ -1351,45 +1580,60 @@ function budgetCard(r) {
     if (o.type === 'recette') moisRecettes += Number(o.montant || 0); else moisDepenses += Number(o.montant || 0);
   });
 
+  const net = moisRecettes - moisDepenses;
+  const fluxTotal = moisRecettes + moisDepenses;
+  const recPct = fluxTotal > 0 ? Math.round(moisRecettes / fluxTotal * 100) : 0;
+  const depPct = fluxTotal > 0 ? 100 - recPct : 0;
+  let moisLabel = new Date(today() + 'T00:00').toLocaleDateString('fr-FR', { month: 'long' });
+  moisLabel = moisLabel.charAt(0).toUpperCase() + moisLabel.slice(1);
+
   const rows = sorted.length ? sorted.map((o, i) => {
     const isRec = o.type === 'recette';
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
-      <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isRec ? '#dcfce7' : '#fee2e2'};color:${isRec ? '#16a34a' : '#dc2626'};font-weight:800">${isRec ? '+' : '–'}</div>
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .85rem;${i ? 'border-top:1px solid var(--border)' : ''}">
+      <span style="width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${isRec ? '#dcfce7' : '#fee2e2'};color:${isRec ? '#16a34a' : '#dc2626'};font-size:.95rem;font-weight:700">${isRec ? '↑' : '↓'}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.libelle || (isRec ? 'Recette' : 'Dépense'))}${o.categorie ? ` <span class="badge badge-gray">${escHtml(o.categorie)}</span>` : ''}</div>
-        <div style="font-size:.73rem;color:var(--muted);margin-top:1px">${formatDate(o.date)}${o.notes ? ' · ' + escHtml(o.notes) : ''}</div>
+        <div style="font-weight:600;font-size:.83rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${escHtml(o.libelle || (isRec ? 'Recette' : 'Dépense'))}${o.categorie ? ` <span class="badge badge-gray">${escHtml(o.categorie)}</span>` : ''}${o.recurrence ? ` <span class="badge" style="background:#e0e7ff;color:#4338ca" title="Opération récurrente ${o.recurrence === 'mensuelle' ? 'mensuelle' : 'hebdomadaire'}">🔁 ${o.recurrence === 'mensuelle' ? 'mensuel' : 'hebdo'}</span>` : ''}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:1px">${formatDate(o.date)}${o.notes ? ' · ' + escHtml(o.notes) : ''}</div>
       </div>
       <div style="font-weight:700;font-size:.85rem;color:${isRec ? '#16a34a' : '#dc2626'};white-space:nowrap">${isRec ? '+' : '–'} ${fmtMoney(o.montant)}</div>
-      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${o.id}')">✎</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteBudgetOp('${o.id}')">✕</button></div>` : ''}
+      ${canEdit ? `<div class="no-print" style="display:flex;gap:.2rem"><button class="btn btn-ghost btn-sm" onclick="openBudgetModal('${o.id}')">✎</button>${o.serie ? `<button class="btn btn-ghost btn-sm" style="color:#dc2626" title="Supprimer toute la série récurrente" onclick="deleteBudgetSerie('${o.serie}')">🔁✕</button>` : ''}<button class="btn btn-ghost btn-sm" style="color:var(--red)" title="${o.serie ? 'Supprimer seulement cette échéance' : 'Supprimer'}" onclick="deleteBudgetOp('${o.id}')">✕</button></div>` : ''}
     </div>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune opération enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #d97706;background:linear-gradient(135deg,#d977060d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d97706">💰 Budget personnel</span>
+  const bar = fluxTotal > 0
+    ? `<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px">${moisRecettes > 0 ? `<div style="width:${recPct}%;background:#16a34a"></div>` : ''}${moisDepenses > 0 ? `<div style="width:${depPct}%;background:#dc2626"></div>` : ''}</div>`
+    : `<div style="height:12px;border-radius:6px;background:#e5e7eb"></div>`;
+
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #d97706 12%, #fff)">
+        <span class="card-title" style="color:#d97706">💰 Budget personnel</span>
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openBudgetModal()">+ Opération</button>` : ''}
-      </div>
-      <div class="grid grid-3" style="gap:.75rem">
-        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:${solde < 0 ? '#fef2f2' : '#f0fdf4'};border:1px solid ${solde < 0 ? '#fecaca' : '#bbf7d0'}">
-          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Solde actuel</div>
-          <div style="font-size:1.25rem;font-weight:800;color:${solde < 0 ? '#dc2626' : '#16a34a'};line-height:1.2">${fmtMoney(solde)}</div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:1rem">
+        <div>
+          <div style="font-size:.72rem;color:var(--muted)">Solde actuel</div>
+          <div style="font-size:1.6rem;font-weight:800;line-height:1.1;color:${solde < 0 ? '#dc2626' : '#16a34a'}">${fmtMoney(solde)}</div>
         </div>
-        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--border)">
-          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Recettes (mois)</div>
-          <div style="font-size:1.05rem;font-weight:800;color:#16a34a;line-height:1.4">+ ${fmtMoney(moisRecettes)}</div>
-        </div>
-        <div style="padding:.7rem .85rem;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--border)">
-          <div style="font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Dépenses (mois)</div>
-          <div style="font-size:1.05rem;font-weight:800;color:#dc2626;line-height:1.4">– ${fmtMoney(moisDepenses)}</div>
+        <div style="text-align:right">
+          <div style="font-size:.72rem;color:var(--muted)">Net du mois</div>
+          <div style="font-size:.98rem;font-weight:700;color:${net < 0 ? '#dc2626' : '#16a34a'}">${net < 0 ? '– ' : '+ '}${fmtMoney(Math.abs(net))}</div>
         </div>
       </div>
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 5 ? 'max-height:255px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
+      <div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:.35rem">Flux du mois — ${moisLabel}</div>
+        ${bar}
+        <div style="display:flex;flex-wrap:wrap;gap:.15rem 1.1rem;margin-top:.5rem;font-size:.75rem">
+          <span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:#16a34a"></span>Recettes <b style="color:#16a34a">${fmtMoney(moisRecettes)}</b></span>
+          <span style="display:flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:3px;background:#dc2626"></span>Dépenses <b style="color:#dc2626">${fmtMoney(moisDepenses)}</b></span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--r-sm);${sorted.length > 5 ? 'max-height:230px;overflow-y:auto' : 'overflow:hidden'}">${rows}</div>
       ${sorted.length > 5 ? `<div class="no-print" style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:-.35rem">↕ ${sorted.length} opérations — faites défiler pour tout voir</div>` : ''}
     </div></div>`;
 }
 
 function budgetFormHtml(item) {
   const type = item.type || 'depense';
+  const isNew = !item.id;
   const cats = type === 'recette' ? BUDGET_CAT_RECETTE : BUDGET_CAT_DEPENSE;
   const catOpts = ['<option value="">—</option>'].concat(cats.map(c => `<option value="${c}"${item.categorie === c ? ' selected' : ''}>${c}</option>`)).join('');
   return `
@@ -1401,11 +1645,54 @@ function budgetFormHtml(item) {
       <div class="form-group"><label>Montant (€) *</label><input type="number" step="0.01" min="0" id="buMontant" value="${item.montant != null ? item.montant : ''}" class="form-input"/></div>
     </div>
     <div class="grid grid-2" style="gap:.75rem">
-      ${santeField('buDate', 'Date *', item.date || today(), 'date')}
+      ${santeField('buDate', isNew ? 'Date de début *' : 'Date *', item.date || today(), 'date')}
       <div class="form-group"><label>Catégorie</label><select id="buCategorie" class="form-input">${catOpts}</select></div>
     </div>
+    ${isNew ? `
+    <div class="grid grid-2" style="gap:.75rem">
+      <div class="form-group"><label>Récurrence</label><select id="buRecurrence" class="form-input" onchange="refreshBudgetRecur()">
+        <option value="ponctuelle">Ponctuelle (une seule fois)</option>
+        <option value="hebdomadaire">Chaque semaine</option>
+        <option value="mensuelle">Chaque mois</option>
+      </select></div>
+      <div class="form-group" id="buRecurFinWrap" style="display:none"><label>Jusqu'au *</label><input type="date" id="buRecurrenceFin" class="form-input"/></div>
+    </div>
+    <div id="buRecurHint" style="display:none;font-size:.72rem;color:var(--muted);margin:-.35rem 0 .2rem;line-height:1.4">🔁 Une opération identique sera générée à chaque période, de la date de début jusqu'au « Jusqu'au » inclus — ex. <b>salaire</b> chaque mois, <b>argent de poche</b> chaque semaine.</div>` : ''}
     ${santeField('buLibelle', 'Libellé', item.libelle)}
     ${santeTextarea('buNotes', 'Notes', item.notes)}`;
+}
+
+// Récurrence : affiche/masque la date de fin + amorce une valeur par défaut sensée
+function refreshBudgetRecur() {
+  const rec = document.getElementById('buRecurrence');
+  if (!rec) return;
+  const on = rec.value !== 'ponctuelle';
+  const wrap = document.getElementById('buRecurFinWrap');
+  const hint = document.getElementById('buRecurHint');
+  if (wrap) wrap.style.display = on ? '' : 'none';
+  if (hint) hint.style.display = on ? '' : 'none';
+  const fin = document.getElementById('buRecurrenceFin');
+  const deb = document.getElementById('buDate');
+  if (on && fin && !fin.value && deb && deb.value) {
+    const d = new Date(deb.value + 'T00:00');
+    d.setMonth(d.getMonth() + (rec.value === 'mensuelle' ? 12 : 3));   // 12 mois / ~3 mois par défaut
+    fin.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+}
+
+// Liste des dates (YYYY-MM-DD) d'une récurrence, de début à fin inclus (borne de sécurité 200)
+function _budgetRecurDates(startStr, endStr, freq) {
+  const out = [];
+  const start = new Date(startStr + 'T00:00'), end = new Date(endStr + 'T00:00');
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return out;
+  const d = new Date(start);
+  let guard = 0;
+  while (d <= end && guard < 200) {
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    if (freq === 'hebdomadaire') d.setDate(d.getDate() + 7); else d.setMonth(d.getMonth() + 1);
+    guard++;
+  }
+  return out;
 }
 
 function refreshBudgetCats() {
@@ -1439,20 +1726,52 @@ async function saveBudgetOp() {
     date: g('buDate'), categorie: g('buCategorie'), libelle: g('buLibelle'), notes: g('buNotes')
   };
   const ops = [...getBudgetOps(r)];
-  if (budgetEditId) { const idx = ops.findIndex(x => x.id === budgetEditId); if (idx >= 0) ops[idx] = { ...ops[idx], ...item }; }
-  else { item.id = genId(); ops.push(item); }
+  if (budgetEditId) {
+    const idx = ops.findIndex(x => x.id === budgetEditId); if (idx >= 0) ops[idx] = { ...ops[idx], ...item };
+  } else {
+    const rec = (document.getElementById('buRecurrence') || {}).value || 'ponctuelle';
+    if (rec === 'ponctuelle') {
+      ops.push({ ...item, id: genId() });
+    } else {
+      const finStr = g('buRecurrenceFin');
+      if (!finStr) { toast('Indiquez la date « Jusqu\'au » pour la récurrence', 'error'); return; }
+      const dates = _budgetRecurDates(item.date, finStr, rec);
+      if (!dates.length) { toast('« Jusqu\'au » doit être postérieur (ou égal) à la date de début', 'error'); return; }
+      const serie = genId();
+      dates.forEach(dt => ops.push({ ...item, id: genId(), date: dt, serie, recurrence: rec }));
+      toast(`${dates.length} échéance${dates.length > 1 ? 's' : ''} générée${dates.length > 1 ? 's' : ''} 🔁`, 'success');
+    }
+  }
   await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
   closeModal('budgetModal');
-  toast('Enregistré', 'success');
+  if (budgetEditId) toast('Enregistré', 'success');
   loadResident();
 }
 
 function deleteBudgetOp(id) {
-  confirmDialog('Supprimer cette opération ?', async () => {
+  const r0 = getResident();
+  const op = getBudgetOps(r0).find(o => o.id === id);
+  const msg = (op && op.serie) ? 'Supprimer seulement cette échéance ? (les autres échéances de la série sont conservées)' : 'Supprimer cette opération ?';
+  confirmDialog(msg, async () => {
     const r = getResident();
     const ops = getBudgetOps(r).filter(o => o.id !== id);
     await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
     toast('Supprimé', 'success');
+    loadResident();
+  });
+}
+
+// Supprime TOUTE une série récurrente (toutes les échéances partageant le même identifiant de série)
+function deleteBudgetSerie(serie) {
+  const r0 = getResident();
+  const serieOps = getBudgetOps(r0).filter(o => o.serie === serie);
+  if (!serieOps.length) return;
+  const lib = serieOps[0].libelle || (serieOps[0].type === 'recette' ? 'Recette' : 'Dépense');
+  confirmDialog(`Supprimer les ${serieOps.length} échéances de la série récurrente « ${lib} » ?`, async () => {
+    const r = getResident();
+    const ops = getBudgetOps(r).filter(o => o.serie !== serie);
+    await persistResident({ ...r, budget: { ...(r.budget || {}), operations: ops }, updatedAt: new Date().toISOString() });
+    toast('Série récurrente supprimée', 'info');
     loadResident();
   });
 }
@@ -1480,6 +1799,9 @@ function objectifsCard(r) {
   const rows = resObjs.map(o => {
     const sv = suivi[o.id] || {};
     const st = OBJ_STATUTS[sv.statut] || OBJ_STATUTS.non_commence;
+    const axes = Array.isArray(sv.axes) ? sv.axes : [];
+    const axPct = axes.length ? Math.round(axes.reduce((s, a) => s + Math.max(0, Math.min(100, +a.progression || 0)), 0) / axes.length) : null;
+    const evs = (Array.isArray(sv.evaluations) ? sv.evaluations : []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     return `<div style="padding:.7rem .85rem;background:var(--g50);border-radius:var(--r-sm);border:1px solid var(--border);border-left:3px solid ${st.color}">
       <div style="display:flex;align-items:flex-start;gap:.5rem">
         <div style="flex:1;min-width:0">
@@ -1487,17 +1809,25 @@ function objectifsCard(r) {
           ${o.description ? `<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(o.description)}</div>` : ''}
           ${sv.note ? `<div style="font-size:.76rem;color:var(--g700);margin-top:.35rem">📌 ${escHtml(sv.note)}</div>` : ''}
           ${sv.dateMaj ? `<div style="font-size:.7rem;color:var(--g400);margin-top:2px">Mis à jour le ${formatDate(sv.dateMaj)}</div>` : ''}
+          ${axes.length ? `<div style="margin-top:.45rem">
+            <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--g400)"><span>🧭 ${axes.length} axe${axes.length > 1 ? 's' : ''} de travail</span><span style="font-weight:700;color:${axPct === 100 ? '#16a34a' : '#d97706'}">${axPct}%</span></div>
+            <div style="height:5px;border-radius:3px;background:var(--g100);overflow:hidden;margin-top:2px"><div style="height:100%;width:${axPct}%;background:${axPct === 100 ? '#16a34a' : '#f59e0b'};transition:width .3s"></div></div>
+          </div>` : ''}
+          ${evs.length ? `<div style="font-size:.7rem;color:var(--g400);margin-top:3px">📊 Dernière évaluation : <strong>${evs[0].score}%</strong> le ${formatDate(evs[0].date)}</div>` : ''}
         </div>
-        ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="color:var(--accent);flex-shrink:0" onclick="openObjectifModal('${o.id}')">✎ Suivi</button>` : ''}
+        <div class="no-print" style="display:flex;flex-direction:column;gap:.15rem;flex-shrink:0;align-items:flex-end">
+        ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="openObjectifModal('${o.id}')">✎ Suivi</button>
+        <a class="btn btn-ghost btn-sm" style="color:#6366f1" href="objectifs.html?resident=${r.id}&evaluer=${o.id}" title="Évaluer cet objectif : chaque axe de travail est noté de 0 à 4">📊 Évaluer</a>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
 
-  return `<div class="card" style="border-left:3px solid #f59e0b;background:linear-gradient(135deg,#f59e0b0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b">🎯 Objectifs personnalisés (${resObjs.length})</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #f59e0b 12%, #fff)">
+        <span class="card-title" style="color:#f59e0b">🎯 Objectifs personnalisés (${resObjs.length})</span>
         <span class="badge badge-green" style="margin-left:auto">${nbAtteint}/${resObjs.length} atteint${nbAtteint > 1 ? 's' : ''}</span>
-      </div>
+        <a class="btn btn-ghost btn-sm no-print" href="objectifs.html?resident=${r.id}" style="color:var(--accent);flex-shrink:0" title="Définir les axes de travail et suivre la progression">🧭 Axes de travail</a>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="height:7px;border-radius:4px;background:var(--g100);overflow:hidden"><div style="height:100%;width:${pct}%;background:#16a34a;transition:width .3s"></div></div>
       ${rows}
     </div></div>`;
@@ -1526,7 +1856,8 @@ async function saveObjectifSuivi() {
   const statut = document.getElementById('objStatut').value;
   const note = document.getElementById('objNote').value.trim();
   const suivi = { ...getObjSuivi(r) };
-  suivi[objectifEditId] = { statut, note, dateMaj: new Date().toISOString() };
+  // On étend l'entrée existante : les axes de travail (page Objectifs) doivent être préservés
+  suivi[objectifEditId] = { ...(suivi[objectifEditId] || {}), statut, note, dateMaj: new Date().toISOString() };
   await persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
   closeModal('objectifModal');
   toast('Suivi mis à jour', 'success');
@@ -1628,39 +1959,68 @@ function evaluationsCard(r) {
     </details>`;
   }).join('') : '<div style="padding:.85rem;font-size:.78rem;color:var(--g400)">Aucune évaluation enregistrée</div>';
 
-  return `<div class="card" style="border-left:3px solid #9333ea;background:linear-gradient(135deg,#9333ea0d,#fff 55%)"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9333ea">📋 Grilles d'évaluation${last ? ` <span class="badge" style="background:${evalScoreColor(evalScorePct(last.scores))}22;color:${evalScoreColor(evalScorePct(last.scores))};margin-left:.3rem">${evalScorePct(last.scores)}% d'autonomie</span>` : ''}</span>
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #9333ea 12%, #fff)">
+        <span class="card-title" style="color:#9333ea">📋 Grilles d'évaluation${last ? ` <span class="badge" style="background:${evalScoreColor(evalScorePct(last.scores))}22;color:${evalScoreColor(evalScorePct(last.scores))};margin-left:.3rem">${evalScorePct(last.scores)}% d'autonomie</span>` : ''}</span>
         ${trend}
         ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openEvalModal()">+ Nouvelle évaluation</button>` : ''}
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
     </div></div>`;
 }
 
+const EVAL_DOM_COLORS = ['#8b5cf6', '#f59e0b', '#0d9488', '#ef4444', '#16a34a', '#0ea5e9'];
+
 function evalFormHtml(item) {
   const scores = item.scores || {};
   const niveauxLegende = EVAL_NIVEAUX.map(n => `${n.v} = ${n.label}`).join(' · ');
-  const domaines = GRILLE_EVAL.map(d => `
-    <div style="margin-top:.5rem">
-      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9333ea;margin-bottom:.3rem">${d.domaine}</div>
-      ${d.criteres.map(c => {
-        const cur = scores[c.key];
-        const opts = EVAL_NIVEAUX.map(n => `<option value="${n.v}"${Number(cur) === n.v ? ' selected' : ''}>${n.v} — ${n.label}</option>`).join('');
-        return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
-          <label style="flex:1;font-size:.8rem;margin:0">${c.label}</label>
-          <select id="ev_${c.key}" class="form-input" style="width:230px;flex-shrink:0"><option value="">— Non évalué —</option>${opts}</select>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
-  return `
-    <div class="grid grid-2" style="gap:.75rem">
-      ${santeField('evDate', 'Date de l\'évaluation *', item.date || today(), 'date')}
-      ${santeField('evEvaluateur', 'Évaluateur', item.evaluateur)}
+
+  const sideBtns = GRILLE_EVAL.map((d, i) => {
+    const total = d.criteres.length;
+    const filled = d.criteres.filter(c => scores[c.key] != null).length;
+    const color = EVAL_DOM_COLORS[i % EVAL_DOM_COLORS.length];
+    return `<button type="button" class="eval-dom-btn${i === 0 ? ' active' : ''}" id="evdombtn_${i}" style="--bc:${color}" onclick="evalSelectDomain(${i})"><span class="dot" style="background:${color}"></span><span class="nm">${d.domaine}</span><span class="cnt" id="evdomcnt_${i}">${filled}/${total}</span></button>`;
+  }).join('');
+
+  const domBlocks = GRILLE_EVAL.map((d, i) => {
+    const color = EVAL_DOM_COLORS[i % EVAL_DOM_COLORS.length];
+    const crit = d.criteres.map(c => {
+      const cur = scores[c.key];
+      const opts = EVAL_NIVEAUX.map(n => `<option value="${n.v}"${Number(cur) === n.v ? ' selected' : ''}>${n.v} — ${n.label}</option>`).join('');
+      return `<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem"><label style="flex:1;font-size:.82rem;margin:0">${c.label}</label><select id="ev_${c.key}" class="form-input" style="width:230px;max-width:52%;flex-shrink:0" onchange="evalDomCount(${i})"><option value="">— Non évalué —</option>${opts}</select></div>`;
+    }).join('');
+    return `<div class="eval-dom" id="evdom_${i}" style="display:${i === 0 ? 'block' : 'none'}"><div class="eval-dom-title" style="color:${color}">${d.domaine}</div>${crit}</div>`;
+  }).join('');
+
+  return `<div class="eval-layout">
+    <div class="eval-side"><div class="eval-side-h">Domaines</div>${sideBtns}</div>
+    <div class="eval-main">
+      <div class="grid grid-2" style="gap:.75rem">
+        ${santeField('evDate', 'Date de l\'évaluation *', item.date || today(), 'date')}
+        ${santeField('evEvaluateur', 'Évaluateur', item.evaluateur)}
+      </div>
+      <div style="font-size:.7rem;color:var(--muted);padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm);margin:.7rem 0">Échelle : ${niveauxLegende}</div>
+      ${domBlocks}
+      <div style="margin-top:.8rem">${santeTextarea('evNote', 'Synthèse / commentaire', item.note)}</div>
     </div>
-    <div style="font-size:.7rem;color:var(--muted);padding:.5rem .7rem;background:var(--g50);border-radius:var(--r-sm)">Échelle : ${niveauxLegende}</div>
-    ${domaines}
-    ${santeTextarea('evNote', 'Synthèse / commentaire', item.note)}`;
+  </div>`;
+}
+
+function evalSelectDomain(i) {
+  GRILLE_EVAL.forEach((d, j) => {
+    const blk = document.getElementById('evdom_' + j);
+    const btn = document.getElementById('evdombtn_' + j);
+    if (blk) blk.style.display = j === i ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', j === i);
+  });
+}
+
+function evalDomCount(i) {
+  const d = GRILLE_EVAL[i];
+  if (!d) return;
+  let filled = 0;
+  d.criteres.forEach(c => { const el = document.getElementById('ev_' + c.key); if (el && el.value !== '') filled++; });
+  const cnt = document.getElementById('evdomcnt_' + i);
+  if (cnt) cnt.textContent = filled + '/' + d.criteres.length;
 }
 
 function openEvalModal(id) {
@@ -1700,25 +2060,109 @@ function deleteEvaluation(id) {
   });
 }
 
+// Statut d'échéance d'un document (vue grille) : couleur + libellé + pastille
+function docExpiryStatus(d) {
+  if (!d.dueDate) return { color: 'var(--muted)', label: 'sans échéance', dot: 'var(--border)' };
+  const days = Math.round((new Date(d.dueDate) - new Date(today())) / 86400000);
+  if (days < 0 && !d.done) return { color: '#ef4444', label: 'expiré le ' + formatDate(d.dueDate), dot: '#ef4444' };
+  if (days <= 60)          return { color: '#f59e0b', label: 'expire le ' + formatDate(d.dueDate), dot: '#f59e0b' };
+  return { color: '#16a34a', label: 'valide → ' + formatDate(d.dueDate), dot: '#16a34a' };
+}
+
+// Normalise une catégorie de document vers une clé canonique.
+// Les documents ajoutés à la main stockent une clé (ex. 'identite') ; ceux créés par un
+// renouvellement d'échéance stockaient le LIBELLÉ du type (ex. "Pièce d'identité").
+// On ramène tout à la clé pour que les onglets ne se dédoublent pas.
+function normDocCat(c) {
+  if (!c) return 'autre';
+  if (DOC_CAT_LABELS[c]) return c; // déjà une clé connue
+  const s = String(c).trim().toLowerCase();
+  const byLabel = Object.keys(DOC_CAT_LABELS).find(k => DOC_CAT_LABELS[k].toLowerCase() === s);
+  if (byLabel) return byLabel;
+  // libellés des types d'échéance qui diffèrent des libellés de catégorie
+  const ec = { "pièce d'identité": 'identite', "notification mdph": 'mdph', "jugement / mesure": 'jugement', "css / mutuelle": 'cmu', "contrat de séjour": 'contrat', "visite médicale": 'medical' };
+  return ec[s] || c; // sinon on conserve la valeur brute (catégorie libre)
+}
+
 function docsHtml(docs) {
   const list = docs.map(d => {
-    const overdue = d.dueDate && d.dueDate < today() && !d.done;
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
-      <span style="font-size:1.3rem">${docTypeIcon(d.mimeType)}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(d.name)}</div>
-        <div style="font-size:.72rem;color:var(--muted);display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1px">
-          <span>${DOC_CAT_LABELS[d.category]||d.category||'—'}</span>
-          ${d.docDate ? `<span>📅 ${formatDate(d.docDate)}</span>` : ''}
-          ${d.dueDate ? `<span style="color:${overdue ? '#ef4444' : 'inherit'}">⏰ ${formatDate(d.dueDate)}${overdue ? ' (Expiré)' : ''}</span>` : ''}
-          <span>· ${fmtSize(d.size)}</span>
+    const s = docExpiryStatus(d);
+    const cat = normDocCat(d.category);
+    return `<div data-doccat="${escHtml(cat)}" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column">
+      <div style="height:76px;background:color-mix(in srgb, var(--accent) 10%, #fff);display:flex;align-items:center;justify-content:center;position:relative">
+        <span style="font-size:2rem">${docTypeIcon(d.mimeType)}</span>
+        <span title="${s.label}" style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${s.dot};box-shadow:0 0 0 2px #fff"></span>
+      </div>
+      <div style="padding:.6rem .7rem;flex:1;display:flex;flex-direction:column;gap:.3rem">
+        <span style="align-self:flex-start;font-size:.63rem;background:color-mix(in srgb, var(--accent) 12%, #fff);color:var(--accent);padding:1px 8px;border-radius:20px">${escHtml(docCatLabel(cat))}</span>
+        <div style="font-weight:600;font-size:.82rem;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="${escHtml(d.name)}">${escHtml(d.name)}</div>
+        <div style="font-size:.68rem;color:${s.color};margin-top:auto">⏰ ${s.label}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:.4rem;margin-top:.15rem">
+          <span style="font-size:.66rem;color:var(--muted)">${d.docDate ? formatDate(d.docDate)+' · ' : ''}${fmtSize(d.size)}</span>
+          <span style="display:flex;gap:.15rem">
+            <button class="btn btn-ghost btn-sm" style="padding:2px 7px" onclick="downloadDoc('${d.id}','${currentResidentId}')">↓</button>
+            <button class="btn btn-ghost btn-sm admin-only" style="padding:2px 7px;color:var(--red)" onclick="deleteDocFromPage('${d.id}','${currentResidentId}')">✕</button>
+          </span>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}','${currentResidentId}')">↓</button>
-      <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteDocFromPage('${d.id}','${currentResidentId}')">✕</button>
     </div>`;
   }).join('');
-  return `<div class="card"><div class="card-header"><span class="card-title">Fichiers joints</span></div><div class="card-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>`;
+  const catOpts = Object.entries(DOC_CAT_LABELS).map(([k, v]) => `<option value="${k}"${k === 'autre' ? ' selected' : ''}>${escHtml(v)}</option>`).join('');
+  return `<div class="card" style="overflow:hidden">
+    <div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff);display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <span class="card-title" style="color:var(--accent)">Fichiers joints</span>
+      <label class="btn btn-accent btn-sm no-print" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:.35rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter un document
+        <input type="file" id="pageDocFileInput" accept="application/pdf,image/*" style="display:none"/>
+      </label>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="docnav-bar no-print" id="docCatTabs" style="padding:.85rem 1.25rem .1rem;margin-bottom:0">${docCatTabsHtml(docs)}</div>
+      <div id="pageDocPending" class="no-print" style="display:none;flex-direction:column;gap:.7rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:color-mix(in srgb, var(--accent) 6%, #fff)">
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;min-width:0">
+          <span style="font-size:1.1rem">📎</span>
+          <strong id="pageDocPendingName" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></strong>
+          <span style="color:var(--muted);flex-shrink:0" id="pageDocPendingSize"></span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Nom du document</label><input type="text" id="pageDocName" class="form-input" placeholder="Nom du fichier par défaut"/></div>
+          <div class="form-group"><label>Catégorie</label><select id="pageDocCategory" class="form-input">${catOpts}</select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Date du document</label><input type="date" id="pageDocDate" class="form-input"/></div>
+          <div class="form-group"><label>Échéance / renouvellement <span style="color:var(--muted);font-weight:400">(facultatif)</span></label><input type="date" id="pageDocDueDate" class="form-input"/></div>
+        </div>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="cancelPageDoc()">Annuler</button>
+          <button class="btn btn-accent btn-sm" onclick="uploadDocFromPage()">💾 Enregistrer</button>
+        </div>
+      </div>
+      <div id="docList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem;padding:1rem 1.25rem;max-height:454px;overflow-y:auto">${docs.length ? list : '<div class="empty" style="grid-column:1/-1;padding:2rem"><p>Aucun document joint.</p></div>'}</div>
+    </div>
+  </div>`;
+}
+
+// Onglets de catégorie des documents (dynamiques : uniquement les catégories présentes)
+function docCatLabel(c) {
+  const extra = { administratif:'Administratif', medical:'Médical', scolaire:'Scolaire', judiciaire:'Judiciaire', ressource:'Ressource' };
+  return (typeof DOC_CAT_LABELS !== 'undefined' && DOC_CAT_LABELS[c]) || extra[c] || (c ? c.charAt(0).toUpperCase() + c.slice(1) : 'Autre');
+}
+function docCatTabsHtml(docs) {
+  const cats = [...new Set((docs || []).map(d => normDocCat(d.category)))].sort((a, b) => docCatLabel(a).localeCompare(docCatLabel(b)));
+  const bdg = n => `<span class="badge badge-gray" style="margin-left:.35rem">${n}</span>`;
+  const all = `<button class="docnav active" onclick="filterDocCat(this,'')">📎 Tous${docs && docs.length ? bdg(docs.length) : ''}</button>`;
+  if (cats.length <= 1) return all; // une seule catégorie → pas besoin d'onglets
+  return all + cats.map(c => `<button class="docnav" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => normDocCat(d.category) === c).length)}</button>`).join('');
+}
+function filterDocCat(btn, cat) {
+  const bar = btn.closest('#docCatTabs');
+  if (bar) bar.querySelectorAll('.docnav').forEach(b => b.classList.toggle('active', b === btn));
+  const list = document.getElementById('docList');
+  if (!list) return;
+  list.querySelectorAll('[data-doccat]').forEach(row => {
+    row.style.display = (!cat || row.getAttribute('data-doccat') === cat) ? '' : 'none';
+  });
 }
 
 function inputField(id, label, value, type) {
@@ -1729,12 +2173,19 @@ function selectField(id, label, value, options) {
   const opts = options.map(o => `<option value="${o[0]}"${value===o[0]?' selected':''}>${o[1]}</option>`).join('');
   return `<div class="form-group"><label>${label}</label><select id="${id}" class="form-input">${opts}</select></div>`;
 }
+// Comme selectField mais préserve une valeur existante hors-liste (évite toute perte de donnée)
+function selectFieldP(id, label, value, options) {
+  const opts = (value && !options.some(o => String(o[0]) === String(value))) ? [...options, [value, value]] : options;
+  return selectField(id, label, value, opts);
+}
 
 function renderEditMode(r) {
   const type = getStructureType();
   const objs = DB.get(DB.keys.objectives) || [];
   const resObjIds = r.objectifs || [];
 
+  const ressourcesOpts = [['rsa','RSA'],['aah','AAH'],['salaire','Salaire'],['apl','APL'],['autre','Autre']];
+  const ressSet = new Set(String(r.ressources || '').split(',').map(s => s.trim()).filter(Boolean));
   document.getElementById('residentContent').innerHTML = `
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-header"><span class="card-title">✎ Modification — ${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</span></div>
@@ -1742,7 +2193,7 @@ function renderEditMode(r) {
         <div class="grid grid-3" style="gap:.75rem">
           ${inputField('ePrenom','Prénom',r.prenom)}
           ${inputField('eNom','Nom',r.nom)}
-          ${selectField('eGenre','Genre',r.genre, [['','—'],['M','Masculin'],['F','Féminin'],['A','Autre']])}
+          ${selectFieldP('eGenre','Genre',r.genre, [['','—'],['M','Masculin'],['F','Féminin'],['autre','Autre']])}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
           ${inputField('eDob','Date de naissance',r.dob,'date')}
@@ -1750,23 +2201,27 @@ function renderEditMode(r) {
           ${inputField('eChambre','Chambre / Unité',r.chambre)}
         </div>
         <div class="grid grid-3" style="gap:.75rem">
-          ${selectField('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent'],['sorti','Sorti(e)']])}
-          ${inputField('eReferent','Référent',r.referent)}
-          ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
+          ${selectFieldP('eStatut','Statut',r.statut, [['urgence','Urgence'],['stage','Stage'],['temporaire','Temporaire'],['permanent','Permanent'],['sorti','Sorti(e)']])}
+          <div class="form-group"><label>Référent principal</label><select id="eReferent" class="form-input"><option value="">— Aucun —</option></select></div>
+          <div class="form-group"><label>Co-référent</label><select id="eCoReferent" class="form-input"><option value="">— Aucun —</option></select></div>
         </div>
         <div class="grid grid-3" style="gap:.75rem">
           ${inputField('eDateSortie','Date de sortie (si sorti)',r.dateSortie,'date')}
+          ${inputField('eColor','Couleur',r.color||'#3b82f6','color')}
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
-        <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem">👤 Informations personnelles</div>
+        <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem">👤 Informations personnelles &amp; santé</div>
         <div class="grid grid-2" style="gap:.75rem">
           ${inputField('eMedecin','Médecin traitant',r.medecin)}
           ${inputField('eMedecinTel','Tél. médecin',r.medecinTel)}
           ${inputField('eAllergies','Allergies / CI',r.allergies)}
           ${inputField('eNss','NIR (Sécurité sociale)',r.nss)}
           ${inputField('eIns','INS (Identifiant National de Santé)',r.ins)}
-          ${selectField('eDmp','DMP (Dossier Médical Partagé)',r.dmp,[['','—'],['actif','Actif'],['en_attente','En attente'],['non_ouvert','Non ouvert']])}
-          ${selectField('eConsent','Consentement partage données santé',r.consent,[['','—'],['oui','Donné'],['non','Refusé'],['en_attente','En attente']])}
+          <div></div>
+          ${selectFieldP('eDmp','DMP (Dossier Médical Partagé)',r.dmp,[['','—'],['actif','Actif'],['en_attente','En attente'],['non_ouvert','Non ouvert']])}
+          ${inputField('eDmpDate','Date ouverture DMP',r.dmpDate,'date')}
+          ${selectFieldP('eConsent','Consentement partage données santé',r.consent,[['','—'],['oui','Donné'],['non','Refusé'],['en_attente','En attente']])}
+          ${inputField('eConsentDate','Date consentement',r.consentDate,'date')}
         </div>
         ${(type==='enfants'||type==='mixte')?`
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
@@ -1776,19 +2231,21 @@ function renderEditMode(r) {
           ${inputField('eTuteurTel','Tél. tuteur',r.tuteurTel)}
           ${inputField('eEcole','Établissement scolaire',r.ecole)}
           ${inputField('eClasse','Classe',r.classe)}
-          ${inputField('eOrganisme','Organisme',r.organisme)}
+          ${selectFieldP('eOrganisme','Organisme prescripteur',r.organisme,[['','—'],['ase','ASE'],['mdph','MDPH'],['pjj','PJJ'],['autre','Autre']])}
           ${inputField('eDossier','N° dossier',r.dossier)}
         </div>`:''}
         ${(type==='adultes'||type==='mixte')?`
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3b82f6;margin-bottom:.25rem">👤 Adulte</div>
         <div class="grid grid-2" style="gap:.75rem">
-          ${selectField('eSituationPro','Situation pro.',r.situationPro, [['','—'],['emploi','Emploi'],['chantier','Chantier éducatif'],['formation','Formation'],['stage','Stage'],['inactif','Inactif'],['retraite','Retraite'],['autre','Autre']])}
-          ${selectField('eRessources','Ressources',r.ressources, [['','—'],['aaH','AAH'],['rsa','RSA'],['sans','Sans'],['autre','Autre']])}
-          ${inputField('eOrganismeA','Organisme',r.organismeA)}
-          ${inputField('eSituationAdmin','Situation admin.',r.situationAdmin)}
-          ${selectField('eProtection','Mesure de protection',r.protection, [['','—'],['tutelle','Tutelle'],['curatelle','Curatelle'],['sauvegarde','Sauvegarde de justice'],['habilitation','Habilitation familiale'],['masp','MASP'],['autre','Autre']])}
+          ${selectFieldP('eSituationPro','Situation professionnelle',r.situationPro, [['','—'],['emploi','En emploi'],['formation','En formation'],['recherche','Recherche d\'emploi'],['inactif','Inactif']])}
+          <div class="form-group"><label>Ressources / Revenus <span style="font-weight:400;color:var(--muted);font-size:.72rem">(plusieurs possibles)</span></label><div id="rRessources" style="display:flex;flex-wrap:wrap;gap:.4rem .9rem;padding:.5rem .2rem">${ressourcesOpts.map(o => `<label style="display:flex;align-items:center;gap:.35rem;font-weight:400;font-size:.85rem;cursor:pointer;margin:0"><input type="checkbox" class="r-ress" value="${o[0]}" style="width:auto"${ressSet.has(o[0])?' checked':''}/>${o[1]}</label>`).join('')}</div></div>
+          ${selectFieldP('eOrganismeA','Organisme prescripteur',r.organismeA,[['','—'],['siao','SIAO'],['mdph','MDPH'],['ccas','CCAS'],['prefecture','Préfecture'],['autre','Autre']])}
+          ${inputField('eDossierA','N° dossier',r.dossierA)}
+          ${selectFieldP('eSituationAdmin','Situation administrative',r.situationAdmin,[['','—'],['francais','Français'],['ue','UE'],['titre_sejour','Titre de séjour'],['demandeur','Demandeur d\'asile'],['refugie','Réfugié reconnu']])}
+          ${selectFieldP('eProtection','Mesure de protection',r.protection, [['','—'],['tutelle','Tutelle'],['curatelle','Curatelle'],['curatelle_renforcee','Curatelle renforcée'],['sauvegarde','Sauvegarde de justice'],['habilitation','Habilitation familiale'],['masp','MASP'],['autre','Autre']])}
           ${inputField('eProtectionNom','Tuteur / Curateur',r.protectionNom)}
+          ${inputField('eProtectionTel','Tél. tuteur / curateur',r.protectionTel)}
         </div>`:''}
         <hr style="border:none;border-top:1px solid var(--border);margin:.25rem 0"/>
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:.25rem">🎯 Objectifs</div>
@@ -1804,6 +2261,12 @@ function renderEditMode(r) {
         <button class="btn btn-primary" onclick="savePageEdit()">💾 Enregistrer</button>
       </div>
     </div>`;
+  // Peupler les sélecteurs référent/co-référent avec la liste des éducateurs
+  // (mêmes helpers que residents.html — formulaire unique et cohérent)
+  if (typeof fillReferentSelect === 'function') {
+    fillReferentSelect('eReferent', r.referent || '');
+    fillReferentSelect('eCoReferent', r.coReferent || '');
+  }
 }
 
 async function savePageEdit() {
@@ -1815,14 +2278,15 @@ async function savePageEdit() {
     ...r,
     prenom: g('ePrenom'), nom: g('eNom'), genre: g('eGenre'),
     dob: g('eDob'), entree: g('eEntree'), chambre: g('eChambre'),
-    statut: g('eStatut'), dateSortie: g('eDateSortie'), referent: g('eReferent'), color: g('eColor') || '#3b82f6',
+    statut: g('eStatut'), dateSortie: g('eDateSortie'),
+    referent: g('eReferent'), coReferent: g('eCoReferent'), color: g('eColor') || '#3b82f6',
     medecin: g('eMedecin'), medecinTel: g('eMedecinTel'),
     allergies: g('eAllergies'), nss: g('eNss'), ins: g('eIns'),
-    dmp: g('eDmp'), consent: g('eConsent'),
+    dmp: g('eDmp'), dmpDate: g('eDmpDate'), consent: g('eConsent'), consentDate: g('eConsentDate'),
     tuteur: g('eTuteur'), tuteurTel: g('eTuteurTel'), ecole: g('eEcole'),
     classe: g('eClasse'), organisme: g('eOrganisme'), dossier: g('eDossier'),
-    situationPro: g('eSituationPro'), ressources: g('eRessources'),
-    organismeA: g('eOrganismeA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'),
+    situationPro: g('eSituationPro'), ressources: (typeof getRessources === 'function' ? getRessources() : g('eRessources')),
+    organismeA: g('eOrganismeA'), dossierA: g('eDossierA'), situationAdmin: g('eSituationAdmin'), protection: g('eProtection'), protectionNom: g('eProtectionNom'), protectionTel: g('eProtectionTel'),
     objectifs: checked,
     notes: g('eNotes'), contacts: g('eContacts'),
     updatedAt: new Date().toISOString()
@@ -1876,7 +2340,7 @@ function buildFilDeVie(r) {
   const cats = DB.get(DB.keys.categories) || [];
   _residentJournalAll.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === name) && _canConf(e)).forEach(e => {
     const cat = cats.find(c => String(c.id) === String(e.categorie));
-    push(new Date(e.date), 'journal', '📔', cat ? cat.color : '#059669', cat ? cat.name : 'Journal', e.contenu);
+    push(new Date(e.date), 'journal', '📔', cat ? safeColor(cat.color, '#059669') : '#059669', cat ? cat.name : 'Journal', e.contenu);
   });
   (DB.get(DB.keys.incidents) || []).filter(e => String(e.residentId) === String(currentResidentId)).forEach(e => {
     push(new Date((e.date || (e.declaredAt||'').slice(0,10)) + 'T' + (e.heure || '00:00')), 'incident', '⚠️', '#dc2626', `${e.eig?.declarable ? '🚨 EIG — ' : 'Incident — '}${e.type||''}`.trim(), `${e.gravite ? '['+e.gravite+'] ' : ''}${e.description||''}`);
@@ -1904,7 +2368,7 @@ function buildFilDeVie(r) {
     });
   }
   getResidentActivites(r).forEach(i => {
-    const catalogue = DB.get(DB.keys.activites) || [];
+    const catalogue = actCatalogue();
     const act = catalogue.find(a => a.id === i.activiteId);
     const c = _actCategories[act?.categorie] || _actCategories.autre;
     const nom = act ? act.nom : 'Activité';
@@ -1929,7 +2393,7 @@ function buildFilDeVie(r) {
   const _trShiftColors = { matin:'#f59e0b', aprem:'#3b82f6', soir:'#8b5cf6', nuit:'#1e293b' };
   const _trShiftLabels = { matin:'Matin', aprem:'Après-midi', soir:'Soir', nuit:'Nuit' };
   const _trCatLabels = { sante:'Santé', medicament:'Médicament', comportement:'Comportement', alimentation:'Alimentation', hygiene:'Hygiène', activite:'Activité', famille:'Famille', sortie:'Sortie / Retour', administratif:'Administratif', maintenance:'Maintenance', urgent:'Urgent' };
-  (DB.get(DB.keys.transmissions) || []).filter(t => String(t.residentId) === String(currentResidentId)).forEach(t => {
+  (_residentTransmissionsAll || []).filter(t => String(t.residentId) === String(currentResidentId)).forEach(t => {
     const isUrgent = t.priority === 'urgent' || t.cat === 'urgent';
     const shiftLabel = _trShiftLabels[t.shift] || t.shift || '';
     const catLabel = _trCatLabels[t.cat] || t.cat || '';
@@ -1951,8 +2415,8 @@ function fvFilter(type, btn) {
 
 function filDeVieCard(r) {
   const ev = buildFilDeVie(r);
-  const head = `<div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>📋</span> Générer le bilan</button></div>`;
-  if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
+  const head = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><line x1="12" y1="2" x2="12" y2="22"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span class="card-title" style="color:var(--accent)">🧬 Fil de vie</span><span class="badge badge-gray" style="margin-left:.5rem">${ev.length} événement${ev.length>1?'s':''}</span><button class="btn btn-accent btn-sm no-print" style="margin-left:auto;gap:.35rem" onclick="genererBilanIA()"><span>📋</span> Générer le bilan</button></div>`;
+  if (!ev.length) return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun événement enregistré pour ce résident.</p></div></div></div>`;
   const types = [...new Set(ev.map(e => e.type))];
   const chips = `<button class="fv-chip active" onclick="fvFilter('all',this)">Tout (${ev.length})</button>` +
     types.map(t => `<button class="fv-chip" onclick="fvFilter('${t}',this)">${FV_TYPE_LABELS[t]||t}</button>`).join('');
@@ -1962,7 +2426,7 @@ function filDeVieCard(r) {
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap"><span style="font-weight:650;font-size:.83rem;color:${e.color}">${escHtml(e.title)}</span><span style="font-size:.7rem;color:var(--muted)">${fvDate(e.ts)}</span></div>
         ${e.detail ? `<div style="font-size:.78rem;color:var(--g700);margin-top:1px;white-space:pre-wrap">${escHtml(String(e.detail).slice(0,240))}</div>` : ''}
       </div></div>`).join('');
-  return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body" style="padding:1rem 1.25rem">
+  return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body" style="padding:1rem 1.25rem">
       <div class="fv-chips no-print" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">${chips}</div>
       <div id="fvList" style="max-height:520px;overflow-y:auto">${rows}</div>
     </div></div>`;
@@ -1983,7 +2447,7 @@ function computeSignals(r) {
   else if (abs >= 3) out.push({ level:'warn', icon:'📉', label:'Absences en hausse', detail:`${abs} absences sur 14 jours` });
   // Transmissions urgentes (7 j)
   const since7 = daysAgo(7);
-  const trUrgents = (DB.get(DB.keys.transmissions) || []).filter(t => String(t.residentId) === String(currentResidentId) && (t.date||'') >= since7 && (t.priority === 'urgent' || t.cat === 'urgent'));
+  const trUrgents = (_residentTransmissionsAll || []).filter(t => String(t.residentId) === String(currentResidentId) && (t.date||'') >= since7 && (t.priority === 'urgent' || t.cat === 'urgent'));
   if (trUrgents.length >= 3) out.push({ level:'alert', icon:'📡', label:'Transmissions urgentes répétées', detail:`${trUrgents.length} transmission${trUrgents.length>1?'s':''} urgente${trUrgents.length>1?'s':''} sur les 7 derniers jours` });
   else if (trUrgents.length >= 1) out.push({ level:'warn', icon:'📡', label:'Transmission urgente récente', detail:`${trUrgents.length} transmission${trUrgents.length>1?'s':''} urgente${trUrgents.length>1?'s':''} cette semaine` });
   // Incidents (30 j)
@@ -2031,11 +2495,10 @@ function radarSignauxCard(r) {
       <span style="font-size:1.05rem;flex-shrink:0;line-height:1.3">${x.icon}</span>
       <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.82rem;color:${cm[x.level].c}">${escHtml(x.label)}</div><div style="font-size:.76rem;color:var(--g700)">${escHtml(x.detail)}</div></div>
     </div>`).join('') : `<div style="padding:.85rem;font-size:.82rem;color:#16a34a">✓ Aucun signal faible détecté. La situation paraît stable.</div>`;
-  return `<div class="card" style="margin-bottom:1.5rem;border-left:3px solid ${lv.c}"><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${lv.c}">📡 Radar de vigilance</span>
+  return `<div class="card" id="radarCard" style="margin-bottom:1.5rem;overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, ${lv.c} 12%, #fff)">
+        <span class="card-title" style="color:${lv.c}">📡 Radar de vigilance</span>
         <span class="badge" style="margin-left:auto;background:${lv.bg};color:${lv.c};border:1px solid ${lv.bd}">${lv.txt}</span>
-      </div>
+      </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:flex;flex-direction:column;gap:.5rem">${rows}</div>
     </div></div>`;
 }
@@ -2138,27 +2601,151 @@ function imprimerBilan() {
 }
 
 function renderDataCards(r) {
-  const journal = _residentJournalAll;
   const planning = _residentPlanningCache;
-  const ppeList = DB.get(DB.keys.ppe) || [];
-  const incidents = DB.get(DB.keys.incidents) || [];
-  const categories = DB.get(DB.keys.categories) || [];
   const now = new Date();
   const rEvents = planning.filter(e => String(e.residentId) === String(currentResidentId) || e.residentName === `${r.prenom||''} ${r.nom||''}`);
   const upcomingEvents = rEvents.filter(e => { const start = new Date(e.date + 'T' + (e.time||'09:00')); return start.getTime() > now.getTime() - 3600000; }).sort((a,b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'')).slice(0,5);
-  const _sess = Auth.getSession();
-  const _canConf = e => e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId);
-  const rJournal = journal.filter(e => (String(e.residentId) === String(currentResidentId) || e.resident === `${r.prenom||''} ${r.nom||''}`) && _canConf(e)).slice(-5).reverse();
-  const rIncidents = incidents.filter(e => String(e.residentId) === String(currentResidentId)).slice(-5).reverse();
-  const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
-  const canSeeIncidents = _sess && typeof canViewAllIncidents === 'function' && canViewAllIncidents(_sess.userId);
-  const incidentsCardHtml = !canSeeIncidents ? '' : `<div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="card-title">Incidents récents</span><a href="incidents.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rIncidents.length ? rIncidents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.type||'Incident')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${escHtml(e.description||'').slice(0,80)}</div></div><span class="badge ${e.gravite === 'grave' ? 'badge-red' : e.gravite === 'modere' ? 'badge-amber' : 'badge-green'}">${e.gravite||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun incident</p></div>'}</div></div>`;
-  return `<div class="grid grid-2" style="gap:1.5rem;margin-bottom:1rem">
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="card-title">Événements à venir</span><a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${upcomingEvents.length ? upcomingEvents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.titre||'Événement')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${e.time ? e.time.slice(0,5) : '—'}${e.timeEnd ? ' → '+e.timeEnd.slice(0,5) : ''}</div></div><span class="badge">${e.type||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun événement planifié</p></div>'}</div></div>
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="card-title">Journal de bord</span><a href="journal.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rJournal.length ? rJournal.map(e => { const cat = categories.find(c=>String(c.id)===String(e.categorie)); return `<div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:3px">${cat?`<span class="badge" style="background:${escHtml(cat.color)}22;color:${escHtml(cat.color)}">${escHtml(cat.name)}</span>`:''}<span style="font-size:.72rem;color:var(--muted)">${formatDateTime(e.date)}</span></div><div style="font-size:.8rem;color:var(--g700)">${escHtml(e.contenu||'')}</div></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucune entrée journal</p></div>'}</div></div>
-    <div class="card"><div class="card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="card-title">Avenants (PPE)</span><a href="ppe.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${rPpe.length ? rPpe.map(p => { const totalObj = Object.values(p.sections||{}).reduce((a, s) => a + (s.objectifs?.length||0), 0); return `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0;cursor:pointer" onclick="window.location='ppe.html?id=${p.id}'"><div style="font-weight:600;font-size:.875rem">${escHtml(p.dateRedaction||'?')}</div><div style="font-size:.75rem;color:var(--muted)">${totalObj} objectifs</div></div><span class="badge-ppe ${p.statut}">${STATUT_PPE_LABEL[p.statut]||p.statut}</span></div>`; }).join('') : '<div class="empty" style="padding:2rem"><p>Aucun avenant actif</p></div>'}</div></div>
-    ${incidentsCardHtml}
+  // Journal, Avenants (PPE) et Incidents étaient ici mais sont déjà dans le Fil de vie → retirés.
+  return `<div style="margin-bottom:1rem">
+    <div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="card-title" style="color:var(--accent)">Événements à venir</span><a href="planning.html" class="btn btn-ghost btn-sm" style="margin-left:auto">Voir tout</a></div><div class="card-body" style="padding:0">${upcomingEvents.length ? upcomingEvents.map(e => `<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.875rem">${escHtml(e.titre||'Événement')}</div><div style="font-size:.75rem;color:var(--muted)">${formatDate(e.date)} · ${e.time ? e.time.slice(0,5) : '—'}${e.timeEnd ? ' → '+e.timeEnd.slice(0,5) : ''}</div></div><span class="badge">${e.type||'—'}</span></div>`).join('') : '<div class="empty" style="padding:2rem"><p>Aucun événement planifié</p></div>'}</div></div>
   </div>`;
+}
+
+// ── ÉVOLUTION DE L'AUTONOMIE (courbe du niveau de soutien) ──
+// Alimentée automatiquement par les niveaux de soutien saisis dans le journal + l'agenda.
+function autonomieCard(r) {
+  const NIV_SCORE = { autonomie:5, supervision:4, verbal:3, partiel:2, total:1 };
+  const LEVELS = [
+    { s:5, label:'Autonomie',      color:'#10b981', emoji:'🟢' },
+    { s:4, label:'Supervision',    color:'#3b82f6', emoji:'🔵' },
+    { s:3, label:'Guidance',       color:'#f59e0b', emoji:'🟡' },
+    { s:2, label:'Aide partielle', color:'#f97316', emoji:'🟠' },
+    { s:1, label:'Aide totale',    color:'#ef4444', emoji:'🔴' }
+  ];
+  const byScore = s => LEVELS.find(l => l.s === Math.round(s)) || LEVELS[LEVELS.length-1];
+  const fullName = `${r.prenom||''} ${r.nom||''}`.trim();
+  const TR_CAT = { sante:'Santé', medicament:'Médicament', comportement:'Comportement', alimentation:'Alimentation', hygiene:'Hygiène', activite:'Activité', famille:'Famille', sortie:'Sortie / Retour', administratif:'Administratif', maintenance:'Maintenance', urgent:'Urgent' };
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  const categories = (typeof DB !== 'undefined' && DB.get) ? (DB.get(DB.keys.categories) || []) : [];
+
+  // Observations { date, s(1..5), cat } collectées depuis journal + agenda + transmissions
+  const obs = [];
+  const push = (dateStr, niv, cat) => { const sc = NIV_SCORE[niv]; if (!sc || !dateStr) return; obs.push({ date: String(dateStr).slice(0,10), s: sc, cat: cat || 'Autre' }); };
+  (_residentJournalAll||[]).forEach(e => {
+    if (String(e.residentId) === String(currentResidentId) || e.resident === fullName) {
+      const jc = categories.find(c => String(c.id) === String(e.categorie));
+      push(e.date || e.createdAt, e.niveauSoutien, jc ? jc.name : 'Journal');
+    }
+  });
+  (_residentPlanningCache||[]).forEach(e => {
+    if (String(e.residentId) === String(currentResidentId) || e.residentName === fullName) push(e.date, e.niveauSoutien, 'Agenda');
+  });
+  const _trAll = _residentTransmissionsAll || [];
+  _trAll.forEach(t => {
+    if (String(t.residentId) === String(currentResidentId) || t.residentName === fullName) push(t.date || t.createdAt, t.soutienNiveau, TR_CAT[t.cat] || (t.cat ? cap(t.cat) : 'Transmission'));
+  });
+
+  const header = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)"><span style="font-size:18px">📈</span><span class="card-title" style="color:var(--accent)">Évolution de l'autonomie</span>`;
+
+  if (!obs.length) {
+    return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}</div><div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucun niveau de soutien saisi pour ce résident.</p><p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Renseignez le « niveau de soutien » dans les transmissions, le journal ou l'agenda : l'évolution par domaine s'affichera ici.</p></div></div></div>`;
+  }
+
+  // Regroupement par domaine
+  const byCat = {};
+  obs.forEach(o => { (byCat[o.cat] = byCat[o.cat] || []).push(o); });
+  const allRows = Object.entries(byCat).map(([name, arr]) => {
+    arr.sort((a,b) => a.date.localeCompare(b.date));
+    const first = arr[0].s, last = arr[arr.length-1].s;
+    return { name, first, last, delta: last - first, n: arr.length };
+  }).sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta) || b.n - a.n);
+  const rows = allRows.slice(0, 8);
+
+  // Tendance globale = moyenne des évolutions par domaine
+  const oDelta = allRows.reduce((a,x) => a + x.delta, 0) / allRows.length;
+  const trend = d => d > 0.01 ? { a:'↗', c:'#059669' } : d < -0.01 ? { a:'↘', c:'#dc2626' } : { a:'→', c:'#64748b' };
+  const ot = trend(oDelta);
+  const deltaTxt = (oDelta >= 0 ? '+' : '') + oDelta.toFixed(1).replace('.', ',');
+  const trendBlock = `<span style="margin-left:auto;text-align:right;line-height:1.15"><span style="font-size:1.05rem;font-weight:800;color:${ot.c}">${ot.a} ${deltaTxt}</span><span style="display:block;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">tendance globale</span></span>`;
+
+  const badge = s => { const l = byScore(s); return `<span style="display:inline-flex;align-items:center;gap:.2rem;padding:.12rem .5rem;border-radius:20px;background:${l.color}1f;color:${l.color};font-weight:700;font-size:.72rem;white-space:nowrap">${l.emoji} ${l.label}</span>`; };
+
+  const list = rows.map(row => {
+    const t = trend(row.delta);
+    const evo = row.n > 1 ? `${badge(row.first)}<span style="color:var(--muted);font-weight:700">→</span>${badge(row.last)}` : badge(row.last);
+    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .1rem;border-top:1px solid var(--border)">
+      <div style="width:104px;flex-shrink:0"><div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(row.name)}</div><div style="font-size:.68rem;color:var(--muted)">${row.n} obs.</div></div>
+      <div style="flex:1;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">${evo}</div>
+      <span style="font-weight:800;font-size:1rem;color:${t.c};width:22px;text-align:center;flex-shrink:0">${t.a}</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="card no-print" style="overflow:hidden;margin-bottom:1rem">${header}${trendBlock}</div>
+    <div class="card-body" style="padding-top:.5rem">
+      <div style="font-size:.76rem;color:var(--muted);margin-bottom:.2rem">${escHtml(fullName)} · évolution du niveau de soutien par domaine — d'après les transmissions, le journal et l'agenda</div>
+      ${list}
+      <div style="font-size:.68rem;color:var(--muted);margin-top:.75rem;padding-top:.55rem;border-top:1px solid var(--border)">🔴 Aide totale · 🟠 Aide partielle · 🟡 Guidance · 🔵 Supervision · 🟢 Autonomie</div>
+    </div>
+  </div>`;
+}
+
+function _hdrSpark(color, d) {
+  return `<svg viewBox="0 0 80 28" preserveAspectRatio="none" style="width:100%;height:22px;display:block"><path d="${d} L80,28 L0,28 Z" fill="${color}" opacity="0.09"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function _hdrStat(label, num, sub, color, d, onclick) {
+  const inner = `<div style="font-size:.72rem;color:var(--muted)">${label}</div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:.5rem;margin-top:.15rem">
+      <div><div style="font-size:1.5rem;font-weight:800;line-height:1.05">${num}</div><div style="font-size:.66rem;color:var(--muted)">${sub}</div></div>
+      <div style="width:58px;flex-shrink:0">${_hdrSpark(color, d)}</div>
+    </div>`;
+  return onclick
+    ? `<div onclick="${onclick}" style="cursor:pointer;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem;position:relative">${inner}<span style="position:absolute;top:.55rem;right:.6rem;color:var(--muted)">›</span></div>`
+    : `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem">${inner}</div>`;
+}
+
+// Carte « Suivi & Activités » + bandeau de vigilance. L'identité est portée par
+// residentHeroV2() (maquette V2), d'où le retrait de l'ancien hero bleu.
+function residentHeaderCard(r) {
+  const presences = _residentPresencesRange;
+  const planning = _residentPlanningCache;
+  const ppeList = DB.get(DB.keys.ppe) || [];
+  const now = new Date();
+  const monthStart = today().slice(0, 7) + '-01';
+  let monthAbsences = 0, monthTotal = 0;
+  for (const [d, day] of Object.entries(presences)) { if (d < monthStart) continue; const s = day[currentResidentId]; if (s) { monthTotal++; if (s === 'absent') monthAbsences++; } }
+  const pct = monthTotal ? Math.round(monthAbsences / monthTotal * 100) : 0;
+  const rEvents = planning.filter(e => String(e.residentId) === String(currentResidentId) || e.residentName === `${r.prenom || ''} ${r.nom || ''}`);
+  const upcomingCount = rEvents.filter(e => { const st = new Date(e.date + 'T' + (e.time || '09:00')); return st.getTime() > now.getTime() - 3600000; }).length;
+  const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
+  const docCount = docResByResident(currentResidentId).length;
+
+  const sig = (typeof computeSignals === 'function') ? computeSignals(r) : [];
+  const nAlert = sig.filter(x => x.level === 'alert').length, nWarn = sig.filter(x => x.level === 'warn').length;
+  const vig = nAlert ? { c: '#dc2626', bg: '#fef2f2', bd: '#fecaca', txt: `Vigilance élevée — ${nAlert} alerte${nAlert > 1 ? 's' : ''}` }
+    : nWarn ? { c: '#d97706', bg: '#fffbeb', bd: '#fde68a', txt: `Points de vigilance — ${nWarn} signal${nWarn > 1 ? 'aux' : ''}` }
+    : sig.length ? { c: '#0891b2', bg: '#ecfeff', bd: '#a5f3fc', txt: 'À surveiller' }
+    : { c: '#16a34a', bg: '#f0fdf4', bd: '#bbf7d0', txt: 'Situation stable' };
+  const solde = getBudgetOps(r).reduce((a, o) => a + (o.type === 'recette' ? Number(o.montant || 0) : -Number(o.montant || 0)), 0);
+
+  const suivi = `<div style="padding:0 1.25rem">
+    <div style="font-size:.8rem;font-weight:700;color:#8b5cf6;margin-bottom:.7rem">Suivi &amp; Activités</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:.6rem">
+      ${_hdrStat('Absences (mois)', monthAbsences, pct + '%', '#ef4444', 'M0,14 C10,8 18,20 28,14 C38,8 46,18 56,10 C66,4 74,14 80,8')}
+      ${_hdrStat('Événements à venir', upcomingCount, 'Sur le planning', '#3b82f6', 'M0,22 C12,18 20,20 32,12 C44,8 54,10 66,6 C72,5 76,6 80,4')}
+      ${_hdrStat('Avenants actifs', rPpe.length, 'En cours', '#16a34a', 'M0,16 C10,22 18,8 28,16 C38,22 46,9 56,16 C66,22 74,10 80,13')}
+      ${_hdrStat('Documents', docCount, 'Fichiers attachés', '#8b5cf6', 'M0,20 C12,18 22,16 34,14 C46,12 56,11 68,8 C74,7 78,6 80,5', "document.getElementById('tab-documents') && document.getElementById('tab-documents').scrollIntoView({behavior:'smooth',block:'center'})")}
+    </div>
+  </div>`;
+  const grouped = `<div class="card" style="padding:1.2rem 0;border-radius:14px">${suivi}</div>`;
+
+  const band = `<div class="no-print" onclick="document.getElementById('radarCard') && document.getElementById('radarCard').scrollIntoView({behavior:'smooth',block:'center'})" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;background:${vig.bg};border:1px solid ${vig.bd};border-radius:12px;padding:.85rem 1.25rem;margin:1rem 0 1.5rem;cursor:pointer">
+    <div style="display:flex;align-items:center;gap:.5rem;color:${vig.c};font-weight:700;font-size:.9rem">🛡 Radar de vigilance</div>
+    <div style="width:1px;height:26px;background:${vig.bd}"></div>
+    <div style="display:flex;align-items:center;gap:.5rem"><span style="font-size:1.1rem">💰</span><div><div style="font-weight:700;font-size:.85rem;color:${solde < 0 ? '#dc2626' : '#16a34a'}">${solde < 0 ? 'Budget négatif' : 'Budget'}</div><div style="font-size:.72rem;color:var(--muted)">Solde actuel : ${fmtMoney(solde)}</div></div></div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:.35rem;color:${vig.c};font-weight:700;font-size:.85rem">${vig.txt} <span style="font-size:1.1rem">›</span></div>
+  </div>`;
+
+  return grouped + band;
 }
 
 function renderStatCards(r) {
@@ -2183,19 +2770,31 @@ function renderStatCards(r) {
   const rIncidents = incidents.filter(e => String(e.residentId) === String(currentResidentId)).slice(-5).reverse();
   const rPpe = ppeList.filter(p => String(p.residentId) === String(currentResidentId) && p.statut !== 'termine');
   const docCount = docResByResident(currentResidentId).length;
+  const _statTile = (icon, color, label, num, sub) => `<div style="background:var(--g50);border-radius:12px;padding:.85rem 1rem">
+    <div style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.4rem"><svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">${icon}</svg>${label}</div>
+    <div style="font-size:1.6rem;font-weight:700;margin-top:.2rem;line-height:1.1">${num}</div>
+    <div style="font-size:.7rem;color:var(--muted)">${sub}</div>
+  </div>`;
   return `
-    <div class="grid grid-4" style="margin-bottom:1.5rem">
-      <div class="stat-card" style="background:linear-gradient(135deg,#ef444425,#fca5a515)"><div class="stat-card-top"><span class="stat-label">Absences (mois)</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div></div><div class="stat-num">${monthAbsences}</div><div class="stat-change">${monthTotal ? Math.round(monthAbsences/monthTotal*100)+'%' : '—'}</div></div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#ef444425,#fca5a515)"><div class="stat-card-top"><span class="stat-label">Événements à venir</span><div class="stat-icon" style="background:#fef3f2;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-num">${upcomingEvents.length}</div><div class="stat-change">Sur le planning</div></div>
-      <div class="stat-card" style="background:linear-gradient(135deg,#16a34a25,#4ade8015)"><div class="stat-card-top"><span class="stat-label">Avenants actifs</span><div class="stat-icon" style="background:#f0fdf4;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg></div></div><div class="stat-num">${rPpe.length}</div><div class="stat-change">${rPpe.length ? (rPpe.filter(p=>p.statut==='actif').length)+' en cours' : 'Aucun'}</div></div>
-      <a href="documents.html?residentId=${currentResidentId}" class="stat-card" style="cursor:pointer;text-decoration:none;color:inherit;display:block;background:linear-gradient(135deg,#6366f125,#a5b4fc15)"><div class="stat-card-top"><span class="stat-label">Documents</span><div class="stat-icon" style="background:#eef2ff;color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-num">${docCount}</div><div class="stat-change">Fichiers attachés</div></a>
+    <div class="grid grid-4" style="margin-bottom:1.5rem;gap:.75rem">
+      ${_statTile('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', '#ef4444', 'Absences (mois)', monthAbsences, monthTotal ? Math.round(monthAbsences/monthTotal*100)+'%' : '—')}
+      ${_statTile('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', '#3b82f6', 'Événements à venir', upcomingEvents.length, 'Sur le planning')}
+      ${_statTile('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>', '#16a34a', 'Avenants actifs', rPpe.length, rPpe.length ? (rPpe.filter(p=>p.statut==='actif').length)+' en cours' : 'Aucun')}
+      <a href="documents.html?residentId=${currentResidentId}" style="text-decoration:none;color:inherit;background:var(--g50);border-radius:12px;padding:.85rem 1rem;display:block">
+        <div style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.4rem"><svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Documents<span style="margin-left:auto;color:var(--muted)">›</span></div>
+        <div style="font-size:1.6rem;font-weight:700;margin-top:.2rem;line-height:1.1">${docCount}</div>
+        <div style="font-size:.7rem;color:var(--muted)">Fichiers attachés</div>
+      </a>
     </div>`;
 }
 
 function initPageTabs() {
-  document.querySelectorAll('#residentContent .tab').forEach(t => {
+  // Uniquement les vrais onglets de page (identifiés par data-tab). Les onglets de
+  // catégorie des documents (#docCatTabs) portent aussi class="tab" mais sont gérés
+  // par filterDocCat — ne pas les capter ici, sinon on masque toute la carte documents.
+  document.querySelectorAll('#residentContent .tab[data-tab]').forEach(t => {
     t.addEventListener('click', () => {
-      document.querySelectorAll('#residentContent .tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('#residentContent .tab[data-tab]').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
       document.querySelectorAll('#residentContent > [id^="tab-"]').forEach(x => x.style.display = 'none');
       const tab = document.getElementById('tab-' + t.dataset.tab);
@@ -2205,7 +2804,7 @@ function initPageTabs() {
 }
 
 function residentTransmissionsCard(r) {
-  const all = (DB.get(DB.keys.transmissions) || [])
+  const all = (_residentTransmissionsAll || [])
     .filter(t => String(t.residentId) === String(r.id))
     .sort((a, b) => (b.createdAt || b.date || '').localeCompare(a.createdAt || a.date || ''));
 
@@ -2219,9 +2818,9 @@ function residentTransmissionsCard(r) {
   const unread  = all.filter(t => !Array.isArray(t.readBy) || !t.readBy.includes(String(userId))).length;
   const urgent  = all.filter(t => t.priority === 'urgent' || t.cat === 'urgent').length;
 
-  const head = `<div class="card-header">
+  const head = `<div class="card-header" style="background:color-mix(in srgb, var(--accent) 12%, #fff)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M8 9h8M8 13h5M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
-    <span class="card-title">📡 Transmissions</span>
+    <span class="card-title" style="color:var(--accent)">📡 Transmissions</span>
     <span class="badge badge-gray" style="margin-left:.5rem">${all.length}</span>
     ${unread ? `<span class="badge" style="margin-left:.3rem;background:#fef2f2;color:#dc2626;border:1px solid #fecaca">● ${unread} non lue${unread>1?'s':''}</span>` : ''}
     ${urgent ? `<span class="badge" style="margin-left:.3rem;background:#fef2f2;color:#dc2626;border:1px solid #fecaca">⚡ ${urgent} urgente${urgent>1?'s':''}</span>` : ''}
@@ -2229,7 +2828,7 @@ function residentTransmissionsCard(r) {
   </div>`;
 
   if (!all.length) {
-    return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucune transmission enregistrée pour ce résident.</p></div></div></div>`;
+    return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body"><div class="empty" style="padding:1.5rem"><p>Aucune transmission enregistrée pour ce résident.</p></div></div></div>`;
   }
 
   // Affiche les 10 dernières, groupées par date
@@ -2274,7 +2873,7 @@ function residentTransmissionsCard(r) {
 
   const more = all.length > 10 ? `<div style="text-align:center;padding:.5rem 0"><a href="transmissions.html" style="font-size:.76rem;color:var(--primary)">Voir ${all.length - 10} transmission${all.length-10>1?'s':''} de plus →</a></div>` : '';
 
-  return `<div class="card" style="margin-bottom:1.5rem">${head}<div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">${rows}${more}</div></div>`;
+  return `<div class="card" style="margin-bottom:1.5rem;overflow:hidden">${head}<div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">${rows}${more}</div></div>`;
 }
 
 let pageDocFile = null;
@@ -2300,11 +2899,14 @@ async function uploadDocFromPage() {
   const dueDate = document.getElementById('pageDocDueDate').value;
   const category = document.getElementById('pageDocCategory').value;
   try {
-    const path = await sbUploadJustificatif(pageDocFile, currentResidentId);
+    // Le 1er dossier du chemin Storage doit être l'uid du compte connecté (RLS bucket justificatifs).
+    const uid = await sbAuthUid();
+    const path = await sbUploadJustificatif(pageDocFile, uid || currentResidentId);
     const saved = await sbSaveDocumentResident({
       residentId: currentResidentId, name, fileName: pageDocFile.name,
       size: pageDocFile.size, mimeType: pageDocFile.type,
-      category, docDate, dueDate, fichierPath: path, type: 'resident'
+      category, docDate, dueDate, fichierPath: path, type: 'resident',
+      uploadedBy: uid || ''
     });
     _docResCache.unshift(saved);
     toast('Document ajouté', 'success');
@@ -2315,8 +2917,13 @@ async function uploadDocFromPage() {
     document.getElementById('pageDocCategory').value = '';
     document.getElementById('pageDocFileInput').value = '';
     document.getElementById('pageDocPending').style.display = 'none';
-    loadResident();
-  } catch { toast('Erreur lors de l\'ajout', 'error'); }
+  } catch (e) {
+    console.error('[uploadDocFromPage]', e);
+    toast('Erreur : ' + (e?.message || e), 'error');
+    return;
+  }
+  // Hors du try : une erreur de rechargement ne doit pas afficher un faux échec après un enregistrement réussi.
+  try { loadResident(); } catch (e) { console.error('[uploadDocFromPage/loadResident]', e); }
 }
 
 function cancelPageDoc() {
@@ -2344,6 +2951,121 @@ const PR_TYPE_COLORS = { activite:'#3b82f6', rdv:'#ef4444', sortie:'#10b981', re
 const PR_JOUR_DOW    = { lundi:1, mardi:2, mercredi:3, jeudi:4, vendredi:5, samedi:6, dimanche:0 };
 const PR_JOURS_COURT = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 
+// ─── SEMAINE TYPE (r.planningHebdo) — absences récurrentes ───
+// Distinct du « Planning individuel » ci-dessous (agenda d'événements datés) :
+// ici on décrit les jours de la semaine où le résident est habituellement
+// absent (retour en famille, travail…). Lu par presences.js (présomption
+// « sortie », exclusion de « Tous présents ») et medicaments.js (filtre
+// « Présents seulement », tag 📅).
+const PH_JOURS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+const PH_JOURS_COURT = { lundi:'Lun', mardi:'Mar', mercredi:'Mer', jeudi:'Jeu', vendredi:'Ven', samedi:'Sam', dimanche:'Dim' };
+
+function planningHebdoCard(r) {
+  const ph = r.planningHebdo || {};
+  const canEdit = canEditResident();
+  const actifs = PH_JOURS.filter(j => phDayAbsences(ph[j]).length);
+
+  // Bande horizontale : chaque jour est une colonne ; les absences s'affichent sous leur jour
+  // (plusieurs possibles le même jour : ex. Sport après le Travail).
+  const cols = PH_JOURS.map(j => {
+    const list = phDayAbsences(ph[j]).slice().sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+    const on = list.length > 0;
+    const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:var(--g50, #f8fafc);color:var(--g400);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</div>`;
+    const body = on
+      ? list.map(d => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;text-align:center">
+          <div style="font-weight:600;font-size:.7rem;line-height:1.2;color:#0369a1">📅 ${escHtml(d.label || 'Absence')}</div>
+          ${d.debut ? `<div style="font-size:.63rem;color:var(--muted);margin-top:2px">départ ${d.debut}</div>` : ''}
+          ${d.fin ? `<div style="font-size:.63rem;color:var(--muted)">retour ${d.fin}</div>` : ''}
+        </div>`).join('')
+      : `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:var(--g300, #cbd5e1)">·</div>`;
+    return `<div style="min-width:0">${head}${body}</div>`;
+  }).join('');
+
+  return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #0369a1 12%, #fff)">
+      <span class="card-title" style="color:#0369a1">🗓 Semaine type${actifs.length ? ` <span class="badge" style="margin-left:.3rem;background:#e0f2fe;color:#0369a1">${actifs.length} jour${actifs.length > 1 ? 's' : ''} d'absence</span>` : ''}</span>
+      ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openPlanningHebdoModal()">✎ Modifier</button>` : ''}
+    </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+    <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (retour en famille, travail, activité extérieure…). Les jours cochés sont présumés « sortie » au pointage et filtrables dans Médicaments.</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;min-width:0;align-items:start">${cols}</div>
+    ${!actifs.length ? '<div style="font-size:.78rem;color:var(--g400);text-align:center">Aucune absence récurrente — le résident est attendu chaque jour.</div>' : ''}
+  </div></div>`;
+}
+
+// Éditeur « liste d'absences » : chaque absence = motif + jours concernés + départ/retour.
+// Plusieurs absences peuvent tomber le même jour (ex. Sport après le Travail).
+let _phAbs = [];
+
+function phRenderAbs() {
+  const el = document.getElementById('phAbsList');
+  if (!el) return;
+  el.innerHTML = _phAbs.map((a, i) => `
+    <div style="border:1px solid var(--border);border-radius:var(--r-sm);padding:.7rem .8rem;margin-bottom:.6rem;background:var(--g50,#f8fafc)">
+      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.55rem">
+        <input type="text" class="form-input" placeholder="Motif (Travail, Sport, Retour famille…)" value="${escAttr(a.label || '')}" oninput="_phAbs[${i}].label=this.value" style="flex:1"/>
+        <input type="time" class="form-input" value="${escAttr(a.debut || '')}" onchange="_phAbs[${i}].debut=this.value" style="width:92px" title="Heure de départ"/>
+        <input type="time" class="form-input" value="${escAttr(a.fin || '')}" onchange="_phAbs[${i}].fin=this.value" style="width:92px" title="Heure de retour"/>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="phRemoveAbs(${i})" title="Supprimer cette absence">✕</button>
+      </div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+        ${PH_JOURS.map(j => {
+          const on = (a.jours || []).includes(j);
+          return `<button type="button" onclick="phToggleAbsJour(${i},'${j}')" style="font:inherit;font-size:.72rem;font-weight:600;padding:.28rem .6rem;border-radius:999px;cursor:pointer;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:#fff;color:var(--muted);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</button>`;
+        }).join('')}
+      </div>
+    </div>`).join('') || '<div style="font-size:.8rem;color:var(--muted);padding:.4rem 0">Aucune absence. Ajoutez-en une ci-dessous.</div>';
+}
+
+function phAddAbs() { _phAbs.push({ label: '', jours: [], debut: '', fin: '' }); phRenderAbs(); }
+function phRemoveAbs(i) { _phAbs.splice(i, 1); phRenderAbs(); }
+function phToggleAbsJour(i, j) {
+  const s = new Set(_phAbs[i].jours || []);
+  s.has(j) ? s.delete(j) : s.add(j);
+  _phAbs[i].jours = PH_JOURS.filter(x => s.has(x)); // conserve l'ordre Lun→Dim
+  phRenderAbs();
+}
+
+function openPlanningHebdoModal() {
+  if (!canEditResident()) return;
+  const r = getResident();
+  if (!r) return;
+  const ph = r.planningHebdo || {};
+  // Regroupe les absences existantes par (motif, départ, retour) → jours concernés.
+  const map = new Map();
+  PH_JOURS.forEach(j => {
+    phDayAbsences(ph[j]).forEach(a => {
+      const key = (a.label || '') + '|' + (a.debut || '') + '|' + (a.fin || '');
+      if (!map.has(key)) map.set(key, { label: a.label || '', debut: a.debut || '', fin: a.fin || '', jours: [] });
+      map.get(key).jours.push(j);
+    });
+  });
+  _phAbs = [...map.values()];
+  if (!_phAbs.length) _phAbs = [{ label: '', jours: [], debut: '', fin: '' }];
+  document.getElementById('phModalBody').innerHTML = `
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.7rem">Absences récurrentes du résident. Ajoutez-en autant que nécessaire ; une même journée peut en comporter plusieurs (ex. Sport après le Travail). Le pointage et la distribution des médicaments en tiennent compte automatiquement.</div>
+    <div id="phAbsList"></div>
+    <button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="phAddAbs()">+ Ajouter une absence</button>`;
+  phRenderAbs();
+  openModal('planningHebdoModal');
+}
+
+async function savePlanningHebdo() {
+  const r = getResident();
+  if (!r) return;
+  const ph = {};
+  (_phAbs || []).forEach(a => {
+    const label = (a.label || '').trim();
+    const jours = a.jours || [];
+    if (!jours.length) return;                // absence sans jour → ignorée
+    if (!label && !a.debut && !a.fin) return; // ligne vide → ignorée
+    jours.forEach(j => { if (!ph[j]) ph[j] = []; ph[j].push({ label, debut: a.debut || '', fin: a.fin || '' }); });
+  });
+  Object.keys(ph).forEach(j => ph[j].sort((x, y) => (x.debut || '').localeCompare(y.debut || '')));
+  await persistResident({ ...r, planningHebdo: ph, updatedAt: new Date().toISOString() });
+  closeModal('planningHebdoModal');
+  toast('Semaine type enregistrée', 'success');
+  loadResident();
+}
+
 function planningResidentCard(r) {
   const todayStr = today();
   const todayD   = new Date(todayStr + 'T00:00:00');
@@ -2370,7 +3092,7 @@ function planningResidentCard(r) {
   const actInscritIds = new Set(
     (r.activites || []).filter(i => i.statut === 'active').map(i => String(i.activiteId))
   );
-  const myActivites = (DB.get(DB.keys.activites) || []).filter(a => actInscritIds.has(String(a.id)));
+  const myActivites = actCatalogue().filter(a => actInscritIds.has(String(a.id)));
 
   // Construire le map jour → événements
   const byDay = {};
@@ -2382,7 +3104,7 @@ function planningResidentCard(r) {
       id: e.id, recurId: e.recurId || null,
       titre: e.titre || '',
       heure: (e.heure || e.time || '').slice(0,5),
-      color: e.color || PR_TYPE_COLORS[e.type] || '#94a3b8',
+      color: safeColor(e.color) || PR_TYPE_COLORS[e.type] || '#94a3b8',
       deletable: true
     });
   });
@@ -2433,18 +3155,38 @@ function planningResidentCard(r) {
     ? `<div style="font-size:.75rem;color:var(--muted);text-align:center;padding:.3rem 0">Aucun événement cette semaine</div>`
     : '';
 
-  return `<div class="card" style="border-left:3px solid #2563eb;background:linear-gradient(135deg,#2563eb0d,#fff 55%)">
-    <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-        <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#2563eb">📅 Planning individuel</span>
+  // « Événements à venir » (intégré ici) : prochains événements datés, chronologiques,
+  // au-delà de la semaine affichée par la grille ci-dessus.
+  const _now = new Date();
+  const upcoming = _residentPlanningCache
+    .filter(e => String(e.residentId) === String(r.id) && new Date(e.date + 'T' + (e.heure || e.time || '09:00').slice(0,5)).getTime() > _now.getTime() - 3600000)
+    .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.heure || a.time || '').localeCompare(b.heure || b.time || ''))
+    .slice(0, 5);
+  const upcomingHtml = upcoming.length ? `<div style="border-top:1px solid var(--border);padding-top:.7rem">
+      <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Événements à venir</div>
+      ${upcoming.map(e => {
+        const col = safeColor(e.color) || PR_TYPE_COLORS[e.type] || '#94a3b8';
+        const lbl = _PR_TYPE_LABELS[e.type] || e.type || 'Événement';
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem .1rem;border-bottom:1px solid var(--border)">
+        <span style="flex-shrink:0;font-size:.66rem;font-weight:600;padding:1px 8px;border-radius:20px;background:${col}1a;color:${col};border:1px solid ${col}33">${escHtml(lbl)}</span>
+        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.82rem">${escHtml(e.titre || 'Événement')}</div><div style="font-size:.72rem;color:var(--muted)">${formatDate(e.date)}${(e.heure || e.time) ? ' · ' + (e.heure || e.time).slice(0,5) : ''}</div></div>
+      </div>`;
+      }).join('')}
+    </div>` : '';
+
+  return `<div class="card" style="overflow:hidden">
+    <div class="card-header" style="background:color-mix(in srgb, #2563eb 12%, #fff)">
+        <span class="card-title" style="color:#2563eb">📅 Planning individuel</span>
         ${totalItems ? `<span class="badge" style="background:#eff6ff;color:#2563eb">${totalItems} événement${totalItems>1?'s':''} cette semaine</span>` : ''}
         <div style="margin-left:auto;display:flex;gap:.4rem" class="no-print">
           ${canEdit ? `<button class="btn btn-ghost btn-sm" style="color:#2563eb" onclick="openPlanningResidentAdd()">+ Ajouter</button>` : ''}
           <a href="planning.html" class="btn btn-ghost btn-sm" style="color:#2563eb">Agenda →</a>
         </div>
       </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;min-width:0">${cols}</div>
       ${emptyMsg}
+      ${upcomingHtml}
     </div>
   </div>`;
 }
@@ -2589,7 +3331,7 @@ function viewPlanningResidentEvent(eventId, actId) {
 
   // ── Activité récurrente ──
   if (actId) {
-    const act = (DB.get(DB.keys.activites) || []).find(a => a.id === actId);
+    const act = actCatalogue().find(a => a.id === actId);
     if (!act) return;
     const color    = _PR_ACT_COLORS[act.categorie] || '#8b5cf6';
     const icon     = _PR_ACT_ICONS[act.categorie]  || '✨';
@@ -2619,7 +3361,7 @@ function viewPlanningResidentEvent(eventId, actId) {
   // ── Événement agenda ──
   const ev = _residentPlanningCache.find(e => e.id === eventId);
   if (!ev) return;
-  const color     = ev.color || PR_TYPE_COLORS[ev.type] || '#3b82f6';
+  const color     = safeColor(ev.color) || PR_TYPE_COLORS[ev.type] || '#3b82f6';
   const typeLabel = _PR_TYPE_LABELS[ev.type] || ev.type || 'Événement';
   const icon      = _PR_MEV_ICONS[ev.type] || '📅';
   const dureeMap  = {'30':'30 min','60':'1h','90':'1h30','120':'2h','180':'3h','journee':'Journée'};
@@ -2664,13 +3406,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!requireModule('view_residents')) return;
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
   document.getElementById('residentContent').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
-  [_residentDetailCache, _residentJournalAll, _residentPresencesRange, _residentPlanningCache] = await Promise.all([
-    sbGetResidents(),
-    sbGetJournalEntries(),
-    sbGetPresencesRange(daysAgo(35), today()),
-    sbGetPlanningEvents()
-  ]);
-  await loadDocResCache();
+  // Une seule lecture qui échoue (ou dépasse le quota localStorage à l'hydratation) ne doit JAMAIS
+  // laisser la fiche figée sur « Chargement… » : chaque lecture est isolée, et le rendu a toujours lieu.
+  const _safe = (label, p) => Promise.resolve().then(() => p).catch(e => { console.error('[fiche résident] échec chargement ' + label, e); return null; });
+  const _dbset = (k, v) => { if (v != null) { try { DB.set(k, v); } catch (e) { console.warn('[fiche résident] cache local ignoré (quota ?) — ' + k, e); } } };
+  // Toutes ces lectures sont indépendantes : elles partent EN UNE SEULE VAGUE.
+  // Les enchaîner par `await` successifs multipliait les allers-retours réseau.
+  const opt = (nom, ...args) => (typeof window[nom] === 'function' ? window[nom](...args) : Promise.resolve(null));
+  const t0 = (window.performance && performance.now()) || 0;
+  try {
+    // La fiche ne lit les présences que pour CE résident : on filtre côté serveur.
+    const idCourant = new URLSearchParams(window.location.search).get('id');
+    const lectures = {
+      residents:     sbGetResidents(),
+      journal:       sbGetJournalEntries(),
+      presences:     sbGetPresencesRange(daysAgo(35), today(), idCourant),
+      planning:      sbGetPlanningEvents(),
+      activites:     opt('sbGetActivites'),
+      referents:     opt('loadReferents'),
+      transmissions: opt('sbGetTransmissions'),
+      documents:     loadDocResCache(),
+      chambres:      opt('sbGetChambres'),
+      employes:      opt('sbGetEmployes'),
+      incidents:     opt('sbGetIncidents'),
+      ppe:           opt('sbGetPpe'),
+      nuits:         opt('sbGetNuits'),
+      visites:       opt('sbGetVisites'),
+      medicaments:   opt('sbGetMedDistrib'),
+      planSoins:     opt('sbGetPlanSoins')
+    };
+    const cles = Object.keys(lectures);
+    const vals = await Promise.all(cles.map(k => _safe(k, lectures[k])));
+    const d = {};
+    cles.forEach((k, n) => { d[k] = vals[n]; });
+
+    _residentDetailCache      = d.residents     || [];
+    _residentJournalAll       = d.journal       || [];
+    _residentPresencesRange   = d.presences     || {};
+    _residentPlanningCache    = d.planning      || [];
+    _residentActCatalogue     = d.activites     || [];
+    _residentTransmissionsAll = d.transmissions || [];
+    _residentChambres         = d.chambres      || [];
+    _residentEmployes         = d.employes      || [];
+
+    // Hydrate en localStorage les stores migrés encore lus via DB.get sur la fiche
+    // (incidents, ppe, nuits, visites, médicaments) — les sbGet* ne cachent pas d'eux-mêmes.
+    _dbset(DB.keys.incidents,   d.incidents);
+    _dbset(DB.keys.ppe,         d.ppe);
+    _dbset(DB.keys.nuits,       d.nuits);
+    _dbset(DB.keys.visites,     d.visites);
+    _dbset(DB.keys.medicaments, d.medicaments);
+    _dbset(DB.keys.planSoins,   d.planSoins);
+    if (t0) console.info('[fiche résident] données chargées en ' + Math.round(performance.now() - t0) + ' ms');
+  } catch (e) {
+    console.error('[fiche résident] erreur de chargement des données (rendu quand même)', e);
+  }
   loadResident();
 });
 
@@ -2694,10 +3484,27 @@ function printResident() {
     phMeta.textContent = parts.join(' · ');
   }
 
+  // Les onglets ne découpent que l'affichage : une fiche imprimée doit rester complète.
+  const ongletCourant = RV2_TAB;
+  const zone = document.getElementById('residentContent');
+  // Pendant l'assemblage des onglets, on ne journalise pas et on ne recharge
+  // pas l'historique (renderViewMode tourne 6 fois sur des rendus jetables).
+  _rv2Printing = true;
+  const tout = RV2_TABS.map(t => { RV2_TAB = t.k; renderViewMode(r); return zone.innerHTML; });
+  RV2_TAB = ongletCourant;
+  renderViewMode(r);
+  _rv2Printing = false;
+  const sauvegarde = zone.innerHTML;
+  zone.innerHTML = tout.join('');
+
   document.title = `Fiche — ${name}`;
   window.print();
   document.title = 'Fiche résident — FTR';
+  zone.innerHTML = sauvegarde;
+  initPageTabs();
+  initPageDocUpload(currentResidentId);
 }
 </script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

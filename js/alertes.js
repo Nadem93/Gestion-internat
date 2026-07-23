@@ -22,6 +22,10 @@ const AL_PRIOS = {
 let _alDismissed = [];
 const AL_DISMISS_KEY = 'ftr_alertes_dismissed';
 
+// Cache des prises de médicaments du jour (chargé une fois dans initAlertes, lu en synchrone
+// dans generateAlertes — même patron que les autres sources DB.get(...) de ce fichier)
+let _alMedRecords = [];
+
 function _alLoadDismissed() {
   try { _alDismissed = JSON.parse(localStorage.getItem(AL_DISMISS_KEY) || '[]'); } catch { _alDismissed = []; }
 }
@@ -64,9 +68,9 @@ function generateAlertes() {
   // ── 2. Échéances ── dépassées ou dans les 14 jours ─────────────────────────
   const echeances = DB.get(DB.keys.echeances) || [];
   echeances.forEach(e => {
-    if (e.statut === 'termine' || e.statut === 'annule') return;
-    if (!e.dateEcheance) return;
-    const ech = new Date(e.dateEcheance); ech.setHours(0,0,0,0);
+    if (e.done) return;
+    if (!e.date) return;
+    const ech = new Date(e.date); ech.setHours(0,0,0,0);
     const diffJ = Math.round((ech - today) / 86400000);
     if (diffJ > 14) return;
     const r = e.residentId ? resMap[e.residentId] : null;
@@ -76,7 +80,7 @@ function generateAlertes() {
     if (diffJ < 0)       prio = 'critique';
     else if (diffJ <= 3) prio = 'urgent';
     const label = diffJ < 0 ? `En retard de ${-diffJ}j` : diffJ === 0 ? 'Aujourd\'hui' : `Dans ${diffJ}j`;
-    alerts.push({ id, type:'echeance', prio, residentId:e.residentId||null, resName, titre: e.titre||'Échéance', msg:`${label}${resName?' — '+resName:''}`, date:e.dateEcheance, link:'echeances.html', diffJ });
+    alerts.push({ id, type:'echeance', prio, residentId:e.residentId||null, resName, titre: e.libelle||'Échéance', msg:`${label}${resName?' — '+resName:''}`, date:e.date, link:'echeances.html', diffJ });
   });
 
   // ── 3. Planning — événements aujourd'hui ou demain ────────────────────────
@@ -170,6 +174,25 @@ function generateAlertes() {
     alerts.push({ id, type:'budget_remboursement', prio, residentId:null, resName:d.employeNom||'', titre:`Demande de budget — ${d.employeNom||'Employé'}`, msg:`En attente depuis ${ageJ}j : ${manque.join(' et ')}`, date:refDateStr, link:'budget.html', diffJ:0 });
   });
 
+  // ── 9. Médicaments — prise prévue non enregistrée, moment déjà passé ──────
+  const MED_ALERT_HEURE_LIMITE = { matin: 11, midi: 14, soir: 20, coucher: 23 };
+  const MED_ALERT_LABEL = { matin: 'Matin', midi: 'Midi', soir: 'Soir', coucher: 'Coucher' };
+  const nowH = new Date().getHours();
+  residents.forEach(r => {
+    if (r.statut === 'sorti') return;
+    const traitements = (r.sante?.traitements || []).filter(t =>
+      (t.moments || []).length && (!t.debut || t.debut <= todayStr) && (!t.fin || t.fin >= todayStr));
+    traitements.forEach(t => (t.moments || []).forEach(moment => {
+      const limite = MED_ALERT_HEURE_LIMITE[moment];
+      if (limite == null || nowH < limite) return; // pas encore l'heure de s'en inquiéter
+      const record = _alMedRecords.find(x => x.date === todayStr && String(x.residentId) === String(r.id) && String(x.traitementId) === String(t.id) && x.moment === moment);
+      if (record?.statut) return; // déjà traité (donné/confié/refusé/absent/reporté)
+      const resName = `${r.prenom || ''} ${r.nom || ''}`.trim();
+      const id = _alId('medicament', `${r.id}_${t.id}_${moment}_${todayStr}`);
+      alerts.push({ id, type:'medicament', prio:'critique', residentId:r.id, resName, titre:`Médicament — ${resName}`, msg:`${t.nom || 'Traitement'} (${MED_ALERT_LABEL[moment] || moment}) non enregistré`, date:todayStr, link:'medicaments.html', diffJ:0 });
+    }));
+  });
+
   // Trier : critique → urgent → info, puis par diffJ croissant
   const ORDER = { critique:0, urgent:1, info:2 };
   alerts.sort((a,b) => ORDER[a.prio] - ORDER[b.prio] || a.diffJ - b.diffJ);
@@ -178,66 +201,10 @@ function generateAlertes() {
 }
 
 // ─── Rendu ────────────────────────────────────────────────────────────────────
-function renderAlertes(filterType) {
-  _alLoadDismissed();
-  let list = generateAlertes().filter(a => !_alDismissed.includes(a.id));
-  if (filterType) list = list.filter(a => a.type === filterType);
-
-  const counts = { all:list.length };
-  Object.keys(AL_TYPES).forEach(t => { counts[t] = list.filter(a => a.type === t).length; });
-
-  // Stats
-  const statEl = document.getElementById('alStats');
-  if (statEl) {
-    statEl.innerHTML = `
-      <div class="chx-stat" style="--c:#ef4444"><div class="chx-stat-top"><span class="chx-stat-lbl">Critiques</span></div><div class="chx-stat-num">${list.filter(a=>a.prio==='critique').length}</div></div>
-      <div class="chx-stat" style="--c:#f97316"><div class="chx-stat-top"><span class="chx-stat-lbl">Urgentes</span></div><div class="chx-stat-num">${list.filter(a=>a.prio==='urgent').length}</div></div>
-      <div class="chx-stat" style="--c:#3b82f6"><div class="chx-stat-top"><span class="chx-stat-lbl">Informations</span></div><div class="chx-stat-num">${list.filter(a=>a.prio==='info').length}</div></div>
-      <div class="chx-stat" style="--c:#7c3aed"><div class="chx-stat-top"><span class="chx-stat-lbl">Total</span></div><div class="chx-stat-num">${list.length}</div></div>`;
-  }
-
-  // Filtres
-  const filtersEl = document.getElementById('alFilters');
-  if (filtersEl) {
-    filtersEl.innerHTML = `<button class="al-filter-btn ${!filterType?'active':''}" onclick="renderAlertes('')">Toutes <span>(${counts.all})</span></button>`
-      + Object.entries(AL_TYPES).map(([t,cfg]) => counts[t] ? `<button class="al-filter-btn ${filterType===t?'active':''}" onclick="renderAlertes('${t}')">${cfg.icon} ${cfg.label} <span>(${counts[t]})</span></button>` : '').join('');
-  }
-
-  const container = document.getElementById('alList');
-  if (!container) return;
-
-  if (!list.length) {
-    container.innerHTML = `<div class="empty" style="padding:4rem 2rem;text-align:center">
-      <div style="font-size:3.5rem;margin-bottom:.75rem">✅</div>
-      <div style="font-weight:700;font-size:1.05rem;color:var(--text);margin-bottom:.3rem">Tout est à jour</div>
-      <div style="font-size:.83rem;color:var(--muted)">Aucune alerte active pour le moment.</div>
-    </div>`;
-    return;
-  }
-
-  // Grouper par priorité
-  const groups = [
-    { prio:'critique', list:list.filter(a=>a.prio==='critique') },
-    { prio:'urgent',   list:list.filter(a=>a.prio==='urgent') },
-    { prio:'info',     list:list.filter(a=>a.prio==='info') }
-  ].filter(g => g.list.length);
-
-  container.innerHTML = groups.map(g => {
-    const p = AL_PRIOS[g.prio];
-    return `<div style="margin-bottom:1.5rem">
-      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color}"></span>
-        <span style="font-size:.8rem;font-weight:700;color:${p.color};text-transform:uppercase;letter-spacing:.05em">${p.label}</span>
-        <span style="font-size:.75rem;color:var(--muted)">(${g.list.length})</span>
-        ${g.prio !== 'info' ? `<button class="btn btn-ghost btn-sm" style="margin-left:auto;font-size:.7rem" onclick="dismissGroupAl('${g.prio}')">Tout ignorer</button>` : ''}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:.5rem">
-        ${g.list.map(a => _alCard(a, p)).join('')}
-      </div>
-    </div>`;
-  }).join('');
-
-  _updateAlBadges(list.length);
+// Le rendu est assuré par js/alertes-v2.js (maquette « Alertes - refonte »).
+// La signature est conservée : dismissAl() et resetAlDismissed() l'appellent.
+function renderAlertes() {
+  if (typeof al2Render === 'function') al2Render();
 }
 
 function _alCard(a, p) {
@@ -316,7 +283,42 @@ function getAlerteCount() {
 async function initAlertes() {
   const s = Auth.requireAuth();
   if (!s) return;
-  await sbLoadResidentsCache();
+  // Hydrate les stores migrés lus par generateAlertes (sinon localStorage mort → alertes muettes)
+  // TOUT part en une seule vague, y compris le cache résidents et les
+  // médicaments. Ces deux-là étaient `await`és avant le lot : le lot partait
+  // donc deux vagues plus tard, hors de la fenêtre où supabase-client.js
+  // mutualise les lectures identiques. Résultat mesuré sur accueil.html :
+  // ppe, planning_events et incidents repartaient en réseau alors que
+  // l'accueil venait de les demander. Ni les résidents ni les médicaments
+  // n'étaient nécessaires aux appels suivants.
+  try {
+    const _resCache = sbLoadResidentsCache();
+    const _med = (typeof sbGetMedDistribForDate === 'function')
+      ? sbGetMedDistribForDate(today()).catch(e => { console.error('[initAlertes] médicaments', e); return null; })
+      : Promise.resolve(null);
+
+    const _hy = await Promise.all([
+      (typeof sbGetPpe === 'function' ? sbGetPpe() : Promise.resolve(null)),
+      (typeof sbGetEcheances === 'function' ? sbGetEcheances() : Promise.resolve(null)),
+      (typeof sbGetPlanningEvents === 'function' ? sbGetPlanningEvents() : Promise.resolve(null)),
+      (typeof sbGetIncidents === 'function' ? sbGetIncidents() : Promise.resolve(null)),
+      (typeof sbGetSatisfaction === 'function' ? sbGetSatisfaction() : Promise.resolve(null)),
+      (typeof sbGetAdmissions === 'function' ? sbGetAdmissions() : Promise.resolve(null)),
+      (typeof sbGetPlanSoins === 'function' ? sbGetPlanSoins() : Promise.resolve(null)),
+      (typeof sbGetBudgetDemandes === 'function' ? sbGetBudgetDemandes() : Promise.resolve(null)),
+      _resCache,
+      _med,
+    ]);
+    _alMedRecords = _hy[9] != null ? _hy[9] : _alMedRecords;
+    if (_hy[0] != null) DB.set(DB.keys.ppe, _hy[0]);
+    if (_hy[1] != null) DB.set(DB.keys.echeances, _hy[1]);
+    if (_hy[2] != null) DB.set(DB.keys.planning, _hy[2]);
+    if (_hy[3] != null) DB.set(DB.keys.incidents, _hy[3]);
+    if (_hy[4] != null) DB.set(DB.keys.satisfaction, _hy[4]);
+    if (_hy[5] != null) DB.set(DB.keys.admissions, _hy[5]);
+    if (_hy[6] != null) DB.set(DB.keys.planSoins, _hy[6]);
+    if (_hy[7] != null) DB.set(DB.keys.budgetDemandes, _hy[7]);
+  } catch (e) { console.error('[initAlertes] hydratation', e); }
   renderAlertes();
 }
 

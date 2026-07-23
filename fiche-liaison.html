@@ -4,63 +4,153 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Fiche de liaison hospitalière — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-@media print {
-  .header, .fl-toolbar, .no-print { display:none!important; }
-  .content { padding:0!important; }
-  #flPrintZone { border:none!important; box-shadow:none!important; }
-}
-</style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-fiche-liaison.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">🏥 Fiche de liaison hospitalière</div>
-    </div>
-    <div class="header-right">
-      <button class="btn btn-ghost btn-sm no-print" onclick="printFiche()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Imprimer
-      </button>
-    </div>
-  </header>
+  <div class="v2-shell fl2-shell">
 
-  <main class="content">
-    <div style="max-width:780px;margin:0 auto">
-
-      <!-- Sélecteur résident -->
-      <div class="fl-toolbar" style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding:.65rem .9rem;background:#fff;border:1px solid var(--border);border-radius:10px">
-        <label style="font-size:.82rem;font-weight:600;color:var(--text);white-space:nowrap">Résident :</label>
-        <select id="flResident" style="flex:1;font-size:.85rem;padding:.35rem .6rem;border:1px solid var(--border);border-radius:8px">
-          <option value="">— Choisir un résident —</option>
-        </select>
-        <button class="btn btn-accent btn-sm no-print" onclick="loadFicheLiaison()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
-          Actualiser
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="dossiers.html" style="background:linear-gradient(135deg,#dc2626,#f87171)" aria-label="Dossiers &amp; suivi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Dossiers &amp; suivi</div>
+        <div class="v2-top-title">Fiche de liaison hospitalière</div>
+      </div>
+      <div class="fl2-topact">
+        <button type="button" class="fl2-btn fl2-btn-sec" onclick="openFlComp()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+          Compléter<span class="fl2-hide-sm">&nbsp;la fiche</span>
+        </button>
+        <button type="button" class="fl2-btn" onclick="printFiche()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimer
         </button>
       </div>
+    </div>
 
-      <!-- Contenu de la fiche -->
-      <div id="flContent">
-        <div class="empty" style="padding:4rem;text-align:center">
-          <div style="font-size:3rem;margin-bottom:.5rem">🏥</div>
-          <p style="font-weight:600;color:var(--text)">Sélectionnez un résident</p>
-          <p style="font-size:.83rem;color:var(--muted)">La fiche de liaison sera générée automatiquement depuis son dossier.</p>
-        </div>
+    <div class="v2-body">
+
+      <!-- SÉLECTEUR DE RÉSIDENT -->
+      <div class="fl2-selbar">
+        <span class="fl2-selbar-l">Résident :</span>
+        <div id="flChips" style="display:contents"></div>
+        <!-- Source de vérité de la sélection (piloté par les puces). -->
+        <select id="flResident" class="fl2-native" aria-label="Résident">
+          <option value="">— Choisir un résident —</option>
+        </select>
       </div>
 
+      <!-- FICHE -->
+      <div id="flContent"></div>
+
     </div>
-  </main>
+  </div>
 </div></div>
+
+<!-- MODALE COMPLÉMENT DE FICHE -->
+<div class="v2-ov" id="modalFlComp">
+  <div class="v2-md" style="--mc:#f87171">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+      <div><div class="v2-md-t">Compléter la fiche de liaison</div><div class="v2-md-s">Risque de chute, autonomie, langue et consignes</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalFlComp')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <span class="v2-fld-l">Risque de chute</span>
+        <div class="v2-seg" id="flcChute">
+          <button type="button" class="v2-seg-o" data-v="" aria-pressed="true" onclick="fl2SetChute('')">Non évalué</button>
+          <button type="button" class="v2-seg-o" data-v="faible" aria-pressed="false" onclick="fl2SetChute('faible')">Faible</button>
+          <button type="button" class="v2-seg-o" data-v="modere" aria-pressed="false" onclick="fl2SetChute('modere')">Modéré</button>
+          <button type="button" class="v2-seg-o" data-v="eleve" aria-pressed="false" onclick="fl2SetChute('eleve')">Élevé</button>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="flcDeplacement">Déplacement</label>
+          <select id="flcDeplacement" class="v2-fld">
+            <option value="">Non évalué</option>
+            <option value="autonome">Autonome</option>
+            <option value="aide_partielle">Aide partielle</option>
+            <option value="aide_totale">Aide totale</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="flcToilette">Toilette</label>
+          <select id="flcToilette" class="v2-fld">
+            <option value="">Non évalué</option>
+            <option value="autonome">Autonome</option>
+            <option value="aide_partielle">Aide partielle</option>
+            <option value="aide_totale">Aide totale</option>
+          </select>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="flcRepas">Repas</label>
+          <select id="flcRepas" class="v2-fld">
+            <option value="">Non évalué</option>
+            <option value="autonome">Autonome</option>
+            <option value="aide_partielle">Aide partielle</option>
+            <option value="aide_totale">Aide totale</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="flcCommunication">Communication</label>
+          <select id="flcCommunication" class="v2-fld">
+            <option value="">Non évalué</option>
+            <option value="bonne">Bonne</option>
+            <option value="partielle">Partielle</option>
+            <option value="difficile">Difficile</option>
+            <option value="non_verbale">Non verbale</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="flcLangue">Langue parlée</label>
+        <input type="text" id="flcLangue" class="v2-fld" placeholder="Ex : Français, LSF, arabe…"/>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="flcConsignes">Consignes à transmettre à l'hôpital</label>
+        <textarea id="flcConsignes" class="v2-fld" placeholder="Ex : prévenir le référent en cas d'hospitalisation…"></textarea>
+      </div>
+      <div class="v2-note v2-note-warn" id="flcNote" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>La table <code>fiches_liaison</code> n'existe pas encore : exécutez <strong>migration-fiche-liaison.sql</strong> dans Supabase pour enregistrer ces informations.</span>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalFlComp')">Annuler</button>
+      <button type="button" class="v2-btn-pri" id="flcSave" onclick="saveFlComp()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/serafin-codage.js"></script>
 <script src="js/evaluations.js"></script>
 <script src="js/fiche-liaison.js"></script>
+<script src="js/fiche-liaison-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

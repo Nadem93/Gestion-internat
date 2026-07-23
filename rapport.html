@@ -1,101 +1,281 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Rapport d'activité — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-rapport.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">📈 Rapport d'activité</div>
-    </div>
-    <div class="header-right">
-    </div>
-  </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(34,197,94,.16)">
 
-  <main class="content">
-    <div style="max-width:720px;margin:0 auto">
+  <!-- ── BARRE DU HAUT ── -->
+  <div class="v2-top">
+    <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#16a34a,#86efac);color:#fff">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · PILOTAGE</div>
+      <div class="v2-top-title" id="rap2Titre">Rapport d'activité</div>
+    </div>
+    <div class="rap2-ctrl" style="margin-left:auto">
+      <label class="sr-only" for="rapportType" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Période</label>
+      <select id="rapportType" class="rap2-inp" onchange="rap2PeriodeChange()">
+        <option value="mois">Mensuel</option>
+        <option value="annee">Annuel</option>
+      </select>
+      <span class="rap2-wrap" id="rapportMoisWrap">
+        <label class="sr-only" for="rapportMois" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mois</label>
+        <input type="month" id="rapportMois" class="rap2-inp" onchange="rap2PeriodeChange()"/>
+      </span>
+      <span class="rap2-wrap" id="rapportAnneeWrap" style="display:none">
+        <label class="sr-only" for="rapportAnnee" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Année</label>
+        <input type="number" id="rapportAnnee" class="rap2-inp" min="2000" max="2100" step="1" style="width:110px" onchange="rap2PeriodeChange()"/>
+      </span>
+      <button type="button" class="v2-btn" onclick="renderApercu()" title="Recalculer l'aperçu du document">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Actualiser
+      </button>
+      <button type="button" class="v2-btn v2-btn-primary" onclick="genererRapportPDF()" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);box-shadow:0 8px 18px -6px rgba(124,58,237,.6)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Générer le PDF
+      </button>
+    </div>
+  </div>
 
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="card-header"><span class="card-title">📄 Générer un rapport d'activité</span></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-          <p style="font-size:.85rem;color:var(--muted);margin:0">
-            Document automatique — taux d'occupation, mouvements, journal, incidents, transmissions, PPE, SERAFIN-PH et satisfaction —
-            généré pour la période choisie et ouvert dans un nouvel onglet, prêt à imprimer ou enregistrer en PDF.
-            Il ne reprend que les données déjà saisies dans les modules : les graphiques, pas le récit de l'année.
-            Pour ça, complétez les contributions ci-dessous avant de générer le rapport.
-          </p>
-          <div style="display:flex;align-items:flex-end;gap:.75rem;flex-wrap:wrap">
-            <div class="form-group" style="margin:0;min-width:140px">
-              <label>Période</label>
-              <select id="rapportType" onchange="toggleRapportPeriode()">
-                <option value="mois">Mensuel</option>
-                <option value="annee">Annuel</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin:0" id="rapportMoisWrap">
-              <label>Mois</label>
-              <input type="month" id="rapportMois"/>
-            </div>
-            <div class="form-group" style="margin:0;display:none" id="rapportAnneeWrap">
-              <label>Année</label>
-              <input type="number" id="rapportAnnee" min="2000" max="2100" step="1"/>
-            </div>
-          </div>
-          <button class="btn btn-violet" onclick="genererRapportPDF()" style="font-weight:700;align-self:flex-start">
-            📄 Générer le rapport PDF
-          </button>
+  <div class="v2-body">
+
+    <!-- ── KPIS ── -->
+    <div class="rap2-kgrid" id="rap2Kpis"></div>
+
+    <!-- ── CORPS : colonne principale + rail ── -->
+    <div class="rap2-main">
+
+      <div class="rap2-col">
+
+        <!-- Sections du rapport -->
+        <div>
+          <div class="rap2-h">Sections du rapport</div>
+          <div class="rap2-secs" id="rap2Sections"></div>
         </div>
+
+        <!-- Taux d'occupation 12 mois -->
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="v2-blk-t">Taux d'occupation — 12 mois</span>
+            <span class="rap2-big" style="margin-left:auto" id="rap2ChartVal">—</span>
+          </div>
+          <div id="rap2Chart"></div>
+        </div>
+
+        <!-- Mouvements + comparaison N-1 -->
+        <div class="rap2-two">
+          <div class="v2-blk">
+            <div class="v2-blk-h"><span class="v2-blk-t">Mouvements de la période</span></div>
+            <div id="rap2Mouv"></div>
+          </div>
+          <div class="v2-blk">
+            <div class="v2-blk-h"><span class="v2-blk-t">Évolution vs période précédente</span></div>
+            <div id="rap2Comp" style="display:flex;flex-direction:column;gap:13px"></div>
+          </div>
+        </div>
+
+        <!-- Comptes rendus / diffusion / échéance -->
+        <div class="rap2-three">
+          <div class="v2-blk">
+            <div class="v2-blk-h">
+              <span class="v2-blk-t">Comptes rendus obligatoires</span>
+              <button type="button" class="rap2-add" onclick="rap2OuvrirSuivi('obligatoire')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
+              </button>
+            </div>
+            <div id="rap2Oblig"></div>
+          </div>
+          <div class="v2-blk rap2-tint-vert">
+            <div class="v2-blk-h">
+              <span class="rap2-blk-ico" style="color:#86efac"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+              <span class="v2-blk-t">Diffusion du rapport</span>
+              <button type="button" class="rap2-add" onclick="rap2OuvrirSuivi('diffusion')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
+              </button>
+            </div>
+            <div id="rap2Diff"></div>
+          </div>
+          <div class="v2-blk rap2-tint-ambre">
+            <div class="v2-blk-h">
+              <span class="rap2-blk-ico" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              <span class="v2-blk-t">Prochaine échéance</span>
+              <button type="button" class="rap2-add" onclick="rap2OuvrirSuivi('echeance')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
+              </button>
+            </div>
+            <div id="rap2Ech"></div>
+          </div>
+        </div>
+
+        <!-- Aperçu du document -->
+        <div class="v2-blk">
+          <div class="v2-blk-h">
+            <span class="v2-blk-t">Aperçu à l'écran</span>
+            <span class="v2-blk-lien" style="font-weight:500;color:var(--v2-t7)">Document imprimable — identique au PDF généré</span>
+          </div>
+          <p style="font-size:12px;color:var(--v2-t6);margin:0 0 12px;line-height:1.55">
+            Le document reprend uniquement les données déjà saisies dans les modules : taux d'occupation, mouvements,
+            journal, incidents, transmissions, PPE, SERAFIN-PH et satisfaction. Le récit de l'année vient des
+            contributions de l'équipe, à compléter dans le rail de droite avant de générer le rapport.
+          </p>
+          <div class="rap2-apercu"><div id="rapportApercu"></div></div>
+        </div>
+
       </div>
 
-      <div class="card">
-        <div class="card-header"><span class="card-title">✍️ Contributions de l'équipe</span></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
-          <p style="font-size:.85rem;color:var(--muted);margin:0">
-            Faits marquants, points forts, difficultés rencontrées, perspectives… Chaque éducateur ou membre de l'équipe peut
-            contribuer ici tout au long de l'année. Ces apports sont repris dans le rapport PDF, dans la section
-            « Contributions de l'équipe », pour la période concernée.
-          </p>
-          <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-            <div class="form-group" style="margin:0;min-width:160px">
-              <label>Catégorie</label>
-              <select id="rcCategorie">
-                <option value="fait_marquant">📌 Fait marquant</option>
-                <option value="point_fort">✅ Point fort</option>
-                <option value="difficulte">⚠️ Difficulté rencontrée</option>
-                <option value="perspective">🎯 Perspective / projet à venir</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin:0;min-width:140px">
-              <label>Concerne le mois de</label>
-              <input type="month" id="rcMois"/>
-            </div>
+      <!-- ── RAIL ── -->
+      <div class="rap2-col">
+
+        <div class="v2-blk v2-rail-blk">
+          <div class="v2-blk-h">
+            <span class="rap2-blk-ico" style="color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            <span class="v2-blk-t">Contributions de l'équipe</span>
+            <button type="button" class="rap2-add" onclick="openModal('modalRc')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
+            </button>
           </div>
-          <div class="form-group" style="margin:0">
-            <label>Description</label>
-            <textarea id="rcTexte" rows="3" placeholder="Ex : Mise en place d'un atelier cuisine hebdomadaire, très bien accueilli par les résidents…"></textarea>
-          </div>
-          <button class="btn btn-primary" onclick="ajouterContributionRapport()" style="font-weight:700;align-self:flex-start">
-            ➕ Ajouter ma contribution
-          </button>
-          <div id="rcList" style="display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem"></div>
+          <div id="rcList"></div>
+        </div>
+
+        <div class="v2-blk v2-rail-blk rap2-tint-vert">
+          <div class="v2-blk-h"><span class="v2-blk-t">Indicateurs SERAFIN-PH</span></div>
+          <div id="rap2Serafin" style="display:flex;flex-direction:column;gap:11px"></div>
+        </div>
+
+        <div class="v2-blk v2-rail-blk">
+          <div class="v2-blk-h"><span class="v2-blk-t">Historique des rapports</span></div>
+          <div id="rap2Hist"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE — CONTRIBUTION DE L'ÉQUIPE ══ -->
+<div class="v2-ov" id="modalRc">
+  <div class="v2-md" style="--mc:#22c55e">
+    <div class="v2-md-h">
+      <span class="v2-md-ico" style="background:linear-gradient(135deg,#16a34a,#4ade80);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+      <div><div class="v2-md-t">Ajouter ma contribution</div><div class="v2-md-s">Fait marquant, point fort, difficulté ou perspective</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalRc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div class="rap2-grid2">
+        <div>
+          <label class="v2-fld-l" for="rcCategorie">Catégorie</label>
+          <select id="rcCategorie" class="v2-fld">
+            <option value="fait_marquant">📌 Fait marquant</option>
+            <option value="point_fort">✅ Point fort</option>
+            <option value="difficulte">⚠️ Difficulté rencontrée</option>
+            <option value="perspective">🎯 Perspective / projet à venir</option>
+          </select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="rcMois">Concerne le mois de</label>
+          <input type="month" id="rcMois" class="v2-fld"/>
         </div>
       </div>
-
+      <div>
+        <label class="v2-fld-l" for="rcTexte">Description</label>
+        <textarea id="rcTexte" class="v2-fld" rows="3" placeholder="Ex : mise en place d'un atelier cuisine hebdomadaire, très bien accueilli par les résidents…"></textarea>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Ces apports sont repris dans le rapport PDF, section « Contributions de l'équipe », pour la période concernée.
+      </div>
     </div>
-  </main>
-</div></div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalRc')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="ajouterContributionRapport();closeModal('modalRc')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE — SUIVI (compte rendu / diffusion / échéance) ══ -->
+<div class="v2-ov" id="modalSuivi">
+  <div class="v2-md" style="--mc:#f59e0b">
+    <div class="v2-md-h">
+      <span class="v2-md-ico" style="background:linear-gradient(135deg,#d97706,#fbbf24);color:#0a1728"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+      <div><div class="v2-md-t">Suivi du rapport</div><div class="v2-md-s">Compte rendu obligatoire, destinataire ou échéance</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalSuivi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="suiviType">Type</label>
+        <select id="suiviType" class="v2-fld" onchange="rap2SuiviTypeChange()">
+          <option value="obligatoire">Compte rendu obligatoire</option>
+          <option value="diffusion">Destinataire de diffusion</option>
+          <option value="echeance">Échéance</option>
+        </select>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="suiviLibelle">Libellé</label>
+        <input type="text" id="suiviLibelle" class="v2-fld" placeholder="Ex : Rapport annuel ARS, Conseil d'administration…"/>
+      </div>
+      <div id="suiviStatutWrap">
+        <label class="v2-fld-l" for="suiviStatut">Statut</label>
+        <select id="suiviStatut" class="v2-fld"></select>
+      </div>
+      <div id="suiviEcheanceWrap" style="display:none">
+        <label class="v2-fld-l" for="suiviEcheance">Date d'échéance</label>
+        <input type="date" id="suiviEcheance" class="v2-fld"/>
+      </div>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span>Ces lignes sont enregistrées dans la table <strong>rapport_suivi</strong> (fichier migration-rapport.sql).</span>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalSuivi')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="rap2EnregistrerSuivi()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
 <script src="js/app.js"></script>
 <script>Auth.requireAuth();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
+<script src="js/config-supabase.js"></script>
+<script src="js/journal-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
+<script src="js/planning-supabase.js"></script>
+<script src="js/incidents-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/satisfaction-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/employes-supabase.js"></script>
+<script src="js/conges-supabase.js"></script>
+<script src="js/formations-supabase.js"></script>
+<script src="js/entretiens-supabase.js"></script>
 <script src="js/rapport-supabase.js"></script>
 <script src="js/rapport.js"></script>
+<script src="js/rapport-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

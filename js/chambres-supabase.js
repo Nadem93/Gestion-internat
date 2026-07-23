@@ -21,10 +21,17 @@ function _chFromRow(r) {
     unite:     r.unite || '',
     capacite:  r.capacite || 1,
     notes:     r.notes || '',
+    // `select('*')` rapatrie déjà cette colonne : la jeter obligeait à relire
+    // toute la table juste pour elle (voir loadChambresDatesAttribution).
+    dateAttribution: r.date_attribution || '',
     createdAt: r.created_at,
     updatedAt: r.updated_at
   };
 }
+
+// La colonne date_attribution n'existe qu'après la migration SQL. On note sa
+// présence ici plutôt que de la sonder par une seconde requête.
+let sbChambresDateAttrPresente = true;
 
 async function sbGetChambres() {
   const { data, error } = await supabaseClient
@@ -32,6 +39,7 @@ async function sbGetChambres() {
     .select('*')
     .order('nom', { ascending: true });
   if (error) { console.error(error); toast('Erreur chargement chambres', 'error'); return []; }
+  if (data.length) sbChambresDateAttrPresente = ('date_attribution' in data[0]);
   return data.map(_chFromRow);
 }
 

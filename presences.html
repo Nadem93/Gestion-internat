@@ -5,67 +5,158 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <title>Présences — FTR</title>
   <link rel="stylesheet" href="css/style.css?v=2"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-presences.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Présences</div></div>
-    </header>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell" style="--v2-halo:rgba(13,148,136,.2)">
 
-    <main class="content">
-      <!-- Stats du jour -->
-      <div class="grid grid-4" style="margin-bottom:1.5rem">
-        <div class="stat-card" style="background:linear-gradient(135deg,#10b98125,#34d39915)"><div class="stat-card-top"><span class="stat-label">Présents</span><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div></div><div class="stat-num" id="countPresent">0</div></div>
-        <div class="stat-card" style="background:linear-gradient(135deg,#ef444425,#fca5a515)"><div class="stat-card-top"><span class="stat-label">Absents</span><div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div></div><div class="stat-num" id="countAbsent">0</div></div>
-        <div class="stat-card" style="background:linear-gradient(135deg,#e85d0425,#fb923c15)"><div class="stat-card-top"><span class="stat-label">Sortie temp.</span><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div></div><div class="stat-num" id="countSortie">0</div></div>
-        <div class="stat-card" style="background:linear-gradient(135deg,#06b6d425,#67e8f915)"><div class="stat-card-top"><span class="stat-label">Non renseigné</span><div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="stat-num" id="countUnknown">0</div></div>
+    <div class="v2-top">
+      <a class="v2-logo pr2-logo" href="accueil.html" title="Accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Vie quotidienne</div>
+        <div class="v2-top-title">Présences</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="v2-datenav">
+          <button type="button" id="prevDay" title="Jour précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="v2-datenav-l" id="presDateNav" onclick="prv2PickDate()" title="Choisir une date"></span>
+          <button type="button" id="nextDay" title="Jour suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <input type="date" id="presenceDate" class="pr2-date-hidden" aria-label="Date de la feuille de présence"/>
+        </div>
+        <button type="button" class="v2-btn v2-btn-sm pr2-topbtn" id="todayBtn">Aujourd'hui</button>
+        <button type="button" class="v2-btn v2-btn-sm pr2-topbtn" onclick="openExportModal()" title="Export des absences">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+    </div>
+
+    <div class="v2-body">
+
+      <!-- Compteurs du jour -->
+      <div class="v2-al-stats">
+        <div class="v2-al-stat" style="--pc:#10b981">
+          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+          <div><div class="v2-al-stat-n" id="countPresent">0</div><div class="v2-al-stat-l">Présents</div></div>
+        </div>
+        <div class="v2-al-stat" style="--pc:#ef4444">
+          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          <div><div class="v2-al-stat-n" id="countAbsent">0</div><div class="v2-al-stat-l">Absents</div></div>
+        </div>
+        <div class="v2-al-stat" style="--pc:#f59e0b">
+          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+          <div><div class="v2-al-stat-n" id="countSortie">0</div><div class="v2-al-stat-l">Sorties temp.</div></div>
+        </div>
+        <div class="v2-al-stat" style="--pc:#22d3ee">
+          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <div><div class="v2-al-stat-n" id="countUnknown">0</div><div class="v2-al-stat-l">Non renseigné</div></div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Feuille de présence</span>
-          <span id="presenceDateLabel" style="font-size:.8rem;color:var(--muted);margin-left:.5rem"></span>
-          <div class="presence-actions" style="margin-left:auto;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-            <div class="presence-legend" style="display:flex;gap:.5rem;font-size:.75rem;color:var(--muted);align-items:center">
-              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#ecfdf5;border:1px solid #a7f3d0"></span>Présent</span>
-              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#fef2f2;border:1px solid #fecaca"></span>Absent</span>
-              <span style="display:inline-flex;align-items:center;gap:.3rem"><span style="width:12px;height:12px;border-radius:2px;background:#fffbeb;border:1px solid #fde68a"></span>Sortie</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:.35rem">
-              <button class="btn btn-outline btn-sm" id="prevDay">&#8592;</button>
-              <input type="date" id="presenceDate" style="font-weight:600;font-size:.8rem;padding:.3rem .4rem;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--glass);color:var(--text)"/>
-              <button class="btn btn-outline btn-sm" id="nextDay">&#8594;</button>
-              <button class="btn btn-ghost btn-sm" id="todayBtn">Aujourd'hui</button>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="openExportModal()" title="Export des absences">📥 <span class="btn-add-label">Export</span></button>
-          </div>
+      <!-- Feuille de présence -->
+      <div class="pr2-sheet" style="margin-top:16px">
+        <div class="pr2-sheet-h">
+          <span class="pr2-sheet-t">Feuille de présence</span>
+          <span class="pr2-sheet-d" id="presenceDateLabel"></span>
+          <span class="pr2-lg">
+            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#10b981"></span>Présent</span>
+            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#ef4444"></span>Absent</span>
+            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#f59e0b"></span>Sortie</span>
+            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#7f93b3"></span>Non pointé</span>
+          </span>
         </div>
-        <div class="card-body" style="padding:0">
-          <div id="presenceTable"></div>
+        <!-- Filtre par unité (déduit de la chambre du résident, catalogue `chambres`) -->
+        <div class="pr2-bar pr2-bar-u" id="presUnitesBar" hidden>
+          <div class="pr2-uchips" id="presUnites" role="group" aria-label="Filtrer par unité"></div>
         </div>
+        <div class="pr2-bar">
+          <div class="v2-chips" id="presFiltres"></div>
+          <button type="button" class="pr2-all" onclick="markAllPresent()" title="Pointer présents tous les résidents non pointés">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Tout présent
+          </button>
+        </div>
+        <div class="pr2-scroll" id="presenceTable"></div>
       </div>
-    </main>
+
+    </div>
   </div>
-</div>
+</div></div>
 
 <div id="toast-container" class="toast-container"></div>
 
-<!-- Modal Export Absences -->
-<div id="modalExportAbs" class="modal-overlay" onclick="closeModal('modalExportAbs')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
-    <div class="modal-header"><span class="modal-title">Export des absences</span><button class="modal-close" onclick="closeModal('modalExportAbs')">&times;</button></div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Date début</label>
-        <input type="date" id="exportStart" class="form-control" value=""/>
+<!-- Modale Motif / pointage détaillé (appui long, clic droit ou ✎) -->
+<div id="modalMotif" class="v2-ov" onclick="closeModal('modalMotif')" onkeydown="if(event.key==='Escape')closeModal('modalMotif')">
+  <div class="v2-md" role="dialog" aria-modal="true" aria-labelledby="motifModalTitle" onclick="event.stopPropagation()" style="max-width:460px;--mc:#16a34a">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="motifModalTitle">Pointage</div>
+        <div class="v2-md-s" id="motifResName"></div>
       </div>
-      <div class="form-group">
-        <label>Date fin</label>
-        <input type="date" id="exportEnd" class="form-control" value=""/>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalMotif')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l">Statut</label>
+        <div class="v2-seg" id="motifSeg"></div>
       </div>
-      <button class="btn btn-accent" onclick="exportPresencesPDF()" style="width:100%;margin-top:.5rem">📥 Exporter PDF</button>
+      <div>
+        <label class="v2-fld-l" for="motifInput">Motif (facultatif)</label>
+        <input type="text" id="motifInput" class="v2-fld" maxlength="120" placeholder="Ex : hospitalisation, retour famille, rendez-vous…"/>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalMotif')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="presSaveMotif()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale Export des absences -->
+<div id="modalExportAbs" class="v2-ov" onclick="closeModal('modalExportAbs')" onkeydown="if(event.key==='Escape')closeModal('modalExportAbs')">
+  <div class="v2-md" role="dialog" aria-modal="true" aria-labelledby="exportAbsTitle" onclick="event.stopPropagation()" style="max-width:460px;--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="exportAbsTitle">Export des présences</div>
+        <div class="v2-md-s">Registre imprimable sur une période</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalExportAbs')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="exportStart">Date début</label>
+          <input type="date" id="exportStart" class="v2-fld" value=""/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="exportEnd">Date fin</label>
+          <input type="date" id="exportEnd" class="v2-fld" value=""/>
+        </div>
+      </div>
+      <div class="v2-note v2-note-ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Le registre s'ouvre dans un onglet, prêt à imprimer ou enregistrer en PDF.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalExportAbs')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="exportPresencesPDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter
+      </button>
     </div>
   </div>
 </div>
@@ -74,8 +165,15 @@
 <script>Auth.requireAuth();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/presences-supabase.js"></script>
-<script src="js/presences.js?v=4"></script>
+<script src="js/chambres-supabase.js"></script>
+<script src="js/presences.js?v=5"></script>
+<script src="js/presences-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

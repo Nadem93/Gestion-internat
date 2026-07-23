@@ -3,6 +3,7 @@ let editingId = null;
 let pendingPhoto = null;
 let pendingDocFile = null;
 let _residentsCache = [];
+let _residentsEcheances = [];   // échéances (MDPH, mesure de protection, contrat…) pour l'affichage sur les cartes
 
 async function loadAndRenderResidents() {
   _residentsCache = await sbGetResidents();
@@ -106,7 +107,9 @@ async function uploadDocument() {
   const session = Auth.getSession();
   const uploader = session ? ([session.prenom, session.nom].filter(Boolean).join(' ') || session.username) : '—';
   try {
-    const path = await sbUploadJustificatif(pendingDocFile, residentId);
+    // 1er dossier du chemin = uid du compte connecté (RLS bucket justificatifs), pas residentId.
+    const uid = await sbAuthUid();
+    const path = await sbUploadJustificatif(pendingDocFile, uid || residentId);
     const saved = await sbSaveDocumentResident({
       residentId, name: pendingDocFile.name, category,
       size: pendingDocFile.size, mimeType: pendingDocFile.type,
@@ -199,6 +202,8 @@ function getResidents() {
   let list = _residentsCache;
   if (q) list = list.filter(r => `${r.prenom} ${r.nom}`.toLowerCase().includes(q) || (r.chambre||'').toLowerCase().includes(q));
   if (objectif) list = list.filter(r => (r.objectifs || []).includes(String(objectif)));
+  // Chips de statut (maquette V2). RES_FILTRE vaut 'all' sur les pages sans chips.
+  if (typeof RES_FILTRE !== 'undefined' && RES_FILTRE !== 'all') list = list.filter(r => r.statut === RES_FILTRE);
 
   list.sort((a, b) => {
     // Sortis toujours en dernier
@@ -221,18 +226,157 @@ function renderResidents() {
   const list = getResidents();
   const container = document.getElementById('residentsContainer');
   const countEl = document.getElementById('residentCount');
-  countEl.textContent = `${list.length} résident${list.length > 1 ? 's' : ''}`;
+  if (!container || !countEl) return; // page sans liste (fiche résident, documents…)
+  countEl.textContent = `${list.length} résident${list.length > 1 ? 's' : ''} affiché${list.length > 1 ? 's' : ''}`;
+  if (typeof resRenderChips === 'function') resRenderChips();
+  // Le rail montre le premier résident visible tant qu'aucun n'a été choisi,
+  // et se recale si le filtre courant exclut la sélection.
+  if (typeof RES_SEL !== 'undefined') {
+    if (!list.some(r => String(r.id) === String(RES_SEL))) RES_SEL = list.length ? list[0].id : null;
+  }
 
   if (!list.length) {
+    if (typeof resRenderDetail === 'function') resRenderDetail();
     container.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3>Aucun résident trouvé</h3><p>Ajoutez votre premier résident ou modifiez vos filtres.</p><button class="btn btn-accent" onclick="openModal('modalResident')">+ Nouveau résident</button></div>`;
     return;
   }
 
-  if (currentView === 'grid') {
-    container.innerHTML = `<div class="res-grid" style="gap:.5rem">${list.map(residentCard).join('')}</div>`;
+  if (typeof resRenderAnniversaires === 'function') resRenderAnniversaires();
+
+  if (currentView === 'trombi') {
+    container.innerHTML = `<div class="res-trombi">${list.map(residentTrombi).join('')}</div>`;
+  } else if (currentView === 'grid') {
+    container.innerHTML = `<div class="res-grid" style="gap:14px">${list.map(residentCard).join('')}</div>`;
   } else {
     container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Résident</th><th>Âge / Naissance</th><th>Entrée</th><th>Chambre</th><th>Actions</th><th>Statut</th><th>Objectifs</th></tr></thead><tbody>${list.map(residentRow).join('')}</tbody></table></div>`;
   }
+  if (typeof resRenderDetail === 'function') resRenderDetail();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANNIVERSAIRES À VENIR  (cohérent avec l'annuaire : connaître son groupe)
+// ══════════════════════════════════════════════════════════════════════════
+
+// Jours avant le prochain anniversaire + âge qu'il fêtera. null si pas de date.
+function _resAnnivInfo(dob) {
+  if (!dob) return null;
+  const d = new Date(String(dob).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  let prochain = new Date(now.getFullYear(), d.getMonth(), d.getDate());
+  if (prochain < now) prochain = new Date(now.getFullYear() + 1, d.getMonth(), d.getDate());
+  const jours = Math.round((prochain - now) / 86400000);
+  return { jours, date: prochain, ageAVenir: prochain.getFullYear() - d.getFullYear() };
+}
+
+const RES_ANNIV_FENETRE = 30;   // horizon du bloc (jours)
+const RES_ANNIV_BADGE   = 7;    // pastille 🎂 sur la carte si dans cette fenêtre
+
+// Résidents (hors sortis) dont l'anniversaire tombe dans les N prochains jours.
+function _resProchainsAnniv(fenetre) {
+  return (_residentsCache || [])
+    .filter(r => r.statut !== 'sorti' && r.dob)
+    .map(r => ({ r, info: _resAnnivInfo(r.dob) }))
+    .filter(x => x.info && x.info.jours <= (fenetre || RES_ANNIV_FENETRE))
+    .sort((a, b) => a.info.jours - b.info.jours);
+}
+
+function resRenderAnniversaires() {
+  const el = document.getElementById('resAnniv');
+  if (!el) return;
+  const prochains = _resProchainsAnniv(RES_ANNIV_FENETRE);
+  if (!prochains.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `<div class="res-anniv">
+    <div class="res-anniv-h"><span class="res-anniv-em">🎂</span><b>Anniversaires à venir</b>
+      <span class="res-anniv-n">${prochains.length}</span></div>
+    <div class="res-anniv-l">${prochains.map(({ r, info }) => {
+      const col = safeColor(r.color, 'var(--primary)');
+      const quand = info.jours === 0 ? 'aujourd\'hui 🎉'
+        : info.jours === 1 ? 'demain'
+        : 'dans ' + info.jours + ' jours';
+      const dateFr = info.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      return `<button type="button" class="res-anniv-i${info.jours === 0 ? ' today' : ''}" onclick="${(typeof resSelect === 'function') ? `resSelect('${r.id}')` : `window.location.href='resident.html?id=${r.id}'`}">
+        <span class="res-anniv-av" style="background:${col}">${r.photo ? `<img src="${sanitizeUrl(r.photo)}" alt=""/>` : initials(r.prenom, r.nom)}</span>
+        <span class="res-anniv-b">
+          <span class="res-anniv-nom">${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}</span>
+          <span class="res-anniv-m">${escHtml(quand)} · ${escHtml(dateFr)} · ${info.ageAVenir} ans</span>
+        </span>
+      </button>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TROMBINOSCOPE  (reconnaître les visages — cœur d'un annuaire)
+// ══════════════════════════════════════════════════════════════════════════
+
+function residentTrombi(r) {
+  const col = safeColor(r.color, 'var(--primary)');
+  const todayPresences = (DB.get(DB.keys.presences) || {})[today()] || {};
+  const st = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
+  const dotCol = { present: '#10b981', absent: '#ef4444', sortie: '#f59e0b', sorti: '#94a3b8' }[st] || '#94a3b8';
+  const action = (typeof resSelect === 'function') ? `resSelect('${r.id}')` : `window.location.href='resident.html?id=${r.id}'`;
+  const anniv = _resAnnivInfo(r.dob);
+  const fete = anniv && anniv.jours <= RES_ANNIV_BADGE;
+  return `<button type="button" class="res-tr" onclick="${action}" title="${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}">
+    <span class="res-tr-photo" style="background:${col}">
+      ${r.photo ? `<img src="${sanitizeUrl(r.photo)}" alt=""/>` : `<span class="res-tr-ini">${initials(r.prenom, r.nom)}</span>`}
+      <span class="res-tr-dot" style="background:${dotCol}" title="${escHtml(st || '')}"></span>
+      ${fete ? '<span class="res-tr-cake">🎂</span>' : ''}
+    </span>
+    <span class="res-tr-nom">${escHtml(r.prenom || '')}</span>
+    <span class="res-tr-sub">${escHtml(r.nom || '')}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</span>
+  </button>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANNUAIRE DU JOUR — IMPRIMABLE
+// ══════════════════════════════════════════════════════════════════════════
+
+function resImprimerAnnuaire() {
+  const list = getResidents();               // respecte le filtre/tri courant
+  const todayPresences = (DB.get(DB.keys.presences) || {})[today()] || {};
+  const stLabel = { present: 'Présent', absent: 'Absent', sortie: 'Sortie temp.', sorti: 'Sorti' };
+  const dateStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  let etab = ''; try { const e = (typeof getCurrentEtab === 'function') ? getCurrentEtab() : null; etab = e?.nom || ''; } catch (_) {}
+
+  const lignes = list.map(r => {
+    const st = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
+    return `<tr>
+      <td>${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}</td>
+      <td>${r.chambre ? escHtml(r.chambre) : '—'}</td>
+      <td>${r.dob ? _resAge(r.dob) + ' ans' : '—'}</td>
+      <td>${r.referent ? escHtml(r.referent) : '—'}</td>
+      <td>${stLabel[st] || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const zone = document.getElementById('resPrint');
+  if (!zone) return;
+  zone.innerHTML = `<div class="rp-doc">
+    <div class="rp-head">
+      <div><div class="rp-title">Annuaire des résidents</div>
+        <div class="rp-sub">${escHtml(etab)}${etab ? ' · ' : ''}${escHtml(dateStr)}</div></div>
+      <div class="rp-count">${list.length} résident${list.length > 1 ? 's' : ''}</div>
+    </div>
+    <table class="rp-table"><thead><tr>
+      <th>Résident</th><th>Chambre</th><th>Âge</th><th>Référent</th><th>Présence</th>
+    </tr></thead><tbody>${lignes}</tbody></table>
+    <div class="rp-foot">Document interne — secret professionnel. Imprimé le ${escHtml(dateStr)}.</div>
+  </div>`;
+  document.body.classList.add('rp-printing');
+  const nettoyer = () => { document.body.classList.remove('rp-printing'); window.removeEventListener('afterprint', nettoyer); };
+  window.addEventListener('afterprint', nettoyer);
+  window.print();
+}
+
+// Âge numérique (age() de app.js renvoie déjà « X ans » : on recalcule le nombre).
+function _resAge(dob) {
+  if (!dob) return '';
+  const d = new Date(String(dob).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d.getTime())) return '';
+  return Math.floor((Date.now() - d.getTime()) / 31557600000);
 }
 
 function statusBadge(s) {
@@ -243,23 +387,81 @@ function statusBadge(s) {
 }
 
 function residentCard(r) {
-  const coverColor = r.color || 'var(--primary)';
-  const photoEl = r.photo
-    ? `<img src="${sanitizeUrl(r.photo)}" class="res-card-photo" alt="${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}"/>`
-    : `<div class="res-card-photo" style="background:${coverColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
-
+  const coverColor = safeColor(r.color, 'var(--primary)');
   const todayPresences = (DB.get(DB.keys.presences)||{})[today()] || {};
   const presenceStatus = todayPresences[r.id] || (r.statut === 'sorti' ? 'sorti' : r.statut);
-  return `<div class="res-card" style="--card-color:${coverColor}" onclick="window.location.href='resident.html?id=${r.id}'">
-    <div class="res-card-body">
-      ${photoEl}
-      <div class="res-card-info">
-        <div class="res-card-name">${escHtml(r.prenom||'')} ${escHtml(r.nom||'')}</div>
-        <div class="res-card-meta">${r.dob ? age(r.dob)+' ans' : ''}${r.chambre ? ' · Ch. '+escHtml(r.chambre) : ''}</div>
-        ${r.protection ? `<div class="res-card-ref">${PROTECTION_LABELS[r.protection] || r.protection}</div>` : ''}
-        <div>${statusBadge(presenceStatus)}</div>
+
+  // Progression des objectifs : part réellement atteinte (objectifsSuivi), pas d'estimation
+  const objIds = r.objectifs || [];
+  const suivi = r.objectifsSuivi || {};
+  const atteints = objIds.filter(id => (suivi[id] || {}).statut === 'atteint').length;
+  const objPct = objIds.length ? Math.round(atteints / objIds.length * 100) : 0;
+  const refNom = (r.referent || '').trim();
+  const refIni = refNom ? refNom.split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : '';
+
+  const tags = (typeof resTags === 'function') ? resTags(r) : [];
+  const choisie = (typeof RES_SEL !== 'undefined') && String(RES_SEL) === String(r.id);
+  // Clic = sélection dans le rail (maquette V2) ; l'ouverture se fait par
+  // « Ouvrir la fiche ». Sur les pages sans rail, on va directement à la fiche.
+  const action = (typeof resSelect === 'function')
+    ? `resSelect('${r.id}')`
+    : `window.location.href='resident.html?id=${r.id}'`;
+
+  return `<div class="v2-res${choisie ? ' on' : ''}" style="--rc:${coverColor}" onclick="${action}">
+    <span class="v2-res-bar"></span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="v2-res-av" style="background:${coverColor}">${r.photo
+        ? `<img src="${sanitizeUrl(r.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`
+        : initials(r.prenom, r.nom)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="v2-res-nom">${escHtml(r.prenom || '')} ${escHtml(r.nom || '')}</div>
+        <div class="v2-res-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        ${statusBadge(presenceStatus)}
+        ${(() => { const a = _resAnnivInfo(r.dob); return (a && a.jours <= RES_ANNIV_BADGE)
+          ? `<span class="res-cake-badge" title="Anniversaire ${a.jours === 0 ? "aujourd'hui" : 'dans ' + a.jours + ' j'}">🎂 ${a.jours === 0 ? "auj." : a.jours + ' j'}</span>` : ''; })()}
       </div>
     </div>
+
+    ${refNom ? `<div class="v2-res-ref">
+      <span class="v2-res-ref-av" style="background:${coverColor}33;color:${coverColor}">${escHtml(refIni)}</span>
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Réf. ${escHtml(refNom)}</span></div>` : ''}
+
+    <div class="v2-res-obj">
+      <div class="v2-res-obj-h"><span>Objectifs</span><span style="color:${coverColor};font-weight:700">${atteints}/${objIds.length}</span></div>
+      <div class="v2-bar v2-bar-sm"><span style="width:${objPct}%;background:${coverColor}"></span></div>
+    </div>
+
+    ${_resEcheanceCard(r)}
+
+    ${tags.length ? `<div class="v2-res-tags">${tags.map(t =>
+      `<span class="v2-res-tag" style="--pc:${t.c}">${escHtml(t.l)}</span>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+// Échéance sur la carte : la plus urgente encore ouverte (non faite) du
+// résident — MDPH, mesure de protection, contrat de séjour… En retard (rouge)
+// ou dans les 30 jours (ambre). Au-delà, rien : la carte reste calme.
+function _resEcheanceCard(r) {
+  const list = (_residentsEcheances || [])
+    .filter(e => String(e.residentId) === String(r.id) && !e.done && e.date);
+  if (!list.length) return '';
+  list.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const e = list[0];
+  const t0 = today();
+  const jours = Math.round((new Date(e.date + 'T00:00:00') - new Date(t0 + 'T00:00:00')) / 86400000);
+  const enRetard = jours < 0;
+  if (!enRetard && jours > 30) return '';           // trop lointaine
+  const col = enRetard ? '#ef4444' : '#f59e0b';
+  const quand = enRetard ? (jours === -1 ? 'hier' : 'il y a ' + (-jours) + ' j')
+    : (jours === 0 ? "aujourd'hui" : jours === 1 ? 'demain' : 'dans ' + jours + ' j');
+  const lib = e.libelle || e.type || 'Échéance';
+  const autres = list.length > 1 ? ` <span class="v2-res-ech-n">+${list.length - 1}</span>` : '';
+  return `<div class="v2-res-ech" style="--ec:${col}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 13.5"/></svg>
+    <span class="v2-res-ech-t">${escHtml(lib)}${autres}</span>
+    <span class="v2-res-ech-b">${enRetard ? 'En retard · ' : ''}${escHtml(quand)}</span>
   </div>`;
 }
 
@@ -268,7 +470,7 @@ function residentRow(r) {
   const resObjs = (r.objectifs || []).map(id => objs.find(o => String(o.id) === String(id))?.name).filter(Boolean);
   const photoEl = r.photo
     ? `<img src="${sanitizeUrl(r.photo)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid var(--border)" alt=""/>`
-    : `<div style="width:32px;height:32px;border-radius:8px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:#fff;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
+    : `<div style="width:32px;height:32px;border-radius:8px;background:${safeColor(r.color,'var(--blue)')};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem;color:#fff;flex-shrink:0">${initials(r.prenom,r.nom)}</div>`;
   const session = Auth.getSession();
   const canEdit = session && (session.role === 'admin' || session.role === 'moderator' || canEditResidents(session.userId));
   return `<tr>
@@ -296,7 +498,7 @@ function showDetail(id) {
 
   const photoEl = r.photo
     ? `<img src="${sanitizeUrl(r.photo)}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:3px solid var(--border);box-shadow:var(--shadow-md)" alt=""/>`
-    : `<div style="width:80px;height:80px;border-radius:8px;background:${r.color||'var(--blue)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
+    : `<div style="width:80px;height:80px;border-radius:8px;background:${safeColor(r.color,'var(--blue)')};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;color:#fff">${initials(r.prenom,r.nom)}</div>`;
 
   let extraFields = '';
   if (type === 'enfants' || type === 'mixte') {
@@ -366,7 +568,9 @@ function showDetail(id) {
 let _refEducNames = [];
 async function loadReferents() {
   try {
-    const emps = await sbGetEmployes();
+    // residents.js est aussi chargé par resident.html / documents.html, qui n'incluent pas
+    // js/employes-supabase.js (la liste des référents n'y sert pas) : on ne plante pas.
+    const emps = (typeof sbGetEmployes === 'function') ? await sbGetEmployes() : [];
     const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     _refEducNames = emps
       .filter(e => norm(e.poste).includes('educ'))
@@ -537,8 +741,26 @@ async function initResidents() {
   renderObjectifsCheckboxes([]);
   initPhotoUpload();
   initDocUpload();
-  await loadDocResCache();
-  await loadAndRenderResidents();
+  // Toutes ces lectures sont indépendantes : une seule vague réseau.
+  // (chambres = l'unité du rail, transmissions = la dernière note du rail ;
+  //  échec silencieux, le rail se dégrade mais la liste reste utilisable.)
+  const _d3 = new Date(); _d3.setDate(_d3.getDate() - 3);
+  const _opt = (nom, ...a) => (typeof window[nom] === 'function' ? window[nom](...a) : Promise.resolve(null));
+  const _sr = (label, p) => Promise.resolve().then(() => p).catch(e => { console.warn('[annuaire] ' + label, e); return null; });
+  const [, presences, chambres, transmissions, residents, echeances] = await Promise.all([
+    _sr('documents', loadDocResCache()),
+    _sr('présences', _opt('sbGetPresencesRange', _d3.toISOString().slice(0, 10), today())),
+    _sr('chambres', _opt('sbGetChambres')),
+    _sr('transmissions', _opt('sbGetTransmissions')),
+    _sr('résidents', sbGetResidents()),
+    _sr('échéances', _opt('sbGetEcheances'))
+  ]);
+  if (presences) DB.set(DB.keys.presences, presences);
+  _residentChambres = chambres || [];
+  _residentsTransmissions = transmissions || [];
+  _residentsEcheances = echeances || [];
+  _residentsCache = residents || [];
+  renderResidents();
 
   const searchInput = document.getElementById('searchInput');
   if (searchInput) searchInput.addEventListener('input', renderResidents);
@@ -546,18 +768,38 @@ async function initResidents() {
   if (filterObj) filterObj.addEventListener('change', renderResidents);
   const sortSel = document.getElementById('sortResidents');
   if (sortSel) sortSel.addEventListener('change', renderResidents);
+  const setVue = v => {
+    currentView = v;
+    try { localStorage.setItem('res_view', v); } catch (_) {}
+    ['viewGrid', 'viewList', 'viewTrombi'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.classList.toggle('on', id === ({ grid: 'viewGrid', list: 'viewList', trombi: 'viewTrombi' }[v]));
+    });
+    renderResidents();
+  };
   const viewGrid = document.getElementById('viewGrid');
-  if (viewGrid) viewGrid.addEventListener('click', () => { currentView='grid'; renderResidents(); });
+  if (viewGrid) viewGrid.addEventListener('click', () => setVue('grid'));
   const viewList = document.getElementById('viewList');
-  if (viewList) viewList.addEventListener('click', () => { currentView='list'; renderResidents(); });
+  if (viewList) viewList.addEventListener('click', () => setVue('list'));
+  const viewTrombi = document.getElementById('viewTrombi');
+  if (viewTrombi) viewTrombi.addEventListener('click', () => setVue('trombi'));
+  // reprise du dernier mode d'affichage
+  try { const v = localStorage.getItem('res_view'); if (v === 'grid' || v === 'list' || v === 'trombi') setVue(v); } catch (_) {}
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
   const modalRes = document.getElementById('modalResident');
   if (modalRes) modalRes.addEventListener('click', e => {
     if (e.target.id === 'modalResident') { closeAllModals(); resetForm(); }
   });
 
-  // Ouvrir directement l'édition si ?edit=xxx
+  // Recherche pré-remplie depuis un autre écran (?q=…) — ex. la palette ⌘K du tableau de bord
   const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (q) {
+    const si = document.getElementById('searchInput');
+    if (si) { si.value = q; renderResidents(); si.focus(); }
+  }
+
+  // Ouvrir directement l'édition si ?edit=xxx
   const editId = params.get('edit');
   if (editId) {
     setTimeout(() => editResident(editId), 100);

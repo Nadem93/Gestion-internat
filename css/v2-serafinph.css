@@ -1,0 +1,199 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — SERAFIN-PH · habillage V2 (thème sombre)
+   Langage visuel repris de « Portail - refonte (bento) » :
+   cartes voilées, chips, tuiles KPI à icône dégradée, listes à filets fins.
+   Ne modifie jamais css/v2.css : tout est préfixé « sp2- ».
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── En-tête ─────────────────────────────────────────────────────────── */
+.sp2-top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sp2-top-actions .v2-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sp2-head { margin-bottom: 22px; }
+
+/* ── Tuiles KPI (cartes « Mon espace » de la maquette) ────────────────── */
+.sp2-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.sp2-kpi {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 18px;
+}
+.sp2-kpi-ico {
+  width: 44px; height: 44px; border-radius: var(--v2-r-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: linear-gradient(135deg, var(--pc, #818cf8), var(--pc2, #a5b4fc));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--pc, #818cf8) 33%, transparent);
+}
+.sp2-kpi-ico svg { width: 21px; height: 21px; flex-shrink: 0; }
+.sp2-kpi-n {
+  font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1;
+  color: #fff; margin-top: 14px;
+}
+.sp2-kpi-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); margin-top: 6px; }
+.sp2-kpi-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Bandeau journal ─────────────────────────────────────────────────── */
+.sp2-jrn { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sp2-jrn-t {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 13px; border-radius: var(--v2-r-chip);
+  background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pc, #818cf8) 26%, transparent);
+  font-size: 12.5px; color: var(--v2-t3);
+}
+.sp2-jrn-t b { font-family: var(--v2-display); font-size: 14px; color: var(--pc, #818cf8); }
+.sp2-jrn-sep { font-size: 12px; color: var(--v2-t7); }
+
+/* ── Vue par prestation ──────────────────────────────────────────────── */
+.sp2-blk + .sp2-blk { margin-top: 18px; }
+.sp2-blk.pad0 .v2-blk-h { margin-bottom: 0; }
+
+.sp2-prest {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 4px; border-bottom: 1px solid var(--v2-b-list);
+  cursor: pointer; border-radius: var(--v2-r-ctrl);
+  transition: background .15s;
+}
+.sp2-prest:last-child { border-bottom: none; }
+.sp2-prest:hover { background: var(--v2-s-hover); }
+.sp2-prest-ico {
+  width: 34px; height: 34px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+  background: color-mix(in srgb, var(--pc, #818cf8) 14%, transparent);
+}
+.sp2-prest-id { flex: 1; min-width: 0; }
+.sp2-prest-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.sp2-prest-c { font-size: 11px; font-weight: 500; color: var(--v2-t8); margin-left: 6px; }
+.sp2-prest-m { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.sp2-prest-rep { width: 190px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; }
+.sp2-prest-moy {
+  width: 54px; flex-shrink: 0; text-align: right;
+  font-family: var(--v2-display); font-size: 15px; font-weight: 800; color: var(--v2-violet);
+}
+.sp2-prest-moy.off { color: var(--v2-t8); }
+
+/* Une ligne de répartition : « niveau · barre · effectif » */
+.sp2-rep { display: flex; align-items: center; gap: 7px; font-size: 10.5px; }
+.sp2-rep-n { width: 11px; text-align: center; font-weight: 700; color: var(--lc, #7f93b3); }
+.sp2-rep-b { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.sp2-rep-b > span { display: block; height: 100%; border-radius: 99px; background: var(--lc, #7f93b3); }
+.sp2-rep-c { width: 18px; text-align: right; color: var(--v2-t7); }
+.sp2-rep-vide { font-size: 11px; color: var(--v2-t8); }
+
+/* ── Légende des niveaux ─────────────────────────────────────────────── */
+.sp2-leg { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp2-leg-i { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--v2-t7); }
+.sp2-leg-b {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 5px;
+  background: var(--lc, #7f93b3); color: #0a1728;
+  font-size: 10px; font-weight: 800;
+}
+
+/* ── Détail par résident ─────────────────────────────────────────────── */
+.sp2-res-head { cursor: pointer; }
+.sp2-fold {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; padding: 0;
+  border: 1px solid var(--v2-b-ctrl); background: var(--v2-s-ctrl); color: var(--v2-t5);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  font: inherit; font-size: 12px; transition: background .15s, color .15s;
+}
+.sp2-fold:hover { background: var(--v2-s-hover); color: #fff; }
+.sp2-fold svg { width: 14px; height: 14px; transition: transform .24s; }
+.sp2-fold[aria-expanded="true"] svg { transform: rotate(90deg); }
+
+.sp2-res {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 12px 4px; border-bottom: 1px solid var(--v2-b-list);
+}
+.sp2-res:last-child { border-bottom: none; }
+.sp2-res-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #0a1728;
+  background: var(--rc, #818cf8);
+}
+.sp2-res-b { flex: 1; min-width: 0; }
+.sp2-res-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.sp2-res-m { font-size: 10.5px; color: var(--v2-t7); margin-top: 1px; }
+.sp2-res-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.sp2-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px 3px 4px; border-radius: 7px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  font-size: 10.5px; color: var(--v2-t4);
+}
+.sp2-tag-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 15px; height: 15px; border-radius: 4px; padding: 0 3px;
+  background: var(--lc, #7f93b3); color: #0a1728; font-size: 9.5px; font-weight: 800;
+}
+.sp2-res-tot { flex-shrink: 0; text-align: right; }
+.sp2-res-tot-n { font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: var(--v2-violet); }
+.sp2-res-tot-l { font-size: 10px; color: var(--v2-t8); text-transform: uppercase; letter-spacing: .07em; }
+
+/* Recherche résident */
+.sp2-search {
+  height: 34px; width: 220px; padding: 0 13px; border-radius: var(--v2-r-chip);
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  color: var(--v2-t2); font: inherit; font-size: 12.5px;
+}
+.sp2-search::placeholder { color: var(--v2-t7); }
+.sp2-search:focus { outline: none; border-color: rgba(139,92,246,.55); }
+
+/* ── Modale : détail d'une prestation ────────────────────────────────── */
+.sp2-md-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--v2-b-list);
+}
+.sp2-md-row:last-child { border-bottom: none; }
+.sp2-md-n { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+
+/* ── Accès refusé (injecté par la page) ──────────────────────────────── */
+body.v2 .v2-body .empty { color: var(--v2-t6); }
+body.v2 .v2-body .empty h3 { color: #fff; }
+
+/* ── Adaptatif ───────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .sp2-kpis { grid-template-columns: repeat(2, 1fr); }
+  .sp2-prest-rep { width: 140px; }
+}
+@media (max-width: 780px) {
+  .sp2-kpis { grid-template-columns: 1fr; }
+  .sp2-prest { flex-wrap: wrap; }
+  .sp2-prest-rep { width: 100%; order: 3; }
+  .sp2-search { width: 100%; }
+  .sp2-leg { display: none; }
+}
+
+/* ── Impression : le rapport SERAFIN-PH sort en clair ────────────────── */
+@media print {
+  @page { margin: 1.4cm 1.1cm; size: A4; }
+  html, body.v2 { background: #fff !important; color: #0f172a !important; margin: 0 !important; }
+  body.v2 .v2-shell {
+    background: #fff !important; border: none !important; box-shadow: none !important;
+    margin: 0 !important; border-radius: 0 !important;
+  }
+  .v2-top, .sp2-top-actions, .v2-chips, .sp2-fold, .sp2-search, .v2-ov, #toast-container { display: none !important; }
+  .v2-body { padding: 0 !important; }
+  #printHeader { display: block !important; }
+  #spResidentsBody { display: block !important; }
+  .v2-blk, .sp2-kpi {
+    background: #fff !important; border: 1px solid #e2e8f0 !important;
+    break-inside: avoid; box-shadow: none !important;
+  }
+  .v2-blk-t, .sp2-kpi-n, .sp2-kpi-l, .sp2-res-n, .sp2-prest-n, .v2-h1 { color: #0f172a !important; }
+  .v2-sub, .sp2-kpi-s, .sp2-prest-m, .sp2-res-m, .sp2-prest-c { color: #64748b !important; }
+  .sp2-tag { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #334155 !important; }
+  .sp2-rep-b { background: #e2e8f0 !important; }
+  .sp2-res, .sp2-prest { border-bottom-color: #e2e8f0 !important; break-inside: avoid; }
+}
+
+#printHeader {
+  display: none;
+  border-bottom: 3px solid #0f2b4a;
+  padding-bottom: .5cm;
+  margin-bottom: .5cm;
+}
+#printHeader .ph-etab { font-size: 9pt; color: #64748b; }
+#printHeader .ph-title { font-size: 16pt; font-weight: 800; color: #0f2b4a; margin: 2px 0; }
+#printHeader .ph-meta { font-size: 8pt; color: #94a3b8; }

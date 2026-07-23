@@ -4,8 +4,68 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Transmissions — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 <style>
+/* ── Dictée vocale (modale) ── */
+.tr-dictee-wrap{position:relative}
+.tr-mic{position:absolute;right:9px;bottom:9px;width:34px;height:34px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--v2-s-ctrl,rgba(255,255,255,.05));border:1px solid var(--v2-b-ctrl,rgba(255,255,255,.1));color:var(--v2-t5,#9fb2ce);transition:background .15s,color .15s}
+.tr-mic:hover{background:var(--v2-s-hover,rgba(255,255,255,.1));color:var(--v2-t2,#eef3fb)}
+.tr-mic svg{width:17px;height:17px}
+.tr-mic.on{background:#ef4444;border-color:#ef4444;color:#fff;animation:trMicPulse 1.1s ease-in-out infinite}
+@keyframes trMicPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+.tr-dictee-hint{font-size:11.5px;color:#ef4444;margin-top:7px;font-weight:600}
+
+/* ── Case « À faire » (modale) ── */
+.tr-afaire{display:flex;gap:11px;align-items:flex-start;cursor:pointer;padding:13px 15px;border-radius:12px;
+  background:color-mix(in srgb,#f59e0b 9%,transparent);border:1px solid color-mix(in srgb,#f59e0b 26%,transparent);
+  text-transform:none;letter-spacing:normal}   /* style.css met les <label> en majuscules */
+.tr-afaire b,.tr-afaire span{text-transform:none;letter-spacing:normal}
+.tr-afaire input{margin-top:2px;width:17px;height:17px;flex-shrink:0;accent-color:#f59e0b;cursor:pointer}
+.tr-afaire b{display:block;font-size:13px;color:var(--v2-t2,#eef3fb)}
+.tr-afaire span span{display:block;font-size:11.5px;color:var(--v2-t7,#7f93b3);margin-top:2px;line-height:1.45}
+
+/* ── Bandeau « prise de poste » ── */
+.tr-prise{display:flex;align-items:center;gap:13px;padding:14px 18px;margin-bottom:16px;border-radius:14px;
+  background:linear-gradient(135deg,color-mix(in srgb,#f59e0b 16%,transparent),color-mix(in srgb,#f59e0b 4%,transparent));
+  border:1px solid color-mix(in srgb,#f59e0b 32%,transparent)}
+.tr-prise-ic{width:40px;height:40px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,#f59e0b 20%,transparent);color:#f59e0b}
+.tr-prise-ic svg{width:21px;height:21px}
+.tr-prise-t{font-size:14px;font-weight:700;color:var(--v2-t1,#fff)}
+.tr-prise-s{font-size:12px;color:var(--v2-t6,#8095b4);margin-top:1px}
+.tr-prise-b{margin-left:auto;flex-shrink:0;height:38px;padding:0 16px;border-radius:10px;border:none;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#d97706,#f59e0b)}
+.tr-prise-b:hover{filter:brightness(1.07)}
+
+/* ── Bloc « À faire pour la relève » (actions ouvertes, tous jours) ── */
+.tr-todo-block{margin-bottom:16px;border-radius:14px;overflow:hidden;
+  background:var(--v2-s-card,rgba(255,255,255,.035));border:1px solid var(--v2-b,rgba(255,255,255,.07))}
+.tr-todo-h{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid var(--v2-b,rgba(255,255,255,.07))}
+.tr-todo-h svg{width:16px;height:16px;color:#f59e0b}
+.tr-todo-h b{font-size:13px;font-weight:700;color:var(--v2-t2,#eef3fb)}
+.tr-todo-h .n{margin-left:auto;font-size:11px;font-weight:700;color:#f59e0b;background:color-mix(in srgb,#f59e0b 16%,transparent);border-radius:999px;padding:2px 9px}
+.tr-todo-i{display:flex;align-items:flex-start;gap:11px;padding:11px 16px;border-top:1px solid var(--v2-b-list,rgba(255,255,255,.05))}
+.tr-todo-i:first-child{border-top:none}
+.tr-todo-chk{width:22px;height:22px;flex-shrink:0;border-radius:7px;cursor:pointer;margin-top:1px;
+  border:1.5px solid var(--v2-b-active,rgba(255,255,255,.18));background:none;display:flex;align-items:center;justify-content:center;color:transparent;transition:.12s}
+.tr-todo-chk:hover{border-color:#10b981;color:#10b981}
+.tr-todo-chk svg{width:14px;height:14px}
+.tr-todo-b{min-width:0;flex:1}
+.tr-todo-txt{font-size:13px;color:var(--v2-t2,#eef3fb);line-height:1.45}
+.tr-todo-m{font-size:11px;color:var(--v2-t7,#7f93b3);margin-top:3px}
+.tr-todo-m .old{color:#f59e0b;font-weight:600}
+.tr-todo-vide{padding:16px;text-align:center;color:var(--v2-t7,#7f93b3);font-size:12.5px}
+
+/* ── Marqueurs « à faire » sur une carte ── */
+.tr-tag-todo{background:color-mix(in srgb,#f59e0b 15%,transparent)!important;color:#f59e0b!important;font-weight:700}
+.tr-tag-done{background:color-mix(in srgb,#10b981 15%,transparent)!important;color:#10b981!important;font-weight:700}
+
 /* ── Kanban Board ── */
 .kb-header-bar{display:flex;align-items:center;gap:.65rem;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.55rem .9rem;margin-bottom:.75rem}
 .kb-date-nav{display:flex;align-items:center;gap:.25rem;background:var(--g50);border:1px solid var(--border);border-radius:8px;padding:3px 6px}
@@ -28,7 +88,6 @@
 .kb-col-name{font-size:.88rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:.4rem}
 .kb-col-hours{font-size:.7rem;color:var(--muted);font-weight:400}
 .kb-col-count{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:20px}
-.kb-col-bar{height:4px;border-radius:2px;margin-top:0}
 
 /* Cards container */
 .kb-cards{padding:.65rem;display:flex;flex-direction:column;gap:.55rem}
@@ -78,162 +137,218 @@
 
 @media(max-width:900px){.kb-board{grid-template-columns:1fr 1fr}.kb-stat-pill{display:none}}
 @media(max-width:520px){.kb-board{grid-template-columns:1fr}}
+
+/* ═══ Design « Timeline lumineuse » (cartes de quart) ═══ */
+@keyframes trGlow{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.18)}}
+.kb-col{background:#fff !important;position:relative;box-shadow:0 4px 16px rgba(30,41,59,.06)}
+/* Barre néon latérale colorée par quart */
+.kb-col::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;z-index:2;
+  background:linear-gradient(180deg,var(--sc,#6366f1),color-mix(in srgb,var(--sc,#6366f1) 55%,#fff));
+  box-shadow:0 0 14px var(--sc,#6366f1)}
+.kb-col-hdr{padding-left:1.25rem}
+/* Points de progression pulsants */
+.kb-col-dots{display:flex;align-items:center;gap:6px;margin-top:.55rem}
+.kb-dot{width:9px;height:9px;border-radius:50%;background:#dbe3ee;flex-shrink:0}
+.kb-dot.lit{background:var(--sc,#6366f1);box-shadow:0 0 6px color-mix(in srgb,var(--sc,#6366f1) 60%,transparent)}
+.kb-dot.on{background:var(--sc,#6366f1);box-shadow:0 0 8px var(--sc,#6366f1);animation:trGlow 2s ease-in-out infinite}
+.kb-line{flex:1;height:2px;background:#e8edf6;border-radius:2px}
+.kb-line.lit{background:var(--sc,#6366f1);opacity:.55}
+@media(prefers-reduced-motion:reduce){.kb-dot.on{animation:none}}
 </style>
 </head>
-<body>
+<body class="v2">
 <div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info">
-      <div class="header-title">Transmissions</div>
-    </div>
-    <div class="header-right">
-      <button class="btn btn-accent btn-sm" onclick="resetTrModal();openModal('modalTr')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nouvelle transmission
-      </button>
-    </div>
-  </header>
+  <!-- Pleine largeur : le tableau à trois vacations respire mal dans les 1400 px
+       du canevas des maquettes. -->
+  <div class="v2-shell">
 
-  <main class="content">
-    <div style="max-width:1100px;margin:0 auto">
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Passation d'équipe</div>
+        <div class="v2-top-title">Transmissions</div>
+      </div>
+      <div class="v2-datenav" style="margin-left:8px">
+        <button type="button" onclick="trPrevDay()" title="Jour précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span class="v2-datenav-l" id="trDateLabel" onclick="trGoToday()" title="Revenir à aujourd'hui"></span>
+        <button type="button" onclick="trNextDay()" title="Jour suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-accent btn-sm" onclick="tv2Nouvelle()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle transmission
+        </button>
+      </div>
+    </div>
 
-      <!-- Titre du jour -->
-      <div style="margin-bottom:1.25rem">
-        <div id="trTodayLabel" style="font-size:1.45rem;font-weight:800;letter-spacing:-.03em;background:linear-gradient(90deg,var(--primary) 0%,#1786cf 60%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1"></div>
-        <div id="trTodayDate" style="font-size:.82rem;color:var(--muted);margin-top:.2rem;font-weight:500"></div>
+    <div class="v2-body">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+        <div class="v2-chips" id="trFilters"></div>
+        <div class="v2-stats" id="trStats"></div>
       </div>
 
-      <!-- Kanban board -->
-      <div id="trList"></div>
+      <!-- Prise de poste : transmissions non lues de la vacation précédente -->
+      <div id="trPrise"></div>
+      <!-- À faire pour la relève : actions ouvertes, tous jours confondus -->
+      <div id="trTodo"></div>
 
-      <!-- Historique jours précédents -->
-      <div class="section-label" style="margin:1.75rem 0 .75rem">🗂 Jours précédents</div>
-      <div id="trHisto" style="display:flex;flex-direction:column;gap:.5rem"></div>
+      <div id="trList" class="v2-board"></div>
+
+      <div class="v2-tr-bottom" style="margin-top:18px">
+        <div class="v2-blk" id="trSynthese"></div>
+        <div class="v2-consignes" id="trConsignes"></div>
+      </div>
+
+      <div class="v2-blk" id="trHisto" style="margin-top:18px"></div>
     </div>
-  </main>
+
+  </div>
 </div></div>
 
 <!-- MODAL NOUVELLE TRANSMISSION — Template 2 panneau latéral -->
-<div class="modal-overlay" id="modalTr">
-  <div class="modal" style="max-width:760px;flex-direction:row;padding:0">
-    <!-- Panneau latéral vert -->
-    <div style="width:220px;flex-shrink:0;background:linear-gradient(160deg,#064e3b 0%,#059669 100%);display:flex;flex-direction:column;padding:28px 20px 24px;border-radius:20px 0 0 20px;overflow:hidden;position:relative">
-      <div style="position:absolute;bottom:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
-      <div style="position:absolute;top:-30px;left:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+<div class="modal-overlay v2-ov" id="modalTr">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="modalTrTitle">Nouvelle transmission</div>
+        <div class="v2-md-s">Catégorie, résident et observation</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalTr')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
 
-      <!-- Icône + titre -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;position:relative">
-        <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📡</div>
-        <div>
-          <div style="font-size:.8rem;font-weight:700;color:#fff;line-height:1.2">Transmissions</div>
-          <div style="font-size:.65rem;color:rgba(255,255,255,.6);margin-top:1px">Passation d'équipe</div>
-        </div>
+    <input type="hidden" id="trEditId"/>
+    <input type="hidden" id="trShift" value="matin"/>
+
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="trCat">Catégorie *</label>
+        <select id="trCat" class="v2-fld">
+          <option value="sante">🏥 Santé</option>
+          <option value="medicament">💊 Médicament</option>
+          <option value="comportement">🧠 Comportement</option>
+          <option value="alimentation">🍽️ Alimentation</option>
+          <option value="hygiene">🚿 Hygiène</option>
+          <option value="activite">🎯 Activité</option>
+          <option value="famille">👨‍👩‍👧 Famille</option>
+          <option value="sortie">🚪 Sortie / Retour</option>
+          <option value="administratif">📋 Administratif</option>
+          <option value="maintenance">🔧 Maintenance</option>
+          <option value="urgent">⚡ Urgent</option>
+        </select>
       </div>
 
-      <!-- Description -->
-      <p style="font-size:.72rem;color:rgba(255,255,255,.8);line-height:1.6;margin:0 0 16px;position:relative">
-        Consignez ici tout ce que l'équipe suivante doit savoir avant de prendre son poste.
-      </p>
-
-      <!-- Exemples -->
-      <div style="display:flex;flex-direction:column;gap:8px;position:relative">
-        <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:2px">Exemples</div>
-
-        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px">
-          <div style="font-size:.63rem;font-weight:700;color:#fbbf24;margin-bottom:3px">🌅 Matin · Santé</div>
-          <div style="font-size:.68rem;color:rgba(255,255,255,.85);line-height:1.5">"Mohamed a refusé son traitement ce matin, à surveiller."</div>
-        </div>
-
-        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px">
-          <div style="font-size:.63rem;font-weight:700;color:#6ee7b7;margin-bottom:3px">☀️ Après-midi · Famille</div>
-          <div style="font-size:.68rem;color:rgba(255,255,255,.85);line-height:1.5">"Appel de la mère de Lucie, rappeler demain matin."</div>
-        </div>
-
-        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px">
-          <div style="font-size:.63rem;font-weight:700;color:#f87171;margin-bottom:3px">⚡ Urgent</div>
-          <div style="font-size:.68rem;color:rgba(255,255,255,.85);line-height:1.5">"Sophie très agitée depuis 17h, risque de crise — veiller toute la nuit."</div>
-        </div>
-
-        <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px">
-          <div style="font-size:.63rem;font-weight:700;color:#a78bfa;margin-bottom:3px">🌙 Nuit · Administratif</div>
-          <div style="font-size:.68rem;color:rgba(255,255,255,.85);line-height:1.5">"Fuite signalée salle de bain couloir B — technicien attendu demain."</div>
-        </div>
+      <div>
+        <label class="v2-fld-l" for="trResident">Résident concerné</label>
+        <select id="trResident" class="v2-fld"></select>
       </div>
 
-      <!-- Note bas -->
-      <div style="margin-top:auto;padding-top:16px;position:relative">
-        <div style="font-size:.63rem;color:rgba(255,255,255,.5);line-height:1.5">Les transmissions urgentes peuvent être converties en incident ou ajoutées au journal de bord.</div>
+      <div>
+        <label class="v2-fld-l">Priorité</label>
+        <div class="v2-seg" id="trPrioritySeg">
+          <button type="button" class="v2-seg-o" data-v="info" onclick="trSetPriority('info')">Information</button>
+          <button type="button" class="v2-seg-o on" data-v="normal" onclick="trSetPriority('normal')">Normal</button>
+          <button type="button" class="v2-seg-o" data-v="urgent" onclick="trSetPriority('urgent')">Urgent</button>
+        </div>
+        <input type="hidden" id="trPriority" value="normal"/>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="trContent">Observation *</label>
+        <div class="tr-dictee-wrap">
+          <textarea id="trContent" class="v2-fld" rows="4" placeholder="Décrivez l'observation, l'événement ou la consigne à transmettre à l'équipe suivante…"></textarea>
+          <button type="button" class="tr-mic" id="trMic" onclick="trDicteeToggle()" title="Dicter à la voix" aria-label="Dicter à la voix" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+        </div>
+        <div class="tr-dictee-hint" id="trMicHint" style="display:none">🎤 À l'écoute… parlez, le texte s'ajoute tout seul.</div>
+      </div>
+
+      <label class="tr-afaire" for="trAFaire">
+        <input type="checkbox" id="trAFaire"/>
+        <span>
+          <b>À faire pour la relève</b>
+          <span>Une action à réaliser par la vacation suivante. Elle reste ouverte tant qu'elle n'est pas cochée « fait ».</span>
+        </span>
+      </label>
+
+      <div>
+        <label class="v2-fld-l" for="trSoutien">Accompagnement apporté <span style="color:var(--v2-t7);font-weight:400">— facultatif</span></label>
+        <textarea id="trSoutien" class="v2-fld" rows="2" placeholder="Ex : incitation verbale pour la toilette, médiation avec un pair, présence rassurante…"></textarea>
+        <select id="trSoutienNiveau" class="v2-fld" style="margin-top:12px">
+          <option value="">Niveau de soutien — non précisé</option>
+          <option value="autonomie">🟢 Autonomie — présence simple</option>
+          <option value="supervision">🔵 Supervision / veille</option>
+          <option value="verbal">🟡 Incitation / guidance verbale</option>
+          <option value="partiel">🟠 Aide partielle</option>
+          <option value="total">🔴 Aide totale</option>
+        </select>
+      </div>
+
+      <div class="v2-note v2-note-ok" id="trRecap" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+        <span id="trRecapTxt"></span>
       </div>
     </div>
 
-    <!-- Formulaire (colonne droite) -->
-    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
-      <div class="modal-header" style="border-radius:0 20px 0 0">
-        <div>
-          <div class="modal-title" id="modalTrTitle">Nouvelle transmission</div>
-          <div style="font-size:.7rem;color:var(--muted);margin-top:2px;font-weight:400">Journal de l'équipe soignante</div>
-        </div>
-        <button class="modal-close" onclick="closeModal('modalTr')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalTr')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveTr_Modal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+        Enregistrer la transmission
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay v2-ov" id="modalConsigne">
+  <div class="v2-md" style="--mc:#f59e0b;max-width:560px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Nouvelle consigne permanente</div>
+        <div class="v2-md-s">Affichée en haut de la passation, tous les jours</div>
       </div>
-      <input type="hidden" id="trEditId"/>
-      <div class="modal-body" style="gap:.85rem">
-        <!-- Étape 1 -->
-        <div id="trFormStep1">
-          <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669;margin-bottom:.6rem">Étape 1 — Catégorie</div>
-          <input type="hidden" id="trShift" value="matin"/>
-          <div style="display:grid;grid-template-columns:1fr;gap:.75rem">
-            <div class="form-group">
-              <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Catégorie *</label>
-              <select id="trCat">
-                <option value="sante">🏥 Santé</option>
-                <option value="medicament">💊 Médicament</option>
-                <option value="comportement">🧠 Comportement</option>
-                <option value="alimentation">🍽️ Alimentation</option>
-                <option value="hygiene">🚿 Hygiène</option>
-                <option value="activite">🎯 Activité</option>
-                <option value="famille">👨‍👩‍👧 Famille</option>
-                <option value="sortie">🚪 Sortie / Retour</option>
-                <option value="administratif">📋 Administratif</option>
-                <option value="maintenance">🔧 Maintenance</option>
-                <option value="urgent">⚡ Urgent</option>
-              </select>
-            </div>
-          </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalConsigne')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l">Nature de la consigne</label>
+        <div class="v2-seg" id="consCatSeg">
+          <button type="button" class="v2-seg-o on" data-v="soin" onclick="tv2SetConsCat('soin')">Soin</button>
+          <button type="button" class="v2-seg-o" data-v="securite" onclick="tv2SetConsCat('securite')">Sécurité</button>
+          <button type="button" class="v2-seg-o" data-v="direction" onclick="tv2SetConsCat('direction')">Direction</button>
+          <button type="button" class="v2-seg-o" data-v="autre" onclick="tv2SetConsCat('autre')">Autre</button>
         </div>
-        <!-- Étape 2 -->
-        <div id="trFormStep2">
-          <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669;margin-bottom:.6rem">Étape 2 — Résident &amp; Priorité</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-            <div class="form-group">
-              <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Résident concerné</label>
-              <select id="trResident"></select>
-            </div>
-            <div class="form-group">
-              <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Priorité</label>
-              <select id="trPriority">
-                <option value="info">ℹ️ Information</option>
-                <option value="normal" selected>📌 Normal</option>
-                <option value="urgent">⚡ Urgent</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <!-- Étape 3 -->
-        <div id="trFormStep3">
-          <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669;margin-bottom:.6rem">Étape 3 — Contenu</div>
-          <div class="form-group">
-            <label style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Observation *</label>
-            <textarea id="trContent" rows="5" placeholder="Décrivez l'observation, l'événement ou la consigne à transmettre à l'équipe suivante…" style="resize:vertical"></textarea>
-          </div>
-        </div>
+        <input type="hidden" id="consCat" value="soin"/>
       </div>
-      <div class="modal-footer" style="border-radius:0 0 20px 0;justify-content:space-between">
-        <span id="trStepLabel" style="font-size:.72rem;color:var(--muted)">Étape 1 sur 3</span>
-        <div style="display:flex;gap:.5rem">
-          <button class="btn btn-ghost" onclick="closeModal('modalTr')">Annuler</button>
-          <button class="btn btn-primary" onclick="saveTr_Modal()">Enregistrer</button>
-        </div>
+      <div>
+        <label class="v2-fld-l" for="consTexte">Consigne *</label>
+        <textarea id="consTexte" class="v2-fld" rows="3" placeholder="Ex : M. Diallo — traitement cardiaque à 08h impérativement, ne pas décaler."></textarea>
       </div>
+      <div>
+        <label class="v2-fld-l" for="consAuteur">Émetteur</label>
+        <input type="text" id="consAuteur" class="v2-fld" placeholder="Ex : Consigne infirmerie, Direction, Sécurité…"/>
+      </div>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Une consigne permanente reste affichée jusqu'à ce qu'un administrateur la retire.</span>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalConsigne')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="tv2SaveConsigne()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+        Publier la consigne
+      </button>
     </div>
   </div>
 </div>
@@ -242,10 +357,17 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/journal-supabase.js"></script>
 <script src="js/incidents-supabase.js"></script>
 <script src="js/transmissions-supabase.js"></script>
+<script src="js/consignes-supabase.js"></script>
 <script src="js/transmissions.js"></script>
+<script src="js/transmissions-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

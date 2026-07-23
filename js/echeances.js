@@ -14,6 +14,11 @@ const EC_TYPES = {
   autre: { label: 'Autre', icon: '📌' }
 };
 
+// Type d'échéance → clé de catégorie GED (documents_resident.category), pour que le
+// document créé au renouvellement soit classé sous le bon onglet de la fiche résident
+// (la clé, pas le libellé — sinon l'onglet se dédouble).
+const EC_DOCCAT = { mdph: 'mdph', jugement: 'jugement', identite: 'identite', css: 'cmu', contrat: 'contrat', medical: 'medical' };
+
 // Source = Supabase. Cache mémoire chargé au démarrage.
 let _ecCache = [];
 function getEcheances() { return _ecCache; }
@@ -46,7 +51,31 @@ function ecDaysLabel(e) {
   return `dans ${diff} j`;
 }
 
+// Compte à rebours (gros chiffre + libellé) pour la pastille de gauche (design 1)
+function ecCountdown(e) {
+  if (e.done) return { n: '✓', u: 'traité' };
+  const diff = Math.ceil((new Date(e.date) - new Date(today())) / 86400000);
+  if (diff < 0) return { n: Math.abs(diff), u: 'j retard' };
+  if (diff === 0) return { n: 0, u: "auj." };
+  return { n: diff, u: diff > 1 ? 'jours' : 'jour' };
+}
+// Remplissage de la barre d'échéance : plus l'échéance est lointaine, plus la barre est pleine (horizon 90 j)
+function ecBarPct(e) {
+  if (e.done) return 100;
+  const diff = Math.ceil((new Date(e.date) - new Date(today())) / 86400000);
+  if (diff < 0) return 5;
+  return Math.max(8, Math.min(100, Math.round(diff / 90 * 100)));
+}
+
+// ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/echeances-v2.js (design V2). La version
+// historique reste disponible pour les contextes où le module n'est pas chargé.
 function renderEcheances() {
+  if (typeof ec2Render === 'function') return ec2Render();
+  return renderEcheancesLegacy();
+}
+
+function renderEcheancesLegacy() {
   const all = getEcheances();
   const showDone = document.getElementById('ecShowDone')?.checked;
   const fRes = document.getElementById('ecFilterResident')?.value || '';
@@ -79,31 +108,109 @@ function renderEcheances() {
   }
   el.innerHTML = list.map(e => {
     const u = ecUrgency(e), c = EC_URG[u], t = EC_TYPES[e.type] || EC_TYPES.autre;
-    return `<div class="card" style="border-left:3px solid ${c.color};${e.done ? 'opacity:.65' : ''}">
-      <div class="card-body" style="padding:.8rem 1rem;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap">
-        <span style="font-size:1.3rem;flex-shrink:0">${t.icon}</span>
-        <div style="flex:1;min-width:200px">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            <span style="font-weight:700;font-size:.88rem">${escHtml(e.libelle || t.label)}</span>
-            <span class="badge" style="background:${c.bg};color:${c.color};border:1px solid ${c.bd}">${c.label}</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">
-            ${t.label}${e.residentName ? ` · <a href="resident.html?id=${e.residentId}" style="color:var(--accent);text-decoration:none">${escHtml(e.residentName)}</a>` : ''}
-            ${e.notes ? ` · ${escHtml(e.notes)}` : ''}
-          </div>
+    const resHtml = e.residentName ? ` · <a href="resident.html?id=${e.residentId}" style="color:var(--accent);text-decoration:none">${escHtml(e.residentName)}</a>` : '';
+    const cd = ecCountdown(e), pct = ecBarPct(e);
+    return `<div class="card" style="overflow:hidden;${e.done ? 'opacity:.6' : ''}">
+      <div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem">
+        <span style="width:52px;height:46px;border-radius:10px;background:${c.bg};border:1px solid ${c.bd};color:${c.color};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1;font-variant-numeric:tabular-nums" title="${escAttr(ecDaysLabel(e))}">
+          <span style="font-size:1.1rem;font-weight:800">${cd.n}</span>
+          <span style="font-size:.58rem;font-weight:700;margin-top:2px">${cd.u}</span>
+        </span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.libelle || t.label)}</div>
+          <div style="font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:1px 0 5px">${t.icon} ${t.label}${resHtml} · <span style="white-space:nowrap">${formatDate(e.date)}</span>${e.notes ? ` · ${escHtml(e.notes)}` : ''}${e.documentPath ? ` · <a onclick="openEcheanceDoc('${e.id}');return false" style="color:var(--accent);cursor:pointer;text-decoration:none" title="Ouvrir le dernier document joint">📎 document</a>` : ''}</div>
+          <div style="height:5px;border-radius:3px;background:#f1f5f9;position:relative" title="${escAttr(c.label)}"><span style="position:absolute;left:0;top:0;height:5px;border-radius:3px;width:${pct}%;background:${c.color}"></span></div>
         </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:var(--display);font-weight:700;color:${c.color}">${formatDate(e.date)}</div>
-          <div style="font-size:.7rem;color:var(--muted)">${ecDaysLabel(e)}</div>
-        </div>
-        ${canEdit ? `<div class="no-print" style="display:flex;gap:.25rem;flex-shrink:0">
+        ${canEdit ? `<div class="no-print" style="display:flex;gap:.1rem;flex-shrink:0">
           ${!e.done ? `<button class="btn btn-ghost btn-sm" style="color:var(--green)" title="Marquer comme traité" onclick="toggleEcheanceDone('${e.id}')">✓</button>` : `<button class="btn btn-ghost btn-sm" title="Réactiver" onclick="toggleEcheanceDone('${e.id}')">↩</button>`}
+          <button class="btn btn-ghost btn-sm" style="color:var(--accent)" title="Renouveler : joindre le nouveau document et reporter la date" onclick="openRenouvelerModal('${e.id}')">📎</button>
           <button class="btn btn-ghost btn-sm" onclick="openEcheanceModal('${e.id}')">✎</button>
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEcheance('${e.id}')">✕</button>
         </div>` : ''}
       </div>
     </div>`;
   }).join('');
+}
+
+// ── RENOUVELLEMENT (pièce jointe + report de la date) ──
+let renEcId = null;
+function openRenouvelerModal(id) {
+  renEcId = id;
+  const e = getEcheances().find(x => x.id === id);
+  if (!e) return;
+  const t = EC_TYPES[e.type] || EC_TYPES.autre;
+  document.getElementById('renEcTitle').textContent = `${e.libelle || t.label}${e.residentName ? ' — ' + e.residentName : ''}`;
+  document.getElementById('renFile').value = '';
+  document.getElementById('renDate').value = '';
+  if (typeof ec2FileName === 'function') ec2FileName();   // remet « Aucun fichier sélectionné »
+  openModal('modalRenouveler');
+}
+
+async function saveRenouvellement() {
+  const e = getEcheances().find(x => x.id === renEcId);
+  if (!e) return;
+  const file = document.getElementById('renFile').files[0];
+  const newDate = document.getElementById('renDate').value;
+  if (!file) { toast('Joignez le document renouvelé', 'error'); return; }
+  if (!newDate) { toast("Indiquez la nouvelle date d'échéance", 'error'); return; }
+  const btn = document.getElementById('renSaveBtn');
+  // On mémorise le balisage d'origine (icône SVG comprise) pour le restaurer :
+  // écrire textContent effacerait l'icône du bouton V2.
+  const btnHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Envoi…'; }
+  try {
+    const t = EC_TYPES[e.type] || EC_TYPES.autre;
+    const sess = Auth.getSession();
+    const by = sess ? (`${sess.prenom||''} ${sess.nom||''}`.trim() || sess.username || '') : '';
+    // 1) Upload du fichier dans le bucket justificatifs — dossier = id du compte connecté
+    //    (même convention que les justificatifs d'absence, compatible avec la RLS Storage)
+    let path;
+    try {
+      path = await sbUploadJustificatif(file, (sess && sess.userId) || e.residentId || 'ech');
+    } catch (err) {
+      throw new Error('Envoi du fichier : ' + (err?.message || err));
+    }
+    // 2) Classement dans les Documents (GED) du résident
+    if (e.residentId && typeof sbSaveDocumentResident === 'function') {
+      try {
+        await sbSaveDocumentResident({
+          residentId: e.residentId, name: e.libelle || t.label, fileName: file.name,
+          size: file.size, mimeType: file.type, category: EC_DOCCAT[e.type] || 'autre', docDate: today(),
+          dueDate: newDate, fichierPath: path, type: 'resident', uploadedBy: by
+        });
+      } catch (err) { console.error('[renouveler] GED', err); }
+    }
+    // 3) Renouvellement de l'échéance : report de la date + document + repasse active
+    let saved;
+    try {
+      saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null, document_path: path, document_name: file.name });
+    } catch (err) {
+      console.error('[renouveler] maj avec document échouée, retry sans colonnes document', err);
+      try {
+        saved = await sbUpdateEcheanceField(e.id, { date: newDate, done: false, done_at: null });
+        saved.documentPath = ''; saved.documentName = '';
+      } catch (err2) {
+        throw new Error("Mise à jour de l'échéance : " + (err2?.message || err2));
+      }
+    }
+    _ecCache = _ecCache.map(x => x.id === e.id ? saved : x);
+    if (typeof auditLog === 'function') auditLog('echeance_renouvellement', `${e.libelle || t.label} → ${newDate}`);
+    closeModal('modalRenouveler');
+    renderEcheances();
+    toast('Échéance renouvelée ✓');
+  } catch (err) {
+    console.error('[saveRenouvellement]', err);
+    toast('Erreur : ' + (err?.message || err), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = btnHtml; }
+  }
+}
+
+async function openEcheanceDoc(id) {
+  const e = getEcheances().find(x => x.id === id);
+  if (!e || !e.documentPath) return;
+  const url = (typeof sbJustificatifUrl === 'function') ? await sbJustificatifUrl(e.documentPath) : null;
+  if (url) window.open(url, '_blank'); else toast('Document introuvable', 'error');
 }
 
 function openEcheanceModal(id) {
@@ -177,8 +284,10 @@ async function initEcheances() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('view_residents')) return;
-  await sbLoadResidentsCache();
-  await loadEcheancesCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([sbLoadResidentsCache(), loadEcheancesCache()]);
   // Remplir les sélecteurs résident
   const residents = sbResidents().filter(r => r.statut !== 'sorti');
   const opts = residents.map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');

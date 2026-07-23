@@ -1,0 +1,347 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PORTAIL — V2 (maquette « Portail - refonte (bento) »)
+   Coque à deux colonnes : navigation latérale groupée repliable + panneau
+   principal (accueil bento ou sous-page en iframe).
+   Ne dépend que des variables de css/v2.css (jamais modifié ici).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2 .pl-shell {
+  display: flex;
+  height: calc(100vh - 44px);
+  min-height: 620px;
+  background:
+    radial-gradient(1200px 600px at 78% -10%, rgba(56,97,161,.28), transparent 60%),
+    var(--v2-bg);
+}
+@keyframes plNavPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.09) rotate(3deg); } }
+
+/* ── Panneau principal ────────────────────────────────────────────────── */
+/* min-height:0 : sans lui, dans la coque mobile `height:100dvh` en colonne,
+   .pl-main grandit à son contenu et #plHome ne défile plus (cf. vie-quotidienne). */
+.pl-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.pl-topbar {
+  height: 66px; flex-shrink: 0; border-bottom: 1px solid var(--v2-b);
+  display: flex; align-items: center; gap: 14px; padding: 0 30px;
+}
+.pl-topbar-t {
+  font-size: 17px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.pl-back {
+  display: none; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
+  border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+  flex-shrink: 0;
+}
+.pl-back.on { display: inline-flex; }
+.pl-back:hover { background: var(--v2-s-hover); color: #fff; }
+.pl-back svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* Emplacement de la cloche partagée (js/notif-bell.js cible .header-right) */
+.pl-bellbox { margin-left: auto; flex-shrink: 0; position: relative; display: flex; align-items: center; }
+body.v2 .pl-bellbox .nb-bell {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t4);
+}
+body.v2 .pl-bellbox .nb-bell:hover { background: var(--v2-s-hover); color: #fff; }
+body.v2 .pl-bellbox .nb-count { border: 2px solid var(--v2-bg); top: -5px; right: -5px; }
+body.v2 .pl-bellbox .nb-panel {
+  background: #101d31; border: 1px solid var(--v2-b-ctrl); border-radius: 16px;
+  box-shadow: 0 40px 100px -30px rgba(0,0,0,.8);
+}
+body.v2 .pl-bellbox .nb-head, body.v2 .pl-bellbox .nb-row,
+body.v2 .pl-bellbox .nb-foot { border-bottom-color: var(--v2-b); border-top-color: var(--v2-b); }
+body.v2 .pl-bellbox .nb-head strong, body.v2 .pl-bellbox .nb-row .l1 { color: var(--v2-t2); }
+body.v2 .pl-bellbox .nb-head span, body.v2 .pl-bellbox .nb-row .l2,
+body.v2 .pl-bellbox .nb-empty { color: var(--v2-t7); }
+body.v2 .pl-bellbox .nb-row:hover { background: var(--v2-s-hover); }
+body.v2 .pl-bellbox .nb-foot button { color: var(--v2-indigo-light); }
+body.v2 .pl-bellbox .nb-foot button:hover { background: rgba(99,102,241,.16); }
+
+.pl-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* le rembourrage vient de .v2-body (css/v2.css) */
+#plHome { flex: 1; overflow-y: auto; }
+#plFrame { flex: 1; width: 100%; border: none; background: var(--v2-inset); }
+
+/* ── En-tête de contenu ───────────────────────────────────────────────── */
+.pl-hello { margin-bottom: 22px; }
+.pl-hello h1 {
+  margin: 0; font-family: var(--v2-display); font-size: 26px; font-weight: 700;
+  letter-spacing: -.02em; color: #fff;
+}
+.pl-hello-s { margin-top: 4px; font-size: 13.5px; color: var(--v2-t7); }
+.pl-sec {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t9); margin-bottom: 12px;
+}
+
+/* ── « Mon espace » : 4 tuiles chiffrées ──────────────────────────────── */
+.pl-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.pl-stat {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 18px; cursor: pointer;
+  text-align: left; font-family: inherit; display: block; width: 100%; outline: none;
+  transition: transform .15s, border-color .2s, box-shadow .3s;
+}
+.pl-stat:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--plc, #818cf8) 40%, transparent);
+  box-shadow: 0 14px 30px -14px var(--plc-sh, rgba(129,140,248,.4));
+}
+.pl-stat:focus-visible { box-shadow: 0 0 0 2.5px var(--plc-sh, rgba(129,140,248,.4)); }
+.pl-stat-ic {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--plc, #818cf8); box-shadow: 0 6px 14px var(--plc-sh, rgba(129,140,248,.33));
+}
+.pl-stat-ic svg { width: 21px; height: 21px; }
+.pl-stat-n {
+  font-family: var(--v2-display); font-size: 23px; font-weight: 800;
+  line-height: 1; color: #fff; margin-top: 14px;
+}
+.pl-stat-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); margin-top: 6px; }
+.pl-stat-s { font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+
+/* ── Accès rapides (une tuile par module autorisé) ────────────────────── */
+.pl-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.pl-card {
+  position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-kpi); padding: 18px; cursor: pointer; overflow: hidden;
+  text-align: left; font-family: inherit; outline: none; display: block; width: 100%;
+  transition: transform .15s, box-shadow .3s, border-color .2s;
+}
+.pl-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--plc, #818cf8) 40%, transparent);
+  box-shadow: 0 14px 30px -14px var(--plc-sh, rgba(129,140,248,.4));
+}
+.pl-card:focus-visible { box-shadow: 0 0 0 2.5px var(--plc-sh, rgba(129,140,248,.4)); }
+.pl-card-ic {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: var(--plc, #818cf8); box-shadow: 0 6px 14px var(--plc-sh, rgba(129,140,248,.33));
+}
+.pl-card-ic svg { width: 22px; height: 22px; }
+.pl-card-l { font-size: 13px; font-weight: 600; color: var(--v2-t2); margin-top: 14px; }
+.pl-card-s { font-size: 11px; color: var(--v2-t6); margin-top: 3px; }
+/* Bouton « à quoi ça sert ? » — ouvre le mode d'emploi du module */
+.pl-card-i {
+  position: absolute; top: 12px; right: 12px; width: 26px; height: 26px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t7);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+}
+.pl-card-i:hover { background: var(--v2-s-active); color: #fff; }
+
+/* ── Blocs bento ──────────────────────────────────────────────────────── */
+.pl-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px;
+  align-items: start; }
+.pl-bento:last-child { margin-bottom: 0; }
+.pl-blk {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 20px; min-width: 0;
+}
+.pl-blk-wide { margin-bottom: 24px; }
+.pl-blk-ech {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(239,68,68,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(245,158,11,.22);
+}
+.pl-blk-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+.pl-blk-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.pl-blk-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.pl-blk-ech .pl-blk-t { color: var(--v2-warn-text); }
+.pl-blk-c {
+  margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+  background: color-mix(in srgb, var(--pc, #38bdf8) 11%, transparent); color: var(--pc, #38bdf8);
+}
+.pl-blk-a {
+  margin-left: auto; height: 28px; padding: 0 11px; border-radius: 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+  font-size: 11px; font-weight: 600; color: var(--v2-t5);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.pl-blk-a:hover { background: var(--v2-s-hover); color: #fff; }
+.pl-blk-a svg { width: 13px; height: 13px; flex-shrink: 0; }
+.pl-blk-c + .pl-blk-a, .pl-blk-a + .pl-blk-a { margin-left: 0; }
+.pl-vide { font-size: 12px; color: var(--v2-t7); padding: 6px 0; line-height: 1.55; }
+
+/* Messages */
+.pl-msg { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); cursor: pointer; }
+.pl-msg:last-child { border-bottom: none; }
+.pl-msg:hover .pl-msg-n { color: #fff; }
+.pl-msg-av {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0a1728;
+}
+.pl-msg-b { flex: 1; min-width: 0; }
+.pl-msg-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-msg-p { font-size: 11px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-msg-dot { width: 8px; height: 8px; border-radius: 50%; background: #38bdf8; flex-shrink: 0; }
+
+/* Prochains créneaux */
+.pl-sh { display: flex; align-items: center; gap: 13px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.pl-sh:last-child { border-bottom: none; }
+.pl-sh-d { width: 44px; flex-shrink: 0; text-align: center; }
+.pl-sh-j { font-size: 11px; font-weight: 700; color: var(--pc, #f59e0b); }
+.pl-sh-dt { font-size: 10.5px; color: var(--v2-t7); }
+.pl-sh-b { flex: 1; min-width: 0; }
+.pl-sh-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.pl-sh-h { font-size: 11px; color: var(--v2-t6); }
+.pl-sh-tag { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  white-space: nowrap; flex-shrink: 0;
+  color: var(--pc, #f59e0b); background: color-mix(in srgb, var(--pc, #f59e0b) 11%, transparent); }
+
+/* Mes documents */
+.pl-docs { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 900px) { .pl-docs { grid-template-columns: 1fr; } }
+.pl-doc { display: flex; align-items: center; gap: 12px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.pl-doc-ic {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 11%, transparent); color: var(--pc, #818cf8);
+}
+.pl-doc-ic svg { width: 15px; height: 15px; }
+.pl-doc-b { flex: 1; min-width: 0; }
+.pl-doc-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-doc-m { font-size: 10.5px; color: var(--v2-t6); }
+.pl-doc-dl {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent; color: var(--v2-t8); font-family: inherit;
+}
+.pl-doc-dl:hover { background: var(--v2-s-ctrl); border-color: var(--v2-b-ctrl); color: #fff; }
+.pl-doc-dl svg { width: 15px; height: 15px; }
+
+/* Mes demandes */
+.pl-rq { display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.pl-rq:last-child { border-bottom: none; }
+.pl-rq-ic {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.pl-rq-ic svg { width: 15px; height: 15px; }
+.pl-rq-b { flex: 1; min-width: 0; }
+.pl-rq-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-rq-s { font-size: 10.5px; color: var(--v2-t6); }
+.pl-rq-st { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  white-space: nowrap; flex-shrink: 0;
+  color: var(--sc, #f59e0b); background: color-mix(in srgb, var(--sc, #f59e0b) 11%, transparent); }
+
+/* À ne pas oublier */
+.pl-ech { display: flex; align-items: center; gap: 13px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-soft); }
+.pl-ech:last-child { border-bottom: none; }
+.pl-ech-d {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 11%, transparent); color: var(--pc, #818cf8);
+}
+.pl-ech-j { font-family: var(--v2-display); font-size: 14px; font-weight: 800; line-height: 1; }
+.pl-ech-m { font-size: 8.5px; font-weight: 700; }
+.pl-ech-b { flex: 1; min-width: 0; }
+.pl-ech-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-ech-s { font-size: 10.5px; color: var(--v2-t6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-ech-l { font-size: 10.5px; font-weight: 700; color: var(--pc, #818cf8);
+  white-space: nowrap; flex-shrink: 0; }
+
+/* Mes compteurs */
+.pl-cpts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.pl-cpt-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.pl-cpt-l { font-size: 12.5px; color: var(--v2-t3); }
+.pl-cpt-v { margin-left: auto; font-family: var(--v2-display); font-size: 13px; font-weight: 800;
+  color: var(--pc, #818cf8); white-space: nowrap; }
+.pl-cpt-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 6px; line-height: 1.45; }
+
+/* ── Droits annuels (modale, gabarit v2-ov/v2-md) ─────────────────────── */
+.pl-md-ico svg { width: 22px; height: 22px; }
+.pl-dr-l { display: flex; flex-direction: column; gap: 8px; }
+.pl-dr {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft); border-radius: 11px;
+}
+.pl-dr-b { flex: 1; min-width: 0; }
+.pl-dr-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.pl-dr-s { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+
+/* ── Mode d'emploi (modale, gabarit v2-ov/v2-md) ──────────────────────── */
+.pl-tuto-h { font-size: 12.5px; font-weight: 700; color: var(--v2-t3); margin-bottom: 7px;
+  display: flex; align-items: center; gap: 7px; }
+.pl-tuto-p { font-size: 13px; color: var(--v2-t4); line-height: 1.55; }
+.pl-tuto-ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.pl-tuto-ol li { font-size: 12.5px; color: var(--v2-t4); line-height: 1.5; }
+.pl-tuto-ol li::marker { color: var(--mc, #818cf8); font-weight: 800; }
+.pl-tuto-box {
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-sm); padding: 12px 14px;
+}
+.pl-tuto-ex {
+  background: var(--v2-s-sub); border-left: 3px solid var(--mc, #818cf8);
+  border-radius: var(--v2-r-badge); padding: 11px 13px;
+  font-size: 12.5px; color: var(--v2-t4); line-height: 1.55;
+}
+.pl-tuto-ex b, .pl-tuto-h b { color: var(--mc, #818cf8); }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1280px) {
+  .pl-stats, .pl-cards { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1080px) {
+  .pl-bento { grid-template-columns: 1fr; }
+  .pl-cpts { grid-template-columns: 1fr; }
+}
+@media (max-width: 960px) {
+  body.v2 .pl-shell { flex-direction: column; height: auto; }
+  .pl-stats, .pl-cards { grid-template-columns: repeat(2, 1fr); }
+  #plFrame { min-height: 70vh; }
+}
+@media (max-width: 620px) {
+  .pl-stats, .pl-cards { grid-template-columns: 1fr; }
+  .pl-topbar { padding-left: 18px; padding-right: 18px; }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────
+   Ajouté avec le passage bord à bord de css/v2.css. Placé en fin de fichier :
+   les règles ci-dessus ont la même specificité, c'est l'ordre qui tranche. */
+@media (max-width: 960px) {
+  /* Le rail supprimé, la coquille n'est plus qu'une colonne. En `height:auto`
+     l'iframe du module (flex:1) n'a aucune base de calcul et se réduit à une
+     hauteur arbitraire : on redonne une hauteur réelle. dvh d'abord pour ne
+     pas compter la barre d'URL mobile, vh en repli. */
+  body.v2 .pl-shell { height: 100vh; height: 100dvh; min-height: 0; }
+}
+@media (max-width: 860px) {
+  .pl-topbar {
+    height: auto; min-height: 58px; flex-wrap: wrap;
+    padding: 10px 14px; gap: 8px;
+  }
+  /* Sans troncature, le titre pousse la méta hors de l'écran. */
+  .pl-topbar-t {
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* La méta passe à la ligne plutôt que de disparaître : l'information
+     (date, effectif) reste lisible. */
+  /* `order` élevé : la méta occupant toute la ligne, sans ça elle
+     repousserait le bouton de thème sur une troisième ligne. */
+  .pl-topbar-m {
+    order: 10; display: block; margin-left: 0; flex-basis: 100%;
+    font-size: 11.5px; white-space: normal;
+  }
+  .pl-topbar #thmBtn { margin-left: auto; }
+}
+@media (max-width: 640px) {
+  /* Dégager la barre de navigation mobile fixe (js/mobile-nav.js, ~86px) :
+     #plHome défile en interne, le padding-bottom du body ne l'atteint pas. */
+  #plHome { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}

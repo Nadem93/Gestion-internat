@@ -303,7 +303,7 @@ function renderFinance() {
 
   // ── Tableau des opérations ──
   const ops = [];
-  demandes.forEach(d => ops.push({ date: d.dateDepense, type: 'Dépense', label: `${d.motif||'—'} (${escHtml(d.employeNom||'')})`, montant: -Number(d.montant||0), statut: d.statut }));
+  demandes.forEach(d => ops.push({ date: d.dateDepense, type: 'Dépense', label: `${escHtml(d.motif||'—')} (${escHtml(d.employeNom||'')})`, montant: -Number(d.montant||0), statut: d.statut }));
   fichesPaie.forEach(f => ops.push({ date: f.dateAjout ? f.dateAjout.slice(0,10) : '', type: 'Paie', label: `Fiche de paie — ${escHtml(f.employeNom||'')} (${f.periode||''})`, montant: -Number(f.net||0), statut: 'accepte' }));
   ops.sort((a,b) => (b.date||'').localeCompare(a.date||''));
 
@@ -341,7 +341,24 @@ async function initFinance() {
     document.querySelector('.content').innerHTML = `<div class="empty" style="padding:3rem;text-align:center"><h3>Accès réservé</h3><p>Ce module est réservé aux administrateurs.</p><a href="accueil.html" class="btn btn-accent">← Accueil</a></div>`;
     return;
   }
-  await sbLoadResidentsCache();
+  // Six lectures indépendantes : elles partaient l'une après l'autre, soit six
+  // allers-retours en file. Une seule vague suffit — chacune garde sa propre
+  // dégradation douce, une table absente n'empêche pas les autres de se charger.
+  const _lot = [
+    ['budgetEnveloppes', 'sbGetBudgetEnveloppes'],
+    ['budgetDemandes',   'sbGetBudgetDemandes'],
+    ['fichesPaie',       'sbGetFichesPaie'],
+    ['contrats',         'sbGetContrats'],
+    ['employes',         'sbGetEmployes'],
+  ];
+  await Promise.all([
+    sbLoadResidentsCache(),
+    ..._lot.map(([cle, fn]) =>
+      (typeof window[fn] === 'function')
+        ? window[fn]().then(d => DB.set(DB.keys[cle], d)).catch(e => console.error('[initFinance]', fn, e))
+        : Promise.resolve()
+    ),
+  ]);
   finPopulatePeriode();
   document.getElementById('finPeriode').addEventListener('change', renderFinance);
   renderFinance();

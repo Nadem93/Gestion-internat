@@ -4,46 +4,138 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Pointage — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    .pt-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
-    .pt-table th{background:#f8fafc;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:.5rem .4rem;text-align:center;border-bottom:1px solid var(--border)}
-    .pt-table td{padding:.4rem;text-align:center;border-bottom:1px solid var(--border);font-size:.8rem}
-    .pt-table td.pt-name{text-align:left;font-weight:600;padding-left:.85rem;white-space:nowrap}
-    .pt-input{width:92px;font-size:.82rem;padding:.3rem .25rem;border:1px solid var(--border);border-radius:5px;text-align:center}
-  </style>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-pointage.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Pointage / temps de travail</div></div>
-      <div class="header-right">
-        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell" style="--v2-halo:rgba(13,148,136,.20)">
+
+    <!-- ── BARRE DU HAUT ─────────────────────────────────────────────── -->
+    <div class="v2-top">
+      <a class="v2-logo" href="rh.html" title="Portail RH" style="background:linear-gradient(135deg,#0d9488,#2dd4bf)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · RH</div>
+        <div class="v2-top-title">Pointage &amp; temps de travail</div>
       </div>
-    </header>
-
-    <main class="content" style="max-width:1150px">
-      <div id="ptStats" class="grid grid-5" style="margin-bottom:1.5rem"></div>
-
-      <div class="toolbar" style="margin-bottom:1rem;align-items:center">
-        <button class="btn btn-ghost btn-icon" onclick="ptShiftWeek(-1)" title="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <span id="ptWeekLabel" style="font-weight:700;color:var(--primary)"></span>
-        <button class="btn btn-ghost btn-icon" onclick="ptShiftWeek(1)" title="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="9 18 15 12 9 6"/></svg></button>
-        <button class="btn btn-ghost btn-sm" onclick="ptGoToday()">Cette semaine</button>
-      </div>
-
-      <div class="toolbar" style="margin-bottom:1.25rem">
-        <div class="search-box" style="max-width:280px">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="ptSearch" placeholder="Rechercher un employé…" oninput="renderPointage()"/>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="pt2-nav">
+          <button type="button" onclick="pt2Prev()" title="Période précédente" aria-label="Période précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="pt2-nav-l" id="ptWeekLabel"></span>
+          <button type="button" onclick="pt2Next()" title="Période suivante" aria-label="Période suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
-        <select id="ptFilterPoste" style="width:auto" onchange="renderPointage()"><option value="">Tous les métiers</option></select>
+        <button type="button" class="v2-btn v2-btn-sm" onclick="pt2Today()">Aujourd'hui</button>
+        <div class="pt2-seg">
+          <button type="button" id="pt2ViewJour" class="on" onclick="pt2SetView('jour')">Jour</button>
+          <button type="button" id="pt2ViewSem" onclick="pt2SetView('semaine')">Semaine</button>
+        </div>
+        <div class="pt2-clock"><span class="pt2-live"></span><span id="pt2Clock"></span></div>
       </div>
+    </div>
 
-      <div id="ptTableWrap" style="overflow-x:auto"></div>
-      <p style="font-size:.74rem;color:var(--muted);margin-top:.75rem">Saisissez les heures réelles (arrivée / départ) pour chaque jour. Le badge 📋 affiche le créneau prévu issu du <a href="planning-equipe.html">planning équipe</a> — cliquez-le pour le recopier tel quel. Les cases en rouge signalent un créneau planifié non encore pointé. La colonne « Écart » compare les heures réelles aux heures prévues.</p>
-    </main>
+    <!-- ── CORPS ────────────────────────────────────────────────────── -->
+    <div class="v2-body">
+      <main class="content">
+
+        <div class="pt2-tools">
+          <div class="pt2-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="ptSearch" placeholder="Rechercher un salarié…" oninput="renderPointage()" aria-label="Rechercher un salarié"/>
+          </div>
+          <select id="ptFilterPoste" class="pt2-select" onchange="renderPointage()" aria-label="Filtrer par métier">
+            <option value="">Tous les métiers</option>
+          </select>
+          <span class="pt2-hint">Heures réelles · le créneau prévu vient du <a href="planning-equipe.html" style="color:#a5f3fc">planning équipe</a></span>
+        </div>
+
+        <div id="ptStats" class="pt2-stats"></div>
+
+        <div class="pt2-grid">
+          <div class="pt2-main">
+            <div id="ptTableWrap"></div>
+            <div id="pt2Anomalies"></div>
+          </div>
+          <div class="pt2-rail" id="pt2Rail"></div>
+        </div>
+
+        <div id="pt2Features"></div>
+
+      </main>
+    </div>
+  </div>
+</div></div>
+
+<!-- ══ MODALE — SAISIE / RÉGULARISATION D'UN POINTAGE ════════════════ -->
+<div class="v2-ov" id="modalPt2Saisie" onclick="if(event.target===this)closeModal('modalPt2Saisie')">
+  <div class="v2-md" style="--mc:#2dd4bf">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+      <div><div class="v2-md-t">Pointage</div><div class="v2-md-s" id="pt2SaisieSub"></div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalPt2Saisie')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="pt2-md-who" id="pt2SaisieWho"></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="pt2FldArr">Arrivée</label><input type="time" class="v2-fld" id="pt2FldArr"/></div>
+        <div><label class="v2-fld-l" for="pt2FldDep">Départ</label><input type="time" class="v2-fld" id="pt2FldDep"/></div>
+      </div>
+      <div><label class="v2-fld-l" for="pt2FldPause">Pause (minutes)</label><input type="number" min="0" step="5" class="v2-fld" id="pt2FldPause" value="0"/></div>
+      <button type="button" class="v2-btn-sec" id="pt2CopyPlan" onclick="pt2CopierPlanning()">Recopier le créneau prévu</button>
+      <div class="v2-note v2-note-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Toute modification repasse le pointage en attente de validation.
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="pt2SaveSaisie(false)">Enregistrer</button>
+      <button type="button" class="v2-btn-pri" onclick="pt2SaveSaisie(true)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer et valider
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALE — BORNE DE POINTAGE ═══════════════════════════════════ -->
+<div class="v2-ov" id="modalPt2Borne" onclick="if(event.target===this)closeModal('modalPt2Borne')">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      <div><div class="v2-md-t" id="pt2BorneTitre">Nouvelle borne</div><div class="v2-md-s">Point de badgeage de l'établissement</div></div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalPt2Borne')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div><label class="v2-fld-l" for="pt2BorneNom">Nom</label><input type="text" class="v2-fld" id="pt2BorneNom" placeholder="Borne entrée principale"/></div>
+      <div><label class="v2-fld-l" for="pt2BorneLieu">Emplacement</label><input type="text" class="v2-fld" id="pt2BorneLieu" placeholder="Hall d'accueil"/></div>
+      <div class="v2-grid2">
+        <div><label class="v2-fld-l" for="pt2BorneType">Type</label>
+          <select class="v2-fld" id="pt2BorneType">
+            <option value="badge">Badge</option>
+            <option value="qr">QR + badge</option>
+            <option value="mobile">Pointage mobile</option>
+          </select></div>
+        <div><label class="v2-fld-l" for="pt2BorneActif">État</label>
+          <select class="v2-fld" id="pt2BorneActif">
+            <option value="1">En service</option>
+            <option value="0">Hors service</option>
+          </select></div>
+      </div>
+      <button type="button" class="v2-btn-sec" id="pt2BorneDel" onclick="pt2DeleteBorne()" style="display:none">Supprimer cette borne</button>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalPt2Borne')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="pt2SaveBorne()">Enregistrer</button>
+    </div>
   </div>
 </div>
 
@@ -51,6 +143,10 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/contrats-supabase.js"></script>
@@ -58,5 +154,7 @@
 <script src="js/planning-equipe-supabase.js"></script>
 <script src="js/pointages-supabase.js"></script>
 <script src="js/pointage.js"></script>
+<script src="js/pointage-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

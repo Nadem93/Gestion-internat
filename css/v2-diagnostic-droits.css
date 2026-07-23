@@ -1,0 +1,215 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — Diagnostic des droits & obligations (RH), design V2
+   D'après la maquette « Diagnostic droits (RH) ».
+   Ne contient QUE le style propre à cette page : tout le reste
+   (coque, top bar, blocs, modales, barres de progression) vient de css/v2.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── En-tête : bandeau score + tuiles ─────────────────────────────────── */
+.dd2-head { display: grid; grid-template-columns: 300px 1fr; gap: 20px; margin-bottom: 18px; }
+@media (max-width: 1000px) { .dd2-head { grid-template-columns: 1fr; } }
+
+.dd2-score {
+  display: flex; align-items: center; gap: 18px; padding: 20px;
+  border-radius: var(--v2-r-card2);
+  background: linear-gradient(135deg, rgba(16,185,129,.14), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(16,185,129,.22);
+}
+.dd2-ring {
+  position: relative; width: 96px; height: 96px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.dd2-ring-in {
+  width: 74px; height: 74px; border-radius: 50%; background: var(--v2-inset);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.dd2-ring-v { font-family: var(--v2-display); font-size: 24px; font-weight: 800; color: #fff; line-height: 1; }
+.dd2-ring-l { font-size: 9px; color: var(--v2-t6); margin-top: 2px; }
+.dd2-score-t { font-size: 13.5px; font-weight: 700; color: #6ee7b7; margin-bottom: 6px; }
+.dd2-score-s { font-size: 11.5px; color: var(--v2-t5); line-height: 1.5; }
+
+.dd2-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 720px) { .dd2-stats { grid-template-columns: 1fr; } }
+.dd2-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.dd2-stat-ic {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.dd2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; }
+.dd2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Corps principal : domaines + rail ────────────────────────────────── */
+.dd2-main { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .dd2-main { grid-template-columns: 1fr; } }
+.dd2-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dd2-titre { font-size: 14px; font-weight: 700; color: var(--v2-t2); margin-bottom: 12px; }
+.dd2-liste { display: flex; flex-direction: column; gap: 12px; }
+
+/* Ligne de domaine (cliquable : elle pilote l'auto-diagnostic) */
+.dd2-dom {
+  display: flex; align-items: center; gap: 16px; width: 100%; text-align: left;
+  padding: 14px 18px; border-radius: var(--v2-r-sub); cursor: pointer; font: inherit;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  transition: background .15s, border-color .15s;
+}
+.dd2-dom:hover { background: var(--v2-s-hover); }
+.dd2-dom.on { background: var(--v2-s-sel); border-color: var(--v2-b-active); }
+.dd2-dom-ic {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc) 13%, transparent); color: var(--pc);
+}
+.dd2-dom-txt { width: 210px; flex-shrink: 0; min-width: 0; display: block; }
+.dd2-dom-l { display: block; font-size: 13px; font-weight: 700; color: var(--v2-t2); }
+.dd2-dom-d { display: block; font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; }
+/* .v2-prog est posé sur un <span> ici : sans display:block, la hauteur de la
+   barre ne s'applique pas et la jauge reste invisible. */
+.dd2-dom-bar { flex: 1; min-width: 60px; }
+.dd2-dom-bar .v2-prog { display: block; }
+.dd2-dom-pct { font-family: var(--v2-display); font-size: 14px; font-weight: 800; width: 46px; text-align: right; flex-shrink: 0; }
+.dd2-dom-tag { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px; width: 92px; text-align: center; flex-shrink: 0; }
+@media (max-width: 780px) {
+  .dd2-dom { flex-wrap: wrap; }
+  .dd2-dom-txt { width: auto; flex: 1; }
+  .dd2-dom-bar { flex-basis: 100%; order: 5; }
+}
+
+/* ── Rail : points de vigilance ───────────────────────────────────────── */
+.dd2-blk-alerte {
+  background: linear-gradient(135deg, rgba(239,68,68,.13), rgba(245,158,11,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(239,68,68,.22);
+}
+.dd2-blk-alerte .v2-blk-t { color: #fecaca; }
+.dd2-vig { display: flex; align-items: flex-start; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.dd2-vig:last-child { border-bottom: none; }
+.dd2-vig-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.dd2-vig-b { flex: 1; min-width: 0; }
+.dd2-vig-l { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.dd2-vig-d { font-size: 10.5px; color: var(--v2-t6); margin-top: 1px; }
+.dd2-vig-tag { font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.dd2-vig-plus { font-size: 10.5px; color: var(--v2-t7); padding-top: 10px; }
+
+/* ── Rail : plan d'action ─────────────────────────────────────────────── */
+.dd2-act { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-list); }
+.dd2-act:last-child { border-bottom: none; }
+.dd2-act-box {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; padding: 0; cursor: pointer;
+  border: 2px solid var(--v2-t7); display: flex; align-items: center; justify-content: center;
+}
+.dd2-act-l {
+  flex: 1; min-width: 0; text-align: left; font: inherit; font-size: 12px; color: var(--v2-t3);
+  background: none; border: none; padding: 0; cursor: pointer;
+}
+.dd2-act-l:hover { color: #fff; }
+.dd2-act-l.done { color: var(--v2-t9); text-decoration: line-through; }
+.dd2-act-e { font-size: 10px; color: var(--v2-t6); flex-shrink: 0; }
+
+/* ── Rail : veille réglementaire ──────────────────────────────────────── */
+.dd2-vei {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left;
+  padding: 8px 0; border-bottom: 1px solid var(--v2-b-soft);
+  background: none; border-left: none; border-right: none; border-top: none;
+  font: inherit; cursor: pointer;
+}
+.dd2-vei:last-child { border-bottom: none; }
+.dd2-vei:hover .dd2-vei-l { color: #fff; }
+.dd2-vei-t {
+  width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 800;
+}
+.dd2-vei-b { flex: 1; min-width: 0; display: block; }
+.dd2-vei-l { display: block; font-size: 11.5px; font-weight: 600; color: var(--v2-t2); }
+.dd2-vei-d { display: block; font-size: 10px; color: var(--v2-t6); margin-top: 1px; }
+
+/* ── Auto-diagnostic + évolution ──────────────────────────────────────── */
+.dd2-g2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 18px; align-items: start; }
+@media (max-width: 1000px) { .dd2-g2 { grid-template-columns: 1fr; } }
+
+.dd2-q { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.dd2-q:last-child { border-bottom: none; }
+.dd2-q-l { flex: 1; min-width: 0; font-size: 12px; color: var(--v2-t3); }
+.dd2-q-a { display: flex; gap: 6px; flex-shrink: 0; }
+.dd2-q-b {
+  height: 28px; padding: 0 12px; border-radius: 8px; font: inherit;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  color: var(--v2-t5); background: var(--v2-s-ctrl); border: 1px solid rgba(255,255,255,.1);
+}
+.dd2-q-b:hover { color: var(--v2-t2); background: var(--v2-s-hover); }
+.dd2-q-b.oui.on { color: #fff; background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.45); }
+.dd2-q-b.non.on { color: #fff; background: rgba(239,68,68,.2);  border-color: rgba(239,68,68,.45); }
+
+.dd2-meta { margin-left: auto; font-size: 11px; font-weight: 700; }
+.dd2-lien {
+  margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--v2-indigo-light);
+  background: none; border: none; padding: 0; cursor: pointer; font-family: inherit;
+}
+.dd2-lien:hover { color: var(--v2-indigo-pale); }
+
+/* Graphique d'évolution */
+.dd2-chart { display: flex; align-items: flex-end; gap: 12px; height: 130px; }
+.dd2-chart-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-end; gap: 7px; height: 100%; }
+.dd2-chart-v { font-size: 9.5px; font-weight: 700; color: #6ee7b7; }
+.dd2-chart-b { width: 100%; border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, #34d399, #10b981); }
+.dd2-chart-l { font-size: 9.5px; color: var(--v2-t8); }
+
+/* ── Risques / échéancier / référents ─────────────────────────────────── */
+.dd2-g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 18px; align-items: start; }
+@media (max-width: 1100px) { .dd2-g3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px)  { .dd2-g3 { grid-template-columns: 1fr; } }
+
+.dd2-risq { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.dd2-risq:last-child { border-bottom: none; }
+.dd2-risq-b { flex: 1; min-width: 0; }
+.dd2-risq-l { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.dd2-risq-d { font-size: 10px; color: var(--v2-t6); margin-top: 1px; }
+.dd2-risq-t { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px; flex-shrink: 0; }
+
+.dd2-ech { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-list); }
+.dd2-ech:last-child { border-bottom: none; }
+.dd2-ech-d { width: 40px; text-align: center; flex-shrink: 0; }
+.dd2-ech-j { font-family: var(--v2-display); font-size: 14px; font-weight: 800; line-height: 1; }
+.dd2-ech-m { font-size: 9px; color: var(--v2-t6); text-transform: uppercase; margin-top: 2px; }
+.dd2-ech-l { flex: 1; min-width: 0; font-size: 11.5px; color: var(--v2-t3); }
+
+.dd2-ref {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+  padding: 9px 0; border-bottom: 1px solid var(--v2-b-list);
+  background: none; border-left: none; border-right: none; border-top: none;
+  font: inherit; cursor: pointer;
+}
+.dd2-ref:last-child { border-bottom: none; }
+.dd2-ref:hover .dd2-ref-r { color: #fff; }
+.dd2-ref-av {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: var(--v2-bg);
+}
+.dd2-ref-b { flex: 1; min-width: 0; display: block; }
+.dd2-ref-r { display: block; font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.dd2-ref-n { display: block; font-size: 10px; color: var(--v2-t6); margin-top: 1px; }
+.dd2-ref-s { flex-shrink: 0; display: flex; align-items: center; }
+
+/* ── Barre d'actions du haut ──────────────────────────────────────────── */
+.dd2-top-act { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 700px) { .dd2-top-act { margin-left: 0; width: 100%; } }
+
+/* ── Accès refusé (hors encadrement RH) ───────────────────────────────── */
+.dd2-refus {
+  max-width: 520px; margin: 60px auto; text-align: center;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card); padding: 34px 30px;
+}
+.dd2-refus-ic {
+  width: 58px; height: 58px; border-radius: 17px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(239,68,68,.12); color: var(--v2-danger-text);
+}
+.dd2-refus-t { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.dd2-refus-s { font-size: 12.5px; color: var(--v2-t6); line-height: 1.6; margin-bottom: 20px; }

@@ -1,83 +1,202 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<head>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Confidentialité — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    body { background: #f8fafc; }
-    .pp { max-width:720px; margin:2rem auto; padding:0 1rem }
-    .pp h1 { font-size:1.5rem; margin-bottom:.25rem }
-    .pp h2 { font-size:1.1rem; margin:1.5rem 0 .5rem }
-    .pp p, .pp li { font-size:.875rem; line-height:1.7; color:#475569 }
-    .pp ul { padding-left:1.5rem }
-    .pp hr { margin:1.5rem 0; border:none; border-top:1px solid #e2e8f0 }
-  </style>
-</head><body>
-<div class="pp">
-  <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem">
-    <a href="accueil.html" class="btn btn-ghost btn-sm">← Retour</a>
-    <span style="font-size:.78rem;color:var(--muted)">Confidentialité</span>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-confidentialite.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell cf2-shell">
+
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#0891b2,#22d3ee)" aria-label="Retour à l'accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Informations légales</div>
+        <div class="v2-top-title">Politique de confidentialité</div>
+      </div>
+      <div class="cf2-top-act">
+        <label class="cf2-search" for="confSearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="confSearch" placeholder="Rechercher dans la politique…" aria-label="Rechercher dans la politique de confidentialité"/>
+        </label>
+        <button type="button" class="cf2-btn" id="confPrint" title="Imprimer ou enregistrer en PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimer
+        </button>
+        <a class="cf2-btn cf2-btn-back" href="accueil.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Retour
+        </a>
+      </div>
+    </div>
+
+    <div class="v2-body">
+      <main class="content">
+
+        <!-- BANDEAU -->
+        <section class="cf2-hero v2-card-tint" aria-labelledby="cf2HeroT">
+          <div class="cf2-hero-txt">
+            <h1 class="v2-h1" id="cf2HeroT">Vos données, et ce que nous en faisons</h1>
+            <p class="v2-sub">INTERNALIS — FTR (Fiche de Transmission et de Résident). Traitement des données à caractère personnel au sein de l'établissement, conformément au RGPD.</p>
+            <div class="v2-chips cf2-hero-chips">
+              <span class="v2-badge v2-badge-lg v2-b-info">RGPD</span>
+              <span class="v2-badge v2-badge-lg v2-b-neutral">Dernière mise à jour : juillet 2026</span>
+              <span class="v2-badge v2-badge-lg v2-b-warn">Non certifié HDS</span>
+            </div>
+          </div>
+          <div class="cf2-hero-kpis" id="confStats" aria-label="Repères chiffrés"></div>
+        </section>
+
+        <!-- CORPS : SOMMAIRE + SECTIONS -->
+        <div class="cf2-body">
+
+          <!-- RAIL SOMMAIRE -->
+          <aside class="cf2-rail" aria-label="Sommaire">
+            <div class="v2-blk cf2-rail-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Sommaire</span></div>
+              <nav id="confSommaire" class="cf2-toc"></nav>
+            </div>
+
+            <div class="v2-blk cf2-rail-blk">
+              <div class="v2-blk-h"><span class="v2-blk-t">Vos droits, en bref</span></div>
+              <ul class="cf2-droits">
+                <li><span class="cf2-dot" style="background:#22d3ee"></span>Accès à l'intégralité du dossier</li>
+                <li><span class="cf2-dot" style="background:#818cf8"></span>Rectification des informations</li>
+                <li><span class="cf2-dot" style="background:#ef4444"></span>Effacement / anonymisation</li>
+                <li><span class="cf2-dot" style="background:#16a34a"></span>Portabilité (export JSON)</li>
+                <li><span class="cf2-dot" style="background:#f59e0b"></span>Opposition</li>
+              </ul>
+            </div>
+
+            <div class="v2-blk cf2-rail-blk cf2-contact">
+              <div class="v2-blk-h"><span class="v2-blk-t">Exercer un droit</span></div>
+              <p class="v2-blk-vide cf2-contact-p">Adressez votre demande au référent RGPD ou à l'administrateur de votre établissement. Une réponse vous est due sous un mois.</p>
+              <a class="cf2-btn cf2-btn-pri" href="messages.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Contacter le référent
+              </a>
+            </div>
+          </aside>
+
+          <!-- SECTIONS -->
+          <div class="cf2-sections" id="confSections">
+
+            <article class="v2-blk cf2-sec" id="sec-1" data-num="1">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#818cf8">1</span>
+                <h2 class="v2-blk-t cf2-sec-t">Responsable du traitement</h2>
+              </div>
+              <p>L'établissement ESMS utilisant INTERNALIS est responsable du traitement des données à caractère personnel. L'application est un outil interne de gestion des résidents, du personnel et des activités.</p>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-2" data-num="2">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#22d3ee">2</span>
+                <h2 class="v2-blk-t cf2-sec-t">Données collectées</h2>
+              </div>
+              <p>INTERNALIS traite les catégories de données suivantes :</p>
+              <div class="cf2-cats">
+                <div class="cf2-cat" style="--c:#818cf8"><span class="cf2-cat-l">Identité</span><span class="cf2-cat-s">Nom, prénom, date de naissance, photo (facultative)</span></div>
+                <div class="cf2-cat" style="--c:#ef4444"><span class="cf2-cat-l">Santé</span><span class="cf2-cat-s">Antécédents, allergies, traitements, vaccinations, groupe sanguin, NIR, INS, DMP, consentement</span></div>
+                <div class="cf2-cat" style="--c:#22d3ee"><span class="cf2-cat-l">Séjour</span><span class="cf2-cat-s">Dates d'entrée et de sortie, chambre, statut, notes de suivi</span></div>
+                <div class="cf2-cat" style="--c:#16a34a"><span class="cf2-cat-l">Socio-éducatif</span><span class="cf2-cat-s">Scolarité, situation professionnelle, mesures de protection, sorties, budget</span></div>
+                <div class="cf2-cat" style="--c:#f59e0b"><span class="cf2-cat-l">Connexion</span><span class="cf2-cat-s">Historique de connexion, journal d'accès (audit log)</span></div>
+              </div>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-3" data-num="3">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#16a34a">3</span>
+                <h2 class="v2-blk-t cf2-sec-t">Base légale du traitement</h2>
+              </div>
+              <p>Le traitement est fondé sur :</p>
+              <ul class="cf2-ul">
+                <li>L'exécution de la mission d'intérêt public ou relevant de l'exercice de l'autorité publique (ESMS).</li>
+                <li>Le consentement explicite des résidents ou de leurs représentants légaux pour les données de santé.</li>
+                <li>L'obligation légale de tenue de dossiers et de traçabilité (loi Santé 2022, Ségur Vague 2).</li>
+              </ul>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-4" data-num="4">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#a78bfa">4</span>
+                <h2 class="v2-blk-t cf2-sec-t">Hébergement et destinataires</h2>
+              </div>
+              <p>Les données sont hébergées sur l'infrastructure <strong>Supabase</strong> (base PostgreSQL et stockage de fichiers), sous-traitant au sens de l'article 28 du RGPD, et transitent exclusivement en <strong>HTTPS</strong>.</p>
+              <p>L'accès est cloisonné par établissement et par rôle au moyen de politiques de sécurité au niveau des lignes (RLS) : un utilisateur ne voit que les données de son établissement et de son périmètre. <strong>Aucune donnée n'est cédée à des tiers</strong> ; l'application ne comporte ni traceur publicitaire, ni mesure d'audience.</p>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-5" data-num="5">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#f59e0b">5</span>
+                <h2 class="v2-blk-t cf2-sec-t">Durée de conservation</h2>
+              </div>
+              <p>Les données sont conservées jusqu'à leur suppression explicite par l'administrateur de l'établissement. Conformément à la réglementation, les données de santé peuvent être conservées pendant la durée du séjour et jusqu'à 5 ans après la sortie du résident.</p>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-6" data-num="6">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#22d3ee">6</span>
+                <h2 class="v2-blk-t cf2-sec-t">Droits des personnes</h2>
+              </div>
+              <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+              <div class="cf2-droits-g">
+                <div class="cf2-droit" style="--c:#22d3ee"><span class="cf2-droit-t">Accès</span><span class="cf2-droit-s">Consulter l'intégralité des données d'un résident (fiche résident + export JSON).</span></div>
+                <div class="cf2-droit" style="--c:#818cf8"><span class="cf2-droit-t">Rectification</span><span class="cf2-droit-s">Modifier les données via les formulaires d'édition.</span></div>
+                <div class="cf2-droit" style="--c:#ef4444"><span class="cf2-droit-t">Effacement</span><span class="cf2-droit-s">Anonymiser un résident (bouton « Anonymiser » de la fiche).</span></div>
+                <div class="cf2-droit" style="--c:#16a34a"><span class="cf2-droit-t">Portabilité</span><span class="cf2-droit-s">Exporter les données au format JSON depuis la fiche résident ou l'administration.</span></div>
+                <div class="cf2-droit" style="--c:#f59e0b"><span class="cf2-droit-t">Opposition</span><span class="cf2-droit-s">Cesser l'utilisation de l'application à tout moment.</span></div>
+              </div>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-7" data-num="7">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#ef4444">7</span>
+                <h2 class="v2-blk-t cf2-sec-t">Sécurité des données de santé (HDS)</h2>
+              </div>
+              <div class="cf2-alerte">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cf2-alerte-i"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>L'application <strong>n'est pas certifiée HDS</strong>. Une conformité HDS complète suppose un hébergement auprès d'un prestataire certifié « hébergeur de données de santé ».</span>
+              </div>
+              <p>Les mesures de sécurité en place sont les suivantes :</p>
+              <ul class="cf2-ul">
+                <li>Authentification par mot de passe (comptes gérés par le fournisseur d'authentification, mots de passe jamais stockés en clair).</li>
+                <li>Cloisonnement par établissement et par rôle (politiques RLS côté base).</li>
+                <li>Journalisation exhaustive des accès (audit log).</li>
+                <li>Gestion des permissions par fonction.</li>
+                <li>Consentement explicite pour le partage des données de santé.</li>
+                <li>Anonymisation possible des résidents.</li>
+              </ul>
+            </article>
+
+            <article class="v2-blk cf2-sec" id="sec-8" data-num="8">
+              <div class="v2-blk-h">
+                <span class="cf2-sec-n" style="--c:#8b5cf6">8</span>
+                <h2 class="v2-blk-t cf2-sec-t">Contact</h2>
+              </div>
+              <p>Pour toute question relative à la protection des données, adressez-vous à votre référent RGPD ou à l'administrateur de l'établissement. Vous pouvez également saisir la CNIL en cas de désaccord persistant.</p>
+            </article>
+
+            <div class="v2-blk-vide cf2-vide" id="confVide" hidden>Aucune section ne correspond à cette recherche.</div>
+          </div>
+        </div>
+
+        <p class="cf2-foot">INTERNALIS — application de gestion pour ESMS. Aucune donnée cédée à des tiers.</p>
+      </main>
+    </div>
   </div>
+</div></div>
 
-  <h1>🔐 Politique de confidentialité</h1>
-  <p style="margin-top:.25rem">INTERNALIS — FTR (Fiche de Transmission et de Résident)</p>
-  <p style="font-size:.78rem;color:#94a3b8">Dernière mise à jour : juin 2026</p>
-
-  <hr>
-
-  <h2>1. Responsable du traitement</h2>
-  <p>L'établissement ESMS utilisant INTERNALIS est responsable du traitement des données à caractère personnel. L'application est conçue comme un outil interne de gestion des résidents, du personnel et des activités.</p>
-
-  <h2>2. Données collectées</h2>
-  <p>INTERNALIS stocke exclusivement en local (navigateur) les catégories de données suivantes :</p>
-  <ul>
-    <li><strong>Données d'identité</strong> : nom, prénom, date de naissance, photo (facultative)</li>
-    <li><strong>Données de santé</strong> : antécédents, allergies, traitements, vaccinations, groupe sanguin, NIR, INS, DMP, consentement</li>
-    <li><strong>Données de séjour</strong> : dates d'entrée/sortie, chambre, statut, notes de suivi</li>
-    <li><strong>Données socio-éducatives</strong> : scolarité, situation professionnelle, mesures de protection, sorties, budget</li>
-    <li><strong>Données de connexion</strong> : historique de connexion, journal d'accès (audit log)</li>
-  </ul>
-
-  <h2>3. Base légale du traitement</h2>
-  <p>Le traitement est fondé sur :</p>
-  <ul>
-    <li>L'exécution de la mission d'intérêt public ou relevant de l'exercice de l'autorité publique (ESMS)</li>
-    <li>Le consentement explicite des résidents ou de leurs représentants légaux pour les données de santé</li>
-    <li>L'obligation légale de tenue de dossiers et de traçabilité (loi Santé 2022, Ségur Vague 2)</li>
-  </ul>
-
-  <h2>4. Destinataires des données</h2>
-  <p>Les données sont stockées dans le <strong>localStorage du navigateur</strong> de l'utilisateur. Aucune donnée n'est transmise à des tiers. L'application ne contient pas de serveur distant, de tracking, ni de publicité.</p>
-
-  <h2>5. Durée de conservation</h2>
-  <p>Les données sont conservées jusqu'à la suppression explicite par l'administrateur ou la réinitialisation du navigateur. Conformément à la réglementation, les données de santé peuvent être conservées pendant la durée du séjour et jusqu'à 5 ans après la sortie du résident.</p>
-
-  <h2>6. Droits des personnes</h2>
-  <p>Conformément au RGPD, vous disposez des droits suivants :</p>
-  <ul>
-    <li><strong>Droit d'accès</strong> : consulter l'intégralité des données d'un résident (fiche résident + export JSON)</li>
-    <li><strong>Droit de rectification</strong> : modifier les données via les formulaires d'édition</li>
-    <li><strong>Droit à l'effacement</strong> : anonymiser un résident (bouton "Anonymiser" dans la fiche)</li>
-    <li><strong>Droit à la portabilité</strong> : exporter les données au format JSON depuis la fiche résident ou depuis l'admin</li>
-    <li><strong>Droit d'opposition</strong> : cesser l'utilisation de l'application à tout moment</li>
-  </ul>
-
-  <h2>7. Sécurité des données de santé (HDS)</h2>
-  <p>L'application en mode local (<code>file://</code>) <strong>n'est pas certifiée HDS</strong>. Pour une conformité HDS complète, l'application doit être déployée sur un serveur respectant les exigences de la certification HDS (hébergement de données de santé).</p>
-  <p>Les mesures de sécurité actuelles incluent :</p>
-  <ul>
-    <li>Authentification par mot de passe (hashé en local)</li>
-    <li>Journalisation exhaustive des accès (audit log)</li>
-    <li>Gestion des permissions par fonction</li>
-    <li>Consentement explicite pour le partage des données de santé</li>
-    <li>Anonymisation possible des résidents</li>
-  </ul>
-
-  <h2>8. Contact</h2>
-  <p>Pour toute question relative à la protection des données, veuillez contacter votre référent RGPD ou l'administrateur de l'établissement.</p>
-
-  <hr>
-  <p style="font-size:.72rem;color:#94a3b8;text-align:center">INTERNALIS — Application ESMS locale. Aucune donnée transmise à des tiers.</p>
-</div>
+<script src="js/confidentialite-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body></html>

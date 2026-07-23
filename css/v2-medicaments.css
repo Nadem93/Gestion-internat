@@ -1,0 +1,161 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — MÉDICAMENTS (vie quotidienne) — design V2
+   D'après la maquette « Médicaments (vie quotidienne).dc.html ».
+   Chargé APRÈS css/v2.css, qui n'est pas modifié par cette page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bandeau de compteurs (4 tuiles icône + nombre) ───────────────────── */
+.v2-med-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+@media (max-width: 1000px) { .v2-med-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .v2-med-stats { grid-template-columns: 1fr; } }
+.v2-med-stat {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
+}
+.v2-med-stat-i {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #818cf8) 13%, transparent); color: var(--pc, #818cf8);
+}
+.v2-med-stat-i svg { width: 21px; height: 21px; }
+.v2-med-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--pc, #fff); }
+.v2-med-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Deux panneaux : renouvellements + prochaines prises ──────────────── */
+.v2-med-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; align-items: start; }
+@media (max-width: 1000px) { .v2-med-panels { grid-template-columns: 1fr; } }
+.v2-med-pan {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 18px 20px;
+}
+.v2-med-pan-warn {
+  background: linear-gradient(135deg, rgba(245,158,11,.13), rgba(239,68,68,.05)), var(--v2-s-alt);
+  border-color: rgba(245,158,11,.22);
+}
+.v2-med-pan-h { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.v2-med-pan-h svg { width: 15px; height: 15px; flex-shrink: 0; }
+.v2-med-pan-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t3); }
+.v2-med-pan-warn .v2-med-pan-t { color: var(--v2-warn-text); }
+.v2-med-pan-c { display: flex; flex-direction: column; }
+
+.v2-med-li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--v2-b-soft); }
+.v2-med-li:last-child { border-bottom: none; }
+.v2-med-li-n { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); }
+.v2-med-li-s { font-size: 10.5px; color: var(--v2-t6); }
+.v2-med-li-tag {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+  color: var(--pc, #818cf8); background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent);
+}
+.v2-med-li-h {
+  width: 74px; flex-shrink: 0; font-family: var(--v2-display);
+  font-size: 12px; font-weight: 800; color: var(--pc, #818cf8);
+}
+.v2-med-li-k { font-size: 10px; font-weight: 700; color: var(--v2-t5); white-space: nowrap; }
+.v2-med-li-bar { width: 90px; flex-shrink: 0; }
+
+/* ── Stock de médicaments (panneau « Stock & renouvellements ») ───────── */
+.v2-med-pan-add {
+  margin-left: auto; flex-shrink: 0; height: 26px; padding: 0 11px;
+  border-radius: 8px; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700;
+  color: var(--v2-warn-text); background: rgba(245,158,11,.14);
+  border: 1px solid rgba(245,158,11,.3);
+}
+.v2-med-pan-add:hover { background: rgba(245,158,11,.24); }
+.v2-med-sub-h {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--v2-t7); margin: 14px 0 2px; padding-top: 12px;
+  border-top: 1px solid var(--v2-b-soft);
+}
+.v2-med-li-edit {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--v2-t6); background: rgba(255,255,255,.04); border: 1px solid var(--v2-b-ctrl);
+}
+.v2-med-li-edit:hover { background: var(--v2-s-hover); color: var(--v2-t2); }
+.v2-med-li-edit svg { width: 12px; height: 12px; }
+
+/* ── Filtres ──────────────────────────────────────────────────────────── */
+.v2-med-search {
+  height: 34px; flex: 1; min-width: 190px; max-width: 300px;
+  border-radius: var(--v2-r-chip); padding: 0 13px; gap: 9px;
+  display: flex; align-items: center;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+}
+.v2-med-search svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--v2-t7); }
+.v2-med-search input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; margin: 0;
+  background: none; border: none; outline: none; box-shadow: none;
+  font: inherit; font-size: 12.5px; color: var(--v2-t2);
+}
+.v2-med-hint { font-size: 11.5px; color: var(--v2-t7); margin: 0 0 14px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.v2-med-hint b { color: var(--v2-ok-light); }
+.v2-med-hint svg { width: 14px; height: 14px; flex-shrink: 0; }
+.v2-med-vide-i { width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(129,140,248,.14); color: var(--v2-indigo-light); }
+.v2-med-vide-i svg { width: 22px; height: 22px; }
+
+/* ── Cartes résident ──────────────────────────────────────────────────── */
+.v2-med-cards { display: flex; flex-direction: column; gap: 14px; }
+.v2-med-card {
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 16px 20px;
+}
+.v2-med-card-h {
+  display: flex; align-items: center; gap: 11px; flex-wrap: wrap;
+  margin-bottom: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--v2-b);
+}
+.v2-med-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #0a1728;
+}
+.v2-med-av img { width: 100%; height: 100%; object-fit: cover; }
+.v2-med-nom { font-size: 14px; font-weight: 700; color: var(--v2-t2); }
+.v2-med-ch { font-size: 10.5px; color: var(--v2-t6); }
+.v2-med-alrt {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700;
+  color: var(--v2-danger-text); background: rgba(239,68,68,.14); padding: 4px 10px; border-radius: 7px;
+}
+.v2-med-alrt svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+.v2-med-rows { display: flex; flex-direction: column; gap: 9px; }
+.v2-med-row {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+  border-radius: var(--v2-r-sm); padding: 11px 15px;
+}
+.v2-med-row.late { border-color: rgba(239,68,68,.28); }
+.v2-med-mom {
+  width: 78px; flex-shrink: 0; display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; color: var(--v2-t5);
+}
+.v2-med-nm { font-size: 13px; font-weight: 600; color: var(--v2-t2); }
+.v2-med-dose { font-size: 10.5px; color: var(--v2-t6); }
+.v2-med-opts { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+.v2-med-opt {
+  height: 30px; padding: 0 12px; border-radius: 9px;
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 700; color: var(--v2-t6);
+  background: rgba(255,255,255,.04); border: 1px solid var(--v2-b-ctrl);
+}
+.v2-med-opt:hover { background: var(--v2-s-hover); color: var(--v2-t2); }
+.v2-med-opt.on { color: #0a1728; background: var(--oc, #10b981); border-color: var(--oc, #10b981); }
+.v2-med-opt:disabled { cursor: default; }
+.v2-med-opt svg { width: 12px; height: 12px; }
+.v2-med-note {
+  width: 100%; font-size: 11px; color: var(--v2-t5);
+  background: var(--v2-s-sub); border: 1px dashed var(--v2-b-ctrl);
+  border-radius: 9px; padding: 5px 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.v2-med-note svg { width: 12px; height: 12px; flex-shrink: 0; }
+.v2-med-tag { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  color: var(--pc, #818cf8); background: color-mix(in srgb, var(--pc, #818cf8) 12%, transparent); }
+
+/* Segment de statut de la modale : 5 statuts sur deux lignes */
+#mdSeg.v2-seg { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); }
+#mdSeg .v2-seg-o { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 54px; }
+#mdSeg .v2-seg-o svg { width: 15px; height: 15px; }
+#mdSeg .v2-seg-o span { font-size: 11px; }

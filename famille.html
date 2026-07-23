@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
+  <title>Espace famille — INTERNALIS</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-famille.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(99,102,241,.24)">
+
+  <div class="v2-top">
+    <span class="v2-logo" style="background:linear-gradient(135deg,#4f46e5,#6366f1)" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </span>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Portail famille</div>
+      <div class="v2-top-title">Espace famille</div>
+    </div>
+    <div class="fam-top-actions">
+      <span class="fam-ro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Lecture seule
+      </span>
+      <button type="button" class="v2-btn v2-btn-sm" id="famLogoutBtn" onclick="Auth.logout()" aria-label="Déconnexion">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+    <div class="fam-hero" id="famWelcome" aria-live="polite"></div>
+
+    <div class="v2-blk-sub">Mon espace</div>
+    <div class="fam-kpis" id="famKpis"></div>
+
+    <div class="v2-chips fam-filtres" id="famChips" role="group" aria-label="Filtrer par catégorie de document"></div>
+
+    <div id="famResidents" aria-live="polite"></div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+<script>Auth.requireAuth();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
+<script src="js/famille-supabase.js"></script>
+<script>
+  const FAM_CATEGORY_LABEL = { admin: 'Administratif', medical: 'Médical', scolaire: 'Scolaire', autre: 'Autre' };
+
+  // Rendu historique (V1) — conservé comme repli ; js/famille-v2.js le remplace
+  // en réassignant window.renderFamille (liaison tardive via la flèche ci-dessous).
+  async function renderFamille() {
+    const docs = await sbGetMesDocumentsFamille();
+    const el = document.getElementById('famResidents');
+    if (!docs.length) {
+      el.innerHTML = `<div class="v2-blk"><div class="v2-blk-vide">Aucun document n'a encore été partagé avec vous.</div></div>`;
+      return;
+    }
+    const byResident = {};
+    docs.forEach(d => { (byResident[d.residentNom] ||= []).push(d); });
+    el.innerHTML = Object.entries(byResident).map(([nom, list], idx) => `
+      <section class="v2-blk" style="margin-bottom:18px" aria-labelledby="fam-res-${idx}">
+        <h2 class="fam-res-n" id="fam-res-${idx}">${escHtml(nom)}</h2>
+        ${list.map(d => {
+          const catLabel = FAM_CATEGORY_LABEL[d.category] || d.category || '';
+          const dateLabel = d.docDate ? formatDate(d.docDate) : '';
+          const docLabel = d.documentName || 'Document';
+          return `<div class="fam-doc">
+            <div class="fam-doc-b">
+              <div class="fam-doc-n">${escHtml(docLabel)}</div>
+              <div class="fam-doc-m">${escHtml(catLabel)}${dateLabel ? ' <span aria-hidden="true">·</span> ' + escHtml(dateLabel) : ''}</div>
+            </div>
+            <button type="button" class="v2-btn v2-btn-sm fam-btn-ouvrir" onclick="famOpenDocument('${d.documentId}')" aria-label="Ouvrir le document ${escHtml(docLabel)} de ${escHtml(nom)} (nouvel onglet)">Ouvrir</button>
+          </div>`;
+        }).join('')}
+      </section>`).join('');
+  }
+
+  // LECTURE SEULE : seule action possible sur un document, l'ouvrir.
+  async function famOpenDocument(documentId) {
+    const url = await sbGetDocumentUrlFamille(documentId);
+    if (url) { window.open(url, '_blank'); return; }
+    if (typeof toast === 'function') toast("Impossible d'ouvrir le document. Réessayez ou contactez l'établissement.", 'error');
+    else alert("Impossible d'ouvrir le document. Réessayez ou contactez l'établissement.");
+  }
+  window.famOpenDocument = famOpenDocument;
+
+  document.addEventListener('DOMContentLoaded', () => renderFamille());
+</script>
+<script src="js/famille-v2.js"></script>
+</body></html>

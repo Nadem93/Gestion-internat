@@ -27,12 +27,14 @@ function _ptFromRow(r) {
 }
 
 async function sbGetPointages() {
-  const { data, error } = await supabaseClient
-    .from('pointages')
-    .select('*')
-    .order('date', { ascending: true });
-  if (error) { console.error(error); toast('Erreur chargement pointages', 'error'); return []; }
-  return data.map(_ptFromRow);
+  // Lecture paginée : un an de badgeage dépasse largement le plafond PostgREST de 1000 lignes
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('pointages')
+      .select('*')
+      .order('date', { ascending: true }).order('employe_id'));
+    return data.map(_ptFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement pointages', 'error'); return []; }
 }
 
 // Un pointage par (employé, date) : insert ou update via la contrainte unique

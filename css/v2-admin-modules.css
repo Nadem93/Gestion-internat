@@ -1,0 +1,94 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS V2 — admin-modules.html
+
+   Cette page n'a PAS d'interface propre : la grille de modules d'origine a été
+   remplacée par le menu latéral de admin.html, et le fichier ne fait plus que
+   rediriger (meta refresh + location.replace, query string conservée).
+
+   Le seul travail de design restant est donc d'éviter le flash blanc pendant
+   la redirection et d'offrir un repli lisible si celle-ci est bloquée
+   (JS désactivé, meta refresh interdit par une extension).
+   Aucune surface claire, aucun contenu inventé.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.v2 .v2-redir {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+}
+
+body.v2 .v2-redir-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--v2-s-card);
+  border: 1px solid var(--v2-b);
+  border-radius: 18px;
+  padding: 26px 24px;
+  text-align: center;
+}
+
+body.v2 .v2-redir-mark {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo-light));
+}
+
+/* Bornage explicite : une icône SVG sans dimensions remplit son conteneur. */
+body.v2 .v2-redir-mark svg { width: 21px; height: 21px; flex-shrink: 0; }
+
+body.v2 .v2-redir-eyebrow {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--v2-t8);
+}
+
+body.v2 .v2-redir-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--v2-t1);
+  letter-spacing: -.01em;
+  margin-top: 4px;
+}
+
+body.v2 .v2-redir-sub {
+  font-size: 12.5px;
+  color: var(--v2-t6);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+body.v2 .v2-redir-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  margin-top: 18px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--v2-indigo-deep), var(--v2-indigo));
+  box-shadow: 0 8px 18px -6px rgba(79, 70, 229, .6);
+}
+
+body.v2 .v2-redir-link:hover { filter: brightness(1.08); }
+body.v2 .v2-redir-link:focus-visible { outline: 2.5px solid rgba(129, 140, 248, .7); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  body.v2 .v2-redir { padding: 16px; }
+  body.v2 .v2-redir-card { padding: 22px 18px; }
+}

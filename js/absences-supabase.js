@@ -40,8 +40,19 @@ function _abFromRow(r) {
   };
 }
 
+// uid réel du compte Supabase connecté (= auth.uid() = profiles.id).
+// À utiliser comme 1er dossier des chemins Storage : la RLS du bucket "justificatifs"
+// exige que le 1er segment du chemin soit auth.uid(). NE PAS utiliser Auth.getSession().userId
+// (id legacy localStorage, pas garanti égal à auth.uid()).
+async function sbAuthUid() {
+  try {
+    const { data } = await supabaseClient.auth.getUser();
+    return (data && data.user && data.user.id) || null;
+  } catch (e) { console.error('[sbAuthUid]', e); return null; }
+}
+
 // ── Stockage des justificatifs (bucket privé "justificatifs") ──
-// Chemin = <profileId>/<timestamp>_<nom> ; le 1er dossier doit être l'uid de l'uploadeur (ou admin/rh).
+// Chemin = <uid uploadeur>/<timestamp>_<nom> ; le 1er dossier DOIT être l'uid de l'uploadeur (auth.uid()).
 async function sbUploadJustificatif(file, profileId) {
   const safe = (file.name || 'fichier').replace(/[^\w.\-]+/g, '_');
   const path = `${profileId}/${Date.now()}_${safe}`;

@@ -4,6 +4,11 @@
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Accueil — FTR</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <link rel="stylesheet" href="css/v2-mobile.css"/>
+  <script src="js/theme.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
@@ -18,7 +23,11 @@
       filter:blur(8px);
     }
     .accueil-home-card:hover::before{opacity:1}
-    .accueil-home-icon,.accueil-home-label{position:relative;z-index:1}
+    .accueil-home-icon,.accueil-home-label,.accueil-home-illus{position:relative;z-index:1}
+    .accueil-home-illus{width:56px;height:56px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .accueil-home-illus svg{width:56px;height:56px;display:block}
+    @media(max-width:768px){.accueil-home-illus,.accueil-home-illus svg{width:46px;height:46px}}
+    @media(max-width:480px){.accueil-home-illus,.accueil-home-illus svg{width:40px;height:40px}}
     .notif-badge{z-index:10}
     /* Cloche de notifications */
     .acc-bell{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid rgba(15,23,42,.12);background:transparent;color:#334155;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
@@ -41,17 +50,67 @@
     .acc-notif-foot{padding:.6rem;text-align:center;border-top:1px solid #f1f5f9}
     .acc-notif-foot button{background:none;border:none;color:#4f46e5;font-size:.78rem;font-weight:600;cursor:pointer;padding:.3rem .6rem;border-radius:7px}
     .acc-notif-foot button:hover{background:#eef2ff}
-    /* Recherche globale */
-    .srch-grp{margin-bottom:.75rem}
-    .srch-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:.2rem .2rem .35rem}
-    #searchGlobalResults a:hover{background:var(--g50)}
+
+    /* ═══════════ THÈME AURORA GLASS — VERSION CLAIRE (page d'accueil) ═══════════ */
+    .accueil-home{position:relative;background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%)}
+    .acc-aurora{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+    .acc-aurora span{position:absolute;border-radius:50%;filter:blur(74px);display:block}
+    .acc-aurora .ab1{width:520px;height:520px;background:#a78bfa;top:-150px;left:-90px;opacity:.42;animation:accAur 16s ease-in-out infinite}
+    .acc-aurora .ab2{width:480px;height:480px;background:#38bdf8;bottom:-170px;right:-70px;opacity:.4;animation:accAur 21s ease-in-out infinite reverse}
+    .acc-aurora .ab3{width:340px;height:340px;background:#f472b6;top:40%;left:46%;opacity:.26;animation:accAur 26s ease-in-out infinite}
+    @keyframes accAur{0%{transform:translate(0,0) scale(1)}50%{transform:translate(38px,-28px) scale(1.16)}100%{transform:translate(0,0) scale(1)}}
+    @media(prefers-reduced-motion:reduce){.acc-aurora span{animation:none}}
+    .accueil-home-main{position:relative;z-index:1}
+    /* Mise en page de l'accueil forcée EN INLINE (cache-proof, TOUTES largeurs) :
+       boutons en rangée centrée EN HAUT, grille de cartes EN DESSOUS — jamais
+       côte à côte ni superposés. Écrase css/style.css quel que soit le cache. */
+    .accueil-home-main{display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:flex-start !important;padding-top:calc(var(--header-h,60px) + 1rem) !important}
+    .accueil-fab-stack{position:static !important;inset:auto !important;transform:none !important;display:flex !important;flex-direction:row !important;flex-wrap:wrap !important;justify-content:center !important;gap:.6rem !important;margin:.25rem 0 1.4rem !important;width:auto !important;z-index:auto !important}
+    /* Cartes → verre clair (surcharge du fond inline via !important) */
+    .accueil-home-card{
+      background:rgba(255,255,255,.62) !important;
+      -webkit-backdrop-filter:blur(13px);backdrop-filter:blur(13px);
+      border:1px solid rgba(255,255,255,.8) !important;
+      box-shadow:0 4px 16px rgba(30,41,59,.09),inset 0 1px 0 rgba(255,255,255,.9) !important;
+      color:#1e293b !important;
+    }
+    .accueil-home-card:hover{
+      background:rgba(255,255,255,.78) !important;
+      border-color:color-mix(in srgb, var(--c) 42%, #fff) !important;
+      box-shadow:0 12px 30px color-mix(in srgb, var(--c) 26%, transparent),inset 0 1px 0 rgba(255,255,255,.95) !important;
+    }
+    .accueil-home-label{color:#1e293b !important;font-weight:700}
+    /* Glow coloré discret sur l'icône de chaque module */
+    .accueil-home-illus{filter:drop-shadow(0 2px 8px color-mix(in srgb, var(--c) 34%, transparent))}
+
+    /* ── Cartes « Modules » plus compactes (surcharge locale de css/v2.css) ── */
+    .v2-mods { gap: 11px; }
+    .v2-mod-wrap { min-height: 92px; }
+    .v2-mod { padding: 11px 9px; gap: 7px; }
+    .v2-mod-ico { width: 36px; height: 36px; }
+    .v2-mod-ico svg { width: 18px; height: 18px; }
+    .v2-mod-lbl { font-size: 12px; }
+    .v2-mod-sub { font-size: 10px; }
+    .v2-mod-racc { padding: 0 9px 7px; }
+    .v2-mod-r { width: 22px; height: 22px; }
+
+    /* Ossature mobile (barre de nav + grille de modules bento) : fournie par
+       le composant partagé js/mobile-nav.js. Ici, seul le propre à l'Accueil :
+       la recherche du bandeau est masquée en mobile. */
+    @media (max-width: 640px) {
+      .v2-top .v2-search { display: none !important; }
+    }
   </style>
 </head>
-<body>
+<body class="v2">
 <script src="js/app.js"></script>
+<script src="js/accueil-v2.js"></script>
 <script src="js/alertes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/incidents-supabase.js"></script>
 <script src="js/astreintes-supabase.js"></script>
@@ -64,18 +123,43 @@
 <script src="js/planning-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
+<script src="js/admissions-supabase.js"></script>
+<script src="js/plan-soins-supabase.js"></script>
+<script src="js/budget-supabase.js"></script>
 <script src="js/config-supabase.js"></script>
 <script>
 if (!Auth.isLoggedIn()) { location.href = 'index.html'; }
 initEtabs();
-if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-if (!Auth.isRH()) document.querySelectorAll('.rh-only').forEach(el => el.style.display = 'none');
-if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
-document.querySelectorAll('[data-perm]').forEach(el => {
-  const _s = Auth.getSession();
-  const perms = el.dataset.perm.split(',');
-  const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || perms.some(p => hasPermission(_s.userId, p)));
-  if (!ok) el.style.display = 'none';
+// IMPORTANT : les tuiles et boutons réservés (.admin-only, .rh-only, .superadmin-only,
+// [data-perm], #tileInterventions) sont plus bas dans le document. Ce masquage doit donc
+// s'exécuter sur DOMContentLoaded — sinon il tourne AVANT que ces éléments existent,
+// querySelectorAll ne trouve rien, et les cartes réservées (RH, Finance, Administration,
+// Interventions…) restent visibles pour tout le monde.
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.isAdmin()) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  if (!Auth.isRH()) document.querySelectorAll('.rh-only').forEach(el => el.style.display = 'none');
+  if (!Auth.isSuperAdmin()) document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('[data-perm]').forEach(el => {
+    const _s = Auth.getSession();
+    const perms = el.dataset.perm.split(',');
+    const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || perms.some(p => hasPermission(_s.userId, p)));
+    if (!ok) el.style.display = 'none';
+  });
+  // Tuile « Interventions » : visible seulement pour ceux qui peuvent traiter les demandes
+  // (admin/superadmin, permission access_interventions, ou fonction technicien/maintenance).
+  // Les autres demandent une intervention via le bouton flottant « Demander une intervention ».
+  // Même règle que le garde d'accès de interventions.html (canAccessPage).
+  const tileI = document.getElementById('tileInterventions');
+  if (tileI) {
+    const _s = Auth.getSession();
+    const f = ((_s && _s.fonction) || '').toLowerCase();
+    const canSee = !!_s && (
+      _s.role === 'admin' || _s.role === 'superadmin' ||
+      (typeof hasPermission === 'function' && hasPermission(_s.userId, 'access_interventions')) ||
+      f.includes('technicien') || f.includes('maintenance')
+    );
+    if (!canSee) tileI.style.display = 'none';
+  }
 });
 </script>
 
@@ -122,10 +206,20 @@ document.querySelectorAll('[data-perm]').forEach(el => {
 </div>
 
 <div class="accueil-home" id="mainAccueilView" style="display:none">
-  <header class="header" style="background:transparent;border:none;position:absolute;width:100%">
-    <div style="visibility:hidden;pointer-events:none"><div class="header-title"></div></div>
-    <div class="header-right" style="position:relative;z-index:40">
-      <button class="acc-bell" id="accBell" onclick="toggleNotifPanel(event)" aria-label="Notifications">
+  <div class="acc-aurora" aria-hidden="true"><span class="ab1"></span><span class="ab2"></span><span class="ab3"></span></div>
+  <div class="v2-shell">
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html">I</a>
+      <span class="v2-brand">INTERNALIS</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <label class="v2-search" style="cursor:text;min-width:280px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="accSearch" type="search" placeholder="Rechercher un résident, une note…"
+                 style="flex:1;background:none;border:none;outline:none;color:var(--v2-t2);font-family:inherit;font-size:13.5px;padding:0"/>
+          <span class="v2-kbd">⌘K</span>
+        </label>
+        <div class="header-right" style="position:relative;z-index:40;display:flex;align-items:center">
+          <button class="acc-bell" id="accBell" onclick="toggleNotifPanel(event)" aria-label="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="acc-bell-count hidden" id="accBellCount">0</span>
       </button>
@@ -134,51 +228,17 @@ document.querySelectorAll('[data-perm]').forEach(el => {
         <div id="accNotifList"></div>
         <div class="acc-notif-foot" id="accNotifFoot" style="display:none"><button onclick="markAllNotifsRead()">Tout marquer comme lu</button></div>
       </div>
+        </div>
+        <a href="employe.html" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+          <span class="v2-av" id="accUserAv" style="background:linear-gradient(135deg,#818cf8,#22d3ee);width:40px;height:40px">·</span>
+          <span><span id="accUserName" style="display:block;font-size:13px;font-weight:700;color:var(--v2-t2)"></span>
+                <span id="accUserRole" style="display:block;font-size:11.5px;color:var(--v2-t7)"></span></span>
+        </a>
+      </div>
     </div>
-  </header>
-  <main class="accueil-home-main">
-    <div class="accueil-home-grid">
-      <a href="dashboard.html" class="accueil-home-card" data-perm="view_dashboard" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="accueil-home-label">Tableau de bord</span></a>
-      <a href="residents.html" class="accueil-home-card" data-module="residents" data-perm="view_residents" style="--c:#0891b2;background:linear-gradient(135deg,#0891b218,#22d3ee12),#fff"><span class="accueil-home-icon" style="background:#0891b220;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Résidents</span><span class="notif-badge hidden">0</span></a>
-      <a href="transmissions.html" class="accueil-home-card" data-perm="access_journal" style="--c:#3b82f6;background:linear-gradient(135deg,#3b82f618,#93c5fd12),#fff"><span class="accueil-home-icon" style="background:#3b82f620;color:#3b82f6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2v4l-4-4H9a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v4l4-4"/></svg></span><span class="accueil-home-label">Transmissions</span><span class="notif-badge tr-badge hidden"></span></a>
-      <a href="alertes.html" class="accueil-home-card" style="--c:#ef4444;background:linear-gradient(135deg,#ef444418,#fca5a512),#fff"><span class="accueil-home-icon" style="background:#ef444420;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><span class="accueil-home-label">Alertes</span><span class="notif-badge al-badge hidden"></span></a>
-      <a href="journal.html" class="accueil-home-card" data-module="journal" data-perm="access_journal" style="--c:#059669;background:linear-gradient(135deg,#05966918,#34d39912),#fff"><span class="accueil-home-icon" style="background:#05966920;color:#059669"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="accueil-home-label">Journal de bord</span><span class="notif-badge hidden">0</span></a>
-      <a href="planning.html" class="accueil-home-card" data-module="planning" data-perm="access_presences" style="--c:#d97706;background:linear-gradient(135deg,#d9770618,#fbbf2412),#fff"><span class="accueil-home-icon" style="background:#d9770620;color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="accueil-home-label">Agenda</span><span class="notif-badge hidden">0</span></a>
-      <a href="vie-quotidienne.html" class="accueil-home-card" data-perm="access_presences,view_residents,access_journal,access_activites,access_medicaments" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#5eead412),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Vie quotidienne</span></a>
-      <a href="cvs.html" class="accueil-home-card" data-module="ppe" data-perm="access_cvs" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#86efac12),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">Vie Sociale (CVS)</span></a>
-      <a href="dossiers.html" class="accueil-home-card" data-module="ppe" data-perm="access_ppe,view_residents,access_documents,access_repertoire,view_incidents,access_cvs,access_admissions" style="--c:#b45309;background:linear-gradient(135deg,#b4530918,#fcd34d12),#fff"><span class="accueil-home-icon" style="background:#b4530920;color:#b45309"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span class="accueil-home-label">Dossiers & suivi</span><span class="notif-badge hidden">0</span></a>
-      <a href="pilotage.html" class="accueil-home-card" data-module="portail" data-perm="access_planning_equipe,access_conges,access_notes,access_messages,access_documentation,access_budget,access_paie,access_entretiens,access_annuaire,access_facturation,access_formations" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Portail</span><span class="notif-badge hidden">0</span></a>
-<a href="#" onclick="openSearch();return false" class="accueil-home-card" style="--c:#0ea5e9;background:linear-gradient(135deg,#0ea5e918,#7dd3fc12),#fff"><span class="accueil-home-icon" style="background:#0ea5e920;color:#0ea5e9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="accueil-home-label">Recherche</span></a>
-<a href="interventions.html" class="accueil-home-card" data-perm="access_interventions" style="--c:#0d9488;background:linear-gradient(135deg,#0d948818,#2dd4bf12),#fff"><span class="accueil-home-icon" style="background:#0d948820;color:#0d9488"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="accueil-home-label">Interventions</span></a>
-      <a href="rh.html" class="accueil-home-card rh-only" style="--c:#4f46e5;background:linear-gradient(135deg,#4f46e518,#818cf812),#fff"><span class="accueil-home-icon" style="background:#4f46e520;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="accueil-home-label">RH</span></a>
-      <a href="finance.html" class="accueil-home-card admin-only" style="--c:#16a34a;background:linear-gradient(135deg,#16a34a18,#4ade8012),#fff"><span class="accueil-home-icon" style="background:#16a34a20;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="accueil-home-label">Finance</span></a>
-      <a href="admin.html" class="accueil-home-card admin-only" style="--c:#78716c;background:linear-gradient(135deg,#78716c18,#a8a29e12),#fff"><span class="accueil-home-icon" style="background:#78716c20;color:#78716c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></span><span class="accueil-home-label">Administration</span></a>
-      <a href="javascript:showEtabSelection()" class="accueil-home-card admin-only" style="--c:#0f2b4a;background:linear-gradient(135deg,#0f2b4a18,#1e3a5f12),#fff"><span class="accueil-home-icon" style="background:#0f2b4a20;color:#0f2b4a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="accueil-home-label">Établissement</span></a>
-    </div>
-  </main>
+    <div class="v2-body"><div id="accV2"></div></div>
+  </div>
 </div><!-- /mainAccueilView -->
-
-<div class="accueil-fab-stack">
-  <a href="aide.html" class="accueil-fab" title="Aide" style="background:#14b8a6;text-decoration:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-  </a>
-
-  <div class="accueil-fab" onclick="openModal('modalIntervention')" title="Demander une intervention" style="background:#0d9488">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-  </div>
-
-  <div class="accueil-fab" data-module="incidents" onclick="var _s=Auth.getSession();localStorage.setItem('ftr_last_visit_incidents_'+_s.userId,Date.now());if(_s?.role==='admin'){location.href='incidents.html'}else{openModal('modalIncident')}" title="Signaler un incident" style="background:#e11d48">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></svg>
-  </div>
-
-  <a href="vehicules.html" class="accueil-fab" title="Gérer les véhicules" style="background:#6366f1;text-decoration:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.5a1 1 0 0 0-.8.4L2 11v5h2m10 1.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h3m-3 0H9m6-6V7a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v3M6 17.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0"/></svg>
-  </a>
-
-  <a href="console.html" class="accueil-fab superadmin-only" title="Console groupe" style="background:#a16207;text-decoration:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-6h6v6"/></svg>
-  </a>
-</div>
 
 <div class="modal-overlay" id="modalIncident" onclick="closeModal('modalIncident')">
   <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
@@ -306,63 +366,8 @@ document.querySelectorAll('[data-perm]').forEach(el => {
   </div>
 </div>
 
-<!-- ── RECHERCHE GLOBALE ── -->
-<div class="modal-overlay" id="modalSearch" onclick="closeModal('modalSearch')">
-  <div class="modal" style="max-width:640px;align-self:flex-start;margin-top:8vh" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <span class="modal-title">🔍 Recherche globale</span>
-      <button class="modal-close" onclick="closeModal('modalSearch')">&times;</button>
-    </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.75rem">
-      <input type="text" id="searchGlobalInput" class="form-control" placeholder="Rechercher un résident, une note, un document…" oninput="runGlobalSearch()" autocomplete="off"/>
-      <div id="searchGlobalResults" style="max-height:55vh;overflow-y:auto"></div>
-    </div>
-  </div>
-</div>
 
 <script>
-// ── RECHERCHE GLOBALE ──
-function openSearch() {
-  openModal('modalSearch');
-  setTimeout(() => { const i = document.getElementById('searchGlobalInput'); if (i) { i.value = ''; i.focus(); } runGlobalSearch(); }, 60);
-}
-function runGlobalSearch() {
-  const q = (document.getElementById('searchGlobalInput').value || '').trim().toLowerCase();
-  const box = document.getElementById('searchGlobalResults');
-  if (q.length < 2) { box.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Tapez au moins 2 caractères…</div>'; return; }
-  const _sess = Auth.getSession();
-  const groups = [];
-  const item = (icon, title, sub, href) => `<a href="${href}" style="display:flex;gap:.7rem;align-items:center;padding:.55rem .7rem;border-radius:var(--r-sm);text-decoration:none;color:inherit;border-bottom:1px solid var(--border)"><span style="font-size:1.05rem">${icon}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem">${title}</div><div style="font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div></div></a>`;
-
-  // Résidents
-  const residents = DB.get(DB.keys.residents) || [];
-  const rMatch = residents.filter(r => `${r.prenom||''} ${r.nom||''} ${r.chambre||''}`.toLowerCase().includes(q)).slice(0, 8);
-  if (rMatch.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Résidents (${rMatch.length})</div>${rMatch.map(r => item('👤', escHtml(`${r.prenom||''} ${r.nom||''}`.trim()), (r.chambre?'Chambre '+escHtml(r.chambre):'')+(r.referent?' · '+escHtml(r.referent):''), 'resident.html?id='+r.id)).join('')}</div>`);
-
-  // Journal (confidentialité respectée)
-  const journal = (DB.get(DB.keys.journal) || []).filter(e => (e.visibilite !== 'confidentiel' || _sess?.role === 'admin' || String(e.authorId) === String(_sess?.userId)) && (e.contenu||'').toLowerCase().includes(q)).slice(-8).reverse();
-  if (journal.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Journal (${journal.length})</div>${journal.map(e => item('📔', escHtml((e.resident||'Note')), escHtml((e.contenu||'').slice(0,80)), 'journal.html')).join('')}</div>`);
-
-  // Documents
-  const docsMap = DB.get(DB.keys.documents) || {};
-  const docHits = [];
-  Object.entries(docsMap).forEach(([rid, docs]) => (docs||[]).forEach(d => { if ((d.name||'').toLowerCase().includes(q)) { const r = residents.find(x => String(x.id)===String(rid)); docHits.push(item('📎', escHtml(d.name), r?`${r.prenom||''} ${r.nom||''}`.trim():'Document', 'documents.html?residentId='+rid)); } }));
-  if (docHits.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Documents (${docHits.length})</div>${docHits.slice(0,8).join('')}</div>`);
-
-  // Planning
-  const plan = (DB.get(DB.keys.planning) || []).filter(e => `${e.titre||''} ${e.desc||''} ${e.destination||''}`.toLowerCase().includes(q)).slice(0, 6);
-  if (plan.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Planning (${plan.length})</div>${plan.map(e => item('📅', escHtml(e.titre||'Événement'), escHtml(e.date||''), 'planning.html')).join('')}</div>`);
-
-  // Répertoire
-  const rep = (DB.get(DB.keys.repertoire) || []).filter(c => `${c.nom||''} ${c.organisme||''} ${c.fonction||''}`.toLowerCase().includes(q)).slice(0, 6);
-  if (rep.length) groups.push(`<div class="srch-grp"><div class="srch-lbl">Répertoire (${rep.length})</div>${rep.map(c => item('📇', escHtml(c.nom||c.organisme||'Contact'), escHtml([c.fonction,c.organisme].filter(Boolean).join(' · ')), 'repertoire.html')).join('')}</div>`);
-
-  box.innerHTML = groups.length ? groups.join('') : '<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem">Aucun résultat pour « ' + escHtml(q) + ' »</div>';
-}
-// Raccourci clavier Ctrl/⌘ + K
-document.addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
-});
 
 function loadChambres() {
   const r = DB.get(DB.keys.residents) || [];
@@ -384,15 +389,20 @@ async function saveIntervention() {
   document.getElementById('intUrgence').value = 'normale';
   alert('Demande d\'intervention envoyée ✓');
 }
+// Remplit le select résident du modal incident (idempotent : retire ses propres options avant).
+function fillResidentSelect() {
+  const rSel = document.getElementById('fResident');
+  if (!rSel) return;
+  rSel.querySelectorAll('option[data-res]').forEach(o => o.remove());
+  (DB.get(DB.keys.residents) || []).forEach(r => {
+    const o = document.createElement('option'); o.value = r.id; o.dataset.res = '1';
+    o.textContent = `${r.prenom||''} ${r.nom||''}`.trim();
+    rSel.appendChild(o);
+  });
+}
 document.addEventListener('DOMContentLoaded', () => {
   loadChambres();
-  const rSel = document.getElementById('fResident');
-  if (rSel) {
-    (DB.get(DB.keys.residents) || []).forEach(r => {
-      const o = document.createElement('option'); o.value = r.id; o.textContent = `${r.prenom||''} ${r.nom||''}`.trim();
-      rSel.appendChild(o);
-    });
-  }
+  fillResidentSelect();
   const fd = document.getElementById('fDate');
   if (fd) fd.value = new Date().toISOString().slice(0,10);
   const fh = document.getElementById('fHeure');
@@ -533,11 +543,20 @@ async function markAllNotifsRead() {
   try {
     const jrn = await sbGetJournalEntries();
     const unreadJ = jrn.filter(en => Array.isArray(en.readBy) && !en.readBy.map(String).includes(uid));
-    for (const en of unreadJ) { en.readBy = [...(en.readBy || []), uid]; await sbSaveJournalEntry(en); }
+    // En file, marquer 30 entrées non lues coûtait 30 allers-retours enchaînés.
+    // Les écritures sont indépendantes : même traitement que les messages
+    // quelques lignes plus haut.
+    await Promise.all(unreadJ.map(en => {
+      en.readBy = [...(en.readBy || []), uid];
+      return sbSaveJournalEntry(en);
+    }));
   } catch (e) { console.error('[markAllNotifsRead] journal', e); }
   closeNotifPanel();
-  try { await _loadAccRhCounts(); } catch (_) {}
-  try { await _loadAccIncidentCount(); } catch (_) {}
+  // Les deux recomptages sont indépendants : une seule vague.
+  await Promise.all([
+    _loadAccRhCounts().catch(() => {}),
+    _loadAccIncidentCount().catch(() => {}),
+  ]);
   if (typeof toast === 'function') toast('Notifications marquées comme lues', 'success');
 }
 
@@ -565,6 +584,12 @@ async function _loadAccRhCounts() {
       sbGetPeShifts(), sbGetFormations(), sbGetConges(), sbGetMessages(), sbGetConversations(),
       sbGetJournalEntries(), sbGetPpe(), sbGetResidents(), sbGetPlanningEvents(), sbGetInterventions(), sbGetEcheances()
     ]);
+    // Hydrate les stores localStorage pour les lectures DB.get (modal incident, conflit véhicule, datalist chambres)
+    DB.set(DB.keys.residents, residents);
+    DB.set(DB.keys.planning, planningEv);
+    // Résidents hydratés (async) : re-remplir datalist chambres + select résident du modal incident (course résolue)
+    loadChambres();
+    fillResidentSelect();
     window._accShiftsToday   = empFullName ? shifts.filter(s => s.date === todayStr && s.employeNom === empFullName).length : 0;
     window._accFormations    = formations.filter(f => f.statut === 'planifiee' && f.dateDebut >= todayStr && f.dateDebut <= in7dStr).length;
     window._accPendingConges = conges.filter(c => c.statut === 'en_attente').length;
@@ -589,16 +614,16 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) upda
 window.addEventListener('focus', updateNotifs);
 window.addEventListener('pageshow', updateNotifs);
 window.addEventListener('storage', e => {
-  if (e.key && (e.key.startsWith('ftr_messages') || e.key.startsWith('ftr_journal') || e.key.startsWith('ftr_ppe') || e.key.startsWith('ftr_incidents') || e.key.startsWith('ftr_interventions') || e.key.startsWith('ftr_residents') || e.key.startsWith('ftr_planning') || e.key.startsWith('ftr_formations') || e.key === 'ftr_conges')) updateNotifs();
+  if (e.key && (e.key.startsWith('ftr_messages') || e.key.startsWith('ftr_journal') || e.key.startsWith('ftr_ppe') || e.key.startsWith('ftr_incidents') || e.key.startsWith('ftr_interventions') || e.key.startsWith('ftr_residents') || e.key.startsWith('ftr_planning') || e.key.startsWith('ftr_formations'))) updateNotifs();
 });
 setInterval(updateNotifs, 10000);
 
-function loadVehiculesAccueil() {
-  const v = DB.get(DB.keys.vehicules) || ['Renault Kangoo','Citroën Berlingo','Peugeot Partner','Volkswagen Caddy'];
+async function loadVehiculesAccueil() {
+  const v = await sbGetVehiculesListe();
   const dl = document.getElementById('mvVehiculesListA');
   if (dl) dl.innerHTML = v.map(x => '<option value="' + escHtml(x) + '">').join('');
 }
-function reserverVehiculeAccueil() {
+async function reserverVehiculeAccueil() {
   const dateAller = document.getElementById('mvDateAllerA').value;
   const dureeVal = document.getElementById('mvDureeA').value;
   const vehicule = document.getElementById('mvVehiculeA').value.trim();
@@ -621,15 +646,26 @@ function reserverVehiculeAccueil() {
   const prenom = session?.prenom || '';
   const nom = session?.nom || '';
   const userName = [prenom, nom].filter(Boolean).join(' ') || session?.username || 'Inconnu';
+  // Persistance en base (Supabase) — comme planning.html / vehicules.js. On NE fournit PAS d'id :
+  // sbSavePlanningEvent traite un id présent comme une mise à jour (échouerait sur un id client).
+  let saved;
+  try {
+    saved = await sbSavePlanningEvent({
+      titre: 'Véhicule — ' + vehicule,
+      date: dateAller.slice(0,10), dateEnd: dateRetour.slice(0,10),
+      time: dateAller.slice(11,16), timeEnd: dateRetour.slice(11,16),
+      desc: 'Réservé par : ' + userName + (motif ? '\nMotif : ' + motif : '') + '\nVéhicule : ' + vehicule + '\nDestination : ' + destination,
+      color: '#6366f1', type: 'vehicule', vehicule, destination, reservedBy: userName, reservedPrenom: prenom
+    });
+  } catch (e) {
+    console.error('[reserverVehiculeAccueil]', e);
+    alert('Erreur lors de la réservation. Veuillez réessayer.');
+    return;
+  }
+  // Garde le store localStorage cohérent pour la détection de conflit des réservations suivantes
+  // (rechargé depuis Supabase au prochain _loadAccRhCounts).
   const planning = DB.get(DB.keys.planning) || [];
-  planning.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    titre: 'Véhicule — ' + vehicule,
-    date: dateAller.slice(0,10), dateEnd: dateRetour.slice(0,10),
-    time: dateAller.slice(11,16), timeEnd: dateRetour.slice(11,16),
-    desc: 'Réservé par : ' + userName + (motif ? '\nMotif : ' + motif : '') + '\nVéhicule : ' + vehicule + '\nDestination : ' + destination,
-    color: '#6366f1', type: 'vehicule', vehicule, destination, reservedBy: userName, reservedPrenom: prenom
-  });
+  planning.push(saved);
   DB.set(DB.keys.planning, planning);
   closeModal('modalVehiculeAccueil');
   document.getElementById('mvDateAllerA').value = '';
@@ -651,7 +687,7 @@ function renderEtabCards() {
     <div onclick="selectEtab(${e.id})" style="cursor:pointer;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);border:2px solid rgba(255,255,255,.65);border-radius:16px;padding:1.5rem;text-align:center;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 24px rgba(15,43,74,.08)"
       onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 32px rgba(15,43,74,.14)'"
       onmouseout="this.style.transform='';this.style.boxShadow='0 4px 24px rgba(15,43,74,.08)'">
-      <div style="width:52px;height:52px;border-radius:14px;background:${e.color||'#0f2b4a'};margin:0 auto 1rem;display:flex;align-items:center;justify-content:center">
+      <div style="width:52px;height:52px;border-radius:14px;background:${safeColor(e.color,'#0f2b4a')};margin:0 auto 1rem;display:flex;align-items:center;justify-content:center">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:26px;height:26px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </div>
       <div style="font-weight:800;font-size:.95rem;color:#1e293b;margin-bottom:.3rem">${escHtml(e.nom)}</div>
@@ -724,6 +760,21 @@ function showMainAccueil() {
   document.getElementById('mainAccueilView').style.display = 'block';
   applyTerminology();
   applyEtabBackground();
+
+  const s = Auth.getSession() || {};
+  const un = document.getElementById('accUserName');
+  if (un) un.textContent = [s.prenom, s.nom].filter(Boolean).join(' ') || s.username || '';
+  const ur = document.getElementById('accUserRole'); if (ur) ur.textContent = s.fonction || s.role || '';
+  const av = document.getElementById('accUserAv');
+  if (av) av.textContent = ((s.prenom||'')[0]||'') + ((s.nom||'')[0]||'') || (s.username||'?')[0].toUpperCase();
+
+  const si = document.getElementById('accSearch');
+  if (si && !si._bound) {
+    si._bound = true;
+    si.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.trim()) location.href = 'residents.html?q=' + encodeURIComponent(e.target.value.trim()); });
+    document.addEventListener('keydown', e => { if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k') { e.preventDefault(); si.focus(); } });
+  }
+  if (typeof initAccueilV2 === 'function') initAccueilV2().catch(e => console.error('[accV2]', e));
 }
 
 // ── Suivi du curseur pour la lueur des cartes ──
@@ -765,7 +816,7 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
 <!-- ── CARTE ASTREINTES DU SOIR (visible dès 18h) ── -->
 <style>
 #astSoirCard{
-  position:fixed;right:1rem;z-index:300;
+  position:fixed;right:1rem;bottom:1.5rem;z-index:300;
   background:linear-gradient(135deg,#1e3a5f,#0f2b4a);
   border:1px solid rgba(255,255,255,.15);
   border-radius:12px;padding:.55rem .7rem .55rem 1.7rem;
@@ -799,6 +850,17 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
 .ast-rib-bell{width:15px;height:15px;flex-shrink:0}
 .ast-rib-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:.62rem;font-weight:700;letter-spacing:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.12)}
 .ast-rib-chevron{width:10px;height:10px;opacity:.8}
+/* Sur mobile : volet affiné pour ne pas cacher les cartes — replié = fin
+   onglet de 30px collé au bord droit ; déployé plus étroit. */
+@media(max-width:768px){
+  #astSoirCard{bottom:1.4rem;right:.35rem;width:158px}
+  #astSoirCard.ast-collapsed{width:30px}
+}
+/* Quand la barre de navigation mobile est visible (<=640px), remonter la carte
+   d'astreinte pour qu'elle ne soit pas masquée par la barre (~84px). */
+@media(max-width:640px){
+  #astSoirCard{bottom:calc(1.4rem + 88px)}
+}
 </style>
 
 <div id="astSoirCard" style="display:none">
@@ -848,21 +910,16 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
     if (day === 0 || day === 6) {
       // Week-end : clé sur le samedi de la semaine
       if (day === 0) d.setDate(d.getDate() - 1);
-      return 'ast_collapsed_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_wknd';
+      return 'ast_open_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_wknd';
     }
     // Nuit de semaine : clé sur le jour de début (si avant 9h → nuit précédente)
     if (hour < 9) d.setDate(d.getDate() - 1);
-    return 'ast_collapsed_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_night';
+    return 'ast_open_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + '_night';
   }
 
-  function positionAstSoirCard() {
-    const aide = document.querySelector('.accueil-fab-stack .accueil-fab');
-    const card = document.getElementById('astSoirCard');
-    if (!aide || !card || card.style.display === 'none') return;
-    const rect = aide.getBoundingClientRect();
-    card.style.top    = '';
-    card.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
-  }
+  // Position gérée entièrement en CSS (#astSoirCard : ancré en bas à droite).
+  // Plus de dépendance à la position des boutons flottants (qui la décalait).
+  function positionAstSoirCard() {}
 
   // Hauteur du ruban réduit = exactement celle du panneau déployé (mini pour rester lisible)
   let _astExpandedH = 0;
@@ -880,8 +937,8 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
     const collapsed = card.classList.toggle('ast-collapsed');
     astApplyHeight(collapsed);
     btn.title = collapsed ? 'Agrandir' : 'Réduire';
-    if (collapsed) localStorage.setItem(getPeriodKey(), '1');
-    else           localStorage.removeItem(getPeriodKey());
+    if (collapsed) localStorage.removeItem(getPeriodKey());
+    else           localStorage.setItem(getPeriodKey(), '1');   // mémorise l'ouverture pour cette période
   };
 
   async function loadAstreintesSoir() {
@@ -921,8 +978,8 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
         if (arrow) arrow.style.display = 'block';
       }
 
-      // Restaurer l'état réduit si l'utilisateur avait réduit cette période
-      if (localStorage.getItem(getPeriodKey())) {
+      // Réduite PAR DÉFAUT ; déployée seulement si l'utilisateur l'a ouverte cette période
+      if (!localStorage.getItem(getPeriodKey())) {
         card.classList.add('ast-collapsed');
         document.getElementById('astSoirToggle').title = 'Agrandir';
         astApplyHeight(true);
@@ -937,5 +994,7 @@ document.addEventListener('DOMContentLoaded', bindGlowCards);
   document.addEventListener('DOMContentLoaded', _loadAccRhCounts);
 })();
 </script>
+<script src="js/mobile-shell.js"></script>
+<script src="js/accueil-mobile.js"></script>
 </body>
 </html>

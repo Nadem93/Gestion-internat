@@ -10,9 +10,13 @@ let _budgetDemandesCache = [];
 let _budgetResidentsCache = [];
 
 async function loadBudgetData() {
-  [_budgetEnveloppesCache, _budgetDemandesCache, _budgetResidentsCache] = await Promise.all([
-    sbGetBudgetEnveloppes(), sbGetBudgetDemandes(), sbGetResidents()
+  let _emps;
+  [_budgetEnveloppesCache, _budgetDemandesCache, _budgetResidentsCache, _emps] = await Promise.all([
+    sbGetBudgetEnveloppes(), sbGetBudgetDemandes(), sbGetResidents(),
+    (typeof sbGetEmployes === 'function' ? sbGetEmployes() : Promise.resolve([]))
   ]);
+  // Hydrate employes pour budgetCurrentUser (DB.get) : identifiant de demandeur stable entre postes
+  DB.set(DB.keys.employes, _emps || []);
 }
 
 function getBudgetEnveloppes() { return _budgetEnveloppesCache; }

@@ -2,62 +2,181 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
   <title>Mes absences — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-mes-absences.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout">
-  <div class="main">
-    <header class="header">
-      <div class="header-info"><div class="header-title">Mes absences</div></div>
-      <div class="header-right">
-        <button id="btnAddMesAbs" class="btn btn-accent btn-sm" onclick="openMesAbsModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Déclarer une absence
-        </button>
-        <a href="pilotage.html" class="btn btn-ghost btn-sm">Portail</a>
-      </div>
-    </header>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(239,68,68,.16)">
 
-    <main class="content" style="max-width:760px">
-      <div id="mesAbsInfo" style="margin-bottom:1rem"></div>
-      <div id="mesAbsList"></div>
-    </main>
+  <div class="v2-top">
+    <a class="v2-logo" href="pilotage.html" style="background:linear-gradient(135deg,#dc2626,#f87171)" aria-label="Retour au portail">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · Espace personnel</div>
+      <div class="v2-top-title">Mes absences &amp; accidents du travail</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a href="pilotage.html" class="v2-btn">Portail</a>
+      <button id="btnAddMesAbs" type="button" class="v2-btn v2-btn-primary" onclick="openMesAbsModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Déclarer une absence
+      </button>
+    </div>
+  </div>
+
+  <div class="v2-body">
+
+    <div id="mesAbsInfo" class="ma2-info"></div>
+
+    <!-- KPI -->
+    <div id="maStats" class="ma2-stats"></div>
+
+    <!-- Filtres de motif -->
+    <div id="maFilters" class="ma2-filters">
+      <div id="maChips" class="v2-chips"></div>
+    </div>
+
+    <!-- Tableau + registre AT / rail d'analyse -->
+    <div id="maBodyGrid" class="ma2-body">
+      <div class="ma2-main">
+        <div id="mesAbsList"></div>
+
+        <div class="ma2-tint" style="--tc:#ef4444">
+          <div class="ma2-tint-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="ma2-tint-t">Accidents du travail — mon registre</span>
+          </div>
+          <div id="maRegistre"></div>
+        </div>
+      </div>
+
+      <div class="ma2-rail">
+        <div class="v2-blk v2-rail-blk">
+          <div class="ma2-rail-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span class="v2-blk-t">Jours d'absence / mois</span>
+            <span class="ma2-rail-v" id="maChartTotal">—</span>
+          </div>
+          <div id="maChart" class="ma2-chart"></div>
+        </div>
+
+        <div class="v2-blk v2-rail-blk">
+          <div class="ma2-rail-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            <span class="v2-blk-t">Par motif (jours)</span>
+          </div>
+          <div id="maMotifs"></div>
+        </div>
+
+        <div class="ma2-tint" style="--tc:#f59e0b">
+          <div class="ma2-tint-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="ma2-tint-t">Reprises prévues</span>
+          </div>
+          <div id="maRetours"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suivi AT · visites médicales · Bradford -->
+    <div id="maFeat" class="ma2-feat">
+      <div class="ma2-tint" style="--tc:#ef4444">
+        <div class="ma2-tint-h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="ma2-tint-t" id="maSuiviAtTitre">Déclaration AT</span>
+          <span class="ma2-tint-tag" id="maSuiviAtTag" style="display:none">Délai 48 h</span>
+        </div>
+        <div id="maSuiviAt"></div>
+        <button type="button" class="ma2-cta" id="maSuiviAtCta" style="display:none"></button>
+      </div>
+
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span class="v2-blk-t">Visites médicales de reprise</span>
+        </div>
+        <div id="maVisites"></div>
+      </div>
+
+      <div class="v2-blk">
+        <div class="v2-blk-h">
+          <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span class="v2-blk-t">Facteur Bradford</span>
+        </div>
+        <div class="ma2-blk-s">Absences courtes &amp; répétées, 12 derniers mois</div>
+        <div id="maBradford"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<div class="modal-overlay" id="modalMesAbs">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <span class="modal-title" id="maModalTitle">Déclarer une absence</span>
-      <button class="modal-close" onclick="closeModal('modalMesAbs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ══ MODALE — gabarit V2 ════════════════════════════════════════════ -->
+<div class="v2-ov" id="modalMesAbs">
+  <div class="v2-md" style="--mc:#f59e0b">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="maModalTitle">Déclarer une absence</div>
+        <div class="v2-md-s">Motif, période et justificatif</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalMesAbs')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:.85rem">
-      <div class="form-group"><label class="required">Type</label>
-        <select id="maType">
-          <option value="maladie">🤒 Arrêt maladie</option>
-          <option value="at">⚠️ Accident du travail</option>
-          <option value="maladie_pro">🏭 Maladie professionnelle</option>
-          <option value="maternite">👶 Congé maternité/paternité</option>
-          <option value="longue_maladie">🩺 Longue maladie</option>
-          <option value="autre">📋 Autre absence</option>
+
+    <div class="v2-md-b">
+      <div>
+        <span class="v2-fld-l">Motif</span>
+        <div class="ma2-seg" id="maSeg"></div>
+        <!-- Contrat du script de la page : la valeur reste portée par ce select -->
+        <select id="maType" hidden aria-hidden="true" tabindex="-1">
+          <option value="maladie">Arrêt maladie</option>
+          <option value="at">Accident du travail</option>
+          <option value="maladie_pro">Maladie professionnelle</option>
+          <option value="maternite">Congé maternité/paternité</option>
+          <option value="longue_maladie">Longue maladie</option>
+          <option value="autre">Autre absence</option>
         </select>
       </div>
-      <div class="grid grid-2" style="gap:.75rem">
-        <div class="form-group"><label class="required">Date début</label><input type="date" id="maDebut"/></div>
-        <div class="form-group"><label>Date fin (si connue)</label><input type="date" id="maFin"/></div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="maDebut">Du <span style="color:#fca5a5">*</span></label>
+          <input type="date" class="v2-fld" id="maDebut"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="maFin">Au (si connue)</label>
+          <input type="date" class="v2-fld" id="maFin"/>
+        </div>
       </div>
-      <div class="form-group"><label>Motif / précisions</label><textarea id="maNotes" rows="2" placeholder="Optionnel…"></textarea></div>
-      <div class="form-group">
-        <label>Justificatif (arrêt de travail…)</label>
-        <input type="file" id="maFichier" accept="image/*,application/pdf"/>
-        <div id="maJustifInfo" style="font-size:.72rem;color:var(--muted);margin-top:.25rem">PDF ou image, max 5 Mo.</div>
+
+      <div>
+        <label class="v2-fld-l" for="maNotes">Motif / précisions</label>
+        <textarea class="v2-fld" id="maNotes" rows="2" placeholder="Optionnel…"></textarea>
+      </div>
+
+      <div>
+        <span class="v2-fld-l">Justificatif (arrêt de travail, certificat…)</span>
+        <label class="ma2-file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="ma2-file-t" id="maFileName">Joindre le certificat médical (PDF, JPG)</span>
+          <span class="ma2-file-a">Parcourir</span>
+          <input type="file" id="maFichier" accept="image/*,application/pdf" onchange="ma2FileLabel()"/>
+        </label>
+        <div id="maJustifInfo">PDF ou image, max 5 Mo.</div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalMesAbs')">Annuler</button>
-      <button class="btn btn-primary" id="maSaveBtn" onclick="saveMesAbs()">💾 Enregistrer</button>
+
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalMesAbs')">Annuler</button>
+      <button type="button" class="v2-btn-pri" id="maSaveBtn" onclick="saveMesAbs()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -66,12 +185,16 @@
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/absences-supabase.js"></script>
 <script>
 const MA_TYPE_L = { maladie:'Arrêt maladie', at:'Accident du travail', maladie_pro:'Maladie professionnelle', maternite:'Congé maternité/paternité', longue_maladie:'Longue maladie', autre:'Autre absence' };
-const MA_TYPE_C = { maladie:'#d97706', at:'#dc2626', maladie_pro:'#9333ea', maternite:'#8b5cf6', longue_maladie:'#b91c1c', autre:'#64748b' };
+const MA_TYPE_C = { maladie:'#f59e0b', at:'#ef4444', maladie_pro:'#a855f7', maternite:'#ec4899', longue_maladie:'#fb7185', autre:'#64748b' };
 
 let _maFiche = null;     // fiche salarié de l'utilisateur connecté
 let _maCache = [];       // ses absences
@@ -81,51 +204,30 @@ function maDays(a, b) { if (!a) return 0; const f = b || a; return Math.round((n
 async function initMesAbs() {
   const s = Auth.requireAuth();
   if (!s) return;
-  const info = document.getElementById('mesAbsInfo');
   try {
     const employes = await sbGetEmployes();
     _maFiche = employes.find(e => String(e.profileId) === String(s.userId)) || null;
     if (!_maFiche) {
       document.getElementById('btnAddMesAbs').style.display = 'none';
-      info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--muted)">Votre compte n'est pas encore relié à une fiche salarié.<br>Contactez votre administrateur pour pouvoir déclarer vos absences.</div>`;
+      ma2HideAll();
+      ma2Notice('warn', "Votre compte n'est pas relié à une fiche salarié",
+        "Contactez votre administrateur (Admin → Employés → « Lier à cette fiche ») pour pouvoir déclarer et consulter vos absences.");
       return;
     }
     _maCache = (await sbGetAbsences()).filter(a => String(a.employeId) === String(_maFiche.id));
     renderMesAbs();
   } catch (e) {
     console.error('[initMesAbs]', e);
-    info.innerHTML = `<div class="card" style="padding:1.25rem;text-align:center;color:var(--red)">Erreur de chargement : ${escHtml(e?.message || e)}</div>`;
+    ma2HideAll();
+    ma2Notice('err', 'Erreur de chargement', e?.message || String(e));
   }
 }
 
+// Le rendu complet est délégué au module V2 (js/mes-absences-v2.js) ;
+// tous les appelants existants (saveMesAbs, deleteMesAbs…) continuent d'appeler renderMesAbs().
 function renderMesAbs() {
-  const el = document.getElementById('mesAbsList');
-  const list = [..._maCache].sort((a, b) => (b.debut || '').localeCompare(a.debut || ''));
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2.5rem;text-align:center"><div style="font-size:2.5rem;margin-bottom:.5rem">🤒</div><h3>Aucune absence déclarée</h3><p>Cliquez sur « Déclarer une absence » pour en ajouter une.</p></div>`;
-    return;
-  }
-  el.innerHTML = list.map(a => {
-    const color = MA_TYPE_C[a.type] || '#64748b';
-    const jours = maDays(a.debut, a.fin);
-    const enCours = !a.fin || a.fin >= new Date().toISOString().slice(0, 10);
-    return `<div style="display:flex;align-items:flex-start;gap:.85rem;padding:.85rem 1rem;background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:3px solid ${color}">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:.85rem">${escHtml(MA_TYPE_L[a.type] || a.type)}</span>
-          <span style="font-size:.7rem;color:#fff;background:${color};padding:1px 8px;border-radius:99px">${jours}j</span>
-          ${enCours ? `<span style="font-size:.68rem;font-weight:700;background:#fef9c3;color:#b45309;padding:1px 8px;border-radius:99px">En cours</span>` : ''}
-        </div>
-        <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">${formatDate(a.debut)}${a.fin ? ' → ' + formatDate(a.fin) : ' (en cours)'}</div>
-        ${a.notes ? `<div style="font-size:.78rem;margin-top:.2rem;font-style:italic">${escHtml(a.notes)}</div>` : ''}
-        ${a.justificatifPath ? `<button class="btn btn-ghost btn-sm" style="margin-top:.35rem;padding:.2rem .5rem" onclick="openJustificatif('${a.id}')">📎 Voir le justificatif</button>` : '<div style="font-size:.72rem;color:#dc2626;margin-top:.3rem">⚠️ Aucun justificatif joint</div>'}
-      </div>
-      <div style="display:flex;gap:.25rem;flex-shrink:0">
-        <button class="btn btn-ghost btn-sm" onclick="openMesAbsModal('${a.id}')" title="Modifier / ajouter un justificatif">✎</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteMesAbs('${a.id}')" title="Supprimer">✕</button>
-      </div>
-    </div>`;
-  }).join('');
+  if (typeof ma2Render === 'function') { ma2Render(); return; }
+  console.warn('[mes-absences] module V2 absent : rendu impossible');
 }
 
 let _maEditId = null;
@@ -140,9 +242,11 @@ function openMesAbsModal(id) {
   document.getElementById('maNotes').value = a ? (a.notes || '') : '';
   document.getElementById('maFichier').value = '';
   document.getElementById('maJustifInfo').innerHTML = (a && a.justificatifPath)
-    ? `📎 Justificatif déjà joint — <a href="#" onclick="openJustificatif('${a.id}');return false">voir</a>. Choisir un fichier le remplacera.`
+    ? `Justificatif déjà joint — <a href="#" onclick="openJustificatif('${a.id}');return false">voir</a>. Choisir un fichier le remplacera.`
     : 'PDF ou image, max 5 Mo.';
-  document.getElementById('maSaveBtn').textContent = a ? '💾 Enregistrer' : '💾 Enregistrer';
+  document.getElementById('maSaveBtn').textContent = 'Enregistrer';
+  if (typeof ma2SyncSeg === 'function') ma2SyncSeg();
+  if (typeof ma2FileLabel === 'function') ma2FileLabel();
   openModal('modalMesAbs');
 }
 
@@ -155,10 +259,15 @@ async function saveMesAbs() {
 
   const existing = _maEditId ? _maCache.find(x => x.id === _maEditId) : null;
   const btn = document.getElementById('maSaveBtn');
-  btn.disabled = true; const lbl = btn.textContent; btn.textContent = '⏳ Enregistrement…';
+  btn.disabled = true; const lbl = btn.textContent; btn.textContent = 'Enregistrement…';
   try {
     let justificatifPath = existing?.justificatifPath || '';
-    if (file) justificatifPath = await sbUploadJustificatif(file, Auth.getSession().userId);
+    if (file) {
+      // RLS du bucket « justificatifs » : le 1er dossier du chemin doit être auth.uid()
+      const uid = await sbAuthUid();
+      if (!uid) throw new Error('Session Supabase expirée — reconnectez-vous pour joindre un fichier.');
+      justificatifPath = await sbUploadJustificatif(file, uid);
+    }
     const saved = await sbSaveAbsence({
       id: _maEditId || undefined,
       employeId: _maFiche.id,
@@ -218,5 +327,7 @@ function deleteMesAbs(id) {
 
 document.addEventListener('DOMContentLoaded', initMesAbs);
 </script>
+<script src="js/mes-absences-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
 </body>
 </html>

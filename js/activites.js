@@ -54,7 +54,14 @@ function actBilansCeMois() {
 }
 
 // ── RENDU PRINCIPAL ──
+// Le rendu est assuré par js/activites-v2.js (design V2). La version
+// historique reste ci-dessous comme repli si le module n'est pas chargé.
 function renderActivites() {
+  if (typeof ac2Render === 'function') return ac2Render();
+  return renderActivitesLegacy();
+}
+
+function renderActivitesLegacy() {
   const all = getActivites();
   const fCat = document.getElementById('aFilterCat')?.value || '';
   const fJour = document.getElementById('aFilterJour')?.value || '';
@@ -84,7 +91,8 @@ function renderActivites() {
 function activiteCardGrille(a) {
   const c = ACT_CATEGORIES[a.categorie] || ACT_CATEGORIES.autre;
   const inscrits = actInscriptions(a.id).length;
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(Auth.getSession()?.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(Auth.getSession()?.userId) : Auth.isAdmin());
   const plein = a.placesMax > 0 && inscrits >= a.placesMax;
   const pct = a.placesMax > 0 ? Math.min(100, Math.round(inscrits / a.placesMax * 100)) : null;
   return `<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;${a.actif===false?'opacity:.55':''}transition:box-shadow .12s" onmouseover="this.style.boxShadow='0 6px 20px rgba(15,23,42,.1)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(15,23,42,.06)'">
@@ -187,7 +195,7 @@ function openBilanAnnuelModal(activiteId) {
   annee.innerHTML = Array.from({ length: 6 }, (_, i) => nowY - 4 + i).map(y => `<option value="${y}">${y}</option>`).join('');
   annee.value = nowY;
   const a = getActivites().find(x => x.id === activiteId);
-  document.getElementById('baTitle').textContent = '📝 Bilan annuel — ' + (a?.nom || 'Activité');
+  document.getElementById('baTitle').textContent = 'Bilan annuel — ' + (a?.nom || 'Activité');
   renderBilanAnnuelForm();
   openModal('modalBilanAnnuel');
 }
@@ -247,6 +255,11 @@ function openParticipantsModal(id) {
 }
 
 function renderParticipantsList(inscrits, activite) {
+  if (typeof ac2ParticipantsList === 'function') return ac2ParticipantsList(inscrits, activite);
+  return renderParticipantsListLegacy(inscrits, activite);
+}
+
+function renderParticipantsListLegacy(inscrits, activite) {
   const box = document.getElementById('pmList');
   const stats = document.getElementById('pmStats');
 
@@ -278,7 +291,7 @@ function renderParticipantsList(inscrits, activite) {
   box.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${inscrits.map(({ resident: r, inscription: i }) => {
     const lastBilan = (i.bilans || []).slice().sort((x, y) => (y.date || '').localeCompare(x.date || ''))[0];
     const nbBilans = (i.bilans || []).length;
-    const color = r.color || '#6366f1';
+    const color = safeColor(r.color, '#6366f1');
     const name = `${r.prenom || ''} ${r.nom || ''}`.trim();
     const av = r.photo
       ? `<img src="${sanitizeUrl(r.photo)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid ${color}44" alt=""/>`
@@ -332,13 +345,16 @@ async function initActivites() {
   const s = Auth.requireAuth();
   if (!s) return;
   if (!requireModule('access_activites')) return;
-  await loadResidentsCache();
-  await loadActivitesCache();
+  // Les deux caches sont indépendants : une seule vague réseau au lieu
+  // de deux. Enchaînés, le second partait hors de la fenêtre où
+  // supabase-client.js mutualise les lectures identiques.
+  await Promise.all([loadResidentsCache(), loadActivitesCache()]);
   document.getElementById('aFilterCat').innerHTML = '<option value="">Toutes catégories</option>' + Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');
   document.getElementById('aFilterJour').innerHTML = '<option value="">Tous les jours</option>' + ACT_JOURS.map(j => `<option value="${j}">${j}</option>`).join('');
   document.getElementById('amCategorie').innerHTML = Object.entries(ACT_CATEGORIES).map(([k, c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join('');
   document.getElementById('amJour').innerHTML = ACT_JOURS.map(j => `<option value="${j}">${j}</option>`).join('');
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(s.role)
+    || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin());
   if (!canEdit) { const b = document.getElementById('btnAddActivite'); if (b) b.style.display = 'none'; }
   ['aFilterCat', 'aFilterJour'].forEach(id => document.getElementById(id)?.addEventListener('change', renderActivites));
   renderActivites();

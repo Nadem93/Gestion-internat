@@ -1,43 +1,56 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Plan de formation — FTR</title>
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#0a1728"/>
+  <title>Formation &amp; développement des compétences — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-formations.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 </head>
-<body>
-<div class="app-layout"><div class="main">
-  <header class="header">
-    <div class="header-info"><div class="header-title">Plan de formation</div></div>
-    <div class="header-right"></div>
-  </header>
-  <main class="content" style="max-width:1280px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
-      <div>
-        <div style="font-weight:700;font-size:1rem">🎓 Plan de formation collectif</div>
-        <div style="font-size:.78rem;color:var(--muted)">Recensement des besoins et suivi des actions de formation de l'équipe</div>
-      </div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-primary admin-only" onclick="openFormationModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nouvelle formation
-        </button>
-      </div>
-    </div>
+<body class="v2">
+<div class="v2-shell" style="--v2-halo:rgba(22,163,74,.16)">
 
-    <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;gap:1rem;padding:.75rem 1rem;flex-wrap:wrap">
-        <div style="flex:1;text-align:center;min-width:90px"><div id="frmStatPlanifiees" style="font-weight:800;font-size:1.4rem;color:#d97706">0</div><div style="font-size:.72rem;color:var(--muted)">Planifiées</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="frmStatRealisees" style="font-weight:800;font-size:1.4rem;color:#16a34a">0</div><div style="font-size:.72rem;color:var(--muted)">Réalisées</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="frmStatParticipants" style="font-weight:800;font-size:1.4rem;color:#0f2b4a">0</div><div style="font-size:.72rem;color:var(--muted)">Participations</div></div>
-        <div style="flex:1;text-align:center;min-width:90px"><div id="frmStatBudget" style="font-weight:800;font-size:1.4rem;color:#7c2d12">0,00 €</div><div style="font-size:.72rem;color:var(--muted)">Budget engagé</div></div>
-      </div>
+  <div class="v2-top">
+    <a class="v2-logo" href="rh.html" style="background:linear-gradient(135deg,#16a34a,#4ade80)" title="Retour au portail RH">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    </a>
+    <div style="line-height:1.15;min-width:0">
+      <div class="v2-eyebrow">INTERNALIS · RH</div>
+      <div class="v2-top-title">Formation &amp; développement des compétences</div>
     </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a href="rh.html" class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Portail RH
+      </a>
+      <button class="v2-btn v2-btn-primary admin-only" onclick="openFormationModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle formation
+      </button>
+    </div>
+  </div>
 
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-      <select id="frmFiltreAnnee" class="form-input" style="width:140px" onchange="renderFormations()"><option value="">Toutes les années</option></select>
-      <select id="frmFiltreDomaine" class="form-input" style="width:240px" onchange="renderFormations()"><option value="">Tous les domaines</option></select>
-      <select id="frmFiltreStatut" class="form-input" style="width:160px" onchange="renderFormations()">
+  <div class="v2-body">
+
+    <!-- Tuiles statistiques -->
+    <div id="fr2Stats" class="fr2-stats"></div>
+
+    <!-- Filtres : chips de catégorie + année. Les <select> hérités restent le
+         contrat du script de page (js/formations.js). -->
+    <div class="fr2-filters">
+      <div id="fr2Chips" class="v2-chips"></div>
+      <select id="frmFiltreAnnee" class="fr2-sel" aria-label="Filtrer par année" onchange="renderFormations()">
+        <option value="">Toutes les années</option>
+      </select>
+      <select id="frmFiltreDomaine" hidden aria-hidden="true" tabindex="-1" onchange="renderFormations()">
+        <option value="">Tous les domaines</option>
+      </select>
+      <select id="frmFiltreStatut" hidden aria-hidden="true" tabindex="-1" onchange="renderFormations()">
         <option value="">Tous les statuts</option>
         <option value="planifiee">Planifiée</option>
         <option value="realisee">Réalisée</option>
@@ -45,85 +58,158 @@
       </select>
     </div>
 
-    <div id="frmList"><div class="empty" style="padding:3rem;text-align:center"><p>Aucune formation enregistrée</p></div></div>
-  </main>
-</div></div>
+    <!-- Compteurs hérités, conservés pour les scripts qui les lisent -->
+    <div hidden aria-hidden="true">
+      <span id="frmStatPlanifiees">0</span><span id="frmStatRealisees">0</span>
+      <span id="frmStatParticipants">0</span><span id="frmStatBudget">0,00 €</span>
+    </div>
+
+    <!-- Tableau + rail -->
+    <div class="fr2-body">
+      <div class="fr2-main">
+        <div id="frmList" class="fr2-card"></div>
+        <div id="fr2Oblig" class="fr2-oblig"></div>
+      </div>
+      <aside class="fr2-rail">
+        <div id="fr2Budget" class="fr2-budget"></div>
+        <div id="fr2Cats" class="v2-blk v2-rail-blk"></div>
+        <div id="fr2Sessions" class="v2-blk v2-rail-blk"></div>
+      </aside>
+    </div>
+
+    <!-- Plan de développement + compteurs CPF -->
+    <div class="fr2-feat1">
+      <div id="fr2Plan" class="v2-blk"></div>
+      <div id="fr2Cpf" class="fr2-cpf"></div>
+    </div>
+
+    <!-- Évaluations + attestations + organismes -->
+    <div class="fr2-feat2">
+      <div id="fr2Evals" class="v2-blk"></div>
+      <div id="fr2Attest" class="v2-blk"></div>
+      <div id="fr2Orgs" class="v2-blk"></div>
+    </div>
+
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 
-<div class="modal-overlay" id="modalFormation">
-  <div class="modal" style="max-width:600px;--mc:#7c3aed">
-    <div class="mdx-hero">
-      <button class="mdx-close" onclick="closeModal('modalFormation')" aria-label="Fermer">✕</button>
-      <div class="mdx-badge">🎓</div>
-      <div class="mdx-hero-txt">
-        <div class="mdx-title" id="frmModalTitle">Nouvelle formation</div>
-        <div class="mdx-sub">Formation professionnelle</div>
+<!-- ── Modale « formation » (gabarit .v2-ov / .v2-md) ───────────────────── -->
+<div class="v2-ov" id="modalFormation">
+  <div class="v2-md v2-md-lg" style="--mc:#16a34a" role="dialog" aria-modal="true" aria-label="Formation">
+    <div class="v2-md-h">
+      <span class="v2-md-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/></svg></span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="frmModalTitle">Nouvelle formation</div>
+        <div class="v2-md-s">Formation professionnelle</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalFormation')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="v2-md-b">
+      <div>
+        <label class="v2-fld-l" for="frmFormTitre">Intitulé *</label>
+        <input type="text" id="frmFormTitre" class="v2-fld" placeholder="Ex : PSC1 — Prévention et secours civiques" oninput="frmModalSync()"/>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="frmFormOrganisme">Organisme / prestataire</label>
+          <input type="text" id="frmFormOrganisme" class="v2-fld" placeholder="Nom de l'organisme de formation"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="frmFormDomaine">Domaine</label>
+          <select id="frmFormDomaine" class="v2-fld" onchange="frmModalSync()">
+            <option value="Sécurité &amp; gestes d'urgence">Sécurité &amp; gestes d'urgence</option>
+            <option value="Accompagnement éducatif &amp; pédagogique">Accompagnement éducatif &amp; pédagogique</option>
+            <option value="Communication &amp; gestion des conflits">Communication &amp; gestion des conflits</option>
+            <option value="Hygiène, santé &amp; soins">Hygiène, santé &amp; soins</option>
+            <option value="Réglementation &amp; droit des usagers">Réglementation &amp; droit des usagers</option>
+            <option value="Numérique &amp; outils professionnels">Numérique &amp; outils professionnels</option>
+            <option value="Management &amp; encadrement">Management &amp; encadrement</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="frmFormDateDebut">Date de début *</label>
+          <input type="date" id="frmFormDateDebut" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="frmFormDateFin">Date de fin</label>
+          <input type="date" id="frmFormDateFin" class="v2-fld"/>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="frmFormDuree">Durée (heures)</label>
+          <input type="number" id="frmFormDuree" class="v2-fld" min="0" step="0.5" placeholder="0"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="frmFormCout">Coût (€)</label>
+          <input type="number" id="frmFormCout" class="v2-fld" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+      </div>
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="frmFormMax">Nb max de participants</label>
+          <input type="number" id="frmFormMax" class="v2-fld" min="1" placeholder="Illimité"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="frmFormStatut">Statut</label>
+          <select id="frmFormStatut" class="v2-fld" onchange="frmModalSync()">
+            <option value="planifiee">Planifiée</option>
+            <option value="realisee">Réalisée</option>
+            <option value="annulee">Annulée</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="v2-fld-l">Participants</label>
+        <div id="frmFormParticipants"></div>
+      </div>
+      <div>
+        <label class="v2-fld-l" for="frmFormNotes">Notes / objectifs</label>
+        <textarea id="frmFormNotes" class="v2-fld" rows="2" placeholder="Objectifs de la formation, remarques…"></textarea>
       </div>
     </div>
-    <div class="modal-body mdx-body">
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>🎓</span> La formation</div>
-        <div class="form-group"><label>Intitulé *</label><input type="text" id="frmFormTitre" class="form-input" placeholder="Ex: PSC1 — Prévention et secours civiques" oninput="frmModalSync()"/></div>
-        <div class="form-row">
-          <div class="form-group"><label>Organisme / prestataire</label><input type="text" id="frmFormOrganisme" class="form-input" placeholder="Nom de l'organisme de formation"/></div>
-          <div class="form-group"><label>Domaine</label>
-            <select id="frmFormDomaine" class="form-input" onchange="frmModalSync()">
-              <option value="Sécurité & gestes d'urgence">Sécurité & gestes d'urgence</option>
-              <option value="Accompagnement éducatif & pédagogique">Accompagnement éducatif & pédagogique</option>
-              <option value="Communication & gestion des conflits">Communication & gestion des conflits</option>
-              <option value="Hygiène, santé & soins">Hygiène, santé & soins</option>
-              <option value="Réglementation & droit des usagers">Réglementation & droit des usagers</option>
-              <option value="Numérique & outils professionnels">Numérique & outils professionnels</option>
-              <option value="Management & encadrement">Management & encadrement</option>
-              <option value="Autre">Autre</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>📅</span> Planning, coût &amp; statut</div>
-        <div class="form-row">
-          <div class="form-group"><label>Date de début *</label><input type="date" id="frmFormDateDebut" class="form-input"/></div>
-          <div class="form-group"><label>Date de fin</label><input type="date" id="frmFormDateFin" class="form-input"/></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Durée (heures)</label><input type="number" id="frmFormDuree" class="form-input" min="0" step="0.5" placeholder="0"/></div>
-          <div class="form-group"><label>Coût (€)</label><input type="number" id="frmFormCout" class="form-input" min="0" step="0.01" placeholder="0.00"/></div>
-          <div class="form-group"><label>Nb max participants</label><input type="number" id="frmFormMax" class="form-input" min="1" placeholder="Illimité"/></div>
-          <div class="form-group"><label>Statut</label>
-            <select id="frmFormStatut" class="form-input" onchange="frmModalSync()">
-              <option value="planifiee">Planifiée</option>
-              <option value="realisee">Réalisée</option>
-              <option value="annulee">Annulée</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="mdx-section">
-        <div class="mdx-sec-head"><span>👥</span> Participants &amp; notes</div>
-        <div class="form-group">
-          <label>Participants</label>
-          <div id="frmFormParticipants" style="display:flex;flex-direction:column;gap:.3rem;max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem"></div>
-        </div>
-        <div class="form-group"><label>Notes / objectifs</label><textarea id="frmFormNotes" class="form-input" rows="2" placeholder="Objectifs de la formation, remarques…"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost admin-only" id="frmDeleteBtn" style="color:var(--red);margin-right:auto;display:none" onclick="supprimerFormation()">Supprimer</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalFormation')">Annuler</button>
-      <button class="btn btn-primary admin-only" onclick="saveFormation()">💾 Enregistrer</button>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec admin-only" id="frmDeleteBtn" style="display:none" onclick="supprimerFormation()">Supprimer</button>
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalFormation')">Annuler</button>
+      <button type="button" class="v2-btn-pri admin-only" onclick="saveFormation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
 
+<!-- Modale des blocs RH (budget, obligations, parcours, CPF, attestations,
+     organismes) — contenu rendu par js/formations-v2.js, même gabarit V2. -->
+<div class="v2-ov" id="fr2Modal"></div>
+
 <script src="js/app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/employes-supabase.js"></script>
 <script src="js/formations-supabase.js"></script>
 <script src="js/formations.js"></script>
-<script>Auth.requireAuth(); if (!requireModule('access_formations')) { document.querySelector('.content').innerHTML = ''; }</script>
+<script src="js/formations-v2.js"></script>
+<script>
+  Auth.requireAuth();
+  if (!requireModule('access_formations')) {
+    const b = document.querySelector('.v2-body');
+    if (b) b.innerHTML = '';
+  }
+</script>
+<script src="js/mobile-nav.js"></script>
 </body></html>

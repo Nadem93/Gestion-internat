@@ -1,0 +1,151 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — FINANCE (pilotage) — design V2
+   D'après la maquette « Finance (pilotage) ».
+   Ne redéfinit aucun composant de css/v2.css : uniquement le spécifique page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre du haut ────────────────────────────────────────────────────── */
+.fin2-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.fin2-per {
+  display: flex; align-items: center; gap: 9px; height: 42px; padding: 0 6px 0 14px;
+  border-radius: var(--v2-r-ctrl);
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl);
+}
+.fin2-per-l { font-size: 11px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--v2-t8); white-space: nowrap; }
+body.v2 select.fin2-per-s {
+  height: 32px; padding: 0 30px 0 8px; width: auto; min-width: 108px;
+  border: none; background-color: transparent; border-radius: 9px;
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--v2-t4);
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f93b3' stroke-width='2.2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center; background-size: 15px;
+}
+body.v2 select.fin2-per-s option { background: #101d31; color: var(--v2-t2); }
+
+/* ── Espacement vertical des blocs ────────────────────────────────────── */
+body.v2 .v2-body > .content > * + * { margin-top: 18px; }
+.fin2-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .fin2-g2 { grid-template-columns: 1fr; } }
+
+/* ── Tuiles de synthèse (5 colonnes) ─────────────────────────────────── */
+.fin2-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+@media (max-width: 1200px) { .fin2-stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px)  { .fin2-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 430px)  { .fin2-stats { grid-template-columns: 1fr; } }
+
+.fin2-stat {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 15px 16px; min-width: 0;
+}
+.fin2-stat-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; margin-bottom: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--sc, #818cf8) 14%, transparent); color: var(--sc, #818cf8);
+}
+.fin2-stat-ico svg { width: 15px; height: 15px; }
+.fin2-stat-n {
+  font-family: var(--v2-display); font-size: 20px; font-weight: 800; line-height: 1.05;
+  color: var(--sc, #fff); overflow-wrap: anywhere;
+}
+.fin2-stat-l { font-size: 11px; color: var(--v2-t6); margin-top: 6px; }
+
+/* ── Demandes en attente ─────────────────────────────────────────────── */
+.fin2-mini { display: flex; gap: 26px; flex-wrap: wrap; margin-bottom: 12px; }
+.fin2-mini-k { font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--v2-t8); }
+.fin2-mini-v { font-family: var(--v2-display); font-size: 21px; font-weight: 800;
+  line-height: 1; margin-top: 5px; color: #fff; }
+
+/* ── Jauge de consommation ───────────────────────────────────────────── */
+.fin2-gauge { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.fin2-ring {
+  position: relative; width: 120px; height: 120px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(var(--gc, #22d3ee) 0turn var(--gp, 0turn), rgba(255,255,255,.09) var(--gp, 0turn) 1turn);
+}
+.fin2-ring-in {
+  width: 92px; height: 92px; border-radius: 50%; background: var(--v2-inset);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fin2-ring-n { font-family: var(--v2-display); font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+.fin2-ring-l { font-size: 9px; color: var(--v2-t6); margin-top: 2px; }
+.fin2-gauge-x { flex: 1; min-width: 190px; font-size: 11.5px; color: var(--v2-t5); line-height: 1.6; }
+.fin2-gauge-x b { color: #fff; }
+
+/* ── Comparaison année sur année ─────────────────────────────────────── */
+.fin2-yoy { display: flex; flex-direction: column; gap: 10px; }
+.fin2-yoy-r {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--v2-s-sub-soft); border-radius: 11px; padding: 10px 14px;
+}
+.fin2-yoy-l { flex: 1; min-width: 140px; font-size: 12px; color: var(--v2-t3); }
+.fin2-yoy-p { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+.fin2-yoy-v { font-family: var(--v2-display); font-size: 13px; font-weight: 700; color: #fff; }
+.fin2-yoy-d { display: inline-flex; align-items: center; gap: 5px; width: 74px;
+  justify-content: flex-end; font-size: 11px; font-weight: 700; }
+.fin2-yoy-d svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Graphiques ──────────────────────────────────────────────────────── */
+.fin2-chart-wrap { width: 100%; overflow-x: auto; }
+.fin2-chart-wrap svg { display: block; }
+.fin2-legend { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: 10.5px; color: var(--v2-t6); }
+.fin2-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+.fin2-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+@keyframes fin2Draw { from { stroke-dashoffset: 1200 } to { stroke-dashoffset: 0 } }
+.fin2-line { animation: fin2Draw 1.1s ease-out forwards; }
+.fin2-dot { transition: r .15s; }
+.fin2-dot:hover { r: 6; }
+
+/* ── Lignes de liste (enveloppes, tops, masse salariale) ─────────────── */
+.fin2-row {
+  display: flex; align-items: center; gap: 11px; padding: 10px 0;
+  border-bottom: 1px solid var(--v2-b-list); min-width: 0;
+}
+.fin2-row:last-child { border-bottom: none; }
+.fin2-row-t { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  overflow: hidden; text-overflow: ellipsis; }
+.fin2-row-m { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+.fin2-row-v { font-family: var(--v2-display); font-size: 12.5px; font-weight: 700;
+  color: #fff; white-space: nowrap; }
+.fin2-rank {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; background: rgba(255,255,255,.06); color: var(--v2-t4);
+}
+.fin2-rank.first { color: var(--v2-warn-icon); }
+.fin2-dot-c { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+.fin2-env { padding: 9px 0; }
+.fin2-env-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.fin2-env-l { font-size: 12px; color: var(--v2-t3); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin2-env-v { margin-left: auto; font-size: 11px; color: var(--v2-t6); white-space: nowrap; }
+
+/* ── Tableau des opérations ──────────────────────────────────────────── */
+.v2-blk.pad0 { padding: 0; overflow: hidden; }
+.fin2-tw { width: 100%; overflow-x: auto; }
+.fin2-ops { min-width: 640px; }
+.fin2-ops th:first-child, .fin2-ops td:first-child { padding-left: 22px; }
+.fin2-ops th:last-child, .fin2-ops td:last-child { padding-right: 22px; }
+.fin2-ops td.num { text-align: right; font-family: var(--v2-display); font-weight: 700; }
+
+/* ── Message vide ────────────────────────────────────────────────────── */
+.fin2-vide { font-size: 12px; color: var(--v2-t7); padding: 18px 0; text-align: center; }
+
+/* ── Accès refusé ────────────────────────────────────────────────────── */
+.fin2-deny { text-align: center; padding: 60px 20px; }
+.fin2-deny h3 { font-family: var(--v2-display); font-size: 20px; color: #fff; margin: 0 0 8px; }
+.fin2-deny p { font-size: 13px; color: var(--v2-t6); margin: 0 0 20px; }
+
+/* Toute icône SVG de la page est bornée : sans width/height explicites,
+   un <svg> remplit sa colonne. */
+.v2-body .fin2-row svg, .v2-body .v2-blk-h svg { width: 15px; height: 15px; }
+
+@media (max-width: 700px) {
+  .fin2-actions { width: 100%; }
+  .fin2-per { flex: 1; }
+  .fin2-gauge { gap: 16px; }
+}

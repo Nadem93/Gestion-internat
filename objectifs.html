@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Objectifs &amp; grilles d'évaluation — FTR</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/v2.css"/>
+  <link rel="stylesheet" href="css/v2-clair.css"/>
+  <link rel="stylesheet" href="css/v2-clair-pages.css"/>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/v2-objectifs.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body class="v2">
+<div class="app-layout"><div class="main">
+  <div class="v2-shell ob2-shell">
+
+    <!-- BARRE DU HAUT -->
+    <div class="v2-top">
+      <a class="v2-logo" href="accueil.html" style="background:linear-gradient(135deg,#6366f1,#a5b4fc)" aria-label="Accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </a>
+      <div style="line-height:1.15;min-width:0">
+        <div class="v2-eyebrow">INTERNALIS · Dossiers &amp; suivi</div>
+        <div class="v2-top-title" id="ob2Title">Objectifs &amp; axes</div>
+      </div>
+      <div class="ob2-topact">
+        <span id="ob2ActObj">
+          <button type="button" id="btnGererObj" class="v2-btn v2-btn-primary" onclick="openCatalogue()" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvel objectif
+          </button>
+        </span>
+        <span id="ob2ActEv" style="display:none">
+          <button type="button" id="btnAddEv" class="v2-btn v2-btn-primary" onclick="openEvModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvelle évaluation
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <div class="v2-body">
+      <main class="content">
+
+        <!-- ONGLETS -->
+        <div class="v2-chips ob2-tabs" role="tablist" aria-label="Sections">
+          <button type="button" id="obTabBtnObjectifs" class="v2-chip-f on" role="tab" aria-selected="true" onclick="obSwitchTab('objectifs')">
+            <span class="dot" style="background:#818cf8"></span>Objectifs &amp; axes
+          </button>
+          <button type="button" id="obTabBtnEvals" class="v2-chip-f" role="tab" aria-selected="false" onclick="obSwitchTab('evaluations')">
+            <span class="dot" style="background:#22d3ee"></span>Grilles d'évaluation
+          </button>
+        </div>
+
+        <!-- ════ ONGLET OBJECTIFS & AXES ════ -->
+        <section id="obTabObjectifs">
+
+          <div class="ob2-kpis">
+            <div class="ob2-kpi" style="--c:#a5b4fc">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatObjectifs">—</div><div class="ob2-kpi-l">Objectifs suivis</div></div>
+            </div>
+            <div class="ob2-kpi" style="--c:#818cf8">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatProgression">—</div><div class="ob2-kpi-l">Progression moyenne</div></div>
+            </div>
+            <div class="ob2-kpi" style="--c:#f59e0b">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatAxes">—</div><div class="ob2-kpi-l">Axes de travail</div></div>
+            </div>
+            <div class="ob2-kpi" style="--c:#10b981">
+              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0z"/><line x1="12" y1="15" x2="12" y2="19"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatAtteints">—</div><div class="ob2-kpi-l">Objectifs atteints</div></div>
+            </div>
+          </div>
+
+          <div class="ob2-filters">
+            <select id="obResident" class="v2-fld" aria-label="Choisir un résident">
+              <option value="">Tous les résidents — vue d'ensemble</option>
+            </select>
+            <select id="obFilterStatut" class="v2-fld" aria-label="Filtrer par statut">
+              <option value="">Tous les statuts</option>
+              <option value="non_commence">Non commencés</option>
+              <option value="en_cours">En cours</option>
+              <option value="atteint">Atteints</option>
+              <option value="abandonne">Abandonnés</option>
+            </select>
+          </div>
+
+          <details class="v2-blk ob2-guide" id="obGuide">
+            <summary>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Comment fonctionne cette page ?
+            </summary>
+            <div class="ob2-guide-steps">
+              <div class="ob2-guide-step"><span class="ob2-guide-n" style="background:#a5b4fc">1</span><div><strong>Assignez des objectifs</strong> au résident : choisissez-le dans la liste ci-dessus puis cliquez sur « Nouvel objectif ». Les modèles d'objectifs (Autonomie, Santé, Logement…) se créent aussi dans Administration → Objectifs.</div></div>
+              <div class="ob2-guide-step"><span class="ob2-guide-n" style="background:#fbbf24">2</span><div><strong>Découpez chaque objectif en axes de travail</strong> : des étapes concrètes et mesurables (ex. « Préparer un repas simple en autonomie »), avec une échéance et un responsable si besoin. Des suggestions vous sont proposées.</div></div>
+              <div class="ob2-guide-step"><span class="ob2-guide-n" style="background:#5eead4">3</span><div><strong>Pointez la progression</strong> au fil des semaines en cliquant sur le palier atteint : la jauge, les couleurs et la courbe d'évolution se mettent à jour automatiquement. Quand tous les axes sont à 100 %, l'objectif peut être marqué « atteint ».</div></div>
+            </div>
+          </details>
+
+          <div id="obList" aria-live="polite"></div>
+        </section>
+
+        <!-- ════ ONGLET GRILLES D'ÉVALUATION ════ -->
+        <section id="obTabEvals" style="display:none">
+          <div class="ob2-kpis" id="evStats"></div>
+
+          <div class="ob2-filters">
+            <select id="evResident" class="v2-fld" aria-label="Filtrer par résident">
+              <option value="">Tous les résidents</option>
+            </select>
+            <div class="v2-chips" id="ev2Chips"></div>
+            <!-- Contrat avec js/evaluations.js : la grille reste pilotée par ce select,
+                 masqué et actionné par les puces ci-dessus. -->
+            <select id="evGrille" class="ob2-hidden" aria-hidden="true" tabindex="-1">
+              <option value="">Toutes les grilles</option>
+              <option value="mif">MIF</option>
+              <option value="barthel">Barthel</option>
+              <option value="serafin">SERAFIN-PH</option>
+            </select>
+          </div>
+
+          <div id="evList"></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODALE — AXE DE TRAVAIL -->
+<div class="modal-overlay v2-ov" id="modalAxe">
+  <div class="v2-md" style="--mc:#38bdf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="axModalTitle">Nouvel axe de travail</div>
+        <div class="v2-md-s">Une étape concrète et mesurable de l'objectif</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalAxe')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="ob2-md-info" id="axModalObjectif"></div>
+
+      <div>
+        <label class="v2-fld-l" for="axNom">Axe de travail *</label>
+        <input type="text" id="axNom" class="v2-fld" placeholder="Ex : Préparer un repas simple en autonomie"/>
+      </div>
+
+      <div id="axSuggestWrap" style="display:none">
+        <span class="v2-fld-l">Suggestions pour cet objectif</span>
+        <div id="axSuggest" class="ob2-sugg"></div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l">Niveau d'autonomie : <output id="axProgVal" style="font-weight:700">0%</output></label>
+        <input type="hidden" id="axProgression" value="0"/>
+        <div id="axSteps" class="ob2-steps" role="radiogroup" aria-label="Niveau d'autonomie"></div>
+      </div>
+
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="axEcheance">Échéance visée</label>
+          <input type="date" id="axEcheance" class="v2-fld"/>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="axResp">Responsable</label>
+          <input type="text" id="axResp" class="v2-fld" placeholder="Ex : éducateur référent"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="axNote">Moyens / observations</label>
+        <textarea id="axNote" class="v2-fld" rows="2" placeholder="Ex : atelier cuisine hebdomadaire avec l'éducateur référent"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalAxe')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveAxe()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE — SAISIE D'UNE ÉVALUATION (MIF / BARTHEL / SERAFIN-PH) -->
+<div class="modal-overlay v2-ov" id="modalEv">
+  <div class="v2-md" style="--mc:#818cf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="evModalTitle">Nouvelle évaluation</div>
+        <div class="v2-md-s">Grille d'autonomie du résident</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalEv')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="v2-grid2">
+        <div>
+          <label class="v2-fld-l" for="evModalResidentSel">Résident</label>
+          <select id="evModalResidentSel" class="v2-fld"></select>
+        </div>
+        <div>
+          <label class="v2-fld-l" for="evModalGrille">Grille</label>
+          <select id="evModalGrille" class="v2-fld">
+            <option value="mif">MIF (18–126)</option>
+            <option value="barthel">Barthel (0–100)</option>
+            <option value="serafin">SERAFIN-PH — besoins (0–44)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="evModalDate">Date d'évaluation *</label>
+        <input type="date" id="evModalDate" class="v2-fld"/>
+      </div>
+
+      <div class="ob2-live" id="evLiveScore">Remplissez les items ci-dessous…</div>
+
+      <div id="evFormBody"></div>
+
+      <div>
+        <label class="v2-fld-l" for="evModalNote">Note clinique</label>
+        <textarea id="evModalNote" class="v2-fld" rows="2" placeholder="Observations, contexte de l'évaluation…"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalEv')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveEvaluation()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE — DÉTAIL D'UNE ÉVALUATION -->
+<div class="modal-overlay v2-ov" id="modalEvDetail">
+  <div class="v2-md" style="--mc:#22d3ee">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t">Détail de l'évaluation</div>
+        <div class="v2-md-s">Score par item et niveau atteint</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalEvDetail')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b" id="evDetailBody"></div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalEvDetail')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE — ÉVALUER UN OBJECTIF (grille 0-4 sur ses axes de travail) -->
+<div class="modal-overlay v2-ov" id="modalEvalObj">
+  <div class="v2-md" style="--mc:#38bdf8">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="eoModalTitle">Évaluer l'objectif</div>
+        <div class="v2-md-s">Chaque axe de travail est noté de 0 à 4</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalEvalObj')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="ob2-md-info" id="eoModalInfo"></div>
+
+      <div style="max-width:240px">
+        <label class="v2-fld-l" for="eoDate">Date de l'évaluation *</label>
+        <input type="date" id="eoDate" class="v2-fld"/>
+      </div>
+
+      <div class="ob2-live" id="eoLiveScore">Notez chaque axe ci-dessous…</div>
+
+      <div id="eoGrid" style="display:flex;flex-direction:column;gap:10px"></div>
+
+      <div>
+        <label class="v2-fld-l" for="eoComment">Commentaire</label>
+        <textarea id="eoComment" class="v2-fld" rows="2" placeholder="Contexte, observations de l'équipe…"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalEvalObj')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="saveEvalObj()">Enregistrer l'évaluation</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE — NOUVEL OBJECTIF DU RÉSIDENT -->
+<div class="modal-overlay v2-ov" id="modalCatalogue">
+  <div class="v2-md" style="--mc:#a5b4fc">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="catModalTitle">Nouvel objectif</div>
+        <div class="v2-md-s">Créé puis assigné immédiatement au résident</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalCatalogue')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b">
+      <div class="ob2-md-info" id="catModalInfo"></div>
+
+      <div>
+        <label class="v2-fld-l" for="catNewName">Objectif *</label>
+        <input type="text" id="catNewName" class="v2-fld" placeholder="Ex : Développer l'autonomie au quotidien" onkeydown="if(event.key==='Enter'){event.preventDefault();catCreateObjectif()}"/>
+      </div>
+
+      <div id="catSuggestWrap" style="display:none">
+        <span class="v2-fld-l">Suggestions</span>
+        <div id="catSuggest" class="ob2-sugg"></div>
+      </div>
+
+      <div>
+        <label class="v2-fld-l" for="catNewDesc">Description</label>
+        <textarea id="catNewDesc" class="v2-fld" rows="2" placeholder="Objet de l'objectif, contexte…"></textarea>
+      </div>
+    </div>
+    <div class="v2-md-f">
+      <button type="button" class="v2-btn-sec" onclick="closeModal('modalCatalogue')">Annuler</button>
+      <button type="button" class="v2-btn-pri" onclick="catCreateObjectif()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/offline-outbox.js"></script>
+<script src="js/audit-supabase.js"></script>
+<script src="js/search-global.js"></script>
+<script src="js/notif-bell.js"></script>
+<script src="js/residents-supabase.js"></script>
+<script src="js/evaluations-supabase.js"></script>
+<script src="js/ppe-supabase.js"></script>
+<script src="js/serafin-codage.js"></script>
+<script src="js/config-supabase.js"></script>
+<script src="js/objectifs.js"></script>
+<script src="js/evaluations.js"></script>
+<script src="js/objectifs-v2.js"></script>
+<script src="js/mobile-nav.js"></script>
+</body>
+</html>

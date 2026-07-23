@@ -40,6 +40,33 @@ function _trSession() {
 }
 function _trShift(id) { return TR_SHIFTS.find(s => s.id === id) || TR_SHIFTS[0]; }
 function _trCat(id)   { return TR_CATS.find(c => c.id === id) || TR_CATS[8]; }
+
+// « Fil du quart » : avancement du quart selon l'heure courante.
+// matin 07h–13h30, aprem 13h30–22h, nuit 22h–07h (chevauche minuit).
+// Renvoie { state:'past'|'current'|'future', filled:0..3 } (points remplis).
+function _trShiftProgress(id) {
+  const d = new Date();
+  let now = d.getHours() * 60 + d.getMinutes();
+  let start, end;
+  if (id === 'matin')      { start = 420;  end = 810; }
+  else if (id === 'aprem') { start = 810;  end = 1320; }
+  else                     { start = 1320; end = 1860; if (now < 420) now += 1440; } // nuit après minuit
+  if (now < start)  return { state: 'future',  filled: 0 };
+  if (now >= end)   return { state: 'past',    filled: 3 };
+  return { state: 'current', filled: Math.min(3, Math.floor((now - start) / (end - start) * 3) + 1) };
+}
+function _trDotsHtml(id) {
+  const p = _trShiftProgress(id);
+  const titre = p.state === 'past' ? 'Quart terminé' : p.state === 'future' ? 'Quart à venir' : 'Quart en cours';
+  let h = `<div class="kb-col-dots" title="${titre}">`;
+  for (let i = 0; i < 3; i++) {
+    const lit = i < p.filled;
+    const lead = p.state === 'current' && i === p.filled - 1;
+    h += `<span class="kb-dot${lead ? ' on' : lit ? ' lit' : ''}"></span>`;
+    if (i < 2) h += `<span class="kb-line${(i + 1) < p.filled ? ' lit' : ''}"></span>`;
+  }
+  return h + '</div>';
+}
 function _trIsRead(tr, userId) {
   return Array.isArray(tr.readBy) && tr.readBy.includes(String(userId));
 }
@@ -82,6 +109,8 @@ async function initTransmissions() {
   const autoShift = (h >= 7 && (h < 13 || (h === 13 && new Date().getMinutes() < 30))) ? 'matin' : (h >= 13 && h < 22) ? 'aprem' : 'nuit';
   const shiftEl = document.getElementById('trShift');
   if (shiftEl) shiftEl.value = autoShift;
+  // Consignes permanentes (nouveauté de la maquette) — chargées sans bloquer le rendu.
+  if (typeof tv2ChargerConsignes === 'function') tv2ChargerConsignes();
 }
 
 function _populateTrResidents() {
@@ -109,7 +138,9 @@ function _renderTrDateNav() {
   if (_trCurrentDate === today) shortLabel = "Aujourd'hui";
   else if (_trCurrentDate === yesterday) shortLabel = 'Hier';
   else shortLabel = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
-  if (el) el.textContent = _trCurrentDate === today ? `Aujourd'hui — ${fullDate}` : fullDate;
+  // Format court de la maquette : « Lun. 20 juil. 2026 ».
+  const court = d.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+  if (el) el.textContent = _trCurrentDate === today ? "Aujourd'hui" : court;
   const titleEl = document.getElementById('trTodayLabel');
   if (titleEl) titleEl.textContent = shortLabel;
   const dateEl = document.getElementById('trTodayDate');
@@ -186,45 +217,21 @@ function _renderTransmissions() {
     unreadCountEl.style.color = unreadCount ? '#ef4444' : '#16a34a';
   }
 
-  const grouped = {};
-  TR_SHIFTS.forEach(s => { grouped[s.id] = []; });
-  list.forEach(t => { if (grouped[t.shift]) grouped[t.shift].push(t); });
-
-  const SHIFT_HOURS = { matin: '07h–13h30', aprem: '13h30–22h', nuit: '22h–07h' };
-  const SHIFT_ICONS = { matin: '🌅', aprem: '☀️', nuit: '🌙' };
-
-  container.innerHTML = `<div class="kb-board">${
-    TR_SHIFTS.map(shift => {
-      const items = grouped[shift.id];
-      return `<div class="kb-col">
-        <div class="kb-col-hdr">
-          <div class="kb-col-hdr-top">
-            <div class="kb-col-name">
-              ${SHIFT_ICONS[shift.id]} ${shift.label}
-              <span class="kb-col-hours">${SHIFT_HOURS[shift.id]}</span>
-            </div>
-            <span class="kb-col-count" style="background:${shift.bg};color:${shift.color}">${items.length}</span>
-          </div>
-          <div class="kb-col-bar" style="background:${shift.color};opacity:.4"></div>
-        </div>
-        <div class="kb-cards">
-          ${items.length
-            ? items.map(t => _trCard(t, residents, userId)).join('<div class="kb-sep"></div>')
-            : `<div class="kb-empty-col"><span class="ei">${SHIFT_ICONS[shift.id]}</span><span>Aucune transmission</span></div>`
-          }
-        </div>
-        <button class="kb-add-btn" onclick="resetTrModal();document.getElementById('trShift').value='${shift.id}';openModal('modalTr')">+ Ajouter</button>
-      </div>`;
-    }).join('')
-  }</div>`;
-
-  _renderTrHisto();
+  // Rendu V2 (maquette « Transmissions - refonte (bento) »).
+  if (typeof tv2RenderPrise === 'function') tv2RenderPrise();   // prise de poste (non lues)
+  if (typeof tv2RenderTodos === 'function') tv2RenderTodos();   // à faire pour la relève (tous jours)
+  tv2RenderFilters(allDay, userId);
+  tv2RenderBoard(list, residents, userId);
+  tv2RenderSynthese(allDay);
+  tv2RenderConsignes();
+  tv2RenderHisto();
 }
+
 
 function _trCard(t, residents, userId) {
   const r        = residents.find(x => x.id === t.residentId);
   const resName  = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : '';
-  const resColor = r?.color || '#64748b';
+  const resColor = safeColor(r?.color, '#64748b');
   const cat      = _trCat(t.cat);
   const isRead   = _trIsRead(t, userId);
   const isUrgent = t.priority === 'urgent' || t.cat === 'urgent';
@@ -282,6 +289,10 @@ function _trCard(t, residents, userId) {
       <div class="kb-time-wrap"><span class="kb-card-time">${time}</span></div>
     </div>
     <div class="kb-card-body">${escHtml(t.content || '')}</div>
+    ${(t.soutien || (t.soutienNiveau && TR_SOUTIEN[t.soutienNiveau])) ? `<div style="margin-top:.4rem;padding:.4rem .55rem;background:#f0fdfa;border-left:3px solid #14b8a6;border-radius:6px;font-size:.72rem;color:#134e4a">
+      <span style="font-weight:700">🤝 Accompagnement :</span> ${escHtml(t.soutien || '')}
+      ${(t.soutienNiveau && TR_SOUTIEN[t.soutienNiveau]) ? `<span style="display:inline-block;margin-left:.3rem;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:999px;color:#fff;background:${TR_SOUTIEN[t.soutienNiveau].c}">${TR_SOUTIEN[t.soutienNiveau].l}</span>` : ''}
+    </div>` : ''}
     <div class="kb-card-foot">
       <div class="kb-badges">
         <span class="kb-badge" style="background:${cat.color}22;color:${cat.color}">${cat.icon} ${cat.label}</span>
@@ -425,6 +436,15 @@ async function addTrReply(id) {
 }
 
 // ─── Sauvegarde modal ─────────────────────────────────────────────────────────
+// P4 « deux couches » : libellés du niveau de soutien apporté par le professionnel
+const TR_SOUTIEN = {
+  autonomie:   { l: 'Autonomie',            c: '#16a34a' },
+  supervision: { l: 'Supervision',          c: '#0284c7' },
+  verbal:      { l: 'Guidance verbale',     c: '#d97706' },
+  partiel:     { l: 'Aide partielle',       c: '#ea580c' },
+  total:       { l: 'Aide totale',          c: '#dc2626' }
+};
+
 async function saveTr_Modal() {
   const editId     = document.getElementById('trEditId')?.value  || '';
   const residentId = document.getElementById('trResident')?.value || '';
@@ -432,6 +452,9 @@ async function saveTr_Modal() {
   const cat        = document.getElementById('trCat')?.value      || 'administratif';
   const priority   = document.getElementById('trPriority')?.value || 'normal';
   const content    = document.getElementById('trContent')?.value.trim() || '';
+  const soutien       = document.getElementById('trSoutien')?.value.trim() || '';
+  const soutienNiveau = document.getElementById('trSoutienNiveau')?.value  || '';
+  const aFaire        = !!document.getElementById('trAFaire')?.checked;
   if (!content) { toast('Le contenu est obligatoire', 'error'); return; }
 
   const sess = _trSession();
@@ -442,7 +465,7 @@ async function saveTr_Modal() {
     if (editId) {
       const existing = _trCache.find(x => x.id === editId);
       if (!existing) return;
-      const updated = await sbSaveTransmission({ ...existing, residentId, shift, cat, priority, content, updatedAt: now });
+      const updated = await sbSaveTransmission({ ...existing, residentId, shift, cat, priority, content, soutien, soutienNiveau, aFaire, updatedAt: now });
       const idx = _trCache.findIndex(x => x.id === editId);
       if (idx !== -1) _trCache[idx] = updated;
       toast('Transmission modifiée');
@@ -451,7 +474,7 @@ async function saveTr_Modal() {
         date: _trCurrentDate,
         residentId,
         residentName: r ? `${r.prenom||''} ${r.nom||''}`.trim() : '',
-        shift, cat, priority, content,
+        shift, cat, priority, content, soutien, soutienNiveau, aFaire,
         authorId:   String(sess.id),
         authorName: sess.name,
         createdAt:  now,
@@ -479,8 +502,11 @@ function editTr(id) {
   document.getElementById('trResident').value  = t.residentId  || '';
   document.getElementById('trShift').value     = t.shift       || 'matin';
   document.getElementById('trCat').value       = t.cat         || 'administratif';
-  document.getElementById('trPriority').value  = t.priority    || 'normal';
+  trSetPriority(t.priority || 'normal');
   document.getElementById('trContent').value   = t.content     || '';
+  const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = t.soutien || '';
+  const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = t.soutienNiveau || '';
+  const _afEl = document.getElementById('trAFaire');       if (_afEl) _afEl.checked = !!t.aFaire;
   document.getElementById('modalTrTitle').textContent = 'Modifier la transmission';
   openModal('modalTr');
 }
@@ -552,7 +578,7 @@ async function trVersJournal(trId) {
     type: 'observation',
     residentId:    t.residentId,
     resident:      r ? `${r.prenom||''} ${r.nom||''}`.trim() : '',
-    residentColor: r?.color || '#3b82f6',
+    residentColor: safeColor(r?.color, '#3b82f6'),
     categorie:     t.cat || 'general',
     date:          new Date().toISOString(),
     contenu:       `[Transmission ${shiftLabel} — ${t.date}]\n${t.content || ''}`,
@@ -588,35 +614,91 @@ function resetTrModal() {
   document.getElementById('trEditId').value    = '';
   document.getElementById('trResident').value  = '';
   document.getElementById('trContent').value   = '';
+  const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = '';
+  const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = '';
+  const _afEl = document.getElementById('trAFaire');       if (_afEl) _afEl.checked = false;
+  trDicteeStop();
   document.getElementById('trCat').value       = 'administratif';
-  document.getElementById('trPriority').value  = 'normal';
+  trSetPriority('normal');
   document.getElementById('modalTrTitle').textContent = 'Nouvelle transmission';
   const h = new Date().getHours();
   const autoShift = (h >= 7 && (h < 13 || (h === 13 && new Date().getMinutes() < 30))) ? 'matin' : (h >= 13 && h < 22) ? 'aprem' : 'nuit';
   document.getElementById('trShift').value = autoShift;
-  trGoStep(1);
+  trSetPriority('normal');
 }
 
-function trGoStep(step) {
-  for (let i = 1; i <= 3; i++) {
-    const nav = document.getElementById('trStep' + i + 'Nav');
-    if (!nav) continue;
-    if (i === step) {
-      nav.style.background = 'rgba(255,255,255,.18)';
-      nav.style.opacity    = '1';
-      const circle = nav.querySelector('span');
-      if (circle) { circle.style.background = '#fff'; circle.style.color = '#059669'; }
-    } else {
-      nav.style.background = 'transparent';
-      nav.style.opacity    = '.55';
-      const circle = nav.querySelector('span');
-      if (circle) { circle.style.background = 'rgba(255,255,255,.2)'; circle.style.color = '#fff'; }
+// ─── Dictée vocale ──────────────────────────────────────────────────────────
+// Reconnaissance vocale du navigateur (Web Speech API). Le texte reconnu
+// s'ajoute au champ Observation. Support inégal : surtout Chrome / Android —
+// le bouton reste caché là où l'API n'existe pas.
+let _trReco = null, _trRecoOn = false;
+
+function trDicteeDispo() {
+  return typeof (window.SpeechRecognition || window.webkitSpeechRecognition) === 'function';
+}
+
+function trDicteeInit() {
+  const mic = document.getElementById('trMic');
+  if (mic && trDicteeDispo()) mic.hidden = false;
+}
+
+function trDicteeToggle() {
+  if (_trRecoOn) { trDicteeStop(); return; }
+  const Reco = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Reco) { toast('La dictée n\'est pas disponible sur ce navigateur', 'info'); return; }
+  const champ = document.getElementById('trContent');
+  if (!champ) return;
+
+  _trReco = new Reco();
+  _trReco.lang = 'fr-FR';
+  _trReco.interimResults = false;
+  _trReco.continuous = true;
+  let base = champ.value;
+
+  _trReco.onresult = e => {
+    let ajout = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) ajout += e.results[i][0].transcript;
     }
-  }
-  const label = document.getElementById('trStepLabel');
-  if (label) label.textContent = 'Étape ' + step + ' sur 3';
-  const target = document.getElementById('trFormStep' + step);
-  if (target) target.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    if (!ajout) return;
+    ajout = ajout.trim();
+    ajout = ajout.charAt(0).toUpperCase() + ajout.slice(1);           // majuscule en début
+    base = (base ? base.replace(/\s+$/, '') + (/[.!?…]$/.test(base.trim()) ? ' ' : '. ') : '') + ajout;
+    champ.value = base;
+  };
+  _trReco.onerror = ev => {
+    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')
+      toast('Micro refusé — autorisez l\'accès au microphone', 'error');
+    trDicteeStop();
+  };
+  _trReco.onend = () => { if (_trRecoOn) { try { _trReco.start(); } catch (_) {} } };  // relance auto tant qu'actif
+
+  try { _trReco.start(); } catch (_) {}
+  _trRecoOn = true;
+  document.getElementById('trMic')?.classList.add('on');
+  const hint = document.getElementById('trMicHint'); if (hint) hint.style.display = '';
+}
+
+function trDicteeStop() {
+  _trRecoOn = false;
+  if (_trReco) { try { _trReco.stop(); } catch (_) {} _trReco = null; }
+  document.getElementById('trMic')?.classList.remove('on');
+  const hint = document.getElementById('trMicHint'); if (hint) hint.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', trDicteeInit);
+
+// Priorité : choix segmenté (.v2-seg) adossé à un input caché, pour que
+// saveTr_Modal() et editTr() continuent de lire/écrire trPriority.
+function trSetPriority(v) {
+  const inp = document.getElementById('trPriority');
+  if (inp) inp.value = v;
+  document.querySelectorAll('#trPrioritySeg .v2-seg-o').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === v);
+  });
+  const MC = { info: '#64748b', normal: '#22d3ee', urgent: '#ef4444' };
+  const md = document.querySelector('#modalTr .v2-md');
+  if (md) md.style.setProperty('--mc', MC[v] || '#22d3ee');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

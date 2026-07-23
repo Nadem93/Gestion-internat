@@ -15,6 +15,7 @@ function toggleRapportPeriode() {
   const t = document.getElementById('rapportType').value;
   document.getElementById('rapportMoisWrap').style.display = t === 'mois' ? '' : 'none';
   document.getElementById('rapportAnneeWrap').style.display = t === 'annee' ? '' : 'none';
+  if (typeof renderApercu === 'function' && document.getElementById('rapportApercu')) renderApercu();
 }
 
 // ── CONTRIBUTIONS DE L'ÉQUIPE (qualitatif, saisi par les éducateurs etc.) ──
@@ -176,7 +177,7 @@ function svgDonut(segments, centerLabel) {
   return `<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><svg viewBox="0 0 140 140" width="120" height="120" style="flex-shrink:0">${arcs}${center}</svg><div>${legend}</div></div>`;
 }
 
-function genererRapportPDF() {
+async function genererRapportPDF(previewIframe) {
   const type = document.getElementById('rapportType').value;
   let startStr, endStr, label;
   if (type === 'mois') {
@@ -197,15 +198,41 @@ function genererRapportPDF() {
   const _start = new Date(startStr + 'T00:00:00'), _end = new Date(endStr + 'T00:00:00');
   const _days = Math.round((_end - _start) / 86400000) + 1;
 
-  const settings = DB.get(DB.keys.settings) || {};
+  // Onglet ouvert AVANT les fetchs → préserve le geste utilisateur (pas de blocage pop-up).
+  // En mode aperçu (previewIframe fourni), on écrira dans l'iframe de la page à la place.
+  let w = null;
+  if (!previewIframe) {
+    w = window.open('', '_blank');
+    if (w) w.document.write('<!doctype html><meta charset=utf-8><body style="font:15px system-ui,sans-serif;padding:3rem;text-align:center;color:#334155"><p>⏳ Génération du rapport en cours…</p>');
+  }
+
   const session = Auth.getSession();
   const residents = sbResidents();
   const activeRes = residents.filter(r => r.statut !== 'sorti');
-  const journal = DB.get(DB.keys.journal) || [];
-  const incidents = DB.get(DB.keys.incidents) || [];
-  const ppe = DB.get(DB.keys.ppe) || [];
-  const presences = DB.get(DB.keys.presences) || {};
-  const cats = DB.get(DB.keys.categories) || [];
+
+  // ── Données Supabase (le rapport lisait auparavant un localStorage désormais vide) ──
+  const SBF = async (name, ...args) => { try { return (typeof window[name] === 'function') ? await window[name](...args) : null; } catch (e) { console.error(name, e); return null; } };
+  const R = await Promise.all([
+    SBF('sbGetAppConfig'), SBF('sbGetJournalEntries'), SBF('sbGetIncidents'), SBF('sbGetPpe'),
+    SBF('sbGetPresencesRange', startStr, endStr), SBF('sbGetSatisfaction'), SBF('sbGetTransmissions'),
+    SBF('sbGetActivites'), SBF('sbGetPlanningEvents'), SBF('sbGetEmployes'), SBF('sbGetConges'),
+    SBF('sbGetFormations'), SBF('sbGetEntretiens')
+  ]);
+  const cfg = R[0] || {};
+  const settings = cfg.settings || DB.get(DB.keys.settings) || {};
+  const journal = R[1] || [];
+  const incidents = R[2] || [];
+  const ppe = R[3] || [];
+  const presences = R[4] || {};
+  const satAll = R[5] || [];
+  const transmissions = R[6] || [];
+  const activitesCatalogue = R[7] || [];
+  const planning = R[8] || [];
+  const employes = R[9] || [];
+  const conges = R[10] || [];
+  const formations = R[11] || [];
+  const entretiens = R[12] || [];
+  const cats = cfg.categories || DB.get(DB.keys.categories) || [];
 
   // Journal
   const jPeriod = journal.filter(e => inRange(e.date));
@@ -279,7 +306,6 @@ function genererRapportPDF() {
   activeRes.forEach(r => { const p = protLabels[r.protection] || r.protection || 'Non renseigné'; protDist[p] = (protDist[p] || 0) + 1; });
 
   // ── Satisfaction ──
-  const satAll = DB.get(DB.keys.satisfaction) || [];
   const satPeriod = satAll.filter(s => inRange(s.date));
   const SAT_CATS_PDF = {
     'Accueil & intégration': ['accueil'],
@@ -378,7 +404,6 @@ function genererRapportPDF() {
   const iSeries = buckets.map(b => iPeriod.filter(i => _inB(i.date, b)).length);
 
   // ── TRANSMISSIONS ──
-  const transmissions = DB.get(DB.keys.transmissions) || [];
   const trPeriod = transmissions.filter(t => t.date && t.date >= startStr && t.date <= endStr);
   const trByShift = { matin: 0, aprem: 0, soir: 0, nuit: 0 };
   const trByCat = {};
@@ -394,7 +419,6 @@ function genererRapportPDF() {
 
   // ── ACTIVITÉS ÉDUCATIVES — bilan de chaque activité sur la période ──
   const ACT_CAT_LABELS = { sportive: 'Sportive', creative: 'Créative / Artistique', culturelle: 'Culturelle', scolaire: 'Scolaire / Soutien', autonomie: 'Autonomie / Vie quotidienne', sortie: 'Sortie / Extérieur', citoyennete: 'Citoyenneté / Expression', autre: 'Autre' };
-  const activitesCatalogue = DB.get(DB.keys.activites) || [];
   const rapportAnnee = startStr.slice(0, 4);
   const activitesBilan = activitesCatalogue.map(act => {
     const inscriptionsActives = residents.filter(r => (r.activites || []).some(insc => String(insc.activiteId) === String(act.id) && insc.statut === 'active'));
@@ -413,8 +437,43 @@ function genererRapportPDF() {
     </div>`;
   }).join('') : '<p class="empty-line">Aucune contribution de l\'équipe enregistrée pour cette période.</p>';
 
-  const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  // ── NIVEAU DE SOUTIEN / AUTONOMIE (journal + transmissions + agenda) ──
+  const NIV_ORDER = ['autonomie','supervision','verbal','partiel','total'];
+  const NIV_LABEL = { autonomie:'🟢 Autonomie', supervision:'🔵 Supervision / veille', verbal:'🟡 Guidance verbale', partiel:'🟠 Aide partielle', total:'🔴 Aide totale' };
+  const NIV_COLOR = { autonomie:'#16a34a', supervision:'#0284c7', verbal:'#d97706', partiel:'#ea580c', total:'#dc2626' };
+  const NIV_SCORE = { autonomie:5, supervision:4, verbal:3, partiel:2, total:1 };
+  const nivEntries = [];
+  journal.forEach(e => { if (inRange(e.date) && NIV_SCORE[e.niveauSoutien]) nivEntries.push({ date:String(e.date).slice(0,10), niv:e.niveauSoutien }); });
+  transmissions.forEach(t => { if (t.date && t.date >= startStr && t.date <= endStr && NIV_SCORE[t.soutienNiveau]) nivEntries.push({ date:t.date, niv:t.soutienNiveau }); });
+  planning.forEach(e => { if (inRange(e.date) && NIV_SCORE[e.niveauSoutien]) nivEntries.push({ date:String(e.date).slice(0,10), niv:e.niveauSoutien }); });
+  const nivRepart = {}, nivColorMap = {};
+  NIV_ORDER.forEach(k => { nivRepart[NIV_LABEL[k]] = 0; nivColorMap[NIV_LABEL[k]] = NIV_COLOR[k]; });
+  nivEntries.forEach(e => { nivRepart[NIV_LABEL[e.niv]]++; });
+  const nivMoy = nivEntries.length ? nivEntries.reduce((a,e)=>a+NIV_SCORE[e.niv],0)/nivEntries.length : null;
+  const autoMoyLabel = nivMoy != null ? NIV_LABEL[NIV_ORDER[Math.min(4, Math.max(0, Math.round(nivMoy)-1))]].replace(/^\S+\s/,'') : '—';
+  let serafinDir = 0, serafinIndir = 0;
+  journal.forEach(e => { if (!inRange(e.date)) return; if (isSerafinDirect(e.niveauSoutien)) serafinDir++; else if (e.niveauSoutien || e.accompagnement) serafinIndir++; });
+  transmissions.forEach(t => { if (!(t.date >= startStr && t.date <= endStr)) return; if (isSerafinDirect(t.soutienNiveau)) serafinDir++; else if (t.soutienNiveau || t.soutien) serafinIndir++; });
+  planning.forEach(e => { if (!inRange(e.date)) return; if (isSerafinDirect(e.niveauSoutien)) serafinDir++; else if (e.niveauSoutien || e.accompagnement) serafinIndir++; });
+  const autoEvol = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(endStr + 'T00:00:00'); d.setDate(1); d.setMonth(d.getMonth() - i); const yy2 = d.getFullYear(), mm2 = String(d.getMonth() + 1).padStart(2, '0'); const lb = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }); const mo = nivEntries.filter(e => e.date.slice(0, 7) === `${yy2}-${mm2}`); autoEvol.push({ label: lb, value: mo.length ? Math.round(mo.reduce((a, e) => a + NIV_SCORE[e.niv], 0) / mo.length * 20) : null }); }
+  const autoEvolData = autoEvol.filter((p, i, arr) => { const f = arr.findIndex(x => x.value != null); const l = arr.length - 1 - [...arr].reverse().findIndex(x => x.value != null); return i >= f && i <= l; }).filter(p => p.value != null);
+
+  // ── RESSOURCES HUMAINES ──
+  const empActifs = (employes || []).filter(e => e.statut === 'actif');
+  const CONTRAT_LABEL = { cdi:'CDI', cdd:'CDD', interim:'Intérim', stage:'Stage', apprentissage:'Apprentissage', vacataire:'Vacataire', benevole:'Bénévole', service_civique:'Service civique' };
+  const contratDist = {};
+  empActifs.forEach(e => { const c = e.contrat ? (CONTRAT_LABEL[String(e.contrat).toLowerCase()] || e.contrat) : 'Non renseigné'; contratDist[c] = (contratDist[c] || 0) + 1; });
+  const congesPeriod = (conges || []).filter(c => (c.debut && inRange(c.debut)) || (c.fin && inRange(c.fin)));
+  const congesValides = congesPeriod.filter(c => c.statut === 'approuve' || c.statut === 'valide').length;
+  const formPeriod = (formations || []).filter(f => inRange(f.dateDebut));
+  const formReal = formPeriod.filter(f => f.statut === 'realisee').length;
+  const formPrev = formPeriod.filter(f => f.statut === 'planifiee').length;
+  const nbFormes = new Set(formPeriod.filter(f => f.statut === 'realisee').flatMap(f => f.participants || [])).size;
+  const entrPeriod = (entretiens || []).filter(e => inRange(e.date));
+  const entrReal = entrPeriod.filter(e => e.statut === 'realise' || e.statut === 'realisee').length;
+
+  const __html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Rapport d'activité — ${escHtml(label)}</title>
 <style>
   @page{margin:1.8cm 1.5cm}
@@ -482,6 +541,9 @@ function genererRapportPDF() {
   ${kpi(nbObjAtteints, 'Objectifs atteints')}
   ${kpi(gmps != null ? gmps : '—', 'GMPS moyen')}
   ${kpi(withSp.length + '/' + activeRes.length, 'Résidents évalués SERAFIN-PH')}
+  ${kpi(nivEntries.length, 'Obs. niveau de soutien')}
+  ${kpi(autoMoyLabel, "Niveau d'autonomie moyen")}
+  ${kpi(empActifs.length, 'Effectif (professionnels)')}
 </div>
 ${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accueil » dans Administration → Établissement pour calculer le taux d\'occupation.</p>'}
 
@@ -548,6 +610,17 @@ ${activitesBilan.length ? activitesBilan.map(({ act, nbInscrits, bilanAnnuel }) 
 <p class="methode"><strong>📌 Méthode :</strong> Les évaluations d'autonomie sont réalisées via des grilles standardisées renseignées par l'équipe. Les objectifs sont définis dans le PPE et leur suivi est mis à jour manuellement. Les sorties et permissions sont saisies dans le dossier résident à chaque occurrence.</p>
 <p class="note"><strong>${nbEvals}</strong> évaluation${nbEvals > 1 ? 's' : ''} d'autonomie · <strong>${nbObjAtteints}</strong> objectif${nbObjAtteints > 1 ? 's' : ''} atteint${nbObjAtteints > 1 ? 's' : ''} · <strong>${nbSorties}</strong> sortie${nbSorties > 1 ? 's' : ''}/permission${nbSorties > 1 ? 's' : ''} enregistrée${nbSorties > 1 ? 's' : ''}.</p>
 
+<h2>🎚️ Niveau de soutien &amp; autonomie</h2>
+<p class="methode"><strong>📌 Méthode :</strong> À chaque observation (journal de bord, transmissions, agenda), l'équipe indique le niveau de soutien apporté à la personne, sur une échelle de 5 degrés — de l'aide totale à l'autonomie. L'application en déduit l'évolution de l'autonomie et la classification SERAFIN-PH (prestation directe si un niveau est renseigné, indirecte sinon), sans double saisie.</p>
+${nivEntries.length ? `
+<p class="note"><strong>${nivEntries.length}</strong> observation${nivEntries.length > 1 ? 's' : ''} de niveau de soutien sur la période · niveau moyen : <strong>${autoMoyLabel}</strong>.</p>
+<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
+  <div style="flex:1;min-width:300px"><div class="chart-title">Répartition des niveaux de soutien</div>${svgHBar(nivRepart, '#6366f1', true, nivColorMap, 165)}</div>
+  <div style="flex:0 0 auto"><div class="chart-title">Prestations SERAFIN-PH</div>${svgDonut([{ label: 'Directe', value: serafinDir, color: '#2563eb' }, { label: 'Indirecte', value: serafinIndir, color: '#f59e0b' }], 'accomp.')}</div>
+</div>
+${autoEvolData.length >= 2 ? `<div class="chart-title" style="margin-top:.35cm">Évolution de l'autonomie moyenne (score sur 100)</div>${svgLine(autoEvolData, '#16a34a', 100, '')}<p style="font-size:8pt;color:#94a3b8;margin-top:.1cm">Score d'autonomie moyen par mois (aide totale = 20 · autonomie = 100), sur les 12 derniers mois glissants.</p>` : ''}
+` : '<p class="empty-line">Aucun niveau de soutien saisi sur la période (journal, transmissions ou agenda).</p>'}
+
 <h2>Profil SERAFIN-PH</h2>
 <p class="note"><strong>${withSp.length}</strong> résident${withSp.length > 1 ? 's' : ''} évalué${withSp.length > 1 ? 's' : ''} sur <strong>${activeRes.length}</strong> résident${activeRes.length > 1 ? 's' : ''} présents · GMPS moyen : <strong>${gmps != null ? gmps : '—'}</strong> · Score total cumulé : <strong>${allScores.reduce((a, s) => a + s.total, 0)}</strong>.</p>
 ${withSp.length ? `<div style="display:flex;gap:.4cm;flex-wrap:wrap;margin-bottom:.3cm">
@@ -597,14 +670,58 @@ ${Object.entries(SAT_CATS_PDF).map(([cat, qIds]) => {
 }).join('')}
 </table>`}
 
+<h2>👥 Ressources humaines</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Synthèse du module personnel : effectif en poste, répartition des contrats, congés et absences, plan de formation et entretiens professionnels menés sur la période.</p>
+<p class="note"><strong>${empActifs.length}</strong> professionnel${empActifs.length > 1 ? 's' : ''} en poste · <strong>${congesPeriod.length}</strong> demande${congesPeriod.length > 1 ? 's' : ''} de congés / absence sur la période (dont ${congesValides} validée${congesValides > 1 ? 's' : ''}) · <strong>${formReal}</strong> formation${formReal > 1 ? 's' : ''} réalisée${formReal > 1 ? 's' : ''} · <strong>${entrReal}</strong> entretien${entrReal > 1 ? 's' : ''} professionnel${entrReal > 1 ? 's' : ''} mené${entrReal > 1 ? 's' : ''}.</p>
+${empActifs.length ? `<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-items:flex-start">
+  <div style="flex:0 0 auto"><div class="chart-title">Répartition des contrats</div>${svgDonut(Object.entries(contratDist).map(([l, v], i) => ({ label: l, value: v, color: ['#2563eb', '#8b5cf6', '#0d9488', '#f59e0b', '#ec4899', '#64748b'][i % 6] })), 'salariés')}</div>
+  <div style="flex:1;min-width:260px"><div class="chart-title">Plan de formation sur la période</div>${svgHBar({ 'Réalisées': formReal, 'Planifiées': formPrev }, '#0d9488', true, { 'Réalisées': '#16a34a', 'Planifiées': '#f59e0b' }, 130)}<p class="note" style="margin-top:.15cm">${nbFormes} professionnel${nbFormes > 1 ? 's' : ''} formé${nbFormes > 1 ? 's' : ''} (formations réalisées).</p></div>
+</div>` : '<p class="empty-line">Aucun professionnel enregistré dans le module personnel.</p>'}
+
 <h2>✍️ Contributions de l'équipe</h2>
 <p class="methode"><strong>📌 Méthode :</strong> Cette section reprend les apports qualitatifs saisis par les éducateurs et l'équipe (faits marquants, points forts, difficultés rencontrées, perspectives) via la page Rapport d'activité, pour les mois compris dans la période sélectionnée. Ce contenu n'est pas calculé automatiquement à partir des autres modules.</p>
 ${contribHtml}
 
 <div class="footer">${escHtml(settings.etablissement || 'Établissement')} · Rapport d'activité ${escHtml(label)} · Document interne</div>
-</body></html>`);
+</body></html>`;
+
+  // Mode aperçu : on écrit le rapport dans l'iframe de la page
+  if (previewIframe) {
+    const d = previewIframe.contentDocument || (previewIframe.contentWindow && previewIframe.contentWindow.document);
+    if (d) { d.open(); d.write(__html); d.close(); }
+    return;
+  }
+  // Mode PDF : nouvel onglet imprimable
+  if (!w) { toast('Autorisez les fenêtres pop-up pour ouvrir le rapport.', 'error'); return; }
+  w.document.open();
+  w.document.write(__html);
   w.document.close();
   if (typeof auditLog === 'function') auditLog('export', `Rapport d'activité — ${label}`);
+}
+
+// ── Aperçu graphique à l'écran (même rendu que le PDF, dans un iframe) ──
+async function renderApercu() {
+  const cont = document.getElementById('rapportApercu');
+  if (!cont) return;
+  if (!document.getElementById('rapportType')) return;
+  const type = document.getElementById('rapportType').value;
+  const per = type === 'mois' ? document.getElementById('rapportMois').value : document.getElementById('rapportAnnee').value;
+  if (!per) { cont.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:1.5rem;font-size:.85rem">Choisissez une période pour afficher l\'aperçu.</p>'; return; }
+  cont.innerHTML = '<div style="padding:2.5rem;text-align:center;color:#94a3b8;font-size:.9rem">⏳ Chargement de l\'aperçu…</div>';
+  const ifr = document.createElement('iframe');
+  ifr.title = 'Aperçu du rapport d\'activité';
+  ifr.style.cssText = 'width:100%;border:1px solid #e2e8f0;border-radius:12px;background:#fff;min-height:640px;box-shadow:0 4px 16px rgba(15,43,74,.08)';
+  cont.innerHTML = '';
+  cont.appendChild(ifr);
+  try {
+    await genererRapportPDF(ifr);
+    const doc = ifr.contentDocument || (ifr.contentWindow && ifr.contentWindow.document);
+    const resize = () => { try { ifr.style.height = (doc.documentElement.scrollHeight + 24) + 'px'; } catch (e) {} };
+    resize(); setTimeout(resize, 200); setTimeout(resize, 700);
+  } catch (e) {
+    console.error(e);
+    cont.innerHTML = '<p style="text-align:center;color:#dc2626;padding:1.5rem;font-size:.85rem">Erreur lors du chargement de l\'aperçu.</p>';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -1,0 +1,150 @@
+/* ══════════════════════════════════════════════════════════════════════
+   INTERNALIS — V2 « Mes fiches de paie » (bento)
+   Complément de css/v2.css. Ne redéfinit aucun composant partagé.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Bandeau d'information (compte non relié / erreur) ───────────────── */
+.mfp-info {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 20px 22px; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.mfp-info-ico {
+  width: 42px; height: 42px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #f59e0b) 15%, transparent); color: var(--pc, #f59e0b);
+}
+.mfp-info-ico svg { width: 20px; height: 20px; }
+.mfp-info-t { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
+.mfp-info-s { font-size: 12px; color: var(--v2-t6); margin-top: 3px; line-height: 1.5; }
+
+/* ── Tuiles statistiques ─────────────────────────────────────────────── */
+.mfp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 900px) { .mfp-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .mfp-stats { grid-template-columns: 1fr; } }
+.mfp-stat {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+}
+.mfp-stat-bar { width: 32px; height: 4px; border-radius: 3px; background: var(--pc, #818cf8); margin-bottom: 12px; }
+.mfp-stat-n { font-family: var(--v2-display); font-size: 22px; font-weight: 800; line-height: 1; color: #fff; }
+.mfp-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 6px; }
+
+/* ── Colonnes ────────────────────────────────────────────────────────── */
+.mfp-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .mfp-layout { grid-template-columns: 1fr; } }
+.mfp-main { min-width: 0; display: flex; flex-direction: column; gap: 13px; }
+.mfp-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* ── Grille de bulletins ─────────────────────────────────────────────── */
+.mfp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .mfp-grid { grid-template-columns: 1fr; } }
+
+/* .pyx-card est conservée pour le périmètre de révélation de money-mask.js :
+   on neutralise entièrement son habillage clair hérité de css/style.css. */
+body.v2 .pyx-card.mfp-bul {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px; box-shadow: none;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: background .18s ease, transform .18s ease;
+}
+body.v2 .pyx-card.mfp-bul:hover { background: var(--v2-s-hover); transform: none; box-shadow: none; }
+
+.mfp-bul-h { display: flex; align-items: center; gap: 11px; }
+.mfp-bul-ico {
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #1e3a5f; color: #93c5fd;
+}
+.mfp-bul-ico svg { width: 18px; height: 18px; }
+.mfp-bul-ht { flex: 1; min-width: 0; }
+.mfp-bul-per { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
+.mfp-bul-file {
+  font-size: 10.5px; color: var(--v2-t6); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.mfp-net { background: var(--v2-s-sub); border-radius: var(--v2-r-ctrl); padding: 12px 14px; }
+.mfp-net-l { font-size: 10.5px; color: var(--v2-t6); }
+.mfp-net-v {
+  font-family: var(--v2-display); font-size: 22px; font-weight: 800;
+  color: var(--v2-ok); line-height: 1; margin-top: 3px;
+}
+.mfp-net-v .moneyx:hover { background: rgba(255,255,255,.09); }
+
+.mfp-mini { display: flex; gap: 8px; }
+.mfp-mini-c {
+  flex: 1; min-width: 0; text-align: center;
+  background: var(--v2-s-kpi); border-radius: 9px; padding: 7px 4px;
+}
+.mfp-mini-v { font-size: 12px; font-weight: 700; color: var(--v2-t3); }
+.mfp-mini-v.warn { color: var(--v2-warn-icon); }
+.mfp-mini-v.neg { color: var(--v2-danger-text); }
+.mfp-mini-l { font-size: 9.5px; color: var(--v2-t6); margin-top: 1px; }
+
+.mfp-dl {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; height: 34px; border-radius: var(--v2-r-chip); cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 700;
+  background: rgba(129,140,248,.14); border: 1px solid rgba(129,140,248,.32); color: var(--v2-indigo-pale);
+}
+.mfp-dl:hover { background: rgba(129,140,248,.22); color: #fff; }
+.mfp-dl svg { width: 14px; height: 14px; }
+.mfp-nofile {
+  display: flex; align-items: center; justify-content: center; height: 34px;
+  border-radius: var(--v2-r-chip); font-size: 11.5px; color: var(--v2-t7);
+  background: var(--v2-s-alt); border: 1px dashed var(--v2-b-ctrl);
+}
+
+/* ── Vide ────────────────────────────────────────────────────────────── */
+.mfp-vide {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); padding: 42px 22px; text-align: center;
+}
+.mfp-vide-ico { width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(129,140,248,.12); color: var(--v2-indigo-light); }
+.mfp-vide-ico svg { width: 22px; height: 22px; }
+.mfp-vide-t { font-size: 14px; font-weight: 700; color: var(--v2-t2); }
+.mfp-vide-s { font-size: 12px; color: var(--v2-t7); margin-top: 5px; }
+
+/* ── Rail : graphe d'évolution ───────────────────────────────────────── */
+.mfp-ev { display: flex; align-items: flex-end; gap: 10px; height: 130px; }
+.mfp-ev-c { flex: 1; min-width: 0; display: flex; flex-direction: column;
+  align-items: center; gap: 7px; height: 100%; justify-content: flex-end; }
+.mfp-ev-b { width: 100%; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #34d399, #10b981); min-height: 4px; }
+.mfp-ev-l { font-size: 9.5px; color: var(--v2-t8); white-space: nowrap; }
+
+/* ── Rail : cumuls ───────────────────────────────────────────────────── */
+.mfp-cum { display: flex; align-items: center; gap: 10px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.mfp-cum:last-child { border-bottom: none; }
+.mfp-cum-l { font-size: 12px; color: var(--v2-t4); flex: 1; min-width: 0; }
+.mfp-cum-v { font-family: var(--v2-display); font-size: 13px; font-weight: 800; color: var(--pc, #22d3ee); }
+
+/* ── Rail : attestation employeur ────────────────────────────────────── */
+.mfp-att {
+  background: linear-gradient(135deg, rgba(34,211,238,.14), rgba(129,140,248,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(34,211,238,.22); border-radius: var(--v2-r-card2);
+  padding: 18px; display: flex; align-items: center; gap: 13px;
+  width: 100%; text-align: left; cursor: pointer; font: inherit;
+}
+.mfp-att:hover { border-color: rgba(34,211,238,.4); }
+.mfp-att-ico { width: 40px; height: 40px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(34,211,238,.13); color: var(--v2-cyan); }
+.mfp-att-ico svg { width: 19px; height: 19px; }
+.mfp-att-txt { min-width: 0; }
+.mfp-att-t { display: block; font-size: 12.5px; font-weight: 700; color: var(--v2-t2); }
+.mfp-att-s { display: block; font-size: 10.5px; color: var(--v2-t6); margin-top: 2px; line-height: 1.4; }
+
+.mfp-dem { display: flex; align-items: center; gap: 10px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.mfp-dem:last-child { border-bottom: none; }
+.mfp-dem-t { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.mfp-dem-s { font-size: 10.5px; color: var(--v2-t7); margin-top: 2px; }
+.mfp-dem-b { margin-left: auto; flex-shrink: 0; }
+
+/* ── Barre du haut ───────────────────────────────────────────────────── */
+.mfp-top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

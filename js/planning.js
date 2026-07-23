@@ -1,4 +1,4 @@
-let currentView = 'week';
+let currentView = 'month';
 let currentDate = new Date();
 // Mois affiché en premier dans les mini-calendriers (indépendant de la date sélectionnée)
 let sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -120,8 +120,9 @@ function evDurMin(ev) {
 }
 
 // Assigne des colonnes (col/ncols) à un ensemble d'items selon le chevauchement
-// de l'intervalle [sKey, eKey], en regroupant par grappes.
-function assignColumns(items, sKey, eKey, colKey, nKey) {
+// de l'intervalle [sKey, eKey], en regroupant par grappes. Si clusterKey est
+// fourni, chaque item reçoit aussi l'indice de sa grappe (pour le plafonnement).
+function assignColumns(items, sKey, eKey, colKey, nKey, clusterKey) {
   const sorted = [...items].sort((a, b) => a[sKey] - b[sKey] || a[eKey] - b[eKey]);
   let clusters = [], cur = [], curEnd = -1;
   sorted.forEach(it => {
@@ -129,7 +130,7 @@ function assignColumns(items, sKey, eKey, colKey, nKey) {
     cur.push(it); curEnd = Math.max(curEnd, it[eKey]);
   });
   if (cur.length) clusters.push(cur);
-  clusters.forEach(cluster => {
+  clusters.forEach((cluster, ci) => {
     const colEnds = [];
     cluster.forEach(it => {
       let placed = false;
@@ -138,7 +139,7 @@ function assignColumns(items, sKey, eKey, colKey, nKey) {
       }
       if (!placed) { it[colKey] = colEnds.length; colEnds.push(it[eKey]); }
     });
-    cluster.forEach(it => it[nKey] = colEnds.length);
+    cluster.forEach(it => { it[nKey] = colEnds.length; if (clusterKey) it[clusterKey] = ci; });
   });
 }
 
@@ -146,14 +147,41 @@ function assignColumns(items, sKey, eKey, colKey, nKey) {
 //  - bandCol/bandN : empilement des fines bandes latérales (selon la durée totale)
 //  - contentCol/contentN : colonnes des blocs de contenu (selon la hauteur du texte seulement)
 // Ainsi un événement qui ne chevauche que la « traîne » (bande) d'un autre prend toute la largeur.
-function layoutDayEvents(evs) {
+// Au-delà de PL_MAX_COLS colonnes qui se chevauchent, les blocs deviennent
+// illisibles : on plafonne l'affichage et on regroupe le surplus dans un « +N ».
+const PL_MAX_COLS = 4;   // vue Semaine (colonnes étroites) : 3 blocs visibles + 1 « +N »
+
+// maxCols dépend de la vue : serré en Semaine, large en Jour (colonne pleine
+// largeur → on peut montrer beaucoup plus d'événements sans « +N »).
+function layoutDayEvents(evs, maxCols) {
+  maxCols = maxCols || PL_MAX_COLS;
   const items = evs.map(ev => {
     const start = evStartMin(ev);
     return { ev, start, end: start + evDurMin(ev), cStart: start, cEnd: start + PL_CONTENT_MIN };
   });
-  assignColumns(items, 'start', 'end', 'bandCol', 'bandN');       // bandes (durée réelle)
-  assignColumns(items, 'cStart', 'cEnd', 'contentCol', 'contentN'); // blocs (hauteur de texte)
-  return items.sort((a, b) => a.start - b.start);
+  assignColumns(items, 'start', 'end', 'bandCol', 'bandN');                       // bandes (durée réelle)
+  assignColumns(items, 'cStart', 'cEnd', 'contentCol', 'contentN', 'contentClu'); // blocs (hauteur de texte)
+
+  // Plafonnement par grappe : si une grappe dépasse maxCols colonnes, on
+  // masque les colonnes excédentaires et on prépare un chip « +N ».
+  const clusters = {};
+  items.forEach(it => { (clusters[it.contentClu] = clusters[it.contentClu] || []).push(it); });
+  const overflow = [];
+  Object.values(clusters).forEach(list => {
+    const n = list[0].contentN;
+    if (n <= maxCols) { list.forEach(it => { it.dispN = n; it.hidden = false; }); return; }
+    const visCols = maxCols - 1;                           // colonnes d'événements réellement affichées
+    const hidden = list.filter(it => it.contentCol >= visCols);
+    list.forEach(it => { it.dispN = maxCols; it.hidden = it.contentCol >= visCols; });
+    if (hidden.length) overflow.push({
+      start: Math.min(...hidden.map(h => h.start)),
+      end: Math.max(...hidden.map(h => h.end)),
+      col: visCols, dispN: maxCols, count: hidden.length
+    });
+  });
+
+  items.sort((a, b) => a.start - b.start);
+  return { items, overflow };
 }
 
 function getRecurDates(startDate, freq, until) {
@@ -240,30 +268,53 @@ function renderTimeline(days) {
     const dStr = dateStr(d);
     const dayEvents = events.filter(e => eventOnDay(e, dStr) && (e.heure || e.time));
     const conflictIds = getConflictIds(dayEvents);
-    const laid = layoutDayEvents(dayEvents);
+    // Vue Jour (1 colonne, pleine largeur) : plafond large ; vue Semaine : serré.
+    const maxCols = days.length === 1 ? 10 : PL_MAX_COLS;
+    const { items: laid, overflow } = layoutDayEvents(dayEvents, maxCols);
     const blocks = laid.map(it => {
+      if (it.hidden) return '';   // colonne excédentaire : représentée par le chip « +N »
       const ev = it.ev;
       const isConflict = conflictIds.has(ev.id);
       const top = Math.max(0, (it.start - PL_DAY_START*60) / 60 * PL_HOUR_H);
       const fullH = Math.max(20, (it.end - it.start) / 60 * PL_HOUR_H - 2);
-      const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+      const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const veh = ev.vehicule ? '🚗 ' : '';
-      const bandLeft = it.bandCol * PL_BAND_W;
-      const inset = it.bandN * PL_BAND_W + 2;
-      const colW = `((100% - ${inset + 2}px) / ${it.contentN})`;
+      const isVirt = String(ev.id).startsWith('act_');
+      const stCls = (ev.statut && ev.statut !== 'prevu') ? ' pl-ev-' + ev.statut : '';
+      const dragAttr = isVirt ? '' : ` draggable="true" ondragstart="plDragStart(event,'${ev.id}')" ondragend="plDragEnd(event)"`;
+      const inset = 2;   // plus de gouttière : la barre est intégrée au bloc lui-même
+      const colW = `((100% - ${inset + 2}px) / ${it.dispN})`;
       const cLeft = `calc(${inset}px + ${it.contentCol} * ${colW})`;
       const cWidth = `calc(${colW} - 2px)`;
-      return `<div class="pl-ev-wrap" style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}${ev.vehicule?' — 🚗 '+escHtml(ev.vehicule):''}">
-        <div class="pl-ev-band" style="left:${bandLeft}px;background:${bg}"></div>
-        <div class="pl-ev${isConflict?' pl-ev-conflict':''}" style="left:${cLeft};width:${cWidth};background:${bg}">
+      // La bande de durée est INTÉGRÉE au carré : alignée sur son bord gauche, elle
+      // sort de sa base (léger chevauchement masqué par le bloc, peint par-dessus)
+      // et descend jusqu'à l'heure de fin. Un événement court n'en a pas.
+      const bandTop = 28;
+      const band = (fullH - bandTop) > 12
+        ? `<div class="pl-ev-band" style="left:calc(${cLeft} + 3px);top:${bandTop}px;background:${bg}"></div>`
+        : '';
+      return `<div class="pl-ev-wrap${isVirt ? '' : ' pl-ev-drag'}"${dragAttr} style="top:${top}px;height:${fullH}px;left:0;width:100%" onclick="event.stopPropagation();viewEvent('${ev.id}')" title="${ev.residentName?escAttr(ev.residentName)+' — ':''}${escAttr(ev.titre)}${ev.vehicule?' — 🚗 '+escAttr(ev.vehicule):''}">
+        ${band}
+        <div class="pl-ev${isConflict?' pl-ev-conflict':''}${stCls}" style="left:${cLeft};width:${cWidth};background:${bg}">
           ${isConflict?'<span class="pl-ev-conflict-ic">⚠</span>':''}
           <div class="pl-ev-time">${veh}${(ev.heure||ev.time||'').slice(0,5)}${ev.recurId?' <span style="opacity:.75;font-size:.55rem">↻</span>':''}</div>
           <div class="pl-ev-title">${escHtml(ev.titre)}</div>
         </div>
       </div>`;
     }).join('');
+    // Chips « +N » pour les colonnes masquées des grappes surchargées.
+    const moreChips = overflow.map(o => {
+      const top = Math.max(0, (o.start - PL_DAY_START * 60) / 60 * PL_HOUR_H);
+      const h = Math.max(24, (o.end - o.start) / 60 * PL_HOUR_H - 2);
+      const inset = 2;
+      const colW = `((100% - ${inset + 2}px) / ${o.dispN})`;
+      const cLeft = `calc(${inset}px + ${o.col} * ${colW})`;
+      const cWidth = `calc(${colW} - 2px)`;
+      const lbl = `${o.count} autre${o.count > 1 ? 's' : ''} événement${o.count > 1 ? 's' : ''} ce jour — cliquez pour la vue Jour`;
+      return `<div class="pl-ev-more" style="top:${top}px;height:${h}px;left:${cLeft};width:${cWidth}" title="${lbl}" onclick="event.stopPropagation();goToDate('${dStr}');switchView('day')">+${o.count}</div>`;
+    }).join('');
     const nowLine = (sameDay(d, todayD) && showNow) ? `<div class="pl-now" style="top:${nowTop}px"></div>` : '';
-    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')">${nowLine}${blocks}</div>`;
+    return `<div class="pl-day" style="height:${bodyH}px;background:${gridBg}" onclick="quickAddFromClick(event,'${dStr}')" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDropTime(event,'${dStr}')">${nowLine}${blocks}${moreChips}</div>`;
   }).join('');
 
   const html = `<div class="pl-week">
@@ -368,6 +419,8 @@ function shiftSidebar(dir) {
   renderMiniCalendars();
 }
 
+let _plSelDay = null; // jour sélectionné pour la liste iOS mobile
+
 function renderMonth() {
   const y = currentDate.getFullYear(), m = currentDate.getMonth();
   document.getElementById('calTitle').textContent = `${MONTHS[m]} ${y}`;
@@ -377,6 +430,11 @@ function renderMonth() {
   const events = getFilteredEvents();
   const todayD = new Date();
 
+  // Jour sélectionné (vue iOS mobile) : dans le mois affiché ; défaut = aujourd'hui sinon le 1er
+  if (!_plSelDay || _plSelDay < dateStr(first) || _plSelDay > dateStr(last)) {
+    _plSelDay = (todayD.getFullYear() === y && todayD.getMonth() === m) ? dateStr(todayD) : dateStr(first);
+  }
+
   let cells = [];
   for (let i = 0; i < startDay; i++) cells.push(null);
   for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(y, m, d));
@@ -385,29 +443,66 @@ function renderMonth() {
 
   const grid = cells.map(d => {
     if (!d) return `<div class="plm-cell plm-empty"></div>`;
+    const ds = dateStr(d);
     const isTod = sameDay(d, todayD);
-    const dayEvs = events.filter(e => eventOnDay(e, dateStr(d)));
+    const dayEvs = events.filter(e => eventOnDay(e, ds));
     const num = `<div class="plm-num${isTod?' is-today':''}">${d.getDate()}</div>`;
     const evHtml = dayEvs.map(ev => {
-      const bg = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+      const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
       const time = (ev.heure || ev.time || '').slice(0, 5);
       const label = (time ? time + ' ' : '') + escHtml(ev.titre);
-      return '<div class="plm-ev" onclick="event.stopPropagation();viewEvent(\'' + ev.id + '\')">'
+      const isVirt = String(ev.id).startsWith('act_');
+      const stCls = (ev.statut && ev.statut !== 'prevu') ? ' plm-ev-' + ev.statut : '';
+      const drag = isVirt ? '' : ` draggable="true" ondragstart="plDragStart(event,'${ev.id}')" ondragend="plDragEnd(event)"`;
+      return `<div class="plm-ev${isVirt ? '' : ' plm-ev-drag'}${stCls}"${drag} onclick="event.stopPropagation();viewEvent('${ev.id}')">`
         + '<span class="plm-ev-band" style="background:' + bg + '"></span>'
         + '<span class="plm-ev-txt">' + label + '</span>'
         + '</div>';
     }).join('');
-    const more = '';
-    return `<div class="plm-cell${isTod ? ' plm-today' : ''}" onclick="quickAddEvent('${dateStr(d)}','')">
-      ${num}${evHtml}${more}
+    // Pastilles iOS (mobile) : jusqu'à 3 points colorés
+    const dots = dayEvs.slice(0, 3).map(ev =>
+      `<span class="plm-dot" style="background:${safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6'}"></span>`
+    ).join('');
+    return `<div class="plm-cell${isTod ? ' plm-today' : ''}${ds === _plSelDay ? ' plm-sel' : ''}" onclick="plDayClick('${ds}')" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDropDay(event,'${ds}')">
+      ${num}${evHtml}<div class="plm-dots">${dots}</div>
     </div>`;
   }).join('');
 
-  document.getElementById('calContainer').innerHTML =
+  const calEl = document.getElementById('calContainer');
+  calEl.classList.add('plm-ios');   // vue Mois en style Calendrier iOS (toutes largeurs)
+  calEl.innerHTML =
     '<div class="card" style="overflow:hidden;padding:0">'
     + '<div class="plm-head">' + head + '</div>'
     + '<div class="plm-grid">' + grid + '</div>'
-    + '</div>';
+    + '</div>'
+    + plDayListHtml(_plSelDay);
+}
+
+// Clic sur un jour : le sélectionne et affiche ses événements dessous
+function plDayClick(ds) { _plSelDay = ds; renderMonth(); }
+
+// Liste des événements du jour sélectionné, façon iOS (affichée en mobile via CSS)
+function plDayListHtml(ds) {
+  const evs = getFilteredEvents().filter(e => eventOnDay(e, ds))
+    .sort((a, b) => (a.heure || a.time || '') > (b.heure || b.time || '') ? 1 : -1);
+  const d = new Date(ds + 'T12:00:00');
+  let title = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (ds === dateStr(new Date())) title = "Aujourd'hui · " + title;
+  const rows = evs.length ? evs.map(ev => {
+    const bg = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+    const time = (ev.heure || ev.time || '').slice(0, 5);
+    const sub = [ev.residentName, TYPE_LABELS[ev.type] || ev.type, ev.destination].filter(Boolean).join(' · ');
+    return `<div class="plm-dl-ev" onclick="viewEvent('${ev.id}')">
+      <div class="plm-dl-time">${time ? '<b>' + time + '</b>' : '<span style="color:var(--muted)">–</span>'}</div>
+      <div class="plm-dl-bar" style="background:${bg}"></div>
+      <div class="plm-dl-body"><div class="plm-dl-t">${escHtml(ev.titre) || 'Événement'}</div>${sub ? `<div class="plm-dl-s">${escHtml(sub)}</div>` : ''}</div>
+    </div>`;
+  }).join('') : '<div class="plm-dl-empty">Aucun événement ce jour</div>';
+  return `<div class="plm-daylist">
+    <div class="plm-dl-head"><span class="plm-dl-title">${escHtml(title)}</span>
+      <button class="btn btn-ghost btn-sm plm-dl-add" onclick="quickAddEvent('${ds}','')">＋ Ajouter</button></div>
+    ${rows}
+  </div>`;
 }
 
 function renderListView() {
@@ -422,7 +517,7 @@ function renderListView() {
     return;
   }
   tbody.innerHTML = events.map(ev => `<tr>
-    <td><span style="display:inline-flex;align-items:center;gap:.4rem"><span style="width:10px;height:10px;border-radius:50%;background:${escHtml(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};flex-shrink:0"></span><strong>${ev.vehicule?'🚗 ':''}${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</strong></span></td>
+    <td><span style="display:inline-flex;align-items:center;gap:.4rem"><span style="width:10px;height:10px;border-radius:50%;background:${safeColor(ev.color)||TYPE_COLORS[ev.type]||'#3b82f6'};flex-shrink:0"></span><strong>${ev.vehicule?'🚗 ':''}${ev.residentName?escHtml(ev.residentName)+' — ':''}${escHtml(ev.titre)}</strong></span></td>
     <td>${escHtml(ev.residentName)||'Tous'}</td>
     <td>${ev.date ? formatDate(ev.date) : '—'}</td>
     <td>${ev.heure||ev.time||'—'}</td>
@@ -433,6 +528,7 @@ function renderListView() {
 
 function render() {
   document.getElementById('calContainer').style.display = '';
+  document.getElementById('calContainer').classList.remove('plm-ios'); // vue Mois seule la remet
   document.getElementById('listContainer').style.display = 'none';
   const sidebar = document.getElementById('planningSidebar');
   if (sidebar) {
@@ -445,6 +541,10 @@ function render() {
   else if (currentView === 'week') renderWeek();
   else if (currentView === 'month') renderMonth();
   else renderListView();
+  // Compléments V2 (maquette « Planning - refonte ») : rail « Prochains
+  // événements » et teinte des blocs d'événement.
+  if (typeof pl2RenderUpcoming === 'function') pl2RenderUpcoming();
+  if (typeof pl2TeinterEvenements === 'function') pl2TeinterEvenements();
 }
 
 function navigate(dir) {
@@ -461,6 +561,8 @@ function quickAddEvent(date, heure) {
   document.getElementById('btnDeleteEvent').style.display = 'none';
   document.getElementById('modalEventTitle').textContent = 'Nouvel événement';
   document.getElementById('eventId').value = '';
+  const accNew = document.getElementById('evAccompagnement'); if (accNew) accNew.value = '';
+  const nivNew = document.getElementById('evNiveauSoutien'); if (nivNew) nivNew.value = '';
   resetVehiculeFields();
   const recurRow = document.getElementById('evRecurRow');
   if (recurRow) recurRow.style.display = '';
@@ -483,7 +585,7 @@ function resetVehiculeFields() {
 function viewEvent(id) {
   const ev = _planningEventsCache.find(e => e.id === id);
   if (!ev) return;
-  const color = escHtml(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
+  const color = safeColor(ev.color) || TYPE_COLORS[ev.type] || '#3b82f6';
   const dureeLabels = { '30':'30 min', '60':'1h', '90':'1h30', '120':'2h', '180':'3h', 'journee':'Journée' };
   const dureeLabel = dureeLabels[ev.duree] || (ev.duree ? ev.duree + ' min' : '');
   const heure = (ev.heure || ev.time || '').slice(0,5);
@@ -494,6 +596,9 @@ function viewEvent(id) {
   body += row('📅', 'Date', ev.date ? formatDate(ev.date) : '—');
   body += row('🕒', 'Horaire', [heure, dureeLabel].filter(Boolean).join(' · '));
   body += row('📝', 'Description', ev.desc ? escHtml(ev.desc) : '');
+  const NIV_LABELS = { autonomie:'🟢 Autonomie — présence simple', supervision:'🔵 Supervision / veille', verbal:'🟡 Incitation / guidance verbale', partiel:'🟠 Aide partielle', total:'🔴 Aide totale' };
+  body += row('🤝', 'Accompagnement apporté', ev.accompagnement ? escHtml(ev.accompagnement) : '');
+  body += row('🎚️', 'Niveau de soutien', ev.niveauSoutien ? (NIV_LABELS[ev.niveauSoutien] || escHtml(ev.niveauSoutien)) : '');
   if (ev.vehicule) {
     body += row('🚗', 'Véhicule', escHtml(ev.vehicule));
     body += row('📍', 'Destination', ev.destination ? escHtml(ev.destination) : '');
@@ -529,6 +634,10 @@ function editEvent(id) {
   document.getElementById('evDuree').value = ev.duree || '60';
   document.getElementById('evColor').value = ev.color || '#3b82f6';
   document.getElementById('evDesc').value = ev.desc || '';
+  const accEd = document.getElementById('evAccompagnement'); if (accEd) accEd.value = ev.accompagnement || '';
+  const nivEd = document.getElementById('evNiveauSoutien'); if (nivEd) nivEd.value = ev.niveauSoutien || '';
+  const stEd = document.getElementById('evStatut'); if (stEd) stEd.value = ev.statut || 'prevu';
+  const acpEd = document.getElementById('evAccompagnants'); if (acpEd) acpEd.value = ev.accompagnants || '';
   document.getElementById('btnDeleteEvent').style.display = '';
   // Masquer la récurrence en mode édition (on édite un seul événement)
   const recurRow = document.getElementById('evRecurRow');
@@ -563,7 +672,12 @@ async function saveEvent() {
     heure: document.getElementById('evHeure').value,
     duree: document.getElementById('evDuree').value,
     color: document.getElementById('evColor').value,
-    desc: document.getElementById('evDesc').value.trim()
+    desc: document.getElementById('evDesc').value.trim(),
+    accompagnement: (document.getElementById('evAccompagnement')?.value || '').trim(),
+    niveauSoutien: document.getElementById('evNiveauSoutien')?.value || '',
+    statut: document.getElementById('evStatut')?.value || 'prevu',
+    accompagnants: (document.getElementById('evAccompagnants')?.value || '').trim(),
+    serafin: (isSerafinDirect(document.getElementById('evNiveauSoutien')?.value) ? 'directe' : 'indirecte')
   };
   const vehCb = document.getElementById('evVehiculeCheck');
   if (vehCb && vehCb.checked) {
@@ -753,42 +867,263 @@ function populateResidentSelect() {
   });
 }
 
-function populateVehiculeList() {
+async function populateVehiculeList() {
   const list = document.getElementById('evVehiculeList');
   if (!list) return;
-  const vehicules = DB.get(DB.keys.vehicules) || [];
+  const vehicules = await sbGetVehiculesListe();
   list.innerHTML = vehicules.map(v => `<option value="${escHtml(v)}"/>`).join('');
 }
 
 async function initPlanning() {
   if (!requireModule('access_presences')) return;
   document.getElementById('evDate').value = today();
+  if (typeof sbGetActivites === 'function') { try { DB.set(DB.keys.activites, await sbGetActivites()); } catch(e){ console.error(e); } }
   await loadPlanningData();
   populateResidentSelect();
-  populateVehiculeList();
+  await populateVehiculeList();
+  // Vue restaurée (Jour / Semaine / Mois / Liste) — mémorisée dans localStorage
+  currentView = localStorage.getItem('pl_view') || 'month';
+  setViewBtn('view' + currentView.charAt(0).toUpperCase() + currentView.slice(1));
   render();
   document.getElementById('prevBtn').onclick = () => navigate(-1);
   document.getElementById('nextBtn').onclick = () => navigate(1);
   document.getElementById('todayBtn').onclick = () => { currentDate = new Date(); sidebarBase = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); render(); };
   document.getElementById('filterEventResident').onchange = render;
+  ['day','week','month','list'].forEach(v => {
+    const btn = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+    if (btn) btn.onclick = () => switchView(v);
+  });
   const searchEl = document.getElementById('searchEvent');
   if (searchEl) searchEl.oninput = () => { searchQuery = searchEl.value.trim(); render(); };
-  if (window.innerWidth < 640) { currentView = 'day'; setViewBtn('viewDay'); }
-  window.addEventListener('resize', () => {
-    if (window.innerWidth < 640 && currentView !== 'day') { currentView = 'day'; setViewBtn('viewDay'); render(); }
-  });
-  document.getElementById('viewDay').onclick = () => { currentView='day'; setViewBtn('viewDay'); document.getElementById('listContainer').style.display='none'; render(); };
-  document.getElementById('viewWeek').onclick = () => { currentView='week'; setViewBtn('viewWeek'); document.getElementById('listContainer').style.display='none'; render(); };
-  document.getElementById('viewMonth').onclick = () => { currentView='month'; setViewBtn('viewMonth'); document.getElementById('listContainer').style.display='none'; render(); };
-  document.getElementById('viewList').onclick = () => { currentView='list'; setViewBtn('viewList'); render(); };
 }
 document.addEventListener('DOMContentLoaded', initPlanning);
 if (typeof registerPageInit === 'function') registerPageInit('planning', initPlanning);
 
+// Surligne le bouton de vue actif (via une classe CSS, compatible thèmes clair/sombre)
 function setViewBtn(active) {
   ['viewDay','viewWeek','viewMonth','viewList'].forEach(id => {
     const btn = document.getElementById(id);
-    if (id === active) { btn.style.background='#fff'; btn.style.boxShadow='var(--shadow-sm)'; btn.classList.remove('btn-ghost'); }
-    else { btn.style.background=''; btn.style.boxShadow=''; btn.classList.add('btn-ghost'); }
+    if (btn) btn.classList.toggle('active', id === active);
   });
+}
+
+// Change de vue (Jour / Semaine / Mois / Liste) et mémorise le choix
+function switchView(view) {
+  currentView = view;
+  try { localStorage.setItem('pl_view', view); } catch (_) {}
+  setViewBtn('view' + view.charAt(0).toUpperCase() + view.slice(1));
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// GLISSER-DÉPOSER — replanifier un événement en le déplaçant
+// ══════════════════════════════════════════════════════════════
+let _plDragId = null;
+
+function plDragStart(e, id) {
+  _plDragId = id;
+  if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', id); } catch (_) {} }
+  e.currentTarget.classList.add('pl-dragging');
+}
+function plDragEnd(e) {
+  _plDragId = null;
+  e.currentTarget.classList.remove('pl-dragging');
+  document.querySelectorAll('.pl-drop-hover').forEach(el => el.classList.remove('pl-drop-hover'));
+}
+function plDragOver(e) {
+  if (!_plDragId) return;      // ne pas capter un drag externe
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('pl-drop-hover');
+}
+function plDragLeave(e) { e.currentTarget.classList.remove('pl-drop-hover'); }
+
+function plDropDay(e, dStr) {   // vue Mois : on ne change que la date
+  e.preventDefault();
+  e.currentTarget.classList.remove('pl-drop-hover');
+  const id = _plDragId; _plDragId = null;
+  if (id) plMoveEvent(id, dStr, null);
+}
+function plDropTime(e, dStr) {  // vue timeline : date + heure d'après la position du drop
+  e.preventDefault();
+  const cell = e.currentTarget;
+  cell.classList.remove('pl-drop-hover');
+  const id = _plDragId; _plDragId = null;
+  if (!id) return;
+  const rect = cell.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  let mins = PL_DAY_START * 60 + Math.round((y / PL_HOUR_H) * 60 / 30) * 30;  // arrondi 30 min
+  mins = Math.max(PL_DAY_START * 60, Math.min((PL_DAY_END - 1) * 60, mins));
+  const hh = String(Math.floor(mins / 60)).padStart(2, '0');
+  const mm = String(mins % 60).padStart(2, '0');
+  plMoveEvent(id, dStr, hh + ':' + mm);
+}
+
+async function plMoveEvent(id, newDate, newHeure) {
+  if (String(id).startsWith('act_')) return;   // activité récurrente virtuelle : non éditable
+  const ev = _planningEventsCache.find(e => e.id === id);
+  if (!ev) return;
+  const sameDate = ev.date === newDate;
+  const sameHeure = newHeure == null || (ev.heure || ev.time || '') === newHeure;
+  if (sameDate && sameHeure) return;
+  const prev = { date: ev.date, heure: ev.heure, time: ev.time, dateEnd: ev.dateEnd, timeEnd: ev.timeEnd };
+  ev.date = newDate;
+  if (newHeure != null) { ev.heure = newHeure; ev.time = newHeure; }
+
+  // Réservation véhicule : vérifier qu'il n'y a pas de conflit sur le nouveau créneau
+  if (ev.vehicule) {
+    const heure = ev.heure || ev.time || '00:00';
+    const dateAllerISO = ev.date + 'T' + heure;
+    let dateRetourISO;
+    if (ev.duree === 'journee') dateRetourISO = ev.date + 'T23:59';
+    else { const d = new Date(dateAllerISO); d.setMinutes(d.getMinutes() + (parseInt(ev.duree) || 60)); dateRetourISO = toLocalDateTimeStr(d); }
+    const conflit = getVehiculeConflit(ev.vehicule, dateAllerISO, dateRetourISO, ev.id);
+    if (conflit) {
+      Object.assign(ev, prev);   // annuler le déplacement
+      toast('❌ Véhicule déjà réservé sur ce créneau', 'error');
+      render();
+      return;
+    }
+    ev.dateEnd = dateRetourISO.slice(0, 10);
+    ev.timeEnd = dateRetourISO.slice(11, 16);
+  }
+
+  try {
+    const saved = await sbSavePlanningEvent(ev);
+    const idx = _planningEventsCache.findIndex(e => e.id === id);
+    if (idx !== -1) _planningEventsCache[idx] = saved;
+    await syncEventToResidentRdv(saved);   // un RDV déplacé met à jour la fiche santé
+    toast('Événement replanifié');
+  } catch (err) {
+    Object.assign(ev, prev);
+    toast('Erreur lors du déplacement', 'error');
+    console.error(err);
+  }
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT iCalendar (.ics) — agenda importable dans Outlook / Google
+// ══════════════════════════════════════════════════════════════
+function _icsStamp(dStr, heure, addMin) {
+  const [y, m, d] = (dStr || '').split('-').map(Number);
+  const [hh, mm] = (heure || '09:00').split(':').map(Number);
+  const dt = new Date(y || 1970, (m || 1) - 1, d || 1, hh || 0, mm || 0);
+  if (addMin) dt.setMinutes(dt.getMinutes() + addMin);
+  const p = n => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}${p(dt.getMonth() + 1)}${p(dt.getDate())}T${p(dt.getHours())}${p(dt.getMinutes())}00`;
+}
+function _icsEsc(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+
+function plExportIcs() {
+  const events = getFilteredEvents().filter(e => e.date && !String(e.id).startsWith('act_'));
+  if (!events.length) { toast('Aucun événement à exporter', 'info'); return; }
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//INTERNALIS//Planning//FR', 'CALSCALE:GREGORIAN'];
+  events.forEach(e => {
+    const dur = e.duree === 'journee' ? (PL_DAY_END - PL_DAY_START) * 60 : (parseInt(e.duree) || 60);
+    const heure = (e.heure || e.time || '09:00').slice(0, 5);
+    const summary = (e.residentName ? e.residentName + ' — ' : '') + (e.titre || 'Événement');
+    const desc = [TYPE_LABELS[e.type] || e.type, e.desc, e.lieu ? 'Lieu : ' + e.lieu : '', e.accompagnants ? 'Accompagnant(s) : ' + e.accompagnants : '', (e.statut && e.statut !== 'prevu') ? 'Statut : ' + e.statut : ''].filter(Boolean).join(' · ');
+    lines.push('BEGIN:VEVENT', 'UID:' + e.id + '@internalis',
+      'DTSTART:' + _icsStamp(e.date, heure), 'DTEND:' + _icsStamp(e.date, heure, dur),
+      'SUMMARY:' + _icsEsc(summary));
+    if (desc) lines.push('DESCRIPTION:' + _icsEsc(desc));
+    if (e.lieu || e.destination) lines.push('LOCATION:' + _icsEsc(e.lieu || e.destination));
+    if (e.statut === 'annule') lines.push('STATUS:CANCELLED');
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'planning-internalis.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast(`${events.length} événement${events.length > 1 ? 's exportés' : ' exporté'} (.ics)`);
+}
+
+// ══════════════════════════════════════════════════════════════
+// DUPLICATION — recréer un événement à une nouvelle date
+// ══════════════════════════════════════════════════════════════
+function plDuplicateEvent(id) {
+  const ev = _planningEventsCache.find(e => e.id === id);
+  if (!ev) return;
+  closeModal('modalEventView');
+  quickAddEvent(ev.date || today(), (ev.heure || ev.time || '09:00'));   // nouvelle entrée (id vide)
+  // Le patch openModal réinitialise le multi-résidents à 30 ms : on repeuple après (60 ms).
+  setTimeout(() => {
+    const set = (i, v) => { const el = document.getElementById(i); if (el) el.value = v; };
+    set('evTitre', (ev.titre || '') + ' (copie)');
+    set('evType', ev.type || 'activite');
+    set('evDuree', ev.duree || '60');
+    set('evColor', ev.color || '#3b82f6');
+    set('evDesc', ev.desc || '');
+    set('evAccompagnement', ev.accompagnement || '');
+    set('evNiveauSoutien', ev.niveauSoutien || '');
+    set('evStatut', 'prevu');
+    set('evAccompagnants', ev.accompagnants || '');
+    set('evLieu', ev.lieu || '');
+    if (typeof _mevResSelected !== 'undefined') {
+      _mevResSelected = new Set((ev.residentIds && ev.residentIds.length) ? ev.residentIds : (ev.residentId ? [ev.residentId] : []));
+      if (typeof renderMevResChips === 'function') renderMevResChips();
+      if (typeof syncMevResHiddenSelect === 'function') syncMevResHiddenSelect();
+    }
+    if (typeof selectMevType === 'function') selectMevType(ev.type || 'activite');
+    if (typeof updateMevPreview === 'function') updateMevPreview();
+  }, 60);
+}
+
+// ══════════════════════════════════════════════════════════════
+// FICHE DE SORTIE imprimable (résidents, horaires, véhicule, accompagnants,
+// contacts d'urgence tirés de la fiche résident)
+// ══════════════════════════════════════════════════════════════
+const _PL_DUREE_LBL = { '30': '30 min', '60': '1h', '90': '1h30', '120': '2h', '180': '3h', 'journee': 'Journée' };
+
+function plFicheSortie(id) {
+  const ev = _planningEventsCache.find(e => e.id === id);
+  if (!ev) return;
+  const zone = document.getElementById('plPrintZone');
+  if (!zone) return;
+  const resIds = (ev.residentIds && ev.residentIds.length) ? ev.residentIds : (ev.residentId ? [ev.residentId] : []);
+  const residents = resIds.map(rid => _planningResidentsCache.find(r => String(r.id) === String(rid))).filter(Boolean);
+  const heure = (ev.heure || ev.time || '').slice(0, 5);
+  const retour = ev.timeEnd ? ev.timeEnd.slice(0, 5) : '';
+  const info = (lbl, val) => val ? `<tr><td class="pfs-l">${lbl}</td><td class="pfs-v">${escHtml(val)}</td></tr>` : '';
+
+  const resBlocks = residents.length ? residents.map(r => {
+    const nom = `${r.prenom || ''} ${r.nom || ''}`.trim();
+    return `<div class="pfs-res">
+      <div class="pfs-res-h">${escHtml(nom)}${r.chambre ? ` <span class="pfs-ch">Chambre ${escHtml(r.chambre)}</span>` : ''}</div>
+      <div class="pfs-res-u"><b>Contacts d'urgence :</b> ${r.contacts ? escHtml(r.contacts) : '<i>non renseignés dans la fiche résident</i>'}</div>
+    </div>`;
+  }).join('') : `<div class="pfs-res"><div class="pfs-res-h">Tous / Groupe</div></div>`;
+
+  zone.innerHTML = `
+    <div class="pfs-head">
+      <div>
+        <div class="pfs-title">Fiche de sortie</div>
+        <div class="pfs-sub">${escHtml(TYPE_LABELS[ev.type] || ev.type || '')} · ${escHtml(ev.titre || '')}</div>
+      </div>
+      <div class="pfs-brand">INTERNALIS</div>
+    </div>
+    <table class="pfs-tbl">
+      ${info('Date', ev.date ? formatDate(ev.date) : '')}
+      ${info('Départ', heure)}
+      ${info('Retour prévu', retour)}
+      ${info('Durée', _PL_DUREE_LBL[ev.duree] || (ev.duree ? ev.duree + ' min' : ''))}
+      ${info('Véhicule', ev.vehicule)}
+      ${info('Destination', ev.destination || ev.lieu)}
+      ${info('Motif', ev.motif || ev.desc)}
+      ${info('Accompagnant(s)', ev.accompagnants)}
+    </table>
+    <div class="pfs-sec">Résident(s) concerné(s)</div>
+    ${resBlocks}
+    <div class="pfs-foot">
+      <div class="pfs-sign">Signature accompagnant(s)<br><br>______________________</div>
+      <div class="pfs-sign">Heure de retour réelle<br><br>______________________</div>
+    </div>`;
+  document.body.classList.add('pl-printing');
+  const cleanup = () => { document.body.classList.remove('pl-printing'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
 }

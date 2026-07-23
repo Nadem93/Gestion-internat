@@ -1,0 +1,538 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — Administration (RH) · design V2
+   D'après la maquette « Administration (RH).dc.html ».
+
+   Ne redéfinit RIEN de css/v2.css : uniquement les composants propres à
+   cette page (barre latérale d'onglets, hero d'occupation, matrice de
+   permissions, lignes Ségur, listes conformité).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Coque : barre latérale + panneau principal ───────────────────────── */
+body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
+
+.adm-side {
+  width: 250px; flex-shrink: 0; align-self: flex-start;
+  position: sticky; top: 0; max-height: 100vh;
+  background: rgba(255,255,255,.03);
+  border-right: 1px solid var(--v2-b);
+  display: flex; flex-direction: column; padding: 20px 14px;
+}
+.adm-side-brand { display: flex; align-items: center; gap: 11px; padding: 6px 6px 18px; }
+.adm-side-logo {
+  width: 40px; height: 40px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  background: linear-gradient(135deg, #7c6fcd, #a78bfa);
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.adm-side-logo svg { width: 19px; height: 19px; }
+.adm-side-t { font-size: 14px; font-weight: 800; color: #fff; line-height: 1.2; }
+.adm-side-s { font-size: 11px; color: var(--v2-t7); line-height: 1.2; }
+.adm-side-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+/* Les entrées de navigation sont injectées par js/admin-v2.js dans ce
+   conteneur : il porte donc lui-même la direction (colonne sur grand écran,
+   rangée défilante sous 900px), sans quoi les boutons resteraient empilés. */
+#admSideNav { display: flex; flex-direction: column; }
+.adm-side-grp {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--v2-t9); padding: 12px 10px 6px;
+}
+
+.adm-nav {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 8px 10px; border-radius: var(--v2-r-chip); margin-bottom: 2px;
+  background: transparent; border: none; cursor: pointer;
+  font: inherit; text-align: left; outline: none;
+  transition: background .16s, transform .16s, box-shadow .16s;
+}
+.adm-nav:hover { background: rgba(255,255,255,.09); transform: translateX(3px); }
+.adm-nav:focus-visible { box-shadow: 0 0 0 2.5px rgba(129,140,248,.6); }
+.adm-nav.on { background: var(--v2-s-active); }
+.adm-nav-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: linear-gradient(135deg, var(--tc-a, #7c6fcd), var(--tc, #a78bfa));
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--tc, #a78bfa) 33%, transparent);
+}
+.adm-nav-ico svg { width: 15px; height: 15px; }
+.adm-nav.on .adm-nav-ico { animation: admPulse 1.9s ease-in-out infinite; }
+@keyframes admPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.09) rotate(3deg); } }
+.adm-nav-l { font-size: 12.5px; font-weight: 500; color: #aebbd0; white-space: nowrap; }
+.adm-nav.on .adm-nav-l { font-weight: 700; color: #fff; }
+
+.adm-side-user {
+  display: flex; align-items: center; gap: 11px; padding: 10px 8px 4px;
+  border-top: 1px solid var(--v2-b); margin-top: 8px;
+}
+.adm-side-av {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--v2-indigo-light), var(--v2-cyan));
+  color: var(--v2-bg); display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}
+.adm-side-un { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); line-height: 1.2; }
+.adm-side-ur { font-size: 10.5px; color: var(--v2-t6); line-height: 1.2; }
+
+.adm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.adm-top { padding: 22px 30px 14px; }
+.adm-top-ico {
+  width: 42px; height: 42px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  background: linear-gradient(135deg, var(--tc-a, #7c6fcd), var(--tc, #a78bfa));
+}
+.adm-top-ico svg { width: 20px; height: 20px; }
+.adm-top-act { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-etab {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px;
+  border-radius: var(--v2-r-ctrl); background: var(--v2-s-ctrl);
+  border: 1px solid var(--v2-b-ctrl); font-size: 12.5px; color: var(--v2-t4);
+}
+.adm-etab-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--v2-cyan); flex-shrink: 0; }
+.adm-etab b { color: var(--v2-t2); font-weight: 700; }
+.adm-body { padding: 2px 30px 30px; }
+
+/* ── Panneaux d'onglet ───────────────────────────────────────────────── */
+.adm-panel { display: none; }
+.adm-panel.active { display: block; animation: admFade .22s ease; }
+@keyframes admFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.adm-stack { display: flex; flex-direction: column; gap: 18px; }
+
+/* ── Hero « vue d'ensemble » ─────────────────────────────────────────── */
+.adm-hero { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 16px; }
+.adm-hero-main {
+  background: linear-gradient(135deg, rgba(124,111,205,.22), rgba(34,211,238,.06)), var(--v2-s-alt);
+  border: 1px solid rgba(124,111,205,.28); border-radius: var(--v2-r-card2);
+  padding: 22px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+}
+.adm-donut {
+  position: relative; width: 120px; height: 120px; flex-shrink: 0; border-radius: 50%;
+  background: conic-gradient(#a78bfa 0turn var(--p, 0turn), rgba(255,255,255,.09) var(--p, 0turn) 1turn);
+  display: flex; align-items: center; justify-content: center;
+}
+.adm-donut-in {
+  width: 92px; height: 92px; border-radius: 50%; background: var(--v2-inset);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.adm-donut-n { font-family: var(--v2-display); font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+.adm-donut-l { font-size: 9.5px; color: var(--v2-t6); }
+.adm-hero-eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #c4b5fd; margin-bottom: 8px;
+}
+.adm-hero-facts { display: flex; gap: 24px; flex-wrap: wrap; }
+.adm-hero-n { font-family: var(--v2-display); font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
+.adm-hero-n small { font-size: 13px; font-weight: 700; color: var(--v2-t6); }
+.adm-hero-l { font-size: 10.5px; color: var(--v2-t6); margin-top: 4px; }
+
+/* Mini graphique en colonnes (connexions 7 jours) */
+.adm-spark { display: flex; align-items: flex-end; gap: 6px; height: 74px; }
+.adm-spark-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 5px; height: 100%; justify-content: flex-end; }
+.adm-spark-b { width: 100%; border-radius: 4px 4px 1px 1px;
+  background: linear-gradient(180deg, #34d399, #0d9488); min-height: 2px; }
+.adm-spark-l { font-size: 8.5px; color: var(--v2-t8); }
+
+/* Répartition (légende + valeur) */
+.adm-leg { display: flex; align-items: center; gap: 9px; }
+.adm-leg-sq { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.adm-leg-l { flex: 1; font-size: 11.5px; color: var(--v2-t4); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-leg-n { font-size: 11.5px; font-weight: 700; color: #fff; }
+
+/* ── Tuiles KPI avec icône ───────────────────────────────────────────── */
+.adm-kgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.adm-kgrid-3 { grid-template-columns: repeat(3, 1fr); }
+.adm-k {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.adm-k-ico {
+  width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #a78bfa) 13%, transparent); color: var(--pc, #a78bfa);
+}
+.adm-k-ico svg { width: 21px; height: 21px; }
+.adm-k-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800;
+  line-height: 1; color: var(--pc, #a78bfa); }
+.adm-k-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
+
+/* ── Graphique 6 mois ────────────────────────────────────────────────── */
+.adm-chart { display: flex; align-items: flex-end; gap: 14px; height: 150px; }
+.adm-chart-c { flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 7px; height: 100%; justify-content: flex-end; }
+.adm-chart-v { font-size: 9.5px; font-weight: 700; color: var(--v2-indigo-pale); }
+.adm-chart-b { width: 100%; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #a78bfa, #7c6fcd); min-height: 2px; }
+.adm-chart-l { font-size: 9.5px; color: var(--v2-t8); }
+
+/* Usage des modules (label + valeur + barre) */
+.adm-use-h { display: flex; align-items: baseline; margin-bottom: 5px; gap: 10px; }
+.adm-use-l { font-size: 12px; color: var(--v2-t3); }
+.adm-use-n { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #fff; }
+
+/* ── Lignes de liste (audit, système, agréments, sauvegardes, RGPD) ──── */
+.adm-li { display: flex; align-items: center; gap: 11px; padding: 9px 0;
+  border-bottom: 1px solid var(--v2-b-list); }
+.adm-li:last-child { border-bottom: none; }
+.adm-li-av { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: var(--v2-bg); }
+.adm-li-ico { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #34d399) 13%, transparent); color: var(--pc, #34d399); }
+.adm-li-ico svg { width: 15px; height: 15px; }
+.adm-li-b { flex: 1; min-width: 0; }
+.adm-li-t { font-size: 12px; font-weight: 600; color: var(--v2-t2); }
+.adm-li-s { font-size: 10px; color: var(--v2-t6); }
+.adm-li-w { font-size: 10.5px; color: var(--v2-t7); flex-shrink: 0; }
+.adm-li-tag { font-size: 10.5px; font-weight: 700; color: var(--pc, #34d399); flex-shrink: 0; }
+.adm-li-pill { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px;
+  flex-shrink: 0; color: var(--pc, #34d399);
+  background: color-mix(in srgb, var(--pc, #34d399) 11%, transparent); }
+.adm-li-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--pc, #34d399); }
+.adm-li-act { flex-shrink: 0; }
+
+/* Cartes teintées de la maquette */
+.adm-tint-ok {
+  background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(16,185,129,.2);
+}
+.adm-tint-ok .v2-blk-t { color: #6ee7b7; }
+.adm-tint-grey {
+  background: linear-gradient(135deg, rgba(100,116,139,.16), rgba(148,163,184,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(148,163,184,.22);
+}
+.adm-tint-grey .v2-blk-t { color: #cbd5e1; }
+.adm-tint-indigo {
+  background: linear-gradient(135deg, rgba(129,140,248,.14), rgba(34,211,238,.05)), var(--v2-s-alt);
+  border: 1px solid rgba(129,140,248,.22);
+}
+.adm-tint-indigo .v2-blk-t { color: #c7d2fe; }
+.adm-tint-danger {
+  background: linear-gradient(135deg, rgba(239,68,68,.12), transparent 60%), var(--v2-s-alt);
+  border: 1px solid rgba(239,68,68,.24);
+}
+.adm-tint-danger .v2-blk-t { color: var(--v2-danger-text); }
+
+/* ── Matrice de permissions ──────────────────────────────────────────── */
+.adm-perm-wrap { background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2); overflow: hidden; }
+.adm-perm-scroll { overflow-x: auto; }
+.adm-perm { width: 100%; border-collapse: collapse; min-width: 560px; }
+.adm-perm th {
+  padding: 13px 12px; font-size: 10.5px; font-weight: 700;
+  background: var(--v2-s-alt); border-bottom: 1px solid var(--v2-b);
+  text-align: center; white-space: nowrap;
+}
+.adm-perm th.adm-perm-h1 { text-align: left; padding: 13px 20px;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
+  position: sticky; left: 0; z-index: 2; }
+.adm-perm td { padding: 11px 12px; text-align: center; border-bottom: 1px solid var(--v2-b-table); }
+.adm-perm td.adm-perm-c1 { padding: 11px 20px; text-align: left;
+  font-size: 12.5px; color: var(--v2-t3);
+  /* colonne d'intitulés figée : la matrice défile horizontalement */
+  position: sticky; left: 0; background: var(--v2-s-alt); z-index: 1; }
+.adm-perm tr.adm-perm-grp td {
+  padding: 14px 20px 6px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--v2-t8);
+  background: rgba(255,255,255,.02); border-bottom: 1px solid var(--v2-b-soft);
+  /* le colspan couvre toute la largeur : sans cette règle le libellé se
+     centrerait au milieu du tableau, hors de la zone visible au défilement */
+  text-align: left; position: sticky; left: 0;
+}
+.adm-sw {
+  display: inline-flex; width: 34px; height: 20px; border-radius: 11px; padding: 2px;
+  align-items: center; cursor: pointer; border: none;
+  background: rgba(255,255,255,.1); justify-content: flex-start;
+  transition: background .15s, justify-content 0s;
+}
+.adm-sw > i { display: block; width: 16px; height: 16px; border-radius: 50%; background: #64748b;
+  transition: background .15s; }
+.adm-sw.on { justify-content: flex-end; background: var(--rc, #818cf8); }
+.adm-sw.on > i { background: #fff; }
+.adm-sw:focus-visible { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
+.adm-perm-legacy { display: none; }
+
+/* ── Ségur : lignes de conformité ────────────────────────────────────── */
+.adm-seg {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-sub); padding: 14px 18px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.adm-seg-ico { width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--pc, #60a5fa) 13%, transparent); color: var(--pc, #60a5fa); }
+.adm-seg-ico svg { width: 19px; height: 19px; }
+.adm-seg-h { width: 230px; flex-shrink: 0; }
+.adm-seg-t { font-size: 13px; font-weight: 700; color: var(--v2-t2); }
+.adm-seg-s { font-size: 10.5px; color: var(--v2-t6); }
+.adm-seg-bar { flex: 1; min-width: 120px; }
+.adm-seg-p { font-family: var(--v2-display); font-size: 14px; font-weight: 800;
+  color: var(--pc, #60a5fa); width: 48px; text-align: right; flex-shrink: 0; }
+
+/* ── Formulaires en carte (établissement, compte) ────────────────────── */
+.adm-fields { display: flex; flex-direction: column; gap: 14px; }
+.adm-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.adm-color {
+  width: 44px; height: 44px; padding: 0; border-radius: 11px; cursor: pointer;
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-ctrl); flex-shrink: 0;
+}
+.adm-drop {
+  display: flex; align-items: center; gap: 12px; padding: 14px;
+  border: 1.5px dashed rgba(255,255,255,.14); border-radius: var(--v2-r-sub);
+  cursor: pointer; background: var(--v2-s-sub-soft);
+}
+.adm-drop:hover { border-color: rgba(255,255,255,.28); }
+.adm-drop-p { width: 52px; height: 52px; border-radius: var(--v2-r-chip); flex-shrink: 0;
+  overflow: hidden; background: var(--v2-s-sub);
+  display: flex; align-items: center; justify-content: center; }
+.adm-drop-t { font-size: 12.5px; font-weight: 700; color: var(--v2-t2); }
+.adm-drop-s { font-size: 11px; color: var(--v2-t7); }
+
+/* Anneaux d'indicateurs (présence, occupation, journal…) */
+.adm-rings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+.adm-ring {
+  background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-kpi); padding: 16px 12px;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
+}
+.adm-ring-w { position: relative; width: 84px; height: 84px; }
+.adm-ring-w svg { width: 84px; height: 84px; transform: rotate(-90deg); }
+.adm-ring-track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 8; }
+.adm-ring-bar { fill: none; stroke-width: 8; stroke-linecap: round;
+  transition: stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+.adm-ring-v { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--v2-display); font-size: 17px; font-weight: 800; color: #fff; }
+.adm-ring-n { font-size: 12px; font-weight: 700; color: var(--v2-t3); margin-top: 6px; }
+.adm-ring-s { font-size: 10.5px; color: var(--v2-t7); }
+
+/* Cartes utilisateurs */
+.adm-users { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.adm-user {
+  position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
+  border-radius: var(--v2-r-card2); padding: 16px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: transform .15s, background .15s, border-color .15s;
+}
+.adm-user:hover { transform: translateY(-3px); background: var(--v2-s-hover);
+  border-color: color-mix(in srgb, var(--uc, #818cf8) 45%, transparent); }
+.adm-user-bar { position: absolute; top: 0; left: 16px; right: 16px; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--uc, #818cf8); }
+.adm-user-av { width: 46px; height: 46px; border-radius: var(--v2-r-sub); flex-shrink: 0;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: #fff; background: var(--uc, #818cf8); }
+.adm-user-av img { width: 100%; height: 100%; object-fit: cover; }
+.adm-user-n { font-size: 14px; font-weight: 700; color: var(--v2-t2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-user-p { font-size: 11.5px; color: var(--v2-t6); margin-top: 2px; }
+.adm-user-kv { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--v2-t5); }
+.adm-user-kv svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--uc, #818cf8); }
+.adm-user-kv span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-user-act { display: flex; gap: 8px; }
+.adm-user-act button, .adm-user-act a {
+  width: 30px; height: 30px; border-radius: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--v2-s-ctrl); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t5);
+}
+.adm-user-act button:hover, .adm-user-act a:hover { background: var(--v2-s-hover); color: #fff; }
+.adm-user-act svg { width: 15px; height: 15px; }
+.adm-user-more { margin-left: auto; }
+
+/* Tableaux scrollables */
+.adm-tw { overflow-x: auto; }
+.adm-tw-h { max-height: 300px; overflow-y: auto; }
+
+/* Divers */
+.adm-note-sql { font-size: 11.5px; color: var(--v2-t7); line-height: 1.6; }
+.adm-note-sql code { color: var(--v2-warn-text); }
+.adm-badge-role { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 7px; }
+
+/* ── Modales : gabarit V2 partagé (.modal-overlay pour closeAllModals) ── */
+body.v2 .v2-ov .v2-md { background: #101d31; }
+.adm-md-sec { display: flex; flex-direction: column; gap: 12px; }
+.adm-md-sec-h { font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--v2-t8); }
+.adm-md-info { font-size: 11.5px; color: var(--v2-t7); line-height: 1.5; }
+.v2-md-f.adm-md-f { flex-wrap: wrap; }
+.v2-md-f.adm-md-f > * { flex: 1 1 150px; }
+.v2-md-f.adm-md-f .adm-md-full { flex: 1 1 100%; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+/* Un élément de grille vaut par défaut min-width:auto : il refuse de
+   descendre sous la largeur min-content de son contenu, ce qui débordait
+   sur mobile (blocs rognés, boutons hors écran). On l'autorise à rétrécir ;
+   les tableaux larges gardent leur propre conteneur à défilement. */
+.adm-body .v2-g > *, .adm-body .adm-stack > *, .adm-body .adm-hero > * { min-width: 0; }
+
+/* Graphe de présence hérité : autant de barres que de jours de la période.
+   Il défile dans son propre conteneur au lieu de déborder de la page. */
+.adm-body #barPresenceMonth { overflow-x: auto; }
+
+/* Lignes héritées des listes « catégories » et « objectifs » (rendues avec
+   des styles en ligne par js/admin.js) : le bouton d'action sortait de
+   l'écran faute de retour à la ligne. */
+@media (max-width: 760px) {
+  #catList > div, #objList > div { flex-wrap: wrap; row-gap: 8px; }
+}
+
+@media (max-width: 1280px) {
+  .adm-rings { grid-template-columns: repeat(3, 1fr); }
+  .adm-users { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1100px) {
+  .adm-hero { grid-template-columns: 1fr; }
+  .adm-kgrid { grid-template-columns: repeat(2, 1fr); }
+  .adm-users { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  body.v2 .adm-shell { flex-direction: column; }
+  .adm-side {
+    width: auto; max-height: none; position: static; flex-direction: row;
+    align-items: center; align-self: stretch; gap: 8px; overflow-x: auto;
+    border-right: none; border-bottom: 1px solid var(--v2-b); padding: 10px 12px;
+  }
+  .adm-side-brand, .adm-side-grp, .adm-side-user { display: none; }
+  .adm-side-scroll { flex-direction: row; overflow: visible; }
+  #admSideNav { flex-direction: row; align-items: center; gap: 6px; }
+  .adm-nav { width: auto; margin-bottom: 0; flex: 0 0 auto; }
+  .adm-nav-l { font-size: 12px; }
+  .adm-nav:hover { transform: none; }
+  .adm-top { padding: 16px 18px 12px; }
+  .adm-body { padding: 2px 18px 24px; }
+  .adm-seg-h { width: 100%; }
+}
+@media (max-width: 760px) {
+  .adm-kgrid, .adm-kgrid-3 { grid-template-columns: 1fr; }
+  .adm-rings { grid-template-columns: repeat(2, 1fr); }
+  .adm-users { grid-template-columns: 1fr; }
+  .adm-hero-main { justify-content: center; text-align: center; }
+  .adm-hero-facts { justify-content: center; }
+}
+@media (max-width: 560px) {
+  .adm-rings { grid-template-columns: 1fr; }
+  .adm-top-act { width: 100%; }
+  .adm-etab { flex: 1; }
+  body.v2 .v2-ov { padding: 0; align-items: flex-end; }
+  body.v2 .v2-ov .v2-md { border-radius: 22px 22px 0 0; max-height: 92vh; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CARTES SALARIÉ (onglet Utilisateurs) + INFOBULLE DE PROFIL
+
+   Ces composants sont produits par renderEmployes() / showEmpPopup() dans
+   admin.html. Leur feuille de style vivait dans le <style> en ligne de la
+   page V1, supprimé lors du passage à la coquille V2 : les cartes se sont
+   retrouvées sans mise en forme. On la rétablit ici, transposée au thème
+   sombre (les surfaces claires d'origine — #fff, #f1f5f9, #fef3c7 — sont
+   remplacées par les surfaces V2).
+
+   Le bandeau coloré garde --avatar-a / --avatar-b, calculées par
+   getPosteCardVars() à partir de la couleur du poste : c'est un aplat
+   saturé, lisible sur fond sombre, on n'y touche pas.
+   ══════════════════════════════════════════════════════════════════════ */
+.emp-cards-grid { display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 18px; padding: 4px 0; align-items: start; }
+@media (max-width: 1280px) { .emp-cards-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1000px) { .emp-cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .emp-cards-grid { grid-template-columns: 1fr; } }
+
+.card-c {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card, 18px); position: relative; overflow: hidden;
+  display: flex; flex-direction: column; cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.card-c:hover { transform: translateY(-4px); background: var(--v2-s-hover);
+  box-shadow: 0 14px 28px rgba(0,0,0,.45); }
+
+.c-banner { background: linear-gradient(135deg, var(--avatar-b), var(--avatar-a));
+  padding: 18px 18px 16px; position: relative; overflow: hidden; }
+.c-watermark { position: absolute; top: -8px; right: -4px; font-size: 72px;
+  font-weight: 900; color: rgba(255,255,255,.15); line-height: 1;
+  user-select: none; pointer-events: none; }
+.c-head { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+/* Le bloc intermédiaire enveloppant .c-name doit pouvoir rétrécir (ellipsis). */
+body.v2 .c-head > div { min-width: 0; }
+.c-avatar { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
+  overflow: hidden; background: rgba(255,255,255,.25);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 18px;
+  border: 2.5px solid rgba(255,255,255,.6); box-shadow: 0 4px 12px rgba(0,0,0,.28); }
+.c-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.c-name { font-size: 14.5px; font-weight: 800; color: #fff; margin: 0;
+  line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.c-role-badge { display: inline-block; font-size: 10.5px; font-weight: 700;
+  padding: 2px 9px; border-radius: 6px; margin-top: 5px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 160px;
+  background: rgba(255,255,255,.22); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+
+.c-body { padding: 14px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+.c-status { display: inline-block; font-size: 11px; font-weight: 700;
+  margin-bottom: 10px; padding: 3px 10px; border-radius: 6px; align-self: flex-start;
+  color: var(--v2-ok-light, #6ee7b7); background: rgba(52,211,153,.16); }
+.c-status.inactive { color: var(--v2-t6); background: rgba(148,163,184,.16); }
+.c-status.conge    { color: #fbbf24; background: rgba(245,158,11,.16); }
+.c-status.admin    { color: #fff; background: linear-gradient(135deg,#06b6d4,#6366f1); }
+
+.c-info { font-size: 12.5px; color: var(--v2-t5); flex: 1; }
+.c-info .row-field { display: flex; align-items: center; gap: 9px; padding: 4px 0; }
+.c-info svg { stroke: var(--avatar-a, #818cf8); flex-shrink: 0; }
+.c-info span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Collision de noms : css/style.css définit un composant global « .empty »
+   (état vide pleine hauteur : display:flex, padding:3.5rem). Le champ non
+   renseigné d'une carte porte la même classe et héritait donc d'une hauteur
+   de ~130px, ce qui déformait la carte. On rétablit un simple texte. */
+.c-info .empty {
+  color: var(--v2-t8);
+  display: inline; flex-direction: row; align-items: baseline;
+  gap: 0; padding: 0; min-height: 0; text-align: left;
+}
+
+.c-btn { margin-top: 14px; width: 100%; padding: 9px; border-radius: 10px;
+  border: 1px solid var(--v2-b-strong, rgba(255,255,255,.16));
+  background: var(--v2-s-ctrl); color: var(--v2-t2);
+  font: inherit; font-weight: 700; font-size: 12.5px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background .15s ease, border-color .15s ease; }
+.c-btn:hover { background: var(--v2-s-hover); border-color: rgba(255,255,255,.3); }
+.c-action-icon { transition: transform .15s ease, color .15s ease;
+  border-radius: 8px; padding: 4px; }
+.c-action-icon:hover { transform: scale(1.22); color: #fff !important;
+  background: rgba(255,255,255,.1); }
+
+/* ── Infobulle de profil (survol d'une carte) ─────────────────────────── */
+.emp-popup { position: fixed; z-index: 200; width: 320px; overflow: hidden;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.6); pointer-events: auto; }
+.emp-popup-banner { height: 88px; position: relative;
+  background: linear-gradient(135deg,#7c6fcd 0%,#6366f1 50%,#22d3ee 100%); }
+.emp-popup-av { position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: -30px; width: 64px; height: 64px; border-radius: 50%;
+  border: 3px solid var(--v2-s-card); display: flex; align-items: center;
+  justify-content: center; font-weight: 800; font-size: 1.15rem; color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.emp-popup-action-row { display: flex; justify-content: flex-end; gap: .4rem;
+  padding: .55rem .9rem .2rem; position: relative; z-index: 1; }
+.emp-popup-action-btn { width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--v2-b); background: var(--v2-s-ctrl); color: var(--v2-t5);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: all .12s; }
+.emp-popup-action-btn:hover { border-color: var(--v2-indigo-light, #818cf8); color: #fff; }
+.emp-popup-action-btn svg { width: 15px; height: 15px; stroke: currentColor;
+  stroke-width: 1.8; fill: none; }
+.emp-popup-identity { text-align: center; padding: 1.8rem 1rem .5rem; }
+.emp-popup-name { font-size: .95rem; font-weight: 700; color: var(--v2-t2); }
+.emp-popup-role { font-size: .75rem; color: var(--v2-t6); margin-top: 2px; }
+.emp-popup-role a { color: var(--v2-indigo-light, #818cf8); font-weight: 500; text-decoration: none; }
+.emp-popup-details { padding: .5rem 1rem 1rem; }
+.emp-popup-details-title { font-size: .7rem; font-weight: 700; color: var(--v2-t8);
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
+.emp-popup-row { display: flex; align-items: center; gap: .5rem; padding: .3rem 0;
+  font-size: .78rem; border-top: 1px solid var(--v2-b-table); }
+.emp-popup-row:first-of-type { border-top: none; }
+.emp-popup-row-icon { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  background: var(--v2-s-ctrl); display: flex; align-items: center; justify-content: center; }
+.emp-popup-row-icon svg { width: 13px; height: 13px; stroke: var(--v2-t5);
+  stroke-width: 1.8; fill: none; }
+.emp-popup-row-label { color: var(--v2-t6); min-width: 70px; flex-shrink: 0; }
+.emp-popup-row-val { color: var(--v2-t2); font-weight: 500; flex: 1;
+  text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }

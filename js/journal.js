@@ -99,6 +99,8 @@ function renderEntryForm() {
   const currentDate = document.getElementById('iDate')?.value || new Date().toISOString().slice(0,16);
   const currentContenu = document.getElementById('iContenu')?.value || '';
   const currentObjectif = document.getElementById('iObjectif')?.value || '';
+  const currentAccomp = document.getElementById('iAccompagnement')?.value || '';
+  const currentNiveau = document.getElementById('iNiveauSoutien')?.value || '';
   const currentVis = document.querySelector('input[name="iVisibilite"]:checked')?.value || 'equipe';
 
   const CARD = 'background:#fff;border-radius:20px;padding:1.75rem 2rem;box-shadow:0 2px 16px rgba(0,0,0,.05);border:1px solid #f1f5f9';
@@ -141,7 +143,7 @@ function renderEntryForm() {
     const r = residents.find(x => x.id === id);
     if (!r) return '';
     const name = `${r.prenom||''} ${r.nom||''}`.trim();
-    const color = r.color || '#7C4DFF';
+    const color = safeColor(r.color, '#7C4DFF');
     return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1.5px solid ${color}44;border-radius:20px;font-size:.72rem;padding:3px 10px 3px 9px;font-weight:600">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.5;margin-left:2px;font-size:.9em">×</span></span>`;
   }).join('');
 
@@ -176,7 +178,20 @@ function renderEntryForm() {
             <span style="${HDR_LABEL}">Observation / Contenu</span>
           </div>
           <input type="datetime-local" id="iDate" class="form-control" value="${currentDate}" style="margin-bottom:1rem"/>
+          <div class="jr-modeles" id="jrModelesNew"></div>
           <textarea id="iContenu" class="form-control" placeholder="Décrivez l'événement, l'observation ou l'intervention…" style="height:220px;resize:vertical">${escHtml(currentContenu)}</textarea>
+          <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #99e5dc55;border-radius:12px;padding:.8rem .9rem">
+            <div style="font-size:.72rem;font-weight:700;color:#0f766e;margin-bottom:.5rem">🤝 Accompagnement apporté <span style="font-weight:400;color:#64748b">— ce que vous avez fait pour aider (facultatif)</span></div>
+            <textarea id="iAccompagnement" class="form-control" placeholder="Ex : incitation verbale, médiation avec un pair, reformulation des consignes, présence rassurante…" style="height:72px;resize:vertical">${escHtml(currentAccomp)}</textarea>
+            <select id="iNiveauSoutien" class="form-control" style="margin-top:.5rem">
+              <option value="">Niveau de soutien — non précisé</option>
+              <option value="autonomie" ${currentNiveau==='autonomie'?'selected':''}>🟢 Autonomie — présence simple</option>
+              <option value="supervision" ${currentNiveau==='supervision'?'selected':''}>🔵 Supervision / veille</option>
+              <option value="verbal" ${currentNiveau==='verbal'?'selected':''}>🟡 Incitation / guidance verbale</option>
+              <option value="partiel" ${currentNiveau==='partiel'?'selected':''}>🟠 Aide partielle</option>
+              <option value="total" ${currentNiveau==='total'?'selected':''}>🔴 Aide totale</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -220,19 +235,8 @@ function renderEntryForm() {
           </div>
         </div>
 
-        <!-- SERAFIN-PH -->
-        <div style="${CARD}">
-          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${HDR_ICON}"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span style="${HDR_LABEL}">SERAFIN-PH <span style="font-weight:400;opacity:.6">(optionnel)</span></span>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:.5rem">
-            <div class="sp-pill" data-sp="" onclick="selectSpPill('')" ${spPillStyle('', !document.getElementById('iSerafinph')?.value)}>Aucun</div>
-            <div class="sp-pill" data-sp="direct" onclick="selectSpPill('direct')" ${spPillStyle('direct', false)}>Direct</div>
-            <div class="sp-pill" data-sp="indirect" onclick="selectSpPill('indirect')" ${spPillStyle('indirect', false)}>Indirect</div>
-          </div>
-          <input type="hidden" id="iSerafinph" value=""/>
-        </div>
+        <!-- SERAFIN-PH : classification directe/indirecte calculée automatiquement
+             depuis le niveau de soutien (renseigné = directe, sinon indirecte). -->
 
         <!-- Pièces jointes -->
         <div style="${CARD}">
@@ -256,27 +260,13 @@ function renderEntryForm() {
 
   document.getElementById('entryFormContainer').innerHTML = html;
   renderInlineAttachList();
+  if (typeof jr2RenderModeles === 'function') jr2RenderModeles();
   document.addEventListener('click', function _closeRes(e) {
     if (!e.target.closest('#residentSearch') && !e.target.closest('#residentDropdown') && !e.target.closest('[onclick*="toggleResidentDropdown"]')) {
       const dd = document.getElementById('residentDropdown');
       if (dd) dd.style.display = 'none';
       document.removeEventListener('click', _closeRes);
     }
-  });
-}
-
-function selectSpPill(val) {
-  const isp = document.getElementById('iSerafinph');
-  if (isp) isp.value = val;
-  const palettes = { '': ['#64748b','#e2e8f0','#f8fafc'], direct: ['#8b5cf6','#ddd6fe','#f5f3ff'], indirect: ['#f97316','#fed7aa','#fff7ed'] };
-  const BASE = 'padding:.45rem 1rem;border-radius:10px;cursor:pointer;font-size:.8rem;transition:all .15s';
-  document.querySelectorAll('.sp-pill').forEach(el => {
-    const on = el.dataset.sp === val;
-    el.classList.toggle('active', on);
-    const [fg, border, bg] = palettes[el.dataset.sp] || palettes[''];
-    el.style.cssText = on
-      ? `${BASE};border:1.5px solid ${border};background:${bg};color:${fg};font-weight:600`
-      : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
   });
 }
 
@@ -293,7 +283,7 @@ function selectCatPill(id) {
     const on = ids.includes(el.dataset.id);
     el.classList.toggle('active', on);
     const cat = cats.find(c => String(c.id) === String(el.dataset.id));
-    const color = cat?.color || '#7C3AED';
+    const color = safeColor(cat?.color, '#7C3AED');
     el.style.cssText = on
       ? `${BASE};border:1.5px solid ${color};background:${color}22;color:${color};font-weight:600`
       : `${BASE};border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-weight:500`;
@@ -328,7 +318,7 @@ function renderResidentChips(ids) {
     const r = residents.find(x => x.id === id);
     if (!r) return '';
     const name = `${r.prenom||''} ${r.nom||''}`.trim();
-    const color = r.color || 'var(--accent)';
+    const color = safeColor(r.color, 'var(--accent)');
     return `<span style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1px solid ${color};border-radius:20px;font-size:.72rem;padding:2px 8px 2px 7px;font-weight:500">${escHtml(name)}<span onclick="selectResidentDropdown('${id}')" style="cursor:pointer;opacity:.55;margin-left:1px">×</span></span>`;
   }).join('');
 }
@@ -397,12 +387,14 @@ async function saveInlineEntry() {
       await sbSaveJournalEntry({
         residentId,
         resident: name,
-        residentColor: res?.color || 'var(--blue)',
+        residentColor: safeColor(res?.color, 'var(--blue)'),
         categorie: document.getElementById('iCategorie').value,
         date: document.getElementById('iDate').value || new Date().toISOString(),
         objectif: document.getElementById('iObjectif').value,
         contenu, visibilite: visEl?.value || 'equipe',
-        serafinphType: document.getElementById('iSerafinph')?.value || '',
+        serafinphType: (isSerafinDirect(document.getElementById('iNiveauSoutien')?.value) ? 'direct' : 'indirect'),
+        accompagnement: (document.getElementById('iAccompagnement')?.value || '').trim(),
+        niveauSoutien: document.getElementById('iNiveauSoutien')?.value || '',
         attachments: inlineAttachments.slice(),
         author: userName, authorId: session?.userId,
         replies: [], readBy: [session?.userId],
@@ -450,58 +442,33 @@ function getEntries() {
   return list;
 }
 
+// ── Séparateur de jour entre les entrées (design inspiré des transmissions) ──
+function journalDayLabel(dayKey) {
+  const today     = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const d    = new Date(dayKey + 'T12:00:00');
+  const base = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (dayKey === today)     return "Aujourd'hui — " + base;
+  if (dayKey === yesterday) return 'Hier — ' + base;
+  return base;
+}
+function renderJournalDaySep(dayKey) {
+  return `<div style="display:flex;align-items:center;gap:.75rem;margin:.5rem 0 .1rem;user-select:none">
+    <span style="flex:1;height:1px;background:var(--border)"></span>
+    <span style="font-size:.72rem;font-weight:700;text-transform:capitalize;letter-spacing:.02em;color:var(--muted);white-space:nowrap">${escHtml(journalDayLabel(dayKey))}</span>
+    <span style="flex:1;height:1px;background:var(--border)"></span>
+  </div>`;
+}
+
+function journalNiveauLabel(v) {
+  return ({ autonomie:'🟢 Autonomie — présence simple', supervision:'🔵 Supervision / veille', verbal:'🟡 Incitation / guidance verbale', partiel:'🟠 Aide partielle', total:'🔴 Aide totale' })[v] || v;
+}
+
+// Le rendu de la liste est assuré par js/journal-v2.js (maquette « Journal -
+// refonte »). La signature est conservée : tous les appels existants marchent.
 function renderEntries() {
-  const list = getEntries();
-  const el = document.getElementById('entriesList');
-  const cats = DB.get(DB.keys.categories) || [];
-  const journalResidents = _journalResidentsCache;
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Aucune entrée</h3><p>Commencez à documenter les événements.</p></div>`;
-    return;
-  }
-  updateUnreadBadge();
-  const session = Auth.getSession();
-  el.innerHTML = list.map(e => {
-    const entryCats = (e.categorie || '').split(',').filter(Boolean).map(id => cats.find(c => String(c.id) === String(id))).filter(Boolean);
-    const jRes = journalResidents.find(r => r.id === e.residentId);
-    const isSelected = e.id === selectedEntryId;
-    const isUnread = session && (!e.readBy || !e.readBy.includes(session.userId));
-    const expandedSection = isSelected ? `
-      <div onclick="event.stopPropagation()" style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
-        <p style="font-size:.88rem;line-height:1.8;white-space:pre-wrap;color:var(--text);margin-bottom:.5rem">${escHtml(e.contenu)||''}</p>
-        ${e.editedAt ? `<div style="font-size:.7rem;color:var(--muted);margin-bottom:.6rem;font-style:italic">✎ Modifié par ${escHtml(e.editedBy||'?')} le ${formatDateTime(e.editedAt)}${(e.editHistory&&e.editHistory.length)?` · <a href="#" onclick="event.preventDefault();event.stopPropagation();showEditHistory('${e.id}')" style="color:var(--accent)">historique (${e.editHistory.length})</a>`:''}</div>` : ''}
-        ${renderEntryAttachments(e)}
-        ${renderReplies(e)}
-        <div style="display:flex;gap:.5rem;align-items:flex-end;margin-top:.75rem">
-          <textarea id="replyContent_${e.id}" rows="2" class="form-control" style="flex:1;font-size:.82rem;resize:vertical" placeholder="Écrire une réponse…"></textarea>
-          <button class="btn btn-primary btn-sm" style="align-self:flex-end;flex-shrink:0" onclick="addReply('${e.id}')">Envoyer</button>
-        </div>
-        <div style="display:flex;gap:.4rem;justify-content:flex-end;margin-top:.5rem">
-          <button class="btn btn-ghost btn-sm" onclick="editEntry('${e.id}')">Modifier</button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntryById('${e.id}')">Supprimer</button>
-        </div>
-      </div>` : '';
-    return `<div class="entry-card ${isSelected ? 'selected' : ''}" style="${isUnread && !isSelected ? 'box-shadow:0 0 0 3px #3b82f6;border-color:#3b82f6;background:#eff6ff;' : ''}" onclick="selectEntry('${e.id}')">
-      <div class="entry-header">
-        ${jRes?.photo?`<img src="${jRes.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`:`<div class="avatar sm" style="background:${e.residentColor||'var(--blue)'};flex-shrink:0">${(escHtml(e.resident)||'?')[0].toUpperCase()}</div>`}
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;display:inline-block"></span>' : ''}
-            <span style="font-weight:${isUnread ? '800' : '700'};font-size:.875rem">${escHtml(e.resident)||'—'}</span>
-            ${entryCats.map(cat => `<span class="badge" style="background:${cat.color}22;color:${cat.color}">${escHtml(cat.name)}</span>`).join('')}
-            ${e.visibilite === 'confidentiel' ? '<span class="badge badge-red">Confidentiel</span>' : ''}
-            ${e.serafinphType === 'direct' ? '<span class="badge" style="background:#8b5cf622;color:#8b5cf6">📊 Direct</span>' : ''}
-            ${e.serafinphType === 'indirect' ? '<span class="badge" style="background:#f9731622;color:#f97316">📊 Indirect</span>' : ''}
-          </div>
-          <div class="entry-meta">${formatDateTime(e.date)}${isUnread ? '' : ` · <span style="font-weight:500;background:${getAuthorColor(e)}18;color:${getAuthorColor(e)};padding:1px 8px;border-radius:10px;font-size:.75rem">${escHtml(getJournalAuthor(e))}</span>`}</div>
-        </div>
-      </div>
-      ${!isSelected && !isUnread ? `<div class="entry-preview">${escHtml(e.contenu)||''}</div>` : ''}
-      ${!isSelected && isUnread ? `<div style="font-size:.78rem;color:var(--muted);margin-top:.5rem;font-style:italic">Cliquez pour lire</div>` : ''}
-      ${!isSelected && !isUnread && (e.replies||[]).length ? `<div style="font-size:.7rem;color:var(--blue);margin-top:.4rem;font-weight:600">💬 ${e.replies.length} réponse${e.replies.length>1?'s':''}</div>` : ''}
-      ${expandedSection}
-    </div>`;
-  }).join('');
+  if (typeof jr2Render === 'function') jr2Render();
+  if (typeof updateUnreadBadge === 'function') updateUnreadBadge();
 }
 
 function renderReplies(e) {
@@ -637,6 +604,8 @@ function editEntry(id) {
   document.getElementById('eDate').value = e.date ? e.date.slice(0,16) : '';
   document.getElementById('eObjectif').value = e.objectif || '';
   document.getElementById('eContenu').value = e.contenu || '';
+  const eAcc = document.getElementById('eAccompagnement'); if (eAcc) eAcc.value = e.accompagnement || '';
+  const eNiv = document.getElementById('eNiveauSoutien'); if (eNiv) eNiv.value = e.niveauSoutien || '';
   const vis = document.querySelector(`input[name="eVisibilite"][value="${e.visibilite||'equipe'}"]`);
   if (vis) vis.checked = true;
   const sp = document.getElementById('eSerafinph');
@@ -660,13 +629,15 @@ async function saveEntry() {
   const data = {
     residentId,
     resident: res ? `${res.prenom||''} ${res.nom||''}`.trim() : '',
-    residentColor: res?.color || 'var(--blue)',
+    residentColor: safeColor(res?.color, 'var(--blue)'),
     categorie: Array.from(document.getElementById('eCategorie').selectedOptions).map(o => o.value).join(','),
     date: document.getElementById('eDate').value || new Date().toISOString(),
     objectif: document.getElementById('eObjectif').value,
     contenu,
     visibilite: visEl?.value || 'equipe',
-    serafinphType: document.getElementById('eSerafinph')?.value || '',
+    serafinphType: (isSerafinDirect(document.getElementById('eNiveauSoutien')?.value) ? 'direct' : 'indirect'),
+    accompagnement: (document.getElementById('eAccompagnement')?.value || '').trim(),
+    niveauSoutien: document.getElementById('eNiveauSoutien')?.value || '',
     updatedAt: new Date().toISOString()
   };
 
@@ -738,6 +709,8 @@ function resetEntryForm() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   document.getElementById('eObjectif').value = '';
   document.getElementById('eContenu').value = '';
+  const rAcc = document.getElementById('eAccompagnement'); if (rAcc) rAcc.value = '';
+  const rNiv = document.getElementById('eNiveauSoutien'); if (rNiv) rNiv.value = '';
   document.querySelector('input[name="eVisibilite"][value="equipe"]').checked = true;
   document.getElementById('btnDeleteEntry').style.display = 'none';
 }
@@ -747,6 +720,9 @@ async function initJournal() {
   document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
   _journalResidentsCache = await sbGetResidents();
   await loadJournalEntries();
+  if (typeof sbGetAppConfig === 'function') {
+    try { const cfg = await sbGetAppConfig(); if (cfg && cfg.categories) DB.set(DB.keys.categories, cfg.categories); } catch (e) { console.error(e); }
+  }
   populateSelects();
   renderEntries();
   ['jSearch','jFilterResident','jFilterCat','jFilterDate','jFilterDateEnd'].forEach(id => {
