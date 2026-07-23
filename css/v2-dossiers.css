@@ -14,7 +14,9 @@ body.v2 .ds-shell {
 }
 
 /* ── Panneau principal ────────────────────────────────────────────────── */
-.ds-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+/* min-height:0 : sans lui, dans la coque mobile `height:100dvh` en colonne,
+   .ds-main grandit à son contenu et #dsHome ne défile plus (cf. vie-quotidienne). */
+.ds-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .ds-topbar {
   height: 66px; flex-shrink: 0; border-bottom: 1px solid var(--v2-b);
   display: flex; align-items: center; gap: 14px; padding: 0 30px;
@@ -233,4 +235,9 @@ body.v2 .ds-shell {
     font-size: 11.5px; white-space: normal;
   }
   .ds-topbar #thmBtn { margin-left: auto; }
+}
+@media (max-width: 640px) {
+  /* Dégager la barre de navigation mobile fixe (js/mobile-nav.js, ~86px) :
+     #dsHome défile en interne, le padding-bottom du body ne l'atteint pas. */
+  #dsHome { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
 }
