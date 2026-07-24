@@ -34,7 +34,7 @@
 <body>
 <div class="wrap">
   <h1>🧪 Données de démonstration</h1>
-  <p class="sub">Peuple <b>Supabase</b> de façon <b>intégrale</b> avec <b>un an d'historique</b> (365 jours jusqu'à aujourd'hui), comme si l'établissement tournait depuis un an : 50 résidents à la fiche entièrement remplie, une douzaine de salariés avec toute leur RH (paie et facturation sur 12 mois), les soins, la vie institutionnelle — <b>toutes les pages du site reçoivent des données</b>. Rien n'est créé avant l'entrée d'un résident ni l'embauche d'un salarié. Les référés sont répartis sur les comptes existants (6 référés + 6 co-référés chacun). ⏱ Comptez plusieurs minutes.</p>
+  <p class="sub">Peuple <b>Supabase</b> de façon <b>intégrale</b>, comme si l'établissement tournait depuis des mois : chaque résident a une fiche entièrement remplie, les salariés ont toute leur RH (paie et facturation), les soins et la vie institutionnelle sont couverts — <b>toutes les pages du site reçoivent des données</b>, sur l'historique <b>et</b> le futur que tu choisis ci-dessous. Rien n'est créé avant l'entrée d'un résident ni l'embauche d'un salarié. Les référés sont répartis sur les comptes existants (6 référés + 6 co-référés chacun). ⏱ Plus tu mets de résidents et de mois, plus c'est long (comptez plusieurs minutes).</p>
 
   <div class="warn-banner">
     ⚠️ <b>À utiliser sur un établissement de démonstration.</b> Ce générateur ajoute de vraies lignes dans votre base Supabase (établissement de la session connectée). Toutes les données créées sont marquées <b>[démo]</b> et peuvent être retirées avec le bouton « Supprimer les données de démonstration ».
@@ -92,6 +92,17 @@
 
   <div class="card">
     <div class="card-title">Actions</div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 14px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:#334155">Résidents
+        <input type="number" id="cfgResidents" value="50" min="1" max="300" style="width:92px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.95rem"/></label>
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:#334155">Salariés
+        <input type="number" id="cfgEmployes" value="12" min="1" max="120" style="width:92px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.95rem"/></label>
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:#334155">Mois d'historique
+        <input type="number" id="cfgHisto" value="12" min="1" max="36" style="width:92px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.95rem"/></label>
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:#334155">Mois de futur
+        <input type="number" id="cfgFutur" value="6" min="1" max="12" style="width:92px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.95rem"/></label>
+      <div style="font-size:.74rem;color:#64748b;max-width:240px;line-height:1.4">Choisis les quantités. Plus il y a de résidents et de mois, plus la génération est longue.</div>
+    </div>
     <div class="check-row">
       <input type="checkbox" id="chkConfirm"/>
       <label for="chkConfirm">Je confirme vouloir ajouter ces données de démonstration à l'établissement ci-dessus.</label>
@@ -192,7 +203,10 @@ function niveauAt(spec, f){
 // Tout l'historique généré couvre les 365 jours précédant aujourd'hui, comme si
 // l'établissement tournait depuis un an. Rien n'est créé avant l'entrée d'un
 // résident ni avant l'embauche d'un salarié (cohérence de la simulation).
-const SIM_DAYS = 365;
+let SIM_DAYS = 365;   // durée d'historique (jours) — pilotée par le champ « Mois d'historique »
+let FUT_DAYS = 180;   // horizon futur (jours) — piloté par le champ « Mois de futur »
+let NB_RES  = 50;     // nombre de résidents — piloté par le champ « Résidents »
+let NB_EMP  = 12;     // nombre de salariés — piloté par le champ « Salariés »
 // Fenêtre réellement couverte par un résident (bornée par sa date d'entrée)
 function windowOf(spec){ return Math.min(SIM_DAYS, (spec && spec._entreeOff != null) ? spec._entreeOff : SIM_DAYS); }
 // Tire n offsets (en jours passés) dans un pool, en ne gardant que ceux situés
@@ -682,7 +696,7 @@ function genChambres(){
 }
 function genEmployes(){
   const used=new Set(); const out=[];
-  for(let i=0;i<12;i++){
+  for(let i=0;i<NB_EMP;i++){
     const isF=Math.random()<0.55; let prenom,nom,full,g=0;
     do{ prenom=pick(isF?PRENOMS_F:PRENOMS_M); nom=pick(NOMS); full=prenom+' '+nom; g++; }while(used.has(full)&&g<40);
     used.add(full);
@@ -721,7 +735,7 @@ function genConges(employes){
   employes.forEach(e=>{
     const n=2+rnd(3); // une année de demandes
     for(let i=0;i<n;i++){
-      const fut=Math.random()<0.45; const base= fut? -(10+rnd(170)) : (10+rnd(Math.max(11, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))));
+      const fut=Math.random()<0.45; const base= fut? -(10+rnd(Math.max(20,FUT_DAYS-10))) : (10+rnd(Math.max(11, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))));
       const st=pick(CONGE_STATUTS);
       out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type:pick(CONGE_TYPES),
         debut:dDay(base), fin:dDay(base-(2+rnd(10))), statut:st,
@@ -768,7 +782,7 @@ function genEntretiens(employes){
   const out=[]; const sample=[...employes]; // campagne annuelle : tout le monde
   sample.forEach((e,i)=>{
     const done=i<Math.ceil(sample.length*0.6);
-    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(Math.max(31, Math.min(300,(e._embOff!=null?e._embOff:9999)-30)))):dDay(-(20+rnd(160))),
+    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(Math.max(31, Math.min(300,(e._embOff!=null?e._embOff:9999)-30)))):dDay(-(20+rnd(Math.max(20,FUT_DAYS-20)))),
       type:pick(ENTRETIEN_TYPES), statut: done?'realise':'planifie', evaluateur:'Chef de service éducatif',
       bilan: done?pick(ENTRETIEN_BILANS):'', objectifs: done?pickN(ENTRETIEN_OBJECTIFS,2).join(' • '):'',
       formations: done?'Souhait exprimé : formation sur le handicap psychique.':'', grille:{} });
@@ -902,7 +916,7 @@ function genEcheances(residents){
     if(Math.random()<0.4) return;
     const full=`${r.prenom} ${r.nom}`; const w=windowOf(r._spec);
     pickN(ECHEANCE_TYPES, 1+rnd(2)).forEach(e=>{
-      const fut=Math.random()<0.7; const base= fut? -(15+rnd(180)) : Math.max(1, Math.min(w-2, 10+rnd(300)));
+      const fut=Math.random()<0.7; const base= fut? -(15+rnd(Math.max(20,FUT_DAYS))) : Math.max(1, Math.min(w-2, 10+rnd(300)));
       const done=!fut && Math.random()<0.6;
       out.push({ type:e.type, libelle:e.libelle, date:dDay(base), residentId:r.id, residentName:full,
         notes:`Échéance de démonstration ${DEMO_TAG}`, done, doneAt: done?dISO(base-1):null,
@@ -924,7 +938,7 @@ function genMesuresProtection(residents){
       mandataireNom: pick(PRENOMS_F.concat(PRENOMS_M))+' '+pick(_NOMS_MJ), mandataireOrganisme: pick(_MP_ORG),
       mandataireTel:'01 4'+rnd(9)+' '+(10+rnd(89))+' '+(10+rnd(89))+' '+(10+rnd(89)), mandataireEmail:'',
       tribunal: pick(_MP_TRIB), dateJugement: dDay(200+rnd(600)), dateDebut: dDay(200+rnd(600)),
-      dateRenouvellement: dDay(-(20+rnd(170))), dateAudience: Math.random()<0.4?dDay(-(5+rnd(60))):null,
+      dateRenouvellement: dDay(-(20+rnd(Math.max(30,FUT_DAYS-20)))), dateAudience: Math.random()<0.4?dDay(-(5+rnd(60))):null,
       statut:'active', notes:`Mesure de démonstration ${DEMO_TAG}` });
   });
   return out;
@@ -1178,8 +1192,14 @@ async function runSeed(){
   const btn=document.getElementById('btnRun'), btnDel=document.getElementById('btnDel');
   btn.disabled=true; btnDel.disabled=true; logEl.innerHTML=''; setProgress(1);
   const t0=Date.now();
+  // ── Configuration choisie (champs) ──
+  const _cfg=id=>parseInt((document.getElementById(id)||{}).value);
+  NB_RES  = Math.max(1, Math.min(300, _cfg('cfgResidents')||50));
+  NB_EMP  = Math.max(1, Math.min(120, _cfg('cfgEmployes')||12));
+  SIM_DAYS= Math.max(30, Math.min(36, _cfg('cfgHisto')||12)*30);
+  FUT_DAYS= Math.max(30, Math.min(12, _cfg('cfgFutur')||6)*30);
   try{
-    log('Démarrage de la génération — 1 an d\'historique, comptez plusieurs minutes…','info');
+    log(`Démarrage — ${NB_RES} résidents · ${NB_EMP} salariés · ${Math.round(SIM_DAYS/30)} mois d'historique · ${Math.round(FUT_DAYS/30)} mois de futur (comptez quelques minutes)…`,'info');
 
     // ── 0. Catalogue d'activités (d'abord : les inscriptions le référencent) ──
     log('Création du catalogue d\'activités…','info');
@@ -1190,7 +1210,7 @@ async function runSeed(){
     // ── 1. Résidents avec fiche COMPLÈTE ──
     const usedNames=new Set();
     const specs=[];
-    for(let i=0;i<50;i++){
+    for(let i=0;i<NB_RES;i++){
       const isF = Math.random()<0.5;
       let prenom, nom, full, guard=0;
       do{ prenom=pick(isF?PRENOMS_F:PRENOMS_M); nom=pick(NOMS); full=prenom+' '+nom; guard++; }while(usedNames.has(full)&&guard<30);
@@ -1237,7 +1257,7 @@ async function runSeed(){
       }
     });
 
-    log('Création de 50 résidents (fiche complète)…','info');
+    log(`Création de ${NB_RES} résidents (fiche complète)…`,'info');
     const savedRes = await pool(specs, async (s) => {
       const prot = s.protection;
       const { objectifs, objectifsSuivi } = objectifsFor(s);
@@ -1302,7 +1322,8 @@ async function runSeed(){
     // ── 4. Agenda ──
     log('Génération de l\'agenda…','info');
     const planEvents=[];
-    const OFFS_P=[340,300,265,230,195,160,125,95,65,40,22,10,-3,-10,-20,-35,-55,-80,-110,-145,-180];
+    // Offsets d'agenda : ~12 points de passé (jusqu'à SIM_DAYS) + ~9 points de futur (jusqu'à FUT_DAYS).
+    const OFFS_P=(()=>{ const a=[]; for(let k=0;k<12;k++) a.push(Math.max(2, Math.round(SIM_DAYS*(0.93-k*0.075)))); for(let k=1;k<=9;k++) a.push(-Math.round(FUT_DAYS*k/9)); return a; })();
     residents.forEach(r=>{
       const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
       offsWithin(spec, OFFS_P, 6+rnd(4)).forEach(off=>{
@@ -1514,7 +1535,7 @@ async function runSeed(){
     log('','info');
     log('═══════════════════════════════════════','info');
     log(`✅ Terminé en ${Math.round((Date.now()-t0)/1000)} s — rechargez l'application.`,'ok');
-    log(`   1 an d'historique · 50 résidents (fiche complète) · ${employes.length} salariés · référés répartis · RH, finances, soins, vie institutionnelle remplis`,'info');
+    log(`   ${Math.round(SIM_DAYS/30)} mois d'historique + ${Math.round(FUT_DAYS/30)} mois à venir · ${residents.length} résidents (fiche complète) · ${employes.length} salariés · référés répartis · RH, finances, soins, vie institutionnelle remplis`,'info');
     log('═══════════════════════════════════════','info');
   }catch(e){
     log('ERREUR : '+(e&&e.message||e),'err'); console.error(e);

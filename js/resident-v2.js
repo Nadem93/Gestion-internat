@@ -15,7 +15,8 @@ const RV2_TABS = [
   { k: 'medical',    l: 'Médical' },
   { k: 'quotidien',  l: 'Vie quotidienne' },
   { k: 'historique', l: 'Historique' },
-  { k: 'admin',      l: 'Administratif' }
+  { k: 'admin',      l: 'Administratif' },
+  { k: 'documents',  l: 'Documents' }
 ];
 
 const RV2_OK = '#10b981', RV2_WARN = '#f59e0b', RV2_DANGER = '#ef4444', RV2_MUTED = '#64748b';

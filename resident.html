@@ -660,7 +660,8 @@ function renderViewMode(r) {
     admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
                     + (typeof mesuresProtectionCard === 'function' ? mesuresProtectionCard(r) : '')
                     + (typeof signaturesCard === 'function' ? signaturesCard(r) : '')
-                    + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r) + accesCard(r)
+                    + notes + rgpdCard(r) + accesCard(r),
+    documents:  () => `<div id="tab-documents">${docsHtml(docs)}</div>`
   };
   const rendu = (ONGLETS[RV2_TAB] || ONGLETS.apercu)();
 
@@ -2797,7 +2798,7 @@ function residentHeaderCard(r) {
       ${_hdrStat('Absences (mois)', monthAbsences, pct + '%', '#ef4444', 'M0,14 C10,8 18,20 28,14 C38,8 46,18 56,10 C66,4 74,14 80,8')}
       ${_hdrStat('Événements à venir', upcomingCount, 'Sur le planning', '#3b82f6', 'M0,22 C12,18 20,20 32,12 C44,8 54,10 66,6 C72,5 76,6 80,4')}
       ${_hdrStat('Avenants actifs', rPpe.length, 'En cours', '#16a34a', 'M0,16 C10,22 18,8 28,16 C38,22 46,9 56,16 C66,22 74,10 80,13')}
-      ${_hdrStat('Documents', docCount, 'Fichiers attachés', '#8b5cf6', 'M0,20 C12,18 22,16 34,14 C46,12 56,11 68,8 C74,7 78,6 80,5', "document.getElementById('tab-documents') && document.getElementById('tab-documents').scrollIntoView({behavior:'smooth',block:'center'})")}
+      ${_hdrStat('Documents', docCount, 'Fichiers attachés', '#8b5cf6', 'M0,20 C12,18 22,16 34,14 C46,12 56,11 68,8 C74,7 78,6 80,5', "typeof rv2SetTab==='function' && rv2SetTab('documents')")}
     </div>
   </div>`;
   const grouped = `<div class="card" style="padding:1.2rem 0;border-radius:14px">${suivi}</div>`;
@@ -3555,7 +3556,7 @@ function printResident() {
   const ongletCourant = RV2_TAB;
   const zone = document.getElementById('residentContent');
   // Pendant l'assemblage des onglets, on ne journalise pas et on ne recharge
-  // pas l'historique (renderViewMode tourne 6 fois sur des rendus jetables).
+  // pas l'historique (renderViewMode tourne une fois par onglet sur des rendus jetables).
   _rv2Printing = true;
   const tout = RV2_TABS.map(t => { RV2_TAB = t.k; renderViewMode(r); return zone.innerHTML; });
   RV2_TAB = ongletCourant;

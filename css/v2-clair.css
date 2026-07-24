@@ -151,6 +151,13 @@ html.clair body.v2 .v2-jr-line { background: rgba(15,38,70,.12); }
 html.clair body.v2 .v2-prog { background: rgba(15,38,70,.10); }
 html.clair body.v2 .v2-b-neutral,
 html.clair body.v2 .badge-gray { background: rgba(15,38,70,.06); color: var(--v2-t5); }
+
+/* Carte « À traiter aujourd'hui » — accents profonds du thème clair */
+html.clair body.v2 .at-tag-danger { color: #dc2626; }
+html.clair body.v2 .at-tag-warn   { color: #d97706; }
+html.clair body.v2 .at-tag-info   { color: #4f46e5; }
+html.clair body.v2 .at-pill-danger { background: rgba(239,68,68,.10); color: #dc2626; }
+html.clair body.v2 .at-pill-warn   { background: rgba(245,158,11,.14); color: #b45309; }
 html.clair body.v2 .btn-ghost { background: rgba(15,38,70,.05); color: var(--v2-t4); }
 html.clair body.v2 .btn-ghost:hover { background: rgba(15,38,70,.09); }
 html.clair body.v2 .v2-tr-rep-i { background: rgba(15,38,70,.04); }

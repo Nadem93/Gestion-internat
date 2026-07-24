@@ -190,6 +190,58 @@ body.v2 .v2-shell {
 .v2-b-info { background: rgba(99,102,241,.14); color: var(--v2-indigo-pale); }
 .v2-b-neutral { background: rgba(255,255,255,.06); color: var(--v2-t5); }
 
+/* ── Carte « À traiter aujourd'hui » — liserés latéraux + pills ────────── */
+.at-card {
+  background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card); overflow: hidden;
+}
+.at-head { display: flex; align-items: center; gap: 12px; padding: 18px 20px 16px; }
+.at-dot {
+  position: relative; width: 11px; height: 11px; border-radius: 50%;
+  background: #ef4444; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(239,68,68,.18);
+}
+.at-dot::before {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%;
+  background: #ef4444; opacity: .35; animation: at-pulse 2s ease-out infinite;
+}
+@keyframes at-pulse { 0% { transform: scale(.5); opacity: .5; } 100% { transform: scale(1.7); opacity: 0; } }
+.at-title { font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--v2-t3); }
+.at-count {
+  margin-left: auto; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11.5px; font-weight: 600; color: var(--v2-t7);
+  background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft);
+  padding: 5px 11px; border-radius: 8px; white-space: nowrap;
+}
+.at-list { border-top: 1px solid var(--v2-b); }
+.at-row {
+  position: relative; display: flex; align-items: center; gap: 18px;
+  padding: 15px 20px 15px 24px;
+}
+.at-row + .at-row { border-top: 1px solid var(--v2-b); }
+.at-row::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--at-c, #ef4444);
+}
+.at-tag {
+  flex-shrink: 0; font-size: 11px; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.at-tag-danger { color: #f87171; }
+.at-tag-warn   { color: #fbbf24; }
+.at-tag-info   { color: #a5b4fc; }
+.at-row-title {
+  flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--v2-t3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.at-pill {
+  flex-shrink: 0; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 8px; white-space: nowrap;
+}
+.at-pill-danger { background: rgba(239,68,68,.16); color: #fca5a5; }
+.at-pill-warn   { background: rgba(245,158,11,.16); color: #fcd34d; }
+.at-pill-muted  { background: var(--v2-s-sub); color: var(--v2-t7); }
+.at-empty { padding: 16px 20px 20px; font-size: 13px; color: var(--v2-t7); }
+
 /* ── Boutons & contrôles ──────────────────────────────────────────────── */
 .v2-btn {
   height: 42px; padding: 0 16px; border-radius: var(--v2-r-ctrl);

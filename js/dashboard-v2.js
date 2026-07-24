@@ -182,26 +182,42 @@ function _dv2Kpis() {
 
 function _dv2ATraiter() {
   const t = _dv2Today(), items = [];
+  // Échéances : les plus proches / en retard d'abord (retard = liseré rouge si > 6 mois, sinon orange).
   DV2.data.echeances.filter(e => !e.done && e.date && _dv2Days(t, e.date) <= 15)
     .sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(0, 4).forEach(e => {
-      const j = _dv2Days(t, e.date);
-      items.push({ tag: j < 0 ? 'Urgent' : 'Échéance', cls: j < 0 ? 'v2-b-danger' : 'v2-b-warn',
-        txt: `${e.libelle || 'Échéance'}${e.residentName ? ' — ' + e.residentName : ''}`,
-        meta: j < 0 ? `${Math.abs(j)} j de retard` : `dans ${j} j` });
+      const j = _dv2Days(t, e.date);                 // < 0 = en retard
+      const retard = -j;
+      const title = `${e.libelle || 'Échéance'}${e.residentName ? ' — ' + e.residentName : ''}`;
+      if (j < 0) {
+        items.push({ stripe: retard >= 180 ? '#ef4444' : '#f59e0b', tag: 'Urgent', tone: 'danger',
+          title, pill: `+${retard} j`, pillTone: 'danger' });
+      } else {
+        items.push({ stripe: '#f59e0b', tag: 'Échéance', tone: 'warn',
+          title, pill: j === 0 ? 'auj.' : `${j} j`, pillTone: j === 0 ? 'muted' : 'warn' });
+      }
     });
   const ca = DV2.data.conges.filter(c => c.statut === 'en_attente').length;
-  if (ca) items.push({ tag: 'RH', cls: 'v2-b-info', txt: `${ca} demande${ca > 1 ? 's' : ''} de congés à valider`, meta: 'aujourd\'hui' });
+  if (ca) items.push({ stripe: '#6366f1', tag: 'RH', tone: 'info',
+    title: `${ca} demande${ca > 1 ? 's' : ''} de congés à valider`, pill: 'auj.', pillTone: 'muted' });
   const nonSaisies = DV2.data.residents.filter(r => r.statut !== 'sorti' && !DV2.data.presDay[r.id]).length;
-  if (nonSaisies) items.push({ tag: 'Présences', cls: 'v2-b-warn', txt: `${nonSaisies} présence${nonSaisies > 1 ? 's' : ''} non saisie${nonSaisies > 1 ? 's' : ''}`, meta: 'aujourd\'hui' });
+  if (nonSaisies) items.push({ stripe: '#f59e0b', tag: 'Présences', tone: 'warn',
+    title: `${nonSaisies} présence${nonSaisies > 1 ? 's' : ''} non saisie${nonSaisies > 1 ? 's' : ''}`, pill: 'auj.', pillTone: 'muted' });
 
-  const body = items.length ? items.map(i => `<div class="v2-sub-card" style="margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="v2-badge ${i.cls}">${i.tag}</span>
-        <span class="v2-row-title">${_dv2Esc(i.txt)}</span>
-        <span style="margin-left:auto" class="v2-row-meta">${_dv2Esc(i.meta)}</span>
-      </div></div>`).join('') : _dv2Empty('Rien à traiter — tout est à jour.');
-  return _dv2Card({ title: 'À traiter aujourd\'hui', icon: '⚠', color: '#f59e0b', tint: '#fde68a',
-    meta: items.length ? `${items.length} action${items.length > 1 ? 's' : ''}` : '', body });
+  const rows = items.map(i => `<div class="at-row" style="--at-c:${i.stripe}">
+      <span class="at-tag at-tag-${i.tone}">${_dv2Esc(i.tag)}</span>
+      <span class="at-row-title">${_dv2Esc(i.title)}</span>
+      <span class="at-pill at-pill-${i.pillTone}">${_dv2Esc(i.pill)}</span>
+    </div>`).join('');
+  const body = items.length
+    ? `<div class="at-list">${rows}</div>`
+    : '<div class="at-empty">Rien à traiter — tout est à jour.</div>';
+  return `<div class="at-card">
+    <div class="at-head">
+      <span class="at-dot"></span>
+      <span class="at-title">À traiter aujourd'hui</span>
+      ${items.length ? `<span class="at-count">${items.length} action${items.length > 1 ? 's' : ''}</span>` : ''}
+    </div>${body}
+  </div>`;
 }
 
 function _dv2Presences() {
