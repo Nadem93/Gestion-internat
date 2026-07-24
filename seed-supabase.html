@@ -154,6 +154,9 @@
 <script src="js/facturation-supabase.js"></script>
 <script src="js/planning-equipe-supabase.js"></script>
 <script src="js/documents-employe-supabase.js"></script>
+<script src="js/mesures-protection-supabase.js"></script>
+<script src="js/protocoles-urgence-supabase.js"></script>
+<script src="js/signatures-supabase.js"></script>
 <script>
 // ═══════════════════════ Utilitaires ═══════════════════════
 let logEl, progEl;
@@ -718,7 +721,7 @@ function genConges(employes){
   employes.forEach(e=>{
     const n=2+rnd(3); // une année de demandes
     for(let i=0;i<n;i++){
-      const fut=Math.random()<0.4; const base= fut? -(10+rnd(60)) : (10+rnd(Math.max(11, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))));
+      const fut=Math.random()<0.45; const base= fut? -(10+rnd(170)) : (10+rnd(Math.max(11, Math.min(320,(e._embOff!=null?e._embOff:9999)-10))));
       const st=pick(CONGE_STATUTS);
       out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, type:pick(CONGE_TYPES),
         debut:dDay(base), fin:dDay(base-(2+rnd(10))), statut:st,
@@ -765,7 +768,7 @@ function genEntretiens(employes){
   const out=[]; const sample=[...employes]; // campagne annuelle : tout le monde
   sample.forEach((e,i)=>{
     const done=i<Math.ceil(sample.length*0.6);
-    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(Math.max(31, Math.min(300,(e._embOff!=null?e._embOff:9999)-30)))):dDay(-(20+rnd(90))),
+    out.push({ employeId:e.id, employeNom:`${e.prenom} ${e.nom}`, date: done?dDay(30+rnd(Math.max(31, Math.min(300,(e._embOff!=null?e._embOff:9999)-30)))):dDay(-(20+rnd(160))),
       type:pick(ENTRETIEN_TYPES), statut: done?'realise':'planifie', evaluateur:'Chef de service éducatif',
       bilan: done?pick(ENTRETIEN_BILANS):'', objectifs: done?pickN(ENTRETIEN_OBJECTIFS,2).join(' • '):'',
       formations: done?'Souhait exprimé : formation sur le handicap psychique.':'', grille:{} });
@@ -775,7 +778,7 @@ function genEntretiens(employes){
 function genFormations(employes){
   const doms=pickN(FORM_DOMAINES, 8); // plan de formation sur l'année
   return doms.map((dom,i)=>{
-    const past=i<5; const base= past? (30+i*65) : -(15+(i-5)*30);
+    const past=i<5; const base= past? (30+i*65) : -(15+(i-5)*55);
     // participants d'une formation passée : uniquement des salariés déjà embauchés à sa date
     const eligibles = past ? employes.filter(e=>(e._embOff!=null?e._embOff:9999)>=base+2) : employes;
     const parts=pickN(eligibles, Math.min(eligibles.length, 2+rnd(4))).map(e=>({ id:String(e.id), nom:`${e.prenom} ${e.nom}` }));
@@ -807,7 +810,7 @@ function genFichesPaie(employes){
 }
 function genPeShifts(employes){
   const out=[]; const shifts=[['07:00','14:30'],['14:00','21:30'],['09:00','17:00'],['21:00','07:00']];
-  for(let d=SIM_DAYS-1; d>=-7; d--){ // un an d'historique + la semaine à venir
+  for(let d=SIM_DAYS-1; d>=-56; d--){ // un an d'historique + 8 semaines à venir
     const day=dDay(d);
     employes.forEach(e=>{
       if(d>0 && (e._embOff!=null?e._embOff:9999) < d) return; // pas encore embauché
@@ -881,7 +884,7 @@ function genVisites(residents){
     if(Math.random()<0.35) return;
     const full=`${r.prenom} ${r.nom}`; const n=3+rnd(3); const w=windowOf(r._spec);
     for(let i=0;i<n;i++){
-      const fut=Math.random()<0.35; const base= fut? -(3+rnd(20)) : (3+rnd(Math.max(4, w-4)));
+      const fut=Math.random()<0.4; const base= fut? -(3+rnd(90)) : (3+rnd(Math.max(4, w-4)));
       const type=pick(VISITE_TYPES);
       out.push({ residentId:r.id, residentName:full, type, personne:`${pick(PRENOMS_M.concat(PRENOMS_F))} ${r.nom}`,
         lien:pick(VISITE_LIENS), date:dDay(base), heure:`${13+rnd(5)}:00`,
@@ -908,6 +911,71 @@ function genEcheances(residents){
   });
   return out;
 }
+// ── Mesures de protection juridique (~55% des résidents, renouvellement futur) ──
+const _MP_ORG=['UDAF 92','ATMP 78','Association Tutélaire','Mandataire privé',''];
+const _MP_TRIB=['TJ de Nanterre','TJ de Versailles','TJ de Bobigny','TJ de Créteil','TJ de Pontoise'];
+const _NOMS_MJ=['Martin','Bernard','Petit','Durand','Leroy','Moreau','Fontaine'];
+function genMesuresProtection(residents){
+  const out=[];
+  residents.forEach(r=>{
+    if(Math.random()<0.45) return;
+    const full=`${r.prenom} ${r.nom}`;
+    out.push({ residentId:r.id, residentName:full, type:pick(['tutelle','curatelle','sauvegarde','habilitation']),
+      mandataireNom: pick(PRENOMS_F.concat(PRENOMS_M))+' '+pick(_NOMS_MJ), mandataireOrganisme: pick(_MP_ORG),
+      mandataireTel:'01 4'+rnd(9)+' '+(10+rnd(89))+' '+(10+rnd(89))+' '+(10+rnd(89)), mandataireEmail:'',
+      tribunal: pick(_MP_TRIB), dateJugement: dDay(200+rnd(600)), dateDebut: dDay(200+rnd(600)),
+      dateRenouvellement: dDay(-(20+rnd(170))), dateAudience: Math.random()<0.4?dDay(-(5+rnd(60))):null,
+      statut:'active', notes:`Mesure de démonstration ${DEMO_TAG}` });
+  });
+  return out;
+}
+
+// ── Protocoles d'urgence (~40% des résidents) ──
+const _PU_CAT=[
+  {type:'epilepsie',gravite:'critique',titre:"Crise d'épilepsie",signes:'Perte de contact, mouvements convulsifs, chute',conduite:"1. Protéger la tête, écarter les objets\n2. Ne rien mettre dans la bouche\n3. Noter l'heure de début\n4. Position latérale de sécurité après la crise",traitement:'Buccolam 10 mg intrabuccal si crise > 5 min',contacts:'Médecin traitant · SAMU 15 si > 10 min'},
+  {type:'allergie',gravite:'important',titre:'Allergie alimentaire sévère',signes:'Urticaire, gonflement, gêne respiratoire',conduite:"Éviction stricte de l'allergène. Stylo auto-injecteur si réaction générale.",traitement:'Anapen 0,3 mg IM face externe de la cuisse',contacts:'SAMU 15'},
+  {type:'fausse_route',gravite:'critique',titre:'Risque de fausse route',signes:'Toux, cyanose, impossibilité de parler',conduite:"1. Manœuvre de Heimlich\n2. Appeler à l'aide\n3. Alerter le 15",traitement:'',contacts:'SAMU 15'},
+  {type:'hypoglycemie',gravite:'important',titre:'Hypoglycémie (diabète)',signes:'Sueurs, tremblements, confusion',conduite:'Resucrage immédiat (3 sucres ou jus de fruit). Contrôle glycémie.',traitement:'Glucagon si perte de connaissance',contacts:'Médecin traitant'},
+  {type:'comportement',gravite:'important',titre:"Crise d'angoisse / agitation",signes:'Agitation, cris, mise en danger',conduite:"Isoler dans un espace calme, ton apaisant, ne pas contenir physiquement sauf danger immédiat.",traitement:'Traitement prescrit si besoin',contacts:'Cadre de permanence'}
+];
+function genProtocolesUrgence(residents){
+  const out=[];
+  residents.forEach(r=>{
+    if(Math.random()<0.6) return;
+    const p=pick(_PU_CAT);
+    out.push({ residentId:r.id, type:p.type, gravite:p.gravite, titre:p.titre, signes:p.signes,
+      conduite:p.conduite, traitement:p.traitement, contacts:p.contacts, actif:true, notes:`Protocole de démonstration ${DEMO_TAG}` });
+  });
+  return out;
+}
+
+// ── Signatures de documents clés (image de signature générée) ──
+function _seedSigImage(){
+  try{
+    const cv=document.createElement('canvas'); cv.width=300; cv.height=100; const c=cv.getContext('2d');
+    c.fillStyle='#fff'; c.fillRect(0,0,300,100); c.strokeStyle='#1e3a5f'; c.lineWidth=2; c.lineJoin='round'; c.lineCap='round';
+    c.beginPath(); let x=25, y=55+rnd(10); c.moveTo(x,y);
+    for(let i=0;i<5;i++){ x+=38+rnd(18); c.bezierCurveTo(x-28,y-22-rnd(18),x-8,y+22+rnd(14),x,y-4+rnd(8)); }
+    c.stroke(); return cv.toDataURL('image/png');
+  }catch(e){ return ''; }
+}
+const _SIG_DOCS_K=['contrat_sejour','dipc','reglement','consent_soins','droit_image','consent_donnees'];
+function genSignatures(residents){
+  const out=[];
+  residents.forEach(r=>{
+    if(Math.random()<0.4) return;
+    const full=`${r.prenom} ${r.nom}`;
+    pickN(_SIG_DOCS_K, 1+rnd(3)).forEach(dt=>{
+      const parMand=Math.random()<0.35;
+      out.push({ residentId:r.id, documentType:dt, documentLabel:(typeof SIG_DOCS!=='undefined'?SIG_DOCS[dt]:dt),
+        signataireNom: parMand ? (pick(PRENOMS_F.concat(PRENOMS_M))+' '+pick(_NOMS_MJ)) : full,
+        signataireRole: parMand?'mandataire':'resident',
+        image:_seedSigImage(), signeLe:dISO(10+rnd(300)) });
+    });
+  });
+  return out;
+}
+
 function genViaTrajectoire(residents){
   const sample=pickN(residents, Math.min(15, residents.length));
   return sample.map(r=>({ residentId:r.id, type:pick(VT_TYPES), mdph:pick(MDPH_LIST), date:dDay(Math.max(1, Math.min(windowOf(r._spec)-2, 10+rnd(340)))),
@@ -1234,7 +1302,7 @@ async function runSeed(){
     // ── 4. Agenda ──
     log('Génération de l\'agenda…','info');
     const planEvents=[];
-    const OFFS_P=[340,300,265,230,195,160,125,95,65,40,22,10,-3,-8,-15];
+    const OFFS_P=[340,300,265,230,195,160,125,95,65,40,22,10,-3,-10,-20,-35,-55,-80,-110,-145,-180];
     residents.forEach(r=>{
       const spec=r._spec, full=`${r.prenom} ${r.nom}`, w=windowOf(spec);
       offsWithin(spec, OFFS_P, 6+rnd(4)).forEach(off=>{
@@ -1299,6 +1367,22 @@ async function runSeed(){
     });
     await pool(evalTasks, e=>sbSaveEvaluation(e), 6, (d,tot)=>setProgress(80 + d/tot*3));
     log(`✓ ${evalTasks.length} évaluations créées`,'ok');
+
+    // ── Nouvelles fiches résident : protection juridique, protocoles d'urgence, signatures ──
+    // Si la migration correspondante n'a pas été exécutée, on détecte l'absence
+    // de table et on passe sans bloquer le reste du seed.
+    const seedOptional = async (label, items, saveFn) => {
+      let ok=0, missing=false;
+      for(const it of items){
+        try{ await saveFn(it); ok++; }
+        catch(e){ if(/does not exist|relation|schema cache|Could not find the table/i.test(String((e&&e.message)||e))){ missing=true; break; } }
+      }
+      if(missing) log(`⚠ ${label} : table absente — exécute la migration puis relance le seed`,'info');
+      else log(`✓ ${ok} ${label} créé(e)s`,'ok');
+    };
+    if(typeof sbSaveMesureProtection==='function') await seedOptional('mesures de protection', genMesuresProtection(residents), sbSaveMesureProtection);
+    if(typeof sbSaveProtocoleUrgence==='function') await seedOptional("protocoles d'urgence", genProtocolesUrgence(residents), sbSaveProtocoleUrgence);
+    if(typeof sbSaveSignature==='function')        await seedOptional('signatures de documents', genSignatures(residents), sbSaveSignature);
 
     // ══════════ SECTIONS SUPPLÉMENTAIRES — remplissage intégral du site ══════════
     let _np=0; const _NPT=24; const npTick=()=>{ _np++; setProgress(83 + Math.min(1,_np/_NPT)*16); };

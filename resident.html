@@ -240,6 +240,33 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="signerDocModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Signer un document</span>
+      <button class="modal-close" onclick="closeModal('signerDocModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="signerDocModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('signerDocModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="sigLaunchPad()">✍️ Ouvrir le pavé de signature</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sigViewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="sigViewTitle">Signature</span>
+      <button class="modal-close" onclick="closeModal('sigViewModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="sigViewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('sigViewModal')">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="sortieModal">
   <div class="modal">
     <div class="modal-header">
@@ -484,6 +511,9 @@
 <script src="js/mesures-protection.js"></script>
 <script src="js/protocoles-urgence-supabase.js"></script>
 <script src="js/protocoles-urgence.js"></script>
+<script src="js/signature-pad.js"></script>
+<script src="js/signatures-supabase.js"></script>
+<script src="js/signatures-resident.js"></script>
 <script src="js/residents.js"></script>
 <script src="js/resident-v2.js"></script>
 <script>
@@ -629,6 +659,7 @@ function renderViewMode(r) {
     historique: () => transV2 + filDeVieCard(r) + autonomieCard(r),
     admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
                     + (typeof mesuresProtectionCard === 'function' ? mesuresProtectionCard(r) : '')
+                    + (typeof signaturesCard === 'function' ? signaturesCard(r) : '')
                     + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r) + accesCard(r)
   };
   const rendu = (ONGLETS[RV2_TAB] || ONGLETS.apercu)();
@@ -3468,7 +3499,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       medicaments:   opt('sbGetMedDistrib'),
       planSoins:     opt('sbGetPlanSoins'),
       mesuresProt:   opt('loadMesuresProtectionCache'),
-      protocolesUrg: opt('loadProtocolesUrgenceCache')
+      protocolesUrg: opt('loadProtocolesUrgenceCache'),
+      signatures:    opt('loadSignaturesCache')
     };
     const cles = Object.keys(lectures);
     const vals = await Promise.all(cles.map(k => _safe(k, lectures[k])));
