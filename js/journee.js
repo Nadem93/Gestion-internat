@@ -88,6 +88,9 @@ async function initJournee() {
   // Avenants pour relier les objectifs (facultatif : la page vit sans)
   try { if (typeof sbGetPpe === 'function') _jrPpe = await sbGetPpe(); } catch (e) { _jrPpe = []; }
 
+  // Protocoles d'urgence (facultatif : accès 1 clic 🚨 sur les chips résidents)
+  try { if (typeof loadProtocolesUrgenceCache === 'function') await loadProtocolesUrgenceCache(); } catch (e) {}
+
   // Nature des moments (design V2) — dégradation douce si migration-journee.sql
   // n'a pas été exécuté : la page s'affiche simplement sans nature.
   if (typeof jn2LoadTypes === 'function') await jn2LoadTypes();

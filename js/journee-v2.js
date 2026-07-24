@@ -317,8 +317,12 @@ function jn2ResRail(jour) {
   el.innerHTML = `<button type="button" class="jn2-rchip jn2-rall${!_jn2ResFocus ? ' on' : ''}" onclick="jn2SetResFocus('')">Tous</button>`
     + order.map(rid => {
       const r = byId[rid];
+      const hasProto = (typeof protocolesActifsByResident === 'function') && protocolesActifsByResident(rid).length;
+      const protoBtn = hasProto
+        ? `<span role="button" tabindex="0" title="Protocoles d'urgence" onclick="event.stopPropagation();showProtocolesUrgence('${rid}','${escHtml(r.nom).replace(/'/g, '')}')" style="margin-left:1px;cursor:pointer;font-size:.85em">🚨</span>`
+        : '';
       return `<button type="button" class="jn2-rchip${_jn2ResFocus === rid ? ' on' : ''}" onclick="jn2SetResFocus('${rid}')" title="${escHtml(r.nom)}">
-        ${av(rid, r.nom)}<span class="jn2-rname">${escHtml((r.nom || '').split(' ')[0])}</span>
+        ${av(rid, r.nom)}<span class="jn2-rname">${escHtml((r.nom || '').split(' ')[0])}</span>${protoBtn}
         ${r.todo ? `<span class="jn2-rtodo">${r.todo}</span>` : '<span class="jn2-rdone">✓</span>'}
       </button>`;
     }).join('');

@@ -226,6 +226,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="protocoleModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="protocoleModalTitle">Protocole d'urgence</span>
+      <button class="modal-close" onclick="closeModal('protocoleModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="protocoleModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('protocoleModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveProtocole()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="sortieModal">
   <div class="modal">
     <div class="modal-header">
@@ -468,6 +482,8 @@
 <script src="js/chambres-supabase.js"></script>
 <script src="js/mesures-protection-supabase.js"></script>
 <script src="js/mesures-protection.js"></script>
+<script src="js/protocoles-urgence-supabase.js"></script>
+<script src="js/protocoles-urgence.js"></script>
 <script src="js/residents.js"></script>
 <script src="js/resident-v2.js"></script>
 <script>
@@ -606,7 +622,7 @@ function renderViewMode(r) {
   const ONGLETS = {
     apercu:     () => projetV2 + medicalV2 + transV2 + residentHeaderCard(r) + radarSignauxCard(r),
     projet:     () => projetV2 + paire(objectifsCard(r), evaluationsCard(r)),
-    medical:    () => medicalV2 + paire(santeCard(r), planSoinsCard(r)),
+    medical:    () => medicalV2 + (typeof protocolesUrgenceCard === 'function' ? protocolesUrgenceCard(r) : '') + paire(santeCard(r), planSoinsCard(r)),
     quotidien:  () => planningResidentCard(r) + planningHebdoCard(r)
                     + paire(sortiesCard(r), activitesCard(r))
                     + paire(trousseauCard(r), budgetCard(r)),
@@ -3451,7 +3467,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       visites:       opt('sbGetVisites'),
       medicaments:   opt('sbGetMedDistrib'),
       planSoins:     opt('sbGetPlanSoins'),
-      mesuresProt:   opt('loadMesuresProtectionCache')
+      mesuresProt:   opt('loadMesuresProtectionCache'),
+      protocolesUrg: opt('loadProtocolesUrgenceCache')
     };
     const cles = Object.keys(lectures);
     const vals = await Promise.all(cles.map(k => _safe(k, lectures[k])));
