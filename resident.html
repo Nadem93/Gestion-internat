@@ -212,6 +212,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="mesureProtModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="mesureProtModalTitle">Mesure de protection</span>
+      <button class="modal-close" onclick="closeModal('mesureProtModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="mesureProtModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('mesureProtModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveMesureProt()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="sortieModal">
   <div class="modal">
     <div class="modal-header">
@@ -452,6 +466,8 @@
 <script src="js/medicaments-supabase.js"></script>
 <script src="js/plan-soins-supabase.js"></script>
 <script src="js/chambres-supabase.js"></script>
+<script src="js/mesures-protection-supabase.js"></script>
+<script src="js/mesures-protection.js"></script>
 <script src="js/residents.js"></script>
 <script src="js/resident-v2.js"></script>
 <script>
@@ -596,6 +612,7 @@ function renderViewMode(r) {
                     + paire(trousseauCard(r), budgetCard(r)),
     historique: () => transV2 + filDeVieCard(r) + autonomieCard(r),
     admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
+                    + (typeof mesuresProtectionCard === 'function' ? mesuresProtectionCard(r) : '')
                     + `<div id="tab-documents">${docsHtml(docs)}</div>` + notes + rgpdCard(r) + accesCard(r)
   };
   const rendu = (ONGLETS[RV2_TAB] || ONGLETS.apercu)();
@@ -3433,7 +3450,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       nuits:         opt('sbGetNuits'),
       visites:       opt('sbGetVisites'),
       medicaments:   opt('sbGetMedDistrib'),
-      planSoins:     opt('sbGetPlanSoins')
+      planSoins:     opt('sbGetPlanSoins'),
+      mesuresProt:   opt('loadMesuresProtectionCache')
     };
     const cles = Object.keys(lectures);
     const vals = await Promise.all(cles.map(k => _safe(k, lectures[k])));
