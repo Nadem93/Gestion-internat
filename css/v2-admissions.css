@@ -25,9 +25,9 @@
 .ad2-new svg { width: 16px; height: 16px; }
 
 /* ── Tuiles de statistiques ───────────────────────────────────────────── */
-.ad2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
-@media (max-width: 900px) { .ad2-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .ad2-stats { grid-template-columns: 1fr; } }
+.ad2-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+@media (max-width: 900px) { .ad2-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .ad2-stats { grid-template-columns: minmax(0, 1fr); } }
 .ad2-stat {
   display: flex; align-items: center; gap: 14px; padding: 16px 18px;
   background: rgba(255,255,255,.04); border: 1px solid var(--v2-b); border-radius: 16px;
@@ -45,9 +45,9 @@
 .ad2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
 
 /* ── Colonnes du tableau (kanban) ─────────────────────────────────────── */
-.ad2-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 1200px) { .ad2-board { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px)  { .ad2-board { grid-template-columns: 1fr; } }
+.ad2-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 1200px) { .ad2-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px)  { .ad2-board { grid-template-columns: minmax(0, 1fr); } }
 
 .ad2-col {
   background: rgba(255,255,255,.03); border: 1px solid var(--v2-b);

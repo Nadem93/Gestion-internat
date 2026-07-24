@@ -62,7 +62,7 @@
 .cf2-hero-kpis .v2-kpi-lbl { line-height: 1.35; }
 
 /* ── Corps : rail + sections ──────────────────────────────────────────── */
-.cf2-body { display: grid; grid-template-columns: 280px 1fr; gap: 18px; align-items: start; }
+.cf2-body { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; align-items: start; }
 
 .cf2-rail { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 18px; }
 .cf2-rail-blk { padding: 16px 16px 14px; }
@@ -168,7 +168,7 @@
 
 /* ── Adaptatif ────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .cf2-body { grid-template-columns: 1fr; }
+  .cf2-body { grid-template-columns: minmax(0, 1fr); }
   .cf2-rail { position: static; }
 }
 @media (max-width: 900px) {
@@ -179,7 +179,7 @@
   .cf2-search { width: 100%; order: 3; }
   .cf2-hero { padding: 18px 16px; }
   .cf2-sec { padding: 16px 15px; }
-  .cf2-cats, .cf2-droits-g { grid-template-columns: 1fr; }
+  .cf2-cats, .cf2-droits-g { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 420px) {
   .cf2-hero { gap: 18px; }
@@ -193,7 +193,7 @@
   body.v2 { background: #fff; color: #111; }
   .cf2-top-act, .cf2-rail, .v2-top .v2-logo { display: none !important; }
   body.v2 .v2-shell { margin: 0; border: 0; box-shadow: none; background: #fff; }
-  .cf2-body { grid-template-columns: 1fr; }
+  .cf2-body { grid-template-columns: minmax(0, 1fr); }
   .cf2-hero { background: none; border-color: #ccc; }
   .cf2-sec { break-inside: avoid; border-color: #ddd; background: none; }
   .cf2-sec p, .cf2-ul li, .cf2-cat-s, .cf2-droit-s { color: #333; }

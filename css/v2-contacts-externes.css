@@ -18,7 +18,7 @@ body.v2 .ce2-search { border-radius: var(--v2-r-ctrl); }
 .ce2-count { font-size: 12px; color: var(--v2-t7); white-space: nowrap; }
 
 /* ── Tuiles de statistiques ───────────────────────────────────────────── */
-.ce2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.ce2-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .ce2-stat {
   display: flex; align-items: center; gap: 14px; padding: 16px 18px;
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
@@ -31,8 +31,8 @@ body.v2 .ce2-search { border-radius: var(--v2-r-ctrl); }
 .ce2-stat-i svg { width: 21px; height: 21px; }
 .ce2-stat-n { font-family: var(--v2-display); font-size: 24px; font-weight: 800; line-height: 1; color: var(--sc); }
 .ce2-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
-@media (max-width: 980px) { .ce2-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .ce2-stats { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .ce2-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .ce2-stats { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Bandeau « besoins à couvrir » ────────────────────────────────────── */
 .ce2-besoins {
@@ -42,9 +42,9 @@ body.v2 .ce2-search { border-radius: var(--v2-r-ctrl); }
 .ce2-besoins-h { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; flex-wrap: wrap; }
 .ce2-besoins-h svg { width: 15px; height: 15px; color: var(--v2-danger-text); flex-shrink: 0; }
 .ce2-besoins-t { font-size: 13px; font-weight: 700; color: #fecaca; }
-.ce2-besoins-g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-@media (max-width: 1000px) { .ce2-besoins-g { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 620px)  { .ce2-besoins-g { grid-template-columns: 1fr; } }
+.ce2-besoins-g { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .ce2-besoins-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px)  { .ce2-besoins-g { grid-template-columns: minmax(0, 1fr); } }
 .ce2-besoin {
   display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
   background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
@@ -74,9 +74,9 @@ body.v2 .ce2-search { border-radius: var(--v2-r-ctrl); }
 .ce2-besoin-add svg { width: 14px; height: 14px; }
 
 /* ── Grille du vivier ─────────────────────────────────────────────────── */
-.ce2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-@media (max-width: 1180px) { .ce2-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px)  { .ce2-grid { grid-template-columns: 1fr; } }
+.ce2-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1180px) { .ce2-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px)  { .ce2-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .ce2-card {
   background: var(--v2-s-card); border: 1px solid var(--v2-b);
@@ -142,14 +142,14 @@ body.v2 .ce2-ico { color: var(--v2-t5); }
 .ce2-ico.sup:hover { color: var(--v2-danger-text); }
 
 /* ── Deux colonnes de bas de page ─────────────────────────────────────── */
-.ce2-two   { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; }
-.ce2-two-b { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: start; }
-.ce2-two-c { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; align-items: start; }
+.ce2-two   { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.ce2-two-b { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.ce2-two-c { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 20px; align-items: start; }
 /* min-width:0 : sans cela, le tableau de conformité (min-width 460px) élargit
    sa colonne au-delà de la fenêtre au lieu de défiler dans son propre cadre. */
 .ce2-two > *, .ce2-two-b > *, .ce2-two-c > * { min-width: 0; }
 @media (max-width: 1100px) {
-  .ce2-two, .ce2-two-b, .ce2-two-c { grid-template-columns: 1fr; }
+  .ce2-two, .ce2-two-b, .ce2-two-c { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ── Missions récentes ────────────────────────────────────────────────── */

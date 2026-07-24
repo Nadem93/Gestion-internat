@@ -46,7 +46,7 @@ body.v2 .rh-shell {
 .rh-hello-s { margin-top: 4px; font-size: 13.5px; color: var(--v2-t7); }
 
 /* ── KPI ──────────────────────────────────────────────────────────────── */
-.rh-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.rh-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
 .rh-kpi {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 16px 18px;
@@ -65,7 +65,7 @@ body.v2 .rh-shell {
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
   color: var(--v2-t9); margin-bottom: 12px;
 }
-.rh-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
+.rh-cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
 .rh-card {
   position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
   border-radius: var(--v2-r-kpi); padding: 16px; cursor: pointer; overflow: hidden;
@@ -202,20 +202,20 @@ body.v2 .rh-shell {
 .rh-deny p { font-size: 13.5px; color: var(--v2-t6); margin: 0 0 20px; }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
-@media (max-width: 1320px) { .rh-cards { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 1320px) { .rh-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 1120px) {
-  .rh-cards { grid-template-columns: repeat(3, 1fr); }
+  .rh-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rh-bento { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 960px) {
   body.v2 .rh-shell { flex-direction: column; height: auto; }
   /* Sur mobile : l'identité connectée reste lisible dans l'application. */
-  .rh-kpis { grid-template-columns: repeat(2, 1fr); }
-  .rh-cards { grid-template-columns: repeat(2, 1fr); }
+  .rh-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rh-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #rhFrame { min-height: 70vh; }
 }
 @media (max-width: 620px) {
-  .rh-cards { grid-template-columns: 1fr; }
+  .rh-cards { grid-template-columns: minmax(0, 1fr); }
   .rh-kpi { padding: 13px 14px; gap: 11px; }
   .rh-kpi-ic { width: 38px; height: 38px; border-radius: 11px; }
   .rh-kpi-n { font-size: 20px; }

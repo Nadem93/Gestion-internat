@@ -26,14 +26,14 @@ body.v2 select.fin2-per-s option { background: #101d31; color: var(--v2-t2); }
 
 /* ── Espacement vertical des blocs ────────────────────────────────────── */
 body.v2 .v2-body > .content > * + * { margin-top: 18px; }
-.fin2-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
-@media (max-width: 1000px) { .fin2-g2 { grid-template-columns: 1fr; } }
+.fin2-g2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .fin2-g2 { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Tuiles de synthèse (5 colonnes) ─────────────────────────────────── */
-.fin2-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-@media (max-width: 1200px) { .fin2-stats { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 760px)  { .fin2-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 430px)  { .fin2-stats { grid-template-columns: 1fr; } }
+.fin2-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1200px) { .fin2-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px)  { .fin2-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 430px)  { .fin2-stats { grid-template-columns: minmax(0, 1fr); } }
 
 .fin2-stat {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);

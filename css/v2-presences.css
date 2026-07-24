@@ -49,10 +49,10 @@
 .pr2-hint { font-size: 11px; color: var(--v2-t7); margin-bottom: 14px; }
 
 /* ── Grille de cartes résident ────────────────────────────────────────── */
-.pr2-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-@media (max-width: 1250px) { .pr2-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 920px)  { .pr2-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px)  { .pr2-grid { grid-template-columns: 1fr; } }
+.pr2-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1250px) { .pr2-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 920px)  { .pr2-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px)  { .pr2-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .pr2-card {
   position: relative; border-radius: 16px; padding: 16px; cursor: pointer;

@@ -128,14 +128,14 @@ html.is-embedded .rhv-top-actions { display: none; }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
-  .rhv-mods { grid-template-columns: repeat(3, 1fr); }
+  .rhv-mods { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 860px) {
-  .rhv-mods { grid-template-columns: repeat(2, 1fr); }
+  .rhv-mods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rhv-meta { display: none; }
 }
 @media (max-width: 560px) {
-  .rhv-mods { grid-template-columns: 1fr 1fr; }
+  .rhv-mods { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .rhv-mods .v2-mod { gap: 14px; padding: 14px; }
   .rhv-chart { height: 110px; gap: 7px; }
   .rhv-bar-v { display: none; }

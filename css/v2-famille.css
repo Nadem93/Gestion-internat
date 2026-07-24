@@ -30,11 +30,11 @@
 
 /* ── Bento KPI ────────────────────────────────────────────────────────── */
 .fam-kpis {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px;
 }
 /* On reste à 2 colonnes même en 375px : 4 tuiles empilées noieraient les documents,
    qui sont le cœur de la page. Les tuiles se compactent au lieu de s'empiler. */
-@media (max-width: 900px) { .fam-kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+@media (max-width: 900px) { .fam-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
 @media (max-width: 480px) {
   .fam-kpis { gap: 9px; margin-bottom: 20px; }
   .fam-kpi { padding: 13px; border-radius: 14px; }

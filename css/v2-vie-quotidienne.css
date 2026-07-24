@@ -49,7 +49,7 @@ body.v2 .vq-shell {
 .vq-hello-s { margin-top: 4px; font-size: 13.5px; color: var(--v2-t7); }
 
 /* ── KPI ──────────────────────────────────────────────────────────────── */
-.vq-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.vq-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
 .vq-kpi {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 16px 18px;
@@ -68,7 +68,7 @@ body.v2 .vq-shell {
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
   color: var(--v2-t9); margin-bottom: 12px;
 }
-.vq-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.vq-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
 .vq-card {
   position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
   border-radius: var(--v2-r-kpi); padding: 18px; cursor: pointer; overflow: hidden;
@@ -99,7 +99,11 @@ body.v2 .vq-shell {
 .vq-card-i:hover { background: var(--v2-s-active); color: #fff; }
 
 /* ── Bento du jour ────────────────────────────────────────────────────── */
-.vq-bento { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+/* minmax(0,…) et NON 1fr nu : `1fr` = `minmax(auto,1fr)`, et le plancher
+   `auto` vaut le min-content du contenu. Une ligne en `white-space:nowrap`
+   (ex. les régimes du repas) gonflait alors la piste bien au-delà de l'écran
+   et faisait déborder toute la carte sur mobile. */
+.vq-bento { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 .vq-blk {
   background: var(--v2-s-card); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-card2); padding: 20px;
@@ -146,17 +150,17 @@ body.v2 .vq-shell {
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 1180px) {
-  .vq-cards { grid-template-columns: repeat(3, 1fr); }
-  .vq-bento { grid-template-columns: 1fr; }
+  .vq-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vq-bento { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 960px) {
   body.v2 .vq-shell { flex-direction: column; height: auto; }
-  .vq-kpis { grid-template-columns: repeat(2, 1fr); }
-  .vq-cards { grid-template-columns: repeat(2, 1fr); }
+  .vq-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vq-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #vqFrame { min-height: 70vh; }
 }
 @media (max-width: 620px) {
-  .vq-kpis, .vq-cards { grid-template-columns: 1fr; }
+  .vq-kpis, .vq-cards { grid-template-columns: minmax(0, 1fr); }
   .vq-topbar { padding-left: 18px; padding-right: 18px; }
 }
 

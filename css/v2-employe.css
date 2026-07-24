@@ -45,7 +45,7 @@ body.v2 .ev2-ico-btn svg { width: 17px; height: 17px; display: block; }
 
 /* ── Tuiles statistiques (maquette « stats ») ──────────────────────────── */
 body.v2 .ev2-kgrid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 18px;
 }
 body.v2 .ev2-k {
   display: flex; align-items: center; gap: 14px; text-align: left;
@@ -69,7 +69,7 @@ body.v2 .ev2-k-s {
 }
 
 /* ── Grille des modules ────────────────────────────────────────────────── */
-body.v2 .ev2-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+body.v2 .ev2-g2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 body.v2 .ev2-g2 > * { min-width: 0; }
 
 /* ── Cartes héritées rhabillées au gabarit .v2-blk ─────────────────────── */
@@ -162,7 +162,7 @@ body.v2 #employeContent .doc-upload-zone {
 body.v2 #employeContent .doc-upload-zone:hover { background: var(--v2-s-hover) !important; }
 
 /* ── Mode édition ──────────────────────────────────────────────────────── */
-body.v2 .ev2-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+body.v2 .ev2-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
 body.v2 .ev2-edit-f {
   display: flex; gap: 10px; justify-content: flex-end;
   margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--v2-b);
@@ -172,7 +172,7 @@ body.v2 .ev2-edit-f .v2-btn-sec, body.v2 .ev2-edit-f .v2-btn-pri { flex: 0 0 aut
 /* ── Modales au gabarit .v2-ov / .v2-md ────────────────────────────────── */
 /* L'icône du gabarit attend un SVG ; ici les modules apportent un emoji. */
 body.v2 .v2-md-ico { font-size: 19px; line-height: 1; }
-body.v2 .v2-md-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+body.v2 .v2-md-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 body.v2 .v2-fld-w { min-width: 0; }
 body.v2 .v2-md-b { display: flex; flex-direction: column; gap: 14px; }
 body.v2 .v2-md-b input[type="file"] {
@@ -180,7 +180,7 @@ body.v2 .v2-md-b input[type="file"] {
   color: var(--v2-t5); border-radius: 11px; padding: 10px 12px; font-size: 12.5px; width: 100%;
 }
 body.v2 .v2-md .v2-fld-l { margin-bottom: 7px; }
-@media (max-width: 560px) { body.v2 .v2-md-2 { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { body.v2 .v2-md-2 { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Divers : bulles de message et pastilles claires en dur ────────────── */
 body.v2 #employeContent [style*="background:#f1f5f9"] { background: var(--v2-s-sub) !important; color: var(--v2-t3) !important; }
@@ -188,23 +188,23 @@ body.v2 #employeContent svg { max-width: 100%; }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 1280px) {
-  body.v2 .ev2-kgrid { grid-template-columns: repeat(3, 1fr); }
+  body.v2 .ev2-kgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 1080px) {
-  body.v2 .ev2-g2 { grid-template-columns: 1fr; }
+  body.v2 .ev2-g2 { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
-  body.v2 .ev2-kgrid { grid-template-columns: repeat(2, 1fr); }
-  body.v2 .ev2-form { grid-template-columns: 1fr; }
+  body.v2 .ev2-kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.v2 .ev2-form { grid-template-columns: minmax(0, 1fr); }
   body.v2 .v2-hero-res { gap: 16px; }
   body.v2 .v2-facts {
     margin-left: 0; width: 100%;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px;
   }
   body.v2 .v2-fact { min-width: 0; }
 }
 @media (max-width: 560px) {
-  body.v2 .ev2-kgrid { grid-template-columns: 1fr; }
+  body.v2 .ev2-kgrid { grid-template-columns: minmax(0, 1fr); }
   body.v2 .ev2-hero-actions { width: 100%; }
   body.v2 .v2-top .btn { height: 38px; padding: 0 12px; }
 }

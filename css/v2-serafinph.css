@@ -12,7 +12,7 @@
 .sp2-head { margin-bottom: 22px; }
 
 /* ── Tuiles KPI (cartes « Mon espace » de la maquette) ────────────────── */
-.sp2-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.sp2-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
 .sp2-kpi {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 18px;
@@ -154,11 +154,11 @@ body.v2 .v2-body .empty h3 { color: #fff; }
 
 /* ── Adaptatif ───────────────────────────────────────────────────────── */
 @media (max-width: 1180px) {
-  .sp2-kpis { grid-template-columns: repeat(2, 1fr); }
+  .sp2-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sp2-prest-rep { width: 140px; }
 }
 @media (max-width: 780px) {
-  .sp2-kpis { grid-template-columns: 1fr; }
+  .sp2-kpis { grid-template-columns: minmax(0, 1fr); }
   .sp2-prest { flex-wrap: wrap; }
   .sp2-prest-rep { width: 100%; order: 3; }
   .sp2-search { width: 100%; }

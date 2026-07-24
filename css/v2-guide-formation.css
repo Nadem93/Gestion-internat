@@ -53,7 +53,7 @@ body.v2 .v2-shell { overflow: clip; }
 }
 .gf-maj svg { width: 13px; height: 13px; }
 
-.gf-kgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 6px; }
+.gf-kgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 6px; }
 .gf-kgrid .v2-k { display: flex; align-items: center; gap: 14px; padding: 18px;
   border-radius: var(--v2-r-kpi); background: var(--v2-s-kpi); border: 1px solid var(--v2-b); }
 .gf-kgrid .v2-k-ico { width: 44px; height: 44px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
@@ -61,7 +61,7 @@ body.v2 .v2-shell { overflow: clip; }
 .gf-kgrid .v2-k-ico svg { width: 20px; height: 20px; }
 
 /* ── Corps : rail de navigation + contenu ─────────────────────────────── */
-.gf-layout { display: grid; grid-template-columns: 250px 1fr; gap: 22px; align-items: start; margin-top: 22px; }
+.gf-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; align-items: start; margin-top: 22px; }
 
 .gf-rail {
   position: sticky; top: 18px; max-height: calc(100vh - 40px); overflow-y: auto;
@@ -128,7 +128,7 @@ body.v2 .v2-shell { overflow: clip; }
 .gf-note-warn p { color: var(--v2-t4); }
 
 /* ── Rôles ────────────────────────────────────────────────────────────── */
-.gf-roles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.gf-roles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .gf-role-h { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
 .gf-role-i {
   width: 36px; height: 36px; border-radius: var(--v2-r-chip); flex-shrink: 0;
@@ -216,16 +216,16 @@ body.v2 .v2-shell { overflow: clip; }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 1080px) {
-  .gf-layout { grid-template-columns: 1fr; }
+  .gf-layout { grid-template-columns: minmax(0, 1fr); }
   .gf-rail { position: static; max-height: none; }
-  .gf-kgrid { grid-template-columns: repeat(2, 1fr); }
+  .gf-kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 780px) {
-  .gf-roles { grid-template-columns: 1fr; }
-  .gf-mods, .gf-tips { grid-template-columns: 1fr; }
+  .gf-roles { grid-template-columns: minmax(0, 1fr); }
+  .gf-mods, .gf-tips { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 620px) {
-  .gf-kgrid { grid-template-columns: 1fr; }
+  .gf-kgrid { grid-template-columns: minmax(0, 1fr); }
   .gf-top-act { width: 100%; }
   .gf-search { min-width: 0; flex: 1; }
 }
@@ -235,7 +235,7 @@ body.v2 .v2-shell { overflow: clip; }
   body.v2 { background: #fff; color: #111; }
   body.v2 .v2-shell { box-shadow: none; border: none; margin: 0; background: #fff; }
   .gf-rail, .gf-top-act, .gf-kgrid { display: none !important; }
-  .gf-layout { grid-template-columns: 1fr; }
-  .gf-mods, .gf-tips, .gf-roles { grid-template-columns: 1fr 1fr; }
+  .gf-layout { grid-template-columns: minmax(0, 1fr); }
+  .gf-mods, .gf-tips, .gf-roles { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .gf-mod { break-inside: avoid; }
 }

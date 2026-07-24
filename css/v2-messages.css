@@ -22,7 +22,7 @@
 
 /* ── Coquille deux colonnes ───────────────────────────────────────────── */
 .ms-layout {
-  display: grid; grid-template-columns: 320px 1fr;
+  display: grid; grid-template-columns: 320px minmax(0, 1fr);
   gap: 18px; align-items: stretch;
   height: calc(100vh - 190px); min-height: 520px;
 }
@@ -265,9 +265,9 @@ body.v2 .ms-cp-list .chat-overlay-user-name { font-size: 12.5px; font-weight: 60
 body.v2 .ms-cp-list .chat-overlay-user-role { font-size: 11px; color: var(--v2-t6); }
 
 /* ── Responsive : bascule liste ↔ conversation ────────────────────────── */
-@media (max-width: 1100px) { .ms-layout { grid-template-columns: 280px 1fr; } }
+@media (max-width: 1100px) { .ms-layout { grid-template-columns: 280px minmax(0, 1fr); } }
 @media (max-width: 860px) {
-  .ms-layout { grid-template-columns: 1fr; height: calc(100dvh - 168px); }
+  .ms-layout { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 168px); }
   .ms-layout .ms-thread { display: none; }
   .ms-layout.show-chat .ms-side { display: none; }
   .ms-layout.show-chat .ms-thread { display: flex; }

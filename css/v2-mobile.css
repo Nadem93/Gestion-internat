@@ -99,7 +99,7 @@ html.clair #mob-root{
 .m-search input::placeholder{ color:var(--m-muted2); }
 
 /* ── Cartes KPI (2×2) ───────────────────────────────────────────────────── */
-.m-kpis{ display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:22px; }
+.m-kpis{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:11px; margin-bottom:22px; }
 .m-kpi{ background:var(--m-card); border:1px solid var(--m-brd2); border-radius:16px; padding:14px 15px; display:flex; align-items:center; gap:12px; min-width:0; }
 .m-kpi-ic{ width:40px; height:40px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
 .m-kpi-ic svg{ width:19px; height:19px; }
@@ -112,7 +112,7 @@ html.clair #mob-root{
 .m-sech{ display:flex; align-items:baseline; margin-bottom:12px; }
 .m-sech .m-eye{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--m-eye); }
 .m-sech .m-link{ margin-left:auto; font-size:11.5px; color:var(--m-accent); font-weight:600; cursor:pointer; }
-.m-mods{ display:grid; grid-template-columns:repeat(4,1fr); gap:11px 8px; margin-bottom:24px; }
+.m-mods{ display:grid; grid-template-columns:repeat(4,minmax(0, 1fr)); gap:11px 8px; margin-bottom:24px; }
 .m-mod{ position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; text-decoration:none; }
 .m-mod-ic{ position:relative; width:56px; height:56px; border-radius:17px; display:flex; align-items:center; justify-content:center; }
 .m-mod-ic svg{ width:24px; height:24px; }

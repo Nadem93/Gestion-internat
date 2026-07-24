@@ -10,7 +10,7 @@
 /* Le rail court sur les deux rangées : le bas de page comble la colonne
    principale au lieu de laisser un vide sous le tableau. */
 .mcv-grid {
-  display: grid; grid-template-columns: 1fr 340px;
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px;
   grid-template-areas: "main rail" "bottom rail";
   gap: 20px; align-items: start;
 }
@@ -23,7 +23,7 @@
 .mcv-bottom > .v2-blk { min-width: 0; }
 
 @media (max-width: 1180px) {
-  .mcv-grid { grid-template-columns: 1fr; grid-template-areas: "main" "rail" "bottom"; }
+  .mcv-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "rail" "bottom"; }
 }
 
 /* ── En-tête de section ──────────────────────────────────────────────── */
@@ -155,9 +155,9 @@
 .mcv-info { margin-bottom: 16px; }
 
 /* ── Modale : segmenté sur deux lignes (5 types) ─────────────────────── */
-#mcSeg { display: grid; grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+#mcSeg { display: grid; grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
 #mcSeg .v2-seg-o { height: 42px; padding: 0 6px; }
-@media (max-width: 560px) { #mcSeg { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { #mcSeg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ── Mobile ──────────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
@@ -167,7 +167,7 @@
   .mcv-x { margin-left: auto; }
 }
 @media (max-width: 520px) {
-  .mcv-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .mcv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .mcv-k { padding: 14px; gap: 10px; }
   .mcv-k .v2-k-ico { width: 36px; height: 36px; }
   .mcv-k .v2-k-n { font-size: 21px; }

@@ -96,7 +96,7 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
 .adm-stack { display: flex; flex-direction: column; gap: 18px; }
 
 /* ── Hero « vue d'ensemble » ─────────────────────────────────────────── */
-.adm-hero { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 16px; }
+.adm-hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 .adm-hero-main {
   background: linear-gradient(135deg, rgba(124,111,205,.22), rgba(34,211,238,.06)), var(--v2-s-alt);
   border: 1px solid rgba(124,111,205,.28); border-radius: var(--v2-r-card2);
@@ -138,8 +138,8 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
 .adm-leg-n { font-size: 11.5px; font-weight: 700; color: #fff; }
 
 /* ── Tuiles KPI avec icône ───────────────────────────────────────────── */
-.adm-kgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.adm-kgrid-3 { grid-template-columns: repeat(3, 1fr); }
+.adm-kgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.adm-kgrid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .adm-k {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 16px 18px;
@@ -289,7 +289,7 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
 .adm-drop-s { font-size: 11px; color: var(--v2-t7); }
 
 /* Anneaux d'indicateurs (présence, occupation, journal…) */
-.adm-rings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+.adm-rings { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
 .adm-ring {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 16px 12px;
@@ -306,7 +306,7 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
 .adm-ring-s { font-size: 10.5px; color: var(--v2-t7); }
 
 /* Cartes utilisateurs */
-.adm-users { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.adm-users { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .adm-user {
   position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
   border-radius: var(--v2-r-card2); padding: 16px; cursor: pointer;
@@ -375,13 +375,13 @@ body.v2 .v2-ov .v2-md { background: #101d31; }
 }
 
 @media (max-width: 1280px) {
-  .adm-rings { grid-template-columns: repeat(3, 1fr); }
-  .adm-users { grid-template-columns: repeat(3, 1fr); }
+  .adm-rings { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .adm-users { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 1100px) {
-  .adm-hero { grid-template-columns: 1fr; }
-  .adm-kgrid { grid-template-columns: repeat(2, 1fr); }
-  .adm-users { grid-template-columns: repeat(2, 1fr); }
+  .adm-hero { grid-template-columns: minmax(0, 1fr); }
+  .adm-kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-users { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 900px) {
   body.v2 .adm-shell { flex-direction: column; }
@@ -401,14 +401,14 @@ body.v2 .v2-ov .v2-md { background: #101d31; }
   .adm-seg-h { width: 100%; }
 }
 @media (max-width: 760px) {
-  .adm-kgrid, .adm-kgrid-3 { grid-template-columns: 1fr; }
-  .adm-rings { grid-template-columns: repeat(2, 1fr); }
-  .adm-users { grid-template-columns: 1fr; }
+  .adm-kgrid, .adm-kgrid-3 { grid-template-columns: minmax(0, 1fr); }
+  .adm-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-users { grid-template-columns: minmax(0, 1fr); }
   .adm-hero-main { justify-content: center; text-align: center; }
   .adm-hero-facts { justify-content: center; }
 }
 @media (max-width: 560px) {
-  .adm-rings { grid-template-columns: 1fr; }
+  .adm-rings { grid-template-columns: minmax(0, 1fr); }
   .adm-top-act { width: 100%; }
   .adm-etab { flex: 1; }
   body.v2 .v2-ov { padding: 0; align-items: flex-end; }
@@ -429,11 +429,11 @@ body.v2 .v2-ov .v2-md { background: #101d31; }
    getPosteCardVars() à partir de la couleur du poste : c'est un aplat
    saturé, lisible sur fond sombre, on n'y touche pas.
    ══════════════════════════════════════════════════════════════════════ */
-.emp-cards-grid { display: grid; grid-template-columns: repeat(4, 1fr);
+.emp-cards-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px; padding: 4px 0; align-items: start; }
-@media (max-width: 1280px) { .emp-cards-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 1000px) { .emp-cards-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px)  { .emp-cards-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1280px) { .emp-cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1000px) { .emp-cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px)  { .emp-cards-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .card-c {
   background: var(--v2-s-card); border: 1px solid var(--v2-b);

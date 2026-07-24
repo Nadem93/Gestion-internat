@@ -49,8 +49,8 @@ body.v2 { --v2-halo: rgba(56,97,161,.28); }
   letter-spacing: .05em; margin-top: 6px; }
 
 /* ── Corps : contenu + rail sommaire ───────────────────────────────────── */
-.ai-layout { display: grid; grid-template-columns: 1fr 260px; gap: 22px; align-items: start; margin-top: 20px; }
-@media (max-width: 1080px) { .ai-layout { grid-template-columns: 1fr; } }
+.ai-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 22px; align-items: start; margin-top: 20px; }
+@media (max-width: 1080px) { .ai-layout { grid-template-columns: minmax(0, 1fr); } }
 
 .ai-main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 

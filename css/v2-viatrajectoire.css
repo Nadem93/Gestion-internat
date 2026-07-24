@@ -6,7 +6,7 @@
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ── Tuiles KPI ─────────────────────────────────────────────────────── */
-.vt2-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.vt2-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
 .vt2-kpi {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 18px;
@@ -41,13 +41,13 @@ body.v2 .vt2-search input {
 .vt2-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* ── Corps deux colonnes ────────────────────────────────────────────── */
-.vt2-body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.vt2-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
 /* sans quoi le contenu minimal des lignes élargit la colonne au-delà de l'écran */
 .vt2-body > * { min-width: 0; }
 .vt2-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-@media (max-width: 1100px) { .vt2-body { grid-template-columns: 1fr; } }
-@media (max-width: 900px)  { .vt2-kpis { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px)  { .vt2-kpis { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .vt2-body { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px)  { .vt2-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px)  { .vt2-kpis { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Ligne de demande ───────────────────────────────────────────────── */
 .vt2-list { display: flex; flex-direction: column; }

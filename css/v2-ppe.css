@@ -26,7 +26,7 @@ body.v2 .pp2-shell { --v2-halo: rgba(99,102,241,.2); }
 }
 
 /* ── Tuiles de statistiques ────────────────────────────────────────── */
-.pp2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.pp2-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
 .pp2-stat {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 16px 18px;
@@ -47,7 +47,7 @@ body.v2 .pp2-shell { --v2-halo: rgba(99,102,241,.2); }
 .pp2-chip-res { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── Grille de cartes ──────────────────────────────────────────────── */
-.pp2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.pp2-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 
 .pp2-card {
   background: var(--v2-s-card); border: 1px solid var(--v2-b);
@@ -176,7 +176,7 @@ body.v2 .section-card .section-body strong { color: var(--v2-t2); }
 
 body.v2 .obj-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 130px 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 130px minmax(0, 1fr);
   gap: 8px; padding: 8px; align-items: start;
   background: var(--v2-s-sub);
   border: 1px solid var(--v2-b-soft);
@@ -231,8 +231,8 @@ body.v2 [style*="color:#1d4ed8"] { color: var(--v2-indigo-pale) !important; }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
-  .pp2-grid { grid-template-columns: repeat(2, 1fr); }
-  .pp2-stats { grid-template-columns: repeat(2, 1fr); }
+  .pp2-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp2-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 860px) {
   .pp2-topact { width: 100%; margin-left: 0; }
@@ -240,17 +240,17 @@ body.v2 [style*="color:#1d4ed8"] { color: var(--v2-indigo-pale) !important; }
   .pp2-topact .v2-btn { flex: 1; justify-content: center; }
 }
 @media (max-width: 768px) {
-  body.v2 .obj-row { grid-template-columns: 1fr 1fr; }
+  body.v2 .obj-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 @media (max-width: 700px) {
-  .pp2-grid { grid-template-columns: 1fr; }
+  .pp2-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
   .pp2-topact .v2-btn { flex: 1 1 100%; white-space: nowrap; }
 }
 @media (max-width: 520px) {
-  .pp2-stats { grid-template-columns: 1fr; }
+  .pp2-stats { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 520px) {
-  body.v2 .obj-row { grid-template-columns: 1fr; }
+  body.v2 .obj-row { grid-template-columns: minmax(0, 1fr); }
 }

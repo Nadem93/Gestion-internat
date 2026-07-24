@@ -29,7 +29,7 @@ body.v2 .nt-search input::placeholder { color: var(--v2-t7); }
 .nt-intro { margin-bottom: 20px; }
 
 /* ── Bandeau KPI (cartes « Mon espace » de la maquette) ───────────────── */
-.nt-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.nt-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
 .nt-kpi {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 18px;
@@ -54,7 +54,7 @@ body.v2 .nt-search input::placeholder { color: var(--v2-t7); }
 
 /* ── Disposition liste / éditeur ──────────────────────────────────────── */
 .nt-layout {
-  display: grid; grid-template-columns: 330px 1fr; gap: 18px;
+  display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 18px;
   align-items: stretch;
 }
 
@@ -193,16 +193,16 @@ body.v2 #noteBody::placeholder { color: var(--v2-t7); }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
-  .nt-kpis { grid-template-columns: repeat(2, 1fr); }
+  .nt-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1000px) {
-  .nt-layout { grid-template-columns: 1fr; }
+  .nt-layout { grid-template-columns: minmax(0, 1fr); }
   .nt-aside { max-height: 44vh; min-height: 0; }
   .nt-editor { max-height: none; }
   body.v2 #noteBody { min-height: 320px; }
 }
 @media (max-width: 560px) {
-  .nt-kpis { grid-template-columns: 1fr; }
+  .nt-kpis { grid-template-columns: minmax(0, 1fr); }
   .nt-search { width: 100%; }
   .nt-count { margin-left: 0; }
 }

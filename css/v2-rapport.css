@@ -32,7 +32,7 @@ select.rap2-inp option { background: #101d31; color: var(--v2-t2); }
 .rap2-wrap { display: flex; align-items: center; gap: 8px; }
 
 /* ── Tuiles KPI (4 colonnes) ─────────────────────────────────────────── */
-.rap2-kgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.rap2-kgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
 .rap2-k {
   display: flex; align-items: center; gap: 14px; padding: 16px 18px;
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b); border-radius: var(--v2-r-kpi);
@@ -45,18 +45,18 @@ select.rap2-inp option { background: #101d31; color: var(--v2-t2); }
 .rap2-k-ico svg { width: 21px; height: 21px; display: block; }
 .rap2-k-n { font-family: var(--v2-display); font-size: 23px; font-weight: 800; line-height: 1; color: var(--pc, #fff); }
 .rap2-k-l { font-size: 12px; color: var(--v2-t6); margin-top: 5px; }
-@media (max-width: 1000px) { .rap2-kgrid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px)  { .rap2-kgrid { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .rap2-kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px)  { .rap2-kgrid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Corps : colonne principale + rail ───────────────────────────────── */
-.rap2-main { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.rap2-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
 .rap2-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-@media (max-width: 1120px) { .rap2-main { grid-template-columns: 1fr; } }
+@media (max-width: 1120px) { .rap2-main { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Sections du rapport ─────────────────────────────────────────────── */
 .rap2-h { font-size: 14px; font-weight: 700; color: var(--v2-t2); margin-bottom: 12px; }
-.rap2-secs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 720px) { .rap2-secs { grid-template-columns: 1fr; } }
+.rap2-secs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 720px) { .rap2-secs { grid-template-columns: minmax(0, 1fr); } }
 .rap2-sec {
   background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: 14px;
   padding: 14px 16px; display: flex; align-items: center; gap: 12px; min-width: 0;
@@ -85,13 +85,13 @@ select.rap2-inp option { background: #101d31; color: var(--v2-t2); }
 .rap2-big { font-family: var(--v2-display); font-size: 16px; font-weight: 800; color: #4ade80; }
 
 /* ── Deux / trois colonnes ───────────────────────────────────────────── */
-.rap2-two { display: grid; grid-template-columns: 1fr 1.2fr; gap: 18px; align-items: start; }
-.rap2-three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; }
+.rap2-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+.rap2-three { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 /* Colonnes étroites : le titre s'abrège plutôt que de renvoyer « + Ajouter »
    à la ligne suivante. */
 .rap2-three .v2-blk-h { flex-wrap: nowrap; }
 .rap2-three .v2-blk-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 900px) { .rap2-two, .rap2-three { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .rap2-two, .rap2-three { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Lignes de liste génériques ──────────────────────────────────────── */
 .rap2-row { display: flex; align-items: center; gap: 12px; padding: 10px 0;
@@ -168,8 +168,8 @@ select.rap2-inp option { background: #101d31; color: var(--v2-t2); }
 .rap2-apercu p { margin: 0; }
 
 /* ── Grille de champs dans la modale ─────────────────────────────────── */
-.rap2-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 560px) { .rap2-grid2 { grid-template-columns: 1fr; } }
+.rap2-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 560px) { .rap2-grid2 { grid-template-columns: minmax(0, 1fr); } }
 .v2-md-b > * + * { margin-top: 14px; }
 
 /* ── Barre du haut : les contrôles passent à la ligne en mobile ──────── */

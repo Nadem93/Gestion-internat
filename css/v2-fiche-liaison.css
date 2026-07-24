@@ -82,7 +82,7 @@ body.v2 .fl2-shell { --v2-halo: rgba(220,38,38,.16); }
 .fl2-head-rv { font-family: var(--v2-display); font-size: 18px; font-weight: 800; color: var(--v2-danger-text); }
 
 /* ── Grille des sections ─────────────────────────────────────────────── */
-.fl2-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.fl2-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .fl2-sec {
   padding: 18px 22px;
   border-bottom: 1px solid var(--v2-b-list);
@@ -116,7 +116,7 @@ body.v2 .fl2-shell { --v2-halo: rgba(220,38,38,.16); }
 
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .fl2-grid { grid-template-columns: 1fr; }
+  .fl2-grid { grid-template-columns: minmax(0, 1fr); }
   .fl2-sec { border-right: none; }
 }
 @media (max-width: 560px) {

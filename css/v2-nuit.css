@@ -52,9 +52,9 @@ body.v2 a.nt2-lien { text-decoration: none; }
 .nt2-new svg { width: 16px; height: 16px; }
 
 /* ── Tuiles statistiques ─────────────────────────────────────────────── */
-.nt2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
-@media (max-width: 1000px) { .nt2-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px)  { .nt2-stats { grid-template-columns: 1fr; } }
+.nt2-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 1000px) { .nt2-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px)  { .nt2-stats { grid-template-columns: minmax(0, 1fr); } }
 
 .nt2-stat {
   display: flex; align-items: center; gap: 14px; padding: 16px 18px;
@@ -84,8 +84,8 @@ body.v2 input.nt2-stat-in::-webkit-outer-spin-button,
 body.v2 input.nt2-stat-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* ── Corps : timeline + rail ─────────────────────────────────────────── */
-.nt2-body { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
-@media (max-width: 1100px) { .nt2-body { grid-template-columns: 1fr; } }
+.nt2-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .nt2-body { grid-template-columns: minmax(0, 1fr); } }
 .nt2-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 /* Sélecteur d'ambiance, dans l'en-tête du bloc « Événements de la nuit » */

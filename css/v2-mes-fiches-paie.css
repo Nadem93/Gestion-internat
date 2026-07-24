@@ -19,9 +19,9 @@
 .mfp-info-s { font-size: 12px; color: var(--v2-t6); margin-top: 3px; line-height: 1.5; }
 
 /* ── Tuiles statistiques ─────────────────────────────────────────────── */
-.mfp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
-@media (max-width: 900px) { .mfp-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .mfp-stats { grid-template-columns: 1fr; } }
+.mfp-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 900px) { .mfp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .mfp-stats { grid-template-columns: minmax(0, 1fr); } }
 .mfp-stat {
   background: var(--v2-s-kpi); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-kpi); padding: 16px 18px;
@@ -31,14 +31,14 @@
 .mfp-stat-l { font-size: 12px; color: var(--v2-t6); margin-top: 6px; }
 
 /* ── Colonnes ────────────────────────────────────────────────────────── */
-.mfp-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
-@media (max-width: 1100px) { .mfp-layout { grid-template-columns: 1fr; } }
+.mfp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .mfp-layout { grid-template-columns: minmax(0, 1fr); } }
 .mfp-main { min-width: 0; display: flex; flex-direction: column; gap: 13px; }
 .mfp-rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 /* ── Grille de bulletins ─────────────────────────────────────────────── */
-.mfp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 760px) { .mfp-grid { grid-template-columns: 1fr; } }
+.mfp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 760px) { .mfp-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* .pyx-card est conservée pour le périmètre de révélation de money-mask.js :
    on neutralise entièrement son habillage clair hérité de css/style.css. */
