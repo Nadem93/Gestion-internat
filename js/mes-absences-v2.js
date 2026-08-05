@@ -48,9 +48,13 @@ const MA2_VISITE_TYPES = ['at', 'maladie_pro', 'maternite', 'longue_maladie'];
 function _ma2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône dimensionnée en ligne (les classes dc- ne fixent pas la taille des <svg>)
+function _ma2Ico(d, px, w) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round" style="width:${px}px;height:${px}px">${d}</svg>`;
+}
 function _ma2Ty(t) { return MA2_TY[t] || MA2_TY.autre; }
 function _ma2Esc(s) { return (typeof escHtml === 'function') ? escHtml(s == null ? '' : String(s)) : String(s == null ? '' : s); }
-function _ma2Today() { return new Date().toISOString().slice(0, 10); }
+function _ma2Today() { return today(); }
 function _ma2Cache() { return (typeof _maCache !== 'undefined' && Array.isArray(_maCache)) ? _maCache : []; }
 
 // Nombre de jours couverts (inclusif). Arrêt sans date de fin : compté jusqu'à aujourd'hui.
@@ -89,7 +93,7 @@ function _ma2Plus1(d) {
   const dt = new Date(d + 'T12:00:00');
   if (isNaN(dt)) return '';
   dt.setDate(dt.getDate() + 1);
-  return dt.toISOString().slice(0, 10);
+  return isoJour(dt);
 }
 
 // ══ RENDU ════════════════════════════════════════════════════════════════
@@ -114,19 +118,20 @@ function ma2RenderKpis(list) {
   const enCours = list.filter(_ma2EnCours).length;
   const atOuverts = list.filter(a => (a.type === 'at' || a.type === 'maladie_pro') && (_ma2EnCours(a) || !a.declareeCpam)).length;
   const t = _ma2Today();
-  const il12 = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+  const il12 = isoJour(new Date(Date.now() - 365 * 86400000));
   const jours12 = list.filter(a => (a.fin || a.debut) >= il12 && a.debut <= t).reduce((s, a) => s + _ma2Jours(a), 0);
   const sansJust = list.filter(a => !a.justificatifPath).length;
 
   const k = [
-    { n: enCours,    l: 'Absence' + (enCours > 1 ? 's' : '') + ' en cours', c: '#f59e0b', ic: MA2_IC.clock },
-    { n: atOuverts,  l: 'AT / maladie pro à suivre',  c: '#ef4444', ic: MA2_IC.injury },
-    { n: jours12,    l: 'Jours cumulés sur 12 mois',  c: '#fb7185', ic: MA2_IC.cal },
-    { n: sansJust,   l: 'Justificatif manquant',      c: '#64748b', ic: MA2_IC.file }
+    { n: enCours,    lab: 'EN COURS', sub: 'Absence' + (enCours > 1 ? 's' : '') + ' en cours', c: '#f59e0b', ic: MA2_IC.clock },
+    { n: atOuverts,  lab: 'AT / MP',  sub: 'AT / maladie pro à suivre',  c: '#ef4444', ic: MA2_IC.injury },
+    { n: jours12,    lab: '12 MOIS',  sub: 'Jours cumulés',              c: '#fb7185', ic: MA2_IC.cal },
+    { n: sansJust,   lab: 'JUSTIFS',  sub: 'Justificatif manquant',      c: '#64748b', ic: MA2_IC.file }
   ];
-  el.innerHTML = k.map(x => `<div class="ma2-k" style="--kc:${x.c}">
-      <span class="ma2-k-ico">${_ma2Svg(x.ic)}</span>
-      <div class="ma2-k-txt"><div class="ma2-k-n">${x.n}</div><div class="ma2-k-l">${x.l}</div></div>
+  el.innerHTML = k.map(x => `<div class="dc-kpi" style="--dc-c:${x.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${x.lab}</span><span class="dc-kpi-ico" style="color:${x.c}">${_ma2Ico(x.ic, 16)}</span></div>
+      <div class="dc-kpi-val">${x.n}</div>
+      <div class="dc-kpi-sub">${x.sub}</div>
     </div>`).join('');
 }
 
@@ -156,8 +161,13 @@ function ma2RenderTable(list) {
   const sorted = [...list].sort((a, b) => (b.debut || '').localeCompare(a.debut || ''));
   const shown = MA2_FILTRE === 'all' ? sorted : sorted.filter(a => (MA2_TY[a.type] ? a.type : 'autre') === MA2_FILTRE);
 
+  const head = `<div class="dc-head nb"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#6366f122;color:#818cf8">${_ma2Ico(MA2_IC.cal, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">HISTORIQUE</div><div class="dc-title">Mes absences</div></div>
+    </div><span class="dc-pill dim">${shown.length}/${sorted.length}</span></div>`;
+
   if (!sorted.length) {
-    el.innerHTML = `<div class="ma2-tbl-wrap"><div class="ma2-empty">
+    el.innerHTML = `<div class="dc-card">${head}<div class="ma2-empty">
         <div class="ma2-empty-ico">${_ma2Svg(MA2_IC.cal)}</div>
         <div class="ma2-empty-t">Aucune absence déclarée</div>
         <div class="ma2-empty-s">Utilisez « Déclarer une absence » pour enregistrer un arrêt de travail.</div>
@@ -165,7 +175,7 @@ function ma2RenderTable(list) {
     return;
   }
   if (!shown.length) {
-    el.innerHTML = `<div class="ma2-tbl-wrap"><div class="ma2-empty">
+    el.innerHTML = `<div class="dc-card">${head}<div class="ma2-empty">
         <div class="ma2-empty-ico">${_ma2Svg(MA2_IC.cal)}</div>
         <div class="ma2-empty-t">Aucune absence pour ce motif</div>
         <div class="ma2-empty-s">Choisissez « Toutes » pour revenir à la liste complète.</div>
@@ -178,18 +188,18 @@ function ma2RenderTable(list) {
     const j = _ma2Jours(a);
     const enCours = _ma2EnCours(a);
     const aVenir = _ma2AVenir(a);
-    const st = aVenir ? { l: 'À venir', c: '#22d3ee' }
-             : enCours ? { l: 'En cours', c: '#f59e0b' }
-                       : { l: 'Terminée', c: '#10b981' };
+    const st = aVenir ? { l: 'À venir', cls: 'dc-b-cyan' }
+             : enCours ? { l: 'En cours', cls: 'dc-b-amber' }
+                       : { l: 'Terminée', cls: 'dc-b-green' };
     const just = a.justificatifPath
-      ? `<button type="button" class="ma2-just" style="--jc:#34d399" onclick="openJustificatif('${_ma2Esc(a.id)}')" title="Ouvrir le justificatif">${_ma2Svg(MA2_IC.check, 2.4)}Reçu</button>`
-      : `<span class="ma2-just" style="--jc:#fca5a5">${_ma2Svg(MA2_IC.cross, 2.4)}Manquant</span>`;
+      ? `<button type="button" class="dc-badge dc-b-green" style="cursor:pointer" onclick="openJustificatif('${_ma2Esc(a.id)}')" title="Ouvrir le justificatif">${_ma2Ico(MA2_IC.check, 12, 2.4)}Reçu</button>`
+      : `<span class="dc-badge dc-b-red">${_ma2Ico(MA2_IC.cross, 12, 2.4)}Manquant</span>`;
     return `<tr>
-      <td><span class="ma2-motif" style="--pc:${ty.c}">${_ma2Svg(ty.ic, 2.2)}${_ma2Esc(ty.l)}</span></td>
+      <td><span class="dc-badge" style="background:${ty.c}1f;color:${ty.c};border:1px solid ${ty.c}55">${_ma2Ico(ty.ic, 12, 2.2)}${_ma2Esc(ty.l)}</span></td>
       <td><span class="ma2-per">${_ma2Esc(_ma2Periode(a))}</span>${a.notes ? `<div class="ma2-l-m" title="${_ma2Esc(a.notes)}">${_ma2Esc(a.notes.length > 48 ? a.notes.slice(0, 48) + '…' : a.notes)}</div>` : ''}</td>
       <td><span class="ma2-dur">${enCours && !a.fin ? j + ' j (en cours)' : j + ' j'}</span></td>
       <td>${just}</td>
-      <td><span class="ma2-st" style="--pc:${st.c}">${st.l}</span></td>
+      <td><span class="dc-badge ${st.cls}"><span class="d"></span>${st.l}</span></td>
       <td><div class="ma2-acts">
         <button type="button" class="ma2-ib" onclick="openMesAbsModal('${_ma2Esc(a.id)}')" title="Modifier / ajouter un justificatif" aria-label="Modifier">${_ma2Svg(MA2_IC.pencil, 2.2)}</button>
         <button type="button" class="ma2-ib danger" onclick="deleteMesAbs('${_ma2Esc(a.id)}')" title="Supprimer" aria-label="Supprimer">${_ma2Svg(MA2_IC.trash, 2.2)}</button>
@@ -197,7 +207,7 @@ function ma2RenderTable(list) {
     </tr>`;
   }).join('');
 
-  el.innerHTML = `<div class="ma2-tbl-wrap"><div class="ma2-scroll"><table class="ma2-tbl">
+  el.innerHTML = `<div class="dc-card">${head}<div class="ma2-scroll"><table class="ma2-tbl">
       <thead><tr><th>Motif</th><th>Période</th><th>Durée</th><th>Justificatif</th><th>Statut</th><th style="text-align:right">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
 }
@@ -209,25 +219,24 @@ function ma2RenderRegistre(list) {
   const ats = list.filter(a => a.type === 'at' || a.type === 'maladie_pro')
                   .sort((a, b) => (b.debut || '').localeCompare(a.debut || ''));
   if (!ats.length) {
-    el.innerHTML = `<div class="v2-blk-vide">Aucun accident du travail ni maladie professionnelle déclaré.</div>`;
+    el.innerHTML = `<div class="dc-empty">Aucun accident du travail ni maladie professionnelle déclaré.</div>`;
     return;
   }
   el.innerHTML = ats.map(a => {
     const ty = _ma2Ty(a.type);
     const ouvert = _ma2EnCours(a) || !a.declareeCpam;
-    const st = ouvert ? { l: 'En cours', c: '#f59e0b' } : { l: 'Clôturé', c: '#10b981' };
+    const st = ouvert ? { l: 'En cours', cls: 'dc-b-amber' } : { l: 'Clôturé', cls: 'dc-b-green' };
     const det = [
       a.declareeCpam ? 'DAT transmise à la CPAM' : 'DAT non transmise',
       a.justificatifPath ? 'certificat joint' : 'certificat manquant',
       a.visiteFaite ? 'visite de reprise faite' : (a.visiteDate ? 'visite le ' + formatDate(a.visiteDate) : '')
     ].filter(Boolean).join(' · ');
-    return `<div class="ma2-l" style="--pc:${ty.c}">
-      <span class="ma2-l-ico">${_ma2Svg(ty.ic, 2.2)}</span>
+    return `<div class="ma2-l" style="border-left:3px solid ${ty.c};padding-left:14px">
       <div class="ma2-l-b">
         <div class="ma2-l-t">${_ma2Esc(ty.l)} — ${formatDate(a.debut)}</div>
         <div class="ma2-l-m">${_ma2Esc(det)}</div>
       </div>
-      <span class="ma2-st" style="--pc:${st.c}">${st.l}</span>
+      <span class="dc-badge ${st.cls}"><span class="d"></span>${st.l}</span>
     </div>`;
   }).join('');
 }
@@ -270,11 +279,11 @@ function ma2RenderMotifs(list) {
   const tot = {};
   list.forEach(a => { const k = MA2_TY[a.type] ? a.type : 'autre'; tot[k] = (tot[k] || 0) + _ma2Jours(a); });
   const keys = MA2_ORDER.filter(k => tot[k]);
-  if (!keys.length) { el.innerHTML = `<div class="v2-blk-vide">Aucun jour d'absence enregistré.</div>`; return; }
+  if (!keys.length) { el.innerHTML = `<div class="dc-empty">Aucun jour d'absence enregistré.</div>`; return; }
   const max = Math.max(...keys.map(k => tot[k]));
   el.innerHTML = keys.map(k => `<div class="ma2-mot">
       <div class="ma2-mot-h"><span class="ma2-mot-l">${_ma2Esc(MA2_TY[k].l)}</span><span class="ma2-mot-n">${tot[k]} j</span></div>
-      <div class="v2-prog"><span style="width:${Math.round(tot[k] / max * 100)}%;background:${MA2_TY[k].c}"></span></div>
+      <div class="al-prog-bar"><span style="width:${Math.round(tot[k] / max * 100)}%;background:${MA2_TY[k].c}"></span></div>
     </div>`).join('');
 }
 
@@ -284,14 +293,15 @@ function ma2RenderRetours(list) {
   if (!el) return;
   const ouvertes = list.filter(a => _ma2EnCours(a) || _ma2AVenir(a))
                        .sort((a, b) => (a.fin || '9999').localeCompare(b.fin || '9999'));
-  if (!ouvertes.length) { el.innerHTML = `<div class="v2-blk-vide">Aucune absence en cours : pas de reprise à prévoir.</div>`; return; }
+  if (!ouvertes.length) { el.innerHTML = `<div class="dc-empty">Aucune absence en cours : pas de reprise à prévoir.</div>`; return; }
   el.innerHTML = ouvertes.map(a => {
     const ty = _ma2Ty(a.type);
     const rep = a.fin ? _ma2Plus1(a.fin) : '';
-    return `<div class="ma2-l" style="--pc:${ty.c}">
-      <span class="ma2-dotp"></span>
+    const tc = rep ? '#f59e0b' : '#64748b';
+    const tag = rep ? 'Reprise ' + formatDate(rep) : 'À définir';
+    return `<div class="ma2-l" style="border-left:3px solid ${ty.c};padding-left:14px">
       <div class="ma2-l-b"><div class="ma2-l-t">${_ma2Esc(ty.l)}</div><div class="ma2-l-m">${_ma2AVenir(a) ? 'à partir du' : 'depuis le'} ${formatDate(a.debut)}</div></div>
-      <span class="ma2-l-tag" style="color:${rep ? '#fbbf24' : 'var(--v2-t7)'}">${rep ? 'reprise ' + formatDate(rep) : 'à définir'}</span>
+      <span class="dc-badge" style="background:${tc}1f;color:${tc};border:1px solid ${tc}55"><span class="d" style="background:${tc}"></span>${_ma2Esc(tag)}</span>
     </div>`;
   }).join('');
 }
@@ -307,7 +317,7 @@ function ma2RenderSuiviAt(list) {
   if (!at) {
     if (head) head.textContent = 'Déclaration AT — aucune en cours';
     if (tag) tag.style.display = 'none';
-    el.innerHTML = `<div class="v2-blk-vide">Aucun accident du travail déclaré. En cas d'accident, prévenez votre employeur dans les 24 h et déclarez-le ici.</div>`;
+    el.innerHTML = `<div class="dc-empty">Aucun accident du travail déclaré. En cas d'accident, prévenez votre employeur dans les 24 h et déclarez-le ici.</div>`;
     return;
   }
   const ty = _ma2Ty(at.type);
@@ -329,10 +339,9 @@ function ma2RenderSuiviAt(list) {
   ];
   el.innerHTML = steps.map(s => {
     const c = s.ok ? '#34d399' : (s.tagKo === 'En attente' ? '#f59e0b' : '#64748b');
-    return `<div class="ma2-l" style="--pc:${c}">
-      <span class="ma2-l-ico">${_ma2Svg(s.ok ? MA2_IC.check : MA2_IC.clock, 2.4)}</span>
+    return `<div class="ma2-l" style="border-left:3px solid ${c};padding-left:14px">
       <div class="ma2-l-b"><div class="ma2-l-t" style="font-weight:500;color:var(--v2-t3)">${_ma2Esc(s.l)}</div></div>
-      <span class="ma2-l-tag" style="color:${c}">${_ma2Esc(s.ok ? s.tagOk : s.tagKo)}</span>
+      <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}55"><span class="d" style="background:${c}"></span>${_ma2Esc(s.ok ? s.tagOk : s.tagKo)}</span>
     </div>`;
   }).join('');
 
@@ -356,20 +365,19 @@ function ma2RenderVisites(list) {
   const t = _ma2Today();
   const v = list.filter(a => MA2_VISITE_TYPES.includes(a.type) && !a.visiteFaite)
                 .sort((a, b) => (a.visiteDate || '9999').localeCompare(b.visiteDate || '9999'));
-  if (!v.length) { el.innerHTML = `<div class="v2-blk-vide">Aucune visite de reprise en attente.</div>`; return; }
+  if (!v.length) { el.innerHTML = `<div class="dc-empty">Aucune visite de reprise en attente.</div>`; return; }
   el.innerHTML = v.map(a => {
     const ty = _ma2Ty(a.type);
     let tag, tc;
     if (!a.visiteDate) { tag = 'À planifier'; tc = '#22d3ee'; }
     else if (a.visiteDate < t) { tag = 'Échue ' + formatDate(a.visiteDate); tc = '#ef4444'; }
     else { tag = 'Le ' + formatDate(a.visiteDate); tc = '#f59e0b'; }
-    return `<div class="ma2-l" style="--pc:${ty.c}">
-      <span class="ma2-l-ico">${_ma2Svg(MA2_IC.act, 2.2)}</span>
+    return `<div class="ma2-l" style="border-left:3px solid ${ty.c};padding-left:14px">
       <div class="ma2-l-b">
         <div class="ma2-l-t">Reprise après ${_ma2Esc(ty.court.toLowerCase())}</div>
         <div class="ma2-l-m">arrêt du ${formatDate(a.debut)}${a.fin ? ' au ' + formatDate(a.fin) : ' (en cours)'}</div>
       </div>
-      <span class="ma2-st" style="--pc:${tc}">${_ma2Esc(tag)}</span>
+      <span class="dc-badge" style="background:${tc}1f;color:${tc};border:1px solid ${tc}55"><span class="d" style="background:${tc}"></span>${_ma2Esc(tag)}</span>
     </div>`;
   }).join('');
 }
@@ -378,23 +386,22 @@ function ma2RenderVisites(list) {
 function ma2RenderBradford(list) {
   const el = document.getElementById('maBradford');
   if (!el) return;
-  const il12 = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+  const il12 = isoJour(new Date(Date.now() - 365 * 86400000));
   const rec = list.filter(a => a.debut && (a.fin || a.debut) >= il12 && !_ma2AVenir(a));
-  if (!rec.length) { el.innerHTML = `<div class="v2-blk-vide">Aucune absence sur les 12 derniers mois.</div>`; return; }
+  if (!rec.length) { el.innerHTML = `<div class="dc-empty">Aucune absence sur les 12 derniers mois.</div>`; return; }
   const S = rec.length;
   const D = rec.reduce((s, a) => s + _ma2Jours(a), 0);
   const score = S * S * D;
   const c = score >= 500 ? '#ef4444' : score >= 200 ? '#f59e0b' : '#34d399';
   const niveau = score >= 500 ? 'Élevé' : score >= 200 ? 'À surveiller' : 'Faible';
-  el.innerHTML = `<div class="ma2-l" style="--pc:${c}">
-      <span class="ma2-l-ico">${_ma2Svg(MA2_IC.act, 2.2)}</span>
+  el.innerHTML = `<div class="ma2-l" style="border-left:3px solid ${c};padding-left:14px">
       <div class="ma2-l-b">
         <div class="ma2-l-t">${niveau}</div>
         <div class="ma2-l-m">${S} absence${S > 1 ? 's' : ''} · ${D} jour${D > 1 ? 's' : ''} sur 12 mois</div>
       </div>
-      <span class="ma2-score" style="color:${c}">${score}</span>
+      <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}55">${score}</span>
     </div>
-    <div class="ma2-l" style="--pc:#64748b;border-bottom:none">
+    <div class="ma2-l" style="border-bottom:none;padding-left:14px">
       <div class="ma2-l-b"><div class="ma2-l-m" style="margin-top:0">Score = (nombre d'absences)² × nombre de jours. Indicateur informatif, il ne constitue pas une évaluation.</div></div>
     </div>`;
 }

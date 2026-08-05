@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Chambres — FTR</title>
+  <title>Chambres — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -45,16 +45,23 @@
         <div class="ch2-grid" id="chGrid"></div>
 
         <div class="ch2-rail">
-          <div class="ch2-rblk">
-            <div class="ch2-rblk-t">Occupation par unité</div>
-            <div class="ch2-occs" id="chOccupation"></div>
-          </div>
-          <div class="ch2-rblk">
-            <div class="ch2-rblk-t">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
-              États des lieux
+          <div class="dc-card">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:rgba(244,114,182,.14);color:#f472b6"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Répartition</div><div class="dc-title">Occupation par unité</div></div>
+              </div>
             </div>
-            <div id="edlHistory"></div>
+            <div class="dc-body"><div class="ch2-occs" id="chOccupation"></div></div>
+          </div>
+          <div class="dc-card">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:rgba(163,230,53,.14);color:#a3e635"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Historique</div><div class="dc-title">États des lieux</div></div>
+              </div>
+            </div>
+            <div class="dc-body" id="edlHistory"></div>
           </div>
         </div>
       </div>

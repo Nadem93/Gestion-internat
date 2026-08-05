@@ -71,7 +71,7 @@ async function ouvrirNuit() {
 function nuitShift(days) {
   const d = new Date(nuitDate + 'T12:00');
   d.setDate(d.getDate() + days);
-  nuitDate = d.toISOString().slice(0, 10);
+  nuitDate = isoJour(d);
   renderNuit();
 }
 
@@ -171,14 +171,19 @@ async function initNuit() {
   if (typeof sbGetPresencesRange === 'function') {
     try {
       const d = new Date(); d.setDate(d.getDate() - 3);
-      const from = d.toISOString().slice(0, 10);
+      const from = isoJour(d);
       DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
     } catch (e) { console.error(e); }
   }
   // Avant 12 h, on est encore « sur » la nuit de la veille
   const now = new Date();
   if (now.getHours() < 12) now.setDate(now.getDate() - 1);
-  nuitDate = now.toISOString().slice(0, 10);
+  // Midi AVANT la conversion : toISOString() rend la date en heure de Greenwich,
+  // donc entre 0 h et 2 h du matin (heure d'été) elle reculait d'un jour DE PLUS
+  // — le veilleur ouvrait le cahier de l'avant-veille, déjà rempli, et ses
+  // rondes y étaient enregistrées. Même précaution que nuitShift() plus haut.
+  now.setHours(12, 0, 0, 0);
+  nuitDate = isoJour(now);
   document.getElementById('ntDate')?.addEventListener('change', e => { if (e.target.value) { nuitDate = e.target.value; renderNuit(); } });
   renderNuit();
 }

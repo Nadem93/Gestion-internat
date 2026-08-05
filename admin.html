@@ -84,14 +84,21 @@
               </div>
             </div>
             <div class="v2-blk">
-              <div class="v2-blk-h" style="margin-bottom:12px">
-                <span class="adm-li-dot" style="--pc:#34d399"></span>
-                <span class="v2-blk-t">Connexions — 7 jours</span>
+              <div class="dc-head nb" style="padding:0;margin-bottom:14px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#34d39922;color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">ACTIVITÉ · 7 J</div><div class="dc-title">Connexions</div></div>
+                </div>
               </div>
               <div class="adm-spark" id="admConnexions"></div>
             </div>
             <div class="v2-blk">
-              <div class="v2-blk-h" style="margin-bottom:12px"><span class="v2-blk-t">Répartition du personnel</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:14px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">PERSONNEL</div><div class="dc-title">Répartition du personnel</div></div>
+                </div>
+              </div>
               <div id="admRepartition" style="display:flex;flex-direction:column;gap:8px"></div>
             </div>
           </div>
@@ -102,11 +109,22 @@
           <!-- Activité + modules -->
           <div class="v2-g v2-g-15">
             <div class="v2-blk">
-              <div class="v2-blk-h"><span class="v2-blk-t">Activité de la plateforme — 6 mois</span><span class="v2-blk-lien" id="admActiviteMeta"></span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">PLATEFORME · 6 MOIS</div><div class="dc-title">Activité</div></div>
+                </div>
+                <span class="dc-pill dim" id="admActiviteMeta"></span>
+              </div>
               <div class="adm-chart" id="admActivite"></div>
             </div>
             <div class="v2-blk">
-              <div class="v2-blk-h"><span class="v2-blk-t">Modules les plus utilisés</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">USAGE</div><div class="dc-title">Modules les plus utilisés</div></div>
+                </div>
+              </div>
               <div id="admModules" style="display:flex;flex-direction:column;gap:12px"></div>
             </div>
           </div>
@@ -114,17 +132,21 @@
           <!-- Audit + système -->
           <div class="v2-g v2-g2">
             <div class="v2-blk">
-              <div class="v2-blk-h">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span class="v2-blk-t">Journal d'activité (audit)</span>
-                <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="renderAuditLog();admRenderAuditRecent()">↻</button>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">TRAÇABILITÉ</div><div class="dc-title">Journal d'activité (audit)</div></div>
+                </div>
+                <button type="button" class="v2-btn v2-btn-sm" onclick="renderAuditLog();admRenderAuditRecent()">↻</button>
               </div>
               <div id="admAudit"></div>
             </div>
             <div class="v2-blk adm-tint-ok">
-              <div class="v2-blk-h">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" style="width:15px;height:15px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span class="v2-blk-t">État du système</span>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#34d39922;color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">DIAGNOSTIC</div><div class="dc-title">État du système</div></div>
+                </div>
               </div>
               <div id="admSysteme"></div>
             </div>
@@ -194,9 +216,12 @@
           <div id="statsDetail" class="adm-stack">
             <div class="v2-g v2-g-15">
               <div class="v2-blk">
-                <div class="v2-blk-h">
-                  <span class="v2-blk-t">Taux de présence</span>
-                  <span class="v2-chips" style="margin-left:auto">
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                  <div class="dc-head-l">
+                    <span class="dc-chip" style="background:#a78bfa22;color:#a78bfa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M9 11H3v10h6V11z"/><path d="M21 3h-6v18h6V3z"/></svg></span>
+                    <div style="min-width:0"><div class="dc-eyebrow">PRÉSENCE</div><div class="dc-title">Taux de présence</div></div>
+                  </div>
+                  <span class="v2-chips">
                     <button type="button" class="v2-chip-f btn-freq" data-freq="jour">Jour</button>
                     <button type="button" class="v2-chip-f btn-freq" data-freq="semaine">Semaine</button>
                     <button type="button" class="v2-chip-f btn-freq on active" data-freq="mois">Mois</button>
@@ -206,7 +231,12 @@
                 <div class="v2-chart" id="barPresenceMonth" style="gap:4px"></div>
               </div>
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">PPE / Avenants</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                  <div class="dc-head-l">
+                    <span class="dc-chip" style="background:#34d39922;color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                    <div style="min-width:0"><div class="dc-eyebrow">PROJETS</div><div class="dc-title">PPE / Avenants</div></div>
+                  </div>
+                </div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Actifs</span><b style="margin-left:auto;color:var(--v2-ok-light)" id="ppeActif">—</b></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Brouillons</span><b style="margin-left:auto;color:var(--v2-warn-text)" id="ppeBrouillon">—</b></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Terminés</span><b style="margin-left:auto;color:var(--v2-t5)" id="ppeTermine">—</b></div>
@@ -228,12 +258,12 @@
 
             <div class="v2-g v2-g3">
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Satisfaction résidents</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#ec489922;color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">SATISFACTION</div><div class="dc-title">Satisfaction résidents</div></div></div></div>
                 <div class="v2-kpi-val" id="sSatScore">—</div>
                 <div style="font-size:12px;font-weight:600;margin-top:6px" id="sSatNiv"></div>
               </div>
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Autres indicateurs</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">SYNTHÈSE</div><div class="dc-title">Autres indicateurs</div></div></div></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Résidents actifs</span><b style="margin-left:auto" id="qResidents">—</b></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Utilisateurs</span><b style="margin-left:auto" id="qUsers">—</b></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Véhicules réservés</span><b style="margin-left:auto" id="qVehi">—</b></div>
@@ -241,7 +271,7 @@
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Documents stockés</span><b style="margin-left:auto" id="qDocs">—</b></div>
               </div>
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">SERAFIN-PH</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#8b5cf622;color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">SERAFIN-PH</div><div class="dc-title">SERAFIN-PH</div></div></div></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Résidents évalués</span><b style="margin-left:auto;color:var(--v2-indigo-pale)" id="spEvalues">—</b></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">GMPS moyen</span><b style="margin-left:auto" id="spGmps">—</b></div>
                 <div class="v2-row"><span style="font-size:12px;color:var(--v2-t5)">Score total cumulé</span><b style="margin-left:auto" id="spScore">—</b></div>
@@ -252,42 +282,47 @@
 
             <div class="v2-g v2-g2">
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Résidents par statut</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">RÉSIDENTS</div><div class="dc-title">Résidents par statut</div></div></div></div>
                 <div id="residentStatutList" style="display:flex;flex-direction:column;gap:6px"></div>
               </div>
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Connexions récentes</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">ACCÈS</div><div class="dc-title">Connexions récentes</div></div></div></div>
                 <div id="recentLoginsList"></div>
               </div>
             </div>
 
             <div class="v2-g v2-g2">
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Catégories journal</span><span class="v2-card-meta" id="journalCatTotal"></span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">JOURNAL</div><div class="dc-title">Catégories journal</div></div></div><span class="dc-pill dim" id="journalCatTotal"></span></div>
                 <div id="journalCatBars"></div>
               </div>
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Types d'incidents</span><span class="v2-card-meta" id="incidentTypeTotal"></span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#f59e0b22;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">INCIDENTS</div><div class="dc-title">Types d'incidents</div></div></div><span class="dc-pill dim" id="incidentTypeTotal"></span></div>
                 <div id="incidentTypeBars"></div>
               </div>
             </div>
 
             <div class="v2-g v2-g2">
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">PPE — statuts</span><span class="v2-card-meta" id="ppeTotal"></span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#34d39922;color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">PROJETS</div><div class="dc-title">PPE — statuts</div></div></div><span class="dc-pill dim" id="ppeTotal"></span></div>
                 <div id="ppeBars"></div>
               </div>
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Documents par catégorie</span><span class="v2-card-meta" id="docTotal"></span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">DOCUMENTS</div><div class="dc-title">Documents par catégorie</div></div></div><span class="dc-pill dim" id="docTotal"></span></div>
                 <div id="docBars"></div>
               </div>
             </div>
 
             <div class="v2-blk">
-              <div class="v2-blk-h">
-                <span class="v2-blk-t">Évolution de la satisfaction résidents</span>
-                <span class="v2-card-meta" id="satEvolTotal"></span>
-                <a class="v2-blk-lien" href="satisfaction.html">Voir le détail →</a>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#ec489922;color:#ec4899"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">SATISFACTION · ÉVOLUTION</div><div class="dc-title">Satisfaction résidents</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span class="dc-pill dim" id="satEvolTotal"></span>
+                  <a class="v2-blk-lien" href="satisfaction.html" style="margin-left:0">Voir le détail →</a>
+                </div>
               </div>
               <div id="satEvolChart" style="min-height:80px"></div>
               <div id="satCatBars" class="v2-g v2-g2" style="margin-top:16px"></div>
@@ -295,7 +330,7 @@
 
             <!-- Rapport d'activité -->
             <div class="v2-blk adm-tint-indigo">
-              <div class="v2-blk-h"><span class="v2-blk-t">Rapport d'activité</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">EXPORT</div><div class="dc-title">Rapport d'activité</div></div></div></div>
               <div class="adm-actions" style="align-items:flex-end">
                 <div style="min-width:150px">
                   <label class="v2-fld-l" for="rapportType">Période</label>
@@ -324,7 +359,7 @@
         <div class="adm-stack">
           <div class="v2-g v2-g2">
             <div class="v2-blk">
-              <div class="v2-blk-h"><span class="v2-blk-t">Coordonnées de l'établissement</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">IDENTITÉ</div><div class="dc-title">Coordonnées de l'établissement</div></div></div></div>
               <div class="adm-fields">
                 <div><label class="v2-fld-l" for="setEtab">Raison sociale</label><input class="v2-fld" type="text" id="setEtab" placeholder="Ex : Foyer d'Hébergement Les Trois Rivières"/></div>
                 <div class="v2-grid2">
@@ -343,22 +378,25 @@
 
             <div class="adm-stack">
               <div class="v2-blk">
-                <div class="v2-blk-h">
-                  <span class="v2-blk-t">Agréments &amp; habilitations</span>
-                  <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="admOpenAgrement()">+ Ajouter</button>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                  <div class="dc-head-l">
+                    <span class="dc-chip" style="background:#34d39922;color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+                    <div style="min-width:0"><div class="dc-eyebrow">HABILITATIONS</div><div class="dc-title">Agréments &amp; habilitations</div></div>
+                  </div>
+                  <button type="button" class="v2-btn v2-btn-sm" onclick="admOpenAgrement()">+ Ajouter</button>
                 </div>
                 <div id="admAgrements"></div>
               </div>
 
               <div class="v2-blk adm-tint-indigo">
-                <div class="v2-blk-h" style="margin-bottom:6px"><span class="v2-blk-t">Capacité d'accueil</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">CAPACITÉ</div><div class="dc-title">Capacité d'accueil</div></div></div></div>
                 <div id="admCapacite" style="display:flex;align-items:baseline;gap:8px">
                   <span class="v2-gauge-val" style="font-size:30px">—</span>
                 </div>
               </div>
 
               <div class="v2-blk">
-                <div class="v2-blk-h"><span class="v2-blk-t">Aperçu de la fiche</span></div>
+                <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">APERÇU</div><div class="dc-title">Aperçu de la fiche</div></div></div></div>
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
                   <div id="previewLogo" class="v2-av v2-av-sq" style="width:48px;height:48px;background:var(--v2-s-ctrl);color:var(--v2-t2);font-size:13px">FTR</div>
                   <div style="min-width:0">
@@ -376,7 +414,7 @@
 
           <div class="v2-g v2-g2">
             <div class="v2-blk">
-              <div class="v2-blk-h"><span class="v2-blk-t">Identité visuelle</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#a78bfa22;color:#a78bfa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="13.5" cy="6.5" r=".8"/><circle cx="17.5" cy="10.5" r=".8"/><circle cx="8.5" cy="7.5" r=".8"/><circle cx="6.5" cy="12.5" r=".8"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.5-1.1-.3-.3-.4-.7-.4-1.1a1.7 1.7 0 0 1 1.7-1.7H16c3 0 5.5-2.5 5.5-5.5C21.5 6 17.5 2 12 2z"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">BRANDING</div><div class="dc-title">Identité visuelle</div></div></div></div>
               <div class="adm-fields">
                 <div>
                   <label class="v2-fld-l" for="bPrimary">Barre latérale &amp; titres</label>
@@ -414,9 +452,12 @@
             </div>
 
             <div class="v2-blk">
-              <div class="v2-blk-h">
-                <span class="v2-blk-t">Mes établissements</span>
-                <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="admToggleNewEtab()">+ Nouvel établissement</button>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">STRUCTURES</div><div class="dc-title">Mes établissements</div></div>
+                </div>
+                <button type="button" class="v2-btn v2-btn-sm" onclick="admToggleNewEtab()">+ Nouvel établissement</button>
               </div>
               <div id="newEtabForm" style="display:none;margin-bottom:14px">
                 <div class="v2-sub-card">
@@ -442,14 +483,17 @@
         <div class="v2-g v2-g2">
           <div class="adm-stack">
             <div class="v2-blk">
-              <div class="v2-blk-h">
-                <span class="v2-blk-t">Catégories du journal</span>
-                <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="resetCatForm();openModal('modalCat')">+ Ajouter</button>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+                <div class="dc-head-l">
+                  <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+                  <div style="min-width:0"><div class="dc-eyebrow">JOURNAL</div><div class="dc-title">Catégories du journal</div></div>
+                </div>
+                <button type="button" class="v2-btn v2-btn-sm" onclick="resetCatForm();openModal('modalCat')">+ Ajouter</button>
               </div>
               <div id="catList"></div>
             </div>
             <div class="v2-blk adm-tint-indigo">
-              <div class="v2-blk-h"><span class="v2-blk-t">À propos des catégories</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">AIDE</div><div class="dc-title">À propos des catégories</div></div></div></div>
               <p style="font-size:12.5px;color:var(--v2-t4);line-height:1.7;margin:0">
                 Les catégories classifient les entrées du journal de bord.
                 Supprimer une catégorie n'affecte pas les entrées existantes.
@@ -457,9 +501,12 @@
             </div>
           </div>
           <div class="v2-blk">
-            <div class="v2-blk-h">
-              <span class="v2-blk-t">Objectifs personnalisés</span>
-              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="resetObjForm();openModal('modalObj')">+ Ajouter</button>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">OBJECTIFS</div><div class="dc-title">Objectifs personnalisés</div></div>
+              </div>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="resetObjForm();openModal('modalObj')">+ Ajouter</button>
             </div>
             <div id="objList"></div>
           </div>
@@ -486,13 +533,11 @@
       <section id="tab-permissions" class="adm-panel">
         <div class="adm-stack">
           <div class="v2-chips">
-            <span class="v2-sub" style="margin:0">Cochez les accès de chaque rôle. Enregistrement automatique.</span>
+            <span class="v2-sub" style="margin:0">Pour chaque accès, cliquez sur le badge d'un rôle pour le lui accorder ou le retirer. Enregistrement automatique.</span>
             <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="permApplyRecommendedAll()">↺ Droits recommandés</button>
             <button type="button" class="v2-btn v2-btn-primary v2-btn-sm" onclick="permAddRole()">+ Nouveau rôle</button>
           </div>
-          <div class="adm-perm-wrap">
-            <div class="adm-perm-scroll"><table class="adm-perm" id="admPermMatrix"></table></div>
-          </div>
+          <div class="adm-p3-grid" id="admPermMatrix"></div>
           <!-- Vue héritée (maître-détail) : conservée pour les scripts qui l'alimentent -->
           <div class="adm-perm-legacy"><div id="permRolesList"></div><div id="permDetail"></div></div>
         </div>
@@ -502,7 +547,7 @@
       <section id="tab-compte" class="adm-panel">
         <div class="v2-g v2-g2">
           <div class="v2-blk">
-            <div class="v2-blk-h"><span class="v2-blk-t">Informations</span></div>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">PROFIL</div><div class="dc-title">Informations</div></div></div></div>
             <div class="adm-fields">
               <div style="display:flex;align-items:center;gap:14px">
                 <div class="v2-av" id="accountAvatar" style="width:48px;height:48px;font-size:16px;background:var(--v2-indigo-light)">A</div>
@@ -520,7 +565,7 @@
             </div>
           </div>
           <div class="v2-blk">
-            <div class="v2-blk-h"><span class="v2-blk-t">Identifiants</span></div>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">SÉCURITÉ</div><div class="dc-title">Identifiants</div></div></div></div>
             <div class="adm-fields">
               <div><label class="v2-fld-l" for="uUsername">Identifiant</label><input class="v2-fld" type="text" id="uUsername" placeholder="Identifiant" autocomplete="off"/></div>
               <div><label class="v2-fld-l" for="uPassword">Nouveau mot de passe</label><input class="v2-fld" type="password" id="uPassword" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"/></div>
@@ -544,28 +589,102 @@
         <div class="adm-stack">
           <div class="v2-g v2-g2">
             <div class="v2-blk">
-              <div class="v2-blk-h"><span class="v2-blk-t">Sauvegardes &amp; exports</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#34d39922;color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">SAUVEGARDE</div><div class="dc-title">Sauvegardes &amp; exports</div></div></div></div>
               <div id="admBackups"></div>
             </div>
             <div class="v2-blk adm-tint-grey">
-              <div class="v2-blk-h"><span class="v2-blk-t">RGPD &amp; rétention</span></div>
+              <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#94a3b822;color:#94a3b8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">CONFORMITÉ</div><div class="dc-title">RGPD &amp; rétention</div></div></div></div>
               <div id="admRgpd"></div>
             </div>
           </div>
 
+          <!-- ── Réversibilité : restitution intégrale (art. 28.3.g RGPD) ── -->
+          <div class="v2-blk admin-only">
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#0891b222;color:#0891b2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">RÉVERSIBILITÉ</div><div class="dc-title">Restitution intégrale des données</div></div>
+              </div>
+            </div>
+            <p class="rev-intro">Restitue <b>l'intégralité</b> des données de l'établissement dans un format lisible par machine, comme l'exige l'article&nbsp;28.3.g du RGPD en fin de contrat. La lecture est pilotée par un inventaire de <b id="revNb">…</b> tables&nbsp;: contrairement à l'export de sauvegarde ci-dessus, aucune table ne peut être oubliée.</p>
+            <p class="rev-note">Les pièces jointes du coffre « justificatifs » ne sont pas incluses&nbsp;: elles font l'objet d'une remise séparée. L'export ne contient que les données de <b>votre</b> établissement — le cloisonnement est appliqué par la base elle-même.</p>
+            <div class="rev-actions">
+              <button type="button" class="v2-btn v2-btn-primary" onclick="revExporter('json')">Exporter en JSON</button>
+              <button type="button" class="v2-btn" onclick="revExporter('csv')">Exporter en CSV</button>
+              <button type="button" class="v2-btn" onclick="revAudit()" title="Vérifie que l'inventaire couvre toutes les tables utilisées par l'application">Contrôler l'inventaire</button>
+            </div>
+            <div id="revEtat" class="rev-etat"></div>
+          </div>
+
+          <!-- ── Purge & rétention : application des durées de conservation ── -->
+          <div class="v2-blk admin-only">
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">RÉTENTION</div><div class="dc-title">Dossiers arrivés à échéance</div></div>
+              </div>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="prgAnalyser()">Analyser</button>
+            </div>
+            <p class="rev-intro">Le RGPD interdit de conserver des données personnelles au-delà de leur utilité (art.&nbsp;5.1.e). Cet écran liste ce qui a dépassé sa durée, avec le volume rattaché. <b>Rien n'est supprimé automatiquement</b>&nbsp;: chaque dossier demande une validation, et la suppression est tracée dans le journal d'audit.</p>
+            <div class="prg-durees">
+              <label>Dossier résident<span>conservé après la sortie</span>
+                <span class="prg-champ"><input type="number" id="prgAnsResident" min="0" max="50" step="1" value="3"/> ans</span>
+              </label>
+              <label>Dossier salarié<span>conservé après le départ</span>
+                <span class="prg-champ"><input type="number" id="prgAnsEmploye" min="0" max="50" step="1" value="5"/> ans</span>
+              </label>
+              <label>Journal d'audit<span>traces de consultation et d'écriture</span>
+                <span class="prg-champ"><input type="number" id="prgMoisAudit" min="1" max="24" step="1" value="6"/> mois</span>
+              </label>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="prgSauverDurees()">Enregistrer les durées</button>
+            </div>
+            <p class="rev-note">Le <b>journal d'audit</b> se compte en mois, pas en années&nbsp;: il enregistre qui a consulté quel dossier, une donnée qui n'a plus d'utilité passé quelques mois et qu'il devient illicite de conserver. La purge est planifiée côté base de données&nbsp;; le bouton ci-dessous permet de la contrôler et de la déclencher à la main.</p>
+            <div id="prgAuditEtat"></div>
+            <p class="rev-note">La date de départ d'un salarié n'est pas stockée dans sa fiche&nbsp;: c'est la <b>fin du dernier contrat</b> qui sert de référence. Un salarié inactif sans contrat daté est signalé à part, il ne peut pas être évalué automatiquement.</p>
+            <div id="prgResultat" class="prg-resultat"></div>
+          </div>
+
           <div class="v2-blk">
-            <div class="v2-blk-h">
-              <span class="v2-blk-t">Doublons potentiels</span>
-              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="scanDuplicates()">Analyser</button>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">QUALITÉ</div><div class="dc-title">Doublons potentiels</div></div>
+              </div>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="scanDuplicates()">Analyser</button>
             </div>
             <div id="dupResults" class="v2-blk-vide">Recherche les transmissions et incidents en double (même résident, horaire proche, texte similaire). Cliquez sur « Analyser ».</div>
           </div>
 
+          <!-- ── Reprise de données : import depuis un autre logiciel ── -->
+          <div class="v2-blk admin-only">
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#6366f122;color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">REPRISE DE DONNÉES</div><div class="dc-title">Importer depuis un fichier</div></div>
+              </div>
+              <button type="button" class="v2-btn v2-btn-primary v2-btn-sm" onclick="impOuvrir('residents')">Importer des données</button>
+            </div>
+            <div style="font-size:12.5px;color:var(--v2-t5);line-height:1.6;margin-bottom:14px">
+              Reprenez vos résidents, employés ou chambres depuis un fichier CSV (export Excel de votre ancien logiciel).
+              Les colonnes sont reconnues automatiquement, les doublons écartés, et rien n'est enregistré avant votre validation.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="v2-btn v2-btn-sm" onclick="impModeleCSV('residents')">↓ Modèle résidents</button>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="impModeleCSV('employes')">↓ Modèle employés</button>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="impModeleCSV('chambres')">↓ Modèle chambres</button>
+            </div>
+          </div>
+
           <div class="v2-blk pad0" style="padding:20px 22px">
-            <div class="v2-blk-h">
-              <span class="v2-blk-t">Journal d'audit</span>
-              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="renderAuditLog()">↻</button>
-              <button type="button" class="v2-btn v2-btn-sm" onclick="exportAuditLog()">Exporter CSV</button>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">TRAÇABILITÉ</div><div class="dc-title">Journal d'audit</div></div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button type="button" class="v2-btn v2-btn-sm" onclick="renderAuditLog()">↻</button>
+                <button type="button" class="v2-btn v2-btn-sm" onclick="exportAuditLog()">Exporter CSV</button>
+              </div>
             </div>
             <div class="adm-tw adm-tw-h">
               <table class="v2-table">
@@ -576,9 +695,12 @@
           </div>
 
           <div class="v2-blk">
-            <div class="v2-blk-h">
-              <span class="v2-blk-t">Historique des connexions</span>
-              <button type="button" class="v2-btn v2-btn-sm" style="margin-left:auto" onclick="renderLoginHistory()">↻</button>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">ACCÈS</div><div class="dc-title">Historique des connexions</div></div>
+              </div>
+              <button type="button" class="v2-btn v2-btn-sm" onclick="renderLoginHistory()">↻</button>
             </div>
             <div class="adm-tw adm-tw-h">
               <table class="v2-table">
@@ -589,7 +711,7 @@
           </div>
 
           <div class="v2-blk adm-tint-danger">
-            <div class="v2-blk-h"><span class="v2-blk-t">Zone dangereuse</span></div>
+            <div class="dc-head nb" style="padding:0;margin-bottom:16px"><div class="dc-head-l"><span class="dc-chip" style="background:#ef444422;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><div style="min-width:0"><div class="dc-eyebrow">DANGER</div><div class="dc-title">Zone dangereuse</div></div></div></div>
             <p class="adm-note-sql" style="margin:0 0 12px">Ces actions vident les données locales de sauvegarde. Elles sont irréversibles.</p>
             <div class="adm-actions">
               <button type="button" class="v2-btn v2-btn-sm" onclick="resetData('journal')">Vider le journal de bord</button>
@@ -790,6 +912,79 @@
   </div>
 </div>
 
+<!-- ══ Import de données (reprise depuis un autre logiciel) ══ -->
+<div class="v2-ov" id="modalImport">
+  <div class="v2-md" style="--mc:#6366f1;max-width:720px">
+    <div class="v2-md-h">
+      <span class="v2-md-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </span>
+      <div style="min-width:0">
+        <div class="v2-md-t" id="impTitre">Importer des données</div>
+        <div class="v2-md-s" id="impSousTitre">Étape 1 sur 4 — choix du fichier</div>
+      </div>
+      <button type="button" class="v2-md-x" onclick="closeModal('modalImport')" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="v2-md-b" id="impCorps"></div>
+    <div class="v2-md-f" id="impPied"></div>
+  </div>
+</div>
+
+<style>
+/* ── Import de données ── */
+.imp-types{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.imp-type{display:flex;flex-direction:column;align-items:center;gap:9px;padding:15px 10px;border-radius:13px;cursor:pointer;
+  background:var(--v2-s-card);border:1.5px solid var(--v2-b);color:var(--v2-t3);font:inherit;font-size:12.5px;font-weight:600;transition:.14s}
+.imp-type:hover{border-color:var(--v2-t6)}
+.imp-type.on{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 10%,transparent);color:var(--v2-t1)}
+.imp-type-i{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--tc)}
+.imp-type-i svg{width:19px;height:19px}
+/* style.css met les <label> en majuscules : on neutralise ici, sinon la zone
+   de dépôt s'affiche entièrement en capitales. */
+.imp-drop{display:flex;flex-direction:column;align-items:center;gap:7px;padding:26px 18px;border-radius:13px;cursor:pointer;text-align:center;
+  border:1.6px dashed var(--v2-b-active);background:var(--v2-s-sub);transition:.14s;
+  text-transform:none;letter-spacing:normal}
+.imp-drop b,.imp-drop span{text-transform:none;letter-spacing:normal}
+.imp-drop:hover{border-color:#6366f1;background:color-mix(in srgb,#6366f1 6%,transparent)}
+.imp-drop svg{width:26px;height:26px;color:#6366f1}
+.imp-drop b{font-size:13.5px;color:var(--v2-t2)}
+.imp-drop span{font-size:11.5px;color:var(--v2-t6);max-width:400px;line-height:1.5}
+.imp-note{font-size:12px;color:var(--v2-t5);line-height:1.6;background:var(--v2-s-sub);padding:11px 13px;border-radius:10px}
+.imp-maps{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.imp-map{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 74px;gap:10px;align-items:center}
+.imp-map-l{font-size:12.5px;color:var(--v2-t3);font-weight:600}
+.imp-map-s{font-size:12.5px;padding:7px 10px}
+.imp-map-b{font-size:10.5px;font-weight:700;text-align:center;padding:3px 7px;border-radius:999px;
+  background:var(--v2-s-sub);color:var(--v2-t7)}
+.imp-map-b.ok{background:color-mix(in srgb,#10b981 15%,transparent);color:#10b981}
+.imp-bilan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.imp-b{display:flex;flex-direction:column;align-items:center;gap:3px;padding:14px 8px;border-radius:12px;background:var(--v2-s-sub)}
+.imp-b b{font-family:var(--v2-mono,monospace);font-size:24px;font-weight:800;line-height:1}
+.imp-b span{font-size:11px;color:var(--v2-t6)}
+.imp-b.ok b{color:#10b981}.imp-b.dbl b{color:#f59e0b}.imp-b.ko b{color:#ef4444}
+.imp-tblw{max-height:210px;overflow:auto;border:1px solid var(--v2-b);border-radius:10px}
+.imp-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.imp-tbl th{position:sticky;top:0;text-align:left;padding:8px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--v2-t7);background-color:var(--v2-bg);background-image:linear-gradient(var(--v2-s-alt),var(--v2-s-alt));border-bottom:1px solid var(--v2-b)}
+.imp-tbl td{padding:7px 10px;color:var(--v2-t3);border-bottom:1px solid var(--v2-b-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.imp-det{margin-top:14px;font-size:12.5px;background:var(--v2-s-sub);border-radius:10px;padding:11px 13px}
+.imp-det.err{background:color-mix(in srgb,#ef4444 8%,transparent)}
+.imp-det.warn{background:color-mix(in srgb,#f59e0b 9%,transparent)}
+.imp-det summary{cursor:pointer;font-weight:600;color:var(--v2-t3)}
+.imp-det ul{margin:9px 0 0;padding-left:18px;color:var(--v2-t5);line-height:1.7}
+.imp-prog{height:9px;border-radius:999px;background:var(--v2-b-soft);overflow:hidden;margin-top:9px}
+.imp-prog i{display:block;height:100%;border-radius:999px;background:#6366f1;transition:width .2s}
+.imp-prog-l{font-family:var(--v2-mono,monospace);font-size:13px;font-weight:700;color:var(--v2-t2);text-align:center}
+@media(max-width:620px){
+  .imp-types{grid-template-columns:1fr}
+  .imp-map{grid-template-columns:1fr;gap:4px}
+  .imp-map-b{justify-self:start}
+}
+</style>
+
 <div id="toast-container" class="toast-container"></div>
 
 <script src="js/app.js"></script>
@@ -828,6 +1023,7 @@
 <script src="js/repas-supabase.js"></script>
 <script src="js/cvs-supabase.js"></script>
 <script src="js/medicaments-supabase.js"></script>
+<script src="js/observations-supabase.js"></script>
 <script src="js/planning-equipe-supabase.js"></script>
 <script src="js/viatrajectoire-supabase.js"></script>
 <script src="js/budget-supabase.js"></script>
@@ -859,7 +1055,7 @@
 /* ═══════════ NAVIGATION ═══════════ */
 const PANEL_NAMES = {
   stats:'Statistiques', etablissement:'Établissement & personnalisation',
-  fonctions:'Catégories & Objectifs',
+  fonctions:'Catégories & objectifs',
   employes:'Utilisateurs', permissions:'Permissions', segur:'Ségur / Conformité', compte:'Mon compte', donnees:'Données'
 };
 const ALL_TABS = ['stats','etablissement','fonctions','employes','permissions','segur','compte','donnees'];
@@ -1092,7 +1288,13 @@ async function deleteEmploye() {
   } catch (e) { toast('Erreur : ' + (e?.message || e), 'error'); console.error('[deleteEmploye]', e); }
 }
 
-async function deleteEmployeCard(id, nom) {
+// Le nom n'est PAS passé par l'attribut onclick : escHtml() rend &#39; pour
+// l'apostrophe, que le parseur HTML redécode avant le parseur JS — un salarié
+// nommé « N'Diaye » rendait le bouton inerte (cf. js/app.js:1085). On le relit
+// dans le cache déjà chargé par le rendu.
+async function deleteEmployeCard(id) {
+  const _e = (_empCache || []).find(x => String(x.id) === String(id));
+  const nom = _e ? [_e.prenom, _e.nom].filter(Boolean).join(' ').trim() : 'ce salarié';
   if (!confirm(`Supprimer ${nom} ?`)) return;
   try {
     await sbDeleteEmploye(id);
@@ -1275,7 +1477,7 @@ function renderEmployes() {
   el.innerHTML = `<div class="emp-cards-grid">${
     list.map(e => {
       const initiales = (((e.prenom||'')[0]||'') + ((e.nom||'')[0]||'')).toUpperCase();
-      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '';
+      const dateEmb = e.dateEmbauche ? new Date(e.dateEmbauche).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
       const hex = getPosteColor(e.poste);
       const { vars: cardVars, r, g, b } = getPosteCardVars(hex);
       const statusClass = e.statut==='inactif' ? 'inactive' : e.statut==='admin' ? 'admin' : e.statut==='conge' ? 'conge' : '';
@@ -1306,7 +1508,7 @@ function renderEmployes() {
             ${e.email ? `<a href="mailto:${escHtml(e.email)}" title="Envoyer un email" onclick="event.stopPropagation()" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg></a>` : `<span style="color:#d1d5db;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6 12 13 2 6"/></svg></span>`}
             <a href="employe.html?id=${e.id}" title="Écrire un message" onclick="event.stopPropagation()" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
             <a href="employe.html?id=${e.id}" title="Voir la fiche" onclick="event.stopPropagation()" class="c-action-icon" style="color:var(--muted);display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
-            <button onclick="event.stopPropagation();deleteEmployeCard('${e.id}','${escHtml((e.prenom+' '+e.nom).trim())}')" title="Supprimer" class="c-action-icon" style="color:var(--muted);background:none;border:none;cursor:pointer;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+            <button onclick="event.stopPropagation();deleteEmployeCard('${e.id}')" title="Supprimer" class="c-action-icon" style="color:var(--muted);background:none;border:none;cursor:pointer;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
           </div>
           <button class="c-btn" onclick="event.stopPropagation();editEmploye('${e.id}')">${iconPencil} Modifier</button>
         </div>
@@ -1855,7 +2057,7 @@ function renderPresenceChart(residents, presences, freq) {
   freq = freq || actifBtn?.dataset?.freq || 'semaine';
   const actifs = residents.filter(r => r.statut !== 'sorti');
   const totalActifs = actifs.length || 1;
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = today();
   let days = [];
   if (freq === 'jour') {
     const dayP = presences[todayStr] || {};
@@ -2137,6 +2339,9 @@ function activateTab(name) {
     if (!el) return;
     el.classList.toggle('active', n === name);
   });
+  // « Employés » (déplacé dans le portail RH) s'affiche sans le menu latéral
+  // d'Administration : on masque la barre via cette classe sur <body>.
+  document.body.classList.toggle('adm-emp-only', name === 'employes');
   if (name === 'employes') renderEmployes();
   if (name === 'segur') renderSegurDashboard();
   if (name === 'permissions' && typeof admRenderPermMatrix === 'function') admRenderPermMatrix();
@@ -2182,6 +2387,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script src="js/admin-v2.js"></script>
+<!-- Reprise de données : après les adaptateurs Supabase, dont il utilise
+     sbSaveResident / sbSaveEmploye / sbSaveChambre et les lectures sbGet*. -->
+<script src="js/import-donnees.js"></script>
+<script src="js/reversibilite.js"></script>
+<script src="js/purge.js"></script>
 <script>if (typeof window.adminV2Init === 'function') window.adminV2Init();</script>
 <script src="js/mobile-nav.js"></script>
 </body>

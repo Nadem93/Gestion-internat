@@ -22,21 +22,27 @@ function adm2OrigColor(o) { return ADM2_ORIG[o] || '#64748b'; }
 // Colonnes de la maquette. La 4ᵉ regroupe « refusé » et « désistement »,
 // exactement comme son libellé « Refusé / désist. ».
 const ADM2_COLS = [
-  { id: 'en_attente', name: 'En attente',        c: '#f59e0b', st: ['en_attente'] },
-  { id: 'etude',      name: 'En étude',          c: '#0ea5e9', st: ['etude'] },
-  { id: 'admis',      name: 'Admis',             c: '#10b981', st: ['admis'] },
-  { id: 'refuse',     name: 'Refusé / désist.',  c: '#94a3b8', st: ['refuse', 'abandon'] }
+  { id: 'en_attente', name: 'En attente',        c: '#f59e0b', st: ['en_attente'],        ic: 'hourglass' },
+  { id: 'etude',      name: 'En étude',          c: '#0ea5e9', st: ['etude'],             ic: 'file' },
+  { id: 'admis',      name: 'Admis',             c: '#10b981', st: ['admis'],             ic: 'check' },
+  { id: 'refuse',     name: 'Refusé / désist.',  c: '#94a3b8', st: ['refuse', 'abandon'], ic: 'close' }
 ];
 
 const ADM2_IC = {
   hourglass: '<path d="M5 22h14M5 2h14M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/>',
   file:      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
   check:     '<polyline points="20 6 9 17 4 12"/>',
+  close:     '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
   admis:     '<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>'
 };
 
 function adm2Svg(path, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+}
+
+// Icône 16px pour la puce (.dc-chip) d'en-tête de colonne « Console Data ».
+function adm2ChipSvg(path) {
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 }
 
 // Initiales : prénom + nom, comme la maquette (« JM » pour Jules Martin).
@@ -67,7 +73,7 @@ function adm2Card(a, isAdmin, colColor) {
         ${ageTxt ? `<div class="ad2-age">${escHtml(ageTxt)}</div>` : ''}
       </div>
     </div>
-    ${a.origine ? `<div class="ad2-tags"><span class="ad2-tag" style="--pc:${oc}">${escHtml(a.origine)}</span></div>` : ''}
+    ${a.origine ? `<div class="ad2-tags"><span class="dc-badge" style="background:${oc}1f;color:${oc};border:1px solid ${oc}44"><span class="d" style="background:${oc}"></span>${escHtml(a.origine)}</span></div>` : ''}
     ${a.dateDemande ? `<div class="ad2-l1">Demande : ${formatDate(a.dateDemande)}</div>` : ''}
     ${a.dateEntree ? `<div class="ad2-l2">Entrée prévue : ${formatDate(a.dateEntree)}</div>` : ''}
     ${a.dossier ? `<div class="ad2-l3">Dossier : ${escHtml(a.dossier)}</div>` : ''}
@@ -105,14 +111,13 @@ function adm2Render() {
   board.className = 'ad2-board';
   board.innerHTML = ADM2_COLS.map(col => {
     const cards = filtered.filter(a => col.st.includes(a.statut));
-    return `<div class="ad2-col" style="--cc:${col.c}">
-      <div class="ad2-col-h">
-        <div class="ad2-col-hr">
-          <span class="ad2-col-dot"></span>
-          <span class="ad2-col-n">${escHtml(col.name)}</span>
-          <span class="ad2-col-c">${cards.length}</span>
+    return `<div class="dc-card ad2-col" style="--cc:${col.c}">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:${col.c}22;color:${col.c}">${adm2ChipSvg(ADM2_IC[col.ic])}</span>
+          <div style="min-width:0"><div class="dc-eyebrow">Étape</div><div class="dc-title">${escHtml(col.name)}</div></div>
         </div>
-        <div class="ad2-col-bar"></div>
+        <span class="dc-pill dim">${cards.length}</span>
       </div>
       <div class="ad2-col-b">
         ${cards.length

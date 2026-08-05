@@ -169,6 +169,28 @@
 <script src="js/protocoles-urgence-supabase.js"></script>
 <script src="js/signatures-supabase.js"></script>
 <script>
+// ═══════════════════════ Garde-fou ═══════════════════════
+// Cette page écrit une année de données dans TOUTES les tables de
+// l'établissement. Elle n'avait aucun contrôle d'accès : n'importe quel
+// utilisateur connecté qui tombait sur l'URL pouvait injecter (ou supprimer)
+// des données dans la base de production. Réservée aux administrateurs.
+(function () {
+  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+  if (!s) { window.location.replace('index.html'); return; }
+  if (s.role !== 'admin' && s.role !== 'superadmin') {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;'
+      + 'min-height:100vh;text-align:center;font-family:Inter,system-ui,sans-serif;color:#64748b;padding:2rem">'
+      + '<div><div style="font-size:2.2rem;margin-bottom:.5rem">\u26d4</div>'
+      + '<div style="font-size:1.15rem;font-weight:700;color:#0f2b4a">Acc\u00e8s r\u00e9serv\u00e9</div>'
+      + '<div style="font-size:.9rem;margin-top:.4rem">Le g\u00e9n\u00e9rateur de donn\u00e9es de d\u00e9monstration '
+      + 'est r\u00e9serv\u00e9 aux administrateurs.</div>'
+      + '<a href="accueil.html" style="display:inline-block;margin-top:1.2rem;background:#0f2b4a;color:#fff;'
+      + 'padding:.6rem 1.5rem;border-radius:8px;text-decoration:none;font-size:.85rem;font-weight:600">'
+      + '\u2190 Retour \u00e0 l\'accueil</a></div></div>';
+    throw new Error('seed-supabase : acc\u00e8s refus\u00e9');
+  }
+})();
+
 // ═══════════════════════ Utilitaires ═══════════════════════
 let logEl, progEl;
 function log(msg, cls='info'){ if(!logEl) return; logEl.style.display=''; const d=document.createElement('div'); d.className=cls; d.textContent='▸ '+msg; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }

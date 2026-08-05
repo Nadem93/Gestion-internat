@@ -20,6 +20,7 @@
   const IC = {
     grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
     users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+    team: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     etp: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
     id: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M13 8h5M13 12h5M6 16h12"/>',
     file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
@@ -42,7 +43,7 @@
   // ── Les 15 modules RH — mêmes pages, couleurs et droits que le dock RH ──
   const MODULES = [
     { g: "Vue d'ensemble", page: 'rh-dashboard.html', label: 'Tableau de bord', c: '#6366f1', ic: 'grid', self: true },
-    { g: "Vue d'ensemble", page: 'admin.html?tab=employes', label: 'Utilisateurs', c: '#8b5cf6', ic: 'users' },
+    { g: "Vue d'ensemble", page: 'admin.html?tab=employes', label: 'Employés', c: '#8b5cf6', ic: 'team' },
     { g: "Vue d'ensemble", page: 'contacts-externes.html', label: 'Contacts extérieurs', c: '#e11d48', ic: 'id' },
     { g: 'Contrats & absences', page: 'contrats.html', label: 'Contrats', c: '#0891b2', ic: 'file', badge: 'cdd' },
     { g: 'Contrats & absences', page: 'absences.html', label: 'Absences & AT', c: '#ef4444', ic: 'alert', badge: 'abs' },
@@ -84,7 +85,7 @@
   const PALETTE = ['#6366f1', '#0891b2', '#7c3aed', '#ec4899', '#f59e0b', '#10b981', '#22d3ee', '#ef4444'];
   const initiales = (p, n) => ((p || '').charAt(0) + (n || '').charAt(0)).toUpperCase() || '?';
   const nomComplet = e => `${e.prenom || ''} ${e.nom || ''}`.trim();
-  const plusJours = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const plusJours = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return isoJour(d); };
 
   // ── État ────────────────────────────────────────────────────────────────
   const RHV2 = { data: null };
@@ -157,12 +158,16 @@
     return e ? nomComplet(e) : (fallback || 'Inconnu');
   };
 
+  // ── Langage « Console Data » : chip + en-tête de carte réutilisables ──────
+  const chip = (ic, c) => `<span class="dc-chip" style="background:${c}22;color:${c}">${svg(IC[ic], c, 16)}</span>`;
+  const dcHead = (ic, c, eyebrow, titre, right) =>
+    `<div class="dc-head"><div class="dc-head-l">${chip(ic, c)}<div style="min-width:0">` +
+    `<div class="dc-eyebrow">${esc(eyebrow)}</div><div class="dc-title">${esc(titre)}</div></div></div>${right || ''}</div>`;
+
   // ── Blocs ───────────────────────────────────────────────────────────────
   function hero(d) {
-    const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-    const prenom = s && (s.prenom || s.username) ? (s.prenom || s.username) : '';
     return `<div class="rhv-hero">
-      <h1 class="v2-h1">${prenom ? 'Bonjour, ' + esc(prenom) : 'Ressources humaines'}</h1>
+      <h1 class="v2-h1">Ressources humaines</h1>
       <div class="v2-sub">Vue d'ensemble des ressources humaines.</div>
     </div>`;
   }
@@ -174,9 +179,9 @@
       { n: d.congesEnAttente.length, l: 'Congés à valider', c: '#f59e0b', ic: 'sun' },
       { n: d.cddEcheance.length, l: 'CDD à renouveler (≤30 j)', c: '#ef4444', ic: 'file' }
     ];
-    return `<div class="v2-kgrid rhv-kpis" id="rhStats">${K.map(k => `<div class="v2-k">
-      <span class="v2-k-ico" style="background:${k.c}22">${svg(IC[k.ic], k.c, 22)}</span>
-      <span><span class="v2-k-n" style="color:${k.c}">${esc(String(k.n))}</span><span class="v2-k-l">${esc(k.l)}</span></span>
+    return `<div class="dc-kpis rhv-kpis" id="rhStats">${K.map(k => `<div class="dc-kpi" style="--dc-c:${k.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${esc(k.l)}</span><span class="dc-kpi-ico" style="color:${k.c}">${svg(IC[k.ic], k.c, 16)}</span></div>
+      <div class="dc-kpi-val" style="color:${k.c}">${esc(String(k.n))}</div>
     </div>`).join('')}</div>`;
   }
 
@@ -225,22 +230,19 @@
       sub: 'pipeline de recrutement', tag: 'Recrutement', c: '#0284c7', ic: 'brief', page: 'recrutement.html'
     });
 
-    const body = items.length ? items.map(i => `<a class="rhv-todo" href="${href(i.page)}">
+    const body = items.length ? items.map(i => `<a class="rhv-todo" href="${href(i.page)}" style="border-left:3px solid ${i.c};padding-left:11px">
         <span class="rhv-todo-ic" style="background:${i.c}22;color:${i.c}">${svg(IC[i.ic], i.c, 15)}</span>
         <span class="rhv-todo-x">
           <span class="rhv-todo-t">${esc(i.label)}</span>
           <span class="rhv-todo-s">${esc(i.sub)}</span>
         </span>
-        <span class="rhv-todo-tag" style="color:${i.c};background:${i.c}1c">${esc(i.tag)}</span>
+        <span class="dc-badge" style="background:${i.c}1c;color:${i.c};border:1px solid ${i.c}44"><span class="d" style="background:${i.c}"></span>${esc(i.tag)}</span>
       </a>`).join('')
       : `<div class="v2-blk-vide">Rien à traiter : tout est à jour.</div>`;
 
-    return `<div class="v2-blk rhv-warn" id="rhATraiter">
-      <div class="v2-blk-h">
-        <span class="rhv-blk-ic">${svg(IC.alert, '#fbbf24', 15)}</span>
-        <span class="v2-blk-t" style="color:#fde68a">À traiter</span>
-        <span class="v2-blk-lien" style="color:#fde68a">${items.length} point${items.length > 1 ? 's' : ''}</span>
-      </div>${body}</div>`;
+    return `<div class="dc-card rhv-warn" id="rhATraiter">
+      ${dcHead('alert', '#f59e0b', 'Priorités', 'À traiter', `<span class="dc-pill dim">${items.length} point${items.length > 1 ? 's' : ''}</span>`)}
+      <div class="dc-body">${body}</div></div>`;
   }
 
   function effectif(d) {
@@ -251,15 +253,14 @@
     });
     const rows = [...map.entries()].sort((a, b) => b[1] - a[1]);
     const max = rows.length ? rows[0][1] : 1;
-    const body = rows.length ? rows.map((r, i) => `<div class="rhv-eff">
+    const body = rows.length ? rows.map((r, i) => `<div class="rhv-eff" style="border-left:3px solid ${PALETTE[i % PALETTE.length]};padding-left:11px">
         <div class="rhv-eff-h"><span class="rhv-eff-l">${esc(r[0])}</span><span class="rhv-eff-n">${r[1]}</span></div>
-        <div class="v2-prog"><span style="width:${Math.round(r[1] / max * 100)}%;background:${PALETTE[i % PALETTE.length]}"></span></div>
+        <div class="al-prog-bar"><span style="width:${Math.round(r[1] / max * 100)}%;background:${PALETTE[i % PALETTE.length]}"></span></div>
       </div>`).join('')
       : `<div class="v2-blk-vide">Aucun salarié actif enregistré.</div>`;
-    return `<div class="v2-blk" id="rhEffectif">
-      <div class="v2-blk-h"><span class="v2-blk-t">Effectif par métier</span>
-        <span class="v2-blk-lien">${d.actifs.length} salarié${d.actifs.length > 1 ? 's' : ''}</span></div>
-      <div class="rhv-effs">${body}</div></div>`;
+    return `<div class="dc-card" id="rhEffectif">
+      ${dcHead('users', '#8b5cf6', 'Répartition', 'Effectif par métier', `<span class="dc-pill dim">${d.actifs.length} salarié${d.actifs.length > 1 ? 's' : ''}</span>`)}
+      <div class="dc-body"><div class="rhv-effs">${body}</div></div></div>`;
   }
 
   // Masse salariale — 6 derniers mois de fiches de paie (brut)
@@ -272,9 +273,9 @@
       } catch (_) { return false; }
     })();
     if (!paieVisible) {
-      return `<div class="v2-blk" id="rhMasse">
-        <div class="v2-blk-h"><span class="v2-blk-t">Masse salariale</span></div>
-        <div class="v2-blk-vide">Accès réservé aux profils disposant du droit « paie ».</div></div>`;
+      return `<div class="dc-card" id="rhMasse">
+        ${dcHead('euro', '#ea580c', 'Paie', 'Masse salariale', '')}
+        <div class="dc-body"><div class="v2-blk-vide">Accès réservé aux profils disposant du droit « paie ».</div></div></div>`;
     }
 
     const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
@@ -302,9 +303,9 @@
             <div class="v2-chart-lbl">${esc(p.label)}</div></div>`).join('')}</div>`
       : `<div class="v2-blk-vide">Aucune fiche de paie enregistrée sur les 6 derniers mois.</div>`;
 
-    return `<div class="v2-blk" id="rhMasse">
-      <div class="v2-blk-h"><span class="v2-blk-t">Masse salariale — 6 mois</span>
-        <span class="rhv-masse-tot">${total > 0 ? eur(total) : '—'}</span></div>${body}</div>`;
+    return `<div class="dc-card" id="rhMasse">
+      ${dcHead('euro', '#ea580c', 'Paie · 6 mois', 'Masse salariale', `<span class="dc-pill dim">${total > 0 ? eur(total) : '—'}</span>`)}
+      <div class="dc-body">${body}</div></div>`;
   }
 
   // Anniversaires de contrat — date d'embauche des salariés actifs, 60 jours
@@ -327,35 +328,31 @@
     });
     list.sort((a, b) => a.jours - b.jours);
 
-    const body = list.length ? list.slice(0, 6).map(a => `<div class="rhv-anniv">
+    const body = list.length ? list.slice(0, 6).map(a => `<div class="rhv-anniv" style="border-left:3px solid ${a.c};padding-left:11px">
         <span class="rhv-anniv-av" style="background:${a.c}">${esc(a.ini)}</span>
         <span class="rhv-anniv-x"><span class="rhv-anniv-n">${esc(a.nom)}</span>
           <span class="rhv-anniv-s">${a.ans} an${a.ans > 1 ? 's' : ''} d'ancienneté</span></span>
-        <span class="rhv-anniv-d">${esc(a.date)}</span></div>`).join('')
+        <span class="dc-badge dc-b-cyan"><span class="d"></span>${esc(a.date)}</span></div>`).join('')
       : `<div class="v2-blk-vide">Aucun anniversaire de contrat dans les 60 jours.</div>`;
 
-    return `<div class="v2-blk rhv-cyan" id="rhAnniv">
-      <div class="v2-blk-h"><span class="rhv-blk-ic">${svg(IC.cal, '#22d3ee', 15)}</span>
-        <span class="v2-blk-t" style="color:#a5f3fc">Anniversaires de contrat</span></div>${body}</div>`;
+    return `<div class="dc-card rhv-cyan" id="rhAnniv">
+      ${dcHead('cal', '#22d3ee', 'Ancienneté · 60 j', 'Anniversaires de contrat', `<span class="dc-pill dim">${list.length}</span>`)}
+      <div class="dc-body">${body}</div></div>`;
   }
 
   // ── Détail par module ───────────────────────────────────────────────────
   function bloc(id, titre, ic, c, page, contenu) {
-    return `<div class="v2-blk">
-      <div class="v2-blk-h">
-        <span class="rhv-blk-ic" style="background:${c}22">${svg(IC[ic], c, 15)}</span>
-        <span class="v2-blk-t">${esc(titre)}</span>
-        <a class="v2-blk-lien" href="${href(page)}">Voir tout</a>
-      </div>
-      <div id="${id}" class="rhv-rows">${contenu}</div></div>`;
+    return `<div class="dc-card">
+      ${dcHead(ic, c, 'Détail', titre, `<a class="dc-pill dim" href="${href(page)}">Voir tout</a>`)}
+      <div class="dc-body"><div id="${id}" class="rhv-rows">${contenu}</div></div></div>`;
   }
 
   function row(page, c, ic, titre, sous, droite) {
-    return `<a class="rhv-row" href="${href(page)}">
+    return `<a class="rhv-row" href="${href(page)}" style="border-left:3px solid ${c};padding-left:11px">
       <span class="rhv-row-ic" style="background:${c}22">${svg(IC[ic], c, 15)}</span>
       <span class="rhv-row-x"><span class="rhv-row-t">${esc(titre)}</span>
         <span class="rhv-row-s">${esc(sous)}</span></span>
-      ${droite ? `<span class="v2-badge ${droite.cls || 'v2-b-neutral'}">${esc(droite.txt)}</span>` : ''}</a>`;
+      ${droite ? `<span class="dc-badge ${droite.cls || 'dc-b-gray'}"><span class="d"></span>${esc(droite.txt)}</span>` : ''}</a>`;
   }
   const vide = m => `<div class="v2-blk-vide">${esc(m)}</div>`;
 
@@ -364,7 +361,7 @@
     return d.cddEcheance.map(c => {
       const j = Math.ceil((new Date(c.fin + 'T00:00:00') - new Date(d.t + 'T00:00:00')) / 86400000);
       return row('contrats.html', '#ef4444', 'file', nomDe(d, c.employeId, c.employeNom),
-        `Fin de CDD le ${fdate(c.fin)}`, { txt: 'J-' + j, cls: j <= 7 ? 'v2-b-danger' : 'v2-b-warn' });
+        `Fin de CDD le ${fdate(c.fin)}`, { txt: 'J-' + j, cls: j <= 7 ? 'dc-b-red' : 'dc-b-amber' });
     }).join('');
   }
 
@@ -373,28 +370,28 @@
     const lbl = { at: 'Accident du travail', maladie_pro: 'Maladie pro.', maladie: 'Maladie' };
     return d.absencesEnCours.map(a => row('absences.html', '#ef4444', 'alert',
       nomDe(d, a.employeId, a.employeNom), `Depuis le ${fdate(a.debut)}`,
-      { txt: lbl[a.type] || (a.type || 'Absence'), cls: a.type === 'at' ? 'v2-b-danger' : 'v2-b-neutral' })).join('');
+      { txt: lbl[a.type] || (a.type || 'Absence'), cls: a.type === 'at' ? 'dc-b-red' : 'dc-b-gray' })).join('');
   }
 
   function listeConges(d) {
     if (!d.congesEnAttente.length) return vide('Aucune demande en attente.');
     return d.congesEnAttente.map(c => row('conges.html', '#f59e0b', 'sun',
       nomDe(d, c.employeId, c.employeNom), `${fdate(c.debut)} → ${fdate(c.fin)}`,
-      { txt: 'En attente', cls: 'v2-b-warn' })).join('');
+      { txt: 'En attente', cls: 'dc-b-amber' })).join('');
   }
 
   function listeEntretiens(d) {
     if (!d.entretiensAVenir.length) return vide('Aucun entretien planifié dans les 30 jours.');
     return d.entretiensAVenir.map(e => row('entretiens.html', '#db2777', 'chat',
       e.employeNom || nomDe(d, e.employeId), `Planifié le ${fdate(e.date)}`,
-      { txt: 'Planifié', cls: 'v2-b-info' })).join('');
+      { txt: 'Planifié', cls: 'dc-b-indigo' })).join('');
   }
 
   function listeFormations(d) {
     if (!d.formationsAVenir.length) return vide('Aucune formation planifiée.');
     return d.formationsAVenir.slice(0, 8).map(f => row('formations.html', '#16a34a', 'book',
       f.titre || 'Formation', `Le ${fdate(f.dateDebut)}`,
-      { txt: 'À venir', cls: 'v2-b-ok' })).join('');
+      { txt: 'À venir', cls: 'dc-b-green' })).join('');
   }
 
   function listeRecrutement(d) {
@@ -402,7 +399,7 @@
     const lbl = { recu: 'Reçu', entretien_planifie: 'Entretien planifié', entretien_fait: 'Entretien réalisé' };
     return d.candidatsActifs.map(c => row('recrutement.html', '#0284c7', 'brief',
       `${c.prenom || ''} ${c.nom || ''}`.trim() || 'Candidat', c.poste || '',
-      { txt: lbl[c.statut] || c.statut || '—', cls: 'v2-b-info' })).join('');
+      { txt: lbl[c.statut] || c.statut || '—', cls: 'dc-b-indigo' })).join('');
   }
 
   // Publication explicite : un `function` de module IIFE ne crée pas de

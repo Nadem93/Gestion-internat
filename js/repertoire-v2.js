@@ -221,28 +221,34 @@ function rep2Render() {
       : contacts.length + '/' + all.length + ' contacts';
   }
 
-  // ── Grille des fiches
+  // ── Grille des fiches — cartes « Console Data »
   if (!contacts.length) {
-    container.innerHTML = `<div class="v2-blk"><div class="v2-blk-t">${q || REP2_FILTRE !== 'all' ? 'Aucun résultat' : 'Aucun contact'}</div>
-      <div class="v2-blk-vide" style="margin-top:6px">${q || REP2_FILTRE !== 'all' ? 'Aucun contact ne correspond à cette recherche ou à ce filtre.' : 'Ajoutez votre premier contact partenaire avec le bouton « Nouveau contact ».'}</div></div>`;
+    container.innerHTML = `<div class="dc-card"><div class="dc-body"><div class="dc-title">${q || REP2_FILTRE !== 'all' ? 'Aucun résultat' : 'Aucun contact'}</div>
+      <div class="v2-blk-vide" style="margin-top:6px">${q || REP2_FILTRE !== 'all' ? 'Aucun contact ne correspond à cette recherche ou à ce filtre.' : 'Ajoutez votre premier contact partenaire avec le bouton « Nouveau contact ».'}</div></div></div>`;
   } else {
     container.innerHTML = `<div class="rp-grid">${contacts.map(c => {
       const cd = rep2CatDef(c.id), fav = rep2Fav(c.id), id = escAttr(c.id);
       const tel = c.tel ? `<a class="rp-line" href="tel:${escAttr((c.tel || '').replace(/\s/g, ''))}" title="Appeler et journaliser l'appel" onclick="event.stopPropagation();rep2LogAppel('${id}','sortant')">${_rep2Svg(REP2_IC.tel)}<span>${escHtml(c.tel)}</span></a>` : '';
       const mail = c.email ? `<a class="rp-line" href="mailto:${escAttr(c.email)}" onclick="event.stopPropagation()">${_rep2Svg(REP2_IC.mail)}<span>${escHtml(c.email)}</span></a>` : '';
       const adr = c.adresse ? `<div class="rp-line">${_rep2Svg(REP2_IC.pin)}<span>${escHtml(c.adresse)}</span></div>` : '';
-      return `<div class="rp-card" style="--cc:${cd.c}" onclick="openEditContact('${id}')" role="button" tabindex="0">
-        <div class="rp-head">
-          <div class="rp-av">${escHtml(rep2Ini(c))}</div>
-          <div class="rp-id">
-            <div class="rp-nom">${escHtml(c.nom || c.organisme)}</div>
-            <div class="rp-fn">${escHtml(c.fonction || '—')}</div>
+      return `<div class="dc-card" style="border-left:3px solid ${cd.c};cursor:pointer" onclick="openEditContact('${id}')" role="button" tabindex="0">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:${cd.c}22;color:${cd.c}">${escHtml(rep2Ini(c))}</span>
+            <div style="min-width:0">
+              <div class="dc-eyebrow">${escHtml(c.fonction || '—')}</div>
+              <div class="dc-title">${escHtml(c.nom || c.organisme)}</div>
+            </div>
           </div>
-          <span class="rp-cat">${escHtml(cd.l)}</span>
-          <button type="button" class="rp-star${fav ? ' on' : ''}" title="${fav ? 'Retirer des favoris' : 'Mettre en favori'}" aria-label="${fav ? 'Retirer des favoris' : 'Mettre en favori'}" onclick="event.stopPropagation();rep2ToggleFavori('${id}')">${_rep2Svg(REP2_IC.star, { fill: fav ? 'currentColor' : 'none', w: 1.8 })}</button>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span class="dc-badge" style="background:${cd.c}1f;color:${cd.c};border:1px solid ${cd.c}44"><span class="d" style="background:${cd.c}"></span>${escHtml(cd.l)}</span>
+            <button type="button" class="rp-star${fav ? ' on' : ''}" title="${fav ? 'Retirer des favoris' : 'Mettre en favori'}" aria-label="${fav ? 'Retirer des favoris' : 'Mettre en favori'}" onclick="event.stopPropagation();rep2ToggleFavori('${id}')">${_rep2Svg(REP2_IC.star, { fill: fav ? 'currentColor' : 'none', w: 1.8 })}</button>
+          </div>
         </div>
-        ${c.nom ? `<div class="rp-org">${escHtml(c.organisme || '—')}</div>` : ''}
-        <div class="rp-lines">${tel}${mail}${adr || (tel || mail ? '' : '<div class="v2-blk-vide">Aucune coordonnée renseignée</div>')}</div>
+        <div class="dc-body">
+          ${c.nom ? `<div class="rp-org">${escHtml(c.organisme || '—')}</div>` : ''}
+          <div class="rp-lines">${tel}${mail}${adr || (tel || mail ? '' : '<div class="v2-blk-vide">Aucune coordonnée renseignée</div>')}</div>
+        </div>
       </div>`;
     }).join('')}</div>`;
   }
@@ -265,7 +271,7 @@ function rep2RenderFavoris(all) {
   }
   el.innerHTML = `<div class="rp-fav-grid">${favs.map(c => {
     const cd = rep2CatDef(c.id);
-    return `<div class="rp-fav" style="--cc:${cd.c}" onclick="openEditContact('${escAttr(c.id)}')" role="button" tabindex="0">
+    return `<div class="rp-fav" style="--cc:${cd.c};border-left:3px solid ${cd.c};padding-left:9px" onclick="openEditContact('${escAttr(c.id)}')" role="button" tabindex="0">
       <span class="rp-fav-av">${escHtml(rep2Ini(c))}</span>
       <div style="min-width:0">
         <div class="rp-fav-n">${escHtml(c.nom || c.organisme)}</div>
@@ -305,7 +311,7 @@ function rep2RenderAppels(all) {
     if (!c) return '';
     const sortant = a.sens !== 'entrant';
     const meta = [sortant ? 'Sortant' : 'Entrant'].concat(c.organisme ? [c.organisme] : []).join(' · ');
-    return `<div class="rp-appel" style="--ac:${sortant ? '#34d399' : '#22d3ee'}">
+    return `<div class="rp-appel" style="--ac:${sortant ? '#34d399' : '#22d3ee'};border-left:3px solid ${sortant ? '#34d399' : '#22d3ee'};padding-left:11px">
       <span class="rp-appel-i">${_rep2Svg(sortant ? REP2_IC.out : REP2_IC.in, { w: 2.2 })}</span>
       <div class="rp-appel-b">
         <div class="rp-appel-n">${escHtml(c.nom || c.organisme)}</div>

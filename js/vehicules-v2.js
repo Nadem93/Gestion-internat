@@ -127,11 +127,11 @@
       { n: avenir.length, l: 'Réservations à venir', s: avenir.length ? 'prochaine : ' + libelleCourt(avenir[0]) : 'aucune à venir', c: '#22d3ee', g: 'linear-gradient(135deg,#0891b2,#22d3ee)', i: ICO.cal }
     ];
     el.innerHTML = k.map(function (x) {
-      return '<div class="vh-k" style="--kc:' + x.c + ';--kg:' + x.g + '">'
-        + '<span class="vh-k-ico">' + svg(x.i, 21) + '</span>'
-        + '<div style="min-width:0"><span class="vh-k-n">' + x.n + '</span>'
-        + '<span class="vh-k-l">' + esc(x.l) + '</span>'
-        + '<span class="vh-k-s">' + esc(x.s) + '</span></div></div>';
+      return '<div class="dc-kpi" style="--dc-c:' + x.c + '">'
+        + '<div class="dc-kpi-top"><span class="dc-kpi-label">' + esc(x.l) + '</span>'
+        + '<span class="dc-kpi-ico" style="color:' + x.c + '">' + svg(x.i, 16) + '</span></div>'
+        + '<div class="dc-kpi-val">' + x.n + '</div>'
+        + '<div class="dc-kpi-sub">' + esc(x.s) + '</div></div>';
     }).join('');
   }
 
@@ -176,7 +176,7 @@
       + '<div class="vh-r-m">' + meta.join('<span class="sep"></span>') + '</div>'
       + (e.reservedBy ? '<div class="vh-r-who">Réservé par ' + esc(e.reservedBy) + '</div>' : '')
       + '</div>'
-      + '<span class="vh-r-tag">' + tag + '</span>'
+      + '<span class="vh-r-tag dc-badge" style="background:' + tc + '22;color:' + tc + ';border:1px solid ' + tc + '44"><span class="d" style="background:' + tc + '"></span>' + tag + '</span>'
       + (annulable
         ? '<button type="button" class="vh-x" title="Annuler la réservation" aria-label="Annuler la réservation" onclick="annulerReservation(' + JSON.stringify(String(e.id)).replace(/"/g, '&quot;') + ')">' + svg(ICO.x, 14) + '</button>'
         : '')
@@ -227,10 +227,10 @@
       var sub = courante
         ? 'Retour ' + hhmm(fin(courante)) + (courante.destination ? ' · ' + esc(courante.destination) : '')
         : (prochaine ? 'Prochaine : ' + libelleCourt(prochaine) : 'Aucune réservation');
-      return '<div class="vh-p" style="--pc:' + c + '">'
+      return '<div class="vh-p" style="--pc:' + c + ';border-left:3px solid ' + c + '">'
         + '<span class="vh-p-dot"></span>'
         + '<div style="min-width:0;flex:1"><div class="vh-p-n">' + esc(n) + '</div><div class="vh-p-s">' + sub + '</div></div>'
-        + '<span class="vh-p-st">' + st + '</span></div>';
+        + '<span class="vh-p-st dc-badge" style="background:' + c + '22;color:' + c + ';border:1px solid ' + c + '44"><span class="d" style="background:' + c + '"></span>' + st + '</span></div>';
     }).join('');
   }
 

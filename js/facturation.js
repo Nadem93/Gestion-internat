@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await sbLoadResidentsCache();
   await loadFactCaches();
   const periodeInput = document.getElementById('factPeriode');
-  if (periodeInput) periodeInput.value = new Date().toISOString().slice(0, 7);
+  if (periodeInput) periodeInput.value = isoMois(new Date());
   renderFacturation();
 });
 if (typeof registerPageInit === 'function') registerPageInit('facturation', renderFacturation);

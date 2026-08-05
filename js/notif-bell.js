@@ -83,7 +83,7 @@
   async function loadCounts() {
     const s = Auth.getSession(); if (!s) return;
     const uid = String(s.userId), me = [s.prenom, s.nom].filter(Boolean).join(' ');
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = today();
     // Toutes les pages ne chargent pas tous les *-supabase.js : chaque source
     // manquante retombe sur une valeur neutre au lieu de faire planter la
     // cloche. Les pages « riches » (transmissions, dossiers…) chargent
@@ -92,12 +92,21 @@
       .catch(() => vide);
     try {
       const [msgs, convs, journal, ppe, incidents, interventions, echeances] = await Promise.all([
-        opt('sbGetMessages', []), opt('sbGetConversations', {}), opt('sbGetJournalEntries', []),
+        opt('sbGetMessages', []), opt('sbGetConversations', {}),
+        // Comptage seul : on ne rapatrie que read_by, pas le contenu ni les
+        // pièces jointes (voir sbGetJournalReadBy, js/journal-supabase.js).
+        (typeof window.sbGetJournalReadBy === 'function'
+          ? window.sbGetJournalReadBy().catch(() => [])
+          : opt('sbGetJournalEntries', [])),
         opt('sbGetPpe', []), opt('sbGetIncidents', []), opt('sbGetInterventions', []), opt('sbGetEcheances', [])
       ]);
       const myConvIds = Object.values(convs).filter(c => (c.userIds || []).map(String).includes(uid)).map(c => c.id);
       _counts.messages = msgs.filter(m => myConvIds.includes(m.convId) && !(m.readBy || []).map(String).includes(uid) && String(m.from) !== uid).length;
-      _counts.journal = journal.filter(e => Array.isArray(e.readBy) && !e.readBy.map(String).includes(uid)).length;
+      // La lecture légère rend read_by (colonne brute), l'adaptateur complet readBy.
+      _counts.journal = journal.filter(e => {
+        const rb = Array.isArray(e.readBy) ? e.readBy : (Array.isArray(e.read_by) ? e.read_by : null);
+        return Array.isArray(rb) && !rb.map(String).includes(uid);
+      }).length;
       const lastPpe = localStorage.getItem('ftr_last_visit_ppe_' + uid);
       _counts.ppe = ppe.filter(e => e.createdBy !== me && (!lastPpe || (e.createdAt && new Date(e.createdAt).getTime() > Number(lastPpe)))).length;
       const lastInc = localStorage.getItem('ftr_last_visit_incidents_' + uid);
@@ -121,16 +130,28 @@
     const s = Auth.getSession(); if (!s) return;
     const uid = String(s.userId), now = Date.now();
     ['incidents', 'interventions', 'ppe'].forEach(k => localStorage.setItem('ftr_last_visit_' + k + '_' + uid, now));
+    // Les adaptateurs ne sont pas chargés sur toutes les pages : sans garde,
+    // la ReferenceError était avalée par le catch et la catégorie restait non lue.
+    const has = fn => typeof window[fn] === 'function';
     try {
-      const [msgs, convs] = await Promise.all([sbGetMessages(), sbGetConversations()]);
+      const [msgs, convs] = has('sbGetMessages') && has('sbGetConversations')
+        ? await Promise.all([sbGetMessages(), sbGetConversations()]) : [[], {}];
       const myConvIds = Object.values(convs).filter(c => (c.userIds || []).map(String).includes(uid)).map(c => c.id);
       const unread = msgs.filter(m => myConvIds.includes(m.convId) && !(m.readBy || []).map(String).includes(uid) && String(m.from) !== uid);
       await Promise.all(unread.map(m => sbUpdateMessageReadBy(m.id, [...(m.readBy || []), uid])));
     } catch (e) { console.error('[notif-bell] markAll messages', e); }
     try {
-      const jrn = await sbGetJournalEntries();
+      const jrn = has('sbGetJournalEntries') ? await sbGetJournalEntries() : [];
       const uj = jrn.filter(en => Array.isArray(en.readBy) && !en.readBy.map(String).includes(uid));
-      for (const en of uj) { en.readBy = [...(en.readBy || []), uid]; await sbSaveJournalEntry(en); }
+      // Écriture ciblée et par paquets : réécrire chaque entrée EN ENTIER, une
+      // par une, écrasait les modifications faites par d'autres pendant la
+      // boucle — et pouvait durer très longtemps sur un historique complet.
+      for (let i = 0; i < uj.length; i += 25) {
+        await Promise.all(uj.slice(i, i + 25).map(en => {
+          en.readBy = [...(en.readBy || []), uid];
+          return sbUpdateJournalField(en.id, { read_by: en.readBy });
+        }));
+      }
     } catch (e) { console.error('[notif-bell] markAll journal', e); }
     window._nbClose(); await loadCounts();
     if (typeof toast === 'function') toast('Notifications marquées comme lues', 'success');
@@ -174,8 +195,16 @@
       const p = document.getElementById('nbPanel'), b = document.getElementById('nbBell');
       if (p && p.classList.contains('open') && !p.contains(e.target) && b && !b.contains(e.target)) p.classList.remove('open');
     });
+    // Onglet masqué = aucune requête. Une cloche laissée ouverte en arrière-plan
+    // relançait sinon tout le lot toutes les minutes, indéfiniment. Au retour
+    // sur l'onglet, on recompte tout de suite pour ne pas afficher un chiffre
+    // périmé.
+    const tick = () => { if (document.visibilityState === 'visible') loadCounts(); };
     loadCounts();
-    setInterval(loadCounts, 60000);
+    setInterval(tick, 60000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') loadCounts();
+    });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

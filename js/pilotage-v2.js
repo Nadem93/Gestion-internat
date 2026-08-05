@@ -311,12 +311,20 @@ function _plUnread() {
   return _plMyConvs().reduce((n, c) => n + c.unread, 0);
 }
 
+// En-tête « Console Data » d'une carte : chip coloré + eyebrow mono + titre,
+// et un groupe optionnel d'éléments à droite (badge de compteur, bouton…).
+function _plHead(c, icon, eyebrow, title, right) {
+  return `<div class="dc-head"><div class="dc-head-l">`
+    + `<span class="dc-chip" style="background:${c}22;color:${c}">${_plSvg(icon, 'currentColor', 16)}</span>`
+    + `<div style="min-width:0"><div class="dc-eyebrow">${_pl(eyebrow)}</div>`
+    + `<div class="dc-title">${_pl(title)}</div></div></div>`
+    + (right ? `<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">${right}</div>` : '')
+    + `</div>`;
+}
+
 // ─── Blocs de contenu ─────────────────────────────────────────────────────
 function pl2Hello() {
-  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-  const p = (s && (s.prenom || s.username) || '').trim();
   return `<div class="pl-hello">
-    <h1>Bonjour${p ? ', ' + _pl(p) : ''}</h1>
     <div class="pl-hello-s">Retrouvez ici vos accès personnels et vos documents.</div>
   </div>`;
 }
@@ -361,54 +369,85 @@ function pl2Stats() {
       s: paie0 ? `dernière : ${_plPeriode(paie0.periode)}` : (M ? 'aucune déposée' : ''),
       c: '#3b82f6', ic: PL_IC.pay, page: 'mes-fiches-paie.html', label: 'Mes fiches de paie' }
   ];
-  return `<div class="pl-sec">Mon espace</div>
-    <div class="pl-stats">${K.map(k => `<button type="button" class="pl-stat"
+  return `<div class="pl-sec dc-eyebrow">Mon espace</div>
+    <div class="pl-stats">${K.map(k => `<button type="button" class="dc-kpi pl-stat"
       data-page="${_pl(k.page)}" data-label="${_pl(k.label)}" aria-label="Ouvrir ${_pl(k.label)}"
-      style="--plc:${k.c};--plc-sh:${_plRgba(k.c, .4)}">
-      <span class="pl-stat-ic">${_plSvg(k.ic, 'currentColor', 21)}</span>
-      <div class="pl-stat-n">${_pl(k.n)}</div>
-      <div class="pl-stat-l">${_pl(k.l)}</div>
-      <div class="pl-stat-s">${_pl(k.s)}</div>
+      style="--dc-c:${k.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${_pl(k.l)}</span>
+        <span class="dc-kpi-ico" style="color:${k.c}">${_plSvg(k.ic, 'currentColor', 16)}</span></div>
+      <div class="dc-kpi-val">${_pl(k.n)}</div>
+      <div class="dc-kpi-sub">${_pl(k.s)}</div>
     </button>`).join('')}</div>`;
 }
 
 // Sous-titre de tuile : chiffre réel du module, jamais une valeur inventée.
-function pl2CardSub(page) {
+// Donnée affichée par la carte « accès rapide », au format carte-donnée :
+//   { n, u, lb }   → un chiffre (n), une unité facultative (u) et sa légende
+//   { txt, lb }    → pas de mesure pertinente : un mot-clé et sa légende
+//   warn: true     → la carte se teinte, il y a quelque chose à traiter
+function pl2CardData(page) {
   const D = PL2.data;
   const M = _plMine();
-  if (!D) return '…';
-  const p = (n, s, pl) => `${n} ${n > 1 ? (pl || (s + 's')) : s}`;
+  if (!D) return { txt: '…', lb: 'chargement' };
+  const nonRelie = { txt: 'Non reliée', lb: 'fiche employé à relier' };
+  const s = (n, sing, plur) => (n > 1 ? (plur || sing + 's') : sing);
   switch (page) {
-    case 'mes-absences.html': return M ? `${M.absMois} ce mois-ci` : 'Fiche non reliée';
-    case 'mes-conges.html': return M ? p(M.conges.filter(c => c.statut === 'en_attente').length, 'demande en attente', 'demandes en attente') : 'Fiche non reliée';
-    case 'mes-formations.html': return M ? p(M.formationsAVenir.length, 'à venir', 'à venir') : 'Fiche non reliée';
-    case 'mes-fiches-paie.html': return M ? p(M.paies.length, 'bulletin') : 'Fiche non reliée';
-    case 'planning-equipe.html': return M ? p(M.shifts.length, 'créneau à venir', 'créneaux à venir') : 'Planning de l’équipe';
-    case 'messages.html': return PL2.unread ? `${PL2.unread} non lu${PL2.unread > 1 ? 's' : ''}` : 'Aucun message non lu';
-    case 'notes.html': return 'Notes de service';
-    case 'documentation.html': return 'Procédures & protocoles';
-    case 'budget.html': return 'Enveloppes & dépenses';
-    case 'facturation.html': return 'Factures & règlements';
-    case 'rapport.html': return "Rapport d'activité annuel";
-    case 'satisfaction.html': return 'Enquêtes résidents';
-    case 'inventaire.html': return 'Matériel & équipements';
-    default: return '';
+    case 'mes-absences.html': return M ? { n: M.absMois, lb: 'ce mois-ci' } : nonRelie;
+    case 'mes-conges.html': {
+      if (!M) return nonRelie;
+      const n = M.conges.filter(c => c.statut === 'en_attente').length;
+      return n ? { n, lb: s(n, 'demande en attente', 'demandes en attente'), warn: true }
+               : { n: 0, lb: 'aucune demande en cours' };
+    }
+    case 'mes-formations.html': {
+      if (!M) return nonRelie;
+      const n = M.formationsAVenir.length;
+      return { n, lb: n ? s(n, 'formation à venir', 'formations à venir') : 'aucune formation prévue' };
+    }
+    case 'mes-fiches-paie.html': {
+      if (!M) return nonRelie;
+      const n = M.paies.length;
+      return { n, lb: s(n, 'bulletin disponible', 'bulletins disponibles') };
+    }
+    case 'planning-equipe.html': {
+      if (!M) return { txt: 'Équipe', lb: 'planning de l’équipe' };
+      const n = M.shifts.length;
+      return { n, lb: n ? s(n, 'créneau à venir', 'créneaux à venir') : 'aucun créneau à venir' };
+    }
+    case 'messages.html': return PL2.unread
+      ? { n: PL2.unread, lb: s(PL2.unread, 'message non lu', 'messages non lus'), warn: true }
+      : { n: 0, lb: 'tout est lu' };
+    case 'notes.html': return { txt: 'Service', lb: 'notes de service' };
+    case 'documentation.html': return { txt: 'Procédures', lb: 'protocoles et guides' };
+    case 'budget.html': return { txt: 'Budget', lb: 'enveloppes et dépenses' };
+    case 'facturation.html': return { txt: 'Factures', lb: 'et règlements' };
+    case 'rapport.html': return { txt: 'Rapport', lb: 'activité annuelle' };
+    case 'satisfaction.html': return { txt: 'Enquêtes', lb: 'satisfaction résidents' };
+    case 'inventaire.html': return { txt: 'Matériel', lb: 'et équipements' };
+    default: return { txt: '', lb: '' };
   }
 }
+
 
 function pl2Cards() {
   const nav = (window.PL_NAV || []).filter(window.plAllowed || (() => true));
   const tuto = window.PORTAL_TUTO || {};
-  return `<div class="pl-sec">Accès rapides</div>
-    <div class="pl-cards">${nav.map(e => `
-      <div class="pl-card" role="button" tabindex="0" data-page="${_pl(e.page)}" data-label="${_pl(e.label)}"
-        aria-label="Ouvrir ${_pl(e.label)}" style="--plc:${_pl(e.c1)};--plc-sh:${_plRgba(e.c1, .4)}">
-        ${tuto[e.page] ? `<button type="button" class="pl-card-i" data-tuto="${_pl(e.page)}"
+  return `<div class="pl-sec dc-eyebrow">Accès rapides</div>
+    <div class="pl-cards">${nav.map(e => {
+      const d = pl2CardData(e.page);
+      const aide = !!tuto[e.page];
+      return `<div class="pl-card cdn${aide ? ' cdn-hasi' : ''}${d.warn ? ' cdn-warn' : ''}" role="button" tabindex="0"
+        data-page="${_pl(e.page)}" data-label="${_pl(e.label)}"
+        aria-label="Ouvrir ${_pl(e.label)}" style="--plc:${_pl(e.c1)};--plc-sh:${_plRgba(e.c1, .4)};--cdc:${_pl(e.c1)}">
+        ${aide ? `<button type="button" class="pl-card-i" data-tuto="${_pl(e.page)}"
           title="Mode d'emploi — ${_pl(e.label)}" aria-label="Mode d'emploi — ${_pl(e.label)}">?</button>` : ''}
-        <span class="pl-card-ic">${_plSvg(_plInner(e.icon), 'currentColor', 22)}</span>
-        <div class="pl-card-l">${_pl(e.label)}</div>
-        <div class="pl-card-s">${_pl(pl2CardSub(e.page))}</div>
-      </div>`).join('')}</div>`;
+        <div class="cdn-top">
+          <span class="pl-card-ic cdn-ic">${_plSvg(_plInner(e.icon), 'currentColor', 22)}</span>
+          <div class="cdn-t">${_pl(e.label)}</div>
+        </div>
+        ${_cdnMid(d, _pl)}
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function _plBlkOpen(page, label) {
@@ -424,7 +463,7 @@ function pl2BlkMessages() {
   if (D) {
     const convs = _plMyConvs();
     compteur = PL2.unread
-      ? `<span class="pl-blk-c" style="--pc:#38bdf8">${PL2.unread} non lu${PL2.unread > 1 ? 's' : ''}</span>` : '';
+      ? `<span class="dc-badge dc-b-cyan"><span class="d"></span>${PL2.unread} non lu${PL2.unread > 1 ? 's' : ''}</span>` : '';
     body = convs.length
       ? convs.slice(0, 3).map(c => `<div class="pl-msg" data-page="messages.html" data-label="Messages">
           <span class="pl-msg-av" style="background:${_plAvColor(c.avatarId)}">${_pl(c.ini)}</span>
@@ -433,9 +472,8 @@ function pl2BlkMessages() {
           ${c.unread ? '<span class="pl-msg-dot"></span>' : ''}</div>`).join('')
       : `<div class="pl-vide">Aucune conversation.</div>`;
   }
-  return `<div class="pl-blk"><div class="pl-blk-h">${_plSvg(PL_IC.mail, '#38bdf8', 15)}
-    <span class="pl-blk-t">Messages</span>${compteur}${_plBlkOpen('messages.html', 'Messages')}
-    </div>${body}</div>`;
+  return `<div class="dc-card">${_plHead('#38bdf8', PL_IC.mail, 'Messagerie', 'Messages',
+    compteur + _plBlkOpen('messages.html', 'Messages'))}<div class="dc-body">${body}</div></div>`;
 }
 
 function pl2BlkShifts() {
@@ -449,17 +487,16 @@ function pl2BlkShifts() {
       const d = new Date(String(s.date).slice(0, 10) + 'T00:00:00');
       const v = _plVacation(s.debut);
       const dd = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
-      return `<div class="pl-sh" style="--pc:${v.c}">
+      return `<div class="pl-sh" style="--pc:${v.c};border-left:3px solid ${v.c};padding-left:12px">
         <div class="pl-sh-d"><div class="pl-sh-j">${PL_JOURS[d.getDay()]}</div>
           <div class="pl-sh-dt">${dd}</div></div>
         <div class="pl-sh-b"><div class="pl-sh-t">${_pl(v.l)}</div>
           <div class="pl-sh-h">${_pl(s.debut)} – ${_pl(s.fin)}</div></div>
-        <span class="pl-sh-tag">${_pl(v.t)}</span></div>`;
+        <span class="dc-badge" style="background:${v.c}1f;color:${v.c};border:1px solid ${v.c}44"><span class="d" style="background:${v.c}"></span>${_pl(v.t)}</span></div>`;
     }).join('');
   }
-  return `<div class="pl-blk"><div class="pl-blk-h">${_plSvg(PL_IC.cal, '#22d3ee', 15)}
-    <span class="pl-blk-t">Mes prochains créneaux</span>${_plBlkOpen('planning-equipe.html', 'Planning équipe')}
-    </div>${body}</div>`;
+  return `<div class="dc-card">${_plHead('#22d3ee', PL_IC.cal, 'Planning', 'Mes prochains créneaux',
+    _plBlkOpen('planning-equipe.html', 'Planning équipe'))}<div class="dc-body">${body}</div></div>`;
 }
 
 // Mes documents : documents transmis par les RH + bulletins de paie déposés
@@ -499,7 +536,7 @@ function pl2BlkDocs() {
     if (!M) body = `<div class="pl-vide">${_plSansFiche()}</div>`;
     else if (!list.length) body = `<div class="pl-vide">Aucun document transmis pour l'instant.</div>`;
     else body = `<div class="pl-docs">${list.slice(0, 8).map(d => `
-      <div class="pl-doc" style="--pc:${d.c}">
+      <div class="pl-doc" style="--pc:${d.c};border-left:3px solid ${d.c};padding-left:11px">
         <span class="pl-doc-ic">${_plSvg(PL_IC.doc, 'currentColor', 15)}</span>
         <div class="pl-doc-b"><div class="pl-doc-n" title="${_pl(d.name)}">${_pl(d.name)}</div>
           <div class="pl-doc-m">${_pl(d.meta)}</div></div>
@@ -508,9 +545,8 @@ function pl2BlkDocs() {
           ${_plSvg(PL_IC.dl, 'currentColor', 15)}</button>
       </div>`).join('')}</div>`;
   }
-  return `<div class="pl-blk pl-blk-wide"><div class="pl-blk-h">${_plSvg(PL_IC.doc, '#a78bfa', 15)}
-    <span class="pl-blk-t">Mes documents</span>${_plBlkOpen('mes-fiches-paie.html', 'Mes fiches de paie')}
-    </div>${body}</div>`;
+  return `<div class="dc-card pl-blk-wide">${_plHead('#a78bfa', PL_IC.doc, 'Ressources humaines', 'Mes documents',
+    _plBlkOpen('mes-fiches-paie.html', 'Mes fiches de paie'))}<div class="dc-body">${body}</div></div>`;
 }
 
 const PL_CG_TYPE = { cp: 'Congés payés', rtt: 'RTT', maladie: 'Arrêt maladie',
@@ -558,17 +594,15 @@ function pl2BlkDemandes() {
     const list = pl2Demandes();
     if (!M) body = `<div class="pl-vide">${_plSansFiche()}</div>`;
     else if (!list.length) body = `<div class="pl-vide">Aucune demande enregistrée.</div>`;
-    else body = list.slice(0, 4).map(r => `<div class="pl-rq" style="--pc:${r.c};--sc:${r.sc}">
+    else body = list.slice(0, 4).map(r => `<div class="pl-rq" style="--pc:${r.c};--sc:${r.sc};border-left:3px solid ${r.c};padding-left:12px">
       <span class="pl-rq-ic">${_plSvg(r.ic, 'currentColor', 15)}</span>
       <div class="pl-rq-b"><div class="pl-rq-l">${_pl(r.label)}</div>
         <div class="pl-rq-s">${_pl(r.sub)}</div></div>
-      <span class="pl-rq-st">${_pl(r.status)}</span></div>`).join('');
+      <span class="dc-badge" style="background:${r.sc}1f;color:${r.sc};border:1px solid ${r.sc}44"><span class="d" style="background:${r.sc}"></span>${_pl(r.status)}</span></div>`).join('');
   }
-  return `<div class="pl-blk"><div class="pl-blk-h">${_plSvg(PL_IC.check, '#22d3ee', 15)}
-    <span class="pl-blk-t">Mes demandes</span>
-    <button type="button" class="pl-blk-a" data-open="mes-conges.html" data-label="Mes congés">
-      ${_plSvg(PL_IC.plus, 'currentColor', 13)} Nouvelle</button>
-    </div>${body}</div>`;
+  return `<div class="dc-card">${_plHead('#22d3ee', PL_IC.check, 'Suivi', 'Mes demandes',
+    `<button type="button" class="pl-blk-a" data-open="mes-conges.html" data-label="Mes congés">`
+    + `${_plSvg(PL_IC.plus, 'currentColor', 13)} Nouvelle</button>`)}<div class="dc-body">${body}</div></div>`;
 }
 
 // « À ne pas oublier » : formations à venir, visite médicale du travail,
@@ -605,16 +639,15 @@ function pl2BlkEcheances() {
       const j = _plJours(e.date);
       const c = _plEchColor(j);
       const d = new Date(String(e.date).slice(0, 10) + 'T00:00:00');
-      return `<div class="pl-ech" style="--pc:${c}">
+      return `<div class="pl-ech" style="--pc:${c};border-left:3px solid ${c};padding-left:12px">
         <div class="pl-ech-d"><span class="pl-ech-j">${d.getDate()}</span>
           <span class="pl-ech-m">${PL_MOIS[d.getMonth()]}</span></div>
         <div class="pl-ech-b"><div class="pl-ech-t">${_pl(e.title)}</div>
           <div class="pl-ech-s">${_pl(e.sub)}</div></div>
-        <span class="pl-ech-l">${j === 0 ? "Aujourd'hui" : 'J-' + j}</span></div>`;
+        <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44">${j === 0 ? "Aujourd'hui" : 'J-' + j}</span></div>`;
     }).join('');
   }
-  return `<div class="pl-blk pl-blk-ech"><div class="pl-blk-h">${_plSvg(PL_IC.clock, '#fbbf24', 15)}
-    <span class="pl-blk-t">À ne pas oublier</span></div>${body}</div>`;
+  return `<div class="dc-card">${_plHead('#fbbf24', PL_IC.clock, 'Rappels', 'À ne pas oublier')}<div class="dc-body">${body}</div></div>`;
 }
 
 // Mes compteurs — la jauge n'apparaît que si le droit annuel est connu :
@@ -657,17 +690,15 @@ function pl2BlkCompteurs() {
   if (D) {
     const list = pl2Compteurs();
     if (!M) body = `<div class="pl-vide">${_plSansFiche()}</div>`;
-    else body = `<div class="pl-cpts">${list.map(c => `<div style="--pc:${c.c}">
+    else body = `<div class="pl-cpts">${list.map(c => `<div style="--pc:${c.c};border-left:3px solid ${c.c};padding-left:12px">
       <div class="pl-cpt-h"><span class="pl-cpt-l">${_pl(c.label)}</span>
         <span class="pl-cpt-v">${_pl(c.val)}</span></div>
-      ${c.pct == null ? '' : `<div class="v2-prog"><span style="width:${c.pct}%;background:${c.c}"></span></div>`}
+      ${c.pct == null ? '' : `<div class="al-prog-bar"><span style="width:${c.pct}%;background:${c.c}"></span></div>`}
       <div class="pl-cpt-s">${_pl(c.sub)}</div></div>`).join('')}</div>`;
   }
-  return `<div class="pl-blk"><div class="pl-blk-h">${_plSvg(PL_IC.clock, '#a855f7', 15)}
-    <span class="pl-blk-t">Mes compteurs</span>
-    ${_plAdmin() ? `<button type="button" class="pl-blk-a" id="plDroitsBtn" onclick="pl2OpenDroits()">
-      ${_plSvg(PL_IC.gear, 'currentColor', 13)} Droits annuels</button>` : ''}
-    </div>${body}</div>`;
+  const droits = _plAdmin() ? `<button type="button" class="pl-blk-a" id="plDroitsBtn" onclick="pl2OpenDroits()">`
+    + `${_plSvg(PL_IC.gear, 'currentColor', 13)} Droits annuels</button>` : '';
+  return `<div class="dc-card">${_plHead('#a855f7', PL_IC.clock, 'Soldes', 'Mes compteurs', droits)}<div class="dc-body">${body}</div></div>`;
 }
 
 // ─── Téléchargement d'un document ─────────────────────────────────────────
@@ -828,5 +859,11 @@ document.addEventListener('keydown', ev => {
   }
 });
 
-window.addEventListener('focus', pl2RefreshUnread);
-setInterval(pl2RefreshUnread, 30000);
+// Recomptage des messages non lus : uniquement quand l'onglet est visible, et
+// à 60 s au lieu de 30. La cloche fait déjà le même comptage chaque minute ;
+// à 30 s + à chaque focus, la page relisait toute la table des messages deux
+// fois par minute en plus.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') pl2RefreshUnread();
+});
+setInterval(() => { if (document.visibilityState === 'visible') pl2RefreshUnread(); }, 60000);

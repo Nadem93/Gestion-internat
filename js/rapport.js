@@ -7,7 +7,7 @@ function initRapportDefaults() {
   const now = new Date();
   const mEl = document.getElementById('rapportMois');
   const yEl = document.getElementById('rapportAnnee');
-  if (mEl && !mEl.value) mEl.value = now.toISOString().slice(0, 7);
+  if (mEl && !mEl.value) mEl.value = isoMois(now);
   if (yEl && !yEl.value) yEl.value = now.getFullYear();
 }
 
@@ -33,7 +33,7 @@ async function loadRapportCache() { _rcCache = await sbGetRapportContributions()
 
 async function ajouterContributionRapport() {
   const categorie = document.getElementById('rcCategorie').value;
-  const mois = document.getElementById('rcMois').value || new Date().toISOString().slice(0, 7);
+  const mois = document.getElementById('rcMois').value || isoMois(new Date());
   const texte = document.getElementById('rcTexte').value.trim();
   if (!texte) { toast('Décrivez votre contribution', 'error'); return; }
   const session = Auth.getSession();
@@ -67,7 +67,7 @@ function renderContributionsRapport() {
   const el = document.getElementById('rcList');
   if (!el) return;
   const mEl = document.getElementById('rcMois');
-  if (mEl && !mEl.value) mEl.value = new Date().toISOString().slice(0, 7);
+  if (mEl && !mEl.value) mEl.value = isoMois(new Date());
   const session = Auth.getSession();
   const isAdmin = typeof Auth.isAdmin === 'function' && Auth.isAdmin();
   const list = getRapportContributions().sort((a, b) => (b.mois || '').localeCompare(a.mois || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
@@ -216,7 +216,8 @@ async function genererRapportPDF(previewIframe) {
     SBF('sbGetAppConfig'), SBF('sbGetJournalEntries'), SBF('sbGetIncidents'), SBF('sbGetPpe'),
     SBF('sbGetPresencesRange', startStr, endStr), SBF('sbGetSatisfaction'), SBF('sbGetTransmissions'),
     SBF('sbGetActivites'), SBF('sbGetPlanningEvents'), SBF('sbGetEmployes'), SBF('sbGetConges'),
-    SBF('sbGetFormations'), SBF('sbGetEntretiens')
+    SBF('sbGetFormations'), SBF('sbGetEntretiens'),
+    SBF('sbGetEcheances'), SBF('sbGetMedDistrib'), SBF('sbGetObservations'), SBF('sbGetCvs')
   ]);
   const cfg = R[0] || {};
   const settings = cfg.settings || DB.get(DB.keys.settings) || {};
@@ -232,6 +233,10 @@ async function genererRapportPDF(previewIframe) {
   const conges = R[10] || [];
   const formations = R[11] || [];
   const entretiens = R[12] || [];
+  const echeances = R[13] || [];
+  const medDistrib = R[14] || [];
+  const observations = R[15] || [];
+  const cvsData = R[16] || null;
   const cats = cfg.categories || DB.get(DB.keys.categories) || [];
 
   // Journal
@@ -388,14 +393,14 @@ async function genererRapportPDF(previewIframe) {
     let cur = new Date(_start);
     while (cur <= _end) {
       const bs = new Date(cur), be = new Date(cur); be.setDate(be.getDate() + 6);
-      buckets.push({ label: bs.getDate() + '/' + (bs.getMonth() + 1), start: bs.toISOString().slice(0, 10), end: be.toISOString().slice(0, 10) });
+      buckets.push({ label: bs.getDate() + '/' + (bs.getMonth() + 1), start: isoJour(bs), end: isoJour(be) });
       cur.setDate(cur.getDate() + 7);
     }
   } else {
     let cur = new Date(_start.getFullYear(), _start.getMonth(), 1);
     while (cur <= _end) {
       const y = cur.getFullYear(), m = cur.getMonth();
-      buckets.push({ label: MOIS_ABBR[m], start: new Date(y, m, 1).toISOString().slice(0, 10), end: new Date(y, m + 1, 0).toISOString().slice(0, 10) });
+      buckets.push({ label: MOIS_ABBR[m], start: isoJour(new Date(y, m, 1)), end: isoJour(new Date(y, m + 1, 0)) });
       cur.setMonth(cur.getMonth() + 1);
     }
   }
@@ -473,6 +478,61 @@ async function genererRapportPDF(previewIframe) {
   const entrPeriod = (entretiens || []).filter(e => inRange(e.date));
   const entrReal = entrPeriod.filter(e => e.statut === 'realise' || e.statut === 'realisee').length;
 
+  // ── ÉCHÉANCES & CONFORMITÉ ADMINISTRATIVE ──
+  const _todayStr = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  const echAll = echeances || [];
+  const echOuvertes = echAll.filter(e => !e.done);
+  const echRetard = echOuvertes.filter(e => e.date && e.date < _todayStr);
+  const echTraiteesP = echAll.filter(e => e.done && inRange(((e.doneAt || e.date || '') + '').slice(0, 10)));
+  const EC_TY = { mdph: 'MDPH', contrat: 'Contrat de séjour', cni: 'CNI / titre', jugement: 'Jugement / protection', visite_medicale: 'Visite médicale', vaccin: 'Vaccination', autre: 'Autre' };
+  const echByType = {};
+  echOuvertes.forEach(e => { const l = EC_TY[e.type] || (e.type || 'Autre'); echByType[l] = (echByType[l] || 0) + 1; });
+
+  // ── SÉCURITÉ MÉDICAMENTEUSE ──
+  const medP = (medDistrib || []).filter(m => inRange(m.date));
+  const MED_ST_LBL = { donne: 'Données', confie: 'Confiées', refuse: 'Refus', absent: 'Absent', report: 'Reportées' };
+  const medByStatut = {};
+  medP.forEach(m => { const l = MED_ST_LBL[m.statut] || (m.statut || 'Autre'); medByStatut[l] = (medByStatut[l] || 0) + 1; });
+  const medDonnees = medP.filter(m => m.statut === 'donne' || m.statut === 'confie').length;
+  const medRefus = medP.filter(m => m.statut === 'refuse').length;
+  const medTracaPct = medP.length ? Math.round(medDonnees / medP.length * 100) : null;
+
+  // ── SUIVI CLINIQUE (grilles d'observation) ──
+  const obsP = (observations || []).filter(o => inRange(o.date));
+  const OBS_GR_LBL = { douleur: 'Douleur', comportement: 'Comportement', sommeil: 'Sommeil', humeur: 'Humeur' };
+  const obsByGrille = {};
+  obsP.forEach(o => { const l = OBS_GR_LBL[o.grille] || (o.grille || 'Autre'); obsByGrille[l] = (obsByGrille[l] || 0) + 1; });
+  const obsResidents = new Set(obsP.map(o => String(o.residentId))).size;
+
+  // ── VIE SOCIALE (CVS) ──
+  const cvsSeances = (cvsData && Array.isArray(cvsData.seances)) ? cvsData.seances : [];
+  const cvsMembresActifs = (cvsData && Array.isArray(cvsData.membres)) ? cvsData.membres.filter(m => m.statut !== 'ancien').length : 0;
+  const cvsSeancesP = cvsSeances.filter(s => s.date && inRange(s.date));
+  const cvsResolutionsP = cvsSeancesP.reduce((n, s) => n + ((s.resolutions || []).length), 0);
+
+  // ── COMPARAISON N-1 (même période, un an plus tôt) ──
+  const _fmtISO = d => isoJour(d);
+  const _pS = new Date(_start); _pS.setFullYear(_pS.getFullYear() - 1);
+  const _pE = new Date(_end); _pE.setFullYear(_pE.getFullYear() - 1);
+  const pStartStr = _fmtISO(_pS), pEndStr = _fmtISO(_pE);
+  const inPrev = d => d && d >= pStartStr && d <= pEndStr;
+  const n1 = {
+    incidents: incidents.filter(i => inPrev(i.date)).length,
+    entrees:   residents.filter(r => inPrev(r.entree)).length,
+    sorties:   residents.filter(r => r.dateSortie && inPrev(r.dateSortie)).length,
+    journal:   journal.filter(e => inPrev(e.date)).length,
+    transmissions: transmissions.filter(t => inPrev(t.date)).length,
+    avenants:  ppe.filter(p => inPrev(p.dateRedaction)).length
+  };
+  // Écart (flèche + couleur) : une hausse d'incidents est « mauvaise » (rouge).
+  const _delta = (cur, prev, bad) => {
+    const d = cur - prev;
+    if (d === 0) return '<span style="color:#94a3b8">= 0</span>';
+    const up = d > 0;
+    const col = bad ? (up ? '#dc2626' : '#16a34a') : (up ? '#0d9488' : '#dc2626');
+    return `<span style="color:${col};font-weight:700">${up ? '▲ +' : '▼ '}${d}</span>`;
+  };
+
   const __html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Rapport d'activité — ${escHtml(label)}</title>
 <style>
@@ -544,6 +604,10 @@ async function genererRapportPDF(previewIframe) {
   ${kpi(nivEntries.length, 'Obs. niveau de soutien')}
   ${kpi(autoMoyLabel, "Niveau d'autonomie moyen")}
   ${kpi(empActifs.length, 'Effectif (professionnels)')}
+  ${kpi(echRetard.length, 'Échéances en retard')}
+  ${kpi(medTracaPct != null ? medTracaPct + '%' : '—', "Taux d'administration médic.")}
+  ${kpi(obsP.length, 'Relevés cliniques')}
+  ${kpi(cvsSeancesP.length, 'Séances CVS')}
 </div>
 ${capacite ? '' : '<p class="empty-line">ℹ Renseignez la « Capacité d\'accueil » dans Administration → Établissement pour calculer le taux d\'occupation.</p>'}
 
@@ -677,6 +741,39 @@ ${empActifs.length ? `<div style="display:flex;gap:.8cm;flex-wrap:wrap;align-ite
   <div style="flex:0 0 auto"><div class="chart-title">Répartition des contrats</div>${svgDonut(Object.entries(contratDist).map(([l, v], i) => ({ label: l, value: v, color: ['#2563eb', '#8b5cf6', '#0d9488', '#f59e0b', '#ec4899', '#64748b'][i % 6] })), 'salariés')}</div>
   <div style="flex:1;min-width:260px"><div class="chart-title">Plan de formation sur la période</div>${svgHBar({ 'Réalisées': formReal, 'Planifiées': formPrev }, '#0d9488', true, { 'Réalisées': '#16a34a', 'Planifiées': '#f59e0b' }, 130)}<p class="note" style="margin-top:.15cm">${nbFormes} professionnel${nbFormes > 1 ? 's' : ''} formé${nbFormes > 1 ? 's' : ''} (formations réalisées).</p></div>
 </div>` : '<p class="empty-line">Aucun professionnel enregistré dans le module personnel.</p>'}
+
+<h2>📋 Conformité administrative &amp; échéances</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Les échéances (MDPH, contrats de séjour, titres, jugements, visites médicales…) sont suivies dans le module dédié. Une échéance est « en retard » si sa date est dépassée sans renouvellement. « Traitée sur la période » = clôturée ou renouvelée entre le ${fmtD(startStr)} et le ${fmtD(endStr)}.</p>
+<p class="note"><strong>${echOuvertes.length}</strong> échéance${echOuvertes.length > 1 ? 's' : ''} en cours · <strong>${echRetard.length}</strong> en retard · <strong>${echTraiteesP.length}</strong> traitée${echTraiteesP.length > 1 ? 's' : ''}/renouvelée${echTraiteesP.length > 1 ? 's' : ''} sur la période.</p>
+${Object.keys(echByType).length ? `<div class="chart-title">Échéances en cours par type</div>${svgHBar(echByType, '#f59e0b')}` : '<p class="empty-line">Aucune échéance enregistrée.</p>'}
+
+<h2>💊 Sécurité médicamenteuse</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Chaque prise de médicament pointée par l'équipe est tracée avec son statut (Donné, Confié, Refusé, Absent, Reporté). Le taux d'administration rapporte les prises données ou confiées à l'ensemble des prises enregistrées sur la période.</p>
+${medP.length ? `<p class="note"><strong>${medP.length}</strong> prise${medP.length > 1 ? 's' : ''} tracée${medP.length > 1 ? 's' : ''} · <strong>${medDonnees}</strong> administrée${medDonnees > 1 ? 's' : ''} (donné/confié) · <strong>${medRefus}</strong> refus · taux d'administration : <strong>${medTracaPct != null ? medTracaPct + '%' : '—'}</strong>.</p>
+<div style="flex:0 0 auto"><div class="chart-title">Répartition des prises par statut</div>${svgDonut(Object.entries(medByStatut).map(([l, v], i) => ({ label: l, value: v, color: ['#16a34a', '#22d3ee', '#dc2626', '#94a3b8', '#f59e0b', '#64748b'][i % 6] })), 'prises')}</div>` : '<p class="empty-line">Aucune prise de médicament enregistrée sur la période.</p>'}
+
+<h2>🩺 Suivi clinique (grilles d'observation)</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Les grilles d'observation standardisées (douleur, comportement, sommeil, humeur) assurent un suivi clinique tracé. Chaque relevé est coté et daté par l'équipe.</p>
+${obsP.length ? `<p class="note"><strong>${obsP.length}</strong> relevé${obsP.length > 1 ? 's' : ''} sur la période · <strong>${obsResidents}</strong> résident${obsResidents > 1 ? 's' : ''} suivi${obsResidents > 1 ? 's' : ''}.</p>
+<div class="chart-title">Relevés par grille</div>${svgHBar(obsByGrille, '#0ea5e9')}` : '<p class="empty-line">Aucun relevé d\'observation clinique sur la période.</p>'}
+
+<h2>🗳️ Vie sociale &amp; participation (CVS)</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Le Conseil de la Vie Sociale (CVS) est l'instance de participation des résidents et des familles. Sont comptées les séances tenues sur la période et les résolutions associées.</p>
+<p class="note"><strong>${cvsSeancesP.length}</strong> séance${cvsSeancesP.length > 1 ? 's' : ''} de CVS sur la période · <strong>${cvsResolutionsP}</strong> résolution${cvsResolutionsP > 1 ? 's' : ''} · <strong>${cvsMembresActifs}</strong> membre${cvsMembresActifs > 1 ? 's' : ''} actif${cvsMembresActifs > 1 ? 's' : ''}.</p>
+
+<h2>📈 Comparaison avec l'année précédente</h2>
+<p class="methode"><strong>📌 Méthode :</strong> Chaque indicateur est comparé à la même période un an plus tôt (du ${fmtD(pStartStr)} au ${fmtD(pEndStr)}), pour mettre en évidence les tendances d'activité et de tension.</p>
+<table style="width:100%;border-collapse:collapse">
+  <tr style="font-size:8.5pt;color:#64748b;text-transform:uppercase;letter-spacing:.04em"><td style="padding:.15cm 0">Indicateur</td><td style="text-align:right">Cette période</td><td style="text-align:right">Année N‑1</td><td style="text-align:right">Écart</td></tr>
+  ${[
+    ['Entrées (admissions)', entrees, n1.entrees, false],
+    ['Sorties', sortiesCount, n1.sorties, false],
+    ['Incidents déclarés', iPeriod.length, n1.incidents, true],
+    ['Entrées au journal', jPeriod.length, n1.journal, false],
+    ['Transmissions équipe', trPeriod.length, n1.transmissions, false],
+    ['Avenants PPE rédigés', avCrees, n1.avenants, false]
+  ].map(([l, c, p, bad]) => `<tr style="border-top:1px solid #eef2f7"><td style="font-size:9.5pt;padding:.12cm 0;color:#1e293b">${l}</td><td style="text-align:right;font-weight:700;color:#0f2b4a;padding:.12cm .3cm">${c}</td><td style="text-align:right;color:#64748b;padding:.12cm .3cm">${p}</td><td style="text-align:right;padding:.12cm 0">${_delta(c, p, bad)}</td></tr>`).join('')}
+</table>
 
 <h2>✍️ Contributions de l'équipe</h2>
 <p class="methode"><strong>📌 Méthode :</strong> Cette section reprend les apports qualitatifs saisis par les éducateurs et l'équipe (faits marquants, points forts, difficultés rencontrées, perspectives) via la page Rapport d'activité, pour les mois compris dans la période sélectionnée. Ce contenu n'est pas calculé automatiquement à partir des autres modules.</p>

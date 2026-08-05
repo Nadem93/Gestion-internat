@@ -72,7 +72,7 @@ function rcCard(c, color) {
         ? `<div style="margin-top:.5rem;padding:.45rem .55rem;background:#f0fdf4;border-radius:6px;font-size:.7rem;color:#16a34a">✅ Compte de connexion créé</div>`
         : (Auth.isAdmin()
             ? `<button class="btn btn-primary btn-sm" style="margin-top:.55rem;width:100%;font-size:.72rem" onclick="rcCreateCompte('${c.id}')">🔑 Créer son compte utilisateur</button>`
-            : `<div style="margin-top:.5rem;padding:.45rem .55rem;background:#f0fdf4;border-radius:6px;font-size:.7rem;color:#16a34a">✓ Créez sa fiche depuis <a href="admin.html" style="color:#16a34a;text-decoration:underline">Administration → Utilisateurs</a></div>`)
+            : `<div style="margin-top:.5rem;padding:.45rem .55rem;background:#f0fdf4;border-radius:6px;font-size:.7rem;color:#16a34a">✓ Créez sa fiche depuis <a href="admin.html?tab=employes" style="color:#16a34a;text-decoration:underline">RH → Employés</a></div>`)
       ) : ''}
   </div>`;
 }

@@ -60,10 +60,37 @@ function _jFromRow(r) {
 }
 
 async function sbGetJournalEntries() {
+  // sbFetchAll : sans lui, l'historique du journal serait tronqué à 1000 entrées.
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('journal_entries').select('*').order('date', { ascending: false }));
+    return data.map(_jFromRow);
+  } catch (error) { console.error(error); toast('Erreur de chargement du journal', 'error'); return []; }
+}
+
+// Lecture LÉGÈRE pour le comptage des non-lues (cloche de notifications).
+// sbGetJournalEntries() fait un select('*') : il rapatrie le contenu ET les
+// pièces jointes stockées en base (jusqu'à plusieurs Mo par entrée), alors que
+// le compteur n'a besoin que de read_by. Appelé toutes les minutes sur une
+// dizaine de pages, l'écart est considérable.
+async function sbGetJournalReadBy() {
+  try {
+    return await sbFetchAll(() => supabaseClient
+      .from('journal_entries').select('id,read_by').order('id'));
+  } catch (error) { console.error('[journal] comptage', error); return []; }
+}
+
+// Mise à jour CIBLÉE d'une ou deux colonnes, sans réécrire la ligne entière.
+// Indispensable pour « marquer comme lu » et pour ajouter une réponse : ces
+// gestes partent du cache du navigateur, qui peut dater de plusieurs heures.
+// Passer par sbSaveJournalEntry() renverrait TOUT l'objet en base et écraserait
+// silencieusement le contenu corrigé entre-temps par un collègue sur un autre
+// poste. Même principe que sbUpdateTransmissionField (js/transmissions-supabase.js).
+async function sbUpdateJournalField(id, fields) {
   const { data, error } = await supabaseClient
-    .from('journal_entries').select('*').order('date', { ascending: false });
-  if (error) { console.error(error); toast('Erreur de chargement du journal', 'error'); return []; }
-  return data.map(_jFromRow);
+    .from('journal_entries').update(fields).eq('id', id).select().single();
+  if (error) throw error;
+  return _jFromRow(data);
 }
 
 async function sbSaveJournalEntry(entry) {

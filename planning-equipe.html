@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Planning équipe — FTR</title>
+  <title>Planning équipe — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -69,7 +69,7 @@
       </div>
 
       <!-- Statistiques de la période -->
-      <div class="pe2-stats" id="pe2Stats"></div>
+      <div class="dc-kpis" id="pe2Stats"></div>
 
       <!-- Grille salariés × jours -->
       <div class="pe2-grid" id="peGrid">
@@ -78,33 +78,41 @@
 
       <!-- Légende + récapitulatif des heures -->
       <div class="pe2-bottom">
-        <div class="v2-blk" id="pe2LegendBlk">
-          <div class="v2-blk-sub">Pointage (bordure) · fond = type de créneau</div>
-          <div id="pe2Legende"></div>
+        <div class="dc-card" id="pe2LegendBlk">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">LÉGENDE</div><div class="dc-title">Codes couleur</div></div>
+          </div><span class="dc-pill dim">bordure = pointage</span></div>
+          <div class="dc-body">
+            <div class="v2-blk-sub">Pointage (bordure) · fond = type de créneau</div>
+            <div id="pe2Legende"></div>
+          </div>
         </div>
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Heures planifiées / période</span></div>
-          <div class="pe2-recap" id="pe2Recap"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">RÉCAPITULATIF</div><div class="dc-title">Heures planifiées / période</div></div>
+          </div></div>
+          <div class="dc-body"><div class="pe2-recap" id="pe2Recap"></div></div>
         </div>
       </div>
 
       <!-- Conformité — Code du travail -->
-      <div class="v2-blk" id="pe2ReglesBlk" style="margin-bottom:16px">
-        <div class="v2-blk-h">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" class="v2-blk-ico"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span class="v2-blk-t">Conformité — Code du travail</span>
-          <span class="v2-card-meta">Contrôle automatique du planning affiché</span>
-        </div>
-        <div class="pe2-regles" id="pe2Regles"></div>
+      <div class="dc-card" id="pe2ReglesBlk" style="margin-bottom:16px">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">CONTRÔLE</div><div class="dc-title">Conformité — Code du travail</div></div>
+        </div><span class="dc-pill dim">auto · planning affiché</span></div>
+        <div class="dc-body"><div class="pe2-regles" id="pe2Regles"></div></div>
       </div>
 
       <!-- Alertes réglementaires -->
-      <div class="v2-card-tint" id="pe2AlertesBlk">
-        <div class="v2-blk-h">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" class="v2-blk-ico"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span class="v2-blk-t" style="color:#fde68a">Alertes réglementaires</span>
-        </div>
-        <div class="pe2-alertes" id="pe2Alertes"></div>
+      <div class="dc-card" id="pe2AlertesBlk">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(245,158,11,.14);color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">VIGILANCE</div><div class="dc-title">Alertes réglementaires</div></div>
+        </div></div>
+        <div class="dc-body"><div class="pe2-alertes" id="pe2Alertes"></div></div>
       </div>
 
     </main>

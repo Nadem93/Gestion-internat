@@ -54,7 +54,7 @@
       ecran: 'connexion',
       corps: '<div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;min-height:140px">'
         + '<div class="ai-card" style="width:238px;text-align:center">'
-        + '<div style="font-family:\'Space Grotesk\',sans-serif;font-weight:800;color:#fff;letter-spacing:.14em">INTERNALIS</div>'
+        + '<div style="font-family:\'Space Grotesk\',sans-serif;font-weight:800;color:var(--v2-t1);letter-spacing:.14em">INTERNALIS</div>'
         + '<div class="ai-line m" style="margin:12px auto"></div><div class="ai-line m" style="margin:12px auto"></div>'
         + '<div class="ai-btn" style="margin-top:8px;width:100%">Se connecter</div></div></div>'
         + pin(1, 'top:52px;left:calc(50% + 128px)', 'Saisissez votre identifiant et mot de passe. Après 15 min d\'inactivité, la session se verrouille automatiquement.')
@@ -343,7 +343,7 @@
       corps: '<div class="ai-row">'
         + '<div class="ai-tile"><span class="ic">📈</span>Statistiques</div>'
         + '<div class="ai-tile"><span class="ic">🏠</span>Établissement</div>'
-        + '<div class="ai-tile"><span class="ic">🧑‍🤝‍🧑</span>Utilisateurs</div>'
+        + '<div class="ai-tile"><span class="ic">🧑‍🤝‍🧑</span>Employés</div>'
         + '<div class="ai-tile"><span class="ic">🔐</span>Permissions</div></div>'
         + pin(1, 'top:26px;left:24px', 'Statistiques & rapport d\'activité (taux d\'occupation, file active, indicateurs réglementaires).')
         + pin(2, 'top:26px;left:calc(25% + 30px)', 'Identité de l\'établissement, couleurs, fond d\'écran, logo, capacité, clé IA.')
@@ -352,7 +352,7 @@
       legende: [
         ['Statistiques & rapport', 'Tableaux et graphiques d\'activité : taux d\'occupation, file active, mouvements, profil du public, taux de PPE — exportables pour le rapport d\'activité.'],
         ['Établissement', 'Identité (nom, FINESS, coordonnées), couleurs, couleur de fond, logo, capacité d\'accueil et clé API de l\'assistant IA.'],
-        ['Utilisateurs & fonctions', 'Créez et gérez les comptes des membres de l\'équipe, leurs fonctions (éducateur, AMP, chef de service…) et leurs accès.'],
+        ['Employés & fonctions', 'Créez et gérez les fiches et comptes des membres de l\'équipe (depuis le portail RH → Employés), leurs fonctions (éducateur, AMP, chef de service…) et leurs accès.'],
         ['Permissions', 'Définissez finement, par fonction, qui peut voir et modifier quoi (résidents, incidents, santé, documents…).']
       ],
       tips: [['👑', 'La <strong>Console groupe</strong> (super administrateur) permet de gérer plusieurs établissements, une vue consolidée, les rôles globaux et l\'audit.', 'superadmin-only violet']]
@@ -366,20 +366,29 @@
       + '<div><div class="ai-lg-t">' + l[0] + '</div><div class="ai-lg-d">' + l[1] + '</div></div></li>').join('');
     const tips = (s.tips || []).map(t =>
       '<div class="ai-tip ' + (t[2] || '') + '"><span class="ai-tip-e">' + t[0] + '</span><div>' + t[1] + '</div></div>').join('');
-    return '<section class="v2-blk ai-sec' + (s.admin ? ' admin-only' : '') + '" id="' + s.id + '" style="--sc:' + s.c + '">'
-      + '<div class="ai-sec-h">'
-      + '<span class="ai-sec-ico">' + svg(s.ic) + '</span>'
-      + '<div><div class="ai-sec-t">' + s.titre + '</div></div>'
-      + (s.admin ? '<span class="ai-tag">Administrateur uniquement</span>' : '')
-      + '<span class="ai-sec-n">' + String(i + 1).padStart(2, '0') + '</span>'
+    const num = String(i + 1).padStart(2, '0');
+    // Console Data : carte .dc-card + en-tête .dc-head (chip + eyebrow + titre + pill mono).
+    // La classe .ai-sec et la variable --sc sont conservées (filtre, observer, comptage,
+    // couleur des pastilles de légende). Le corps passe dans .dc-body (padding intégré).
+    return '<section class="dc-card ai-sec' + (s.admin ? ' admin-only' : '') + '" id="' + s.id + '" style="--sc:' + s.c + '">'
+      + '<div class="dc-head">'
+      + '<div class="dc-head-l">'
+      + '<span class="dc-chip" style="background:' + s.c + '22;color:' + s.c + '">' + svg(s.ic, 16) + '</span>'
+      + '<div style="min-width:0"><div class="dc-eyebrow">' + s.nav + '</div><div class="dc-title">' + s.titre + '</div></div>'
       + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+      + (s.admin ? '<span class="dc-badge dc-b-red">Administrateur</span>' : '')
+      + '<span class="dc-pill dim">' + num + '</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="dc-body">'
       + '<p class="ai-lead">' + s.lead + '</p>'
       + '<div class="ai-screen"><div class="ai-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>' + s.ecran + '</span></div>'
       + '<div class="ai-scr-b">' + s.corps + '</div></div>'
-      + '<div class="v2-blk-sub">Légende détaillée</div>'
+      + '<div class="dc-eyebrow" style="margin-top:18px">Légende détaillée</div>'
       + '<ul class="ai-legend">' + leg + '</ul>'
       + tips
-      + '</section>';
+      + '</div></section>';
   }
 
   function render() {

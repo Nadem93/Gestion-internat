@@ -2,12 +2,13 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Accueil — FTR</title>
+  <title>Accueil — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
   <link rel="stylesheet" href="css/v2-clair-pages.css"/>
   <link rel="stylesheet" href="css/v2-mobile.css"/>
+  <link rel="stylesheet" href="css/v2-accueil.css"/>
   <script src="js/theme.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
@@ -30,26 +31,29 @@
     @media(max-width:480px){.accueil-home-illus,.accueil-home-illus svg{width:40px;height:40px}}
     .notif-badge{z-index:10}
     /* Cloche de notifications */
-    .acc-bell{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid rgba(15,23,42,.12);background:transparent;color:#334155;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
-    .acc-bell:hover{background:rgba(255,255,255,.45);color:#0f172a}
+    /* Cloche et panneau : les couleurs étaient figées en clair (#334155 sur une
+       bordure quasi invisible), donc illisibles depuis que la barre du haut est
+       une pilule sombre. Tout passe par les variables de thème. */
+    .acc-bell{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid var(--v2-b-ctrl,rgba(255,255,255,.08));background:var(--v2-s-ctrl,rgba(255,255,255,.05));color:var(--v2-t2,#eef3fb);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+    .acc-bell:hover{background:var(--v2-s-hover,rgba(255,255,255,.09));border-color:var(--v2-b-active,rgba(255,255,255,.18))}
     .acc-bell svg{width:21px;height:21px}
     .acc-bell-count{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
     .acc-bell-count.hidden{display:none}
-    .acc-notif-panel{position:absolute;top:54px;right:0;width:330px;max-width:92vw;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 12px 34px rgba(15,23,42,.16);overflow:hidden;z-index:60;display:none}
+    .acc-notif-panel{position:absolute;top:54px;right:0;width:330px;max-width:92vw;background:var(--v2-s-alt,#101d31);border:1px solid var(--v2-b,rgba(255,255,255,.09));border-radius:14px;box-shadow:0 12px 34px rgba(3,10,22,.4);overflow:hidden;z-index:60;display:none}
     .acc-notif-panel.open{display:block}
-    .acc-notif-head{padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
-    .acc-notif-head strong{font-size:.9rem;color:#0f172a}
-    .acc-notif-head span{font-size:.75rem;color:#94a3b8}
-    .acc-notif-row{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;border-bottom:1px solid #f1f5f9;cursor:pointer;text-decoration:none;color:inherit;transition:background .12s}
-    .acc-notif-row:hover{background:#f8fafc}
+    .acc-notif-head{padding:.7rem .9rem;border-bottom:1px solid var(--v2-b-list,rgba(255,255,255,.06));display:flex;align-items:center;justify-content:space-between}
+    .acc-notif-head strong{font-size:.9rem;color:var(--v2-t2,#eef3fb)}
+    .acc-notif-head span{font-size:.75rem;color:var(--v2-t7,#7f93b3)}
+    .acc-notif-row{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;border-bottom:1px solid var(--v2-b-list,rgba(255,255,255,.06));cursor:pointer;text-decoration:none;color:inherit;transition:background .12s}
+    .acc-notif-row:hover{background:var(--v2-s-hover,rgba(255,255,255,.06))}
     .acc-notif-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .acc-notif-ic svg{width:18px;height:18px}
-    .acc-notif-row .l1{font-size:.84rem;font-weight:600;color:#0f172a}
-    .acc-notif-row .l2{font-size:.72rem;color:#64748b}
-    .acc-notif-empty{padding:1.6rem .9rem;text-align:center;color:#94a3b8;font-size:.82rem}
-    .acc-notif-foot{padding:.6rem;text-align:center;border-top:1px solid #f1f5f9}
-    .acc-notif-foot button{background:none;border:none;color:#4f46e5;font-size:.78rem;font-weight:600;cursor:pointer;padding:.3rem .6rem;border-radius:7px}
-    .acc-notif-foot button:hover{background:#eef2ff}
+    .acc-notif-row .l1{font-size:.84rem;font-weight:600;color:var(--v2-t2,#eef3fb)}
+    .acc-notif-row .l2{font-size:.72rem;color:var(--v2-t7,#7f93b3)}
+    .acc-notif-empty{padding:1.6rem .9rem;text-align:center;color:var(--v2-t7,#7f93b3);font-size:.82rem}
+    .acc-notif-foot{padding:.6rem;text-align:center;border-top:1px solid var(--v2-b-list,rgba(255,255,255,.06))}
+    .acc-notif-foot button{background:none;border:none;color:var(--v2-indigo-light,#818cf8);font-size:.78rem;font-weight:600;cursor:pointer;padding:.3rem .6rem;border-radius:7px}
+    .acc-notif-foot button:hover{background:var(--v2-s-hover,rgba(255,255,255,.06))}
 
     /* ═══════════ THÈME AURORA GLASS — VERSION CLAIRE (page d'accueil) ═══════════ */
     .accueil-home{position:relative;background:radial-gradient(130% 110% at 50% -8%,#f3f6ff,#dde6f6 66%)}
@@ -113,6 +117,7 @@
 <script src="js/search-global.js"></script>
 <script src="js/residents-supabase.js"></script>
 <script src="js/incidents-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
 <script src="js/astreintes-supabase.js"></script>
 <script src="js/planning-equipe-supabase.js"></script>
 <script src="js/formations-supabase.js"></script>
@@ -121,6 +126,10 @@
 <script src="js/journal-supabase.js"></script>
 <script src="js/ppe-supabase.js"></script>
 <script src="js/planning-supabase.js"></script>
+<script src="js/presences-supabase.js"></script>
+<script src="js/transmissions-supabase.js"></script>
+<script src="js/activites-supabase.js"></script>
+<script src="js/observations-supabase.js"></script>
 <script src="js/interventions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
 <script src="js/admissions-supabase.js"></script>
@@ -145,21 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ok = _s && (_s.role === 'admin' || _s.role === 'superadmin' || perms.some(p => hasPermission(_s.userId, p)));
     if (!ok) el.style.display = 'none';
   });
-  // Tuile « Interventions » : visible seulement pour ceux qui peuvent traiter les demandes
-  // (admin/superadmin, permission access_interventions, ou fonction technicien/maintenance).
-  // Les autres demandent une intervention via le bouton flottant « Demander une intervention ».
-  // Même règle que le garde d'accès de interventions.html (canAccessPage).
-  const tileI = document.getElementById('tileInterventions');
-  if (tileI) {
-    const _s = Auth.getSession();
-    const f = ((_s && _s.fonction) || '').toLowerCase();
-    const canSee = !!_s && (
-      _s.role === 'admin' || _s.role === 'superadmin' ||
-      (typeof hasPermission === 'function' && hasPermission(_s.userId, 'access_interventions')) ||
-      f.includes('technicien') || f.includes('maintenance')
-    );
-    if (!canSee) tileI.style.display = 'none';
-  }
+  // (La tuile « Interventions » est désormais rendue par accueil-v2.js avec
+  //  data-perm="access_interventions" : son masquage passe par applyPermissions()
+  //  de js/app.js — l'ancienne règle #tileInterventions, dont l'id n'existe
+  //  plus, a été retirée.)
 });
 </script>
 
@@ -229,11 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="acc-notif-foot" id="accNotifFoot" style="display:none"><button onclick="markAllNotifsRead()">Tout marquer comme lu</button></div>
       </div>
         </div>
-        <a href="employe.html" style="display:flex;align-items:center;gap:10px;text-decoration:none">
-          <span class="v2-av" id="accUserAv" style="background:linear-gradient(135deg,#818cf8,#22d3ee);width:40px;height:40px">·</span>
-          <span><span id="accUserName" style="display:block;font-size:13px;font-weight:700;color:var(--v2-t2)"></span>
-                <span id="accUserRole" style="display:block;font-size:11.5px;color:var(--v2-t7)"></span></span>
-        </a>
+        <!-- Bloc utilisateur retiré : la barre-pilule n'affiche qu'un seul avatar,
+             celui du menu injecté par js/app.js (identique sur les 62 pages).
+             Le lien vers employe.html vit désormais dans ce menu (« Mon espace »). -->
       </div>
     </div>
     <div class="v2-body"><div id="accV2"></div></div>
@@ -404,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadChambres();
   fillResidentSelect();
   const fd = document.getElementById('fDate');
-  if (fd) fd.value = new Date().toISOString().slice(0,10);
+  if (fd) fd.value = today();
   const fh = document.getElementById('fHeure');
   if (fh) fh.value = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
 });
@@ -546,9 +542,11 @@ async function markAllNotifsRead() {
     // En file, marquer 30 entrées non lues coûtait 30 allers-retours enchaînés.
     // Les écritures sont indépendantes : même traitement que les messages
     // quelques lignes plus haut.
+    // Écriture CIBLÉE : renvoyer l'entrée entière écrasait le contenu corrigé
+    // entre-temps par un collègue (voir sbUpdateJournalField).
     await Promise.all(unreadJ.map(en => {
       en.readBy = [...(en.readBy || []), uid];
-      return sbSaveJournalEntry(en);
+      return sbUpdateJournalField(en.id, { read_by: en.readBy });
     }));
   } catch (e) { console.error('[markAllNotifsRead] journal', e); }
   closeNotifPanel();
@@ -576,7 +574,7 @@ async function _loadAccIncidentCount() {
 async function _loadAccRhCounts() {
   const session = Auth.getSession();
   if (!session) return;
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = today();
   const in7dStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
   const empFullName = [session.prenom, session.nom].filter(Boolean).join(' ');
   try {

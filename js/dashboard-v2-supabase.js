@@ -36,7 +36,7 @@ async function sbSaveAnnonce(a) {
     texte: a.texte || '',
     service: a.service || '',
     auteur: a.auteur || '',
-    date_pub: a.date || new Date().toISOString().slice(0, 10),
+    date_pub: a.date || today(),
     epingle: !!a.epingle,
     updated_at: new Date().toISOString()
   };
@@ -58,43 +58,4 @@ async function sbDeleteAnnonce(id) {
 }
 
 // ─── Climat par unité (« Météo du foyer ») ────────────────────────────────
-function _climFromRow(r) {
-  return {
-    id: r.id,
-    date: r.date,
-    unite: r.unite || '',
-    niveau: r.niveau || 'calme',   // calme | tendu | difficile
-    note: r.note || '',
-    saisiPar: r.saisi_par || ''
-  };
-}
-
-// Renvoie les relevés entre deux dates (incluses).
-async function sbGetClimat(startDate, endDate) {
-  const { data, error } = await supabaseClient
-    .from('climat_unite').select('*')
-    .gte('date', startDate).lte('date', endDate)
-    .order('date', { ascending: true });
-  if (error) { console.warn('[sbGetClimat]', error.message); return []; }
-  return data.map(_climFromRow);
-}
-
-// Un seul relevé par (établissement, date, unité) : on remonte sur le conflit.
-async function sbSaveClimat(c) {
-  const etablissementId = await sbGetEtablissementId();
-  const row = {
-    etablissement_id: etablissementId,
-    date: c.date || new Date().toISOString().slice(0, 10),
-    unite: c.unite || '',
-    niveau: c.niveau || 'calme',
-    note: c.note || '',
-    saisi_par: c.saisiPar || '',
-    updated_at: new Date().toISOString()
-  };
-  const { data, error } = await supabaseClient
-    .from('climat_unite')
-    .upsert(row, { onConflict: 'etablissement_id,date,unite' })
-    .select();
-  if (error) throw error;
-  return _climFromRow(data[0]);
-}
+// Déplacé dans js/climat-supabase.js (partagé dashboard + saisie transmissions).

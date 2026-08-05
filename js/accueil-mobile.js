@@ -100,9 +100,8 @@
   }
 
   function greeting(){
-    var a=_auth(), s=null; try { s=(a&&a.getSession)?a.getSession():null; } catch(e){}
     var d=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    return '<div class="m-hello"><div class="m-date">'+esc(d)+'</div><h1>Bonjour, '+esc((s&&(s.prenom||s.username))||'')+'</h1></div>';
+    return '<div class="m-hello"><div class="m-date">'+esc(d)+'</div></div>';
   }
 
   function searchBar(){

@@ -226,7 +226,8 @@ function prv2RenderTable() {
   const actRid = actCard ? actCard.getAttribute('data-rid') : null;
   const actEdit = !!(actRid && act.classList && act.classList.contains('pr2-edit'));
 
-  el.innerHTML = `<div class="pr2-hint">Astuce : touchez une carte pour changer le statut (Présent → Absent → Sortie → Non pointé) · appui long, clic droit ou ✎ pour saisir un motif.</div>
+  el.innerHTML = `<div class="dc-eyebrow" style="margin-bottom:8px">Mode pointage</div>
+    <div class="pr2-hint">Astuce : touchez une carte pour changer le statut (Présent → Absent → Sortie → Non pointé) · appui long, clic droit ou ✎ pour saisir un motif.</div>
     <div class="pr2-grid">${cartes}</div>${vide}`;
 
   if (actRid) {

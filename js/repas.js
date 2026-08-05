@@ -19,7 +19,7 @@ function rpWeekStart(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
   const dow = d.getDay();
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
-  return d.toISOString().slice(0, 10);
+  return isoJour(d);
 }
 
 function rpWeekDays(dateStr) {
@@ -27,7 +27,7 @@ function rpWeekDays(dateStr) {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start + 'T12:00:00');
     d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0, 10);
+    return isoJour(d);
   });
 }
 
@@ -385,11 +385,11 @@ function rpCopyWeek(fromStart, toStart) {
   const all  = getRepas();
   const fromDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(fromStart + 'T12:00:00'); d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0, 10);
+    return isoJour(d);
   });
   const toDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(toStart + 'T12:00:00'); d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0, 10);
+    return isoJour(d);
   });
   fromDays.forEach((fd, i) => {
     if (all[fd]) all[toDays[i]] = JSON.parse(JSON.stringify(all[fd]));
@@ -404,7 +404,7 @@ function rpShiftDate(days) {
   const shift = rpView === 'semaine' ? (days > 0 ? 7 : -7) : days;
   const d = new Date(repasDate + 'T12:00');
   d.setDate(d.getDate() + shift);
-  repasDate = d.toISOString().slice(0, 10);
+  repasDate = isoJour(d);
   renderRepas();
 }
 
@@ -412,7 +412,7 @@ function rpShiftDate(days) {
 function rpJumpDays(days) {
   const d = new Date(repasDate + 'T12:00');
   d.setDate(d.getDate() + days);
-  repasDate = d.toISOString().slice(0, 10);
+  repasDate = isoJour(d);
   renderRepas();
 }
 
@@ -439,7 +439,7 @@ function renderDateStrip() {
   for (let i = 0; i < 35; i++) {
     const d = new Date(todayS + 'T12:00');
     d.setDate(d.getDate() + i);
-    const ds = d.toISOString().slice(0, 10);
+    const ds = isoJour(d);
     const isToday = ds === todayS;
     const isSelected = ds === repasDate;
     const dayData = repasAll[ds];
@@ -555,7 +555,7 @@ function renderSemaineView(residents, canEdit) {
   const nextWeek = (() => {
     const d = new Date(days[0] + 'T00:00:00');
     d.setDate(d.getDate() + 7);
-    return d.toISOString().slice(0, 10);
+    return isoJour(d);
   })();
 
   const copyBtn = canEdit

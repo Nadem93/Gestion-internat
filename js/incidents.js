@@ -49,7 +49,7 @@ function populateResidentSelect() {
 
 function setDefaults() {
   const d = document.getElementById('fDate');
-  if (d && !d.value) d.value = new Date().toISOString().slice(0,10);
+  if (d && !d.value) d.value = today();
   const h = document.getElementById('fHeure');
   if (h && !h.value) h.value = new Date().toTimeString().slice(0,5);
 }

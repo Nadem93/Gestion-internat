@@ -4,6 +4,8 @@ let pendingPhoto = null;
 let pendingDocFile = null;
 let _residentsCache = [];
 let _residentsEcheances = [];   // échéances (MDPH, mesure de protection, contrat…) pour l'affichage sur les cartes
+let _residentsTransmissionsOk = true;  // false si la lecture des transmissions a échoué
+let _residentsMedJour = [];     // prises de médicaments du jour, pour le bloc « Médicaments » du rail
 
 async function loadAndRenderResidents() {
   _residentsCache = await sbGetResidents();
@@ -229,10 +231,12 @@ function renderResidents() {
   if (!container || !countEl) return; // page sans liste (fiche résident, documents…)
   countEl.textContent = `${list.length} résident${list.length > 1 ? 's' : ''} affiché${list.length > 1 ? 's' : ''}`;
   if (typeof resRenderChips === 'function') resRenderChips();
-  // Le rail montre le premier résident visible tant qu'aucun n'a été choisi,
-  // et se recale si le filtre courant exclut la sélection.
-  if (typeof RES_SEL !== 'undefined') {
-    if (!list.some(r => String(r.id) === String(RES_SEL))) RES_SEL = list.length ? list[0].id : null;
+  // Accordéon : au chargement, aucune carte n'est dépliée (RES_SEL = null). On
+  // referme simplement si le filtre courant exclut la carte ouverte — pas de
+  // sélection automatique, qui déplierait une fiche sans que l'on ait cliqué.
+  if (typeof RES_SEL !== 'undefined' && RES_SEL != null
+      && !list.some(r => String(r.id) === String(RES_SEL))) {
+    RES_SEL = null;
   }
 
   if (!list.length) {
@@ -379,11 +383,12 @@ function _resAge(dob) {
   return Math.floor((Date.now() - d.getTime()) / 31557600000);
 }
 
+const RES_STATUT_LABELS = { present:'Présent', absent:'Absent', sortie:'Sortie temp.', sorti:'Sorti', urgence:'Urgence', stage:'Stage', temporaire:'Temporaire', permanent:'Permanent' };
+
 function statusBadge(s) {
   const colors = { urgence:'#ef4444', stage:'#f97316', temporaire:'#3b82f6', permanent:'#10b981', present:'#10b981', absent:'#ef4444', sortie:'#f59e0b', sorti:'#94a3b8' };
-  const labels = { present:'Présent', absent:'Absent', sortie:'Sortie temp.', sorti:'Sorti', urgence:'Urgence', stage:'Stage', temporaire:'Temporaire', permanent:'Permanent' };
   const c = colors[s] || '#94a3b8';
-  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${labels[s]||s||'—'}</span>`;
+  return `<span class="badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${RES_STATUT_LABELS[s]||s||'—'}</span>`;
 }
 
 function residentCard(r) {
@@ -407,36 +412,48 @@ function residentCard(r) {
     ? `resSelect('${r.id}')`
     : `window.location.href='resident.html?id=${r.id}'`;
 
-  return `<div class="v2-res${choisie ? ' on' : ''}" style="--rc:${coverColor}" onclick="${action}">
-    <span class="v2-res-bar"></span>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="v2-res-av" style="background:${coverColor}">${r.photo
-        ? `<img src="${sanitizeUrl(r.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>`
+  // Design « Bandeau coloré » : en-tête à la couleur du résident (avatar, nom,
+  // statut) + corps clair. Les pastilles de l'en-tête sont en blanc translucide
+  // pour rester lisibles sur n'importe quelle couleur de résident.
+  const anniv = _resAnnivInfo(r.dob);
+  const cake = (anniv && anniv.jours <= RES_ANNIV_BADGE)
+    ? `<span class="rc-hb cake" title="Anniversaire ${anniv.jours === 0 ? "aujourd'hui" : 'dans ' + anniv.jours + ' j'}">🎂 ${anniv.jours === 0 ? "auj." : anniv.jours + ' j'}</span>` : '';
+
+  // La carte était focalisable mais Entrée/Espace ne faisaient rien : au clavier
+  // on pouvait atteindre chaque résident sans jamais pouvoir l'ouvrir.
+  return `<div class="rc${choisie ? ' on' : ''}" style="--rc:${coverColor}" tabindex="0" role="button"
+    aria-label="${escHtml((r.prenom || '') + ' ' + (r.nom || ''))}"
+    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"
+    onclick="${action}">
+    <div class="rc-head">
+      <div class="rc-av">${r.photo
+        ? `<img src="${sanitizeUrl(r.photo)}" alt=""/>`
         : initials(r.prenom, r.nom)}</div>
-      <div style="flex:1;min-width:0">
-        <div class="v2-res-nom">${escHtml(r.prenom || '')} ${escHtml(r.nom || '')}</div>
-        <div class="v2-res-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-        ${statusBadge(presenceStatus)}
-        ${(() => { const a = _resAnnivInfo(r.dob); return (a && a.jours <= RES_ANNIV_BADGE)
-          ? `<span class="res-cake-badge" title="Anniversaire ${a.jours === 0 ? "aujourd'hui" : 'dans ' + a.jours + ' j'}">🎂 ${a.jours === 0 ? "auj." : a.jours + ' j'}</span>` : ''; })()}
+      <div class="rc-who">
+        <div class="rc-name">${escHtml(r.prenom || '')} ${escHtml(r.nom || '')}</div>
+        <div class="rc-meta">${r.dob ? age(r.dob) : ''}${r.chambre ? ' · Ch. ' + escHtml(r.chambre) : ''}</div>
+        <div class="rc-hbs"><span class="rc-hb">${escHtml(RES_STATUT_LABELS[presenceStatus] || presenceStatus || '—')}</span>${cake}</div>
       </div>
     </div>
 
-    ${refNom ? `<div class="v2-res-ref">
-      <span class="v2-res-ref-av" style="background:${coverColor}33;color:${coverColor}">${escHtml(refIni)}</span>
-      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Réf. ${escHtml(refNom)}</span></div>` : ''}
+    <div class="rc-body">
+      ${refNom ? `<div class="rc-ref">
+        <span class="rc-ref-av">${escHtml(refIni)}</span>
+        <span class="lbl">Réf.</span> <b>${escHtml(refNom)}</b></div>` : ''}
 
-    <div class="v2-res-obj">
-      <div class="v2-res-obj-h"><span>Objectifs</span><span style="color:${coverColor};font-weight:700">${atteints}/${objIds.length}</span></div>
-      <div class="v2-bar v2-bar-sm"><span style="width:${objPct}%;background:${coverColor}"></span></div>
+      <div class="rc-obj">
+        <div class="rc-obj-h"><span>Objectifs atteints</span><b>${atteints}/${objIds.length}</b></div>
+        <div class="rc-bar"><i style="width:${objPct}%;background:${coverColor}"></i></div>
+      </div>
+
+      ${_resEcheanceCard(r)}
+
+      ${tags.length ? `<div class="rc-tags">${tags.map(t =>
+        `<span class="rc-tag" style="--tc:${t.c}">${escHtml(t.l)}</span>`).join('')}</div>` : ''}
+      <!-- La fiche détaillée n'est plus dépliée dans la carte : elle s'affiche
+           dans le rail #resDetail à droite de la grille (resRenderDetail).
+           La carte garde .rc.on pour montrer laquelle le rail affiche. -->
     </div>
-
-    ${_resEcheanceCard(r)}
-
-    ${tags.length ? `<div class="v2-res-tags">${tags.map(t =>
-      `<span class="v2-res-tag" style="--pc:${t.c}">${escHtml(t.l)}</span>`).join('')}</div>` : ''}
   </div>`;
 }
 
@@ -645,7 +662,15 @@ async function saveResident() {
   const checked = [...document.querySelectorAll('input[name="objectif"]:checked')].map(el => el.value);
   const gV = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   const id = document.getElementById('residentId').value;
+  // FUSION avec la fiche existante. Cette modale ne présente qu'une PARTIE des
+  // champs : sans le `...existant`, enregistrer une modification remettait à
+  // vide tout ce qu'elle n'affiche pas — traitements, rendez-vous médicaux,
+  // régime, allergies alimentaires, planning hebdomadaire, objectifs du projet,
+  // budget, trousseau, activités, évaluations, droits de visite, INS, DMP,
+  // consentement au partage. Même précaution que saveQuickEdit() plus bas.
+  const existant = id ? (_residentsCache || []).find(x => String(x.id) === String(id)) : null;
   const data = {
+    ...(existant || {}),
     id: id || undefined,
     nom, prenom, photo: pendingPhoto,
     dob: gV('rDob'), genre: gV('rGenre'), entree: gV('rEntree'),
@@ -745,20 +770,31 @@ async function initResidents() {
   // (chambres = l'unité du rail, transmissions = la dernière note du rail ;
   //  échec silencieux, le rail se dégrade mais la liste reste utilisable.)
   const _d3 = new Date(); _d3.setDate(_d3.getDate() - 3);
+  const _d60 = new Date(); _d60.setDate(_d60.getDate() - 60);
   const _opt = (nom, ...a) => (typeof window[nom] === 'function' ? window[nom](...a) : Promise.resolve(null));
   const _sr = (label, p) => Promise.resolve().then(() => p).catch(e => { console.warn('[annuaire] ' + label, e); return null; });
-  const [, presences, chambres, transmissions, residents, echeances] = await Promise.all([
+  const [, presences, chambres, transmissions, residents, echeances, medJour] = await Promise.all([
     _sr('documents', loadDocResCache()),
-    _sr('présences', _opt('sbGetPresencesRange', _d3.toISOString().slice(0, 10), today())),
+    _sr('présences', _opt('sbGetPresencesRange', isoJour(_d3), today())),
     _sr('chambres', _opt('sbGetChambres')),
-    _sr('transmissions', _opt('sbGetTransmissions')),
+    // 60 jours suffisent : l'annuaire n'affiche que la DERNIÈRE transmission de
+    // chaque résident. Lire toute la table faisait grossir le temps d'ouverture
+    // avec l'historique de l'établissement.
+    _sr('transmissions', _opt('sbGetTransmissionsDepuis', isoJour(_d60))),
     _sr('résidents', sbGetResidents()),
-    _sr('échéances', _opt('sbGetEcheances'))
+    _sr('échéances', _opt('sbGetEcheances')),
+    // Prises du jour : alimente le bloc « Médicaments » du rail de détail.
+    _sr('médicaments', _opt('sbGetMedDistribForDate', today()))
   ]);
   if (presences) DB.set(DB.keys.presences, presences);
   _residentChambres = chambres || [];
+  // null = la lecture a échoué ; [] = elle a réussi et il n'y a rien. Sans cette
+  // distinction, une panne réseau affichait « Aucune transmission » — une
+  // information fausse — au lieu de le signaler.
   _residentsTransmissions = transmissions || [];
+  _residentsTransmissionsOk = transmissions !== null;
   _residentsEcheances = echeances || [];
+  _residentsMedJour = medJour || [];
   _residentsCache = residents || [];
   renderResidents();
 

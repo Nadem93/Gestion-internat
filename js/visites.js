@@ -57,7 +57,7 @@ function renderVisitesLegacy() {
   // Stats (non filtrées)
   const enCours = all.filter(v => v.type === 'hebergement' && v.statut === 'prevue' && (v.date || '') <= td && (v.dateRetour || v.date || '') >= td);
   const aujourdhui = all.filter(v => v.date === td && v.statut === 'prevue');
-  const in7 = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const in7 = isoJour(new Date(Date.now() + 7 * 86400000));
   const semaine = all.filter(v => v.statut === 'prevue' && v.date > td && v.date <= in7);
   const mediatisees = all.filter(v => v.type === 'mediatisee' && v.statut === 'prevue' && v.date >= td);
   document.getElementById('vStats').innerHTML = `

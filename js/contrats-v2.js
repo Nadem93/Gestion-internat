@@ -50,6 +50,22 @@ function ct2Svg(path, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 }
 
+// SVG dimensionné (les puces « Console Data » n'ont pas de règle de taille CSS).
+function ct2SvgSz(path, size, w) {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+}
+
+// En-tête de carte « Console Data » : puce teintée + micro-label + titre + droite.
+function ct2Head(color, icon, eyebrow, title, right) {
+  return `<div class="dc-head"><div class="dc-head-l">`
+    + `<span class="dc-chip" style="background:${color}22;color:${color}">${ct2SvgSz(icon, 16)}</span>`
+    + `<div style="min-width:0"><div class="dc-eyebrow">${escHtml(eyebrow)}</div><div class="dc-title">${escHtml(title)}</div></div>`
+    + `</div>${right || ''}</div>`;
+}
+
+// Pastille monospace d'en-tête (compteur, total, méta courte).
+function ct2Pill(txt) { return `<span class="dc-pill dim">${escHtml(String(txt))}</span>`; }
+
 // ── Données annexes (tables de migration-contrats.sql) ───────────────────
 let CT2_COUTS = [];
 let CT2_DPAE = [];
@@ -205,15 +221,16 @@ function ct2RenderStats() {
   const actifs = all.filter(ct2Actif);
   const ech60 = actifs.filter(c => { const j = c.fin ? ct2Jours(c.fin) : null; return j !== null && j >= 0 && j <= 60; });
   const tuiles = [
-    { n: actifs.length, l: 'Contrats actifs', c: '#22d3ee', i: CT2_IC.file },
-    { n: actifs.filter(c => c.type === 'cdi').length, l: 'CDI', c: '#10b981', i: CT2_IC.infin },
-    { n: actifs.filter(c => c.type === 'cdd').length, l: 'CDD', c: '#f59e0b', i: CT2_IC.clock },
-    { n: ech60.length, l: 'Échéances < 60j', c: '#ef4444', i: CT2_IC.alert }
+    { n: actifs.length, l: 'Contrats actifs', s: `${all.length} enregistré${all.length > 1 ? 's' : ''}`, c: '#22d3ee', i: CT2_IC.file },
+    { n: actifs.filter(c => c.type === 'cdi').length, l: 'CDI', s: 'Durée indéterminée', c: '#10b981', i: CT2_IC.infin },
+    { n: actifs.filter(c => c.type === 'cdd').length, l: 'CDD', s: 'Durée déterminée', c: '#f59e0b', i: CT2_IC.clock },
+    { n: ech60.length, l: 'Échéances < 60j', s: ech60.length ? 'À renouveler' : 'Aucune', c: '#ef4444', i: CT2_IC.alert }
   ];
   el.innerHTML = tuiles.map(t => `
-    <div class="ct2-stat" style="--pc:${t.c}">
-      <span class="ct2-stat-ico">${ct2Svg(t.i)}</span>
-      <div><div class="ct2-stat-n">${t.n}</div><div class="ct2-stat-l">${escHtml(t.l)}</div></div>
+    <div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${escHtml(t.l)}</span><span class="dc-kpi-ico" style="color:${t.c}">${ct2SvgSz(t.i, 16)}</span></div>
+      <div class="dc-kpi-val">${t.n}</div>
+      <div class="dc-kpi-sub">${escHtml(t.s)}</div>
     </div>`).join('');
 }
 
@@ -244,9 +261,11 @@ function ct2RenderTable() {
   const list = ct2Liste();
   const cols = ['Salarié', 'Type', 'Début', 'Fin', 'ETP', 'Statut', ''];
 
+  const head = ct2Head('#22d3ee', CT2_IC.file, 'Contrats', 'Registre des contrats', ct2Pill(list.length));
+
   if (!list.length) {
     const vide = ct2All().length === 0;
-    el.innerHTML = `<div class="ct2-empty">${vide
+    el.innerHTML = head + `<div class="ct2-empty">${vide
       ? 'Aucun contrat enregistré. Créez le premier contrat d\'un salarié.'
       : 'Aucun contrat ne correspond aux filtres sélectionnés.'}</div>`;
     return;
@@ -267,11 +286,11 @@ function ct2RenderTable() {
           </div>
         </div>
       </td>
-      <td><span class="ct2-type" style="--pc:${t.c}">${escHtml(t.l)}</span></td>
+      <td><span class="dc-badge" style="background:${t.c}1f;color:${t.c};border:1px solid ${t.c}44">${escHtml(t.l)}</span></td>
       <td>${ct2Date(c.debut)}</td>
       <td>${c.fin ? ct2Date(c.fin) : '—'}</td>
       <td>${ct2EtpTxt(c)}</td>
-      <td><span class="ct2-st" style="--pc:${st.c}"><span class="dot"></span>${st.l}</span></td>
+      <td><span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${escHtml(st.l)}</span></td>
       <td>
         ${edit ? `<div class="ct2-actions" onclick="event.stopPropagation()">
           ${c.fichierPath ? `<button type="button" class="ct2-ico-btn" title="${escAttr(c.fichierNom || 'Document joint')}" onclick="ctOpenFichier('${c.id}')">${ct2Svg(CT2_IC.clip)}</button>` : ''}
@@ -282,7 +301,7 @@ function ct2RenderTable() {
     </tr>`;
   }).join('');
 
-  el.innerHTML = `<div class="ct2-tablewrap"><table class="v2-table">
+  el.innerHTML = head + `<div class="ct2-tablewrap"><table class="v2-table">
     <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
@@ -299,17 +318,14 @@ function ct2Echeances() {
 function ct2RenderEcheances() {
   const el = document.getElementById('ct2Echeances');
   if (!el) return;
-  const list = ct2Echeances().slice(0, 6);
-  el.style.setProperty('--ta', 'rgba(239,68,68,.13)');
-  el.style.setProperty('--tb', 'rgba(245,158,11,.05)');
-  el.style.setProperty('--tc', 'rgba(239,68,68,.22)');
-  el.innerHTML = `
-    <div class="ct2-tint-h" style="color:#fca5a5">${ct2Svg(CT2_IC.alert)}<span class="ct2-tint-t" style="color:#fecaca">Échéances contractuelles</span></div>
-    ${list.length ? list.map(x => {
+  const all = ct2Echeances();
+  const list = all.slice(0, 6);
+  el.innerHTML = ct2Head('#ef4444', CT2_IC.alert, 'Suivi', 'Échéances contractuelles', ct2Pill(all.length))
+    + `<div class="dc-body">${list.length ? list.map(x => {
       const col = x.j <= 30 ? '#ef4444' : '#f59e0b';
       const d = new Date(x.c.fin + 'T00:00:00');
       const court = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return `<div class="ct2-li" style="--pc:${col}">
+      return `<div class="ct2-li" style="--pc:${col};border-left:3px solid ${col};padding-left:11px">
         <span class="v2-av v2-av-sm" style="background:${ct2Couleur(x.c.employeId || x.c.id)}">${escHtml(ct2Ini(x.c.employeId))}</span>
         <div class="ct2-li-b">
           <div class="ct2-li-n">${escHtml(ct2Nom(x.c.employeId))}</div>
@@ -317,7 +333,7 @@ function ct2RenderEcheances() {
         </div>
         <span class="ct2-li-v">${court}</span>
       </div>`;
-    }).join('') : '<div class="v2-blk-vide">Aucune échéance à venir sur les contrats actifs.</div>'}`;
+    }).join('') : '<div class="v2-blk-vide">Aucune échéance à venir sur les contrats actifs.</div>'}</div>`;
 }
 
 // ── 5. Répartition des contrats ──────────────────────────────────────────
@@ -328,13 +344,13 @@ function ct2RenderRepartition() {
   const n = CT2_ORDRE.map(k => ({ k, l: ct2T(k).l, c: ct2T(k).c, n: actifs.filter(x => x.type === k).length }))
     .filter(x => x.n > 0);
   const max = n.reduce((m, x) => Math.max(m, x.n), 0) || 1;
-  el.innerHTML = `
-    <div class="v2-blk-h"><span class="v2-blk-t">Répartition des contrats</span></div>
-    ${n.length ? `<div class="ct2-bars">${n.map(x => `
-      <div>
+  const total = actifs.length;
+  el.innerHTML = ct2Head('#818cf8', CT2_IC.file, 'Actifs', 'Répartition des contrats', ct2Pill(total))
+    + `<div class="dc-body">${n.length ? `<div class="ct2-bars">${n.map(x => `
+      <div style="border-left:3px solid ${x.c};padding-left:11px">
         <div class="ct2-bar-h"><span class="ct2-bar-l">${escHtml(x.l)}</span><span class="ct2-bar-n">${x.n}</span></div>
         <div class="v2-prog"><span style="width:${Math.round((x.n / max) * 100)}%;background:${x.c}"></span></div>
-      </div>`).join('')}</div>` : '<div class="v2-blk-vide">Aucun contrat actif.</div>'}`;
+      </div>`).join('')}</div>` : '<div class="v2-blk-vide">Aucun contrat actif.</div>'}</div>`;
 }
 
 // ── 6. Génération de documents ───────────────────────────────────────────
@@ -349,31 +365,25 @@ const CT2_DOCS = [
 function ct2RenderGen() {
   const el = document.getElementById('ct2Gen');
   if (!el) return;
-  el.innerHTML = `
-    <div class="v2-blk-h"><span class="v2-blk-t">Génération de documents</span></div>
-    <div class="ct2-gen">${CT2_DOCS.map(d => `
+  el.innerHTML = ct2Head('#22d3ee', CT2_IC.file, 'Documents', 'Génération de documents')
+    + `<div class="dc-body"><div class="ct2-gen">${CT2_DOCS.map(d => `
       <button type="button" class="ct2-gen-t" style="--pc:${d.c}" onclick="ct2OpenGen('${d.id}')">
         <span class="ct2-gen-ico">${ct2Svg(d.i)}</span>
         <div class="ct2-gen-l">${escHtml(d.l)}</div>
         <div class="ct2-gen-s">Générer · imprimable</div>
-      </button>`).join('')}</div>`;
+      </button>`).join('')}</div></div>`;
 }
 
 // ── 7. Alertes de renouvellement ─────────────────────────────────────────
 function ct2RenderAlertes() {
   const el = document.getElementById('ct2Alertes');
   if (!el) return;
-  el.style.setProperty('--ta', 'rgba(245,158,11,.13)');
-  el.style.setProperty('--tb', 'rgba(239,68,68,.05)');
-  el.style.setProperty('--tc', 'rgba(245,158,11,.22)');
-
   const list = ct2Echeances().filter(x => x.c.type !== 'cdi' && x.j <= 90).slice(0, 5);
-  el.innerHTML = `
-    <div class="ct2-tint-h" style="color:#fbbf24">${ct2Svg(CT2_IC.bell)}<span class="ct2-tint-t" style="color:#fde68a">Alertes de renouvellement</span></div>
-    ${list.length ? list.map(x => {
+  el.innerHTML = ct2Head('#f59e0b', CT2_IC.bell, 'Renouvellement', 'Alertes de renouvellement', ct2Pill(list.length))
+    + `<div class="dc-body">${list.length ? list.map(x => {
       const col = x.j <= 15 ? '#ef4444' : (x.j <= 45 ? '#f59e0b' : '#22d3ee');
       const act = x.j <= 15 ? 'Traiter' : (x.j <= 45 ? 'Renouveler' : 'Planifier');
-      return `<div class="ct2-li" style="--pc:${col}">
+      return `<div class="ct2-li" style="--pc:${col};border-left:3px solid ${col};padding-left:11px">
         <span class="v2-av v2-av-sm" style="background:${ct2Couleur(x.c.employeId || x.c.id)}">${escHtml(ct2Ini(x.c.employeId))}</span>
         <div class="ct2-li-b">
           <div class="ct2-li-n">${escHtml(ct2Nom(x.c.employeId))}</div>
@@ -383,7 +393,7 @@ function ct2RenderAlertes() {
           ? `<button type="button" class="ct2-li-act" onclick="openContratModal('${x.c.id}')">${act}</button>`
           : `<span class="ct2-li-v">J-${x.j}</span>`}
       </div>`;
-    }).join('') : '<div class="v2-blk-vide">Aucun contrat à renouveler dans les 90 jours.</div>'}`;
+    }).join('') : '<div class="v2-blk-vide">Aucun contrat à renouveler dans les 90 jours.</div>'}</div>`;
 }
 
 // ── 8. Périodes d'essai en cours ─────────────────────────────────────────
@@ -393,9 +403,8 @@ function ct2RenderEssais() {
   const list = ct2All().filter(c => ct2Actif(c) && c.essai)
     .sort((a, b) => (a.essai || '').localeCompare(b.essai || ''));
 
-  el.innerHTML = `
-    <div class="v2-blk-h">${`<span style="color:#22d3ee;display:flex">${ct2Svg(CT2_IC.clock)}</span>`}<span class="v2-blk-t">Périodes d'essai en cours</span></div>
-    ${list.length ? `<div class="ct2-bars">${list.map(c => {
+  el.innerHTML = ct2Head('#22d3ee', CT2_IC.clock, 'En cours', "Périodes d'essai", ct2Pill(list.length))
+    + `<div class="dc-body">${list.length ? `<div class="ct2-bars">${list.map(c => {
       const j = ct2Jours(c.essai);
       const debut = new Date((c.debut || c.essai) + 'T00:00:00').getTime();
       const fin = new Date(c.essai + 'T00:00:00').getTime();
@@ -403,12 +412,12 @@ function ct2RenderEssais() {
       pct = Math.max(0, Math.min(100, pct));
       const finie = j === null || j < 0;
       const col = finie ? '#10b981' : (j <= 15 ? '#f59e0b' : '#22d3ee');
-      return `<div>
+      return `<div style="border-left:3px solid ${col};padding-left:11px">
         <div class="ct2-bar-h"><span class="ct2-bar-l">${escHtml(ct2Nom(c.employeId))}</span><span class="ct2-bar-m">fin ${ct2Date(c.essai)}</span></div>
         <div class="v2-prog"><span style="width:${finie ? 100 : pct}%;background:${col}"></span></div>
         <div class="ct2-bar-s">${finie ? 'Échue' : `Reste ${j} jour${j > 1 ? 's' : ''}`}</div>
       </div>`;
-    }).join('')}</div>` : '<div class="v2-blk-vide">Aucune période d\'essai renseignée sur les contrats actifs.</div>'}`;
+    }).join('')}</div>` : '<div class="v2-blk-vide">Aucune période d\'essai renseignée sur les contrats actifs.</div>'}</div>`;
 }
 
 // ── 9. Ancienneté de l'équipe ────────────────────────────────────────────
@@ -438,18 +447,14 @@ function ct2RenderAnciennete() {
     { l: '> 5 ans', c: '#10b981', f: x => x.ans >= 5 }
   ].map(b => ({ ...b, n: anc.filter(b.f).length }));
   const max = buckets.reduce((m, b) => Math.max(m, b.n), 0) || 1;
+  const moyTxt = moy === null ? '—' : moy.toFixed(1).replace('.', ',') + ' ans';
 
-  el.innerHTML = `
-    <div class="v2-blk-h">
-      <span class="v2-blk-t">Ancienneté de l'équipe</span>
-      <span style="margin-left:auto;font-size:12px;font-weight:800;color:#818cf8;font-family:var(--v2-display)">${
-        moy === null ? '—' : moy.toFixed(1).replace('.', ',') + ' ans'}</span>
-    </div>
-    ${anc.length ? `<div class="ct2-bars">${buckets.map(b => `
-      <div>
+  el.innerHTML = ct2Head('#10b981', CT2_IC.users, 'Équipe', "Ancienneté de l'équipe", ct2Pill('moy. ' + moyTxt))
+    + `<div class="dc-body">${anc.length ? `<div class="ct2-bars">${buckets.map(b => `
+      <div style="border-left:3px solid ${b.c};padding-left:11px">
         <div class="ct2-bar-h"><span class="ct2-bar-l">${escHtml(b.l)}</span><span class="ct2-bar-n">${b.n}</span></div>
         <div class="v2-prog"><span style="width:${Math.round((b.n / max) * 100)}%;background:${b.c}"></span></div>
-      </div>`).join('')}</div>` : '<div class="v2-blk-vide">Aucun contrat daté.</div>'}`;
+      </div>`).join('')}</div>` : '<div class="v2-blk-vide">Aucun contrat daté.</div>'}</div>`;
 }
 
 // ── 10. Historique d'un salarié ──────────────────────────────────────────
@@ -470,7 +475,8 @@ function ct2RenderHisto() {
   if (!el) return;
   const emps = ct2EmpsAvecContrat();
   if (!emps.length) {
-    el.innerHTML = '<div class="v2-blk-h"><span class="v2-blk-t">Historique</span></div><div class="v2-blk-vide">Aucun contrat enregistré.</div>';
+    el.innerHTML = ct2Head('#818cf8', CT2_IC.clock, 'Parcours', 'Historique')
+      + '<div class="dc-body"><div class="v2-blk-vide">Aucun contrat enregistré.</div></div>';
     return;
   }
   if (!CT2_HISTO_EMP || !emps.some(e => e.id === CT2_HISTO_EMP)) CT2_HISTO_EMP = emps[0].id;
@@ -486,14 +492,11 @@ function ct2RenderHisto() {
   });
   ev.sort((a, b) => (b.d || '').localeCompare(a.d || ''));
 
-  el.innerHTML = `
-    <div class="v2-blk-h">
-      <span class="v2-blk-t">Historique</span>
-      <select class="ct2-sel" style="margin-left:auto;max-width:170px" aria-label="Salarié" onchange="ct2SetHisto(this.value)">
+  const sel = `<select class="ct2-sel" style="max-width:170px" aria-label="Salarié" onchange="ct2SetHisto(this.value)">
         ${emps.map(e => `<option value="${escAttr(e.id)}"${e.id === CT2_HISTO_EMP ? ' selected' : ''}>${escHtml(e.nom)}</option>`).join('')}
-      </select>
-    </div>
-    ${ev.length ? ev.map((e, i) => `
+      </select>`;
+  el.innerHTML = ct2Head('#818cf8', CT2_IC.clock, 'Parcours', 'Historique', sel)
+    + `<div class="dc-body">${ev.length ? ev.map((e, i) => `
       <div class="ct2-histo-row" style="--pc:${e.c}">
         <div class="ct2-histo-rail">
           <span class="ct2-histo-dot"></span>
@@ -503,7 +506,7 @@ function ct2RenderHisto() {
           <div class="ct2-histo-t">${escHtml(e.l)}</div>
           <div class="ct2-histo-d">${ct2Date(e.d)}${e.s ? ' · ' + escHtml(e.s) : ''}</div>
         </div>
-      </div>`).join('') : '<div class="v2-blk-vide">Aucun événement daté pour ce salarié.</div>'}`;
+      </div>`).join('') : '<div class="v2-blk-vide">Aucun événement daté pour ce salarié.</div>'}</div>`;
 }
 
 function ct2SetHisto(id) { CT2_HISTO_EMP = String(id || ''); ct2RenderHisto(); }
@@ -520,21 +523,20 @@ function ct2RenderDpae() {
   const actifs = ct2All().filter(ct2Actif).sort((a, b) => (b.debut || '').localeCompare(a.debut || '')).slice(0, 8);
   const absente = CT2_MISS.has(CT2_T_DPAE);
 
-  el.innerHTML = `
-    <div class="v2-blk-h"><span style="color:#34d399;display:flex">${ct2Svg(CT2_IC.shield)}</span><span class="v2-blk-t" style="color:#6ee7b7">DPAE &amp; registre</span></div>
-    ${absente ? `<div class="v2-blk-vide">Suivi indisponible : exécutez ${CT2_SQL}.</div>` : ''}
+  el.innerHTML = ct2Head('#10b981', CT2_IC.shield, 'Déclaratif', 'DPAE & registre')
+    + `<div class="dc-body">${absente ? `<div class="v2-blk-vide">Suivi indisponible : exécutez ${CT2_SQL}.</div>` : ''}
     ${actifs.length ? actifs.map(c => {
       const d = ct2DpaeDe(c.id);
       const ok = !!(d && d.statut === 'declaree');
       const col = ok ? '#34d399' : (d ? '#f59e0b' : '#8095b4');
       const tag = ok ? 'Déclarée' : (d ? 'À déclarer' : 'Non renseignée');
       const clic = !absente && ct2IsRH();
-      return `<div class="ct2-dpae" style="--pc:${col}${clic ? ';cursor:pointer' : ''}"${clic ? ` role="button" tabindex="0" onclick="ct2OpenDpae('${c.id}')"` : ''}>
+      return `<div class="ct2-dpae" style="--pc:${col};border-left:3px solid ${col};padding-left:11px${clic ? ';cursor:pointer' : ''}"${clic ? ` role="button" tabindex="0" onclick="ct2OpenDpae('${c.id}')"` : ''}>
         <span class="ct2-dpae-i">${ct2Svg(ok ? CT2_IC.check : CT2_IC.minus, 2.4)}</span>
         <span class="ct2-dpae-n">${escHtml(ct2Nom(c.employeId))} <span style="color:var(--v2-t7)">· ${escHtml(ct2T(c.type).l)}</span></span>
-        <span class="ct2-dpae-t">${tag}</span>
+        <span class="dc-badge" style="background:${col}1f;color:${col};border:1px solid ${col}44"><span class="d" style="background:${col}"></span>${escHtml(tag)}</span>
       </div>`;
-    }).join('') : '<div class="v2-blk-vide">Aucun contrat actif.</div>'}`;
+    }).join('') : '<div class="v2-blk-vide">Aucun contrat actif.</div>'}</div>`;
 }
 
 // ── 12. Coût employeur par contrat ───────────────────────────────────────
@@ -552,15 +554,11 @@ function ct2RenderCout() {
   const absente = CT2_MISS.has(CT2_T_COUT);
   const renseignes = lignes.filter(x => x.k).length;
 
-  el.innerHTML = `
-    <div class="ct2-cout-h">
-      ${ct2Svg(CT2_IC.euro)}
-      <span class="v2-blk-t">Coût employeur par contrat</span>
-      <span class="ct2-cout-tot">${absente
-        ? `Exécutez ${escHtml(CT2_SQL)}`
-        : `Total chargé/mois : <b>${renseignes ? ct2Euro(total) : '—'}</b>`}</span>
-    </div>
-    ${lignes.length ? `<div class="ct2-tablewrap"><table class="v2-table">
+  const totTxt = absente
+    ? `Exécutez ${CT2_SQL}`
+    : `Total chargé/mois : ${renseignes ? ct2Euro(total) : '—'}`;
+  el.innerHTML = ct2Head('#ea580c', CT2_IC.euro, 'Paie', 'Coût employeur par contrat', ct2Pill(totTxt))
+    + `${lignes.length ? `<div class="ct2-tablewrap"><table class="v2-table">
       <thead><tr><th>Salarié</th><th class="num">Brut</th><th class="num">Charges</th><th class="num">Coût chargé</th><th class="num">ETP</th></tr></thead>
       <tbody>${lignes.map(x => {
         const k = x.k;
@@ -588,17 +586,16 @@ function ct2RenderAvenants() {
   ct2All().forEach(c => (c.avenants || []).forEach(a => list.push({ c, a })));
   list.sort((x, y) => String(y.a.date || '').localeCompare(String(x.a.date || '')));
 
-  el.innerHTML = `
-    <div class="v2-blk-h"><span style="color:#818cf8;display:flex">${ct2Svg(CT2_IC.pen)}</span><span class="v2-blk-t">Avenants en cours</span></div>
-    ${list.length ? list.slice(0, 8).map(x => `
-      <div class="ct2-av">
+  el.innerHTML = ct2Head('#818cf8', CT2_IC.pen, 'Modifications', 'Avenants en cours', ct2Pill(list.length))
+    + `<div class="dc-body">${list.length ? list.slice(0, 8).map(x => `
+      <div class="ct2-av" style="border-left:3px solid #818cf8;padding-left:11px">
         <span class="v2-av v2-av-sm" style="background:${ct2Couleur(x.c.employeId || x.c.id)}">${escHtml(ct2Ini(x.c.employeId))}</span>
         <div class="ct2-av-b">
           <div class="ct2-av-n">${escHtml(ct2Nom(x.c.employeId))}</div>
           <div class="ct2-av-t">${escHtml(x.a.texte || '')}</div>
         </div>
-        <span class="ct2-type" style="--pc:#818cf8">${ct2Date(x.a.date)}</span>
-      </div>`).join('') : '<div class="v2-blk-vide">Aucun avenant enregistré.</div>'}`;
+        <span class="dc-pill dim">${ct2Date(x.a.date)}</span>
+      </div>`).join('') : '<div class="v2-blk-vide">Aucun avenant enregistré.</div>'}</div>`;
 }
 
 // ── 14. Registre unique du personnel ─────────────────────────────────────
@@ -622,15 +619,15 @@ function ct2RenderRegistre() {
   const el = document.getElementById('ct2Registre');
   if (!el) return;
   const r = ct2RegistreData();
-  el.innerHTML = `
-    <div class="ct2-tint-h" style="color:#22d3ee">${ct2Svg(CT2_IC.book)}<span class="ct2-tint-t" style="color:#a5f3fc">Registre unique du personnel</span></div>
+  el.innerHTML = ct2Head('#22d3ee', CT2_IC.book, 'Obligation', 'Registre unique du personnel', ct2Pill('Art. L1221-13'))
+    + `<div class="dc-body">
     <div class="ct2-reg-sub">Entrées / sorties · obligation Art. L1221-13</div>
     <div class="ct2-reg-nums">
-      <div class="ct2-reg-n" style="--pc:#34d399"><div class="ct2-reg-v">+${r.entrees}</div><div class="ct2-reg-l">Entrées ${r.an}</div></div>
-      <div class="ct2-reg-n" style="--pc:#fca5a5"><div class="ct2-reg-v">−${r.sorties}</div><div class="ct2-reg-l">Sorties ${r.an}</div></div>
-      <div class="ct2-reg-n" style="--pc:#fff"><div class="ct2-reg-v">${r.inscrits}</div><div class="ct2-reg-l">Inscrits</div></div>
+      <div class="ct2-reg-n" style="--pc:#34d399;border-left:3px solid #34d399"><div class="ct2-reg-v">+${r.entrees}</div><div class="ct2-reg-l">Entrées ${r.an}</div></div>
+      <div class="ct2-reg-n" style="--pc:#fca5a5;border-left:3px solid #fca5a5"><div class="ct2-reg-v">−${r.sorties}</div><div class="ct2-reg-l">Sorties ${r.an}</div></div>
+      <div class="ct2-reg-n" style="--pc:#fff;border-left:3px solid #8095b4"><div class="ct2-reg-v">${r.inscrits}</div><div class="ct2-reg-l">Inscrits</div></div>
     </div>
-    <button type="button" class="ct2-reg-btn" onclick="ct2ExportRegistre()">${ct2Svg(CT2_IC.dl, 2.2)}Exporter le registre</button>`;
+    <button type="button" class="ct2-reg-btn" onclick="ct2ExportRegistre()">${ct2Svg(CT2_IC.dl, 2.2)}Exporter le registre</button></div>`;
 }
 
 // ── Rendu global ─────────────────────────────────────────────────────────

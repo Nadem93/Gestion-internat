@@ -335,7 +335,7 @@ function ms2RenderChat() {
     const dj = new Date(m.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     if (dj !== jour) {
       jour = dj;
-      html += `<div class="ms-date">${dj === auj ? "Aujourd'hui" : dj}</div>`;
+      html += `<div class="ms-date dc-pill dim">${dj === auj ? "Aujourd'hui" : dj}</div>`;
     }
     const perso = String(m.from) === String(session.userId);
     const auteur = perso ? moi : ms2User(m.from);
@@ -349,7 +349,7 @@ function ms2RenderChat() {
     let recu = '';
     if (perso) {
       const tousLus = autres.length > 0 && autres.every(id => lus.includes(String(id)));
-      recu = `<span class="ms-m-rc${tousLus ? ' lu' : ''}">${ms2Svg(tousLus ? MS2_IC.lu : MS2_IC.envoye, 2.4)}${tousLus ? 'Lu' : 'Envoyé'}</span>`;
+      recu = `<span class="dc-badge ${tousLus ? 'dc-b-green' : 'dc-b-gray'} ms-m-rc${tousLus ? ' lu' : ''}">${ms2Svg(tousLus ? MS2_IC.lu : MS2_IC.envoye, 2.4)}${tousLus ? 'Lu' : 'Envoyé'}</span>`;
     }
 
     html += `<div class="ms-m ${perso ? 'own' : 'other'}" style="--cc:${perso ? '#22d3ee' : ms2Couleur(m.from)}">

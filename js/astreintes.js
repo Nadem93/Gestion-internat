@@ -96,7 +96,7 @@ function _astJours(debut, fin) {
   const p = debut.split('-');
   let d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
   for (let i = 0; i < 31; i++) {
-    const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const s = isoJour(d);
     out.push(s);
     if (s >= fin) break;
     d = new Date(d.getTime() + 86400000);

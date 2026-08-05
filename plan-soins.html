@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Plan de soins — FTR</title>
+  <title>Plan de soins — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -38,22 +38,26 @@
     <div class="v2-body">
 
       <!-- STATISTIQUES -->
-      <div class="ps2-stats">
-        <div class="ps2-stat" style="--pc:#0891b2">
-          <span class="ps2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/></svg></span>
-          <div><div class="ps2-stat-n" id="psStatTotal">—</div><div class="ps2-stat-l">Soins définis</div></div>
+      <div class="dc-kpis" style="margin-bottom:14px">
+        <div class="dc-kpi" style="--dc-c:#0891b2">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Soins définis</span><span class="dc-kpi-ico" style="color:#0891b2"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/></svg></span></div>
+          <div class="dc-kpi-val" id="psStatTotal">—</div>
+          <div class="dc-kpi-sub">Périmètre affiché</div>
         </div>
-        <div class="ps2-stat" style="--pc:#10b981">
-          <span class="ps2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
-          <div><div class="ps2-stat-n" id="psStatActifs">—</div><div class="ps2-stat-l">Actifs</div></div>
+        <div class="dc-kpi" style="--dc-c:#10b981">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Actifs</span><span class="dc-kpi-ico" style="color:#10b981"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span></div>
+          <div class="dc-kpi-val" id="psStatActifs">—</div>
+          <div class="dc-kpi-sub">Non suspendus</div>
         </div>
-        <div class="ps2-stat" style="--pc:#8b5cf6">
-          <span class="ps2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
-          <div><div class="ps2-stat-n" id="psStatResidents">—</div><div class="ps2-stat-l">Résidents suivis</div></div>
+        <div class="dc-kpi" style="--dc-c:#8b5cf6">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Résidents suivis</span><span class="dc-kpi-ico" style="color:#8b5cf6"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span></div>
+          <div class="dc-kpi-val" id="psStatResidents">—</div>
+          <div class="dc-kpi-sub">Distincts</div>
         </div>
-        <div class="ps2-stat" style="--pc:#f59e0b">
-          <span class="ps2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><circle cx="12" cy="12" r="10"/></svg></span>
-          <div><div class="ps2-stat-n" id="psStatCats">—</div><div class="ps2-stat-l">Catégories</div></div>
+        <div class="dc-kpi" style="--dc-c:#f59e0b">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Catégories</span><span class="dc-kpi-ico" style="color:#f59e0b"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-3-3v6"/><circle cx="12" cy="12" r="10"/></svg></span></div>
+          <div class="dc-kpi-val" id="psStatCats">—</div>
+          <div class="dc-kpi-sub">Distinctes</div>
         </div>
       </div>
 

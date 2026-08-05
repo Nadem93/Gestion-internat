@@ -96,7 +96,7 @@ function renderEntryForm() {
   const cats = DB.get(DB.keys.categories) || [];
   const currentCat = (document.getElementById('iCategorie')?.value || '').split(',').filter(Boolean);
   const currentRes = (document.getElementById('iResident')?.value || '').split(',').filter(Boolean);
-  const currentDate = document.getElementById('iDate')?.value || new Date().toISOString().slice(0,16);
+  const currentDate = document.getElementById('iDate')?.value || isoMinute(new Date());
   const currentContenu = document.getElementById('iContenu')?.value || '';
   const currentObjectif = document.getElementById('iObjectif')?.value || '';
   const currentAccomp = document.getElementById('iAccompagnement')?.value || '';
@@ -444,8 +444,8 @@ function getEntries() {
 
 // ── Séparateur de jour entre les entrées (design inspiré des transmissions) ──
 function journalDayLabel(dayKey) {
-  const today     = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const today     = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  const yesterday = isoJour(new Date(Date.now() - 86400000));
   const d    = new Date(dayKey + 'T12:00:00');
   const base = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   if (dayKey === today)     return "Aujourd'hui — " + base;
@@ -538,8 +538,8 @@ function renderEntryAttachments(e) {
     <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.4rem">📎 Pièces jointes (${atts.length})</div>
     <div style="display:flex;flex-wrap:wrap;gap:.5rem">
       ${atts.map(a => a.type && a.type.includes('image')
-        ? `<a href="${a.data}" download="${escHtml(a.name)}" title="${escHtml(a.name)}"><img src="${a.data}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--border)"/></a>`
-        : `<a href="${a.data}" download="${escHtml(a.name)}" style="display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem;text-decoration:none;color:var(--g700)">📎 ${escHtml(a.name)}</a>`
+        ? `<a href="${sanitizeUrl(a.data)}" download="${escHtml(a.name)}" title="${escHtml(a.name)}"><img src="${sanitizeUrl(a.data)}" style="width:64px;height:64px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--border)"/></a>`
+        : `<a href="${sanitizeUrl(a.data)}" download="${escHtml(a.name)}" style="display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;background:var(--g50);border:1px solid var(--border);border-radius:var(--r-sm);font-size:.78rem;text-decoration:none;color:var(--g700)">📎 ${escHtml(a.name)}</a>`
       ).join('')}
     </div>
   </div>`;
@@ -557,7 +557,8 @@ async function selectEntry(id) {
   if (session && (!e.readBy || !e.readBy.includes(session.userId))) {
     const readBy = (e.readBy || []).concat([session.userId]);
     try {
-      const updated = await sbSaveJournalEntry({ ...e, readBy });
+      // Écriture ciblée : voir sbUpdateJournalField (js/journal-supabase.js).
+      const updated = await sbUpdateJournalField(id, { read_by: readBy });
       const idx = _journalCache.findIndex(x => x.id === id);
       if (idx !== -1) _journalCache[idx] = updated;
     } catch (err) { console.error(err); }
@@ -585,7 +586,8 @@ async function addReply(entryId) {
     createdAt: new Date().toISOString()
   }]);
   try {
-    const updated = await sbSaveJournalEntry({ ...e, replies });
+    // Écriture ciblée : une réponse ne doit pas réécrire le contenu de l'entrée.
+    const updated = await sbUpdateJournalField(entryId, { replies });
     const idx = _journalCache.findIndex(x => x.id === entryId);
     if (idx !== -1) _journalCache[idx] = updated;
   } catch (err) { toast('Erreur lors de l\'enregistrement', 'error'); console.error(err); return; }
@@ -706,7 +708,7 @@ function resetEntryForm() {
   document.getElementById('modalEntryTitle').textContent = 'Nouvelle entrée';
   document.getElementById('eResident').value = '';
   Array.from(document.getElementById('eCategorie').options).forEach(o => o.selected = false);
-  document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
+  document.getElementById('eDate').value = isoMinute(new Date());
   document.getElementById('eObjectif').value = '';
   document.getElementById('eContenu').value = '';
   const rAcc = document.getElementById('eAccompagnement'); if (rAcc) rAcc.value = '';
@@ -717,7 +719,7 @@ function resetEntryForm() {
 
 async function initJournal() {
   if (!requireModule('access_journal')) return;
-  document.getElementById('eDate').value = new Date().toISOString().slice(0,16);
+  document.getElementById('eDate').value = isoMinute(new Date());
   _journalResidentsCache = await sbGetResidents();
   await loadJournalEntries();
   if (typeof sbGetAppConfig === 'function') {

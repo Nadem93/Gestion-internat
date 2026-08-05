@@ -113,6 +113,7 @@
       { l:'Conseil Vie Sociale', h:'cvs.html', ic:'users', c:'#16a34a' },
       { l:'Satisfaction', h:'satisfaction.html', ic:'star', c:'#22c55e' },
       { l:'Registre EIG', h:'eig.html', ic:'shield', c:'#ef4444' },
+      { l:'Observations', h:'observations.html', ic:'checklist', c:'#8b5cf6' },
       { l:'Répertoire', h:'repertoire.html', ic:'book', c:'#6366f1' },
       { l:'Via Trajectoire', h:'viatrajectoire.html', ic:'map', c:'#0891b2' }
     ]},
@@ -133,7 +134,7 @@
       { l:'Astreintes', h:'astreintes.html', ic:'bell', c:'#ef4444' }
     ]},
     { g:'Mon espace', items:[
-      { l:'Mon espace', h:'portail.html', ic:'user', c:'#818cf8' },
+      { l:'Mon espace', h:'pilotage.html', ic:'user', c:'#818cf8' },
       { l:'Mes congés', h:'mes-conges.html', ic:'cal', c:'#d97706' },
       { l:'Mes absences', h:'mes-absences.html', ic:'clock', c:'#f59e0b' },
       { l:'Mes fiches de paie', h:'mes-fiches-paie.html', ic:'dollar', c:'#22c55e' },
@@ -145,9 +146,11 @@
       { l:'Facturation', h:'facturation.html', ic:'doc', c:'#0891b2' },
       { l:'Véhicules', h:'vehicules.html', ic:'car', c:'#6366f1' },
       { l:'Inventaire', h:'inventaire.html', ic:'clipboard', c:'#b45309' },
-      { l:'Chambres', h:'chambres.html', ic:'bed', c:'#0d9488' }
+      { l:'Chambres', h:'chambres.html', ic:'bed', c:'#0d9488' },
+      { l:'Interventions', h:'interventions.html', ic:'alert', c:'#14b8a6' }
     ]},
     { g:'Aide & informations', items:[
+      { l:'Administration', h:'admin.html', ic:'shield', c:'#64748b' },
       { l:'Centre d\'aide', h:'aide.html', ic:'help', c:'#818cf8' },
       { l:'Documentation', h:'documentation.html', ic:'doc', c:'#3b82f6' },
       { l:'Guide de prise en main', h:'guide-formation.html', ic:'book', c:'#0d9488' },
@@ -202,7 +205,7 @@
       if (a==='plus'){ e.preventDefault(); openPlus(); }
       else if (a==='plus-close'){ e.preventDefault(); closePlus(); }
       else if (a==='bell'){ e.preventDefault(); location.href='alertes.html'; }
-      else if (a==='me'){ e.preventDefault(); location.href='portail.html'; }
+      else if (a==='me'){ e.preventDefault(); location.href='pilotage.html'; }
     });
   }
 

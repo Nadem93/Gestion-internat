@@ -721,10 +721,18 @@ async function saveEvent() {
       const dates = getRecurDates(data.date, recur, recurUntil);
       if (!dates.length) { toast('Plage de dates invalide', 'error'); return; }
       const recurId = genId();
-      const newEvs = dates.map(date => ({ ...data, date, recurId, recurFreq: recur, recurUntil }));
+      // Le lien vers la fiche santé est généré AVANT l'insertion : les
+      // événements le portent dès leur création, ce qui supprime une seconde
+      // écriture par occurrence. Une série hebdomadaire sur un an passait par
+      // 105 requêtes enchaînées — dont 52 réécritures de la fiche résident
+      // complète, photo comprise — contre 2 désormais.
+      const newEvs = dates.map(date => ({
+        ...data, date, recurId, recurFreq: recur, recurUntil,
+        santeRdvId: (data.type === 'rdv' && data.residentId) ? genId() : undefined
+      }));
       const saved = await sbSavePlanningEventsBulk(newEvs);
       _planningEventsCache.push(...saved);
-      for (const ev of saved) await syncEventToResidentRdv(ev);
+      await syncSerieToResidentRdv(saved);
       toast(`${dates.length} événement${dates.length > 1 ? 's créés' : ' créé'}`);
       closeAllModals(); render(); return;
     }
@@ -757,6 +765,33 @@ async function saveEvent() {
 }
 
 // Synchronise un événement planning de type "rdv" vers la fiche du résident (sante.rdv)
+// Synchronisation GROUPÉE d'une série récurrente vers la fiche santé du
+// résident : une seule écriture de la fiche, quel que soit le nombre
+// d'occurrences. Chaque événement porte déjà son santeRdvId (posé avant
+// l'insertion), il n'y a donc aucun lien à réécrire ensuite.
+async function syncSerieToResidentRdv(events) {
+  const evs = (events || []).filter(e => e && e.type === 'rdv' && e.residentId && e.santeRdvId);
+  if (!evs.length) return;
+  const r = _planningResidentsCache.find(x => String(x.id) === String(evs[0].residentId));
+  if (!r) return;
+  if (!r.sante) r.sante = {};
+  if (!Array.isArray(r.sante.rdv)) r.sante.rdv = [];
+  evs.forEach(ev => r.sante.rdv.push({
+    id: ev.santeRdvId, fait: false,
+    date: ev.date, heure: ev.time || ev.heure || '',
+    type: ev.titre || 'Rendez-vous', lieu: ev.destination || '',
+    notes: ev.desc || '', planningId: ev.id
+  }));
+  try {
+    const savedR = await sbSaveResident(r);
+    const idx = _planningResidentsCache.findIndex(x => x.id === r.id);
+    if (idx !== -1) _planningResidentsCache[idx] = savedR;
+  } catch (e) {
+    console.error('[planning] série vers fiche santé', e);
+    if (typeof toast === 'function') toast('Événements créés, mais la fiche santé n\'a pas été mise à jour', 'error');
+  }
+}
+
 async function syncEventToResidentRdv(event) {
   if (!event) return;
   const setEventLink = async (santeRdvId) => {

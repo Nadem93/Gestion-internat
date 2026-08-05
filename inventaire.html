@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Inventaire &amp; matériel — FTR</title>
+  <title>Inventaire &amp; matériel — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -37,23 +37,31 @@
 
   <div class="v2-body">
 
-    <!-- ══ STATISTIQUES ═══════════════════════════════════════════ -->
-    <div class="iv2-stats">
-      <div class="iv2-stat" style="--pc:#d97706">
-        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span>
-        <div><div class="iv2-stat-n" id="invStatTotal">—</div><div class="iv2-stat-l">Articles référencés</div></div>
+    <!-- ══ STATISTIQUES (Console Data — tuiles KPI à liseré) ══════ -->
+    <div class="dc-kpis iv2-stats">
+      <div class="dc-kpi" style="--dc-c:#d97706">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Articles référencés</span>
+          <span class="dc-kpi-ico" style="color:#d97706"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span></div>
+        <div class="dc-kpi-val" id="invStatTotal">—</div>
+        <div class="dc-kpi-sub">Total du parc</div>
       </div>
-      <div class="iv2-stat" style="--pc:#ef4444">
-        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-        <div><div class="iv2-stat-n" id="invStatSeuil">—</div><div class="iv2-stat-l">Sous seuil</div></div>
+      <div class="dc-kpi" style="--dc-c:#ef4444">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Sous seuil</span>
+          <span class="dc-kpi-ico" style="color:#ef4444"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></div>
+        <div class="dc-kpi-val" id="invStatSeuil">—</div>
+        <div class="dc-kpi-sub">À réapprovisionner</div>
       </div>
-      <div class="iv2-stat" style="--pc:#4ade80">
-        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg></span>
-        <div><div class="iv2-stat-n" id="invStatValeur">—</div><div class="iv2-stat-l">Valeur du parc</div></div>
+      <div class="dc-kpi" style="--dc-c:#4ade80">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Valeur du parc</span>
+          <span class="dc-kpi-ico" style="color:#4ade80"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg></span></div>
+        <div class="dc-kpi-val" id="invStatValeur">—</div>
+        <div class="dc-kpi-sub">Articles valorisés</div>
       </div>
-      <div class="iv2-stat" style="--pc:#22d3ee">
-        <span class="iv2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
-        <div><div class="iv2-stat-n" id="invStatMaint">—</div><div class="iv2-stat-l">Maintenance due</div></div>
+      <div class="dc-kpi" style="--dc-c:#22d3ee">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Maintenance due</span>
+          <span class="dc-kpi-ico" style="color:#22d3ee"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span></div>
+        <div class="dc-kpi-val" id="invStatMaint">—</div>
+        <div class="dc-kpi-sub">Contrôles à prévoir</div>
       </div>
     </div>
 
@@ -68,90 +76,130 @@
     <div class="iv2-main">
       <div class="iv2-col">
 
-        <div class="iv2-tablecard" id="invList"></div>
-
-        <div class="iv2-reappro">
-          <div class="iv2-hdr">
-            <svg class="iv2-hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            <span class="iv2-reappro-t">Réapprovisionnement à commander</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#d9770622;color:#d97706"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">STOCK</div><div class="dc-title">Articles</div></div>
+            </div>
           </div>
-          <div id="invReappro"></div>
+          <div class="iv2-tablecard" id="invList" style="border:none;border-radius:0;background:transparent"></div>
+        </div>
+
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#ef444422;color:#ef4444"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">ALERTE</div><div class="dc-title">Réapprovisionnement à commander</div></div>
+            </div>
+          </div>
+          <div class="dc-body"><div id="invReappro"></div></div>
         </div>
 
       </div>
 
       <div class="iv2-rail">
-        <div class="v2-blk v2-rail-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Par catégorie</span></div>
-          <div id="invParCat"></div>
-        </div>
-
-        <div class="iv2-valeur">
-          <div class="iv2-valeur-t">Valeur du parc</div>
-          <div class="iv2-valeur-n" id="invValeurTotal">—</div>
-          <div class="iv2-valeur-s" id="invValeurSub">—</div>
-          <div id="invPatrimoine"></div>
-        </div>
-
-        <div class="v2-blk v2-rail-blk">
-          <div class="v2-blk-h">
-            <svg style="width:15px;height:15px;color:#22d3ee;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            <span class="v2-blk-t">Maintenance à prévoir</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">RÉPARTITION</div><div class="dc-title">Par catégorie</div></div>
+            </div>
           </div>
-          <div id="invMaintenance"></div>
+          <div class="dc-body"><div id="invParCat"></div></div>
+        </div>
+
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#d9770622;color:#d97706"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">PATRIMOINE</div><div class="dc-title">Valeur du parc</div></div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <div class="iv2-valeur-n" id="invValeurTotal">—</div>
+            <div class="iv2-valeur-s" id="invValeurSub">—</div>
+            <div id="invPatrimoine"></div>
+          </div>
+        </div>
+
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">ENTRETIEN</div><div class="dc-title">Maintenance à prévoir</div></div>
+            </div>
+          </div>
+          <div class="dc-body"><div id="invMaintenance"></div></div>
         </div>
       </div>
     </div>
 
     <!-- ══ MOUVEMENTS + ROTATION ══════════════════════════════════ -->
     <div class="iv2-feat1">
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <svg style="width:15px;height:15px;color:#22d3ee;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/></svg>
-          <span class="v2-blk-t">Derniers mouvements de stock</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M8 21H3v-5"/><path d="M3 21l7-7"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">FLUX</div><div class="dc-title">Derniers mouvements de stock</div></div>
+          </div>
           <button type="button" class="iv2-add" onclick="inv2OpenMouvement()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Enregistrer
           </button>
         </div>
-        <div id="invMouvements"></div>
+        <div class="dc-body"><div id="invMouvements"></div></div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Taux de rotation</span></div>
-        <div id="invRotation"></div>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#34d39922;color:#34d399"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">90 JOURS</div><div class="dc-title">Taux de rotation</div></div>
+          </div>
+        </div>
+        <div class="dc-body"><div id="invRotation"></div></div>
       </div>
     </div>
 
     <!-- ══ COMPTAGE + FOURNISSEURS + GARANTIES ════════════════════ -->
     <div class="iv2-feat2">
-      <div class="iv2-comptage">
-        <div class="iv2-hdr" style="margin-bottom:6px">
-          <svg class="iv2-hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          <span class="iv2-comptage-t">Inventaire annuel</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#10b98122;color:#10b981"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">EXERCICE</div><div class="dc-title">Inventaire annuel</div></div>
+          </div>
         </div>
-        <div class="iv2-comptage-s">Comptage physique de l'exercice</div>
-        <span class="v2-prog" style="height:9px"><span id="invComptageBar" style="width:0%;background:linear-gradient(90deg,#16a34a,#4ade80)"></span></span>
-        <div class="iv2-comptage-m" id="invComptageMeta">—</div>
-        <button type="button" class="iv2-comptage-b" id="invComptageBtn" onclick="inv2OpenComptage()">Démarrer le comptage</button>
+        <div class="dc-body">
+          <div class="iv2-comptage-s">Comptage physique de l'exercice</div>
+          <span class="v2-prog" style="height:9px"><span id="invComptageBar" style="width:0%;background:linear-gradient(90deg,#16a34a,#4ade80)"></span></span>
+          <div class="iv2-comptage-m" id="invComptageMeta">—</div>
+          <button type="button" class="iv2-comptage-b" id="invComptageBtn" onclick="inv2OpenComptage()">Démarrer le comptage</button>
+        </div>
       </div>
 
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t">Fournisseurs</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#ea580c22;color:#ea580c"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">ACHATS</div><div class="dc-title">Fournisseurs</div></div>
+          </div>
           <button type="button" class="iv2-add" id="invFournAdd" onclick="inv2OpenFourn()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Ajouter
           </button>
         </div>
-        <div id="invFournisseurs"></div>
+        <div class="dc-body"><div id="invFournisseurs"></div></div>
       </div>
 
-      <div class="iv2-gar">
-        <div class="iv2-hdr">
-          <svg class="iv2-hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span class="iv2-gar-t">Garanties &amp; contrats</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">CONTRATS</div><div class="dc-title">Garanties &amp; contrats</div></div>
+          </div>
         </div>
-        <div id="invGaranties"></div>
+        <div class="dc-body"><div id="invGaranties"></div></div>
       </div>
     </div>
 

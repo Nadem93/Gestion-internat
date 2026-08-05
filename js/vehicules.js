@@ -107,7 +107,7 @@ async function annulerReservation(id) {
 
 function renderReservations() {
   const planning = _vehiculesPlanningCache;
-  const today = new Date().toISOString().slice(0,10);
+  const today = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
   const now = new Date();
 
   const upcoming = planning

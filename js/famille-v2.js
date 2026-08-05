@@ -101,12 +101,14 @@
     ];
 
     el.innerHTML = tiles.map(function (t) {
-      var petit = t.n.length > 5 ? 'font-size:16px' : '';
-      return '<div class="fam-kpi" style="--kc:' + t.c + ';--kc2:' + t.c2 + '">' +
-        '<span class="fam-kpi-ico">' + svg(t.i) + '</span>' +
-        '<div class="fam-kpi-n" style="' + petit + '">' + esc(t.n) + '</div>' +
-        '<div class="fam-kpi-l">' + esc(t.l) + '</div>' +
-        '<div class="fam-kpi-s">' + esc(t.s) + '</div>' +
+      var petit = t.n.length > 5 ? ' style="font-size:16px"' : '';
+      return '<div class="dc-kpi" style="--dc-c:' + t.c2 + '">' +
+        '<div class="dc-kpi-top">' +
+          '<span class="dc-kpi-label">' + esc(t.l) + '</span>' +
+          '<span class="dc-kpi-ico" style="color:' + t.c2 + '">' + svg(t.i) + '</span>' +
+        '</div>' +
+        '<div class="dc-kpi-val"' + petit + '>' + esc(t.n) + '</div>' +
+        '<div class="dc-kpi-sub">' + esc(t.s) + '</div>' +
       '</div>';
     }).join('');
   }
@@ -142,11 +144,11 @@
 
   /* ── Rendu : blocs résident + lignes documents ────────────────────── */
   function vide(titre, texte) {
-    return '<div class="v2-blk"><div class="fam-vide">' +
+    return '<div class="dc-card"><div class="dc-body"><div class="fam-vide">' +
       '<div class="fam-vide-ico">' + svg(IC.fold) + '</div>' +
       '<div class="fam-vide-t">' + esc(titre) + '</div>' +
       '<div class="fam-vide-s">' + esc(texte) + '</div>' +
-    '</div></div>';
+    '</div></div></div>';
   }
 
   function renderBlocs(docs) {
@@ -179,24 +181,26 @@
 
     el.innerHTML = '<div class="fam-blocs">' + ordre.map(function (nom, idx) {
       var p = pal(nom, idx), list = par[nom];
-      return '<section class="v2-blk" aria-labelledby="fam-res-' + idx + '">' +
-        '<div class="fam-res-h">' +
-          '<span class="fam-res-av" style="--rc:' + p[0] + ';--rc2:' + p[1] + '" aria-hidden="true">' + esc(ini(nom)) + '</span>' +
+      return '<section class="dc-card" aria-labelledby="fam-res-' + idx + '">' +
+        '<div class="dc-head"><div class="dc-head-l">' +
+          '<span class="dc-chip fam-res-av" style="background:' + p[0] + '22;color:' + p[0] + '" aria-hidden="true">' + esc(ini(nom)) + '</span>' +
           '<div style="min-width:0">' +
-            '<h2 class="fam-res-n" id="fam-res-' + idx + '">' + esc(nom) + '</h2>' +
-            '<div class="fam-res-m">' + list.length + ' document' + (list.length > 1 ? 's' : '') + ' partagé' + (list.length > 1 ? 's' : '') + '</div>' +
+            '<div class="dc-eyebrow">Dossier</div>' +
+            '<h2 class="dc-title fam-res-n" id="fam-res-' + idx + '">' + esc(nom) + '</h2>' +
           '</div>' +
         '</div>' +
-        '<div class="fam-docs">' + list.map(function (d) {
+        '<span class="dc-pill dim">' + list.length + ' doc' + (list.length > 1 ? 's' : '') + '</span>' +
+        '</div>' +
+        '<div class="dc-body"><div class="fam-docs">' + list.map(function (d) {
           var c = cat(d.category);
           var nomDoc = d.documentName || 'Document';
           var date = d.docDate ? fdate(d.docDate) : '';
-          return '<div class="fam-doc" style="--dc:' + c.c + '">' +
+          return '<div class="fam-doc" style="--dc:' + c.c + ';border-left:3px solid ' + c.c + '">' +
             '<span class="fam-doc-ico" aria-hidden="true">' + svg(IC.doc) + '</span>' +
             '<div class="fam-doc-b">' +
               '<div class="fam-doc-n" title="' + esc(nomDoc) + '">' + esc(nomDoc) + '</div>' +
               '<div class="fam-doc-m">' +
-                '<span class="fam-doc-cat">' + esc(c.l) + '</span>' +
+                '<span class="dc-badge fam-doc-cat" style="background:' + c.c + '1f;color:' + c.c + ';border:1px solid ' + c.c + '44"><span class="d" style="background:' + c.c + '"></span>' + esc(c.l) + '</span>' +
                 (date ? '<span>' + esc(date) + '</span>' : '') +
               '</div>' +
             '</div>' +
@@ -205,7 +209,7 @@
               ' aria-label="Ouvrir le document ' + esc(nomDoc) + ' de ' + esc(nom) + ' (nouvel onglet)">' +
               svg(IC.open) + 'Ouvrir</button>' +
           '</div>';
-        }).join('') + '</div>' +
+        }).join('') + '</div></div>' +
       '</section>';
     }).join('') + '</div>' +
     '<div class="fam-note">' + svg(IC.info) +
@@ -219,7 +223,7 @@
     renderWelcome();
     var el = document.getElementById('famResidents');
     if (el && !state.chargee) {
-      el.innerHTML = '<div class="v2-blk"><div class="v2-blk-vide">Chargement de vos documents…</div></div>';
+      el.innerHTML = '<div class="dc-card"><div class="dc-body"><div class="v2-blk-vide">Chargement de vos documents…</div></div></div>';
     }
     var docs = [];
     try {

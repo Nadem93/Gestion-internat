@@ -78,9 +78,9 @@
 
     el.innerHTML = j.total > 0
       ? '<div class="sp2-jrn">'
-        + '<span class="sp2-jrn-t" style="--pc:#8b5cf6"><b>' + j.direct + '</b> directe' + (j.direct > 1 ? 's' : '') + '</span>'
-        + '<span class="sp2-jrn-t" style="--pc:#f97316"><b>' + j.indirect + '</b> indirecte' + (j.indirect > 1 ? 's' : '') + '</span>'
-        + '<span class="sp2-jrn-sep">Total : ' + j.total + ' entrée' + (j.total > 1 ? 's' : '') + ' de journal taguée' + (j.total > 1 ? 's' : '') + '</span>'
+        + '<span class="dc-badge" style="background:#8b5cf61f;color:#a78bfa;border:1px solid #8b5cf644"><span class="d" style="background:#8b5cf6"></span>' + j.direct + ' directe' + (j.direct > 1 ? 's' : '') + '</span>'
+        + '<span class="dc-badge" style="background:#f973161f;color:#fdba74;border:1px solid #f9731644"><span class="d" style="background:#f97316"></span>' + j.indirect + ' indirecte' + (j.indirect > 1 ? 's' : '') + '</span>'
+        + '<span class="dc-pill dim">Total : ' + j.total + ' entrée' + (j.total > 1 ? 's' : '') + ' de journal taguée' + (j.total > 1 ? 's' : '') + '</span>'
         + '</div>'
       : '<div class="v2-blk-vide">Aucune entrée de journal associée au SERAFIN-PH. Utilisez le champ « SERAFIN-PH » du journal pour taguer vos transmissions.</div>';
   }
@@ -117,7 +117,7 @@
             + '</div>'
           ).join('')
         : '<div class="sp2-rep-vide">Aucun résident ne suit cette prestation</div>';
-      return '<div class="sp2-prest" style="--pc:' + pc + '" role="button" tabindex="0"'
+      return '<div class="sp2-prest" style="--pc:' + pc + ';border-left:3px solid ' + pc + ';padding-left:11px" role="button" tabindex="0"'
         + ' data-code="' + esc(p.code) + '" aria-label="Détail de la prestation ' + esc(p.label) + '">'
         + '<span class="sp2-prest-ico">' + esc(p.icon) + '</span>'
         + '<div class="sp2-prest-id">'
@@ -157,7 +157,7 @@
       const dt = s.sp.dateEvaluation
         ? 'Évalué le ' + new Date(s.sp.dateEvaluation).toLocaleDateString('fr-FR')
         : 'Date d’évaluation non renseignée';
-      return '<div class="sp2-res">'
+      return '<div class="sp2-res" style="border-left:3px solid ' + c + ';padding-left:11px">'
         + '<span class="sp2-res-av" style="--rc:' + c + '">' + esc(ini.toUpperCase()) + '</span>'
         + '<div class="sp2-res-b">'
           + '<div class="sp2-res-n">' + esc((s.resident.prenom || '') + ' ' + (s.resident.nom || '')) + '</div>'
@@ -193,7 +193,7 @@
     if (body) {
       const moy = suivis.length ? (suivis.reduce((a, x) => a + x.n, 0) / suivis.length).toFixed(1) : '—';
       body.innerHTML =
-        '<div class="v2-blk-sub" style="margin-bottom:10px">Niveau moyen ' + moy + ' · ' + suivis.length + ' résident' + (suivis.length > 1 ? 's' : '') + '</div>'
+        '<div class="dc-eyebrow" style="margin-bottom:12px">Niveau moyen ' + moy + ' · ' + suivis.length + ' résident' + (suivis.length > 1 ? 's' : '') + '</div>'
         + (suivis.length
           ? suivis.map(x => {
               const c = col(x.s.resident.color, '#818cf8');
@@ -201,7 +201,7 @@
               return '<div class="sp2-md-row">'
                 + '<span class="sp2-res-av" style="--rc:' + c + ';width:32px;height:32px;font-size:11px">' + esc(ini.toUpperCase()) + '</span>'
                 + '<span class="sp2-md-n">' + esc((x.s.resident.prenom || '') + ' ' + (x.s.resident.nom || '')) + '</span>'
-                + '<span class="v2-pill" style="--pc:' + NIV_C[x.n] + '">' + x.n + ' · ' + NIV_L[x.n] + '</span>'
+                + '<span class="dc-badge" style="background:' + NIV_C[x.n] + '1f;color:' + NIV_C[x.n] + ';border:1px solid ' + NIV_C[x.n] + '55"><span class="d" style="background:' + NIV_C[x.n] + '"></span>' + x.n + ' · ' + esc(NIV_L[x.n]) + '</span>'
                 + '</div>';
             }).join('')
           : '<div class="v2-blk-vide">Aucun résident ne suit cette prestation.</div>');

@@ -319,7 +319,7 @@ function jn2ResRail(jour) {
       const r = byId[rid];
       const hasProto = (typeof protocolesActifsByResident === 'function') && protocolesActifsByResident(rid).length;
       const protoBtn = hasProto
-        ? `<span role="button" tabindex="0" title="Protocoles d'urgence" onclick="event.stopPropagation();showProtocolesUrgence('${rid}','${escHtml(r.nom).replace(/'/g, '')}')" style="margin-left:1px;cursor:pointer;font-size:.85em">🚨</span>`
+        ? `<span role="button" tabindex="0" title="Protocoles d'urgence" onclick="event.stopPropagation();showProtocolesUrgence('${rid}')" style="margin-left:1px;cursor:pointer;font-size:.85em">🚨</span>`
         : '';
       return `<button type="button" class="jn2-rchip${_jn2ResFocus === rid ? ' on' : ''}" onclick="jn2SetResFocus('${rid}')" title="${escHtml(r.nom)}">
         ${av(rid, r.nom)}<span class="jn2-rname">${escHtml((r.nom || '').split(' ')[0])}</span>${protoBtn}
@@ -555,8 +555,7 @@ function jn2Side(jour) {
     if (n('accompagnement')) rows.push({ label: 'Accompagnement', c: '#0d9488', n: n('accompagnement') });
     if (n('rdv')) rows.push({ label: 'RDV extérieurs', c: '#0891b2', n: n('rdv') });
     if (sans) rows.push({ label: 'Nature non renseignée', c: '#64748b', n: sans });
-    brkEl.innerHTML = rows.map(r => `<div class="jn2-break-i">
-      <span class="jn2-break-d" style="background:${r.c}"></span>
+    brkEl.innerHTML = rows.map(r => `<div class="jn2-break-i" style="border-left:3px solid ${r.c};padding-left:11px">
       <span class="jn2-break-l">${escHtml(r.label)}</span>
       <span class="jn2-break-n">${r.n}</span>
     </div>`).join('');

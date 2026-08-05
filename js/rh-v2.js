@@ -38,6 +38,14 @@ function _rhRgba(hex, a) {
 const _rhSvg = (d, c, sz) => `<svg width="${sz || 20}" height="${sz || 20}" viewBox="0 0 24 24" fill="none" `
   + `stroke="${c || 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 
+// En-tête « Console Data » réutilisable : chip coloré + eyebrow mono + titre + pill facultatif
+function _rhDcHead(c, iconD, eyebrow, title, pill) {
+  return `<div class="dc-head"><div class="dc-head-l">
+    <span class="dc-chip" style="background:${_rhRgba(c, .14)};color:${c}">${_rhSvg(iconD, c, 16)}</span>
+    <div style="min-width:0"><div class="dc-eyebrow">${_rh(eyebrow)}</div><div class="dc-title">${_rh(title)}</div></div>
+  </div>${pill || ''}</div>`;
+}
+
 // Icônes de la maquette
 const RH_IC = {
   users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
@@ -229,10 +237,7 @@ function rh2Meta() {
 
 // ─── Blocs de contenu ─────────────────────────────────────────────────────
 function rh2Hello() {
-  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-  const p = (s && (s.prenom || s.username) || '').trim();
   return `<div class="rh-hello">
-    <h1>Bonjour${p ? ', ' + _rh(p) : ''}</h1>
     <div class="rh-hello-s">Vue d'ensemble des ressources humaines.</div>
   </div>`;
 }
@@ -245,34 +250,46 @@ function rh2Kpis() {
     { n: st ? String(st.congesAttente.length) : '—', l: 'Congés à valider', c: '#f59e0b', ic: RH_IC.sun },
     { n: st ? String(st.contratsFin.length) : '—', l: 'Contrats à renouveler', c: '#ef4444', ic: RH_IC.file }
   ];
-  return `<div class="rh-kpis">${K.map(k => `<div class="rh-kpi">
-    <span class="rh-kpi-ic" style="background:${_rhRgba(k.c, .13)};color:${k.c}">${_rhSvg(k.ic, k.c, 21)}</span>
-    <div><div class="rh-kpi-n" style="color:${k.c}">${_rh(k.n)}</div>
-      <div class="rh-kpi-l">${k.l}</div></div></div>`).join('')}</div>`;
+  return `<div class="dc-kpis" style="margin-bottom:24px">${K.map(k => `<div class="dc-kpi" style="--dc-c:${k.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${_rh(k.l)}</span>
+      <span class="dc-kpi-ico" style="color:${k.c}">${_rhSvg(k.ic, k.c, 16)}</span></div>
+    <div class="dc-kpi-val" style="color:${k.c}">${_rh(k.n)}</div></div>`).join('')}</div>`;
 }
 
 // Sous-titre de tuile : chiffre réel du module, jamais une valeur inventée.
-function rh2CardSub(page) {
+// Donnée de la carte au format carte-donnée : { n, u, lb } ou { txt, lb }.
+// warn: true → la carte se teinte, il y a quelque chose à traiter.
+function rh2CardData(page) {
   const st = rh2Stats();
-  if (!st) return '…';
-  const pl = (n, s, p) => `${n} ${n > 1 ? (p || s + 's') : s}`;
+  if (!st) return { txt: '…', lb: 'chargement' };
+  const s = (n, sing, plur) => (n > 1 ? (plur || sing + 's') : sing);
   switch (page) {
-    case 'rh-dashboard.html': return 'Synthèse RH';
-    case 'admin.html?tab=employes': return pl(st.actifs.length, 'fiche');
-    case 'contacts-externes.html': return 'Intervenants';
-    case 'contrats.html': return st.contratsFin.length ? pl(st.contratsFin.length, 'échéance') : 'À jour';
-    case 'absences.html': return st.absencesCours.length ? pl(st.absencesCours.length, 'en cours', 'en cours') : 'Aucune en cours';
-    case 'conges.html': return st.congesAttente.length ? pl(st.congesAttente.length, 'en attente', 'en attente') : 'Rien à valider';
-    case 'pointage.html': return 'Temps réel';
-    case 'planning-equipe.html': return 'Semaine';
-    case 'astreintes.html': return 'Tour de garde';
-    case 'entretiens.html': return st.entretiensRetard.length ? pl(st.entretiensRetard.length, 'en retard', 'en retard') : 'À jour';
-    case 'formations.html': return 'Plan de formation';
-    case 'paie.html': return st.masse.length ? `${st.masse.length} période${st.masse.length > 1 ? 's' : ''}` : 'Bulletins';
-    case 'recrutement.html': return 'Candidatures';
-    case 'diagnostic-droits.html': return 'Droits & accès';
-    case 'viatrajectoire.html': return 'Orientations';
-    default: return '';
+    case 'rh-dashboard.html': return { txt: 'Synthèse', lb: 'tableau de bord RH' };
+    case 'admin.html?tab=employes': return { n: st.actifs.length, lb: s(st.actifs.length, 'fiche salarié', 'fiches salariés') };
+    case 'contacts-externes.html': return { txt: 'Externes', lb: 'intervenants et partenaires' };
+    case 'contrats.html': return st.contratsFin.length
+      ? { n: st.contratsFin.length, lb: s(st.contratsFin.length, 'échéance à traiter', 'échéances à traiter'), warn: true }
+      : { txt: 'À jour', lb: 'aucune échéance proche' };
+    case 'absences.html': return st.absencesCours.length
+      ? { n: st.absencesCours.length, lb: s(st.absencesCours.length, 'absence en cours', 'absences en cours') }
+      : { n: 0, lb: 'aucune absence en cours' };
+    case 'conges.html': return st.congesAttente.length
+      ? { n: st.congesAttente.length, lb: s(st.congesAttente.length, 'demande à valider', 'demandes à valider'), warn: true }
+      : { n: 0, lb: 'rien à valider' };
+    case 'pointage.html': return { txt: 'Temps réel', lb: 'pointages du jour' };
+    case 'planning-equipe.html': return { txt: 'Semaine', lb: 'planning de l’équipe' };
+    case 'astreintes.html': return { txt: 'Astreintes', lb: 'tour de garde' };
+    case 'entretiens.html': return st.entretiensRetard.length
+      ? { n: st.entretiensRetard.length, lb: s(st.entretiensRetard.length, 'entretien en retard', 'entretiens en retard'), warn: true }
+      : { txt: 'À jour', lb: 'aucun entretien en retard' };
+    case 'formations.html': return { txt: 'Formation', lb: 'plan de formation' };
+    case 'paie.html': return st.masse.length
+      ? { n: st.masse.length, lb: s(st.masse.length, 'période de paie', 'périodes de paie') }
+      : { txt: 'Bulletins', lb: 'fiches de paie' };
+    case 'recrutement.html': return { txt: 'Recrutement', lb: 'candidatures en cours' };
+    case 'diagnostic-droits.html': return { txt: 'Droits', lb: 'accès et permissions' };
+    case 'viatrajectoire.html': return { txt: 'Orientations', lb: 'Via Trajectoire' };
+    default: return { txt: '', lb: '' };
   }
 }
 
@@ -280,17 +297,22 @@ function rh2Cards() {
   const nav = (window.RH_NAV || []).filter(window.rhAllowed || (() => true));
   const badges = rh2Badges();
   const tuto = window.PORTAL_TUTO || {};
-  return `<div class="rh-sec">Modules RH</div>
+  return `<div class="dc-eyebrow" style="margin-bottom:12px">Modules RH</div>
     <div class="rh-cards">${nav.map(e => {
       const n = badges[e.page];
       const k = e.page.split('?')[0];
-      return `<div class="rh-card" role="button" tabindex="0" data-page="${_rh(e.page)}" data-label="${_rh(e.label)}"
-        aria-label="Ouvrir ${_rh(e.label)}" style="--rhc:${_rh(e.c1)};--rhc-sh:${_rhRgba(e.c1, .4)}">
+      const d = rh2CardData(e.page);
+      const aide = !!tuto[k];
+      return `<div class="rh-card cdn${n ? ' cdn-hasb' : ''}${aide ? ' cdn-hasi' : ''}${d.warn ? ' cdn-warn' : ''}" role="button" tabindex="0"
+        data-page="${_rh(e.page)}" data-label="${_rh(e.label)}"
+        aria-label="Ouvrir ${_rh(e.label)}" style="--rhc:${_rh(e.c1)};--rhc-sh:${_rhRgba(e.c1, .4)};--cdc:${_rh(e.c1)}">
         ${n ? `<span class="rh-card-b" title="${_rh(n)} à traiter">${_rh(n)}</span>` : ''}
-        <span class="rh-card-ic">${e.icon}</span>
-        <div class="rh-card-l">${_rh(e.label)}</div>
-        <div class="rh-card-s">${_rh(rh2CardSub(e.page))}</div>
-        ${tuto[k] ? `<button type="button" class="rh-card-i" data-tuto="${_rh(e.page)}"
+        <div class="cdn-top">
+          <span class="rh-card-ic cdn-ic">${e.icon}</span>
+          <div class="cdn-t">${_rh(e.label)}</div>
+        </div>
+        ${_cdnMid(d, _rh)}
+        ${aide ? `<button type="button" class="rh-card-i" data-tuto="${_rh(e.page)}"
           title="Mode d'emploi — ${_rh(e.label)}" aria-label="Mode d'emploi — ${_rh(e.label)}">?</button>` : ''}
       </div>`;
     }).join('')}</div>`;
@@ -305,8 +327,8 @@ function rh2Bento() {
 function rh2BlkTodo() {
   const st = rh2Stats();
   let body = `<div class="rh-vide">Chargement…</div>`;
+  let items = [];
   if (st) {
-    const items = [];
     if (st.congesAttente.length) {
       const noms = st.congesAttente.slice(0, 3).map(c => c.employeNom).filter(Boolean).join(', ');
       items.push({
@@ -344,16 +366,19 @@ function rh2BlkTodo() {
     }
     body = items.length
       ? items.slice(0, 5).map(t => `<div class="rh-li" role="button" tabindex="0"
-          data-page="${_rh(t.page)}" data-label="${_rh(t.tag)}">
+          data-page="${_rh(t.page)}" data-label="${_rh(t.tag)}"
+          style="border-left:3px solid ${t.c};padding-left:12px">
           <span class="rh-li-ic" style="background:${_rhRgba(t.c, .13)};color:${t.c}">${_rhSvg(t.ic, t.c, 15)}</span>
           <div class="rh-li-b"><div class="rh-li-t">${_rh(t.label)}</div>
             <div class="rh-li-s">${_rh(t.sub)}</div></div>
-          <span class="rh-li-tag" style="color:${t.c};background:${_rhRgba(t.c, .11)}">${_rh(t.tag)}</span>
+          <span class="dc-badge" style="flex:none;background:${_rhRgba(t.c, .14)};color:${t.c};border:1px solid ${_rhRgba(t.c, .34)}"><span class="d" style="background:${t.c}"></span>${_rh(t.tag)}</span>
         </div>`).join('')
       : `<div class="rh-vide">Rien à traiter aujourd'hui.</div>`;
   }
-  return `<div class="rh-blk rh-blk-warn"><div class="rh-blk-h">${_rhSvg(RH_IC.warn, '#fbbf24', 15)}
-    <span class="rh-blk-t warn">À traiter</span></div>${body}</div>`;
+  const n = st ? Math.min(items.length, 5) : 0;
+  const pill = n ? `<span class="dc-pill dim">${n} en cours</span>` : '';
+  return `<div class="dc-card">${_rhDcHead('#f59e0b', RH_IC.warn, 'Priorités', 'À traiter', pill)}
+    <div class="dc-body">${body}</div></div>`;
 }
 
 function rh2BlkEffectif() {
@@ -370,16 +395,16 @@ function rh2BlkEffectif() {
         }).join('')}</div>`
       : `<div class="rh-vide">Aucun salarié actif enregistré.</div>`;
   }
-  return `<div class="rh-blk"><div class="rh-blk-h">
-    <span class="rh-blk-t">Effectif par métier</span></div>${body}</div>`;
+  const pill = st ? `<span class="dc-pill dim">${st.actifs.length} actif${st.actifs.length > 1 ? 's' : ''}</span>` : '';
+  return `<div class="dc-card">${_rhDcHead('#6366f1', RH_IC.users, 'Répartition', 'Effectif par métier', pill)}
+    <div class="dc-body">${body}</div></div>`;
 }
 
 function rh2BlkMasse() {
   const st = rh2Stats();
   if (st && !st.masse.length && RH2.data && !RH2.data.paieOk) {
-    return `<div class="rh-blk"><div class="rh-blk-h">
-      <span class="rh-blk-t">Masse salariale</span></div>
-      <div class="rh-vide">Réservé aux comptes autorisés à consulter la paie.</div></div>`;
+    return `<div class="dc-card">${_rhDcHead('#ea580c', RH_IC.euro, 'Paie · brut', 'Masse salariale', '')}
+      <div class="dc-body"><div class="rh-vide">Réservé aux comptes autorisés à consulter la paie.</div></div></div>`;
   }
   let body = `<div class="rh-vide">Chargement…</div>`, total = '';
   if (st) {
@@ -394,9 +419,9 @@ function rh2BlkMasse() {
       body = `<div class="rh-vide">Aucune fiche de paie enregistrée.</div>`;
     }
   }
-  return `<div class="rh-blk"><div class="rh-blk-h">
-    <span class="rh-blk-t">Masse salariale — brut, 6 périodes</span>
-    ${total ? `<span class="rh-blk-v">${_rh(total)}</span>` : ''}</div>${body}</div>`;
+  const pill = total ? `<span class="dc-pill">${_rh(total)}</span>` : '';
+  return `<div class="dc-card">${_rhDcHead('#ea580c', RH_IC.euro, 'Paie · brut · 6 périodes', 'Masse salariale', pill)}
+    <div class="dc-body">${body}</div></div>`;
 }
 
 function rh2BlkAnniv() {
@@ -406,16 +431,17 @@ function rh2BlkAnniv() {
     body = st.anniv.length
       ? st.anniv.map((a, i) => {
         const c = a.e.color || RH_AV_C[i % RH_AV_C.length];
-        return `<div class="rh-li">
+        return `<div class="rh-li" style="border-left:3px solid ${_rh(c)};padding-left:12px">
           <span class="rh-li-av" style="background:${_rh(c)}">${_rh(_rhInitiales(a.e.prenom, a.e.nom))}</span>
           <div class="rh-li-b"><div class="rh-li-t">${_rh(_rhNomCourt(a.e))}</div>
             <div class="rh-li-s">${a.ans} an${a.ans > 1 ? 's' : ''} d'ancienneté</div></div>
-          <span class="rh-li-d">${_rh(_rhDateCourte(a.iso))}</span></div>`;
+          <span class="dc-pill dim" style="flex:none">${_rh(_rhDateCourte(a.iso))}</span></div>`;
       }).join('')
       : `<div class="rh-vide">Aucun anniversaire de contrat dans les 90 jours.</div>`;
   }
-  return `<div class="rh-blk rh-blk-cyan"><div class="rh-blk-h">${_rhSvg(RH_IC.cal, '#22d3ee', 15)}
-    <span class="rh-blk-t cyan">Anniversaires de contrat</span></div>${body}</div>`;
+  const pill = (st && st.anniv.length) ? `<span class="dc-pill dim">${st.anniv.length}</span>` : '';
+  return `<div class="dc-card">${_rhDcHead('#22d3ee', RH_IC.cal, '90 jours', 'Anniversaires de contrat', pill)}
+    <div class="dc-body">${body}</div></div>`;
 }
 
 // ─── Mode d'emploi d'un module (gabarit de modale v2) ─────────────────────

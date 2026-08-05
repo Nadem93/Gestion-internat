@@ -17,6 +17,11 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
   border-right: 1px solid var(--v2-b);
   display: flex; flex-direction: column; padding: 20px 14px;
 }
+/* Page « Employés » ouverte depuis le portail RH (admin.html?tab=employes) :
+   on masque le menu latéral d'Administration — la navigation est assurée par
+   la coquille RH. .adm-main (flex:1) reprend toute la largeur, sans trou.
+   S'applique aussi en mobile où la barre devient horizontale. */
+body.adm-emp-only .adm-side { display: none; }
 .adm-side-brand { display: flex; align-items: center; gap: 11px; padding: 6px 6px 18px; }
 .adm-side-logo {
   width: 40px; height: 40px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
@@ -216,21 +221,41 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
 /* ── Matrice de permissions ──────────────────────────────────────────── */
 .adm-perm-wrap { background: var(--v2-s-alt); border: 1px solid var(--v2-b);
   border-radius: var(--v2-r-card2); overflow: hidden; }
-.adm-perm-scroll { overflow-x: auto; }
-.adm-perm { width: 100%; border-collapse: collapse; min-width: 560px; }
+/* Scroll horizontal ET vertical : le tableau défile dans sa propre zone
+   (hauteur bornée), ce qui permet à l'en-tête de rester collé en haut. */
+.adm-perm-scroll { overflow: auto; max-height: 72vh; }
+/* border-collapse: SEPARATE (pas collapse) : indispensable pour que les
+   cellules figées (en-tête sticky + colonne d'intitulés sticky) masquent bien
+   ce qui défile dessous. En mode collapse, les cellules d'une même ligne
+   partagent la couche de rendu et le fond opaque ne les recouvre pas au
+   défilement horizontal (bug Chromium connu). border-spacing:0 = rendu flush. */
+.adm-perm { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 560px; }
 .adm-perm th {
   padding: 13px 12px; font-size: 10.5px; font-weight: 700;
-  background: var(--v2-s-alt); border-bottom: 1px solid var(--v2-b);
+  /* Fond OPAQUE obligatoire : en sticky, les lignes défilent sous l'en-tête.
+     var(--v2-s-alt) seul est translucide (3 %) → le contenu transparaîtrait.
+     On pose donc une base opaque (--v2-bg) puis la teinte par-dessus. Marche
+     en thème clair comme sombre (les deux variables suivent le thème). */
+  background-color: var(--v2-bg);
+  background-image: linear-gradient(var(--v2-s-alt), var(--v2-s-alt));
+  border-bottom: 1px solid var(--v2-b);
   text-align: center; white-space: nowrap;
+  /* En-tête figé en haut au défilement vertical. */
+  position: sticky; top: 0; z-index: 3;
 }
 .adm-perm th.adm-perm-h1 { text-align: left; padding: 13px 20px;
   text-transform: uppercase; letter-spacing: .05em; color: var(--v2-t8);
-  position: sticky; left: 0; z-index: 2; }
+  /* Coin figé : reste visible en haut ET à gauche (au-dessus des deux). */
+  position: sticky; top: 0; left: 0; z-index: 4; }
 .adm-perm td { padding: 11px 12px; text-align: center; border-bottom: 1px solid var(--v2-b-table); }
 .adm-perm td.adm-perm-c1 { padding: 11px 20px; text-align: left;
   font-size: 12.5px; color: var(--v2-t3);
-  /* colonne d'intitulés figée : la matrice défile horizontalement */
-  position: sticky; left: 0; background: var(--v2-s-alt); z-index: 1; }
+  /* colonne d'intitulés figée : la matrice défile horizontalement.
+     Fond OPAQUE (comme l'en-tête) : sinon les cases à cocher qui défilent
+     horizontalement transparaissent sous la colonne. */
+  position: sticky; left: 0; z-index: 1;
+  background-color: var(--v2-bg);
+  background-image: linear-gradient(var(--v2-s-alt), var(--v2-s-alt)); }
 .adm-perm tr.adm-perm-grp td {
   padding: 14px 20px 6px; font-size: 10.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .06em; color: var(--v2-t8);
@@ -251,6 +276,36 @@ body.v2 .adm-shell { display: flex; --v2-halo: rgba(124,111,205,.2); }
 .adm-sw.on > i { background: #fff; }
 .adm-sw:focus-visible { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
 .adm-perm-legacy { display: none; }
+
+/* ── Permissions — vue « par permission » (cartes + badges de rôles) ──── */
+/* Maçonnerie (colonnes CSS) plutôt qu'une grille : les groupes ont des
+   hauteurs très différentes (« Général » = 1 accès, « Portail employé » = 10).
+   Une grille forcerait des hauteurs de ligne égales → grands vides sous les
+   cartes courtes. Les colonnes tassent chaque carte selon sa hauteur réelle. */
+.adm-p3-grid { column-count: 2; column-gap: 12px; }
+.adm-p3-card { background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card2, 16px); padding: 16px 18px; min-width: 0;
+  break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 12px; }
+.adm-p3-gtitle { font-size: 11px; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--v2-t8); margin: 0 0 12px; }
+.adm-p3-perm { padding: 11px 0; border-top: 1px solid var(--v2-b-soft); }
+.adm-p3-perm:first-of-type { border-top: 0; padding-top: 0; }
+.adm-p3-top { display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 8px; }
+.adm-p3-name { font-size: 13.5px; font-weight: 600; color: var(--v2-t1); }
+.adm-p3-cnt { font-size: 11px; font-weight: 700; color: var(--v2-t5);
+  background: rgba(255,255,255,.05); padding: 2px 8px; border-radius: 999px; flex: 0 0 auto; }
+.adm-p3-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.adm-p3-b { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 7px;
+  border: 1px solid var(--v2-b); color: var(--v2-t7); background: transparent; cursor: pointer;
+  transition: border-color .12s, color .12s, filter .12s;
+  max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-p3-b:hover { border-color: var(--v2-t6); color: var(--v2-t3); }
+.adm-p3-b.on { font-weight: 800; }
+.adm-p3-b.on:hover { filter: brightness(1.18); }
+.adm-p3-b:focus-visible { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
+.adm-p3-empty { padding: 32px; text-align: center; color: var(--v2-t5); }
+@media (max-width: 900px) { .adm-p3-grid { column-count: 1; } }
 
 /* ── Ségur : lignes de conformité ────────────────────────────────────── */
 .adm-seg {
@@ -536,3 +591,113 @@ body.v2 .c-head > div { min-width: 0; }
 .emp-popup-row-label { color: var(--v2-t6); min-width: 70px; flex-shrink: 0; }
 .emp-popup-row-val { color: var(--v2-t2); font-weight: 500; flex: 1;
   text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RÉVERSIBILITÉ — écran de restitution intégrale (onglet Données)
+   États produits par js/reversibilite.js : progression pendant la lecture des
+   tables, puis bilan chiffré, puis liste des tables non lues le cas échéant.
+   ══════════════════════════════════════════════════════════════════════════ */
+.rev-intro { font-size: 12.5px; color: var(--v2-t5); line-height: 1.6; margin: 0 0 8px; }
+.rev-note {
+  font-size: 11.5px; color: var(--v2-t6); line-height: 1.55; margin: 0 0 14px;
+  padding: 9px 12px; border-radius: 9px;
+  background: rgba(148,163,184,.09); border: 1px solid var(--v2-b-soft);
+}
+.rev-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.rev-etat:not(:empty) { margin-top: 16px; }
+
+/* Progression : une ligne de texte + une barre qui se remplit table par table. */
+.rev-prog-l { font-size: 11.5px; color: var(--v2-t6); margin-bottom: 7px; font-variant-numeric: tabular-nums; }
+.rev-prog { height: 6px; border-radius: 4px; background: rgba(8,145,178,.15); overflow: hidden; }
+.rev-prog i { display: block; height: 100%; border-radius: 4px; background: #0891b2; transition: width .18s linear; }
+
+/* Bilan : trois compteurs côte à côte. */
+.rev-bilan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .rev-bilan { grid-template-columns: minmax(0, 1fr); } }
+.rev-b {
+  padding: 12px 14px; border-radius: var(--v2-r-sm);
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft);
+}
+.rev-b b { display: block; font-family: var(--v2-display); font-size: 22px; font-weight: 800; line-height: 1; color: var(--v2-t3); }
+.rev-b span { display: block; font-size: 10.5px; color: var(--v2-t6); margin-top: 6px; }
+/* Vert quand tout est lu, rouge quand il reste des tables non exportées : le
+   nombre de tables manquantes est l'information à ne pas rater sur cet écran. */
+.rev-b.ok b { color: #0b8a63; }
+html:not(.clair) .rev-b.ok b { color: #34d399; }
+.rev-b.ko { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.07); }
+.rev-b.ko b { color: var(--v2-danger-text); }
+
+.rev-det { margin-top: 12px; font-size: 12px; color: var(--v2-t5); }
+.rev-det summary { cursor: pointer; font-weight: 700; color: var(--v2-t4); }
+.rev-det ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.6; }
+
+.rev-alerte {
+  padding: 11px 13px; border-radius: 9px; line-height: 1.55; font-size: 12.5px;
+  color: var(--v2-warn-text); background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.32);
+}
+.rev-ok {
+  padding: 11px 13px; border-radius: 9px; line-height: 1.55; font-size: 12.5px;
+  color: var(--v2-ok-text, #0b8a63); background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.32);
+}
+html:not(.clair) .rev-ok { color: #34d399; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PURGE & RÉTENTION — écran des dossiers arrivés à échéance (onglet Données)
+   ══════════════════════════════════════════════════════════════════════════ */
+.prg-durees { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; margin: 0 0 14px; }
+.prg-durees label { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--v2-t3); }
+.prg-durees label span { font-size: 10.5px; font-weight: 400; color: var(--v2-t7); }
+.prg-champ { display: inline-flex; align-items: center; gap: 7px; margin-top: 5px; font-size: 12px; color: var(--v2-t6); }
+.prg-durees input {
+  width: 68px; height: 34px; padding: 0 10px; border-radius: 9px;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b-ctrl); color: var(--v2-t2);
+  font: inherit; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.prg-resultat:not(:empty) { margin-top: 14px; }
+.prg-attente { font-size: 12.5px; color: var(--v2-t7); padding: 10px 0; }
+
+.prg-bandeau {
+  font-size: 12.5px; line-height: 1.55; padding: 11px 13px; border-radius: 9px; margin-bottom: 14px;
+  color: var(--v2-warn-text); background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.32);
+}
+.prg-ok {
+  font-size: 12.5px; line-height: 1.55; padding: 11px 13px; border-radius: 9px;
+  color: #0b8a63; background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.32);
+}
+html:not(.clair) .prg-ok { color: #34d399; }
+/* Purge incomplète : une cascade manquante en base a laissé des lignes. */
+.prg-alerte {
+  font-size: 12.5px; line-height: 1.55; padding: 11px 13px; border-radius: 9px; margin-bottom: 14px;
+  color: var(--v2-danger-text); background: rgba(239,68,68,.11); border: 1px solid rgba(239,68,68,.35);
+}
+.prg-alerte code { font-family: var(--v2-mono, Menlo, monospace); font-size: 11px; }
+.prg-note {
+  font-size: 11.5px; line-height: 1.55; margin: 14px 0 0; padding: 9px 12px; border-radius: 9px;
+  color: var(--v2-t6); background: rgba(148,163,184,.09); border: 1px solid var(--v2-b-soft);
+}
+.prg-sec {
+  font-family: var(--v2-mono, Menlo, monospace); font-size: 10px; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--v2-t7); margin: 16px 0 7px;
+}
+.prg-li {
+  display: flex; align-items: center; gap: 14px; padding: 11px 13px; margin-bottom: 7px;
+  background: var(--v2-s-sub-soft); border: 1px solid var(--v2-b-soft); border-radius: var(--v2-r-sm);
+}
+.prg-li-b { flex: 1; min-width: 0; }
+.prg-li-t { font-size: 13px; font-weight: 700; color: var(--v2-t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prg-li-s { font-size: 11px; color: var(--v2-t6); margin-top: 3px; }
+.prg-li-n {
+  flex-shrink: 0; text-align: right; font-family: var(--v2-display);
+  font-size: 17px; font-weight: 800; color: var(--v2-t4); line-height: 1;
+}
+.prg-li-n span { display: block; font-family: inherit; font-size: 9.5px; font-weight: 600; color: var(--v2-t7); margin-top: 4px; }
+@media (max-width: 620px) {
+  .prg-li { flex-wrap: wrap; }
+  .prg-li-b { flex: 1 1 100%; }
+}
+
+/* Bouton d'action destructive : rouge en contour, plein au survol. */
+.v2-btn-danger {
+  color: var(--v2-danger-text); background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.38);
+}
+.v2-btn-danger:hover { color: #fff; background: #ef4444; border-color: #ef4444; }

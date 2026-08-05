@@ -160,6 +160,25 @@
 .ob2-ppa-dom { font-size: 10.5px; font-weight: 700; color: var(--v2-warn-text); white-space: nowrap; flex-shrink: 0; }
 .ob2-ppa-txt { font-size: 12.5px; color: var(--v2-t3); line-height: 1.45; flex: 1; min-width: 180px; }
 .ob2-ppa-meta { font-size: 11px; color: var(--v2-t7); margin-top: 4px; }
+/* Bouton « En faire un objectif suivi » + état « déjà suivi » (par ligne du PPE) */
+.ob2-ppa-add {
+  margin-left: auto; flex-shrink: 0; height: 28px; padding: 0 11px; border-radius: 8px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 11.5px; font-weight: 700;
+  color: var(--v2-warn-text); background: color-mix(in srgb, var(--v2-warn-text) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--v2-warn-text) 40%, transparent); transition: background .15s;
+}
+.ob2-ppa-add:hover { background: color-mix(in srgb, var(--v2-warn-text) 24%, transparent); }
+.ob2-ppa-add svg { width: 13px; height: 13px; }
+.ob2-ppa-done { margin-left: auto; flex-shrink: 0; font-size: 11px; font-weight: 700; color: #10b981;
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* Repères sur la carte perso : lien avenant + retrait */
+.ob2-perso-link { font-size: 11px; font-weight: 700; color: var(--v2-warn-text); text-decoration: none;
+  padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--v2-warn-text) 13%, transparent); white-space: nowrap; }
+.ob2-perso-link:hover { text-decoration: underline; }
+.ob2-perso-del { margin-left: auto; flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1;
+  color: var(--v2-t7); background: transparent; border: 1px solid var(--v2-b); transition: color .15s, border-color .15s, background .15s; }
+.ob2-perso-del:hover { color: #ef4444; border-color: #ef4444; background: rgba(239,68,68,.1); }
 
 /* Carte d'objectif */
 .ob2-objs { display: flex; flex-direction: column; gap: 14px; }

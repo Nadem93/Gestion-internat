@@ -39,12 +39,15 @@ function _ecFromRow(r) {
 }
 
 async function sbGetEcheances() {
-  const { data, error } = await supabaseClient
-    .from('echeances')
-    .select('*')
-    .order('date', { ascending: true });
-  if (error) { console.error(error); toast('Erreur chargement échéances', 'error'); return []; }
-  return data.map(_ecFromRow);
+  // sbFetchAll : sans lui, les échéances les plus lointaines (tri ascendant)
+  // sortiraient des alertes au-delà de 1000 lignes.
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('echeances')
+      .select('*')
+      .order('date', { ascending: true }));
+    return data.map(_ecFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement échéances', 'error'); return []; }
 }
 
 async function sbSaveEcheance(e) {

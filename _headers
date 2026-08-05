@@ -1,0 +1,46 @@
+# En-têtes de sécurité HTTP — INTERNALIS (format Netlify)
+#
+# Ce fichier doit se trouver À LA RACINE DU DOSSIER DÉPLOYÉ pour être pris en
+# compte par Netlify. Vérification après déploiement :
+#   curl -I https://internalis.fr | grep -i "strict-transport\|content-security"
+#
+# Écart n° 4 du dossier de conformité (conformite/02-mesures-securite.md).
+
+/*
+  # HTTPS obligatoire pendant 2 ans, sous-domaines inclus.
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+  # Empêche le navigateur de "deviner" un type MIME (anti-injection de contenu).
+  X-Content-Type-Options: nosniff
+
+  # Interdit l'inclusion du site dans une iframe externe (anti-clickjacking).
+  # SAMEORIGIN et non DENY : les portails (RH, dossiers, pilotage) affichent
+  # leurs pages dans une iframe de MÊME origine.
+  X-Frame-Options: SAMEORIGIN
+
+  # Ne divulgue pas l'URL complète (qui peut contenir un identifiant de
+  # résident) aux sites tiers.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Coupe les API navigateur non utilisées par l'application.
+  Permissions-Policy: camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()
+
+  # Empêche la mise en cache des pages par les proxys intermédiaires.
+  Cache-Control: no-store, no-cache, must-revalidate
+
+  # ── Politique de sécurité du contenu (CSP) ──
+  # Déployée en MODE RAPPORT dans un premier temps : elle n'applique aucun
+  # blocage, mais signale les violations dans la console du navigateur.
+  #
+  # ➜ MODE D'EMPLOI
+  #   1. Déployer, puis naviguer dans TOUTES les pages (résidents, journal,
+  #      médicaments, paie, portails RH/dossiers, signature, IA…).
+  #   2. Relever les messages "Content Security Policy" dans la console.
+  #   3. Compléter les sources manquantes ci-dessous.
+  #   4. Quand plus aucune violation n'apparaît, renommer l'en-tête en
+  #      "Content-Security-Policy" (sans -Report-Only) pour l'appliquer.
+  #
+  # Note : 'unsafe-inline' est nécessaire tant que l'application utilise des
+  # attributs onclick et des styles en ligne. La CSP reste utile : elle
+  # verrouille les origines externes, les connexions et les iframes.
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co; worker-src 'self' blob: https://cdnjs.cloudflare.com; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'

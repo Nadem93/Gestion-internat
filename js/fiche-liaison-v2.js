@@ -25,6 +25,10 @@ const FL2_IC = {
 function _fl2Svg(d) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône 16px pour les puces « Console Data » (.dc-chip).
+function _fl2Svg16(d) {
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
 
 // Régimes alimentaires : mêmes clés que js/repas.js (non chargé ici).
 const FL2_REGIMES = {
@@ -64,7 +68,7 @@ function _fl2Age(dob) {
 }
 function _fl2Today() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return isoJour(d);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -197,19 +201,33 @@ function _fl2Row(k, v, cls) {
   return { k: k, v: (v === null || v === undefined) ? '' : String(v), cls: cls || '' };
 }
 
-function _fl2RowHtml(row) {
+function _fl2RowHtml(row, color) {
   const vide = row.v === '';
-  return `<div class="fl2-row"><span class="fl2-k">${escHtml(row.k)}</span>
-    <span class="fl2-v ${vide ? 'mute' : row.cls}">${vide ? '—' : escHtml(row.v)}</span></div>`;
+  const lisere = color ? ` style="border-left:2px solid ${color}33;padding-left:9px"` : '';
+  let vHtml;
+  if (vide) {
+    vHtml = '<span class="fl2-v mute">—</span>';
+  } else if (row.cls === 'danger') {
+    // Valeur à risque (allergies) → badge monospace rouge « Console Data ».
+    vHtml = `<span class="dc-badge dc-b-red"><span class="d"></span>${escHtml(row.v)}</span>`;
+  } else {
+    vHtml = `<span class="fl2-v ${row.cls}">${escHtml(row.v)}</span>`;
+  }
+  return `<div class="fl2-row"${lisere}><span class="fl2-k">${escHtml(row.k)}</span>${vHtml}</div>`;
 }
 
 function _fl2Section(s) {
-  return `<div class="fl2-sec" style="--sc:${s.c}">
-    <div class="fl2-sec-h">
-      <span class="fl2-sec-ico">${_fl2Svg(s.icon)}</span>
-      <span class="fl2-sec-t">${escHtml(s.title)}</span>
+  return `<div class="dc-card fl2-sec" style="--sc:${s.c}">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:${s.c}22;color:${s.c}">${_fl2Svg16(s.icon)}</span>
+        <div style="min-width:0">
+          <div class="dc-eyebrow">${escHtml(s.eyebrow || '')}</div>
+          <div class="dc-title">${escHtml(s.title)}</div>
+        </div>
+      </div>
     </div>
-    <div class="fl2-rows">${s.rows.map(_fl2RowHtml).join('')}</div>
+    <div class="dc-body"><div class="fl2-rows">${s.rows.map(row => _fl2RowHtml(row, s.c)).join('')}</div></div>
   </div>`;
 }
 
@@ -272,39 +290,39 @@ function fl2Sections(d) {
   const soins = d.soins || [];
 
   return [
-    { title: 'Identité', c: '#818cf8', icon: FL2_IC.id, rows: [
+    { title: 'Identité', eyebrow: 'Administratif', c: '#818cf8', icon: FL2_IC.id, rows: [
       _fl2Row('N° Sécu', r.nss),
       _fl2Row('INS', r.ins),
       _fl2Row('Mesure', r.protection ? (FL2_PROTECTION[r.protection] || r.protection) : ''),
       _fl2Row('Entré(e) le', _fl2DateFr(r.entree))
     ] },
-    { title: 'Contacts d’urgence', c: '#22d3ee', icon: FL2_IC.phone, rows: [
+    { title: 'Contacts d’urgence', eyebrow: 'Urgence', c: '#22d3ee', icon: FL2_IC.phone, rows: [
       _fl2Row('Famille', r.contacts),
       _fl2Row('Médecin', med),
       _fl2Row('Tuteur / curateur', tut)
     ] },
-    { title: 'Allergies & risques', c: '#ef4444', icon: FL2_IC.alert, rows: [
+    { title: 'Allergies & risques', eyebrow: 'Vigilance', c: '#ef4444', icon: FL2_IC.alert, rows: [
       _fl2Row('Allergies', r.allergies, 'danger'),
       _fl2Row('Régime', _fl2Regime(r)),
       _fl2Row('Chutes', FL2_CHUTE[c.risqueChute] || '')
     ] },
-    { title: 'Traitements en cours', c: '#ec4899', icon: FL2_IC.pill, rows: _fl2Traitements(d.meds) },
-    { title: 'Autonomie', c: '#f59e0b', icon: FL2_IC.wheel, rows: [
+    { title: 'Traitements en cours', eyebrow: 'Médicaments', c: '#ec4899', icon: FL2_IC.pill, rows: _fl2Traitements(d.meds) },
+    { title: 'Autonomie', eyebrow: 'Dépendance', c: '#f59e0b', icon: FL2_IC.wheel, rows: [
       _fl2Row('Déplacement', FL2_AUT[c.deplacement] || ''),
       _fl2Row('Toilette', FL2_AUT[c.toilette] || ''),
       _fl2Row('Repas', FL2_AUT[c.repas] || ''),
       _fl2Row('Communication', FL2_COM[c.communication] || '')
     ] },
-    { title: 'À savoir', c: '#10b981', icon: FL2_IC.info, rows: [
+    { title: 'À savoir', eyebrow: 'Transmission', c: '#10b981', icon: FL2_IC.info, rows: [
       _fl2Row('Langue', c.langue),
       _fl2Row('Consignes', c.consignes),
       _fl2Row('Référent', r.referent)
     ] },
-    { title: 'Plan de soins actif', c: '#38bdf8', icon: FL2_IC.care, rows:
+    { title: 'Plan de soins actif', eyebrow: 'Soins', c: '#38bdf8', icon: FL2_IC.care, rows:
       soins.length
         ? soins.slice(0, 6).map(s => _fl2Row(s.freq || 'Soin', s.libelle))
         : [_fl2Row('Soins', '')] },
-    { title: 'Niveau d’autonomie évalué', c: '#a78bfa', icon: FL2_IC.grid, rows: _fl2EvalRows(d.lastEval) }
+    { title: 'Niveau d’autonomie évalué', eyebrow: 'Évaluation', c: '#a78bfa', icon: FL2_IC.grid, rows: _fl2EvalRows(d.lastEval) }
   ];
 }
 
@@ -316,9 +334,14 @@ function fl2Render() {
   const r = d.r;
 
   if (!r) {
-    box.innerHTML = `<div class="v2-blk">
-      <div class="v2-blk-t">Fiche de liaison</div>
-      <div class="v2-blk-vide">Choisissez un résident ci-dessus : la fiche est générée depuis son dossier.</div>
+    box.innerHTML = `<div class="dc-card">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:#38bdf822;color:#38bdf8">${_fl2Svg16(FL2_IC.pulse)}</span>
+          <div style="min-width:0"><div class="dc-eyebrow">Fiche de liaison</div><div class="dc-title">Aucun résident sélectionné</div></div>
+        </div>
+      </div>
+      <div class="dc-body"><div class="v2-blk-vide">Choisissez un résident ci-dessus : la fiche est générée depuis son dossier.</div></div>
     </div>`;
     return;
   }
@@ -334,16 +357,16 @@ function fl2Render() {
   const maj = fl2Comp(r.id).updatedAt;
 
   box.innerHTML = `<div class="fl2-card" id="flPrintZone" style="--fc:${c}">
-    <div class="fl2-head">
-      <div class="fl2-head-av">${escHtml(_fl2Ini(r))}</div>
-      <div class="fl2-head-id">
-        <div class="fl2-head-n">${escHtml(_fl2Nom(r))}</div>
-        <div class="fl2-head-m">${escHtml(meta || 'Informations d’état civil incomplètes')}</div>
+    <div class="dc-head" style="margin-bottom:16px">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="width:40px;height:40px;font-size:15px;background:${c}22;color:${c}">${escHtml(_fl2Ini(r))}</span>
+        <div style="min-width:0">
+          <div class="dc-eyebrow">Fiche de liaison hospitalière</div>
+          <div class="dc-title" style="font-size:17px">${escHtml(_fl2Nom(r))}</div>
+          <div class="dc-eyebrow" style="text-transform:none;letter-spacing:0;margin-top:4px;margin-bottom:0;color:var(--v2-t5)">${escHtml(meta || 'Informations d’état civil incomplètes')}</div>
+        </div>
       </div>
-      <div class="fl2-head-r">
-        <div class="fl2-head-rl">Groupe sanguin</div>
-        <div class="fl2-head-rv">${escHtml(sang || '—')}</div>
-      </div>
+      <span class="dc-badge dc-b-red"><span class="d"></span>Groupe ${escHtml(sang || '—')}</span>
     </div>
     <div class="fl2-grid">${fl2Sections(d).map(_fl2Section).join('')}</div>
     <div class="fl2-foot">

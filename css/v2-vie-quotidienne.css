@@ -76,17 +76,25 @@ body.v2 .vq-shell {
   transition: transform .15s, box-shadow .3s, border-color .2s;
 }
 .vq-card:hover {
+  background: color-mix(in srgb, var(--vqc, #6366f1) 4%, var(--v2-s-card));
   transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--vqc, #6366f1) 40%, transparent);
   box-shadow: 0 14px 30px -14px var(--vqc-sh, rgba(99,102,241,.4));
 }
 .vq-card:focus-visible { box-shadow: 0 0 0 2.5px var(--vqc-sh, rgba(99,102,241,.4)); }
+/* Icône en pastille teintée — voir la note dans css/v2-pilotage.css. */
 .vq-card-ic {
-  width: 46px; height: 46px; border-radius: 13px;
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  background: var(--vqc, #6366f1); box-shadow: 0 6px 14px var(--vqc-sh, rgba(99,102,241,.33));
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--vqc, #6366f1) 14%, transparent);
+  color: var(--vqc, #6366f1);
 }
 .vq-card-ic svg { width: 22px; height: 22px; }
+/* Thème sombre : on éclaircit le glyphe, sinon une couleur de module très
+   foncée (ex. #1e3a5f) devient illisible sur la carte sombre. Le thème
+   clair garde la couleur pure. */
+html:not(.clair) .vq-card-ic { color: color-mix(in srgb, var(--vqc, #6366f1) 65%, #fff); }
+html:not(.clair) .vq-card-ic { background: color-mix(in srgb, var(--vqc, #6366f1) 20%, transparent); }
 .vq-card-l { font-size: 13.5px; font-weight: 600; color: var(--v2-t2); margin-top: 14px; }
 .vq-card-s { font-size: 11px; color: var(--v2-t6); margin-top: 3px; }
 /* Bouton « à quoi ça sert ? » — ouvre le mode d'emploi du module */

@@ -11,6 +11,7 @@ function _stkFromRow(r) {
   return {
     id: r.id,
     residentId: r.resident_id || '',
+    traitementId: r.traitement_id || '',
     libelle: r.libelle || '',
     quantite: r.quantite ?? 0,
     quantiteInitiale: r.quantite_initiale ?? 0,
@@ -27,6 +28,7 @@ function _stkToRow(s, etablissementId) {
   return {
     etablissement_id: etablissementId,
     resident_id: s.residentId || null,
+    traitement_id: s.traitementId || null,
     libelle: s.libelle || '',
     quantite: Number.isFinite(qte) ? qte : 0,
     quantite_initiale: Number.isFinite(init) ? init : 0,

@@ -46,6 +46,21 @@ Deno.serve(async (req) => {
     const { email, password, prenom, nom, fonction, role } = await req.json();
     if (!email || !password) return json({ ok: false, error: 'Email et mot de passe requis' });
 
+    // 3 bis) Liste blanche de rôles. Le rôle arrivait tel quel du corps de la
+    // requête : un administrateur pouvait donc se créer un compte `superadmin`
+    // et franchir la seule frontière qui lui reste au-dessus. Le dossier de
+    // conformité affirmait déjà que cette liste existait — elle existe enfin.
+    // `superadmin` n'est volontairement PAS dans la liste : ce rôle ne
+    // s'attribue pas par ce canal.
+    // Relevé sur les appelants réels : les sélecteurs d'admin.html et de
+    // recrutement.html proposent educateur / rh / admin, js/documents.js crée
+    // les comptes famille, et `moderator` est testé dans toute l'application.
+    const ROLES_AUTORISES = ['educateur', 'rh', 'moderator', 'admin', 'famille'];
+    const roleDemande = String(role || 'educateur');
+    if (!ROLES_AUTORISES.includes(roleDemande)) {
+      return json({ ok: false, error: `Rôle non autorisé : ${roleDemande}` });
+    }
+
     // 4) Créer le compte Auth (email déjà confirmé pour permettre la connexion immédiate)
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email, password, email_confirm: true,
@@ -60,7 +75,7 @@ Deno.serve(async (req) => {
       prenom: prenom || '',
       nom: nom || '',
       fonction: fonction || '',
-      role: role || 'educateur',
+      role: roleDemande,
       etablissement_id: callerProfile.etablissement_id,
     });
     if (profErr) {

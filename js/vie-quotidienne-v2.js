@@ -158,10 +158,7 @@ function vq2Meta() {
 
 // ─── Blocs de contenu ─────────────────────────────────────────────────────
 function vq2Hello() {
-  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-  const p = (s && (s.prenom || s.username) || '').trim();
   return `<div class="vq-hello">
-    <h1>Bonjour${p ? ', ' + _vq(p) : ''}</h1>
     <div class="vq-hello-s">Le quotidien du foyer en un coup d'œil.</div>
   </div>`;
 }
@@ -170,46 +167,58 @@ function vq2Kpis() {
   const st = vq2Stats();
   const v = x => st ? String(x) : '—';
   const K = [
-    { n: v(st && st.presents), l: 'Présents', c: '#16a34a', ic: VQ_IC.check },
-    { n: v(st && st.couverts), l: 'Repas midi/soir', c: '#ea580c', ic: VQ_IC.meal },
-    { n: v(st && st.actJour.length), l: 'Activités', c: '#818cf8', ic: VQ_IC.activity },
-    { n: v(st && st.medRestants), l: 'Médic. restants', c: '#dc2626', ic: VQ_IC.pill }
+    { n: v(st && st.presents), l: 'Présents', sub: 'au foyer aujourd’hui', c: '#16a34a', ic: VQ_IC.check },
+    { n: v(st && st.couverts), l: 'Repas midi/soir', sub: 'couverts à servir', c: '#ea580c', ic: VQ_IC.meal },
+    { n: v(st && st.actJour.length), l: 'Activités', sub: 'séances programmées', c: '#818cf8', ic: VQ_IC.activity },
+    { n: v(st && st.medRestants), l: 'Médic. restants', sub: 'prises à distribuer', c: '#dc2626', ic: VQ_IC.pill }
   ];
-  return `<div class="vq-kpis">${K.map(k => `<div class="vq-kpi">
-    <span class="vq-kpi-ic" style="background:${_vqRgba(k.c, .13)};color:${k.c}">${_vqSvg(k.ic, k.c, 21)}</span>
-    <div><div class="vq-kpi-n" style="color:${k.c}">${_vq(k.n)}</div>
-      <div class="vq-kpi-l">${k.l}</div></div></div>`).join('')}</div>`;
+  return `<div class="vq-kpis dc-kpis">${K.map(k => `<div class="dc-kpi" style="--dc-c:${k.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${k.l}</span>
+      <span class="dc-kpi-ico" style="color:${k.c}">${_vqSvg(k.ic, k.c, 16)}</span></div>
+    <div class="dc-kpi-val" style="color:${k.c}">${_vq(k.n)}</div>
+    <div class="dc-kpi-sub">${k.sub}</div></div>`).join('')}</div>`;
 }
 
 // Sous-titre de tuile : chiffre réel du module, sinon rien d'inventé.
-function vq2CardSub(page) {
+// Donnée de la carte au format carte-donnée : { n, u, lb } ou { txt, lb }.
+// warn: true → la carte se teinte, il reste quelque chose à faire.
+function vq2CardData(page) {
   const st = vq2Stats();
-  if (!st) return '…';
+  if (!st) return { txt: '…', lb: 'chargement' };
+  const s = (n, sing, plur) => (n > 1 ? (plur || sing + 's') : sing);
   switch (page) {
-    case 'journee.html': return 'Quart par quart';
-    case 'transmissions.html': return `${st.trans} aujourd'hui`;
-    case 'presences.html': return `${st.presents} présent${st.presents > 1 ? 's' : ''}`;
-    case 'nuit.html': return 'Relais de nuit';
-    case 'repas.html': return `${st.couverts} couvert${st.couverts > 1 ? 's' : ''}`;
-    case 'activites.html': return `${st.actJour.length} séance${st.actJour.length > 1 ? 's' : ''}`;
-    case 'medicaments.html': return `${st.medTotal - st.medRestants}/${st.medTotal} donnés`;
-    case 'plan-soins.html': return `${st.soins} soin${st.soins > 1 ? 's' : ''} actif${st.soins > 1 ? 's' : ''}`;
-    default: return '';
+    case 'journee.html': return { txt: 'Tournée', lb: 'quart par quart' };
+    case 'transmissions.html': return { n: st.trans, lb: st.trans ? s(st.trans, 'transmission aujourd’hui', 'transmissions aujourd’hui') : 'rien aujourd’hui' };
+    case 'presences.html': return { n: st.presents, lb: s(st.presents, 'résident présent', 'résidents présents') };
+    case 'nuit.html': return { txt: 'Nuit', lb: 'relais de nuit' };
+    case 'repas.html': return { n: st.couverts, lb: s(st.couverts, 'couvert prévu', 'couverts prévus') };
+    case 'activites.html': return { n: st.actJour.length, lb: st.actJour.length ? s(st.actJour.length, 'séance aujourd’hui', 'séances aujourd’hui') : 'aucune séance' };
+    case 'medicaments.html': {
+      const faits = st.medTotal - st.medRestants;
+      return { n: faits, u: '/ ' + st.medTotal, lb: st.medRestants ? s(st.medRestants, 'prise à donner', 'prises à donner') : 'toutes les prises données', warn: st.medRestants > 0 };
+    }
+    case 'plan-soins.html': return { n: st.soins, lb: s(st.soins, 'soin actif', 'soins actifs') };
+    default: return { txt: '', lb: '' };
   }
 }
 
 function vq2Cards() {
   const nav = (window.VQ_NAV || []).filter(window.vqAllowed || (() => true));
   return `<div class="vq-sec">Accès rapides</div>
-    <div class="vq-cards">${nav.map(e => `
-      <div class="vq-card" role="button" tabindex="0" data-page="${_vq(e.page)}" data-label="${_vq(e.label)}"
-        aria-label="Ouvrir ${_vq(e.label)}" style="--vqc:${_vq(e.c1)};--vqc-sh:${_vqRgba(e.c1, .4)}">
+    <div class="vq-cards">${nav.map(e => {
+      const d = vq2CardData(e.page);
+      return `<div class="vq-card cdn cdn-hasi${d.warn ? ' cdn-warn' : ''}" role="button" tabindex="0"
+        data-page="${_vq(e.page)}" data-label="${_vq(e.label)}"
+        aria-label="Ouvrir ${_vq(e.label)}" style="--vqc:${_vq(e.c1)};--vqc-sh:${_vqRgba(e.c1, .4)};--cdc:${_vq(e.c1)}">
         <button type="button" class="vq-card-i" data-tuto="${_vq(e.page)}"
           title="Mode d'emploi — ${_vq(e.label)}" aria-label="Mode d'emploi — ${_vq(e.label)}">?</button>
-        <span class="vq-card-ic">${e.icon}</span>
-        <div class="vq-card-l">${_vq(e.label)}</div>
-        <div class="vq-card-s">${_vq(vq2CardSub(e.page))}</div>
-      </div>`).join('')}</div>`;
+        <div class="cdn-top">
+          <span class="vq-card-ic cdn-ic">${e.icon}</span>
+          <div class="cdn-t">${_vq(e.label)}</div>
+        </div>
+        ${_cdnMid(d, _vq)}
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function vq2Bento() {
@@ -236,16 +245,21 @@ function vq2BlkRepas() {
       });
       const detail = Object.entries(parts).map(([k, n]) => `${k} (${n})`).join(' · ');
       const heureH = parseInt(m.h, 10);
-      const etat = new Date().getHours() >= heureH ? 'servi' : 'à préparer';
-      return `<div class="vq-li">
+      const servi = new Date().getHours() >= heureH;
+      const c = servi ? '#10b981' : '#f59e0b';
+      const etat = servi ? 'servi' : 'à préparer';
+      return `<div class="vq-li" style="border-left:3px solid ${c};padding-left:12px">
         <span class="vq-li-h" style="color:#fb923c">${m.h}</span>
         <div class="vq-li-b"><div class="vq-li-t">${m.label}</div>
           <div class="vq-li-s">${_vq(etat + (detail ? ' · ' + detail : ''))}</div></div>
-        <span class="vq-li-n">${list.length}</span></div>`;
+        <span class="dc-badge ${servi ? 'dc-b-green' : 'dc-b-gray'}"><span class="d"></span>${list.length}</span></div>`;
     }).join('');
   }
-  return `<div class="vq-blk"><div class="vq-blk-h">${_vqSvg(VQ_IC.meal, '#fb923c', 15)}
-    <span class="vq-blk-t">Repas du jour</span></div>${body}</div>`;
+  return `<div class="dc-card"><div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#fb923c22;color:#fb923c">${_vqSvg(VQ_IC.meal, '#fb923c', 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Cadre de vie</div><div class="dc-title">Repas du jour</div></div>
+    </div><span class="dc-pill dim">${VQ_REPAS.length} services</span></div>
+    <div class="dc-body">${body}</div></div>`;
 }
 
 function vq2BlkMed() {
@@ -253,16 +267,21 @@ function vq2BlkMed() {
   let body = `<div class="vq-vide">Chargement…</div>`;
   if (st) {
     body = st.med.length
-      ? st.med.slice(0, 6).map(m => `<div class="vq-li">
+      ? st.med.slice(0, 6).map(m => {
+          const c = m.fait ? '#10b981' : '#ef4444';
+          return `<div class="vq-li" style="border-left:3px solid ${c};padding-left:12px">
           <span class="vq-li-h">${_vq(m.h)}</span>
           <div class="vq-li-b"><div class="vq-li-t">${_vq(m.res)}</div>
             <div class="vq-li-s">${_vq(m.drug)}</div></div>
-          <span class="vq-li-dot" style="background:${m.fait ? 'rgba(16,185,129,.13)' : 'rgba(255,255,255,.06)'}">
-            ${_vqSvg(m.fait ? VQ_IC.done : VQ_IC.circle, m.fait ? '#34d399' : '#5f7a9c', 12)}</span></div>`).join('')
+          <span class="dc-badge ${m.fait ? 'dc-b-green' : 'dc-b-gray'}"><span class="d"></span>${m.fait ? 'donné' : 'à donner'}</span></div>`;
+        }).join('')
       : `<div class="vq-vide">Aucune prise programmée aujourd'hui.</div>`;
   }
-  return `<div class="vq-blk"><div class="vq-blk-h">${_vqSvg(VQ_IC.pill, '#f87171', 15)}
-    <span class="vq-blk-t">Médicaments à donner</span></div>${body}</div>`;
+  return `<div class="dc-card"><div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#f8717122;color:#f87171">${_vqSvg(VQ_IC.pill, '#f87171', 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Soins</div><div class="dc-title">Médicaments à donner</div></div>
+    </div>${st ? `<span class="dc-pill dim">${st.medTotal - st.medRestants}/${st.medTotal} donnés</span>` : ''}</div>
+    <div class="dc-body">${body}</div></div>`;
 }
 
 function vq2BlkAct() {
@@ -275,15 +294,18 @@ function vq2BlkAct() {
         const n = D.residents.reduce((k, r) => k + ((r.activites || [])
           .some(i => String(i.activiteId) === String(a.id) && i.statut === 'active') ? 1 : 0), 0);
         const sub = [n ? `${n} résident${n > 1 ? 's' : ''}` : '', a.lieu].filter(Boolean).join(' · ');
-        return `<div class="vq-li">
+        return `<div class="vq-li" style="border-left:3px solid ${c};padding-left:12px">
           <span class="vq-li-h" style="color:${c}">${_vq(a.heureDebut || '—')}</span>
           <div class="vq-li-b"><div class="vq-li-t">${_vq(a.nom)}</div>
             <div class="vq-li-s">${_vq(sub)}</div></div></div>`;
       }).join('')
       : `<div class="vq-vide">Aucune activité programmée aujourd'hui.</div>`;
   }
-  return `<div class="vq-blk"><div class="vq-blk-h">${_vqSvg(VQ_IC.activity, '#a5b4fc', 15)}
-    <span class="vq-blk-t">Activités du jour</span></div>${body}</div>`;
+  return `<div class="dc-card"><div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#a5b4fc22;color:#a5b4fc">${_vqSvg(VQ_IC.activity, '#a5b4fc', 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Cadre de vie</div><div class="dc-title">Activités du jour</div></div>
+    </div>${st ? `<span class="dc-pill dim">${st.actJour.length} séance${st.actJour.length > 1 ? 's' : ''}</span>` : ''}</div>
+    <div class="dc-body">${body}</div></div>`;
 }
 
 // ─── Mode d'emploi d'un module (gabarit de modale v2) ─────────────────────

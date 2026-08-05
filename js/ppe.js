@@ -191,7 +191,7 @@ function renderAvenantFull(p) {
       const r = residentsList().find(x => String(x.id) === String(p.residentId));
       const col = safeColor(r?.color, '#0f2b4a');
       const avatar = r?.photo
-        ? `<img src="${r.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="${escHtml(p.residentName)}"/>`
+        ? `<img src="${sanitizeUrl(r.photo)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="${escHtml(p.residentName)}"/>`
         : `<span style="width:52px;height:52px;border-radius:50%;background:${col}22;border:2px solid ${col}55;color:${col};font-size:1rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${_avInitials(p.residentName)}</span>`;
       const pill = (ic, txt, style) => txt ? `<span style="font-size:.68rem;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap;${style || 'color:#475569;background:#f8fafc;border:0.5px solid #e2e8f0'}">${ic} ${escHtml(String(txt))}</span>` : '';
       return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 4px 14px rgba(15,43,74,.05);padding:1rem 1.15rem;margin-bottom:1rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap">
@@ -258,7 +258,7 @@ function renderSectionCard(p, domaine) {
         <button class="btn btn-ghost btn-sm" style="margin-top:1.2rem" onclick="addSectionObj('${p.id}','${domaine.id}')">+ Objectif</button>
       </div>
       <div style="margin-top:.25rem">
-        <div style="display:grid;grid-template-columns:1fr 1fr 120px 1fr;gap:.5rem;font-size:.7rem;color:var(--muted);font-weight:600;padding:0 .5rem">
+        <div class="ppe-objhead" style="display:grid;grid-template-columns:1fr 1fr 120px 1fr;gap:.5rem;font-size:.7rem;color:var(--muted);font-weight:600;padding:0 .5rem">
           <div>Objectif</div><div>Moyens / Actions</div><div>Échéance</div><div>Évaluation</div>
         </div>
         <div id="objGrid_${p.id}_${domaine.id}">
@@ -913,7 +913,7 @@ function renderAvenant() {
     const C = 2 * Math.PI * 24;
     const ringCol = enRetard ? '#dc2626' : col;
     const inner = r?.photo
-      ? `<img src="${r.photo}" style="position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);border-radius:50%;object-fit:cover" alt="${escHtml(p.residentName)}"/>`
+      ? `<img src="${sanitizeUrl(r.photo)}" style="position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);border-radius:50%;object-fit:cover" alt="${escHtml(p.residentName)}"/>`
       : `<span style="position:absolute;inset:5px;border-radius:50%;background:${_hexToRgba(col,.18)};color:${col};font-size:.85rem;font-weight:800;display:flex;align-items:center;justify-content:center">${_avInitials(p.residentName)}</span>`;
     const avatarHtml = `<div style="position:relative;width:54px;height:54px;flex-shrink:0" title="Cycle du projet : ${faits}/5 étapes">
       <svg viewBox="0 0 54 54" width="54" height="54"><circle cx="27" cy="27" r="24" fill="none" stroke="#eef1f6" stroke-width="4"/>
@@ -1006,7 +1006,7 @@ function resetAvenantModal() {
   document.getElementById('modalAvenantTitle').textContent = 'Nouvel avenant';
   document.getElementById('avenantEditId').value = '';
   document.getElementById('fAvResident').value = '';
-  document.getElementById('fAvDateRedac').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fAvDateRedac').value = today();
   document.getElementById('fAvRevision').value = '';
   document.getElementById('fAvReferent').value = '';
   document.getElementById('fAvProtection').value = '';
@@ -1212,7 +1212,7 @@ async function aiAvenantFromJournal(resident, entries) {
 function futureDate(minMonths, maxMonths) {
   const d = new Date();
   d.setMonth(d.getMonth() + minMonths + Math.floor(Math.random() * (maxMonths - minMonths)));
-  return d.toISOString().slice(0, 7);
+  return isoMois(d);
 }
 
 function ensureSectionsComplete(sections) {
@@ -1272,7 +1272,7 @@ async function serafinSyncResident(p) {
   if (!r) return;
   const prestations = {};
   selected.forEach(code => { prestations[code] = { niveau: spData[code].niveau || 2 }; });
-  const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: new Date().toISOString().slice(0, 10) };
+  const serafinph = { ...(r.serafinph || {}), selected, prestations, dateEvaluation: today() };
   try { await persistResident({ ...r, serafinph }); }
   catch (e) { console.warn('[serafin] synchronisation fiche résident impossible', e); }
 }
@@ -1410,7 +1410,7 @@ function _pcAddMonths(dateStr, n) {
   d.setMonth(d.getMonth() + n);
   const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
   d.setDate(Math.min(day, last));
-  return d.toISOString().slice(0, 10);
+  return isoJour(d);
 }
 function _pcUser() {
   const s = Auth.getSession();

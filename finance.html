@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Finance — FTR</title>
+  <title>Finance — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -46,102 +46,124 @@
       <div id="finStats" class="fin2-stats"></div>
 
       <!-- Demandes en attente de validation -->
-      <div class="v2-card-tint fin2-pending" id="finPendingCard" style="display:none;--v2-tint-a:rgba(245,158,11,.14);--v2-tint-b:rgba(245,158,11,.22)">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t" style="color:var(--v2-warn-text)">Demandes en attente de validation</span>
-          <a href="budget.html" class="v2-blk-lien">Traiter →</a>
-        </div>
-        <div id="finPendingBody"></div>
+      <div class="dc-card fin2-pending" id="finPendingCard" style="display:none">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(245,158,11,.14);color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">VALIDATION</div><div class="dc-title">Demandes en attente</div></div>
+        </div><a href="budget.html" class="dc-pill dim">Traiter →</a></div>
+        <div class="dc-body" id="finPendingBody"></div>
       </div>
 
       <!-- Jauge de consommation + comparaison année sur année -->
       <div class="fin2-g2">
-        <div class="v2-card-tint" style="--v2-tint-a:rgba(8,145,178,.14);--v2-tint-b:rgba(8,145,178,.22)">
-          <div class="v2-blk-h"><span class="v2-blk-t" style="color:#67e8f9">Consommation du budget</span></div>
-          <div id="finGauge"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">BUDGET ENGAGÉ</div><div class="dc-title">Consommation du budget</div></div>
+          </div></div>
+          <div class="dc-body" id="finGauge"></div>
         </div>
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Comparaison année sur année</span></div>
-          <div id="finYoy"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(129,140,248,.16);color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">ÉVOLUTION N / N-1</div><div class="dc-title">Comparaison année sur année</div></div>
+          </div></div>
+          <div class="dc-body" id="finYoy"></div>
         </div>
       </div>
 
       <!-- Tendance 12 mois -->
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t">Tendance financière — 12 mois</span>
-          <span class="fin2-legend">
-            <span><i style="background:#4ade80"></i>Dépenses validées</span>
-            <span><i style="background:#818cf8"></i>Masse salariale</span>
-          </span>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(74,222,128,.16);color:#4ade80"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">12 MOIS GLISSANTS</div><div class="dc-title">Tendance financière</div></div>
         </div>
-        <div class="fin2-chart-wrap" id="finTrendChart"></div>
+        <span class="fin2-legend">
+          <span><i style="background:#4ade80"></i>Dépenses validées</span>
+          <span><i style="background:#818cf8"></i>Masse salariale</span>
+        </span></div>
+        <div class="dc-body"><div class="fin2-chart-wrap" id="finTrendChart"></div></div>
       </div>
 
       <!-- Enveloppes -->
       <div class="fin2-g2">
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="v2-blk-t">Budget vs dépensé par enveloppe</span>
-            <a href="budget.html" class="v2-blk-lien">Gérer →</a>
-          </div>
-          <div class="fin2-chart-wrap" id="finBarChart"></div>
-          <div class="fin2-legend" style="margin-top:10px">
-            <span><i style="background:#22d3ee"></i>Budget alloué</span>
-            <span><i style="background:#f87171"></i>Dépensé</span>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">ENVELOPPES</div><div class="dc-title">Budget vs dépensé</div></div>
+          </div><a href="budget.html" class="dc-pill dim">Gérer →</a></div>
+          <div class="dc-body">
+            <div class="fin2-chart-wrap" id="finBarChart"></div>
+            <div class="fin2-legend" style="margin-top:10px">
+              <span><i style="background:#22d3ee"></i>Budget alloué</span>
+              <span><i style="background:#f87171"></i>Dépensé</span>
+            </div>
           </div>
         </div>
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Détail par enveloppe</span></div>
-          <div id="finEnveloppes"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(139,92,246,.14);color:#8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">RÉPARTITION</div><div class="dc-title">Détail par enveloppe</div></div>
+          </div></div>
+          <div class="dc-body" id="finEnveloppes"></div>
         </div>
       </div>
 
       <!-- Masse salariale + contrats -->
       <div class="fin2-g2">
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="v2-blk-t">Masse salariale (période)</span>
-            <a href="paie.html" class="v2-blk-lien">Détail →</a>
-          </div>
-          <div id="finMasseSalariale"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(129,140,248,.16);color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">PAIE</div><div class="dc-title">Masse salariale (période)</div></div>
+          </div><a href="paie.html" class="dc-pill dim">Détail →</a></div>
+          <div class="dc-body" id="finMasseSalariale"></div>
         </div>
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="v2-blk-t">Contrats &amp; effectif</span>
-            <a href="contrats.html" class="v2-blk-lien">Détail →</a>
-          </div>
-          <div id="finContrats"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">EFFECTIF</div><div class="dc-title">Contrats &amp; effectif</div></div>
+          </div><a href="contrats.html" class="dc-pill dim">Détail →</a></div>
+          <div class="dc-body" id="finContrats"></div>
         </div>
       </div>
 
       <!-- Top dépenses + top dépensiers -->
       <div class="fin2-g2">
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Top dépenses</span></div>
-          <div id="finTopDepenses"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(248,113,113,.16);color:#f87171"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">CLASSEMENT</div><div class="dc-title">Top dépenses</div></div>
+          </div></div>
+          <div class="dc-body" id="finTopDepenses"></div>
         </div>
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Top dépensiers</span></div>
-          <div id="finTopEmployes"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(129,140,248,.16);color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">CLASSEMENT</div><div class="dc-title">Top dépensiers</div></div>
+          </div></div>
+          <div class="dc-body" id="finTopEmployes"></div>
         </div>
       </div>
 
       <!-- Recettes de l'exercice (table finance_recettes) -->
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t">Recettes de l'exercice</span>
-          <button type="button" class="v2-btn v2-btn-sm fin2-admin" id="finAddRecette" onclick="fin2OpenRecetteModal()" style="margin-left:auto">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Ajouter
-          </button>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(52,211,153,.16);color:#34d399"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">PRODUITS</div><div class="dc-title">Recettes de l'exercice</div></div>
         </div>
-        <div id="finRecettes"></div>
+        <button type="button" class="v2-btn v2-btn-sm fin2-admin" id="finAddRecette" onclick="fin2OpenRecetteModal()" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </button></div>
+        <div class="dc-body" id="finRecettes"></div>
       </div>
 
       <!-- Dernières opérations -->
-      <div class="v2-blk pad0">
-        <div class="v2-blk-h" style="padding:20px 22px 6px;margin:0"><span class="v2-blk-t">Dernières opérations</span></div>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">JOURNAL</div><div class="dc-title">Dernières opérations</div></div>
+        </div></div>
         <div class="fin2-tw">
           <table class="v2-table fin2-ops">
             <thead><tr><th>Date</th><th>Type</th><th>Libellé</th><th style="text-align:right">Montant</th><th>Statut</th></tr></thead>

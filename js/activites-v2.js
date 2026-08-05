@@ -84,12 +84,12 @@ function ac2Stats(all) {
     { n: sorties, l: 'Sorties programmées', c: '#0d9488', ico: AC2_IC_KPI.bus }
   ];
   el.innerHTML = tuiles.map(t => `
-    <div class="ac2-kpi">
-      <span class="ac2-kpi-ico" style="--pc:${t.c}">${_ac2Svg(t.ico)}</span>
-      <div>
-        <div class="ac2-kpi-n" style="color:${t.c}">${t.n}</div>
-        <div class="ac2-kpi-l">${t.l}</div>
+    <div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top">
+        <span class="dc-kpi-label">${t.l}</span>
+        <span class="dc-kpi-ico" style="color:${t.c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">${t.ico}</svg></span>
       </div>
+      <div class="dc-kpi-val" style="color:${t.c}">${t.n}</div>
     </div>`).join('');
 }
 
@@ -149,7 +149,7 @@ function ac2Carte(a) {
         <div class="ac2-card-n">${escHtml(a.nom || 'Activité')}</div>
         <div class="ac2-card-c">${escHtml(c.label)}${a.actif === false ? ' · suspendue' : ''}</div>
       </div>
-      ${a.jour ? `<span class="ac2-card-j">${escHtml(AC2_JOURS_COURTS[a.jour] || a.jour)}</span>` : ''}
+      ${a.jour ? `<span class="dc-badge dc-b-indigo">${escHtml(AC2_JOURS_COURTS[a.jour] || a.jour)}</span>` : ''}
     </div>
     ${meta.length ? `<div class="ac2-card-m">${meta.map(m => `<span>${escHtml(m)}</span>`).join('<span class="ac2-sep">·</span>')}</div>` : ''}
     <div>
@@ -248,7 +248,6 @@ function ac2Inscrits() {
     const color = safeColor(r.color, '#6366f1');
     const nom = `${r.prenom || ''} ${r.nom || ''}`.trim();
     const nb = (i.bilans || []).length;
-    const bc = nb ? '#10b981' : '#8095b4';
     const p = _apCache[r.id];
     const st = AP_STATUTS[p && p.statut] || AP_STATUTS.unknown;
     const note = (p && p.note) ? p.note : '';
@@ -258,7 +257,7 @@ function ac2Inscrits() {
         <span class="ac2-ins-av" style="background:${color}">${initials(r.prenom, r.nom)}</span>
         <span class="ac2-ins-n">${escHtml(nom)}</span>
       </a>
-      <span class="ac2-ins-b" style="--pc:${bc}">${nb ? nb + ' bilan' + (nb > 1 ? 's' : '') : 'Sans bilan'}</span>
+      <span class="dc-badge ${nb ? 'dc-b-green' : 'dc-b-gray'}"><span class="d"></span>${nb ? nb + ' bilan' + (nb > 1 ? 's' : '') : 'Sans bilan'}</span>
       <button type="button" class="ac2-ins-p" onclick="ac2CyclePresence('${rid}')"
         title="Cliquer pour changer le statut de présence"
         aria-label="${escAttr(nom)} — ${st.label}. Cliquer pour changer.">
@@ -439,7 +438,7 @@ function ac2Bilans(all) {
         <span class="ac2-bi-n">${escHtml(a.nom || 'Activité')}</span>
         <span class="ac2-bi-s">${annee}${b && b.auteur ? ' · ' + escHtml(b.auteur) : ''}</span>
       </span>
-      <span class="ac2-bi-st" style="--pc:${st.c}">${st.l}</span>
+      <span class="dc-badge ${b ? 'dc-b-green' : 'dc-b-red'}"><span class="d"></span>${st.l}</span>
     </button>`;
   }).join('');
 }

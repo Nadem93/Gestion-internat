@@ -27,6 +27,17 @@ const NT2_IC = {
 function _nt2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône SVG dimensionnée (chips « Console Data » : 16px par défaut).
+function _nt2Ico(d, px, w) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round" style="width:${px || 16}px;height:${px || 16}px">${d}</svg>`;
+}
+// En-tête « Console Data » réutilisable : chip coloré + eyebrow + titre (+ droite).
+function _nt2DcHead(color, ico, eyebrow, titre, right) {
+  return `<div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:${color}22;color:${color}">${_nt2Ico(ico, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">${eyebrow}</div><div class="dc-title">${titre}</div></div>
+    </div>${right || ''}</div>`;
+}
 
 // Couleur + pictogramme par type d'événement (les libellés viennent de
 // NUIT_EVT_TYPES, défini dans js/nuit.js : une seule source de vérité).
@@ -91,7 +102,7 @@ function nt2Render() {
 
   if (!n) {
     document.getElementById('ntStats').innerHTML = '';
-    document.getElementById('ntBody').innerHTML = `<div class="v2-blk nt2-vide">
+    document.getElementById('ntBody').innerHTML = `<div class="dc-card nt2-vide">
       <div class="nt2-vide-ico">${_nt2Svg(NT2_IC.moon)}</div>
       <div class="nt2-vide-t">Cahier non ouvert pour cette nuit</div>
       <div class="nt2-vide-s">Ouvrez le cahier pour consigner rondes, événements et appels à l'astreinte.</div>
@@ -100,9 +111,9 @@ function nt2Render() {
     </div>`;
     // Les consignes de veille et le pointage du sommeil ne dépendent pas de
     // l'ouverture du cahier : le veilleur doit les lire même avant de l'ouvrir.
-    document.getElementById('ntRail').innerHTML = nt2VeilleBlocsHtml(canWrite) + `<div class="v2-blk" id="ntHistoBlk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Nuits précédentes</span></div>
-      <div id="ntHisto"></div>
+    document.getElementById('ntRail').innerHTML = nt2VeilleBlocsHtml(canWrite) + `<div class="dc-card" id="ntHistoBlk">
+      ${_nt2DcHead('#818cf8', NT2_IC.archive, 'ARCHIVE', 'Nuits précédentes')}
+      <div class="dc-body"><div id="ntHisto"></div></div>
     </div>`;
     nt2RenderConsignes();
     nt2RenderSommeil();
@@ -139,22 +150,21 @@ function nt2RenderVeilleur(n) {
 function nt2RenderStats(n, rondes, evts, astr) {
   const el = document.getElementById('ntStats');
   if (!el) return;
-  const tuile = (c, ico, val, lbl) => `<div class="nt2-stat" style="--pc:${c}">
-    <span class="nt2-stat-ico">${_nt2Svg(ico)}</span>
-    <div><div class="nt2-stat-n">${val}</div><div class="nt2-stat-l">${lbl}</div></div>
+  const tuile = (c, ico, val, lbl) => `<div class="dc-kpi" style="--dc-c:${c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${lbl}</span><span class="dc-kpi-ico" style="color:${c}">${_nt2Ico(ico, 16)}</span></div>
+    <div class="dc-kpi-val">${val}</div>
   </div>`;
 
   el.innerHTML =
     tuile('#818cf8', NT2_IC.moon, evts.length, evts.length > 1 ? 'Événements' : 'Événement') +
     tuile(astr.length ? '#ef4444' : '#f59e0b', NT2_IC.phone, astr.length, astr.length > 1 ? 'Appels astreinte' : 'Appel astreinte') +
     tuile('#10b981', NT2_IC.eye, rondes.length, rondes.length > 1 ? 'Rondes faites' : 'Ronde faite') +
-    `<div class="nt2-stat" style="--pc:#22d3ee">
-       <span class="nt2-stat-ico">${_nt2Svg(NT2_IC.bed)}</span>
-       <div>
+    `<div class="dc-kpi" style="--dc-c:#22d3ee;--pc:#22d3ee">
+       <div class="dc-kpi-top"><span class="dc-kpi-label">Résidents veillés</span><span class="dc-kpi-ico" style="color:#22d3ee">${_nt2Ico(NT2_IC.bed, 16)}</span></div>
+       <div class="dc-kpi-val">
          <input type="number" min="0" class="nt2-stat-in" value="${parseInt(n.effectif, 10) || 0}"
                 aria-label="Résidents veillés"
                 onchange="updateNuit({effectif:parseInt(this.value)||0})"/>
-         <div class="nt2-stat-l">Résidents veillés</div>
        </div>
      </div>`;
 }
@@ -198,18 +208,16 @@ function nt2RenderTimeline(n, evts, canWrite) {
     </div>`;
   }).join('');
 
-  el.innerHTML = `<div class="v2-blk">
-    <div class="v2-blk-h">
-      <span style="color:var(--v2-indigo-pale);display:flex;width:16px;height:16px">${_nt2Svg(NT2_IC.clock)}</span>
-      <span class="v2-blk-t">Événements de la nuit</span>
-      <span style="margin-left:auto;display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;color:var(--v2-t7)">21h00 → 07h00</span>
-        <select class="nt2-amb" aria-label="Ambiance de la nuit"
-                onchange="updateNuit({ambiance:this.value});renderNuit()">${ambOpts}</select>
-      </span>
-    </div>
-    ${evts.length ? lignes
-      : `<div class="v2-blk-vide">Rien à signaler — nuit sans événement particulier.</div>`}
+  const rightTl = `<div style="display:flex;align-items:center;gap:10px">
+      <span class="dc-pill dim">21H → 07H</span>
+      <select class="nt2-amb" aria-label="Ambiance de la nuit"
+              onchange="updateNuit({ambiance:this.value});renderNuit()">${ambOpts}</select>
+    </div>`;
+
+  el.innerHTML = `<div class="dc-card">
+    ${_nt2DcHead('#818cf8', NT2_IC.clock, 'CAHIER DE NUIT', 'Événements de la nuit', rightTl)}
+    <div class="dc-body">${evts.length ? lignes
+      : `<div class="v2-blk-vide">Rien à signaler — nuit sans événement particulier.</div>`}</div>
   </div>`;
 }
 
@@ -259,44 +267,42 @@ function nt2RenderRail(n, rondes, astr, canWrite) {
       <button type="button" class="nt2-add warn" style="align-self:flex-end" onclick="addAstreinte()">${_nt2Svg(NT2_IC.plus, 2.4)}Appel astreinte</button>
     </div>` : '';
 
+  const pillRondes = `<span class="dc-pill dim">${rondes.length}</span>`;
+  const pillAstr = astr.length
+    ? `<span class="dc-badge dc-b-red"><span class="d"></span>${astr.length}</span>`
+    : `<span class="dc-pill dim">0</span>`;
+
   el.innerHTML = `
-    <div class="v2-blk">
-      <div class="v2-blk-h">
-        <span style="color:var(--v2-cyan);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.check, 2.4)}</span>
-        <span class="v2-blk-t">Rondes de la nuit</span>
+    <div class="dc-card">
+      ${_nt2DcHead('#22d3ee', NT2_IC.check, 'CONTRÔLES', 'Rondes de la nuit', pillRondes)}
+      <div class="dc-body">
+        <div style="display:flex;flex-direction:column;gap:9px">${listeRondes}</div>
+        ${formRonde}
       </div>
-      <div style="display:flex;flex-direction:column;gap:9px">${listeRondes}</div>
-      ${formRonde}
     </div>
 
     ${nt2VeilleBlocsHtml(canWrite)}
 
-    <div class="nt2-blk-warn">
-      <div class="v2-blk-h">
-        <span style="color:var(--v2-warn-icon);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.phone)}</span>
-        <span class="v2-blk-t">Appels à l'astreinte</span>
+    <div class="dc-card" style="border-color:rgba(245,158,11,.28)">
+      ${_nt2DcHead('#f59e0b', NT2_IC.phone, 'ASTREINTE', 'Appels à l\'astreinte', pillAstr)}
+      <div class="dc-body">
+        ${listeAstr}
+        ${formAstr}
       </div>
-      ${listeAstr}
-      ${formAstr}
     </div>
 
-    <div class="v2-blk">
-      <div class="v2-blk-h">
-        <span style="color:var(--v2-warn-icon);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.sun)}</span>
-        <span class="v2-blk-t">Transmission du matin</span>
-        <span class="nt2-saved" id="ntSaved"></span>
+    <div class="dc-card">
+      ${_nt2DcHead('#f59e0b', NT2_IC.sun, 'RELÈVE', 'Transmission du matin', '<span class="nt2-saved" id="ntSaved"></span>')}
+      <div class="dc-body">
+        <textarea id="ntTransmission" class="nt2-trans" rows="4"
+          placeholder="Synthèse de la nuit, points de vigilance pour la journée…"
+          ${canWrite ? 'oninput="saveTransmission()"' : 'readonly'}>${escHtml(n.transmission || '')}</textarea>
       </div>
-      <textarea id="ntTransmission" class="nt2-trans" rows="4"
-        placeholder="Synthèse de la nuit, points de vigilance pour la journée…"
-        ${canWrite ? 'oninput="saveTransmission()"' : 'readonly'}>${escHtml(n.transmission || '')}</textarea>
     </div>
 
-    <div class="v2-blk">
-      <div class="v2-blk-h">
-        <span style="color:var(--v2-indigo-pale);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.archive)}</span>
-        <span class="v2-blk-t">Nuits précédentes</span>
-      </div>
-      <div id="ntHisto"></div>
+    <div class="dc-card">
+      ${_nt2DcHead('#818cf8', NT2_IC.archive, 'ARCHIVE', 'Nuits précédentes')}
+      <div class="dc-body"><div id="ntHisto"></div></div>
     </div>`;
 }
 
@@ -319,12 +325,12 @@ function nt2RenderHisto() {
     const tag = na ? (na > 1 ? na + ' astreintes' : '1 astreinte')
               : (nb ? (nb > 1 ? nb + ' événements' : '1 événement') : 'RAS');
     const amb = NUIT_AMBIANCES[n.ambiance] || NUIT_AMBIANCES.calme;
-    return `<div class="nt2-histo-r" style="--pc:${c}" onclick="nt2Aller('${n.date}')">
+    return `<div class="nt2-histo-r" style="--pc:${c};border-left:3px solid ${c};padding-left:11px" onclick="nt2Aller('${n.date}')">
       <div style="min-width:0">
         <div class="nt2-histo-d">${escHtml(_nt2LabelCourt(n.date))}</div>
         <div class="nt2-histo-b">${escHtml(n.veilleur || '?')} · ${escHtml(amb.label)} · ${(n.rondes || []).length} rondes</div>
       </div>
-      <span class="nt2-histo-t">${escHtml(tag)}</span>
+      <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${escHtml(tag)}</span>
     </div>`;
   }).join('');
 }
@@ -399,23 +405,19 @@ function _nt2SommeilDe(rid) {
 // ── COQUES DES DEUX BLOCS (insérées dans le rail) ────────────────────
 
 function nt2VeilleBlocsHtml(canWrite) {
+  const addCons = canWrite
+    ? `<button type="button" class="nt2-ico-btn" title="Ajouter une consigne"
+        onclick="openVeilleConsigneModal()">${_nt2Svg(NT2_IC.plus, 2.4)}</button>`
+    : '';
   return `
-    <div class="nt2-blk-warn">
-      <div class="v2-blk-h">
-        <span style="color:var(--v2-warn-icon);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.alert)}</span>
-        <span class="v2-blk-t">Consignes de veille</span>
-        ${canWrite ? `<button type="button" class="nt2-ico-btn" style="margin-left:auto" title="Ajouter une consigne"
-          onclick="openVeilleConsigneModal()">${_nt2Svg(NT2_IC.plus, 2.4)}</button>` : ''}
-      </div>
-      <div id="ntConsignes"></div>
+    <div class="dc-card" style="border-color:rgba(245,158,11,.28)">
+      ${_nt2DcHead('#f59e0b', NT2_IC.alert, 'VEILLE', 'Consignes de veille', addCons)}
+      <div class="dc-body"><div id="ntConsignes"></div></div>
     </div>
 
-    <div class="v2-blk">
-      <div class="v2-blk-h">
-        <span style="color:var(--v2-indigo-pale);display:flex;width:15px;height:15px">${_nt2Svg(NT2_IC.moon)}</span>
-        <span class="v2-blk-t">Sommeil</span>
-      </div>
-      <div id="ntSommeil"></div>
+    <div class="dc-card">
+      ${_nt2DcHead('#818cf8', NT2_IC.moon, 'SUIVI', 'Sommeil')}
+      <div class="dc-body"><div id="ntSommeil"></div></div>
     </div>`;
 }
 

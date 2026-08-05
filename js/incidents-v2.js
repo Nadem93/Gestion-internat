@@ -37,6 +37,16 @@ const INC2_TC = {
 function _inc2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// SVG dimensionné (langage Console Data : chip / kpi-ico / badge)
+function _inc2SvgN(d, px) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:${px || 16}px;height:${px || 16}px;flex:none">${d}</svg>`;
+}
+// Badge monospace Console Data à couleur libre (avec pastille et icône optionnelle)
+function _inc2Badge(label, color, icon) {
+  return `<span class="dc-badge" style="background:${color}1f;color:${color};border:1px solid ${color}55">`
+    + (icon ? _inc2SvgN(icon, 13) : `<span class="d" style="background:${color}"></span>`)
+    + `${_inc2Esc(label)}</span>`;
+}
 function _inc2Esc(s) {
   return (typeof escHtml === 'function') ? escHtml(s == null ? '' : String(s)) : String(s == null ? '' : s);
 }
@@ -87,14 +97,14 @@ function inc2Stats(all) {
   const box = document.getElementById('incStats');
   if (!box) return;
 
-  const auj = new Date().toISOString().slice(0, 10);
-  const limite = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+  const auj = today();
+  const limite = isoJour(new Date(Date.now() - 365 * 86400000));
   const an       = all.filter(i => (i.date || '') >= limite);
   const serieux  = all.filter(i => i.gravite === 'grave' || i.gravite === 'critique');
   const ouverts  = all.filter(i => i.statut === 'declare' || i.statut === 'cours');
   const traites  = all.filter(i => i.statut === 'valide'  || i.statut === 'classe');
   const eigOuv   = all.filter(i => i.eig && i.eig.declarable && !i.eig.declareARS && !i.eig.cloture);
-  const anciens  = ouverts.filter(i => i.date && i.date < new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10));
+  const anciens  = ouverts.filter(i => i.date && i.date < isoJour(new Date(Date.now() - 7 * 86400000)));
 
   const cells = [
     { n: an.length,      l: 'Incidents (12 mois)', c: '#ef4444', ic: INC2_IC.alert },
@@ -106,9 +116,10 @@ function inc2Stats(all) {
   ];
   void auj;
 
-  box.innerHTML = cells.map(c => `<div class="inc2-stat" style="--pc:${c.c}">
-    <span class="inc2-stat-ico">${_inc2Svg(c.ic)}</span>
-    <div><div class="inc2-stat-n">${c.n}</div><div class="inc2-stat-l">${_inc2Esc(c.l)}</div>${c.x ? `<div class="inc2-stat-x">${_inc2Esc(c.x)}</div>` : ''}</div>
+  box.innerHTML = cells.map(c => `<div class="dc-kpi" style="--dc-c:${c.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${_inc2Esc(c.l)}</span><span class="dc-kpi-ico" style="color:${c.c}">${_inc2SvgN(c.ic, 16)}</span></div>
+    <div class="dc-kpi-val">${c.n}</div>
+    ${c.x ? `<div class="dc-kpi-sub">${_inc2Esc(c.x)}</div>` : ''}
   </div>`).join('');
 }
 
@@ -129,13 +140,19 @@ function inc2Corps(list, visibles, ctx) {
   }
 
   el.innerHTML = inc2Table(list, ctx) + `<div class="inc2-duo">
-    <div class="v2-blk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Répartition par type</span></div>
-      ${inc2ParType(visibles)}
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#f9731622;color:#f97316">${_inc2SvgN(INC2_IC.zap, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">ANALYSE</div><div class="dc-title">Répartition par type</div></div>
+      </div></div>
+      <div class="dc-body">${inc2ParType(visibles)}</div>
     </div>
-    <div class="inc2-ars-blk">
-      <div class="inc2-ars-h">${_inc2Svg(INC2_IC.shield)}<span class="inc2-ars-t">Suivi des EIG</span><a class="inc2-ars-lien" href="eig.html">Registre →</a></div>
-      ${inc2EigSuivi(visibles)}
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#6366f122;color:#6366f1">${_inc2SvgN(INC2_IC.shield, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">CONFORMITÉ</div><div class="dc-title">Suivi des EIG</div></div>
+      </div><a class="dc-pill dim" href="eig.html">Registre →</a></div>
+      <div class="dc-body">${inc2EigSuivi(visibles)}</div>
     </div>
   </div>`;
 }
@@ -159,11 +176,11 @@ function inc2Table(list, ctx) {
         <div class="inc2-ty" style="--tc:${tc}"><span class="inc2-dot"></span>${_inc2Esc(_inc2TypeLabel(i.type))}</div>
       </td>
       <td><div class="inc2-res">${_inc2Esc(i.residentName || '—')}${i.lieu ? `<span>${_inc2Esc(i.lieu)}</span>` : ''}</div></td>
-      <td><span class="inc2-pill" style="--pc:${gc}">${_inc2Esc(_inc2GravLabel(i.gravite))}</span></td>
+      <td>${_inc2Badge(_inc2GravLabel(i.gravite), gc)}</td>
       <td>${eg
-        ? `<span class="inc2-eig" style="--pc:${eg.c}">${_inc2Svg(eg.ic, 2.4)}${_inc2Esc(eg.l)}</span>`
-        : `<span class="inc2-eig" style="--pc:#8095b4">${_inc2Svg(INC2_IC.x, 2.4)}Non</span>`}</td>
-      <td><span class="inc2-pill" style="--pc:${st.c}">${_inc2Esc(st.l)}</span></td>
+        ? _inc2Badge(eg.l, eg.c, eg.ic)
+        : _inc2Badge('Non', '#8095b4', INC2_IC.x)}</td>
+      <td>${_inc2Badge(st.l, st.c)}</td>
       <td>
         <div class="inc2-acts">
           <button type="button" class="inc2-act" style="--ac:#818cf8" title="Détails" aria-label="Détails" onclick="viewIncident('${i.id}')">${_inc2Svg(INC2_IC.eye)}</button>
@@ -184,13 +201,19 @@ function inc2ParType(all) {
   const cpt = {};
   all.forEach(i => { const k = i.type || 'autre'; cpt[k] = (cpt[k] || 0) + 1; });
   const entries = Object.keys(cpt).map(k => ({ k, n: cpt[k] })).sort((a, b) => b.n - a.n);
-  if (!entries.length) return '<div class="v2-blk-vide">Aucun incident enregistré.</div>';
+  if (!entries.length) return '<div class="dc-eyebrow">Aucun incident enregistré.</div>';
   const max = entries[0].n || 1;
 
-  return `<div class="inc2-bars">${entries.map(e => `<div>
-    <div class="inc2-bar-h"><span class="inc2-bar-l">${_inc2Esc(_inc2TypeLabel(e.k))}</span><span class="inc2-bar-n">${e.n}</span></div>
-    <div class="inc2-prog"><span style="width:${Math.round(e.n / max * 100)}%;background:${INC2_TC[e.k] || INC2_TC.autre}"></span></div>
-  </div>`).join('')}</div>`;
+  return entries.map((e, idx) => {
+    const c = INC2_TC[e.k] || INC2_TC.autre;
+    return `<div style="${idx ? 'margin-top:13px' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <span class="dc-eyebrow" style="margin:0">${_inc2Esc(_inc2TypeLabel(e.k))}</span>
+        <span class="dc-pill dim">${e.n}</span>
+      </div>
+      <div class="al-prog-bar"><span style="width:${Math.round(e.n / max * 100)}%;background:${c}"></span></div>
+    </div>`;
+  }).join('');
 }
 
 // ── PANNEAU : SUIVI DES EIG ───────────────────────────────────────────
@@ -199,19 +222,19 @@ function inc2EigSuivi(all) {
                   .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
                   .slice(0, 6);
   if (!eigs.length) {
-    return '<div class="inc2-ars-vide">Aucun incident qualifié d\'événement indésirable grave. Ouvrez une fiche d\'incident pour le marquer comme EIG.</div>';
+    return '<div class="dc-eyebrow" style="line-height:1.6;text-transform:none;letter-spacing:0;font-size:12px">Aucun incident qualifié d\'événement indésirable grave. Ouvrez une fiche d\'incident pour le marquer comme EIG.</div>';
   }
-  return eigs.map(i => {
+  return eigs.map((i, idx) => {
     const eg = _inc2Eig(i);
     const num = i.eig && i.eig.numeroSignalement ? ` · n° ${i.eig.numeroSignalement}` : '';
     const sub = `${_inc2TypeLabel(i.type)} · ${_inc2Court(i.date)}${num}`;
-    return `<div class="inc2-ars-r" style="--pc:${eg.c}">
-      <span class="inc2-ars-i">${_inc2Svg(eg.ic, 2.4)}</span>
+    return `<div style="display:flex;align-items:center;gap:11px;border-left:3px solid ${eg.c};padding:9px 12px;background:var(--v2-s-sub);border-radius:8px;${idx ? 'margin-top:8px' : ''}">
+      <span class="dc-chip" style="background:${eg.c}22;color:${eg.c}">${_inc2SvgN(eg.ic, 15)}</span>
       <div style="flex:1;min-width:0">
-        <div class="inc2-ars-n">${_inc2Esc(i.titre)}</div>
-        <div class="inc2-ars-s">${_inc2Esc(sub)}</div>
+        <div class="dc-title" style="font-size:13px">${_inc2Esc(i.titre)}</div>
+        <div class="dc-eyebrow" style="margin:4px 0 0">${_inc2Esc(sub)}</div>
       </div>
-      <span class="inc2-ars-tag">${_inc2Esc(eg.l)}</span>
+      ${_inc2Badge(eg.l, eg.c)}
     </div>`;
   }).join('');
 }
@@ -257,9 +280,9 @@ function viewIncident(id) {
   document.getElementById('detailTitle').textContent = i.titre || 'Détail de l\'incident';
   document.getElementById('detailBody').innerHTML = `
     <div class="inc2-badges">
-      <span class="inc2-pill" style="--pc:${gc}">${_inc2Esc(_inc2GravLabel(i.gravite))}</span>
-      <span class="inc2-pill" style="--pc:${st.c}">${_inc2Esc(st.l)}</span>
-      <span class="inc2-pill" style="--pc:${INC2_TC[i.type] || INC2_TC.autre}">${_inc2Esc(_inc2TypeLabel(i.type))}</span>
+      ${_inc2Badge(_inc2GravLabel(i.gravite), gc)}
+      ${_inc2Badge(st.l, st.c)}
+      ${_inc2Badge(_inc2TypeLabel(i.type), INC2_TC[i.type] || INC2_TC.autre)}
     </div>
 
     <div class="inc2-facts">
@@ -282,7 +305,7 @@ function viewIncident(id) {
     <div class="inc2-eig-blk">
       ${_inc2Svg(INC2_IC.alert)}
       <span class="inc2-eig-t">Événement indésirable grave (ARS)</span>
-      <span class="inc2-pill" style="--pc:${eg ? eg.c : '#8095b4'}">${eg ? _inc2Esc(eg.l) : 'Non déclarable'}</span>
+      ${_inc2Badge(eg ? eg.l : 'Non déclarable', eg ? eg.c : '#8095b4')}
       ${peutTraiter || isAdmin ? `
         <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="inc2-mini" onclick="toggleEigDeclarable('${i.id}')">${eg ? 'Retirer du registre EIG' : 'Marquer comme EIG'}</button>

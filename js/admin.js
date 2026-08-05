@@ -341,8 +341,22 @@ function ensureComptableRole() {
   }]);
 }
 
+// Crée le rôle "Stagiaire" s'il n'existe pas encore (modifiable ensuite dans cette page).
+// Droits par défaut volontairement restreints : accès supervisé en lecture,
+// sans dossier médical/santé, PPE, RH/paie ni administration.
+function ensureStagiaireRole() {
+  const list = getFonctions();
+  if (list.some(f => (f.fonction || '').toLowerCase().trim() === 'stagiaire')) return;
+  const newId = Math.max(0, ...list.map(f => Number(f.id) || 0)) + 1;
+  setFonctions([...list, {
+    id: newId, fonction: 'Stagiaire', color: '#22c55e',
+    permissions: permRecommendedFor('Stagiaire') || ['view_dashboard', 'view_residents', 'access_journal', 'access_presences', 'access_activites', 'access_annuaire', 'access_documentation', 'access_planning_equipe', 'access_messages']
+  }]);
+}
+
 function renderPermissionsPage() {
   ensureComptableRole();
+  ensureStagiaireRole();
   const list = getFonctions();
   if (_permSel == null || !list.find(f => String(f.id) === String(_permSel))) _permSel = list[0]?.id ?? null;
   renderPermLeft();
@@ -713,7 +727,7 @@ async function _hydrateBackupStores(type) {
     try { const d = await fn(); if (d != null) DB.set(DB.keys[key], d); } catch (e) { console.error('[backup]', key, e); }
   }));
   if (type === 'all' && typeof sbGetPresencesRange === 'function') {
-    try { const _f = new Date(); _f.setDate(_f.getDate() - 180); DB.set(DB.keys.presences, await sbGetPresencesRange(_f.toISOString().slice(0,10), today())); } catch (e) { console.error('[backup] presences', e); }
+    try { const _f = new Date(); _f.setDate(_f.getDate() - 180); DB.set(DB.keys.presences, await sbGetPresencesRange(isoJour(_f), today())); } catch (e) { console.error('[backup] presences', e); }
   }
 }
 async function exportData(type) {
@@ -831,32 +845,73 @@ const ACTION_COLORS = {
   user_create:    '#6366f1', user_update:    '#6366f1',
 };
 
-function renderAuditLog() {
+// Lecture depuis public.audit_log — et non depuis le navigateur : le journal
+// doit montrer l'activité de TOUT l'établissement, pas celle de ce poste.
+// Une action inconnue est affichée telle quelle ; on ne consulte les tables de
+// correspondance que sur leurs propres clés, jamais sur la chaîne prototypale.
+const connu = k => Object.prototype.hasOwnProperty.call(ACTION_LABELS, k);
+
+async function renderAuditLog() {
   const tbody = document.getElementById('auditLogBody');
   if (!tbody) return;
-  const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
-  if (!log.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">Aucune action enregistrée</td></tr>';
+  const cell = html => { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted)">${html}</td></tr>`; };
+  cell('Chargement…');
+  let log;
+  try {
+    log = await sbGetAuditLog(200);
+  } catch (e) {
+    console.error('[audit] lecture', e);
+    // Un tableau vide ferait croire à une absence d'activité : on le dit.
+    cell('Journal indisponible — la lecture a échoué. Réessayez.');
     return;
   }
-  tbody.innerHTML = log.slice(0, 200).map(e => {
+  if (!log.length) { cell('Aucune action enregistrée'); return; }
+  tbody.innerHTML = log.map(e => {
     const d = new Date(e.date);
     const dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
     const timeStr = d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-    const label = ACTION_LABELS[e.action] || e.action;
-    const color = ACTION_COLORS[e.action] || '#64748b';
+    // ⚠️ `action` vient de la base et la RLS autorise l'INSERT à tout compte de
+    // l'établissement : une valeur peut être forgée via l'API. Tant que cette
+    // colonne était lue dans le localStorage du poste, l'interpoler brute ne
+    // nuisait qu'à soi-même ; lue en base, c'était un XSS stocké s'exécutant
+    // dans la session de l'ADMINISTRATEUR. On échappe, et on n'interroge les
+    // deux tables de correspondance que sur leurs propres clés (sinon
+    // ACTION_LABELS['constructor'] rend le code d'une fonction).
+    const label = connu(e.action) ? ACTION_LABELS[e.action] : (e.action || '—');
+    const color = Object.prototype.hasOwnProperty.call(ACTION_COLORS, e.action) ? ACTION_COLORS[e.action] : '#64748b';
     return `<tr style="border-bottom:1px solid var(--border)">
       <td style="padding:.55rem 1rem;white-space:nowrap;font-size:.78rem">${dateStr} <span style="color:var(--muted)">${timeStr}</span></td>
       <td style="padding:.55rem 1rem;font-size:.78rem;font-weight:500">${escHtml(e.user||'—')} <span style="font-size:.68rem;color:var(--muted)">(${escHtml(e.role||'')})</span></td>
-      <td style="padding:.55rem 1rem"><span style="display:inline-block;padding:1px 8px;border-radius:100px;font-size:.68rem;font-weight:700;background:${color}18;color:${color}">${label}</span></td>
+      <td style="padding:.55rem 1rem"><span style="display:inline-block;padding:1px 8px;border-radius:100px;font-size:.68rem;font-weight:700;background:${color}18;color:${color}">${escHtml(label)}</span></td>
       <td style="padding:.55rem 1rem;font-size:.75rem;color:var(--g600);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.details||'')}</td>
     </tr>`;
   }).join('');
 }
 
-function exportAuditLog() {
-  const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
+// Export du registre complet — pagination incluse. Une exportation tronquée
+// en silence produirait une pièce fausse le jour d'un contrôle.
+async function exportAuditLog() {
+  let log;
+  try {
+    if (typeof toast === 'function') toast('Export en cours…', 'info');
+    log = await sbGetAuditLogComplet();
+  } catch (e) {
+    console.error('[audit] export', e);
+    if (typeof toast === 'function') toast("Export impossible : lecture du journal en échec", 'error');
+    return;
+  }
   if (!log.length) { toast('Aucune action à exporter', 'info'); return; }
+  // Échappement CSV réel : un guillemet dans le détail se double, un retour à
+  // la ligne se neutralise. Sans ça, un titre de note contenant " décalait
+  // toutes les colonnes suivantes — sur la pièce même qu'on produit en contrôle.
+  // Le préfixe ' neutralise l'injection de formule : un détail commençant par
+  // = + - @ s'exécuterait à l'ouverture dans Excel, et ce champ est désormais
+  // inscriptible via l'API par tout compte de l'établissement.
+  const csv = v => {
+    let t = String(v == null ? '' : v).replace(/[\r\n]+/g, ' ');
+    if (/^[=+\-@\t]/.test(t)) t = "'" + t;
+    return '"' + t.replace(/"/g, '""') + '"';
+  };
   const header = 'Date,Heure,Utilisateur,Rôle,Action,Détails\n';
   const rows = log.map(e => {
     const d = new Date(e.date);
@@ -865,9 +920,9 @@ function exportAuditLog() {
       d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       e.user || '',
       e.role || '',
-      ACTION_LABELS[e.action] || e.action,
-      (e.details || '').replace(/,/g, ';')
-    ].map(v => `"${v}"`).join(',');
+      connu(e.action) ? ACTION_LABELS[e.action] : (e.action || ''),
+      e.details || ''
+    ].map(csv).join(',');
   }).join('\n');
   const blob = new Blob(['﻿' + header + rows], { type:'text/csv;charset=utf-8' });
   const a = document.createElement('a');
@@ -875,7 +930,9 @@ function exportAuditLog() {
   a.download = `audit-${today()}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('Audit exporté ✓');
+  toast(`Audit exporté ✓ (${log.length} entrées)`);
+  // L'export du registre est lui-même un traitement à tracer.
+  if (typeof auditLog === 'function') auditLog('export', `Journal d'audit — ${log.length} entrées`);
 }
 
 // ── INIT ──

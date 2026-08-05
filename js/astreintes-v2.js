@@ -51,6 +51,27 @@
       (w || 2) + '" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
   }
 
+  // Icône 16px pour une pastille .dc-chip (langage « Console Data »).
+  function svg16(path) {
+    return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
+  }
+
+  // En-tête de carte Console Data : pastille + micro-label + titre (+ droite).
+  function dcHead(color, ico, eyebrow, title, right) {
+    return '<div class="dc-head"><div class="dc-head-l">' +
+      '<span class="dc-chip" style="background:' + color + '22;color:' + color + '">' + svg16(ico) + '</span>' +
+      '<div style="min-width:0"><div class="dc-eyebrow">' + esc(eyebrow) + '</div>' +
+      '<div class="dc-title">' + esc(title) + '</div></div></div>' + (right || '') + '</div>';
+  }
+
+  // Badge monospace teinté (couleur hex #rrggbb).
+  function dcBadge(text, color) {
+    return '<span class="dc-badge" style="background:' + color + '1f;color:' + color +
+      ';border:1px solid ' + color + '44"><span class="d" style="background:' + color + '"></span>' +
+      esc(text) + '</span>';
+  }
+
   const el = id => document.getElementById(id);
   const esc = s => (typeof escHtml === 'function' ? escHtml(s == null ? '' : String(s))
     : String(s == null ? '' : s).replace(/[&<>"']/g, c =>
@@ -361,10 +382,10 @@
       { n: String(aVenir), l: 'Astreintes à venir', c: '#22d3ee', i: ICO.clock }
     ];
     box.innerHTML = defs.map(d =>
-      '<div class="as2-stat" style="--pc:' + d.c + '">' +
-        '<span class="as2-stat-ico">' + svg(d.i) + '</span>' +
-        '<div><div class="as2-stat-n">' + esc(d.n) + '</div>' +
-        '<div class="as2-stat-l">' + esc(d.l) + '</div></div>' +
+      '<div class="dc-kpi" style="--dc-c:' + d.c + '">' +
+        '<div class="dc-kpi-top"><span class="dc-kpi-label">' + esc(d.l) + '</span>' +
+          '<span class="dc-kpi-ico" style="color:' + d.c + '">' + svg16(d.i) + '</span></div>' +
+        '<div class="dc-kpi-val">' + esc(d.n) + '</div>' +
       '</div>').join('');
   }
 
@@ -381,24 +402,26 @@
           const st = statutPeriode(p, auj);
           const n = EXTRA.missing[T_INTERV] ? null : nbInterv(p);
           return '<tr class="as2-tbl-row" onclick="ast2OuvrirPeriode(\'' + esc(p.ids[0]) + '\')">' +
-            '<td style="white-space:nowrap">' + esc(libellePeriode(p)) + '</td>' +
+            '<td style="white-space:nowrap;border-left:3px solid ' + typeColor(p.type) + '">' + esc(libellePeriode(p)) + '</td>' +
             '<td><div class="as2-cell-n">' + avatar(p.nom, 'as2-av-32') +
               '<span class="as2-cell-nom">' + esc(p.nom || '—') + '</span></div></td>' +
             '<td>' + esc(typeLabel(p.type)) + '</td>' +
             '<td>' + (n == null ? '—' : (n ? n + ' intervention' + (n > 1 ? 's' : '') : '—')) + '</td>' +
-            '<td><span class="as2-st" style="--pc:' + st.c + '">' + st.l + '</span></td>' +
+            '<td>' + dcBadge(st.l, st.c) + '</td>' +
           '</tr>';
         }).join('')
       : '';
 
+    const pill = per.length
+      ? '<span class="dc-pill dim">' + per.length + ' période' + (per.length > 1 ? 's' : '') + '</span>'
+      : '';
     box.innerHTML =
-      '<div class="as2-sect-t">Roulement des astreintes — ' + MOIS[b.mois] + ' ' + b.an + '</div>' +
-      '<div class="as2-tbl-wrap"><div class="as2-scroll"><table class="as2-tbl">' +
+      dcHead('#a78bfa', ICO.users, 'ROULEMENT DES ASTREINTES', MOIS[b.mois] + ' ' + b.an, pill) +
+      '<div class="as2-scroll"><table class="as2-tbl">' +
         '<thead><tr><th>Période</th><th>Cadre d\'astreinte</th><th>Ligne de garde</th>' +
         '<th>Interventions</th><th>Statut</th></tr></thead>' +
         '<tbody>' + corps + '</tbody></table></div>' +
-        (per.length ? '' : vide('Aucune astreinte planifiée sur ce mois.')) +
-      '</div>';
+      (per.length ? '' : vide('Aucune astreinte planifiée sur ce mois.'));
   }
 
   // ── Interventions récentes ────────────────────────────────────────────
@@ -406,9 +429,8 @@
     const box = el('astInterv'); if (!box) return;
     const rec = EXTRA.interventions.slice(0, 4);
     box.innerHTML =
-      '<div class="as2-tbl-h" style="padding:0 0 14px">' +
-        '<span style="color:#fca5a5;display:flex">' + svg(ICO.bolt) + '</span>' +
-        '<span class="as2-tbl-t">Interventions récentes</span></div>' +
+      dcHead('#ef4444', ICO.bolt, 'JOURNAL', 'Interventions récentes') +
+      '<div class="dc-body">' +
       (rec.length
         ? rec.map(i => {
             const d = dureeMin(i);
@@ -421,7 +443,8 @@
               '<span class="as2-i-d">' + (d == null ? '—' : hm(d)) + '</span>' +
             '</div>';
           }).join('')
-        : vide('Aucune intervention enregistrée', T_INTERV));
+        : vide('Aucune intervention enregistrée', T_INTERV)) +
+      '</div>';
   }
 
   // ── Répartition (équité) ──────────────────────────────────────────────
@@ -433,18 +456,20 @@
       .sort((a, b) => b.j - a.j).slice(0, 8);
     const max = arr.length ? arr[0].j : 1;
 
-    box.innerHTML = '<div class="v2-blk-t" style="margin-bottom:16px">Répartition (équité)</div>' +
+    box.innerHTML = dcHead('#a78bfa', ICO.users, 'RÉPARTITION', 'Équité des astreintes') +
+      '<div class="dc-body">' +
       (arr.length
         ? '<div style="display:flex;flex-direction:column;gap:13px">' + arr.map(e => {
             const c = couleur(e.nom);
             const pct = Math.round(e.j / max * 100);
-            return '<div><div class="as2-eq-h">' +
+            return '<div style="border-left:3px solid ' + c + ';padding-left:11px"><div class="as2-eq-h">' +
               '<span class="as2-av as2-av-22" style="background:' + c + '">' + esc(initiales(e.nom)) + '</span>' +
               '<span class="as2-eq-n">' + esc(e.nom) + '</span>' +
               '<span class="as2-eq-v">' + e.j + ' j</span></div>' +
-              '<div class="v2-prog"><span style="width:' + pct + '%;background:' + c + '"></span></div></div>';
+              '<div class="al-prog-bar"><span style="width:' + pct + '%;background:' + c + '"></span></div></div>';
           }).join('') + '</div>'
-        : '<div class="v2-blk-vide">Aucune astreinte enregistrée.</div>');
+        : '<div class="v2-blk-vide">Aucune astreinte enregistrée.</div>') +
+      '</div>';
   }
 
   // ── Calcul des indemnités du mois ─────────────────────────────────────
@@ -477,15 +502,17 @@
     const l = lignesBareme(duMois, intervMois, setF).filter(x => x.total > 0);
     const tot = totalIndemnites(duMois, intervMois, setF);
     box.innerHTML =
-      '<div class="as2-ind-t">Indemnités du mois</div>' +
-      '<div class="as2-ind-n">' + (tot == null ? '—' : eur(tot)) + '</div>' +
-      '<div class="as2-ind-s">' + (tot == null
-        ? 'Barème non configuré — exécutez ' + SQL_FILE
-        : 'à intégrer en paie') + '</div>' +
-      (l.length
-        ? l.map(x => '<div class="as2-ind-r"><span class="as2-ind-l">' + esc(x.label) +
-            '</span><span class="as2-ind-v">' + eur(x.total) + '</span></div>').join('')
-        : '');
+      dcHead('#10b981', ICO.money, 'PAIE', 'Indemnités du mois') +
+      '<div class="dc-body">' +
+        '<div class="dc-kpi-val">' + (tot == null ? '—' : eur(tot)) + '</div>' +
+        '<div class="dc-kpi-sub">' + (tot == null
+          ? 'Barème non configuré — exécutez ' + SQL_FILE
+          : 'à intégrer en paie') + '</div>' +
+        (l.length
+          ? '<div style="margin-top:12px">' + l.map(x => '<div class="as2-ind-r"><span class="as2-ind-l">' + esc(x.label) +
+              '</span><span class="as2-ind-v">' + eur(x.total) + '</span></div>').join('') + '</div>'
+          : '') +
+      '</div>';
   }
 
   // ── Prochaines astreintes ─────────────────────────────────────────────
@@ -493,29 +520,26 @@
     const box = el('astProchaines'); if (!box) return;
     const per = periodes(list.filter(a => a.date > auj)).slice(0, 4);
     box.innerHTML =
-      '<div class="v2-blk-h" style="margin-bottom:12px">' +
-        '<span style="color:#22d3ee;display:flex;width:15px;height:15px">' + svg(ICO.clock) + '</span>' +
-        '<span class="v2-blk-t">Prochaines astreintes</span></div>' +
+      dcHead('#22d3ee', ICO.clock, 'À VENIR', 'Prochaines astreintes') +
+      '<div class="dc-body">' +
       (per.length
-        ? per.map(p => '<div class="as2-next">' + avatar(p.nom, 'as2-av-26') +
+        ? per.map(p => '<div class="as2-next" style="border-left:3px solid ' + typeColor(p.type) + ';padding-left:11px">' + avatar(p.nom, 'as2-av-26') +
             '<div style="flex:1;min-width:0"><div class="as2-next-n">' + esc(p.nom || '—') + '</div>' +
             '<div class="as2-next-p">' + esc(libellePeriode(p)) + ' · ' + esc(typeLabel(p.type)) + '</div></div>' +
           '</div>').join('')
-        : '<div class="v2-blk-vide">Aucune astreinte planifiée à venir.</div>');
+        : '<div class="v2-blk-vide">Aucune astreinte planifiée à venir.</div>') +
+      '</div>';
   }
 
   // ── Registre des interventions ────────────────────────────────────────
   function renderRegistre() {
     const box = el('astRegistre'); if (!box) return;
     const rows = EXTRA.interventions;
+    const addBtn = '<button type="button" class="as2-add" onclick="openAstIntervModal()">' +
+      svg(ICO.plus, 2.4) + 'Déclarer une intervention</button>';
     box.innerHTML =
-      '<div class="as2-tbl-wrap">' +
-        '<div class="as2-tbl-h">' +
-          '<span style="color:#a78bfa;display:flex">' + svg(ICO.file) + '</span>' +
-          '<span class="as2-tbl-t">Registre des interventions</span>' +
-          '<button type="button" class="as2-add" onclick="openAstIntervModal()">' +
-            svg(ICO.plus, 2.4) + 'Déclarer une intervention</button>' +
-        '</div>' +
+      '<div class="dc-card">' +
+        dcHead('#a78bfa', ICO.file, 'REGISTRE', 'Interventions déclarées', addBtn) +
         '<div class="as2-scroll"><table class="as2-tbl">' +
           '<thead><tr><th>Date</th><th>Motif</th><th>Cadre</th>' +
           '<th class="c">Appel → Fin</th><th class="c">Trajet</th><th class="r">Durée</th></tr></thead>' +
@@ -527,8 +551,8 @@
               '<td style="font-size:12.5px;font-weight:600;color:var(--v2-t2)">' + esc(i.motif) + '</td>' +
               '<td>' + esc(i.cadre || '—') + '</td>' +
               '<td class="c">' + h(i.heure_appel) + ' → ' + h(i.heure_fin) + '</td>' +
-              '<td class="c" style="color:#c4b5fd">' + (Number(i.trajet_min) || 0) + ' min</td>' +
-              '<td class="r" style="font-weight:700;color:#fff">' + (d == null ? '—' : hm(d)) + '</td>' +
+              '<td class="c" style="color:var(--v2-indigo-pale)">' + (Number(i.trajet_min) || 0) + ' min</td>' +
+              '<td class="r" style="font-weight:700;color:var(--v2-t1)">' + (d == null ? '—' : hm(d)) + '</td>' +
             '</tr>';
           }).join('') + '</tbody></table></div>' +
         (rows.length ? '' : vide('Aucune intervention enregistrée', T_INTERV)) +
@@ -541,9 +565,8 @@
     const l = lignesBareme(duMois, intervMois, setF);
     const unite = u => u === 'intervention' ? '/ interv.' : '/ jour';
     box.innerHTML =
-      '<div class="as2-tbl-h" style="padding:0 0 14px">' +
-        '<span style="color:#34d399;display:flex">' + svg(ICO.money) + '</span>' +
-        '<span class="as2-tbl-t">Barème d\'indemnités (CCN 66)</span></div>' +
+      dcHead('#10b981', ICO.money, 'CCN 66', 'Barème d\'indemnités') +
+      '<div class="dc-body">' +
       (l.length
         ? '<table class="as2-bt"><thead><tr><th>Type d\'astreinte</th>' +
             '<th class="r">Taux</th><th class="r">Nb</th><th class="r">Total</th></tr></thead><tbody>' +
@@ -554,7 +577,8 @@
           '</tbody></table>' +
           '<button type="button" class="as2-export" onclick="ast2ExportPaie()">' +
             svg(ICO.down, 2.2) + 'Exporter pour la paie</button>'
-        : vide('Barème non configuré', T_BAREME));
+        : vide('Barème non configuré', T_BAREME)) +
+      '</div>';
   }
 
   // ── Cascade de contacts ───────────────────────────────────────────────
@@ -562,9 +586,8 @@
     const box = el('astCascade'); if (!box) return;
     const c = EXTRA.cascade;
     box.innerHTML =
-      '<div class="v2-blk-h" style="margin-bottom:14px">' +
-        '<span style="color:#f59e0b;display:flex;width:15px;height:15px">' + svg(ICO.phone) + '</span>' +
-        '<span class="v2-blk-t">Cascade de contacts</span></div>' +
+      dcHead('#f59e0b', ICO.phone, 'ESCALADE', 'Cascade de contacts') +
+      '<div class="dc-body">' +
       (c.length
         ? c.map((x, k) => '<div class="as2-casc">' +
             '<div class="as2-casc-rail">' +
@@ -577,7 +600,8 @@
                 (x.tel ? ' · <a href="tel:' + esc(String(x.tel).replace(/\s/g, '')) + '">' + esc(x.tel) + '</a>' : '') +
               '</div></div></div>').join('')
         : '<div class="v2-blk-vide">Cascade non configurée' +
-          (EXTRA.missing[T_CASC] ? ' — exécutez ' + SQL_FILE : '') + '.</div>');
+          (EXTRA.missing[T_CASC] ? ' — exécutez ' + SQL_FILE : '') + '.</div>') +
+      '</div>';
   }
 
   // ── Lignes de garde ───────────────────────────────────────────────────
@@ -585,7 +609,8 @@
     const box = el('astLignes'); if (!box) return;
     const types = (typeof AST_TYPES !== 'undefined' ? AST_TYPES : []);
     const utilisés = types.filter(t => list.some(a => a.type === t.id));
-    box.innerHTML = '<div class="v2-blk-t" style="margin-bottom:14px">Lignes de garde</div>' +
+    box.innerHTML = dcHead('#22d3ee', ICO.shield, 'GARDE', 'Lignes de garde') +
+      '<div class="dc-body">' +
       (utilisés.length
         ? '<div style="display:flex;flex-direction:column;gap:11px">' + utilisés.map(t => {
             const jour = list.find(a => a.type === t.id && a.date === auj);
@@ -606,7 +631,8 @@
                 : '<div class="as2-ligne-b"><span class="as2-ligne-n">Non pourvue</span></div>') +
             '</div>';
           }).join('') + '</div>'
-        : '<div class="v2-blk-vide">Aucune ligne de garde alimentée.</div>');
+        : '<div class="v2-blk-vide">Aucune ligne de garde alimentée.</div>') +
+      '</div>';
   }
 
   // ── Repos compensateur (calculé sur les interventions du mois) ────────
@@ -621,16 +647,16 @@
     const arr = Object.keys(par).map(k => ({ nom: k, min: par[k] }))
       .sort((a, b) => b.min - a.min);
     box.innerHTML =
-      '<div class="as2-tbl-h" style="padding:0 0 14px">' +
-        '<span style="color:#c4b5fd;display:flex">' + svg(ICO.sun) + '</span>' +
-        '<span class="as2-tbl-t">Repos compensateur</span></div>' +
+      dcHead('#8b5cf6', ICO.sun, 'RÉCUPÉRATION', 'Repos compensateur') +
+      '<div class="dc-body">' +
       (arr.length
         ? arr.map(r => '<div class="as2-rp">' + avatar(r.nom, 'as2-av-28') +
             '<div style="flex:1;min-width:0"><div class="as2-rp-n">' + esc(r.nom) + '</div>' +
             '<div class="as2-rp-d">' + hm(r.min) + ' d\'intervention ce mois-ci</div></div>' +
             '<span class="as2-rp-v">+' + (r.min / 60).toFixed(1).replace('.', ',') + ' h</span>' +
           '</div>').join('')
-        : vide('Aucune intervention à compenser ce mois-ci', T_INTERV));
+        : vide('Aucune intervention à compenser ce mois-ci', T_INTERV)) +
+      '</div>';
   }
 
   // ── Consignes ─────────────────────────────────────────────────────────
@@ -638,9 +664,8 @@
     const box = el('astConsignes'); if (!box) return;
     const c = EXTRA.consignes;
     box.innerHTML =
-      '<div class="v2-blk-h" style="margin-bottom:14px">' +
-        '<span style="color:#22d3ee;display:flex;width:15px;height:15px">' + svg(ICO.shield) + '</span>' +
-        '<span class="v2-blk-t">Consignes d\'astreinte</span></div>' +
+      dcHead('#22d3ee', ICO.shield, 'FICHES RÉFLEXES', 'Consignes d\'astreinte') +
+      '<div class="dc-body">' +
       (c.length
         ? '<div class="as2-cons">' + c.map(x =>
             '<button type="button" class="as2-cons-i" style="--pc:' + esc(x.couleur || '#818cf8') + '" ' +
@@ -648,7 +673,8 @@
               '<span class="as2-cons-ico">' + svg(ICO.alert) + '</span>' +
               '<span class="as2-cons-l">' + esc(x.titre) + '</span></button>').join('') + '</div>'
         : '<div class="v2-blk-vide">Aucune consigne enregistrée' +
-          (EXTRA.missing[T_CONS] ? ' — exécutez ' + SQL_FILE : '') + '.</div>');
+          (EXTRA.missing[T_CONS] ? ' — exécutez ' + SQL_FILE : '') + '.</div>') +
+      '</div>';
   }
 
   // ══ ACTIONS ═════════════════════════════════════════════════════════════

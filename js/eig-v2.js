@@ -13,7 +13,8 @@ const EIG2_IC = {
   shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
   print: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
   pen:   '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
-  send:  '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>'
+  send:  '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  bars:  '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>'
 };
 
 // Couleur d'accent par gravité (maquette)
@@ -32,6 +33,11 @@ const EIG2_TC = {
 
 function _eig2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+// SVG dimensionné (px) : les pastilles .dc-chip / .dc-kpi-ico du langage
+// « Console Data » ne fixent pas la taille du <svg>.
+function _eig2SvgN(d, px, w) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round" style="width:${px}px;height:${px}px">${d}</svg>`;
 }
 function _eig2TypeLabel(i) {
   return (typeof INCIDENT_TYPES === 'object' && INCIDENT_TYPES[i.type]) || i.type || 'Autre';
@@ -58,7 +64,7 @@ function eig2Stats(all) {
   if (!box) return;
   const td = today();
   // « 12 mois » : fenêtre glissante d'un an sur la date de l'événement
-  const limite = new Date(new Date(td).getTime() - 365 * 86400000).toISOString().slice(0, 10);
+  const limite = isoJour(new Date(new Date(td).getTime() - 365 * 86400000));
   const an = all.filter(i => (i.date || '') >= limite);
   const declares = all.filter(i => i.eig.declareARS);
   const clotures = all.filter(i => eigStatut(i) === 'cloture');
@@ -71,9 +77,10 @@ function eig2Stats(all) {
     { n: enCours.length,  l: 'En cours',      c: '#f59e0b', ic: EIG2_IC.clock, x: enRetard.length ? `${enRetard.length} en retard` : '' },
     { n: clotures.length, l: 'Clôturés',      c: '#10b981', ic: EIG2_IC.lock }
   ];
-  box.innerHTML = cells.map(c => `<div class="eig2-stat" style="--pc:${c.c}">
-    <span class="eig2-stat-ico">${_eig2Svg(c.ic)}</span>
-    <div><div class="eig2-stat-n">${c.n}</div><div class="eig2-stat-l">${c.l}</div>${c.x ? `<div class="eig2-stat-x">${escHtml(c.x)}</div>` : ''}</div>
+  box.innerHTML = cells.map(c => `<div class="dc-kpi" style="--dc-c:${c.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${escHtml(c.l)}</span><span class="dc-kpi-ico" style="color:${c.c}">${_eig2SvgN(c.ic, 16)}</span></div>
+    <div class="dc-kpi-val">${c.n}</div>
+    ${c.x ? `<div class="dc-kpi-sub">${escHtml(c.x)}</div>` : ''}
   </div>`).join('');
 }
 
@@ -92,13 +99,23 @@ function eig2Corps(all) {
   }
 
   el.innerHTML = eig2Table(all) + `<div class="eig2-duo">
-    <div class="v2-blk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Répartition par type</span></div>
-      ${eig2ParType(all)}
+    <div class="dc-card">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:#8b5cf622;color:#8b5cf6">${_eig2SvgN(EIG2_IC.bars, 16)}</span>
+          <div style="min-width:0"><div class="dc-eyebrow">Analyse</div><div class="dc-title">Répartition par type</div></div>
+        </div>
+      </div>
+      <div class="dc-body">${eig2ParType(all)}</div>
     </div>
-    <div class="eig2-ars-blk">
-      <div class="eig2-ars-h">${_eig2Svg(EIG2_IC.shield)}<span class="eig2-ars-t">Suivi déclarations ARS</span></div>
-      ${eig2ArsSuivi(all)}
+    <div class="dc-card">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:#34d39922;color:#34d399">${_eig2SvgN(EIG2_IC.shield, 16)}</span>
+          <div style="min-width:0"><div class="dc-eyebrow">Conformité</div><div class="dc-title">Suivi déclarations ARS</div></div>
+        </div>
+      </div>
+      <div class="dc-body">${eig2ArsSuivi(all)}</div>
     </div>
   </div>`;
 }
@@ -124,14 +141,18 @@ function eig2Table(all) {
       <td><span class="eig2-date">${escHtml(_eig2Court(i.date))}${i.heure ? ' · ' + escHtml(i.heure.slice(0, 5)) : ''}</span></td>
       <td><div class="eig2-ti">${escHtml(i.titre || '—')}</div><div class="eig2-ty" style="color:${tc}">${escHtml(_eig2TypeLabel(i))}</div></td>
       <td><span class="eig2-res">${escHtml(i.residentName || 'Établissement')}</span></td>
-      <td><span class="eig2-pill" style="--pc:${gc}">${escHtml(gl)}</span></td>
+      <td><span class="dc-badge" style="background:${gc}1f;color:${gc};border:1px solid ${gc}44"><span class="d" style="background:${gc}"></span>${escHtml(gl)}</span></td>
       <td>
-        <span class="eig2-ars" style="--pc:${ars ? '#34d399' : '#8095b4'}">${_eig2Svg(ars ? EIG2_IC.check : EIG2_IC.x, 2.4)}${ars ? 'Oui' : 'Non'}</span>
+        ${ars
+          ? `<span class="dc-badge dc-b-green"><span class="d"></span>Oui</span>`
+          : `<span class="dc-badge dc-b-gray"><span class="d"></span>Non</span>`}
         ${i.eig.numeroSignalement ? `<span class="eig2-ty">n° ${escHtml(i.eig.numeroSignalement)}</span>` : ''}
       </td>
       <td>
-        <span class="eig2-pill" style="--pc:${stD.c}">${stD.l}</span>
-        ${retard ? '<span class="eig2-late">Délai dépassé</span>' : ''}
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+          <span class="dc-badge" style="background:${stD.c}1f;color:${stD.c};border:1px solid ${stD.c}44"><span class="d" style="background:${stD.c}"></span>${stD.l}</span>
+          ${retard ? '<span class="dc-badge dc-b-red"><span class="d"></span>Délai dépassé</span>' : ''}
+        </div>
       </td>
       <td>
         <div class="eig2-acts">
@@ -142,10 +163,19 @@ function eig2Table(all) {
     </tr>`;
   }).join('');
 
-  return `<div class="eig2-tw"><div class="eig2-scroll"><table class="eig2-t">
-    <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
-    <tbody>${corps}</tbody>
-  </table></div></div>`;
+  return `<div class="dc-card">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:#ef444422;color:#ef4444">${_eig2SvgN(EIG2_IC.alert, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Registre</div><div class="dc-title">Dossiers EIG</div></div>
+      </div>
+      <span class="dc-pill dim">${rows.length} dossier${rows.length > 1 ? 's' : ''}</span>
+    </div>
+    <div class="eig2-scroll"><table class="eig2-t">
+      <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${corps}</tbody>
+    </table></div>
+  </div>`;
 }
 
 // ── RÉPARTITION PAR TYPE ──────────────────────────────────────────────
@@ -155,13 +185,16 @@ function eig2ParType(all) {
   const lignes = Object.keys(compte).sort((a, b) => compte[b] - compte[a]);
   if (!lignes.length) return '<div class="v2-blk-vide">Aucun événement à répartir.</div>';
   const max = Math.max(...lignes.map(k => compte[k]));
-  return `<div class="eig2-bars">${lignes.map(k => {
+  return `<div style="display:flex;flex-direction:column;gap:14px">${lignes.map(k => {
     const n = compte[k], pct = Math.round(n / max * 100);
     const c = EIG2_TC[k] || EIG2_TC.autre;
     const l = (typeof INCIDENT_TYPES === 'object' && INCIDENT_TYPES[k]) || k;
     return `<div>
-      <div class="eig2-bar-h"><span class="eig2-bar-l">${escHtml(l)}</span><span class="eig2-bar-n">${n}</span></div>
-      <div class="eig2-prog"><span style="width:${pct}%;background:${c}"></span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px">
+        <span class="dc-eyebrow" style="margin-bottom:0;border-left:3px solid ${c};padding-left:9px">${escHtml(l)}</span>
+        <span style="font-family:var(--v2-mono,ui-monospace,monospace);font-size:13px;font-weight:700;color:${c}">${n}</span>
+      </div>
+      <div class="al-prog-bar"><span style="width:${pct}%;background:${c}"></span></div>
     </div>`;
   }).join('')}</div>`;
 }
@@ -191,13 +224,13 @@ function eig2ArsSuivi(all) {
     if (e.numeroSignalement) sub.push('n° ' + e.numeroSignalement);
     if (st === 'cloture' && e.dateCloture) sub.push('clôturé le ' + formatDate(e.dateCloture));
 
-    return `<div class="eig2-ars-r" style="--pc:${c}">
-      <span class="eig2-ars-i">${_eig2Svg(ic, 2.4)}</span>
+    return `<div style="display:flex;align-items:center;gap:11px;padding:11px 12px;margin-bottom:9px;border-left:3px solid ${c};background:var(--v2-s-sub);border-radius:9px">
+      <span class="dc-kpi-ico" style="color:${c};flex:none">${_eig2SvgN(ic, 16, 2.2)}</span>
       <div style="flex:1;min-width:0">
-        <div class="eig2-ars-n">${escHtml(i.titre || '—')}${i.residentName ? ' — ' + escHtml(i.residentName) : ''}</div>
-        <div class="eig2-ars-s">${escHtml(sub.join(' · '))}</div>
+        <div class="dc-title" style="font-size:12.5px">${escHtml(i.titre || '—')}${i.residentName ? ' — ' + escHtml(i.residentName) : ''}</div>
+        <div style="font-size:11px;color:var(--v2-t7);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(sub.join(' · '))}</div>
       </div>
-      <span class="eig2-ars-tag">${tag}</span>
+      <span class="dc-badge" style="flex:none;background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${tag}</span>
     </div>`;
   }).join('');
 }

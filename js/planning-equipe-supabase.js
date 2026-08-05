@@ -67,7 +67,7 @@ function _peWeekKey(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const day = (d.getDay() + 6) % 7;     // lundi = 0
   d.setDate(d.getDate() - day);
-  return d.toISOString().slice(0, 10);
+  return isoJour(d);
 }
 function _peDurMins(debut, fin) {
   const [h1, m1] = debut.split(':').map(Number);

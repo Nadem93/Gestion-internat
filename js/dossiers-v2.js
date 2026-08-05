@@ -190,7 +190,7 @@ async function ds2Load() {
 function _dsPlus(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return isoJour(d);
 }
 function _dsJours(dateStr) {
   const t = new Date(_dsToday() + 'T00:00:00');
@@ -279,10 +279,7 @@ function ds2Meta() {
 
 // ─── Blocs de contenu ─────────────────────────────────────────────────────
 function ds2Hello() {
-  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-  const p = (s && (s.prenom || s.username) || '').trim();
   return `<div class="ds-hello">
-    <h1>Bonjour${p ? ', ' + _ds(p) : ''}</h1>
     <div class="ds-hello-s">Le dossier du résident, de l'admission au suivi.</div>
   </div>`;
 }
@@ -296,46 +293,56 @@ function ds2Kpis() {
     { n: v(st && st.ech30), l: 'Échéances < 30j', c: '#f59e0b', ic: DS_IC.clock },
     { n: v(st && st.eigMois), l: 'EIG ce mois', c: '#ef4444', ic: DS_IC.alert }
   ];
-  return `<div class="ds-kpis">${K.map(k => `<div class="ds-kpi">
-    <span class="ds-kpi-ic" style="background:${_dsRgba(k.c, .13)};color:${k.c}">${_dsSvg(k.ic, k.c, 21)}</span>
-    <div><div class="ds-kpi-n" style="color:${k.c}">${_ds(k.n)}</div>
-      <div class="ds-kpi-l">${k.l}</div></div></div>`).join('')}</div>`;
+  return `<div class="ds-kpis">${K.map(k => `<div class="dc-kpi" style="--dc-c:${k.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${k.l}</span>
+      <span class="dc-kpi-ico" style="color:${k.c}">${_dsSvg(k.ic, k.c, 16)}</span></div>
+    <div class="dc-kpi-val" style="color:${k.c}">${_ds(k.n)}</div></div>`).join('')}</div>`;
 }
 
 // Sous-titre de tuile : chiffre réel du module, jamais une valeur inventée.
-function ds2CardSub(page) {
+// Donnée de la carte au format carte-donnée : { n, u, lb } ou { txt, lb }.
+// warn: true → la carte se teinte, il y a quelque chose à traiter.
+function ds2CardData(page) {
   const st = ds2Stats();
-  if (!st) return '…';
-  const p = (n, s, pl) => `${n} ${n > 1 ? (pl || (s + 's')) : s}`;
+  if (!st) return { txt: '…', lb: 'chargement' };
+  const s = (n, sing, plur) => (n > 1 ? (plur || sing + 's') : sing);
   switch (page) {
-    case 'admissions.html': return `${st.admissionsEnCours} en cours`;
-    case 'ppe.html': return st.ppeARevoir ? `${st.ppeARevoir} à réviser` : p(st.ppeTotal, 'avenant');
-    case 'echeances.html': return `${st.echAVenir.length} à venir`;
-    case 'documents.html': return p(st.docs, 'document');
-    case 'objectifs.html': return p(st.evals, 'évaluation');
-    case 'plan-soins.html': return p(st.soins, 'soin actif', 'soins actifs');
-    case 'fiche-liaison.html': return 'Urgence hospitalisation';
-    case 'cvs.html': return p(st.cvsMembres, 'membre');
-    case 'satisfaction.html': return p(st.satisfaction, 'réponse');
-    case 'eig.html': return `${st.eigMois} ce mois`;
-    case 'repertoire.html': return p(st.contacts, 'contact');
-    default: return '';
+    case 'admissions.html': return { n: st.admissionsEnCours, lb: st.admissionsEnCours ? s(st.admissionsEnCours, 'admission en cours', 'admissions en cours') : 'aucune en cours' };
+    case 'ppe.html': return st.ppeARevoir
+      ? { n: st.ppeARevoir, lb: s(st.ppeARevoir, 'projet à réviser', 'projets à réviser'), warn: true }
+      : { n: st.ppeTotal, lb: s(st.ppeTotal, 'avenant enregistré', 'avenants enregistrés') };
+    case 'echeances.html': return { n: st.echAVenir.length, lb: st.echAVenir.length ? s(st.echAVenir.length, 'échéance à venir', 'échéances à venir') : 'aucune échéance' };
+    case 'documents.html': return { n: st.docs, lb: s(st.docs, 'document classé', 'documents classés') };
+    case 'objectifs.html': return { n: st.evals, lb: s(st.evals, 'évaluation', 'évaluations') };
+    case 'plan-soins.html': return { n: st.soins, lb: s(st.soins, 'soin actif', 'soins actifs') };
+    case 'fiche-liaison.html': return { txt: 'Liaison', lb: 'urgence hospitalisation' };
+    case 'cvs.html': return { n: st.cvsMembres, lb: s(st.cvsMembres, 'membre élu', 'membres élus') };
+    case 'satisfaction.html': return { n: st.satisfaction, lb: s(st.satisfaction, 'réponse', 'réponses') };
+    case 'eig.html': return { n: st.eigMois, lb: st.eigMois ? s(st.eigMois, 'EIG ce mois', 'EIG ce mois') : 'aucun ce mois', warn: st.eigMois > 0 };
+    case 'repertoire.html': return { n: st.contacts, lb: s(st.contacts, 'contact', 'contacts') };
+    default: return { txt: '', lb: '' };
   }
 }
 
 function ds2Cards() {
   const nav = (window.DS_NAV || []).filter(window.dsAllowed || (() => true));
   const tuto = window.PORTAL_TUTO || {};
-  return `<div class="ds-sec">Accès rapides</div>
-    <div class="ds-cards">${nav.map(e => `
-      <div class="ds-card" role="button" tabindex="0" data-page="${_ds(e.page)}" data-label="${_ds(e.label)}"
-        aria-label="Ouvrir ${_ds(e.label)}" style="--dsc:${_ds(e.c1)};--dsc-sh:${_dsRgba(e.c1, .4)}">
-        ${tuto[e.page] ? `<button type="button" class="ds-card-i" data-tuto="${_ds(e.page)}"
+  return `<div class="dc-eyebrow" style="margin-bottom:12px">Accès rapides</div>
+    <div class="ds-cards">${nav.map(e => {
+      const d = ds2CardData(e.page);
+      const aide = !!tuto[e.page];
+      return `<div class="ds-card cdn${aide ? ' cdn-hasi' : ''}${d.warn ? ' cdn-warn' : ''}" role="button" tabindex="0"
+        data-page="${_ds(e.page)}" data-label="${_ds(e.label)}"
+        aria-label="Ouvrir ${_ds(e.label)}" style="--dsc:${_ds(e.c1)};--dsc-sh:${_dsRgba(e.c1, .4)};--cdc:${_ds(e.c1)}">
+        ${aide ? `<button type="button" class="ds-card-i" data-tuto="${_ds(e.page)}"
           title="Mode d'emploi — ${_ds(e.label)}" aria-label="Mode d'emploi — ${_ds(e.label)}">?</button>` : ''}
-        <span class="ds-card-ic">${_dsSvg(e.icon, 'currentColor', 22)}</span>
-        <div class="ds-card-l">${_ds(e.label)}</div>
-        <div class="ds-card-s">${_ds(ds2CardSub(e.page))}</div>
-      </div>`).join('')}</div>`;
+        <div class="cdn-top">
+          <span class="dc-chip cdn-ic" style="background:${_dsRgba(e.c1, .14)};color:${e.c1}">${_dsSvg(e.icon, e.c1, 16)}</span>
+          <div class="cdn-t">${_ds(e.label)}</div>
+        </div>
+        ${_cdnMid(d, _ds)}
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function ds2Bento() {
@@ -357,14 +364,17 @@ function ds2BlkEcheances() {
             <span class="ds-ech-m">${DS_MOIS[d.getMonth()]}</span></div>
           <div class="ds-ech-b"><div class="ds-ech-t">${_ds(e.libelle || 'Échéance')}</div>
             <div class="ds-ech-s">${_ds(sous)}</div></div>
-          <span class="ds-ech-l">${j === 0 ? "Aujourd'hui" : 'J-' + j}</span></div>`;
+          <span class="dc-badge" style="background:${_dsRgba(c, .16)};color:${c};border:1px solid ${_dsRgba(c, .35)};flex-shrink:0;white-space:nowrap"><span class="d" style="background:${c}"></span>${j === 0 ? "Aujourd'hui" : 'J-' + j}</span></div>`;
       }).join('')
       : `<div class="ds-vide">Aucune échéance à venir.</div>`;
   }
-  return `<div class="ds-blk ds-blk-ech"><div class="ds-blk-h">${_dsSvg(DS_IC.clock, '#fbbf24', 15)}
-    <span class="ds-blk-t">Échéances à venir</span>
-    <button type="button" class="ds-blk-a" data-open="echeances.html" data-label="Échéancier">Voir tout</button>
-    </div>${body}</div>`;
+  return `<div class="dc-card"><div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:${_dsRgba('#fbbf24', .16)};color:#fbbf24">${_dsSvg(DS_IC.clock, '#fbbf24', 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Suivi</div><div class="dc-title">Échéances à venir</div></div>
+      </div>
+      <button type="button" class="ds-blk-a" data-open="echeances.html" data-label="Échéancier">Voir tout</button>
+    </div><div class="dc-body">${body}</div></div>`;
 }
 
 function ds2BlkCompletude() {
@@ -382,22 +392,25 @@ function ds2BlkCompletude() {
       body = `<div class="ds-cpl">${st.completude.slice(0, 5).map(c => {
         const col = c.pct >= 90 ? '#10b981' : c.pct >= 70 ? '#f59e0b' : '#ef4444';
         const miss = c.manque.slice(0, 3).join(', ') + (c.manque.length > 3 ? `, +${c.manque.length - 3}` : '');
-        return `<div>
+        return `<div style="border-left:3px solid ${col};padding-left:12px">
           <div class="ds-cpl-h">
             <span class="ds-cpl-av" style="background:${_dsAvColor(c.id)}">${_ds(c.ini)}</span>
             <span class="ds-cpl-n">${_ds(c.nom)}</span>
-            <span class="ds-cpl-p" style="color:${col}">${c.pct}%</span></div>
-          <div class="v2-prog"><span style="width:${c.pct}%;background:${col}"></span></div>
+            <span class="dc-badge" style="background:${_dsRgba(col, .16)};color:${col};border:1px solid ${_dsRgba(col, .35)};flex-shrink:0"><span class="d" style="background:${col}"></span>${c.pct}%</span></div>
+          <div class="al-prog-bar"><span style="width:${c.pct}%;background:${col}"></span></div>
           ${c.manque.length ? `<div class="ds-cpl-miss">Manque : ${_ds(miss)}</div>` : ''}
         </div>`;
       }).join('')}</div>`;
     }
   }
-  return `<div class="ds-blk"><div class="ds-blk-h">${_dsSvg(DS_IC.check, '#22d3ee', 15)}
-    <span class="ds-blk-t">Complétude des dossiers</span>
-    ${_dsAdmin() ? `<button type="button" class="ds-blk-a" id="dsPiecesBtn" onclick="ds2OpenPieces()">
+  return `<div class="dc-card" id="dsCplCard"><div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:${_dsRgba('#22d3ee', .16)};color:#22d3ee">${_dsSvg(DS_IC.check, '#22d3ee', 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Qualité</div><div class="dc-title">Complétude des dossiers</div></div>
+      </div>
+      ${_dsAdmin() ? `<button type="button" class="ds-blk-a" id="dsPiecesBtn" onclick="ds2OpenPieces()">
       ${_dsSvg(DS_IC.gear, 'currentColor', 13)} Configurer</button>` : ''}
-    </div>${body}</div>`;
+    </div><div class="dc-body">${body}</div></div>`;
 }
 
 // ─── Configuration des pièces requises (modale, gabarit v2) ───────────────
@@ -462,13 +475,11 @@ async function ds2DeletePiece(id) {
 
 // Repeint le seul bloc de complétude (le reste de la page ne bouge pas)
 function ds2RefreshCompletude() {
-  const el = document.getElementById('dsWelcome');
-  if (!el) return;
-  const blocs = el.querySelectorAll('.ds-bento > .ds-blk');
-  if (blocs.length < 2) return;
+  const old = document.getElementById('dsCplCard');
+  if (!old) return;
   const tmp = document.createElement('div');
   tmp.innerHTML = ds2BlkCompletude();
-  blocs[1].replaceWith(tmp.firstElementChild);
+  old.replaceWith(tmp.firstElementChild);
 }
 
 // ─── Mode d'emploi d'un module (gabarit de modale v2) ─────────────────────

@@ -132,7 +132,8 @@
   function ligne(n) {
     var actif = (typeof currentNoteId !== 'undefined') && String(n.id) === String(currentNoteId);
     var pin = !!n.pinned;
-    return '<div class="nt-item' + (actif ? ' on' : '') + '" data-id="' + esc(String(n.id)) + '" role="button" tabindex="0">'
+    var liseré = pin ? ' style="border-left:3px solid #f59e0b;padding-left:9px"' : '';
+    return '<div class="nt-item' + (actif ? ' on' : '') + '" data-id="' + esc(String(n.id)) + '" role="button" tabindex="0"' + liseré + '>'
       + '<span class="nt-item-ico">' + ICO_NOTE + '</span>'
       + '<span class="nt-item-b">'
       + '<span class="nt-item-t">' + esc(n.title || 'Sans titre') + '</span>'
@@ -167,8 +168,8 @@
       var epinglees = list.filter(function (n) { return !!n.pinned; });
       var autres = list.filter(function (n) { return !n.pinned; });
       if (epinglees.length) {
-        html += '<div class="nt-sect">Épinglées</div>' + epinglees.map(ligne).join('');
-        if (autres.length) html += '<div class="nt-sect">Toutes les notes</div>';
+        html += '<div class="nt-sect dc-eyebrow">Épinglées</div>' + epinglees.map(ligne).join('');
+        if (autres.length) html += '<div class="nt-sect dc-eyebrow">Toutes les notes</div>';
       }
       html += autres.map(ligne).join('');
     } else {

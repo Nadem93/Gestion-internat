@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Fiche employé — FTR</title>
+  <title>Fiche employé — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -129,6 +129,39 @@ function fmtSize(b) {
   return (b/1024/1024).toFixed(1) + ' Mo';
 }
 
+// ── Habillage « Console Data » (réutilise les classes .dc-* de css/v2.css) ──
+const EC_IC = {
+  home:  '<path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+  heart: '<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>',
+  sun:   '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  cal:   '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  book:  '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  euro:  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  clip:  '<path d="M21.4 11.05 12.2 20.3a5 5 0 0 1-7.1-7.1l9.2-9.2a3.3 3.3 0 1 1 4.7 4.7l-9.2 9.2a1.7 1.7 0 0 1-2.4-2.4l8.5-8.5"/>',
+  chat:  '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  cap:   '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/>',
+  trend: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  bell:  '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  lock:  '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  door:  '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  file:  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'
+};
+function ecSvg16(path) {
+  return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
+}
+// En-tête Console Data : chip coloré + micro-label + titre (+ contenu droite optionnel).
+function ecHead(color, eyebrow, title, iconPath, right) {
+  return '<div class="dc-head"><div class="dc-head-l">'
+    + '<span class="dc-chip" style="background:' + color + '22;color:' + color + '">' + ecSvg16(iconPath) + '</span>'
+    + '<div style="min-width:0"><div class="dc-eyebrow">' + escHtml(eyebrow) + '</div>'
+    + '<div class="dc-title">' + escHtml(title) + '</div></div></div>'
+    + (right || '') + '</div>';
+}
+// Pill monospace (compteur / méta) pour le côté droit d'un en-tête.
+function ecPill(txt) { return '<span class="dc-pill dim">' + escHtml(String(txt)) + '</span>'; }
+
 const _EMP_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
 function getPosteColor(poste) {
   const fonctions = DB.get(DB.keys.fonctionColors) || [];
@@ -157,15 +190,48 @@ function getEmploye(id) {
   };
 }
 
+// Le journal d'activité d'un salarié dit quels dossiers de résidents il a
+// consultés. Tant qu'il venait du localStorage du poste, l'ouvrir sur la fiche
+// d'un collègue ne montrait rien. Branché sur la base, il montrerait TOUT :
+// or employe.html n'est protégée que par Auth.requireAuth(), donc n'importe
+// quel agent connecté peut ouvrir employe.html?id=<un collègue>.
+// On réserve donc la section à la personne concernée et aux RH.
+let _empJournalAutorise = false;
+
+function _empPeutVoirJournal(e) {
+  const s = Auth.getSession();
+  if (!s) return false;
+  if (s.role === 'admin' || s.role === 'moderator') return true;
+  return !!(e && e.profileId && String(e.profileId) === String(s.userId));
+}
+
+// Activité du salarié, depuis le cache préchargé par auditPrechargerSalarie().
+// Le filtre reproduit celui d'avant : ce qu'il a fait, ou ce qui le cite.
+function _empAudit(fullName) {
+  if (!_empJournalAutorise || typeof auditSalarie !== 'function') return [];
+  return auditSalarie(fullName)
+    .filter(l => l.user === fullName || (l.details && l.details.includes(fullName)));
+}
+
 function canEditEmploye() {
   const session = Auth.getSession();
   return session && (session.role === 'admin' || session.role === 'moderator');
 }
 
-function loadEmploye() {
+async function loadEmploye() {
   const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  if (!id) { document.getElementById('employeContent').innerHTML = '<div class="empty"><h3>Employé non trouvé</h3><p>Aucun ID fourni.</p><a href="accueil.html" class="btn btn-accent">← Retour</a></div>'; return; }
+  let id = params.get('id');
+  if (!id) {
+    // Sans ?id (avatar « Mon profil » de l'accueil / du dashboard) : on ouvre
+    // SA propre fiche, retrouvée par le lien compte ↔ fiche (profileId).
+    const s = Auth.getSession();
+    const mine = s && _empCache.find(x => String(x.profileId || '') === String(s.userId));
+    if (mine) { id = String(mine.id); }
+    else {
+      document.getElementById('employeContent').innerHTML = '<div class="empty"><h3>Fiche introuvable</h3><p>Votre compte n\'est pas encore relié à une fiche employé. Demandez à un administrateur de faire le lien depuis Admin → Employés → « Lier à cette fiche ».</p><a href="accueil.html" class="btn btn-accent">← Retour</a></div>';
+      return;
+    }
+  }
   currentEmployeId = id;
   const e = getEmploye();
   if (!e) { document.getElementById('employeContent').innerHTML = '<div class="empty"><h3>Employé introuvable</h3><p>Cet employé n\'existe pas ou a été supprimé.</p><a href="accueil.html" class="btn btn-accent">← Retour</a></div>'; return; }
@@ -178,6 +244,14 @@ function loadEmploye() {
   const attBtn = document.getElementById('btnAttestation');
   if (attBtn) attBtn.style.display = canEditEmploye() ? '' : 'none';
   if (pageEditMode) { renderEditMode(e); return; }
+  // Le journal d'activité vient de public.audit_log (js/audit-supabase.js).
+  // Les rendus ci-dessous sont synchrones : on charge donc avant de dessiner —
+  // et seulement si le lecteur a le droit de le voir, pour ne pas même le
+  // faire transiter sur le réseau sinon.
+  _empJournalAutorise = _empPeutVoirJournal(e);
+  if (_empJournalAutorise && typeof auditPrechargerSalarie === 'function') {
+    await auditPrechargerSalarie(`${e.prenom || ''} ${e.nom || ''}`.trim());
+  }
   renderViewMode(e);
 }
 
@@ -260,7 +334,7 @@ function renderViewMode(e) {
       const alertesActives=alertes.filter(a=>!a.done&&a.date&&(new Date(a.date).getTime()-now2)<30*86400000).length;
       const histo=(JSON.parse(localStorage.getItem(HISTO_KEY)||'{}'))[currentEmployeId]||[];
       const fullName=`${e.prenom||''} ${e.nom||''}`.trim();
-      const journalLog=(DB.get(DB.keys.auditLog)||[]).filter(l=>l.user===fullName||(l.details&&l.details.includes(fullName)));
+      const journalLog=_empAudit(fullName);
       const journalMonth=journalLog.filter(l=>{const d=new Date(l.date);return d.getFullYear()===new Date().getFullYear()&&d.getMonth()===new Date().getMonth();}).length;
       return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.85rem;margin-bottom:1.75rem">
         ${(() => { const refs=(DB.get(DB.keys.residents)||[]).filter(r=>r.referent===`${e.prenom||''} ${e.nom||''}`.trim()&&r.statut!=='sorti'); return miniWidget('🏠','Référents',refs.length.toString(),refs.length?refs.map(r=>`${r.prenom||''} ${r.nom||''}`.trim()).slice(0,2).join(', ')+(refs.length>2?'…':''):'Aucun résident','#0f766e','referents'); })()}
@@ -310,14 +384,14 @@ function empStatsHtml(e) {
   const fullName = `${e.prenom||''} ${e.nom||''}`.trim();
   const stats = [
     { label:'Planning',         icon:'📅', color:'#3b82f6', count:_empPlanningFor(currentEmployeId).length },
-    { label:'Journal',          icon:'🕘', color:'#6366f1', count:(DB.get(DB.keys.auditLog)||[]).filter(l=>l.user===fullName||(l.details&&l.details.includes(fullName))).length },
+    { label:'Journal',          icon:'🕘', color:'#6366f1', count:(typeof auditSalarieCompteurs === 'function' ? auditSalarieCompteurs(fullName).total : 0) },
     { label:'Congés',           icon:'🗓', color:'#f59e0b', count:_empCongesFor(currentEmployeId).length },
     { label:'Formations',       icon:'📚', color:'#10b981', count:((JSON.parse(localStorage.getItem(FORM_KEY)||'{}'))[currentEmployeId]||[]).length + _empFormationsAcquises(currentEmployeId).length },
     { label:'Entretiens',       icon:'🗂', color:'#8b5cf6', count:_empEntretiensFor(currentEmployeId).length },
     { label:'Documents',        icon:'📎', color:'#14b8a6', count:_empDocsCache.length },
     { label:'Fiches de paie',   icon:'💰', color:'#0f2b4a', count:_empFichesPaieFor(currentEmployeId).length },
     { label:'Alertes',          icon:'🔔', color:'#ef4444', count:((JSON.parse(localStorage.getItem(ALERTES_KEY)||'{}'))[currentEmployeId]||[]).length },
-  ];
+  ].filter(x => x.label !== 'Journal' || _empJournalAutorise);   // « 0 » serait un faux zéro
   const max = Math.max(...stats.map(s=>s.count), 1);
   const bars = stats.map(s => {
     const w = Math.round((s.count / max) * 100);
@@ -357,7 +431,7 @@ function empPlanningHtml() {
     const dayLabel = d.toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' });
     return `<tr>
       <td style="font-weight:600;text-transform:capitalize">${dayLabel}</td>
-      <td><span class="badge" style="background:${t.color}22;color:${t.color}">${t.label}</span></td>
+      <td><span class="dc-badge" style="background:${t.color}1f;color:${t.color};border:1px solid ${t.color}44"><span class="d" style="background:${t.color}"></span>${t.label}</span></td>
       <td>${s.debut} – ${s.fin}</td>
       <td>${peFormatDuration(peDuration(s.debut, s.fin))}</td>
     </tr>`;
@@ -370,17 +444,15 @@ function empPlanningHtml() {
          <button class="btn btn-ghost btn-sm" onclick="togglePlanningExtra(this)">Voir ${hidden.length} créneau${hidden.length>1?'x':''} de plus ↓</button>
        </td></tr></tfoot>`
     : '';
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
-      <span class="card-title">📅 Planning</span>
-      <div style="display:flex;align-items:center;gap:.5rem">
+  const planningRight = `<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
         <button class="btn btn-icon btn-outline btn-sm" onclick="empPlanningShiftMonth(-1)">‹</button>
         <span style="font-weight:700;font-size:.85rem;text-transform:capitalize;min-width:120px;text-align:center">${monthLabel}</span>
         <button class="btn btn-icon btn-outline btn-sm" onclick="empPlanningShiftMonth(1)">›</button>
-      </div>
-      <span style="font-size:.8rem;color:var(--muted)">Total : <strong>${peFormatDuration(totalMin)}</strong></span>
-    </div>
-    <div class="card-body" style="padding:0">
+        <span class="dc-pill dim">Total ${peFormatDuration(totalMin)}</span>
+      </div>`;
+  return `<div class="dc-card">
+    ${ecHead('#3b82f6','TEMPS · PLANNING','Planning',EC_IC.cal,planningRight)}
+    <div class="dc-body" style="padding:0">
       ${monthShifts.length
         ? `<table class="table"><thead><tr><th>Jour</th><th>Type</th><th>Horaire</th><th>Durée</th></tr></thead><tbody>${visible.map(makeRow).join('')}</tbody>${extraRows}</table>`
         : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucun créneau ce mois-ci.</p></div>'}
@@ -419,11 +491,11 @@ function empCongesHtml() {
         <button class="btn btn-sm" style="background:#16a34a;color:#fff;padding:3px 10px;font-size:.72rem" onclick="empAccepterConge('${d.id}')">✓ Accepter</button>
         <button class="btn btn-sm" style="background:#ef4444;color:#fff;padding:3px 10px;font-size:.72rem" onclick="empOuvrirRefus('${d.id}')">✕ Refuser</button>
       </div>` : '';
-    return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border-bottom:1px solid var(--border)">
+    return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border-bottom:1px solid var(--border);border-left:3px solid ${st.c}">
       <span style="font-size:1.2rem;margin-top:2px;flex-shrink:0">${d.type === 'maladie' ? '🤒' : d.type === 'enfant_malade' ? '👶' : d.type === 'formation' ? '📚' : '🗓'}</span>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span style="padding:1px 8px;border-radius:99px;font-size:.68rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
+          <span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${st.l}</span>
           <span style="font-size:.7rem;color:var(--g400)">${TYPE_LABELS[d.type]||d.type}</span>
         </div>
         <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">${formatDate(d.debut)} → ${formatDate(d.fin)} · ${jours} jour${jours>1?'s':''}</div>
@@ -433,14 +505,18 @@ function empCongesHtml() {
       ${actions}
     </div>`;
   }).join('');
-  return `<div class="card" style="margin-bottom:1rem">
-    <div class="card-body" style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap">
-      <div><div style="font-size:.7rem;color:var(--muted);font-weight:700">JOURS PRIS EN ${curYear}</div><div style="font-size:1.6rem;font-weight:800">${joursPris}</div></div>
-      <div><div style="font-size:.7rem;color:var(--muted);font-weight:700">EN ATTENTE</div><div style="font-size:1.6rem;font-weight:800">${enAttente}</div></div>
+  return `<div class="dc-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:1rem">
+    <div class="dc-kpi" style="--dc-c:#16a34a">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">Jours pris en ${curYear}</span><span class="dc-kpi-ico" style="color:#16a34a">${ecSvg16(EC_IC.sun)}</span></div>
+      <div class="dc-kpi-val">${joursPris}</div><div class="dc-kpi-sub">Congés acceptés</div>
+    </div>
+    <div class="dc-kpi" style="--dc-c:#f59e0b">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">En attente</span><span class="dc-kpi-ico" style="color:#f59e0b">${ecSvg16(EC_IC.clock)}</span></div>
+      <div class="dc-kpi-val">${enAttente}</div><div class="dc-kpi-sub">À traiter</div>
     </div>
   </div>
-  <div class="card"><div class="card-header"><span class="card-title">🗓 Demandes de congés</span></div>
-    <div class="card-body" style="padding:0">${list.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune demande.</p></div>'}</div>
+  <div class="dc-card">${ecHead('#f59e0b','TEMPS · CONGÉS','Demandes de congés',EC_IC.sun,list.length?ecPill(list.length):'')}
+    <div class="dc-body" style="padding:0">${list.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune demande.</p></div>'}</div>
   </div>`;
 }
 
@@ -579,7 +655,7 @@ async function empSaveConge() {
 
 function empJournalHtml(e) {
   const fullName = `${e.prenom||''} ${e.nom||''}`.trim();
-  const log = (DB.get(DB.keys.auditLog) || []).filter(l => l.user === fullName || (l.details && l.details.includes(fullName)));
+  const log = _empAudit(fullName);
   const rows = log.slice(0, 100).map(l => `<div style="display:flex;gap:.75rem;padding:.6rem 1rem;border-bottom:1px solid var(--border)">
     <div style="font-size:.72rem;color:var(--muted);min-width:120px;flex-shrink:0">${new Date(l.date).toLocaleString('fr-FR')}</div>
     <div style="flex:1;min-width:0">
@@ -587,25 +663,49 @@ function empJournalHtml(e) {
       ${l.details ? `<div style="font-size:.78rem;color:var(--muted)">${escHtml(l.details)}</div>` : ''}
     </div>
   </div>`).join('');
-  return `<div class="card"><div class="card-header"><span class="card-title">🕘 Journal d'activité</span></div>
-    <div class="card-body" style="padding:0">${log.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune activité enregistrée.</p></div>'}</div>
+  const cpt = (typeof auditSalarieCompteurs === 'function') ? auditSalarieCompteurs(fullName) : { total: log.length, tronque: false };
+  const extrait = log.length > 100 || cpt.tronque
+    ? `<div style="padding:.55rem 1rem;font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--border)">100 entrées les plus récentes sur ${cpt.total} — export complet depuis Administration → Journal d'audit.</div>`
+    : '';
+  return `<div class="dc-card">${ecHead('#818cf8','SYSTÈME · JOURNAL',"Journal d'activité",EC_IC.clock,cpt.total?ecPill(cpt.total):'')}
+    <div class="dc-body" style="padding:0">${log.length ? extrait + rows : `<div class="empty" style="padding:2rem;text-align:center"><p>${
+      !_empJournalAutorise
+        ? "Le journal d'activité est réservé à la personne concernée et aux ressources humaines."
+        : (typeof auditSalarieOk === 'function' && !auditSalarieOk(fullName)
+            ? 'Journal indisponible — la lecture a échoué. Rechargez la page.'
+            : 'Aucune activité enregistrée.')
+    }</p></div>`}</div>
   </div>`;
 }
 
 function empJournalCounterHtml(e) {
+  // Carte de compteurs : rien à afficher si le lecteur n'a pas accès au journal
+  // (des compteurs à zéro se liraient comme « ce collègue n'a rien fait »).
+  if (!_empJournalAutorise) return '';
   const fullName = `${e.prenom||''} ${e.nom||''}`.trim();
-  const log = (DB.get(DB.keys.auditLog) || []).filter(l => l.user === fullName || (l.details && l.details.includes(fullName)));
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth();
-  const thisMonth = log.filter(l => { const d = new Date(l.date); return d.getFullYear() === curYear && d.getMonth() === curMonth; }).length;
-  const thisYear  = log.filter(l => new Date(l.date).getFullYear() === curYear).length;
-  const total     = log.length;
+  // Lecture en échec : des compteurs à zéro se liraient comme « aucune
+  // activité ». On le dit plutôt que de montrer un faux zéro.
+  if (typeof auditSalarieOk === 'function' && !auditSalarieOk(fullName)) {
+    return `<div class="dc-card" style="height:100%">
+      ${ecHead('#818cf8','SYSTÈME','Journal de bord',EC_IC.clock)}
+      <div class="dc-body" style="display:flex;align-items:center;justify-content:center;padding:1.25rem;min-height:120px;text-align:center">
+        <div style="font-size:.78rem;color:var(--muted)">Journal indisponible — la lecture a échoué.<br/>Rechargez la page.</div>
+      </div></div>`;
+  }
+  const log = _empAudit(fullName);
+  // Compteurs = comptages EXACTS en base, pas la taille du lot affiché : la
+  // liste est plafonnée à 300 lignes et un agent qui ouvre une quinzaine de
+  // fiches par jour en produit autant en un mois. « Entrées totales 300 »
+  // aurait été un chiffre faux, figé, sur une page consultée par les RH.
+  const c = (typeof auditSalarieCompteurs === 'function')
+    ? auditSalarieCompteurs(fullName)
+    : { total: log.length, annee: 0, mois: 0 };
+  const total = c.total, thisYear = c.annee, thisMonth = c.mois;
   const last = log[0] ? new Date(log[0].date).toLocaleDateString('fr-FR') : null;
   const bannerColor = getPosteColor(e.poste);
-  return `<div class="card" style="height:100%">
-    <div class="card-header"><span class="card-title">🕘 Journal de bord</span></div>
-    <div class="card-body" style="display:flex;flex-direction:column;gap:1rem;align-items:center;justify-content:center;padding:1.25rem;min-height:120px">
+  return `<div class="dc-card" style="height:100%">
+    ${ecHead('#818cf8','SYSTÈME','Journal de bord',EC_IC.clock)}
+    <div class="dc-body" style="display:flex;flex-direction:column;gap:1rem;align-items:center;justify-content:center;padding:1.25rem;min-height:120px">
       <div style="font-size:2.8rem;font-weight:800;color:${bannerColor};line-height:1">${total}</div>
       <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Entrées totales</div>
       <div style="display:flex;gap:1.5rem;margin-top:.25rem">
@@ -643,9 +743,9 @@ function empDepartHtml() {
   const store = JSON.parse(localStorage.getItem(DEPART_KEY) || '{}');
   const data = store[currentEmployeId] || { items:{}, dateDepart:'', motif:'' };
   const doneCount = DEPART_ITEMS.filter(i => data.items[i.id]).length;
-  return `<div class="card" style="border-left:3px solid #dc2626">
-    <div class="card-header"><span class="card-title">🚪 Départ / Offboarding</span><span style="margin-left:auto;font-size:.72rem;color:var(--muted)">${doneCount}/${DEPART_ITEMS.length}</span></div>
-    <div class="card-body" style="display:flex;flex-direction:column;gap:.6rem">
+  return `<div class="dc-card" style="border-left:3px solid #dc2626">
+    ${ecHead('#dc2626','ADMIN · OFFBOARDING','Départ / Offboarding',EC_IC.door,ecPill(doneCount + '/' + DEPART_ITEMS.length))}
+    <div class="dc-body" style="display:flex;flex-direction:column;gap:.6rem">
       <div class="form-row">
         <div class="form-group" style="flex:1"><label style="font-size:.75rem">Date de départ</label><input type="date" id="departDate" class="form-input" value="${data.dateDepart||''}" onchange="saveDepartMeta()"/></div>
         <div class="form-group" style="flex:1"><label style="font-size:.75rem">Motif</label><input type="text" id="departMotif" class="form-input" value="${escHtml(data.motif||'')}" placeholder="Démission, fin de contrat…" onchange="saveDepartMeta()"/></div>
@@ -681,9 +781,9 @@ let pagePayFile = null;
 function empReferentsHtml(e) {
   const fullName = `${e.prenom||''} ${e.nom||''}`.trim();
   const residents = (DB.get(DB.keys.residents)||[]).filter(r => r.referent === fullName && r.statut !== 'sorti');
-  if (!residents.length) return `<div class="card">
-    <div class="card-header"><span class="card-title">🏠 Résidents référents</span></div>
-    <div class="card-body"><div class="empty" style="text-align:center;padding:1.5rem 0"><p style="color:var(--muted);font-size:.85rem">Aucun résident référé</p></div></div>
+  if (!residents.length) return `<div class="dc-card">
+    ${ecHead('#14b8a6','SUIVI · RÉFÉRENCE','Résidents référents',EC_IC.home)}
+    <div class="dc-body"><div class="empty" style="text-align:center;padding:1.5rem 0"><p style="color:var(--muted);font-size:.85rem">Aucun résident référé</p></div></div>
   </div>`;
   function age(dob) { if(!dob) return null; const d=new Date(dob),n=new Date(); let a=n.getFullYear()-d.getFullYear(); if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--; return a; }
   const rows = residents.map(r => {
@@ -701,9 +801,9 @@ function empReferentsHtml(e) {
       <span style="font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:${r.statut==='présent'?'#10b98118':'#f1f5f9'};color:${r.statut==='présent'?'#10b981':'var(--muted)'}">${escHtml(r.statut||'—')}</span>
     </a>`;
   }).join('');
-  return `<div class="card">
-    <div class="card-header"><span class="card-title">🏠 Résidents référents <span style="font-size:.75rem;font-weight:500;color:var(--muted)">(${residents.length})</span></span></div>
-    <div class="card-body" style="padding:0">${rows}</div>
+  return `<div class="dc-card">
+    ${ecHead('#14b8a6','SUIVI · RÉFÉRENCE','Résidents référents',EC_IC.home,ecPill(residents.length))}
+    <div class="dc-body" style="padding:0">${rows}</div>
   </div>`;
 }
 
@@ -722,9 +822,9 @@ function empHeuresHtml(e) {
   const moisNom = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][now.getMonth()];
   const barColor = pct >= 95 && pct <= 105 ? '#10b981' : pct > 105 ? '#f59e0b' : '#ef4444';
   const ecartColor = Math.abs(ecart) < 2 ? '#10b981' : ecart > 0 ? '#f59e0b' : '#ef4444';
-  return `<div class="card">
-    <div class="card-header"><span class="card-title">⏱ Heures — ${moisNom}</span></div>
-    <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
+  return `<div class="dc-card">
+    ${ecHead('#3b82f6','TEMPS · MENSUEL','Heures — ' + moisNom,EC_IC.clock,ecPill(pct + '%'))}
+    <div class="dc-body" style="display:flex;flex-direction:column;gap:1rem">
       <div style="display:flex;justify-content:space-around;align-items:flex-end;text-align:center">
         <div>
           <div style="font-size:1.8rem;font-weight:800;color:var(--text)">${heuresTheo}h</div>
@@ -771,12 +871,9 @@ function empMessagesHtml(e) {
       <div style="font-size:.67rem;color:var(--muted);margin-top:2px">${isMe?'Vous':'<b>'+escHtml(name)+'</b>'} · ${new Date(m.date).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
     </div>`;
   }).join('');
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">💬 Message interne</span>
-      ${allMsgs.length ? `<a href="messages.html" class="btn btn-ghost btn-sm" style="font-size:.72rem">Voir tout →</a>` : ''}
-    </div>
-    <div class="card-body" style="padding:0">
+  return `<div class="dc-card">
+    ${ecHead('#6366f1','ADMIN · MESSAGERIE','Message interne',EC_IC.chat,allMsgs.length ? `<a href="messages.html" class="btn btn-ghost btn-sm" style="font-size:.72rem">Voir tout →</a>` : '')}
+    <div class="dc-body" style="padding:0">
       ${recent.length ? `<div style="padding:.85rem 1rem 0;max-height:220px;overflow-y:auto">${rows}</div>` : ''}
       <div style="padding:.85rem 1rem;${recent.length?'border-top:1px solid var(--border);margin-top:.85rem':''}">
         <textarea id="empMsgBody" class="form-input" rows="2" placeholder="Écrire à ${escHtml((e.prenom||'').trim())}…" style="resize:none;font-size:.84rem;width:100%;box-sizing:border-box"></textarea>
@@ -824,13 +921,10 @@ function empFichePaieHtml() {
     </div>`).join('');
 
   return `
-    <div class="card">
-      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-        <span class="card-title">💰 Fiches de paie</span>
-        <button class="btn btn-primary btn-sm admin-only" onclick="document.getElementById('paieFileInput').click()">📎 Ajouter</button>
-      </div>
+    <div class="dc-card">
+      ${ecHead('#a855f7','DOCS · PAIE','Fiches de paie',EC_IC.euro,`<button class="btn btn-primary btn-sm admin-only" onclick="document.getElementById('paieFileInput').click()">📎 Ajouter</button>`)}
       <input type="file" id="paieFileInput" style="display:none" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"/>
-      <div class="card-body" style="padding:0">
+      <div class="dc-body" style="padding:0">
         ${list.length ? rows : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune fiche de paie enregistrée.</p></div>'}
       </div>
     </div>`;
@@ -894,7 +988,9 @@ async function uploadPaie() {
   const name = document.getElementById('paieNameInput')?.value.trim() || pagePayFile.name;
   const e = getEmploye();
   try {
-    const folder = (e && e.profileId) ? e.profileId : Auth.getSession().userId;
+    // RLS Storage : le 1er dossier doit être l'auth.uid() de l'UPLOADEUR
+    // (pas le profil de l'employé destinataire — l'upload serait refusé).
+    const folder = (typeof sbAuthUid === 'function' && await sbAuthUid()) || Auth.getSession().userId;
     const fichierPath = await sbUploadJustificatif(pagePayFile, folder);
     const saved = await sbSaveFichePaie({
       employeId: String(currentEmployeId),
@@ -948,10 +1044,10 @@ function docsHtml(docs) {
     <button class="btn btn-ghost btn-sm" onclick="downloadEmpDoc('${d.id}')">↓</button>
     <button class="btn btn-ghost btn-sm admin-only" style="color:var(--red)" onclick="deleteEmpDoc('${d.id}')">✕</button>
   </div>`).join('');
-  return `<div class="card"><div class="card-header"><span class="card-title">Fichiers joints</span></div><div class="card-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>
-    <div class="card" style="margin-top:1rem">
-      <div class="card-header"><span class="card-title">Ajouter un document</span></div>
-      <div class="card-body" style="display:flex;flex-direction:column;gap:.85rem">
+  return `<div class="dc-card">${ecHead('#22d3ee','DOCS · FICHIERS','Fichiers joints',EC_IC.clip,docs.length?ecPill(docs.length):'')}<div class="dc-body" style="padding:0">${docs.length ? list : '<div class="empty" style="padding:2rem"><p>Aucun document joint.</p></div>'}</div></div>
+    <div class="dc-card" style="margin-top:1rem">
+      ${ecHead('#22d3ee','DOCS · AJOUT','Ajouter un document',EC_IC.file)}
+      <div class="dc-body" style="display:flex;flex-direction:column;gap:.85rem">
         <div class="form-group"><label>Nom du document</label><input type="text" id="pageDocName" class="form-input" placeholder="ex: Contrat de travail"/></div>
         <div class="grid grid-2" style="gap:.75rem">
           <div class="form-group"><label>Date du document</label><input type="date" id="pageDocDate" class="form-input"/></div>
@@ -984,9 +1080,9 @@ function empFormationsHtml() {
   const rows = sorted.map(f => {
     const expired = f.dateExpiration && new Date(f.dateExpiration).getTime() < now;
     const soon    = f.dateExpiration && !expired && (new Date(f.dateExpiration).getTime()-now) < 30*86400000;
-    const badge = expired ? `<span style="background:#ef444418;color:#ef4444;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700">Expiré</span>`
-                : soon    ? `<span style="background:#f59e0b18;color:#f59e0b;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700">⚠ Bientôt</span>`
-                :            `<span style="background:#16a34a18;color:#16a34a;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700">Valide</span>`;
+    const badge = expired ? `<span class="dc-badge dc-b-red"><span class="d"></span>Expiré</span>`
+                : soon    ? `<span class="dc-badge dc-b-amber"><span class="d"></span>Bientôt</span>`
+                :            `<span class="dc-badge dc-b-green"><span class="d"></span>Valide</span>`;
     return `<div style="display:flex;align-items:flex-start;gap:.75rem;padding:.8rem 1.1rem;border-bottom:1px solid var(--border)">
       <span style="font-size:1.3rem;margin-top:1px">📚</span>
       <div style="flex:1;min-width:0">
@@ -1015,8 +1111,8 @@ function empFormationsHtml() {
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
           <span style="font-weight:700;font-size:.875rem">${escHtml(f.titre)}</span>
-          <span style="background:#16a34a18;color:#16a34a;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700">Réalisée</span>
-          <span style="background:#6366f118;color:#6366f1;padding:2px 8px;border-radius:99px;font-size:.66rem;font-weight:600">Plan de formation</span>
+          <span class="dc-badge dc-b-green"><span class="d"></span>Réalisée</span>
+          <span class="dc-badge dc-b-indigo"><span class="d"></span>Plan de formation</span>
         </div>
         ${f.organisme?`<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(f.organisme)}</div>`:''}
         <div style="font-size:.72rem;color:var(--muted);margin-top:2px;display:flex;gap:.75rem;flex-wrap:wrap">
@@ -1029,12 +1125,9 @@ function empFormationsHtml() {
   }).join('');
 
   const totalCount = list.length + acquises.length;
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">📚 Formations & Habilitations</span>
-      <button class="btn btn-primary btn-sm" onclick="openFormationModal()">+ Ajouter</button>
-    </div>
-    <div class="card-body" style="padding:0">
+  return `<div class="dc-card">
+    ${ecHead('#10b981','CARRIÈRE · FORMATION','Formations & Habilitations',EC_IC.book,`<button class="btn btn-primary btn-sm" onclick="openFormationModal()">+ Ajouter</button>`)}
+    <div class="dc-body" style="padding:0">
       ${totalCount ? rows + rowsCollectives : '<div class="empty" style="padding:2rem;text-align:center"><p>Aucune formation enregistrée.</p></div>'}
     </div>
   </div>`;
@@ -1107,7 +1200,7 @@ function empEntretiensHtml() {
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
           <span style="font-size:1.1rem">🗂</span>
           <span style="font-weight:700;font-size:.875rem">${escHtml(EMP_ENT_TYPE_L[e.type]||e.type)}</span>
-          <span style="padding:1px 8px;border-radius:99px;font-size:.66rem;font-weight:700;background:${st.bg};color:${st.c}">${st.l}</span>
+          <span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${st.l}</span>
           <span style="font-size:.72rem;color:var(--muted)">${formatDate(e.date)}</span>
         </div>
         ${canEditEmploye()?`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteEntretien('${e.id}')">✕</button>`:''}
@@ -1118,12 +1211,9 @@ function empEntretiensHtml() {
       ${e.formations?`<div style="margin-top:.3rem;font-size:.8rem;color:var(--muted)"><strong>Formations :</strong> ${escHtml(e.formations)}</div>`:''}
     </div>`;
   }).join('');
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">🗂 Entretiens professionnels</span>
-      ${canEditEmploye()?`<button class="btn btn-primary btn-sm" onclick="openEntretienModal()">+ Ajouter</button>`:''}
-    </div>
-    <div class="card-body" style="padding:0">
+  return `<div class="dc-card">
+    ${ecHead('#6366f1','CARRIÈRE · ENTRETIEN','Entretiens professionnels',EC_IC.chat,canEditEmploye()?`<button class="btn btn-primary btn-sm" onclick="openEntretienModal()">+ Ajouter</button>`:'')}
+    <div class="dc-body" style="padding:0">
       ${list.length?rows:'<div class="empty" style="padding:2rem;text-align:center"><p>Aucun entretien enregistré.</p></div>'}
     </div>
   </div>`;
@@ -1222,17 +1312,14 @@ function empHistoriqueHtml() {
           <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:0 4px" onclick="deleteHistorique('${h.id}')">✕</button>
         </div>
       </div>
-      ${h.motif?`<span style="font-size:.7rem;background:#6366f118;color:#6366f1;padding:1px 7px;border-radius:99px">${MOTIF_L[h.motif]||h.motif}</span>`:''}
+      ${h.motif?`<span class="dc-badge dc-b-indigo"><span class="d"></span>${MOTIF_L[h.motif]||h.motif}</span>`:''}
       ${h.salaire?`<div style="font-size:.75rem;color:var(--muted);margin-top:2px">Salaire brut : ${escHtml(h.salaire)} €</div>`:''}
       ${h.note?`<div style="font-size:.75rem;color:var(--muted);margin-top:2px">${escHtml(h.note)}</div>`:''}
     </div>
   </div>`).join('');
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">📈 Historique des postes</span>
-      <button class="btn btn-primary btn-sm" onclick="openHistoriqueModal()">+ Ajouter</button>
-    </div>
-    <div class="card-body" style="padding:0">
+  return `<div class="dc-card">
+    ${ecHead('#0ea5e9','CARRIÈRE · HISTORIQUE','Historique des postes',EC_IC.trend,`<button class="btn btn-primary btn-sm" onclick="openHistoriqueModal()">+ Ajouter</button>`)}
+    <div class="dc-body" style="padding:0">
       ${list.length?rows:'<div class="empty" style="padding:2rem;text-align:center"><p>Aucun historique enregistré.</p></div>'}
     </div>
   </div>`;
@@ -1322,12 +1409,10 @@ function empArretsHtml() {
       ${canEditEmploye() ? `<button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0" onclick="empDeleteArret('${a.id}')">✕</button>` : ''}
     </div>`;
   }).join('');
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">🤒 Absences & arrêts <span style="font-size:.75rem;font-weight:500;color:var(--muted)">(${joursAnnee}j en ${curYear})</span></span>
-      ${canEditEmploye() ? `<button class="btn btn-primary btn-sm admin-only" onclick="empOpenArret()">+ Ajouter</button>` : ''}
-    </div>
-    <div class="card-body" style="padding:0">
+  const arretsRight = `<div style="display:flex;align-items:center;gap:.5rem">${ecPill(joursAnnee + 'j · ' + curYear)}${canEditEmploye() ? `<button class="btn btn-primary btn-sm admin-only" onclick="empOpenArret()">+ Ajouter</button>` : ''}</div>`;
+  return `<div class="dc-card">
+    ${ecHead('#ef4444','TEMPS · ABSENCES','Absences & arrêts',EC_IC.heart,arretsRight)}
+    <div class="dc-body" style="padding:0">
       ${sorted.length ? rows : '<div class="empty" style="padding:1.5rem;text-align:center"><p style="color:var(--muted);font-size:.85rem">Aucune absence enregistrée</p></div>'}
     </div>
   </div>`;
@@ -1383,7 +1468,10 @@ async function empSaveArret() {
   try {
     let justificatifPath = '';
     if (file) {
-      const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+      // Le premier dossier du chemin doit être auth.uid() (policy du bucket
+      // justificatifs) — déposer dans celui du salarié destinataire échoue en
+      // « violates row-level security policy ». Même correctif qu'à la l.938.
+      const folder = (typeof sbAuthUid === 'function' && await sbAuthUid()) || Auth.getSession().userId;
       justificatifPath = await sbUploadJustificatif(file, folder);
     }
     const saved = await sbSaveAbsence({
@@ -1441,10 +1529,10 @@ function empDiplomesHtml() {
     const isExp = hasExp && new Date(d.dateExpiration) < now;
     const isSoon = hasExp && !isExp && (new Date(d.dateExpiration)-now) < 60*86400000;
     const expBadge = isExp
-      ? `<span style="font-size:.68rem;background:#fee2e2;color:#ef4444;padding:1px 7px;border-radius:99px;font-weight:600">Expiré</span>`
+      ? `<span class="dc-badge dc-b-red"><span class="d"></span>Expiré</span>`
       : isSoon
-      ? `<span style="font-size:.68rem;background:#fef3c7;color:#d97706;padding:1px 7px;border-radius:99px;font-weight:600">Expire bientôt</span>`
-      : hasExp ? `<span style="font-size:.68rem;background:#dcfce7;color:#16a34a;padding:1px 7px;border-radius:99px;font-weight:600">Valide</span>` : '';
+      ? `<span class="dc-badge dc-b-amber"><span class="d"></span>Expire bientôt</span>`
+      : hasExp ? `<span class="dc-badge dc-b-green"><span class="d"></span>Valide</span>` : '';
     return `<div style="display:flex;align-items:flex-start;gap:.85rem;padding:.75rem 1rem;border-bottom:1px solid var(--border)">
       <div style="width:36px;height:36px;border-radius:10px;background:${color}18;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🎓</div>
       <div style="flex:1;min-width:0">
@@ -1453,7 +1541,7 @@ function empDiplomesHtml() {
           ${expBadge}
         </div>
         <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">
-          <span style="background:${color}18;color:${color};padding:1px 7px;border-radius:99px;font-weight:600;font-size:.68rem">${escHtml(TYPE_L[d.type]||d.type)}</span>
+          <span class="dc-badge" style="background:${color}1f;color:${color};border:1px solid ${color}44"><span class="d" style="background:${color}"></span>${escHtml(TYPE_L[d.type]||d.type)}</span>
           ${d.organisme ? ` · ${escHtml(d.organisme)}` : ''}
           ${d.dateObtention ? ` · Obtenu le ${formatDate(d.dateObtention)}` : ''}
           ${d.dateExpiration ? ` · Expire le ${formatDate(d.dateExpiration)}` : ''}
@@ -1465,17 +1553,15 @@ function empDiplomesHtml() {
   }).join('');
 
   const badge = expired > 0
-    ? `<span style="font-size:.72rem;background:#fee2e2;color:#ef4444;padding:1px 8px;border-radius:99px;margin-left:.4rem">${expired} expiré(s)</span>`
+    ? `<span class="dc-badge dc-b-red"><span class="d"></span>${expired} expiré(s)</span>`
     : expiresSoon > 0
-    ? `<span style="font-size:.72rem;background:#fef3c7;color:#d97706;padding:1px 8px;border-radius:99px;margin-left:.4rem">${expiresSoon} à renouveler</span>`
+    ? `<span class="dc-badge dc-b-amber"><span class="d"></span>${expiresSoon} à renouveler</span>`
     : '';
 
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">🎓 Diplômes & habilitations${badge}</span>
-      ${canEditEmploye() ? `<button class="btn btn-primary btn-sm admin-only" onclick="empOpenDiplome()">+ Ajouter</button>` : ''}
-    </div>
-    <div class="card-body" style="padding:0">
+  const diplRight = `<div style="display:flex;gap:.5rem;align-items:center">${badge}${canEditEmploye() ? `<button class="btn btn-primary btn-sm admin-only" onclick="empOpenDiplome()">+ Ajouter</button>` : ''}</div>`;
+  return `<div class="dc-card">
+    ${ecHead('#8b5cf6','CARRIÈRE · DIPLÔMES','Diplômes & habilitations',EC_IC.cap,diplRight)}
+    <div class="dc-body" style="padding:0">
       ${sorted.length ? rows : '<div class="empty" style="padding:1.5rem;text-align:center"><p style="color:var(--muted);font-size:.85rem">Aucun diplôme enregistré</p></div>'}
     </div>
   </div>`;
@@ -1562,7 +1648,7 @@ function empSanctionsHtml() {
       <span style="font-size:1.2rem;margin-top:2px">⚠️</span>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-          <span style="background:${c}18;color:${c};padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700">${TYPE_L[s.type]||s.type}</span>
+          <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${TYPE_L[s.type]||s.type}</span>
           <span style="font-size:.72rem;color:var(--muted)">${formatDate(s.date)}</span>
         </div>
         ${s.motif?`<div style="font-size:.8rem;margin-top:.3rem">${escHtml(s.motif)}</div>`:''}
@@ -1571,12 +1657,9 @@ function empSanctionsHtml() {
       <button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0" onclick="deleteSanction('${s.id}')">✕</button>
     </div>`;
   }).join('');
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">⚠️ Sanctions / Incidents RH</span>
-      <button class="btn btn-sm" style="background:#ef444418;color:#ef4444;border:1px solid #ef444430" onclick="openSanctionModal()">+ Ajouter</button>
-    </div>
-    <div class="card-body" style="padding:0">
+  return `<div class="dc-card">
+    ${ecHead('#dc2626','ADMIN · DISCIPLINE','Sanctions / Incidents RH',EC_IC.alert,`<button class="btn btn-sm" style="background:#ef444418;color:#ef4444;border:1px solid #ef444430" onclick="openSanctionModal()">+ Ajouter</button>`)}
+    <div class="dc-body" style="padding:0">
       ${list.length?rows:'<div class="empty" style="padding:2rem;text-align:center"><p>Aucun incident enregistré.</p></div>'}
     </div>
   </div>`;
@@ -1639,12 +1722,9 @@ function deleteSanction(id) {
 function empNotesAdminHtml() {
   const store=JSON.parse(localStorage.getItem(NOTES_ADM_KEY)||'{}');
   const note=store[currentEmployeId]||'';
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">🔒 Notes privées (admin)</span>
-      <span style="font-size:.7rem;color:var(--muted)">Invisible aux autres rôles</span>
-    </div>
-    <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+  return `<div class="dc-card">
+    ${ecHead('#64748b','ADMIN · CONFIDENTIEL','Notes privées (admin)',EC_IC.lock,ecPill('Invisible aux autres rôles'))}
+    <div class="dc-body" style="display:flex;flex-direction:column;gap:.75rem">
       <textarea id="notesAdminArea" class="form-input" rows="5" placeholder="Notes confidentielles sur ce salarié…" style="resize:vertical">${escHtml(note)}</textarea>
       <button class="btn btn-primary btn-sm" style="align-self:flex-end" onclick="saveNotesAdmin()">💾 Enregistrer</button>
     </div>
@@ -1670,7 +1750,7 @@ function empAlertesHtml() {
     const late=!isDone && a.date && new Date(a.date).getTime()<now;
     const soon=!isDone && !late && a.date && (new Date(a.date).getTime()-now)<30*86400000;
     const color=late?'#ef4444':soon?'#f59e0b':'#6366f1';
-    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-bottom:1px solid var(--border);${isDone?'opacity:.5':''}">
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-bottom:1px solid var(--border);border-left:3px solid ${isDone?'#94a3b8':color};${isDone?'opacity:.5':''}">
       <input type="checkbox" ${isDone?'checked':''} onchange="toggleAlerte('${a.id}')" style="width:16px;height:16px;flex-shrink:0;cursor:pointer"/>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:.84rem;${isDone?'text-decoration:line-through':''}">${TYPE_L[a.type]||a.type}</div>
@@ -1680,12 +1760,9 @@ function empAlertesHtml() {
       <button class="btn btn-ghost btn-sm" style="color:var(--red);flex-shrink:0;padding:0 4px" onclick="deleteAlerte('${a.id}')">✕</button>
     </div>`;
   };
-  return `<div class="card">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span class="card-title">🔔 Rappels & Alertes</span>
-      <button class="btn btn-primary btn-sm" onclick="openAlerteModal()">+ Ajouter</button>
-    </div>
-    <div class="card-body" style="padding:0">
+  return `<div class="dc-card">
+    ${ecHead('#f59e0b','SUIVI · RAPPELS','Rappels & Alertes',EC_IC.bell,`<button class="btn btn-primary btn-sm" onclick="openAlerteModal()">+ Ajouter</button>`)}
+    <div class="dc-body" style="padding:0">
       ${sorted.length?sorted.map(a=>renderRow(a,false)).join(''):''}
       ${!sorted.length&&!done.length?'<div class="empty" style="padding:2rem;text-align:center"><p>Aucun rappel.</p></div>':''}
       ${done.length?`<details style="padding:.5rem 1rem"><summary style="font-size:.75rem;color:var(--muted);cursor:pointer">${done.length} terminé(s)</summary>${done.map(a=>renderRow(a,true)).join('')}</details>`:''}
@@ -1859,7 +1936,8 @@ async function uploadDocFromPage() {
   const category = document.getElementById('pageDocCategory').value;
   try {
     const emp = getEmploye();
-    const folder = (emp && emp.profileId) ? emp.profileId : Auth.getSession().userId;
+    // Idem : le dossier doit être celui du déposant, pas du destinataire.
+    const folder = (typeof sbAuthUid === 'function' && await sbAuthUid()) || Auth.getSession().userId;
     const fichierPath = await sbUploadJustificatif(pageDocFile, folder);
     const saved = await sbSaveDocEmploye({
       employeId: currentEmployeId, name,
@@ -1934,10 +2012,19 @@ function generateAttestation() {
   const e = getEmploye();
   if (!e) return;
   const settings = DB.get(DB.keys.settings) || {};
-  const etab = settings.etablissement || 'Établissement';
-  const ville = settings.ville || '';
-  const tel = settings.tel || '';
-  const email = settings.email || '';
+  // Toutes les données injectées dans le document sont échappées ICI : un nom,
+  // un poste ou un réglage d'établissement contenant du HTML ne doit jamais
+  // s'exécuter dans la fenêtre générée (même modèle que ct2GenererDoc).
+  const esc = (typeof escHtml === 'function') ? escHtml : (s => String(s == null ? '' : s));
+  const etab = esc(settings.etablissement || 'Établissement');
+  const ville = esc(settings.ville || '');
+  const tel = esc(settings.tel || '');
+  const email = esc(settings.email || '');
+  const prenomE = esc(e.prenom || '');
+  const nomE = esc(e.nom || '');
+  const nomMajE = esc((e.nom || '').toUpperCase());
+  const posteE = esc(e.poste || '');
+  const heuresE = esc(e.heuresContrat || '');
   const today = new Date();
   const dateStr = today.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const dateEmb = e.dateEmbauche
@@ -1950,7 +2037,7 @@ function generateAttestation() {
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Attestation d'emploi — ${e.prenom} ${e.nom}</title>
+<title>Attestation d'emploi — ${prenomE} ${nomE}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;background:#fff;padding:0}
@@ -1980,7 +2067,7 @@ function generateAttestation() {
 </head>
 <body>
 <div class="no-print" style="background:#1e293b;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;font-family:sans-serif;font-size:13px">
-  <span>📄 Attestation d'emploi — ${e.prenom} ${e.nom}</span>
+  <span>📄 Attestation d'emploi — ${prenomE} ${nomE}</span>
   <button onclick="window.print()" style="background:#6366f1;color:#fff;border:none;padding:7px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">🖨 Imprimer / Enregistrer PDF</button>
 </div>
 <div class="page">
@@ -2005,17 +2092,17 @@ function generateAttestation() {
   </div>
 
   <div class="info-box">
-    <span class="label">Nom et prénom</span><span class="value">${e.nom.toUpperCase()} ${e.prenom}</span>
-    <span class="label">Poste occupé</span><span class="value">${e.poste || 'Non renseigné'}</span>
+    <span class="label">Nom et prénom</span><span class="value">${nomMajE} ${prenomE}</span>
+    <span class="label">Poste occupé</span><span class="value">${posteE || 'Non renseigné'}</span>
     ${dateEmb ? '<span class="label">Date d\'embauche</span><span class="value">' + dateEmb + '</span>' : ''}
     <span class="label">Situation actuelle</span><span class="value">${statut.charAt(0).toUpperCase() + statut.slice(1)}</span>
-    ${e.heuresContrat ? '<span class="label">Contrat</span><span class="value">' + e.heuresContrat + ' heures / semaine</span>' : ''}
+    ${e.heuresContrat ? '<span class="label">Contrat</span><span class="value">' + heuresE + ' heures / semaine</span>' : ''}
   </div>
 
   <div class="body-text">
     ${dateEmb
-      ? `Cette personne est employée au sein de notre établissement depuis le <span class="highlight">${dateEmb}</span> en qualité de <span class="highlight">${e.poste || 'collaborateur(trice)'}</span>, et est actuellement <span class="highlight">${statut}</span>.`
-      : `Cette personne est employée au sein de notre établissement en qualité de <span class="highlight">${e.poste || 'collaborateur(trice)'}</span>, et est actuellement <span class="highlight">${statut}</span>.`
+      ? `Cette personne est employée au sein de notre établissement depuis le <span class="highlight">${dateEmb}</span> en qualité de <span class="highlight">${posteE || 'collaborateur(trice)'}</span>, et est actuellement <span class="highlight">${statut}</span>.`
+      : `Cette personne est employée au sein de notre établissement en qualité de <span class="highlight">${posteE || 'collaborateur(trice)'}</span>, et est actuellement <span class="highlight">${statut}</span>.`
     }
   </div>
 

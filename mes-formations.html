@@ -55,14 +55,14 @@
 
       <div class="mf2-body">
         <div class="mf2-main">
-          <div class="mf2-card"><div id="mfList"></div></div>
+          <div class="dc-card"><div id="mfList"></div></div>
         </div>
 
         <aside class="mf2-rail">
-          <div id="mfParcours" class="mf2-parcours"></div>
-          <div id="mfDomaines" class="v2-blk v2-rail-blk"></div>
-          <div id="mfSessions" class="v2-blk v2-rail-blk"></div>
-          <div id="mfEvaluations" class="v2-blk v2-rail-blk"></div>
+          <div id="mfParcours" class="dc-card"></div>
+          <div id="mfDomaines" class="dc-card"></div>
+          <div id="mfSessions" class="dc-card"></div>
+          <div id="mfEvaluations" class="dc-card"></div>
         </aside>
       </div>
 
@@ -135,7 +135,7 @@ let _mfCache = [];
 let _mfEmployesMap = new Map();
 
 function mfEur(n) { return (n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
-function mfToday() { return new Date().toISOString().slice(0, 10); }
+function mfToday() { return today(); }
 
 async function initMesFormations() {
   const s = Auth.requireAuth();

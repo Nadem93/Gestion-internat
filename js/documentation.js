@@ -36,7 +36,10 @@ async function saveDocumentation() {
   if (file.size > 3 * 1024 * 1024) { toast('Fichier trop lourd (max 3 Mo)', 'error'); return; }
   const session = Auth.getSession();
   try {
-    const path = await sbUploadJustificatif(file, 'documentation');
+    // RLS Storage : 1er dossier = auth.uid() de l'uploadeur (un dossier fixe
+    // « documentation » serait refusé par la politique du bucket).
+    const uid = (typeof sbAuthUid === 'function') ? await sbAuthUid() : null;
+    const path = await sbUploadJustificatif(file, uid || 'documentation');
     const saved = await sbSaveDocumentation({
       titre, categorie,
       fichierNom: file.name, fichierMime: file.type, fichierTaille: file.size, fichierPath: path,

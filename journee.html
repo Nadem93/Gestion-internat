@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Journée — Ma tournée — FTR</title>
+  <title>Journée — Ma tournée — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -55,30 +55,52 @@
         <!-- RAIL : progression, prochaine tâche, répartition -->
         <div class="jn2-side">
 
-          <div class="v2-blk jn2-ring-blk">
-            <div class="jn2-ring">
-              <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
-                <circle cx="66" cy="66" r="58" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
-                <circle id="jn2RingArc" cx="66" cy="66" r="58" fill="none" stroke="#2dd4bf" stroke-width="12"
-                        stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
-              </svg>
-              <div class="jn2-ring-c">
-                <div class="jn2-ring-p" id="jn2Pct">0%</div>
-                <div class="jn2-ring-l">tournée</div>
+          <div class="dc-card">
+            <div class="dc-head"><div class="dc-head-l">
+              <span class="dc-chip" style="background:rgba(20,184,166,.16);color:#2dd4bf">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+              </span>
+              <div style="min-width:0"><div class="dc-eyebrow">PROGRESSION</div><div class="dc-title">Tournée du jour</div></div>
+            </div></div>
+            <div class="dc-body jn2-ring-blk">
+              <div class="jn2-ring">
+                <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+                  <circle cx="66" cy="66" r="58" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+                  <circle id="jn2RingArc" cx="66" cy="66" r="58" fill="none" stroke="#2dd4bf" stroke-width="12"
+                          stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+                </svg>
+                <div class="jn2-ring-c">
+                  <div class="jn2-ring-p" id="jn2Pct">0%</div>
+                  <div class="jn2-ring-l">tournée</div>
+                </div>
               </div>
+              <div class="jn2-ring-x" id="jn2Count"></div>
+              <div class="jn2-ring-r" id="jn2Reports"></div>
             </div>
-            <div class="jn2-ring-x" id="jn2Count"></div>
-            <div class="jn2-ring-r" id="jn2Reports"></div>
           </div>
 
-          <div class="v2-blk v2-rail-blk">
-            <div class="v2-blk-sub">Prochaine tâche</div>
-            <div id="jn2Next"></div>
+          <div class="dc-card">
+            <div class="dc-head"><div class="dc-head-l">
+              <span class="dc-chip" style="background:rgba(129,140,248,.16);color:#818cf8">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+              </span>
+              <div style="min-width:0"><div class="dc-eyebrow">À VENIR</div><div class="dc-title">Prochaine tâche</div></div>
+            </div></div>
+            <div class="dc-body">
+              <div id="jn2Next"></div>
+            </div>
           </div>
 
-          <div class="v2-blk v2-rail-blk">
-            <div class="v2-blk-sub">Répartition</div>
-            <div class="jn2-break" id="jn2Break"></div>
+          <div class="dc-card">
+            <div class="dc-head"><div class="dc-head-l">
+              <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              </span>
+              <div style="min-width:0"><div class="dc-eyebrow">PAR NATURE</div><div class="dc-title">Répartition</div></div>
+            </div></div>
+            <div class="dc-body">
+              <div class="jn2-break" id="jn2Break"></div>
+            </div>
           </div>
 
           <a class="jn2-cta" href="transmissions.html" title="La coche garde la trace — la transmission raconte l'essentiel">

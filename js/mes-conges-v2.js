@@ -48,6 +48,15 @@
   };
   const svg = (p, w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' +
     (w || 2) + '" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  /* Icône dimensionnée pour les chips Console Data (dc-chip / dc-kpi-ico). */
+  const svg16 = (p, w) => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="' +
+    (w || 2) + '" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  /* En-tête de carte Console Data : chip coloré + eyebrow + titre + pill méta. */
+  const dcHead = (col, eyebrow, title, icon, right) =>
+    `<div class="dc-head"><div class="dc-head-l">` +
+    `<span class="dc-chip" style="background:${col}22;color:${col}">${svg16(icon)}</span>` +
+    `<div style="min-width:0"><div class="dc-eyebrow">${esc(eyebrow)}</div><div class="dc-title">${esc(title)}</div></div>` +
+    `</div>${right || ''}</div>`;
 
   /* ── Utilitaires ────────────────────────────────────────────────────── */
   const esc = s => (typeof escHtml === 'function' ? escHtml(s) : String(s == null ? '' : s)
@@ -113,18 +122,19 @@
       .filter(c => c.statut === 'accepte' && c.debut && new Date(c.debut).getFullYear() === year)
       .reduce((s, c) => s + jours(c), 0);
     const k = [
-      { n: joursPris, l: 'Jours pris (' + year + ')', c: '#22d3ee', i: IC.sun },
-      { n: cache.filter(c => c.statut === 'en_attente').length, l: 'En attente', c: '#f59e0b', i: IC.hourglass },
-      { n: cache.filter(c => c.statut === 'accepte').length, l: 'Demandes acceptées', c: '#10b981', i: IC.check },
-      { n: cache.filter(c => c.statut === 'refuse').length, l: 'Demandes refusées', c: '#ef4444', i: IC.cross }
+      { n: joursPris, l: 'Jours pris', sub: 'Année ' + year, c: '#22d3ee', i: IC.sun },
+      { n: cache.filter(c => c.statut === 'en_attente').length, l: 'En attente', sub: 'Demandes à valider', c: '#f59e0b', i: IC.hourglass },
+      { n: cache.filter(c => c.statut === 'accepte').length, l: 'Acceptées', sub: 'Demandes validées', c: '#10b981', i: IC.check },
+      { n: cache.filter(c => c.statut === 'refuse').length, l: 'Refusées', sub: 'Demandes refusées', c: '#ef4444', i: IC.cross }
     ];
     el.innerHTML = k.map(s => `
-      <div class="v2-k mcv-k">
-        <span class="v2-k-ico" style="background:${s.c}22;color:${s.c}">${svg(s.i)}</span>
-        <div>
-          <span class="v2-k-n" style="color:${s.c}">${s.n}</span>
-          <span class="v2-k-l">${esc(s.l)}</span>
+      <div class="dc-kpi" style="--dc-c:${s.c}">
+        <div class="dc-kpi-top">
+          <span class="dc-kpi-label">${esc(s.l)}</span>
+          <span class="dc-kpi-ico" style="color:${s.c}">${svg16(s.i)}</span>
         </div>
+        <div class="dc-kpi-val" style="color:${s.c}">${s.n}</div>
+        <div class="dc-kpi-sub">${esc(s.sub)}</div>
       </div>`).join('');
   }
 
@@ -160,18 +170,17 @@
     let html = '';
 
     /* En attente */
-    html += `<div class="mcv-sec">
-      <span class="mcv-sec-i" style="color:#fbbf24">${svg(IC.clock)}</span>
-      <span class="mcv-sec-t">En attente de validation</span>
-      <span class="mcv-sec-n">${attente.length}</span>
-    </div>`;
+    html += `<div class="dc-card" style="margin-bottom:16px">`;
+    html += dcHead('#f59e0b', 'File d\'attente', 'En attente de validation', IC.clock,
+      `<span class="dc-pill dim">${attente.length}</span>`);
+    html += `<div class="dc-body">`;
     if (!attente.length) {
-      html += `<div class="v2-blk mcv-vide"><div class="v2-blk-vide">Aucune demande en attente.</div></div>`;
+      html += `<div class="v2-blk-vide">Aucune demande en attente.</div>`;
     } else {
       html += `<div class="mcv-pend">` + attente.map(c => {
         const col = MCV.typeColor(c.type);
         const j = jours(c);
-        return `<div class="mcv-p" style="--tc:${col}">
+        return `<div class="mcv-p" style="--tc:${col};border-left:3px solid ${col}">
           <span class="mcv-p-cal">
             <span class="mcv-p-cal-m">${MOIS_C[parseInt((c.debut || '').slice(5, 7), 10) - 1] || '—'}</span>
             <span class="mcv-p-cal-d">${esc((c.debut || '').slice(8, 10) || '—')}</span>
@@ -184,9 +193,7 @@
             <div class="mcv-p-per">${esc(fdate(c.debut))} → ${esc(fdate(c.fin))}</div>
             <div class="mcv-p-s">${c.motif ? esc(c.motif) : 'Demandé le ' + esc(c.dateDemande ? fdate(c.dateDemande) : '—')}</div>
           </div>
-          <span class="v2-pill mcv-pill" style="color:${ST.en_attente.c};background:${ST.en_attente.c}1c">
-            ${svg(IC.hourglass, 2.2)}En attente
-          </span>
+          <span class="dc-badge dc-b-amber"><span class="d"></span>En attente</span>
           <button type="button" class="mcv-x" title="Annuler la demande"
                   aria-label="Annuler la demande" onclick="cancelMesConge('${esc(c.id)}')">
             ${svg(IC.cross, 2.5)}
@@ -194,17 +201,16 @@
         </div>`;
       }).join('') + `</div>`;
     }
+    html += `</div></div>`;
 
     /* Traitées */
-    html += `<div class="mcv-sec">
-      <span class="mcv-sec-i" style="color:#818cf8">${svg(IC.file)}</span>
-      <span class="mcv-sec-t">Demandes traitées</span>
-      <span class="mcv-sec-n">${traitees.length}</span>
-    </div>`;
+    html += `<div class="dc-card">`;
+    html += dcHead('#6366f1', 'Historique', 'Demandes traitées', IC.file,
+      `<span class="dc-pill dim">${traitees.length}</span>`);
     if (!traitees.length) {
-      html += `<div class="v2-blk mcv-vide"><div class="v2-blk-vide">Aucune demande traitée pour l'instant.</div></div>`;
+      html += `<div class="dc-body"><div class="v2-blk-vide">Aucune demande traitée pour l'instant.</div></div>`;
     } else {
-      html += `<div class="v2-blk pad0 mcv-tblwrap"><div class="mcv-scroll"><table class="v2-table mcv-tbl">
+      html += `<div class="mcv-scroll"><table class="v2-table mcv-tbl">
         <thead><tr>
           <th>Type</th><th>Période</th><th style="text-align:center">Jours</th>
           <th>Statut</th><th>Traité par</th>
@@ -213,16 +219,18 @@
           const col = MCV.typeColor(c.type);
           const st = ST[c.statut] || ST.en_attente;
           const j = jours(c);
+          const bcls = c.statut === 'accepte' ? 'dc-b-green' : (c.statut === 'refuse' ? 'dc-b-red' : 'dc-b-amber');
           return `<tr>
             <td><span class="mcv-td-type"><span class="mcv-dot" style="background:${col}"></span>${esc(MCV.typeLabel(c.type))}</span></td>
             <td class="mcv-td-m">${esc(fdate(c.debut))} → ${esc(fdate(c.fin))}</td>
             <td class="mcv-td-m" style="text-align:center">${j}</td>
-            <td><span class="v2-pill mcv-pill" style="color:${st.c};background:${st.c}1c">${svg(c.statut === 'accepte' ? IC.check : IC.cross, 2.4)}${esc(st.l)}</span></td>
+            <td><span class="dc-badge ${bcls}"><span class="d"></span>${esc(st.l)}</span></td>
             <td class="mcv-td-m">${esc(c.traitePar || '—')}${c.statut === 'refuse' && c.reponseMotif ? `<div class="mcv-refus">${esc(c.reponseMotif)}</div>` : ''}</td>
           </tr>`;
         }).join('') +
-        `</tbody></table></div></div>`;
+        `</tbody></table></div>`;
     }
+    html += `</div>`;
 
     el.innerHTML = html;
   }
@@ -235,12 +243,10 @@
 
     /* Mes compteurs */
     const s = MCV.soldes;
-    html += `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h">
-        <span class="mcv-sec-i" style="color:#22d3ee">${svg(IC.layers)}</span>
-        <span class="v2-blk-t">Mes compteurs</span>
-        ${s ? `<span class="v2-blk-lien" style="color:var(--v2-t7)">${esc(s.annee)}</span>` : ''}
-      </div>`;
+    html += `<div class="dc-card">`;
+    html += dcHead('#22d3ee', 'Soldes', 'Mes compteurs', IC.layers,
+      s ? `<span class="dc-pill dim">${esc(s.annee)}</span>` : '');
+    html += `<div class="dc-body">`;
     if (s) {
       const lignes = [
         { l: 'CP N-1', v: s.cp_n1, c: '#f59e0b' },
@@ -252,7 +258,7 @@
       ].filter(x => x.v !== null && x.v !== undefined);
       html += lignes.length
         ? `<div class="mcv-cpt">` + lignes.map(x => `
-            <div class="mcv-cpt-i"><span class="mcv-cpt-l">${esc(x.l)}</span>
+            <div class="mcv-cpt-i" style="border-left:3px solid ${x.c};padding-left:10px"><span class="mcv-cpt-l">${esc(x.l)}</span>
             <span class="mcv-cpt-v" style="color:${x.c}">${esc(String(x.v).replace('.', ','))}</span>
             <span class="mcv-cpt-u">j</span></div>`).join('') + `</div>`
         : `<div class="v2-blk-vide">Aucun compteur saisi.</div>`;
@@ -261,22 +267,20 @@
     } else {
       html += `<div class="v2-blk-vide">Aucun compteur saisi par l'administration.</div>`;
     }
-    html += `</div>`;
+    html += `</div></div>`;
 
     /* Prochains congés */
     const today = ymd(new Date());
     const avenir = cache.filter(c => c.statut === 'accepte' && c.fin && c.fin >= today)
       .sort((a, b) => (a.debut || '').localeCompare(b.debut || '')).slice(0, 5);
-    html += `<div class="v2-blk v2-rail-blk mcv-blk-cyan">
-      <div class="v2-blk-h">
-        <span class="mcv-sec-i" style="color:#22d3ee">${svg(IC.cal)}</span>
-        <span class="v2-blk-t" style="color:#a5f3fc">Prochains congés</span>
-      </div>`;
+    html += `<div class="dc-card mcv-blk-cyan">`;
+    html += dcHead('#22d3ee', 'À venir', 'Prochains congés', IC.cal);
+    html += `<div class="dc-body">`;
     html += avenir.length
       ? `<div class="mcv-next">` + avenir.map(c => {
           const col = MCV.typeColor(c.type);
           const j = jours(c);
-          return `<div class="mcv-next-i">
+          return `<div class="mcv-next-i" style="border-left:3px solid ${col};padding-left:10px">
             <span class="mcv-dot" style="background:${col}"></span>
             <div class="mcv-next-b">
               <div class="mcv-next-t">${esc(MCV.typeLabel(c.type))}</div>
@@ -286,18 +290,16 @@
           </div>`;
         }).join('') + `</div>`
       : `<div class="v2-blk-vide">Aucun congé accepté à venir.</div>`;
-    html += `</div>`;
+    html += `</div></div>`;
 
     /* Jours posés par mois */
     const parMois = new Array(12).fill(0);
     cache.filter(c => c.statut === 'accepte' && c.debut && new Date(c.debut).getFullYear() === year)
       .forEach(c => { parMois[new Date(c.debut).getMonth()] += jours(c); });
     const maxM = Math.max.apply(null, parMois);
-    html += `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h">
-        <span class="mcv-sec-i" style="color:#f59e0b">${svg(IC.chart)}</span>
-        <span class="v2-blk-t">Jours posés — ${year}</span>
-      </div>`;
+    html += `<div class="dc-card">`;
+    html += dcHead('#f59e0b', 'Historique', 'Jours posés — ' + year, IC.chart);
+    html += `<div class="dc-body">`;
     html += maxM > 0
       ? `<div class="mcv-chart">` + parMois.map((v, i) => `
           <div class="mcv-chart-c" title="${MOIS[i]} : ${v} jour${v > 1 ? 's' : ''}">
@@ -306,7 +308,7 @@
             <span class="mcv-chart-l">${MOIS_C[i].slice(0, 1)}</span>
           </div>`).join('') + `</div>`
       : `<div class="v2-blk-vide">Aucun congé accepté cette année.</div>`;
-    html += `</div>`;
+    html += `</div></div>`;
 
     /* Répartition par type */
     const parType = {};
@@ -314,11 +316,9 @@
       .forEach(c => { parType[c.type || 'autre'] = (parType[c.type || 'autre'] || 0) + jours(c); });
     const types = Object.keys(parType).sort((a, b) => parType[b] - parType[a]);
     const totT = types.reduce((s2, t) => s2 + parType[t], 0);
-    html += `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h">
-        <span class="mcv-sec-i" style="color:#a855f7">${svg(IC.layers)}</span>
-        <span class="v2-blk-t">Répartition par type</span>
-      </div>`;
+    html += `<div class="dc-card">`;
+    html += dcHead('#a855f7', 'Ventilation', 'Répartition par type', IC.layers);
+    html += `<div class="dc-body">`;
     html += types.length
       ? types.map(t => {
           const col = MCV.typeColor(t);
@@ -327,11 +327,11 @@
             <div class="mcv-rep-h"><span class="mcv-dot" style="background:${col}"></span>
               <span class="mcv-rep-l">${esc(MCV.typeLabel(t))}</span>
               <span class="mcv-rep-v">${parType[t]} j</span></div>
-            <div class="v2-prog"><span style="width:${pct}%;background:${col}"></span></div>
+            <div class="al-prog-bar"><span style="width:${pct}%;background:${col}"></span></div>
           </div>`;
         }).join('')
       : `<div class="v2-blk-vide">Aucun congé accepté cette année.</div>`;
-    html += `</div>`;
+    html += `</div></div>`;
 
     el.innerHTML = html;
   }
@@ -358,15 +358,12 @@
     const typesVus = [];
     cells.forEach(c => { if (c.hit && typesVus.indexOf(c.hit.type) === -1) typesVus.push(c.hit.type); });
 
-    let html = `<div class="v2-blk mcv-calblk">
-      <div class="v2-blk-h">
-        <span class="mcv-sec-i" style="color:#f59e0b">${svg(IC.cal)}</span>
-        <span class="v2-blk-t">Mon calendrier — ${MOIS[m]} ${y}</span>
-        <span class="mcv-leg">${typesVus.length
-          ? typesVus.map(t => `<span class="mcv-leg-i"><span class="mcv-leg-c" style="background:${MCV.typeColor(t)}"></span>${esc(MCV.typeLabel(t))}</span>`).join('')
-          : ''}</span>
-      </div>
-      <div class="mcv-scroll"><div class="mcv-cal">` +
+    const legHtml = `<span class="mcv-leg">${typesVus.length
+      ? typesVus.map(t => `<span class="mcv-leg-i"><span class="mcv-leg-c" style="background:${MCV.typeColor(t)}"></span>${esc(MCV.typeLabel(t))}</span>`).join('')
+      : ''}</span>`;
+    let html = `<div class="dc-card" style="min-width:0">` +
+      dcHead('#f59e0b', 'Planning', 'Mon calendrier — ' + MOIS[m] + ' ' + y, IC.cal, legHtml) +
+      `<div class="dc-body"><div class="mcv-scroll"><div class="mcv-cal">` +
       cells.map(c => {
         const col = c.hit ? MCV.typeColor(c.hit.type) : '';
         const att = c.hit && c.hit.statut === 'en_attente';
@@ -379,16 +376,14 @@
           title="${esc(c.d + ' ' + MOIS[m] + (t ? ' · ' + t : ''))}"
           style="background:${bg};color:${fg}${att ? ';border-color:' + col : ''}">${c.d}</span>`;
       }).join('') +
-      `</div></div></div>`;
+      `</div></div></div></div>`;
 
     /* Suivi de la dernière demande */
     const derniere = [...cache].sort((a, b) =>
       String(b.dateDemande || '').localeCompare(String(a.dateDemande || '')))[0];
-    html += `<div class="v2-blk mcv-wfblk">
-      <div class="v2-blk-h">
-        <span class="mcv-sec-i" style="color:#818cf8">${svg(IC.route)}</span>
-        <span class="v2-blk-t">Suivi de ma dernière demande</span>
-      </div>`;
+    html += `<div class="dc-card" style="min-width:0">`;
+    html += dcHead('#6366f1', 'Suivi', 'Suivi de ma dernière demande', IC.route);
+    html += `<div class="dc-body">`;
     if (!derniere) {
       html += `<div class="v2-blk-vide">Aucune demande déposée.</div>`;
     } else {
@@ -418,7 +413,7 @@
         html += `<div class="v2-note v2-note-err" style="margin-top:6px">${svg(IC.cross)}<span>${esc(derniere.reponseMotif)}</span></div>`;
       }
     }
-    html += `</div>`;
+    html += `</div></div>`;
 
     el.innerHTML = html;
   }

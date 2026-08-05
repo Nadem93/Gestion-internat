@@ -340,7 +340,7 @@
         syncs: [] },
       { id: 'm-admin', nom: 'Administration', page: 'admin.html · admin-modules.html', ic: IC.gear, c: ['#64748b', '#94a3b8'], accent: '#cbd5e1',
         desc: 'Configuration complète du logiciel. Réservé aux administrateurs.',
-        feats: ['Gestion des utilisateurs (ajout, droits, mot de passe)',
+        feats: ['Gestion des employés et de leurs comptes (ajout, droits, mot de passe)',
           'Activation / désactivation des modules',
           "Paramètres de l'établissement (nom, logo, couleur)",
           'Gestion multi-établissements', 'Export des données', 'Logs de connexion et audit'],
@@ -416,24 +416,38 @@
     }).join('');
   }
 
-  function modCard(m, grpId) {
+  function modCard(m, grpId, grpTitre) {
     var id = m.id || grpId;
-    return '<article class="gf-mod" id="' + esc(id) + '" style="--c:' + m.accent + '" ' +
+    var a = m.accent;
+    /* Console Data : carte .dc-card (padding:0 pour annuler celui de .gf-mod,
+       qui reste obligatoire pour le filtre et le scroll-spy) + en-tête .dc-head
+       (chip translucide + eyebrow domaine + titre + pill mono du fichier) puis
+       corps .dc-body. Les synchros deviennent des .dc-badge à la teinte du module.
+       Les classes fonctionnelles gf-mod / gf-mod-d / gf-feat / gf-syncs et
+       data-q / id sont conservées à l'identique. */
+    return '<article class="gf-mod dc-card" id="' + esc(id) + '" style="--c:' + a + ';padding:0" ' +
       'data-q="' + esc((m.nom + ' ' + m.page + ' ' + m.desc + ' ' + m.feats.join(' ')).toLowerCase()) + '">' +
-      '<div class="gf-mod-h">' +
-        '<span class="gf-mod-i" style="background:' + grad(m.c) + '">' + svg(m.ic) + '</span>' +
-        '<div class="gf-mod-hx"><div class="gf-mod-t">' + esc(m.nom) + '</div>' +
-        '<span class="gf-mod-p">' + esc(m.page) + '</span></div>' +
+      '<div class="dc-head" style="position:relative;z-index:1">' +
+        '<div class="dc-head-l">' +
+          '<span class="dc-chip" style="background:' + a + '22;color:' + a + '">' + svg(m.ic) + '</span>' +
+          '<div style="min-width:0">' +
+            '<div class="dc-eyebrow">' + esc(grpTitre || '') + '</div>' +
+            '<div class="dc-title" style="white-space:normal">' + esc(m.nom) + '</div>' +
+            '<span class="dc-pill dim" style="display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;margin-top:6px">' + esc(m.page) + '</span>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
-      '<p class="gf-mod-d">' + rich(m.desc) + '</p>' +
-      '<ul class="gf-feat">' + m.feats.map(function (f) {
-        return '<li>' + rich(f) + '</li>';
-      }).join('') + '</ul>' +
-      (m.syncs.length
-        ? '<div class="gf-syncs">' + m.syncs.map(function (s) {
-            return '<span class="gf-tag">' + esc(s) + '</span>';
-          }).join('') + '</div>'
-        : '') +
+      '<div class="dc-body" style="position:relative;z-index:1">' +
+        '<p class="gf-mod-d">' + rich(m.desc) + '</p>' +
+        '<ul class="gf-feat">' + m.feats.map(function (f) {
+          return '<li>' + rich(f) + '</li>';
+        }).join('') + '</ul>' +
+        (m.syncs.length
+          ? '<div class="gf-syncs">' + m.syncs.map(function (s) {
+              return '<span class="dc-badge" style="background:' + a + '1a;color:' + a + ';border:1px solid ' + a + '44">' + esc(s) + '</span>';
+            }).join('') + '</div>'
+          : '') +
+      '</div>' +
       '</article>';
   }
 
@@ -445,19 +459,24 @@
     /* — Vue d'ensemble — */
     h += '<section id="intro" class="gf-sec">' +
       '<div class="v2-sep"><span class="v2-sep-txt">Organisation générale</span><span class="v2-sep-line"></span></div>' +
-      '<div class="v2-blk">' +
-        '<div class="v2-blk-h">' + svg(IC.grid, 'v2-blk-ico') +
-          '<span class="v2-blk-t">Une source centrale : la fiche résident</span></div>' +
-        '<p class="gf-p">INTERNALIS est organisé autour d’une <strong>source centrale</strong> : la fiche résident. ' +
-        'Tous les modules s’y connectent pour lire ou écrire des données.</p>' +
-        '<div class="gf-flow">' + FLOW.map(function (n, i) {
-          return (i ? '<span class="gf-flow-a">↔</span>' : '') +
-            '<span class="gf-flow-n' + (n.on ? ' on' : '') + '">' + esc(n.l) + '</span>';
-        }).join('') + '</div>' +
-        '<div class="gf-note gf-note-info">' +
-          '<div class="gf-note-h">' + svg(IC.bulb, 'v2-blk-ico') + 'Principe clé</div>' +
-          '<p>Les données saisies dans un module sont <strong>immédiatement disponibles</strong> dans les autres ' +
-          'modules concernés. Il n’y a pas d’import/export manuel — tout est synchronisé en temps réel.</p>' +
+      '<div class="dc-card" style="padding:0">' +
+        '<div class="dc-head"><div class="dc-head-l">' +
+          '<span class="dc-chip" style="background:#818cf822;color:#818cf8">' + svg(IC.grid) + '</span>' +
+          '<div style="min-width:0"><div class="dc-eyebrow">Architecture</div>' +
+          '<div class="dc-title" style="white-space:normal">Une source centrale : la fiche résident</div></div>' +
+        '</div></div>' +
+        '<div class="dc-body">' +
+          '<p class="gf-p">INTERNALIS est organisé autour d’une <strong>source centrale</strong> : la fiche résident. ' +
+          'Tous les modules s’y connectent pour lire ou écrire des données.</p>' +
+          '<div class="gf-flow">' + FLOW.map(function (n, i) {
+            return (i ? '<span class="gf-flow-a">↔</span>' : '') +
+              '<span class="gf-flow-n' + (n.on ? ' on' : '') + '">' + esc(n.l) + '</span>';
+          }).join('') + '</div>' +
+          '<div class="gf-note gf-note-info">' +
+            '<div class="gf-note-h">' + svg(IC.bulb, 'v2-blk-ico') + 'Principe clé</div>' +
+            '<p>Les données saisies dans un module sont <strong>immédiatement disponibles</strong> dans les autres ' +
+            'modules concernés. Il n’y a pas d’import/export manuel — tout est synchronisé en temps réel.</p>' +
+          '</div>' +
         '</div>' +
       '</div></section>';
 
@@ -465,13 +484,18 @@
     h += '<section id="roles" class="gf-sec">' +
       '<div class="v2-sep"><span class="v2-sep-txt">Rôles & droits d’accès</span><span class="v2-sep-line"></span></div>' +
       '<div class="gf-roles">' + ROLES.map(function (r) {
-        return '<div class="v2-blk gf-role" style="--c:' + r.c + '">' +
-          '<div class="gf-role-h"><span class="gf-role-i">' + svg(r.ic) + '</span>' +
-            '<div><span class="gf-role-b">' + esc(r.badge) + '</span>' +
-            '<div class="gf-role-n">' + esc(r.nom) + '</div></div></div>' +
-          '<ul class="gf-role-ul">' + r.droits.map(function (d) {
+        return '<div class="gf-role dc-card" style="--c:' + r.c + ';padding:0">' +
+          '<div class="dc-head"><div class="dc-head-l">' +
+            '<span class="dc-chip" style="background:' + r.c + '22;color:' + r.c + '">' + svg(r.ic) + '</span>' +
+            '<div style="min-width:0"><div class="dc-eyebrow">Rôle</div>' +
+            '<div class="dc-title" style="white-space:normal">' + esc(r.nom) + '</div></div>' +
+          '</div>' +
+          '<span class="dc-badge" style="background:' + r.c + '1a;color:' + r.c + ';border:1px solid ' + r.c + '44;flex-shrink:0">' +
+            '<span class="d" style="background:' + r.c + '"></span>' + esc(r.badge) + '</span>' +
+          '</div>' +
+          '<div class="dc-body"><ul class="gf-role-ul">' + r.droits.map(function (d) {
             return '<li>' + esc(d) + '</li>';
-          }).join('') + '</ul></div>';
+          }).join('') + '</ul></div></div>';
       }).join('') + '</div>' +
       '<div class="gf-note gf-note-warn">' +
         '<div class="gf-note-h">' + svg(IC.warn, 'v2-blk-ico') + 'Important</div>' +
@@ -482,17 +506,22 @@
     /* — Synchros — */
     h += '<section id="synchros" class="gf-sec">' +
       '<div class="v2-sep"><span class="v2-sep-txt">Carte des synchronisations</span><span class="v2-sep-line"></span></div>' +
-      '<div class="v2-blk">' +
-        '<div class="v2-blk-h">' + svg(IC.link, 'v2-blk-ico') +
-          '<span class="v2-blk-t">Quoi se synchronise avec quoi ?</span>' +
-          '<span class="v2-blk-lien">' + SYNCS.length + ' flux</span></div>' +
-        '<div class="gf-tw"><table class="v2-table gf-sync-t"><thead><tr>' +
-          '<th>Module source</th><th>Données partagées vers…</th><th>Ce qui est transmis</th>' +
-        '</tr></thead><tbody>' + SYNCS.map(function (s) {
-          return '<tr><td><span class="gf-src" style="--c:' + s.c + '">' + esc(s.src) + '</span></td>' +
-            '<td class="gf-td-m">' + esc(s.vers) + '</td>' +
-            '<td class="gf-td-m">' + esc(s.quoi) + '</td></tr>';
-        }).join('') + '</tbody></table></div>' +
+      '<div class="dc-card" style="padding:0">' +
+        '<div class="dc-head"><div class="dc-head-l">' +
+          '<span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">' + svg(IC.link) + '</span>' +
+          '<div style="min-width:0"><div class="dc-eyebrow">Interconnexions</div>' +
+          '<div class="dc-title" style="white-space:normal">Quoi se synchronise avec quoi ?</div></div>' +
+        '</div>' +
+        '<span class="dc-pill dim">' + SYNCS.length + ' flux</span></div>' +
+        '<div class="dc-body">' +
+          '<div class="gf-tw"><table class="v2-table gf-sync-t"><thead><tr>' +
+            '<th>Module source</th><th>Données partagées vers…</th><th>Ce qui est transmis</th>' +
+          '</tr></thead><tbody>' + SYNCS.map(function (s) {
+            return '<tr><td><span class="gf-src" style="--c:' + s.c + '">' + esc(s.src) + '</span></td>' +
+              '<td class="gf-td-m">' + esc(s.vers) + '</td>' +
+              '<td class="gf-td-m">' + esc(s.quoi) + '</td></tr>';
+          }).join('') + '</tbody></table></div>' +
+        '</div>' +
       '</div></section>';
 
     /* — Modules — */
@@ -500,8 +529,8 @@
       h += '<section id="' + esc(g.id) + '-sec" class="gf-sec" data-grp="' + esc(g.id) + '">' +
         '<div class="v2-sep"><span class="v2-sep-txt">' + esc(g.titre) + '</span>' +
           '<span class="v2-sep-line"></span>' +
-          '<span class="v2-badge v2-b-neutral">' + g.mods.length + ' module' + (g.mods.length > 1 ? 's' : '') + '</span></div>' +
-        '<div class="gf-mods">' + g.mods.map(function (m) { return modCard(m, g.id); }).join('') + '</div>' +
+          '<span class="dc-badge dc-b-gray">' + g.mods.length + ' module' + (g.mods.length > 1 ? 's' : '') + '</span></div>' +
+        '<div class="gf-mods">' + g.mods.map(function (m) { return modCard(m, g.id, g.titre); }).join('') + '</div>' +
         '</section>';
     });
 
@@ -509,11 +538,15 @@
     h += '<section id="conseils" class="gf-sec">' +
       '<div class="v2-sep"><span class="v2-sep-txt">Conseils pratiques</span><span class="v2-sep-line"></span></div>' +
       '<div class="gf-tips">' + CONSEILS.map(function (t) {
-        return '<div class="v2-blk gf-tip" style="--c:' + t.c + '">' +
-          '<div class="v2-blk-h">' + svg(t.ic, 'v2-blk-ico') + '<span class="v2-blk-t">' + esc(t.t) + '</span></div>' +
-          '<ul class="gf-tip-ul">' + t.pts.map(function (p) {
+        return '<div class="gf-tip dc-card" style="--c:' + t.c + ';padding:0">' +
+          '<div class="dc-head"><div class="dc-head-l">' +
+            '<span class="dc-chip" style="background:' + t.c + '22;color:' + t.c + '">' + svg(t.ic) + '</span>' +
+            '<div style="min-width:0"><div class="dc-eyebrow">Conseil</div>' +
+            '<div class="dc-title" style="white-space:normal">' + esc(t.t) + '</div></div>' +
+          '</div></div>' +
+          '<div class="dc-body"><ul class="gf-tip-ul">' + t.pts.map(function (p) {
             return '<li>' + rich(p) + '</li>';
-          }).join('') + '</ul></div>';
+          }).join('') + '</ul></div></div>';
       }).join('') + '</div></section>';
 
     h += '<div id="gfVide" class="v2-blk v2-blk-vide" style="display:none">' +
@@ -527,15 +560,18 @@
     if (!el) return;
     var nbMods = GROUPES.reduce(function (n, g) { return n + g.mods.length; }, 0);
     var k = [
-      { n: nbMods, l: 'Modules documentés', ic: IC.grid, c: ['#4f46e5', '#818cf8'] },
-      { n: GROUPES.length, l: 'Domaines fonctionnels', ic: IC.house, c: ['#0891b2', '#22d3ee'] },
-      { n: SYNCS.length, l: 'Flux de synchronisation', ic: IC.link, c: ['#16a34a', '#4ade80'] },
-      { n: ROLES.length, l: 'Rôles & jeux de droits', ic: IC.user, c: ['#f59e0b', '#fbbf24'] }
+      { n: nbMods, lab: 'Total', l: 'Modules documentés', ic: IC.grid, c: '#818cf8' },
+      { n: GROUPES.length, lab: 'Domaines', l: 'Domaines fonctionnels', ic: IC.house, c: '#22d3ee' },
+      { n: SYNCS.length, lab: 'Flux', l: 'Flux de synchronisation', ic: IC.link, c: '#4ade80' },
+      { n: ROLES.length, lab: 'Rôles', l: 'Rôles & jeux de droits', ic: IC.user, c: '#fbbf24' }
     ];
+    /* Console Data : tuiles KPI à liseré gauche (.dc-kpi / --dc-c). */
     el.innerHTML = k.map(function (x) {
-      return '<div class="v2-k"><span class="v2-k-ico" style="background:' + grad(x.c) + '">' +
-        svg(x.ic) + '</span><span><span class="v2-k-n">' + x.n + '</span>' +
-        '<span class="v2-k-l">' + esc(x.l) + '</span></span></div>';
+      return '<div class="dc-kpi" style="--dc-c:' + x.c + '">' +
+        '<div class="dc-kpi-top"><span class="dc-kpi-label">' + esc(x.lab) + '</span>' +
+        '<span class="dc-kpi-ico" style="color:' + x.c + '">' + svg(x.ic) + '</span></div>' +
+        '<div class="dc-kpi-val">' + x.n + '</div>' +
+        '<div class="dc-kpi-sub">' + esc(x.l) + '</div></div>';
     }).join('');
   }
 

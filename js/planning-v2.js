@@ -36,26 +36,31 @@ function pl2RenderUpcoming() {
     .slice(0, 8);
 
   el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
-      <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span class="v2-blk-t">Prochains événements</span>
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        <div style="min-width:0"><div class="dc-eyebrow">Agenda</div><div class="dc-title">Prochains événements</div></div>
+      </div>
+      ${list.length ? `<span class="dc-pill dim">${list.length}</span>` : ''}
     </div>
-    ${list.length ? `<div style="display:flex;flex-direction:column;gap:11px">${list.map(e => {
+    <div class="dc-body">
+    ${list.length ? `<div style="display:flex;flex-direction:column;gap:9px">${list.map(e => {
       const c = safeColor(e.color, (typeof TYPE_COLORS !== 'undefined' && TYPE_COLORS[e.type]) || '#818cf8');
       const h = (e.heure || e.time || '').slice(0, 5);
       const res = e.residentName || (e.residentNames || []).join(', ') || '';
       const sub = [h ? '' : null, e.lieu, res].filter(Boolean).join(' · ');
-      return `<div class="v2-pl-up" style="--pc:${c}">
+      return `<div class="v2-pl-up" style="--pc:${c};border-left:3px solid ${c};padding-left:11px">
         <div class="v2-pl-up-d">
-          <div class="v2-pl-up-j">${escHtml(_pl2Jour((e.date || '').slice(0, 10)))}</div>
-          <div class="v2-pl-up-h">${escHtml(h || '—')}</div>
+          <div class="dc-eyebrow v2-pl-up-j">${escHtml(_pl2Jour((e.date || '').slice(0, 10)))}</div>
+          <div class="v2-pl-up-h" style="color:${c}">${escHtml(h || '—')}</div>
         </div>
         <div class="v2-pl-up-b">
           <div class="v2-pl-up-t">${escHtml(e.titre || e.title || 'Événement')}</div>
           ${sub ? `<div class="v2-pl-up-s">${escHtml(sub)}</div>` : ''}
         </div>
       </div>`;
-    }).join('')}</div>` : '<div class="v2-blk-vide">Aucun événement à venir.</div>'}`;
+    }).join('')}</div>` : '<div class="v2-blk-vide">Aucun événement à venir.</div>'}
+    </div>`;
 }
 
 // Chaque bloc d'événement porte sa couleur en variable, pour que css/v2.css

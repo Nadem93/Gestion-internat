@@ -40,6 +40,14 @@ const BG2_IC = {
 function bg2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône dimensionnée (pour les puces .dc-chip qui n'ont pas de règle svg)
+function bg2Ico(d, px) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:${px || 16}px;height:${px || 16}px">${d}</svg>`;
+}
+// Badge de statut « Console Data » teinté par la couleur du statut
+function bg2StBadge(st) {
+  return `<span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}55"><span class="d" style="background:${st.c}"></span>${st.l}</span>`;
+}
 
 const BG2_ENV_THEMES = [
   { c: '#818cf8', icon: BG2_IC.activity },
@@ -196,7 +204,7 @@ function budgetItemHtml(d, isAdmin) {
         <div class="bg2-sub">${escHtml(d.employeNom || '')}${d.enveloppeNom ? ' · ' + escHtml(d.enveloppeNom) : ''}</div>
       </div>
       <span class="bg2-mt">${bg2Eur(d.montant)}</span>
-      <span class="bg2-st" style="--sc:${st.c}">${st.l}</span>
+      ${bg2StBadge(st)}
     </div>
     ${bg2DetailHtml(d, isAdmin)}
     <div class="bg2-acts" style="margin-top:10px;justify-content:flex-start">
@@ -257,12 +265,12 @@ function bg2RowHtml(d, isAdmin, cu) {
     <button type="button" class="bg2-mini" title="${open ? 'Masquer' : 'Voir'} le détail" onclick="bg2Toggle('${escAttr(d.id)}')">${open ? 'Moins' : 'Détail'}</button>
     ${isAdmin ? `<button type="button" class="bg2-mini bg2-mini-danger" title="Supprimer" onclick="supprimerBudgetDemande('${escAttr(d.id)}')">${bg2Svg(BG2_IC.trash)}</button>` : ''}`;
   return `<tr>
-    <td><div class="who"><span class="bg2-av" style="background:${bg2AvC(d.employeNom)}">${escHtml(bg2Init(d.employeNom))}</span>
+    <td style="border-left:3px solid ${st.c}"><div class="who"><span class="bg2-av" style="background:${bg2AvC(d.employeNom)}">${escHtml(bg2Init(d.employeNom))}</span>
       <div style="min-width:0"><div class="bg2-motif">${escHtml(d.motif || 'Demande de budget')}</div>
       <div class="bg2-sub">${escHtml(d.employeNom || '')}${d.enveloppeNom ? ' · ' + escHtml(d.enveloppeNom) : ''}</div></div></div></td>
     <td class="bg2-mt">${bg2Eur(d.montant)}</td>
     <td class="bg2-date">${bg2ShortDate(d.dateDepense)}</td>
-    <td><span class="bg2-st" style="--sc:${st.c}">${st.l}</span></td>
+    <td>${bg2StBadge(st)}</td>
     <td><div class="bg2-acts">${acts}</div></td>
   </tr>${open ? `<tr class="bg2-detail"><td colspan="5">${bg2DetailHtml(d, isAdmin)}</td></tr>` : ''}`;
 }
@@ -324,10 +332,15 @@ function bg2RenderATraiter() {
     { label: 'Justificatifs manquants', n: scope.filter(d => d.statut === 'accepte' && !(d.justificatifs || []).length).length, c: '#22d3ee' },
     { label: 'Enveloppes > 90 %', n: bg2Env().filter(e => (Number(e.montant) || 0) > 0 && budgetEnveloppeUtilise(e.id) / Number(e.montant) >= 0.9).length, c: '#ef4444' }
   ];
-  el.className = 'bg2-todo';
-  el.innerHTML = `<div class="bg2-todo-h">${bg2Svg(BG2_IC.warn)}<span class="bg2-todo-t">À traiter</span></div>
-    ${items.map(i => `<div class="bg2-todo-i"><span class="bg2-todo-d" style="background:${i.c}"></span>
-      <span class="bg2-todo-l">${i.label}</span><span class="bg2-todo-n" style="color:${i.c}">${i.n}</span></div>`).join('')}`;
+  el.className = 'dc-card';
+  el.innerHTML = `<div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:rgba(245,158,11,.16);color:#f59e0b">${bg2Ico(BG2_IC.warn)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">File d’attente</div><div class="dc-title" style="color:var(--v2-warn-text)">À traiter</div></div>
+    </div></div>
+    <div class="dc-body" style="padding-top:6px;padding-bottom:6px">
+    ${items.map(i => `<div class="bg2-todo-i" style="border-left:3px solid ${i.c};padding-left:10px"><span class="bg2-todo-d" style="background:${i.c}"></span>
+      <span class="bg2-todo-l">${i.label}</span><span class="bg2-todo-n" style="color:${i.c}">${i.n}</span></div>`).join('')}
+    </div>`;
 }
 
 // ══ RÉPARTITION PAR POSTE ═════════════════════════════════════════════
@@ -414,8 +427,8 @@ function bg2RenderJustifs() {
   if (recus) rows.push({ l: `${recus} justificatif${recus > 1 ? 's' : ''} reçu${recus > 1 ? 's' : ''}`, tag: 'OK', c: '#34d399', ic: BG2_IC.ok });
   if (attente) rows.push({ l: `${attente} en attente`, tag: 'À relancer', c: '#f59e0b', ic: BG2_IC.clock });
   if (!rows.length) { el.innerHTML = '<div class="v2-blk-vide">Aucun justificatif attendu ni reçu.</div>'; return; }
-  el.innerHTML = rows.map(r => `<div class="bg2-jl"><span style="color:${r.c}">${bg2Svg(r.ic, 2.4)}</span>
-    <span class="bg2-jl-l">${escHtml(r.l)}</span><span class="bg2-jl-t" style="color:${r.c}">${r.tag}</span></div>`).join('');
+  el.innerHTML = rows.map(r => `<div class="bg2-jl" style="border-left:3px solid ${r.c};padding-left:10px"><span style="color:${r.c}">${bg2Svg(r.ic, 2.4)}</span>
+    <span class="bg2-jl-l">${escHtml(r.l)}</span><span class="dc-badge" style="background:${r.c}1f;color:${r.c};border:1px solid ${r.c}55"><span class="d" style="background:${r.c}"></span>${r.tag}</span></div>`).join('');
 }
 
 // ══ TOP FOURNISSEURS ══════════════════════════════════════════════════
@@ -657,12 +670,12 @@ function voirJustificatif(demandeId, idx) {
   const body = document.getElementById('bgJustifBody');
   if (!body) return;
   if ((j.mimeType || '').startsWith('image/')) {
-    body.innerHTML = `<img src="${j.data}" alt="${escAttr(j.name)}" style="max-width:100%;border-radius:14px"/>`;
+    body.innerHTML = `<img src="${sanitizeUrl(j.data)}" alt="${escAttr(j.name)}" style="max-width:100%;border-radius:14px"/>`;
   } else {
     body.innerHTML = `<div style="padding:14px 0;text-align:center">
       <div style="color:var(--v2-t6);display:flex;justify-content:center;margin-bottom:10px"><span style="width:34px;height:34px;display:block">${bg2Svg(BG2_IC.doc)}</span></div>
       <div style="font-size:13px;color:var(--v2-t3);margin-bottom:14px">${escHtml(j.name)}</div>
-      <a href="${j.data}" download="${escAttr(j.name)}" class="v2-btn-pri" style="display:inline-flex;padding:0 18px">Télécharger</a></div>`;
+      <a href="${sanitizeUrl(j.data)}" download="${escAttr(j.name)}" class="v2-btn-pri" style="display:inline-flex;padding:0 18px">Télécharger</a></div>`;
   }
   openModal('modalBudgetJustif');
 }

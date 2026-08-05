@@ -162,11 +162,13 @@ async function saveRenouvellement() {
     const t = EC_TYPES[e.type] || EC_TYPES.autre;
     const sess = Auth.getSession();
     const by = sess ? (`${sess.prenom||''} ${sess.nom||''}`.trim() || sess.username || '') : '';
-    // 1) Upload du fichier dans le bucket justificatifs — dossier = id du compte connecté
-    //    (même convention que les justificatifs d'absence, compatible avec la RLS Storage)
+    // 1) Upload du fichier dans le bucket justificatifs — la RLS Storage exige
+    //    que le 1er dossier soit l'auth.uid() de l'UPLOADEUR (jamais l'id de
+    //    session legacy ni le résident) : même convention que absences/contrats.
     let path;
     try {
-      path = await sbUploadJustificatif(file, (sess && sess.userId) || e.residentId || 'ech');
+      const uid = (typeof sbAuthUid === 'function') ? await sbAuthUid() : null;
+      path = await sbUploadJustificatif(file, uid || (sess && sess.userId) || 'ech');
     } catch (err) {
       throw new Error('Envoi du fichier : ' + (err?.message || err));
     }
@@ -176,7 +178,8 @@ async function saveRenouvellement() {
         await sbSaveDocumentResident({
           residentId: e.residentId, name: e.libelle || t.label, fileName: file.name,
           size: file.size, mimeType: file.type, category: EC_DOCCAT[e.type] || 'autre', docDate: today(),
-          dueDate: newDate, fichierPath: path, type: 'resident', uploadedBy: by
+          dueDate: newDate, fichierPath: path, type: 'resident', uploadedBy: by,
+          _noEcheance: true   // le renouvellement met déjà à jour son échéance : pas d'auto-création
         });
       } catch (err) { console.error('[renouveler] GED', err); }
     }
@@ -226,6 +229,11 @@ function openEcheanceModal(id) {
 }
 
 async function saveEcheance() {
+  // Modifier une échéance existante est réservé à la direction ; la création
+  // reste ouverte aux éditeurs.
+  if (ecEditId && typeof _ec2EstDirection === 'function' && !_ec2EstDirection()) {
+    toast('Seule la direction peut modifier une échéance', 'error'); return;
+  }
   const date = document.getElementById('ecDate').value;
   if (!date) { toast("La date d'échéance est requise", 'error'); return; }
   const rid = document.getElementById('ecResident').value;
@@ -257,6 +265,11 @@ async function saveEcheance() {
 }
 
 async function toggleEcheanceDone(id) {
+  // Clôturer/réactiver une échéance est réservé à la direction (cf. _ec2EstDirection).
+  if (typeof _ec2EstDirection === 'function' && !_ec2EstDirection()) {
+    toast('Seule la direction peut marquer une échéance comme traitée', 'error');
+    return;
+  }
   const cur = _ecCache.find(x => x.id === id);
   if (!cur) return;
   try {
@@ -267,6 +280,9 @@ async function toggleEcheanceDone(id) {
 }
 
 function deleteEcheance(id) {
+  if (typeof _ec2EstDirection === 'function' && !_ec2EstDirection()) {
+    toast('Seule la direction peut supprimer une échéance', 'error'); return;
+  }
   confirmDialog('Supprimer cette échéance ?', async () => {
     try { await sbDeleteEcheance(id); _ecCache = _ecCache.filter(x => x.id !== id); }
     catch (e) { console.error('[deleteEcheance]', e); toast('Erreur suppression : ' + (e?.message || e), 'error'); return; }
@@ -293,18 +309,29 @@ async function initEcheances() {
   const opts = residents.map(r => `<option value="${r.id}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
   const fSel = document.getElementById('ecFilterResident');
   if (fSel) fSel.innerHTML = '<option value="">Tous les résidents</option>' + opts;
+  // Pré-filtrage par ?resident=<id> (ex. clic sur une échéance depuis le panneau
+  // détail d'un résident dans la page Résidents).
+  const _ridParam = new URLSearchParams(location.search).get('resident');
+  if (_ridParam && fSel && residents.some(r => String(r.id) === String(_ridParam))) fSel.value = _ridParam;
   const mSel = document.getElementById('ecResident');
   if (mSel) mSel.innerHTML = '<option value="">— Aucun (échéance établissement) —</option>' + opts;
   const tSel = document.getElementById('ecFilterType');
   if (tSel) tSel.innerHTML = '<option value="">Tous les types</option>' + Object.entries(EC_TYPES).map(([k, t]) => `<option value="${k}">${t.icon} ${t.label}</option>`).join('');
   const mtSel = document.getElementById('ecType');
   if (mtSel) mtSel.innerHTML = Object.entries(EC_TYPES).map(([k, t]) => `<option value="${k}">${t.icon} ${t.label}</option>`).join('');
-  const canEdit = (typeof canEditResidents === 'function') ? canEditResidents(s.userId) : Auth.isAdmin();
+  const canEdit = Auth.isAdmin() || ((typeof canEditResidents === 'function') ? canEditResidents(s.userId) : false);
   const addBtn = document.getElementById('btnAddEcheance');
   if (addBtn && !canEdit) addBtn.style.display = 'none';
   ['ecFilterResident', 'ecFilterType', 'ecShowDone'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', renderEcheances);
   });
   renderEcheances();
+  // Arrivée depuis le bouton « Traiter » d'une alerte d'échéance : ouvrir
+  // directement le renouvellement (joindre le document + reporter la date).
+  const _renId = new URLSearchParams(location.search).get('renouveler');
+  if (_renId && canEdit && typeof openRenouvelerModal === 'function'
+      && typeof getEcheances === 'function' && getEcheances().find(x => x.id === _renId)) {
+    openRenouvelerModal(_renId);
+  }
 }
 document.addEventListener('DOMContentLoaded', initEcheances);

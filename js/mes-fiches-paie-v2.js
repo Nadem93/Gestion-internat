@@ -19,7 +19,12 @@
     dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
     card: '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
     info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
-    warn: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+    warn: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',
+    trend: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    sum: '<path d="M18 4H6l7 8-7 8h12"/>',
+    stack: '<rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/>',
+    chart: '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>'
   };
   const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${w ? ` style="width:${w}px;height:${w}px"` : ''}>${p}</svg>`;
 
@@ -122,43 +127,54 @@
     const moyen = nets.length ? cumul / nets.length : 0;
     const suffixe = annee || 'toutes années';
     const tuiles = [
-      { n: nets.length ? mask(eur(dernier)) : '—', l: 'Dernier net', c: '#10b981' },
-      { n: nets.length ? mask(eur(moyen)) : '—', l: 'Net moyen', c: '#22d3ee' },
-      { n: nets.length ? mask(eur(cumul)) : '—', l: 'Cumul net ' + suffixe, c: '#818cf8' },
-      { n: String(list.length), l: 'Bulletins ' + suffixe, c: '#f59e0b' }
+      { n: nets.length ? mask(eur(dernier)) : '—', lbl: 'Dernier net', sub: nets.length ? 'Bulletin le plus récent' : 'Aucun bulletin', c: '#10b981', ico: IC.wallet },
+      { n: nets.length ? mask(eur(moyen)) : '—', lbl: 'Net moyen', sub: nets.length ? `Sur ${nets.length} bulletin${nets.length > 1 ? 's' : ''}` : '—', c: '#22d3ee', ico: IC.trend },
+      { n: nets.length ? mask(eur(cumul)) : '—', lbl: 'Cumul net', sub: suffixe, c: '#818cf8', ico: IC.sum },
+      { n: String(list.length), lbl: 'Bulletins', sub: suffixe, c: '#f59e0b', ico: IC.stack }
     ];
-    box.innerHTML = tuiles.map(t => `<div class="mfp-stat" style="--pc:${t.c}">
-      <div class="mfp-stat-bar"></div>
-      <div class="mfp-stat-n">${t.n}</div>
-      <div class="mfp-stat-l">${esc(t.l)}</div>
+    box.innerHTML = tuiles.map(t => `<div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${esc(t.lbl)}</span><span class="dc-kpi-ico" style="color:${t.c}">${svg(t.ico, 15)}</span></div>
+      <div class="dc-kpi-val">${t.n}</div>
+      <div class="dc-kpi-sub">${esc(t.sub)}</div>
     </div>`).join('');
   }
 
   function carte(f) {
     const d = detail(f);
     const minis = [];
-    if (f.brut) minis.push({ v: mask(eur(f.brut)), l: 'Brut', c: '' });
-    if (f.primes) minis.push({ v: mask(eur(f.primes)), l: 'Primes', c: 'warn' });
-    if (f.heuresSup) minis.push({ v: mask(eur(f.heuresSup)), l: 'H. sup.', c: '' });
-    if (d.cotis) minis.push({ v: mask('-' + eur(d.cotis)), l: `Cotis. ${d.tx}%`, c: 'neg' });
-    if (d.ret) minis.push({ v: mask('-' + eur(d.ret)), l: 'Retenues', c: 'neg' });
+    if (f.brut) minis.push({ v: mask(eur(f.brut)), l: 'Brut', c: '#818cf8' });
+    if (f.primes) minis.push({ v: mask(eur(f.primes)), l: 'Primes', c: '#f59e0b' });
+    if (f.heuresSup) minis.push({ v: mask(eur(f.heuresSup)), l: 'H. sup.', c: '#22d3ee' });
+    if (d.cotis) minis.push({ v: mask('-' + eur(d.cotis)), l: `Cotis. ${d.tx}%`, c: '#f87171' });
+    if (d.ret) minis.push({ v: mask('-' + eur(d.ret)), l: 'Retenues', c: '#f87171' });
 
-    return `<article class="pyx-card mfp-bul">
-      <div class="mfp-bul-h">
-        <span class="mfp-bul-ico">${svg(IC.doc)}</span>
-        <div class="mfp-bul-ht">
-          <div class="mfp-bul-per">${esc(fmtPeriode(f.periode))}</div>
-          <div class="mfp-bul-file">${f.fichierNom ? esc(f.fichierNom) : 'Sans fichier joint'}</div>
+    return `<article class="dc-card mfp-bul">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(129,140,248,.14);color:#818cf8">${svg(IC.doc, 16)}</span>
+          <div style="min-width:0">
+            <div class="dc-eyebrow">Bulletin</div>
+            <div class="dc-title">${esc(fmtPeriode(f.periode))}</div>
+          </div>
         </div>
+        ${f.fichierNom ? `<span class="dc-pill dim" title="${esc(f.fichierNom)}">${svg(IC.doc, 12)}</span>` : ''}
       </div>
-      ${d.net > 0
-        ? `<div class="mfp-net"><div class="mfp-net-l">Net estimé</div><div class="mfp-net-v">${mask(d.net.toFixed(2).replace('.', ',') + ' €', 'lead')}</div></div>`
-        : `<div class="mfp-net"><div class="mfp-net-l">Net</div><div class="mfp-net-v" style="font-size:14px;color:var(--v2-t6)">Bulletin déposé</div></div>`}
-      ${minis.length ? `<div class="mfp-mini">${minis.map(m =>
-        `<div class="mfp-mini-c"><div class="mfp-mini-v ${m.c}">${m.v}</div><div class="mfp-mini-l">${esc(m.l)}</div></div>`).join('')}</div>` : ''}
-      ${f.fichierPath
-        ? `<button type="button" class="mfp-dl" data-dl="${esc(f.id)}">${svg(IC.dl)}Télécharger</button>`
-        : `<div class="mfp-nofile">Aucun fichier joint</div>`}
+      <div class="dc-body">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+          <span class="dc-eyebrow" style="margin-bottom:0">${d.net > 0 ? 'Net estimé' : 'Net'}</span>
+          ${d.net > 0
+            ? `<span class="v2-num" style="font-size:22px;font-weight:700;color:#34d399">${mask(d.net.toFixed(2).replace('.', ',') + ' €', 'lead')}</span>`
+            : `<span class="dc-badge dc-b-gray"><span class="d"></span>Bulletin déposé</span>`}
+        </div>
+        ${minis.length ? `<div style="display:grid;gap:6px;margin-top:12px">${minis.map(m =>
+          `<div style="display:flex;align-items:center;justify-content:space-between;border-left:3px solid ${m.c};padding-left:9px">
+            <span class="dc-eyebrow" style="margin-bottom:0">${esc(m.l)}</span>
+            <span class="v2-num" style="font-size:13px;color:var(--v2-t3)">${m.v}</span>
+          </div>`).join('')}</div>` : ''}
+        ${f.fichierPath
+          ? `<button type="button" class="mfp-dl" data-dl="${esc(f.id)}" style="margin-top:14px">${svg(IC.dl)}Télécharger</button>`
+          : `<div class="mfp-nofile" style="margin-top:14px">Aucun fichier joint</div>`}
+      </div>
     </article>`;
   }
 
@@ -211,17 +227,30 @@
     ].filter(c => c.l.startsWith('Net') || c.l.startsWith('Brut') || parseFloat(c.v.replace(/[^\d]/g, '')) > 0);
 
     const dem = _demandes.slice(0, 4);
+    const demTon = st => st === 'traitee' ? 'dc-b-green' : st === 'refusee' ? 'dc-b-red' : 'dc-b-amber';
 
     rail.innerHTML = `
-      <div class="v2-blk v2-rail-blk">
-        <div class="v2-blk-h"><div class="v2-blk-t">Évolution du net (6 derniers)</div></div>
-        ${evo}
+      <div class="dc-card v2-rail-blk">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(52,211,153,.14);color:#34d399">${svg(IC.chart, 16)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">6 derniers mois</div><div class="dc-title">Évolution du net</div></div>
+          </div>
+        </div>
+        <div class="dc-body">${evo}</div>
       </div>
-      <div class="v2-blk v2-rail-blk">
-        <div class="v2-blk-h"><div class="v2-blk-t">Cumuls ${esc(annee || 'toutes années')}</div></div>
+      <div class="dc-card v2-rail-blk">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(129,140,248,.14);color:#818cf8">${svg(IC.sum, 16)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Cumuls</div><div class="dc-title">${esc(annee || 'Toutes années')}</div></div>
+          </div>
+        </div>
+        <div class="dc-body">
         ${list.length
-          ? cumuls.map(c => `<div class="mfp-cum" style="--pc:${c.c}"><span class="mfp-cum-l">${esc(c.l)}</span><span class="mfp-cum-v">${mask(c.v)}</span></div>`).join('')
+          ? cumuls.map(c => `<div class="mfp-cum" style="--pc:${c.c};display:flex;align-items:center;justify-content:space-between;border-left:3px solid ${c.c};padding-left:10px"><span class="mfp-cum-l">${esc(c.l)}</span><span class="mfp-cum-v v2-num">${mask(c.v)}</span></div>`).join('')
           : '<div class="v2-blk-vide">Aucun bulletin sur la période.</div>'}
+        </div>
       </div>
       <button type="button" class="mfp-att" id="mfpBtnAttestation">
         <span class="mfp-att-ico">${svg(IC.card)}</span>
@@ -230,15 +259,23 @@
           <span class="mfp-att-s">Demander une attestation de salaire</span>
         </span>
       </button>
-      ${dem.length ? `<div class="v2-blk v2-rail-blk">
-        <div class="v2-blk-h"><div class="v2-blk-t">Mes demandes</div></div>
+      ${dem.length ? `<div class="dc-card v2-rail-blk">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee">${svg(IC.card, 16)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Suivi</div><div class="dc-title">Mes demandes</div></div>
+          </div>
+          <span class="dc-pill dim">${dem.length}</span>
+        </div>
+        <div class="dc-body" style="display:grid;gap:10px">
         ${dem.map(d => `<div class="mfp-dem">
           <div style="min-width:0">
             <div class="mfp-dem-t">${esc(d.motif || 'Attestation')}</div>
             <div class="mfp-dem-s">${esc((d.created_at || '').slice(0, 10))}${d.periode_debut ? ' · ' + esc(d.periode_debut) + (d.periode_fin ? ' → ' + esc(d.periode_fin) : '') : ''}</div>
           </div>
-          <span class="mfp-dem-b v2-badge ${d.statut === 'traitee' ? 'v2-b-ok' : d.statut === 'refusee' ? 'v2-b-danger' : 'v2-b-warn'}">${esc(d.statut || 'demandee')}</span>
+          <span class="mfp-dem-b dc-badge ${demTon(d.statut)}"><span class="d"></span>${esc(d.statut || 'demandee')}</span>
         </div>`).join('')}
+        </div>
       </div>` : ''}
     `;
   }
@@ -323,9 +360,12 @@
     infoBloc(titre, texte, couleur) {
       const el = document.getElementById('mfpInfo');
       if (!el) return;
-      el.innerHTML = `<div class="mfp-info" style="--pc:${couleur || '#f59e0b'}">
-        <span class="mfp-info-ico">${svg(couleur === '#ef4444' ? IC.warn : IC.info)}</span>
-        <div><div class="mfp-info-t">${esc(titre)}</div><div class="mfp-info-s">${esc(texte)}</div></div>
+      const c = couleur || '#f59e0b';
+      el.innerHTML = `<div class="dc-card mfp-info" style="--pc:${c};border-left:3px solid ${c}">
+        <div class="dc-body" style="display:flex;gap:12px;align-items:flex-start">
+          <span class="dc-chip" style="background:${c}22;color:${c}">${svg(couleur === '#ef4444' ? IC.warn : IC.info, 16)}</span>
+          <div style="min-width:0"><div class="mfp-info-t">${esc(titre)}</div><div class="mfp-info-s">${esc(texte)}</div></div>
+        </div>
       </div>`;
     }
   };

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Rapport d'activité — FTR</title>
+  <title>Rapport d'activité — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -60,76 +60,101 @@
 
         <!-- Sections du rapport -->
         <div>
-          <div class="rap2-h">Sections du rapport</div>
+          <div class="dc-eyebrow" style="margin-bottom:12px">Sections du rapport</div>
           <div class="rap2-secs" id="rap2Sections"></div>
         </div>
 
         <!-- Taux d'occupation 12 mois -->
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="v2-blk-t">Taux d'occupation — 12 mois</span>
-            <span class="rap2-big" style="margin-left:auto" id="rap2ChartVal">—</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#22c55e22;color:#22c55e"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Occupation</div><div class="dc-title">Taux d'occupation — 12 mois</div></div>
+            </div>
+            <span class="dc-pill" id="rap2ChartVal">—</span>
           </div>
-          <div id="rap2Chart"></div>
+          <div class="dc-body"><div id="rap2Chart"></div></div>
         </div>
 
         <!-- Mouvements + comparaison N-1 -->
         <div class="rap2-two">
-          <div class="v2-blk">
-            <div class="v2-blk-h"><span class="v2-blk-t">Mouvements de la période</span></div>
-            <div id="rap2Mouv"></div>
+          <div class="dc-card">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-1.5-1.5"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Flux</div><div class="dc-title">Mouvements de la période</div></div>
+              </div>
+            </div>
+            <div class="dc-body"><div id="rap2Mouv"></div></div>
           </div>
-          <div class="v2-blk">
-            <div class="v2-blk-h"><span class="v2-blk-t">Évolution vs période précédente</span></div>
-            <div id="rap2Comp" style="display:flex;flex-direction:column;gap:13px"></div>
+          <div class="dc-card">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Tendance</div><div class="dc-title">Évolution vs période précédente</div></div>
+              </div>
+            </div>
+            <div class="dc-body"><div id="rap2Comp" style="display:flex;flex-direction:column;gap:13px"></div></div>
           </div>
         </div>
 
         <!-- Comptes rendus / diffusion / échéance -->
         <div class="rap2-three">
-          <div class="v2-blk">
-            <div class="v2-blk-h">
-              <span class="v2-blk-t">Comptes rendus obligatoires</span>
+          <div class="dc-card">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Conformité</div><div class="dc-title">Comptes rendus obligatoires</div></div>
+              </div>
               <button type="button" class="rap2-add" onclick="rap2OuvrirSuivi('obligatoire')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
               </button>
             </div>
-            <div id="rap2Oblig"></div>
+            <div class="dc-body"><div id="rap2Oblig"></div></div>
           </div>
-          <div class="v2-blk rap2-tint-vert">
-            <div class="v2-blk-h">
-              <span class="rap2-blk-ico" style="color:#86efac"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
-              <span class="v2-blk-t">Diffusion du rapport</span>
+          <div class="dc-card rap2-tint-vert">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#22c55e22;color:#86efac"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Transmission</div><div class="dc-title">Diffusion du rapport</div></div>
+              </div>
               <button type="button" class="rap2-add" onclick="rap2OuvrirSuivi('diffusion')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
               </button>
             </div>
-            <div id="rap2Diff"></div>
+            <div class="dc-body"><div id="rap2Diff"></div></div>
           </div>
-          <div class="v2-blk rap2-tint-ambre">
-            <div class="v2-blk-h">
-              <span class="rap2-blk-ico" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-              <span class="v2-blk-t">Prochaine échéance</span>
+          <div class="dc-card rap2-tint-ambre">
+            <div class="dc-head">
+              <div class="dc-head-l">
+                <span class="dc-chip" style="background:#f59e0b22;color:#fbbf24"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <div style="min-width:0"><div class="dc-eyebrow">Agenda</div><div class="dc-title">Prochaine échéance</div></div>
+              </div>
               <button type="button" class="rap2-add" onclick="rap2OuvrirSuivi('echeance')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
               </button>
             </div>
-            <div id="rap2Ech"></div>
+            <div class="dc-body"><div id="rap2Ech"></div></div>
           </div>
         </div>
 
         <!-- Aperçu du document -->
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="v2-blk-t">Aperçu à l'écran</span>
-            <span class="v2-blk-lien" style="font-weight:500;color:var(--v2-t7)">Document imprimable — identique au PDF généré</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#8b5cf622;color:#8b5cf6"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Document</div><div class="dc-title">Aperçu à l'écran</div></div>
+            </div>
+            <span class="dc-pill dim">Identique au PDF généré</span>
           </div>
-          <p style="font-size:12px;color:var(--v2-t6);margin:0 0 12px;line-height:1.55">
-            Le document reprend uniquement les données déjà saisies dans les modules : taux d'occupation, mouvements,
-            journal, incidents, transmissions, PPE, SERAFIN-PH et satisfaction. Le récit de l'année vient des
-            contributions de l'équipe, à compléter dans le rail de droite avant de générer le rapport.
-          </p>
-          <div class="rap2-apercu"><div id="rapportApercu"></div></div>
+          <div class="dc-body">
+            <p style="font-size:12px;color:var(--v2-t6);margin:0 0 12px;line-height:1.55">
+              Le document reprend uniquement les données déjà saisies dans les modules : taux d'occupation, mouvements,
+              journal, incidents, transmissions, PPE, SERAFIN-PH et satisfaction. Le récit de l'année vient des
+              contributions de l'équipe, à compléter dans le rail de droite avant de générer le rapport.
+            </p>
+            <div class="rap2-apercu"><div id="rapportApercu"></div></div>
+          </div>
         </div>
 
       </div>
@@ -137,25 +162,37 @@
       <!-- ── RAIL ── -->
       <div class="rap2-col">
 
-        <div class="v2-blk v2-rail-blk">
-          <div class="v2-blk-h">
-            <span class="rap2-blk-ico" style="color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-            <span class="v2-blk-t">Contributions de l'équipe</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Équipe</div><div class="dc-title">Contributions de l'équipe</div></div>
+            </div>
             <button type="button" class="rap2-add" onclick="openModal('modalRc')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter
             </button>
           </div>
-          <div id="rcList"></div>
+          <div class="dc-body"><div id="rcList"></div></div>
         </div>
 
-        <div class="v2-blk v2-rail-blk rap2-tint-vert">
-          <div class="v2-blk-h"><span class="v2-blk-t">Indicateurs SERAFIN-PH</span></div>
-          <div id="rap2Serafin" style="display:flex;flex-direction:column;gap:11px"></div>
+        <div class="dc-card rap2-tint-vert">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#22c55e22;color:#86efac"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Nomenclature</div><div class="dc-title">Indicateurs SERAFIN-PH</div></div>
+            </div>
+          </div>
+          <div class="dc-body"><div id="rap2Serafin" style="display:flex;flex-direction:column;gap:11px"></div></div>
         </div>
 
-        <div class="v2-blk v2-rail-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Historique des rapports</span></div>
-          <div id="rap2Hist"></div>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#8b5cf622;color:#c4b5fd"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Archives</div><div class="dc-title">Historique des rapports</div></div>
+            </div>
+          </div>
+          <div class="dc-body"><div id="rap2Hist"></div></div>
         </div>
 
       </div>
@@ -273,6 +310,10 @@
 <script src="js/conges-supabase.js"></script>
 <script src="js/formations-supabase.js"></script>
 <script src="js/entretiens-supabase.js"></script>
+<script src="js/echeances-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
+<script src="js/observations-supabase.js"></script>
+<script src="js/cvs-supabase.js"></script>
 <script src="js/rapport-supabase.js"></script>
 <script src="js/rapport.js"></script>
 <script src="js/rapport-v2.js"></script>

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Repas & régimes — FTR</title>
+  <title>Repas & régimes — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -47,7 +47,7 @@
 
         <!-- FRISE DE DATES -->
         <div class="rp2-strip-head no-print">
-          <span class="rp2-strip-t">Commander les repas à l'avance</span>
+          <span class="dc-eyebrow">Commander les repas à l'avance</span>
           <div class="rp2-quick">
             <button type="button" class="v2-chip-f" onclick="rpGoToday()">Aujourd'hui</button>
             <button type="button" class="v2-chip-f" onclick="rpJumpDays(7)">+1 semaine</button>
@@ -57,21 +57,33 @@
         <div id="rpDateStrip" class="rp2-strip no-print"></div>
 
         <!-- MENUS DU JOUR -->
-        <div class="rp2-menus">
-          <div class="rp2-menus-h">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>
-            Menus du jour
+        <div class="dc-card" style="margin-bottom:18px">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#fb923c22;color:#fb923c">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>
+              </span>
+              <div style="min-width:0"><div class="dc-eyebrow">Vie quotidienne</div><div class="dc-title">Menus du jour</div></div>
+            </div>
           </div>
-          <div class="rp2-menus-g" id="rpMenusDuJour"></div>
-          <div class="rp2-cuisine" id="rpCuisine"></div>
+          <div class="dc-body">
+            <div class="rp2-menus-g" id="rpMenusDuJour"></div>
+            <div class="rp2-cuisine" id="rpCuisine"></div>
+          </div>
         </div>
 
         <!-- INSCRIPTIONS -->
-        <div class="rp2-blk">
-          <div class="rp2-blk-h">
-            <span class="v2-blk-t">Inscriptions aux repas</span>
+        <div class="dc-card">
+          <div class="dc-head" style="flex-wrap:wrap">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#fb923c22;color:#fb923c">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </span>
+              <div style="min-width:0"><div class="dc-eyebrow">Vie quotidienne</div><div class="dc-title">Inscriptions aux repas</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:auto">
             <span class="rp2-hint">Touchez Matin / Midi / Soir pour inscrire</span>
-            <span class="rp2-counts" id="rpCounts"></span>
+            <span class="dc-pill dim" id="rpCounts"></span>
             <div class="rp2-views no-print">
               <input type="text" id="rpSearch" class="rp2-search" placeholder="Rechercher un résident…"/>
               <button type="button" class="v2-chip-f" id="rpBtnTableau" onclick="rpSetView('tableau')">
@@ -86,6 +98,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Semaine
               </button>
+            </div>
             </div>
           </div>
           <div id="rpList" class="rp2-list"></div>

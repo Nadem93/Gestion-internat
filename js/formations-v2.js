@@ -86,7 +86,22 @@ let FR2_FORM    = { kind: null, id: null };
 function fr2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
-function fr2Today() { return new Date().toISOString().slice(0, 10); }
+// ── Langage « Console Data » (classes dc-* de css/v2.css) ────────────────
+function fr2Ico16(d) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">${d}</svg>`;
+}
+// En-tête de carte Console Data : chip coloré + micro-label + titre + slot droit.
+function fr2Head(color, ico, eyebrow, title, right) {
+  return `<div class="dc-head"><div class="dc-head-l">`
+    + `<span class="dc-chip" style="background:${color}22;color:${color}">${fr2Ico16(ico)}</span>`
+    + `<div style="min-width:0"><div class="dc-eyebrow">${escHtml(eyebrow)}</div><div class="dc-title">${escHtml(title)}</div></div>`
+    + `</div>${right || ''}</div>`;
+}
+// Badge monospace à couleur libre + pastille.
+function fr2Badge(color, label) {
+  return `<span class="dc-badge" style="background:${color}1f;color:${color};border:1px solid ${color}44"><span class="d" style="background:${color}"></span>${escHtml(label)}</span>`;
+}
+function fr2Today() { return today(); }
 function fr2Num(n) { return (Number(n) || 0).toLocaleString('fr-FR'); }
 function fr2Eur0(n) { return fr2Num(Math.round(Number(n) || 0)) + ' €'; }
 function fr2Cat(f) { return FR2_DOM_CAT[f && f.domaine] || 'metier'; }
@@ -124,7 +139,7 @@ function fr2AddMois(iso, mois) {
   const d = new Date(iso);
   if (isNaN(d)) return '';
   d.setMonth(d.getMonth() + Number(mois));
-  return d.toISOString().slice(0, 10);
+  return isoJour(d);
 }
 function fr2Jours(iso) {
   if (!iso) return null;
@@ -279,14 +294,15 @@ function fr2RenderStats() {
   }
 
   const cards = [
-    { n: String(list.length), l: 'Sessions' + (annee ? ` (${annee})` : ' (toutes années)'), c: '#16a34a', i: FR2_IC.book },
-    { n: (Math.round(heures * 10) / 10).toLocaleString('fr-FR') + ' h', l: 'Heures dispensées', c: '#22d3ee', i: FR2_IC.clock },
-    { n: budgetVal, l: budgetLbl, c: '#4ade80', i: FR2_IC.euro },
-    { n: obligN, l: obligL, c: '#ef4444', i: FR2_IC.alert }
+    { k: 'Sessions', n: String(list.length), l: 'Sessions' + (annee ? ` (${annee})` : ' (toutes années)'), c: '#16a34a', i: FR2_IC.book },
+    { k: 'Heures', n: (Math.round(heures * 10) / 10).toLocaleString('fr-FR') + ' h', l: 'Heures dispensées', c: '#22d3ee', i: FR2_IC.clock },
+    { k: 'Budget', n: budgetVal, l: budgetLbl, c: '#4ade80', i: FR2_IC.euro },
+    { k: 'Obligations', n: obligN, l: obligL, c: '#ef4444', i: FR2_IC.alert }
   ];
-  el.innerHTML = cards.map(c => `<div class="fr2-stat" style="--pc:${c.c}">
-      <span class="fr2-stat-ico">${fr2Svg(c.i)}</span>
-      <div class="fr2-stat-txt"><div class="fr2-stat-n">${escHtml(c.n)}</div><div class="fr2-stat-l">${escHtml(c.l)}</div></div>
+  el.innerHTML = cards.map(c => `<div class="dc-kpi" style="--dc-c:${c.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${escHtml(c.k)}</span><span class="dc-kpi-ico" style="color:${c.c}">${fr2Ico16(c.i)}</span></div>
+      <div class="dc-kpi-val">${escHtml(c.n)}</div>
+      <div class="dc-kpi-sub">${escHtml(c.l)}</div>
     </div>`).join('');
 
   // Compatibilité : les compteurs hérités restent alimentés.
@@ -357,8 +373,9 @@ function fr2RenderTable() {
   if (!el) return;
   const isAdmin = fr2IsAdmin();
   const list = fr2Filtrees();
+  const head = fr2Head('#16a34a', FR2_IC.book, 'Registre', 'Sessions de formation', `<span class="dc-pill dim">${list.length}</span>`);
   if (!list.length) {
-    el.innerHTML = `<div style="padding:34px 20px;text-align:center;font-size:12.5px;color:var(--v2-t7)">Aucune formation ne correspond à ce filtre.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div style="padding:18px 0;text-align:center;font-size:12.5px;color:var(--v2-t7)">Aucune formation ne correspond à ce filtre.</div></div>`;
     return;
   }
   const cols = ['Formation', 'Catégorie', 'Dates', 'Participants', 'Statut', ''];
@@ -379,15 +396,15 @@ function fr2RenderTable() {
           </div>
         </div>
       </td>
-      <td class="opt"><span class="fr2-pill" style="--pc:${cc}">${escHtml(FR2_CAT[cat].l)}</span></td>
+      <td class="opt">${fr2Badge(cc, FR2_CAT[cat].l)}</td>
       <td class="opt"><span class="fr2-dates">${escHtml(fr2Dates(f))}</span></td>
       <td class="opt"><span class="fr2-parts">${escHtml(cap)} inscrit${parts > 1 ? 's' : ''}</span></td>
-      <td><span class="fr2-st" style="--pc:${st.c}"><span class="dot"></span>${escHtml(st.l)}</span></td>
+      <td>${fr2Badge(st.c, st.l)}</td>
       <td><div class="fr2-acts">${fr2LigneActions(f, isAdmin)}</div></td>
     </tr>`;
   }).join('');
 
-  el.innerHTML = `<div class="fr2-tw"><table class="v2-table fr2-table">
+  el.innerHTML = head + `<div class="fr2-tw"><table class="v2-table fr2-table">
       <thead><tr>${cols.map((c, i) => `<th class="${i >= 1 && i <= 3 ? 'opt' : ''}">${escHtml(c)}</th>`).join('')}</tr></thead>
       <tbody>${corps}</tbody>
     </table></div>`;
@@ -412,19 +429,16 @@ function fr2RenderOblig() {
   const el = document.getElementById('fr2Oblig');
   if (!el) return;
   const admin = fr2IsAdmin();
-  const head = `<div class="fr2-h" style="--pc:#fca5a5">
-      <span class="fr2-h-ico">${fr2Svg(FR2_IC.shield)}</span>
-      <span class="fr2-oblig-t">Formations obligatoires à renouveler</span>
-      ${admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('oblig')">${fr2Svg(FR2_IC.plus)}Ajouter</button>` : ''}
-    </div>`;
+  const head = fr2Head('#ef4444', FR2_IC.shield, 'Réglementaire', 'Obligations à renouveler',
+    admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('oblig')">${fr2Svg(FR2_IC.plus)}Ajouter</button>` : '');
 
   if (FR2_MISS.has(FR2_T_OBLIG)) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Suivi indisponible.</div>
-      <div class="fr2-warn">La table <code>${FR2_T_OBLIG}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code> pour activer le suivi des obligations réglementaires.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Suivi indisponible.</div>
+      <div class="fr2-warn">La table <code>${FR2_T_OBLIG}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code> pour activer le suivi des obligations réglementaires.</div></div>`;
     return;
   }
   if (!FR2_OBLIG.length) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Aucune obligation enregistrée.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Aucune obligation enregistrée.</div></div>`;
     return;
   }
   const rows = FR2_OBLIG.slice().sort((a, b) => {
@@ -440,11 +454,11 @@ function fr2RenderOblig() {
         <div class="fr2-i-t">${escHtml(o.libelle || '')}</div>
         <div class="fr2-i-s">${det ? escHtml(det) : '<span class="fr2-dash">Aucun détail</span>'}</div>
       </div>
-      <span class="fr2-pill" style="--pc:${tag.c}">${escHtml(tag.l)}</span>
+      ${fr2Badge(tag.c, tag.l)}
       ${admin ? `<button type="button" class="fr2-btn ico" title="Modifier" onclick="fr2OpenForm('oblig','${escAttr(o.id)}')">${fr2Svg(FR2_IC.pen)}</button>` : ''}
     </div>`;
   }).join('');
-  el.innerHTML = head + rows;
+  el.innerHTML = head + `<div class="dc-body">` + rows + `</div>`;
 }
 
 // ── Rendu : rail budget ──────────────────────────────────────────────────
@@ -460,20 +474,18 @@ function fr2RenderBudget() {
     .filter(f => String(f.dateDebut || '').startsWith(annee) && f.statut !== 'annulee')
     .reduce((a, f) => a + (Number(f.cout) || 0), 0);
   const b = FR2_BUDGETS.find(x => String(x.annee) === annee);
-  const head = `<div class="fr2-h">
-      <span class="fr2-budget-t">Budget formation ${escHtml(annee)}</span>
-      ${admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('budget','${b ? escAttr(b.id) : ''}')">${fr2Svg(b ? FR2_IC.pen : FR2_IC.plus)}${b ? 'Modifier' : 'Enveloppe'}</button>` : ''}
-    </div>`;
+  const head = fr2Head('#16a34a', FR2_IC.euro, 'Enveloppe', 'Budget formation ' + annee,
+    admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('budget','${b ? escAttr(b.id) : ''}')">${fr2Svg(b ? FR2_IC.pen : FR2_IC.plus)}${b ? 'Modifier' : 'Enveloppe'}</button>` : '');
 
   if (FR2_MISS.has(FR2_T_BUDGET)) {
-    el.innerHTML = head + `<div class="fr2-budget-n">${escHtml(fr2Eur0(engage))}</div>
+    el.innerHTML = head + `<div class="dc-body"><div class="fr2-budget-n">${escHtml(fr2Eur0(engage))}</div>
       <div class="fr2-budget-s">engagé sur l'année ${escHtml(annee)}</div>
-      <div class="fr2-warn">Enveloppe indisponible : la table <code>${FR2_T_BUDGET}</code> n'existe pas encore (voir <code>${escHtml(FR2_SQL)}</code>).</div>`;
+      <div class="fr2-warn">Enveloppe indisponible : la table <code>${FR2_T_BUDGET}</code> n'existe pas encore (voir <code>${escHtml(FR2_SQL)}</code>).</div></div>`;
     return;
   }
   if (!b || !(Number(b.enveloppe) > 0)) {
-    el.innerHTML = head + `<div class="fr2-budget-n">${escHtml(fr2Eur0(engage))}</div>
-      <div class="fr2-budget-s">engagé sur l'année ${escHtml(annee)} — aucune enveloppe définie</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="fr2-budget-n">${escHtml(fr2Eur0(engage))}</div>
+      <div class="fr2-budget-s">engagé sur l'année ${escHtml(annee)} — aucune enveloppe définie</div></div>`;
     return;
   }
   const env = Number(b.enveloppe);
@@ -482,10 +494,10 @@ function fr2RenderBudget() {
   const reste = env - engage;
   const partMasse = masse > 0 ? ` (${(env / masse * 100).toFixed(1).replace('.', ',')} % masse salariale)` : '';
   el.innerHTML = head +
-    `<div class="fr2-budget-n">${escHtml(fr2Eur0(engage))}</div>
+    `<div class="dc-body"><div class="fr2-budget-n">${escHtml(fr2Eur0(engage))}</div>
      <div class="fr2-budget-s">engagé sur ${escHtml(fr2Eur0(env))}${escHtml(partMasse)}</div>
      <div class="v2-prog"><span style="width:${pct}%;background:linear-gradient(90deg,#16a34a,#4ade80)"></span></div>
-     <div class="fr2-budget-f">${reste >= 0 ? 'Reste ' + escHtml(fr2Eur0(reste)) + ' disponibles' : 'Dépassement de ' + escHtml(fr2Eur0(-reste))}</div>`;
+     <div class="fr2-budget-f">${reste >= 0 ? 'Reste ' + escHtml(fr2Eur0(reste)) + ' disponibles' : 'Dépassement de ' + escHtml(fr2Eur0(-reste))}</div></div>`;
 }
 
 // ── Rendu : heures par catégorie ─────────────────────────────────────────
@@ -503,7 +515,7 @@ function fr2RenderCats() {
         <div class="v2-prog v2-bar-sm"><span style="width:${Math.round(h[k] / max * 100)}%;background:${FR2_CAT[k].c}"></span></div>
       </div>`).join('')
     : `<div class="v2-blk-vide">Aucune durée renseignée sur ces formations.</div>`;
-  el.innerHTML = `<div class="fr2-h"><span class="v2-blk-t">Par catégorie (heures)</span></div>` + corps;
+  el.innerHTML = fr2Head('#818cf8', FR2_IC.chart, 'Analyse', 'Heures par catégorie') + `<div class="dc-body">` + corps + `</div>`;
 }
 
 // ── Rendu : prochaines sessions ──────────────────────────────────────────
@@ -526,9 +538,7 @@ function fr2RenderSessions() {
         </div>`;
       }).join('')
     : `<div class="v2-blk-vide">Aucune session à venir.</div>`;
-  el.innerHTML = `<div class="fr2-h" style="--pc:#22d3ee">
-      <span class="fr2-h-ico">${fr2Svg(FR2_IC.cal)}</span><span class="v2-blk-t">Prochaines sessions</span>
-    </div>` + corps;
+  el.innerHTML = fr2Head('#22d3ee', FR2_IC.cal, 'Agenda', 'Prochaines sessions') + `<div class="dc-body">` + corps + `</div>`;
 }
 
 // ── Rendu : plan de développement des compétences ────────────────────────
@@ -542,19 +552,18 @@ function fr2RenderPlan() {
   const rows = FR2_PARC.filter(p => !p.annee || String(p.annee) === annee);
   const suivis = new Set(rows.map(p => String(p.employe_id)));
   const total = fr2EmpActifs().length;
-  const head = `<div class="fr2-h" style="--pc:#4ade80">
-      <span class="fr2-h-ico">${fr2Svg(FR2_IC.grad)}</span>
-      <span class="v2-blk-t">Plan de développement des compétences ${escHtml(annee)}</span>
-      ${!FR2_MISS.has(FR2_T_PARC) && total ? `<span class="fr2-pill fr2-h-add" style="--pc:#4ade80">${suivis.size} / ${total} salariés</span>` : ''}
-      ${admin ? `<button type="button" class="fr2-btn${!FR2_MISS.has(FR2_T_PARC) && total ? '' : ' fr2-h-add'}" onclick="fr2OpenForm('parcours')">${fr2Svg(FR2_IC.plus)}Parcours</button>` : ''}
-    </div>`;
+  const right = `<div style="display:flex;align-items:center;gap:8px">`
+    + `${!FR2_MISS.has(FR2_T_PARC) && total ? `<span class="dc-pill dim">${suivis.size} / ${total} salariés</span>` : ''}`
+    + `${admin ? `<button type="button" class="fr2-btn" onclick="fr2OpenForm('parcours')">${fr2Svg(FR2_IC.plus)}Parcours</button>` : ''}`
+    + `</div>`;
+  const head = fr2Head('#16a34a', FR2_IC.grad, 'Compétences', 'Plan de développement ' + annee, right);
   if (FR2_MISS.has(FR2_T_PARC)) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Suivi indisponible.</div>
-      <div class="fr2-warn">La table <code>${FR2_T_PARC}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Suivi indisponible.</div>
+      <div class="fr2-warn">La table <code>${FR2_T_PARC}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div></div>`;
     return;
   }
-  if (!rows.length) { el.innerHTML = head + `<div class="v2-blk-vide">Aucun parcours enregistré pour ${escHtml(annee)}.</div>`; return; }
-  el.innerHTML = head + rows.slice().sort((a, b) => (Number(b.progression) || 0) - (Number(a.progression) || 0)).map(p => {
+  if (!rows.length) { el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Aucun parcours enregistré pour ${escHtml(annee)}.</div></div>`; return; }
+  el.innerHTML = head + `<div class="dc-body">` + rows.slice().sort((a, b) => (Number(b.progression) || 0) - (Number(a.progression) || 0)).map(p => {
     const nom = fr2EmpNom(p.employe_id);
     const c = fr2Color(nom || p.id);
     const pct = Math.max(0, Math.min(100, Number(p.progression) || 0));
@@ -568,7 +577,7 @@ function fr2RenderPlan() {
       <span class="fr2-p-pct">${pct} %</span>
       ${admin ? `<button type="button" class="fr2-btn ico fr2-p-ed" title="Modifier" onclick="fr2OpenForm('parcours','${escAttr(p.id)}')">${fr2Svg(FR2_IC.pen)}</button>` : ''}
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
 }
 
 // ── Rendu : compteurs CPF ────────────────────────────────────────────────
@@ -578,16 +587,14 @@ function fr2RenderCpf() {
   if (!fr2IsRH()) { el.style.display = 'none'; return; }
   el.style.display = '';
   const admin = fr2IsAdmin();
-  const head = `<div class="fr2-h" style="--pc:#22d3ee">
-      <span class="fr2-h-ico">${fr2Svg(FR2_IC.card)}</span><span class="fr2-cpf-t">Compteurs CPF</span>
-      ${admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('cpf')">${fr2Svg(FR2_IC.plus)}Saisir</button>` : ''}
-    </div>`;
+  const head = fr2Head('#22d3ee', FR2_IC.card, 'Confidentiel', 'Compteurs CPF',
+    admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('cpf')">${fr2Svg(FR2_IC.plus)}Saisir</button>` : '');
   if (FR2_MISS.has(FR2_T_CPF)) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Compteurs indisponibles.</div>
-      <div class="fr2-warn">La table <code>${FR2_T_CPF}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Compteurs indisponibles.</div>
+      <div class="fr2-warn">La table <code>${FR2_T_CPF}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div></div>`;
     return;
   }
-  if (!FR2_CPF.length) { el.innerHTML = head + `<div class="v2-blk-vide">Aucun solde CPF renseigné.</div>`; return; }
+  if (!FR2_CPF.length) { el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Aucun solde CPF renseigné.</div></div>`; return; }
   const corps = FR2_CPF.slice().sort((a, b) => (Number(b.solde) || 0) - (Number(a.solde) || 0)).map(c => {
     const nom = fr2EmpNom(c.employe_id);
     const col = fr2Color(nom || c.id);
@@ -598,19 +605,17 @@ function fr2RenderCpf() {
       ${admin ? `<button type="button" class="fr2-btn ico" title="Modifier" onclick="fr2OpenForm('cpf','${escAttr(c.id)}')">${fr2Svg(FR2_IC.pen)}</button>` : ''}
     </div>`;
   }).join('');
-  el.innerHTML = head + corps + `<div class="fr2-cpf-f">Abondement employeur possible sur projet co-construit.</div>`;
+  el.innerHTML = head + `<div class="dc-body">` + corps + `<div class="fr2-cpf-f">Abondement employeur possible sur projet co-construit.</div></div>`;
 }
 
 // ── Rendu : évaluations ──────────────────────────────────────────────────
 function fr2RenderEvals() {
   const el = document.getElementById('fr2Evals');
   if (!el) return;
-  const head = `<div class="fr2-h" style="--pc:#fbbf24">
-      <span class="fr2-h-ico">${fr2Svg(FR2_IC.star)}</span><span class="v2-blk-t">Évaluations</span>
-    </div>`;
+  const head = fr2Head('#f59e0b', FR2_IC.star, 'Retours', 'Évaluations');
   if (FR2_MISS.has(FR2_T_EVAL)) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Retours non disponibles.</div>
-      <div class="fr2-warn">La table <code>${FR2_T_EVAL}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL_EVAL)}</code> (module « Mes formations »).</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Retours non disponibles.</div>
+      <div class="fr2-warn">La table <code>${FR2_T_EVAL}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL_EVAL)}</code> (module « Mes formations »).</div></div>`;
     return;
   }
   const par = new Map();
@@ -619,7 +624,7 @@ function fr2RenderEvals() {
     if (!par.has(k)) par.set(k, []);
     par.get(k).push(e);
   });
-  if (!par.size) { el.innerHTML = head + `<div class="v2-blk-vide">Aucun retour de stagiaire pour l'instant.</div>`; return; }
+  if (!par.size) { el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Aucun retour de stagiaire pour l'instant.</div></div>`; return; }
   const lignes = [...par.entries()].map(([id, evs]) => {
     const f = fr2Liste().find(x => String(x.id) === id);
     const notes = evs.map(e => Number(e.note)).filter(n => n > 0);
@@ -628,13 +633,13 @@ function fr2RenderEvals() {
     const froid = Math.round(evs.filter(e => (e.froid || '').trim()).length / evs.length * 100);
     return { titre: (f && f.titre) || 'Formation supprimée', n: evs.length, moy, chaud, froid };
   }).sort((a, b) => b.n - a.n).slice(0, 5);
-  el.innerHTML = head + lignes.map(l => `<div class="fr2-e">
+  el.innerHTML = head + `<div class="dc-body">` + lignes.map(l => `<div class="fr2-e">
       <div class="fr2-e-h">
         <span class="fr2-e-t">${escHtml(l.titre)}</span>
         <span class="fr2-e-n">${l.moy !== null ? escHtml(l.moy.toFixed(1).replace('.', ',')) + '/5' : '<span class="fr2-dash">non noté</span>'}</span>
       </div>
       <div class="fr2-e-m"><span>À chaud ${l.chaud} %</span><span>À froid ${l.froid} %</span><span>${l.n} retour${l.n > 1 ? 's' : ''}</span></div>
-    </div>`).join('');
+    </div>`).join('') + `</div>`;
 }
 
 // ── Rendu : attestations & certifications ────────────────────────────────
@@ -644,17 +649,15 @@ function fr2RenderAtt() {
   if (!fr2IsRH()) { el.style.display = 'none'; return; }
   el.style.display = '';
   const admin = fr2IsAdmin();
-  const head = `<div class="fr2-h" style="--pc:#a78bfa">
-      <span class="fr2-h-ico">${fr2Svg(FR2_IC.award)}</span><span class="v2-blk-t">Attestations &amp; certifications</span>
-      ${admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('attestation')">${fr2Svg(FR2_IC.plus)}Ajouter</button>` : ''}
-    </div>`;
+  const head = fr2Head('#a855f7', FR2_IC.award, 'Archives', 'Attestations & certifications',
+    admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('attestation')">${fr2Svg(FR2_IC.plus)}Ajouter</button>` : '');
   if (FR2_MISS.has(FR2_T_ATT)) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Archivage indisponible.</div>
-      <div class="fr2-warn">La table <code>${FR2_T_ATT}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Archivage indisponible.</div>
+      <div class="fr2-warn">La table <code>${FR2_T_ATT}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div></div>`;
     return;
   }
-  if (!FR2_ATT.length) { el.innerHTML = head + `<div class="v2-blk-vide">Aucune attestation archivée.</div>`; return; }
-  el.innerHTML = head + FR2_ATT.slice().reverse().map(a => {
+  if (!FR2_ATT.length) { el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Aucune attestation archivée.</div></div>`; return; }
+  el.innerHTML = head + `<div class="dc-body">` + FR2_ATT.slice().reverse().map(a => {
     const nom = fr2EmpNom(a.employe_id);
     const c = fr2Color(a.titre || a.id);
     const sous = [nom, a.delivre_le ? formatDate(a.delivre_le) : ''].filter(Boolean).join(' · ');
@@ -667,7 +670,7 @@ function fr2RenderAtt() {
       ${a.fichier_path ? `<button type="button" class="fr2-a-dl" title="Télécharger" onclick="fr2Telecharger('${escAttr(a.fichier_path)}')">${fr2Svg(FR2_IC.dl)}</button>` : ''}
       ${admin ? `<button type="button" class="fr2-a-dl" title="Supprimer" onclick="fr2SupprimerAtt('${escAttr(a.id)}')">${fr2Svg(FR2_IC.trash)}</button>` : ''}
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
 }
 
 async function fr2Telecharger(path) {
@@ -694,17 +697,15 @@ function fr2RenderOrgs() {
   const el = document.getElementById('fr2Orgs');
   if (!el) return;
   const admin = fr2IsAdmin();
-  const head = `<div class="fr2-h">
-      <span class="v2-blk-t">Organismes partenaires</span>
-      ${admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('organisme')">${fr2Svg(FR2_IC.plus)}Ajouter</button>` : ''}
-    </div>`;
+  const head = fr2Head('#818cf8', FR2_IC.book, 'Partenaires', 'Organismes partenaires',
+    admin ? `<button type="button" class="fr2-btn fr2-h-add" onclick="fr2OpenForm('organisme')">${fr2Svg(FR2_IC.plus)}Ajouter</button>` : '');
   if (FR2_MISS.has(FR2_T_ORG)) {
-    el.innerHTML = head + `<div class="v2-blk-vide">Répertoire indisponible.</div>
-      <div class="fr2-warn">La table <code>${FR2_T_ORG}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Répertoire indisponible.</div>
+      <div class="fr2-warn">La table <code>${FR2_T_ORG}</code> n'existe pas encore : exécutez <code>${escHtml(FR2_SQL)}</code>.</div></div>`;
     return;
   }
-  if (!FR2_ORG.length) { el.innerHTML = head + `<div class="v2-blk-vide">Aucun organisme enregistré.</div>`; return; }
-  el.innerHTML = head + FR2_ORG.map(o => {
+  if (!FR2_ORG.length) { el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Aucun organisme enregistré.</div></div>`; return; }
+  el.innerHTML = head + `<div class="dc-body">` + FR2_ORG.map(o => {
     const c = fr2Color(o.nom || o.id);
     return `<div class="fr2-o" style="--pc:${c}">
       <span class="fr2-o-av">${escHtml(fr2Ini(o.nom))}</span>
@@ -712,10 +713,10 @@ function fr2RenderOrgs() {
         <div class="fr2-o-n">${escHtml(o.nom || '')}</div>
         <div class="fr2-o-s">${o.specialite ? escHtml(o.specialite) : '<span class="fr2-dash">Spécialité non précisée</span>'}</div>
       </div>
-      <span class="fr2-o-q${o.qualiopi ? '' : ' non'}">${o.qualiopi ? 'Qualiopi' : 'Non certifié'}</span>
+      ${o.qualiopi ? fr2Badge('#10b981', 'Qualiopi') : fr2Badge('#8095b4', 'Non certifié')}
       ${admin ? `<button type="button" class="fr2-btn ico" title="Modifier" onclick="fr2OpenForm('organisme','${escAttr(o.id)}')">${fr2Svg(FR2_IC.pen)}</button>` : ''}
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
 }
 
 // ── Modale générique des blocs RH (gabarit .v2-ov / .v2-md) ──────────────

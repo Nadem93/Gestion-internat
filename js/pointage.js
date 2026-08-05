@@ -10,7 +10,7 @@ function getPointages()      { return _ptCache; }
 function ptEmployes()        { return _ptEmployesCache.filter(e => e.statut !== 'inactif'); }
 function ptIsCanEdit()       { return Auth.isAdmin() || (typeof canEditResidents === 'function' && canEditResidents(Auth.getSession()?.userId)); }
 
-function _ptLocalStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function _ptLocalStr(d) { return isoJour(d); }
 
 function ptWeekDates() {
   const now = new Date(); now.setHours(0,0,0,0);

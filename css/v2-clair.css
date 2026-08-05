@@ -158,6 +158,14 @@ html.clair body.v2 .at-tag-warn   { color: #d97706; }
 html.clair body.v2 .at-tag-info   { color: #4f46e5; }
 html.clair body.v2 .at-pill-danger { background: rgba(239,68,68,.10); color: #dc2626; }
 html.clair body.v2 .at-pill-warn   { background: rgba(245,158,11,.14); color: #b45309; }
+
+/* Tableau de bord « Console Data » — accents profonds du thème clair */
+html.clair body.v2 .dc-b-red    { background: rgba(239,68,68,.10);  color: #dc2626; border-color: rgba(239,68,68,.22); }
+html.clair body.v2 .dc-b-amber  { background: rgba(245,158,11,.12); color: #b45309; border-color: rgba(245,158,11,.26); }
+html.clair body.v2 .dc-b-green  { background: rgba(16,185,129,.12); color: #059669; border-color: rgba(16,185,129,.24); }
+html.clair body.v2 .dc-b-indigo { background: rgba(99,102,241,.10); color: #4f46e5; border-color: rgba(99,102,241,.22); }
+html.clair body.v2 .dc-b-cyan   { background: rgba(34,211,238,.12); color: #0891b2; border-color: rgba(34,211,238,.28); }
+html.clair body.v2 .dc-count    { color: #059669; }
 html.clair body.v2 .btn-ghost { background: rgba(15,38,70,.05); color: var(--v2-t4); }
 html.clair body.v2 .btn-ghost:hover { background: rgba(15,38,70,.09); }
 html.clair body.v2 .v2-tr-rep-i { background: rgba(15,38,70,.04); }
@@ -334,3 +342,25 @@ html.clair body.v2 [style*="color:#0284c7"] { color: #0e7490 !important; }
    par pl2TeinterEvenements() (planning-v2.js) → recalcul même à la bascule. */
 html.clair { --pl-ev-base: #ffffff; }
 html.clair body.v2 .pl-ev { background: color-mix(in srgb, var(--ec, #6366f1) 17%, #ffffff); }
+
+/* ── Options des menus déroulants — thème clair ──
+   La base sombre force « option { background:#101d31 } » (v2.css et 17 CSS de
+   pages) : en clair, --v2-t2 devient foncé → texte sombre sur fond sombre,
+   options illisibles. Une seule surcharge générique couvre tous les selects. */
+html.clair body.v2 select option { background: #ffffff; color: var(--v2-t2); }
+
+/* ── Correctifs thème clair (review 2026-08) : fonds sombres codés en dur ── */
+/* Guide d'aide : bulles des épingles (base #101d31) */
+html.clair .ai-pin .bub { background: #ffffff; box-shadow: 0 18px 44px -14px rgba(15,38,70,.28); }
+/* Cases à cocher dessinées (échéances + EIG) : base rgba(10,23,40,.5).
+   L'état :checked garde son fond coloré (indigo / rouge), valable en clair. */
+html.clair body.v2 .ec2-toggle input,
+html.clair body.v2 .eig2-chk input[type="checkbox"] { background-color: #ffffff; border-color: rgba(15,38,70,.30); }
+/* Documentation : tuiles de documents (base rgba(10,23,40,.4)) */
+html.clair .dc2-doc { background: rgba(15,38,70,.04); }
+html.clair .dc2-doc:hover { background: rgba(15,38,70,.08); border-color: rgba(15,38,70,.16); }
+/* Messagerie : boutons d'action de conversation (base rgba(10,23,40,.85)) */
+html.clair .ms-conv-act button { background: rgba(15,38,70,.06); }
+html.clair .ms-conv-act button:hover { color: var(--v2-t1); background: rgba(15,38,70,.14); }
+/* Contacts extérieurs : survol des besoins (base rgba(10,23,40,.62)) */
+html.clair .ce2-besoin:hover { background: rgba(15,38,70,.07); border-color: rgba(15,38,70,.18); }

@@ -43,7 +43,7 @@ function _sa2Avg(s, allQ) {
 }
 function _sa2Pct(avg) { return avg === null ? null : Math.round(avg * 25); }
 function _sa2Mean(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null; }
-function _sa2Iso(d) { return d.toISOString().slice(0, 10); }
+function _sa2Iso(d) { return isoJour(d); }
 
 // ── AGRÉGATION ────────────────────────────────────────────────────────
 function sat2Data() {
@@ -135,8 +135,8 @@ function sat2Stats(d) {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = txt;
-    const tile = el.closest('.sa2-stat');
-    if (tile && col) tile.style.setProperty('--pc', col);
+    const tile = el.closest('.dc-kpi');
+    if (tile && col) tile.style.setProperty('--dc-c', col);
   };
   set('satStatTotal', String(d.list.length), '#fcd34d');
   set('satStatMois', String(d.mois), '#818cf8');
@@ -166,10 +166,10 @@ function sat2Resultats(d) {
 
   // Score par catégorie
   const cats = d.cats.length
-    ? `<div class="sa2-cats">${d.cats.map(c => `<div style="--pc:${_sa2Col(c.pct)}">
-        <div class="sa2-cat-h"><span class="sa2-cat-l">${escHtml(c.label)}</span><span class="sa2-cat-p">${c.pct}%</span></div>
-        <div class="v2-prog"><span style="width:${c.pct}%;background:${_sa2Col(c.pct)}"></span></div>
-      </div>`).join('')}</div>`
+    ? `<div class="sa2-cats">${d.cats.map(c => { const cc = _sa2Col(c.pct); return `<div style="border-left:3px solid ${cc};padding:2px 0 2px 12px">
+        <div class="sa2-cat-h"><span class="sa2-cat-l">${escHtml(c.label)}</span><span class="dc-badge" style="background:${cc}1f;color:${cc};border:1px solid ${cc}44"><span class="d" style="background:${cc}"></span>${c.pct}%</span></div>
+        <div class="al-prog-bar" style="margin-top:7px"><span style="width:${c.pct}%;background:${cc}"></span></div>
+      </div>`; }).join('')}</div>`
     : '<div class="v2-blk-vide">Aucune réponse enregistrée sur les questions du référentiel.</div>';
 
   // Évolution : hauteur proportionnelle au pourcentage (plancher visuel à 6 %)
@@ -196,16 +196,24 @@ function sat2Resultats(d) {
 
   box.innerHTML = `<div class="sa2-body">
     <div class="sa2-col">
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t">Score par catégorie</span>
-          <span class="sa2-meta">${nQ} questionnaire${nQ > 1 ? 's' : ''}</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${_sa2Svg(SA2_IC.smile)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Référentiel</div><div class="dc-title">Score par catégorie</div></div>
+          </div>
+          <span class="dc-pill dim">${nQ} questionnaire${nQ > 1 ? 's' : ''}</span>
         </div>
-        ${cats}
+        <div class="dc-body">${cats}</div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Évolution du score global</span></div>
-        <div class="sa2-evo">${evo}</div>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${_sa2Svg(SA2_IC.up)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">6 mois glissants</div><div class="dc-title">Évolution du score global</div></div>
+          </div>
+        </div>
+        <div class="dc-body"><div class="sa2-evo">${evo}</div></div>
       </div>
     </div>
     <div class="sa2-col">
@@ -218,12 +226,15 @@ function sat2Resultats(d) {
         </div>
         <div class="sa2-gauge-s">${escHtml(deltaTxt)}</div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="sa2-blk-ico" style="color:#22d3ee">${_sa2Svg(SA2_IC.chat)}</span>
-          <span class="v2-blk-t">Verbatims récents</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${_sa2Svg(SA2_IC.chat)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Commentaires</div><div class="dc-title">Verbatims récents</div></div>
+          </div>
+          ${d.verbatims.length ? `<span class="dc-pill dim">${d.verbatims.length}</span>` : ''}
         </div>
-        ${verbs}
+        <div class="dc-body">${verbs}</div>
       </div>
     </div>
   </div>`;
@@ -244,7 +255,15 @@ function sat2Formulaires(d) {
     return;
   }
 
-  box.innerHTML = '<div class="sa2-list">' + rows.map(s => {
+  box.innerHTML = `<div class="dc-card">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${_sa2Svg(SA2_IC.doc)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Historique</div><div class="dc-title">Questionnaires saisis</div></div>
+      </div>
+      <span class="dc-pill dim">${rows.length}</span>
+    </div>
+    <div class="dc-body"><div class="sa2-list">` + rows.map(s => {
     const pct = _sa2Pct(_sa2Avg(s, d.allQ));
     const col = _sa2Col(pct);
     const meta = [];
@@ -269,7 +288,7 @@ function sat2Formulaires(d) {
         <button type="button" class="sa2-act" style="--ac:#ef4444" title="Supprimer" aria-label="Supprimer" onclick="deleteSat('${escAttr(s.id)}')">${_sa2Svg(SA2_IC.trash)}</button>
       </div>
     </div>`;
-  }).join('') + '</div>';
+  }).join('') + '</div></div></div>';
 }
 
 // ── VUE QUESTIONS (admin) ─────────────────────────────────────────────
@@ -281,13 +300,14 @@ function sat2QuestionsView() {
   const custom = (typeof getCustomQuestions === 'function' ? getCustomQuestions() : []) || [];
   const allCats = [...new Set(base.map(q => q.cat)), 'Autre'];
 
-  const bloc = (titre, qs, editable) => {
+  const bloc = (qs, editable) => {
     const cats = [...new Set(qs.map(q => q.cat))];
-    if (!qs.length) return `<div class="sa2-qcat">${escHtml(titre)}</div><div class="v2-blk-vide">Aucune question personnalisée pour l'instant.</div>`;
-    return `<div class="sa2-qcat">${escHtml(titre)}</div>` + cats.map(cat => `
+    if (!qs.length) return `<div class="v2-blk-vide">Aucune question personnalisée pour l'instant.</div>`;
+    const lc = editable ? '#f59e0b' : '#8095b4';
+    return cats.map(cat => `
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;font-weight:600;color:var(--v2-indigo-light);margin-bottom:6px">${escHtml(cat)}</div>
-        ${qs.filter(q => q.cat === cat).map(q => `<div class="sa2-qi">
+        <div class="dc-eyebrow" style="margin-bottom:7px">${escHtml(cat)}</div>
+        ${qs.filter(q => q.cat === cat).map(q => `<div class="sa2-qi" style="border-left:3px solid ${lc};padding-left:11px">
           <span class="sa2-qi-l">${escHtml(q.label)}</span>
           ${editable
             ? `<button type="button" class="sa2-act" style="--ac:#ef4444" title="Supprimer" aria-label="Supprimer la question" onclick="deleteCustomQuestion('${escAttr(q.id)}')">${_sa2Svg(SA2_IC.trash)}</button>`
@@ -298,30 +318,55 @@ function sat2QuestionsView() {
 
   box.innerHTML = `<div class="sa2-body" style="grid-template-columns:1fr 1fr">
     <div class="sa2-col">
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Ajouter une question</span></div>
-        <div class="sa2-qadd">
-          <input type="text" id="satNewQLabel" class="v2-fld" placeholder="Libellé de la question…"/>
-          <button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="addCustomQuestion()">${_sa2Svg(SA2_IC.plus, 2.4)} Ajouter</button>
-        </div>
-        <div class="sa2-qgrid">
-          <div>
-            <label class="v2-fld-l" for="satNewQCatSelect">Catégorie existante</label>
-            <select id="satNewQCatSelect" class="v2-fld" onchange="document.getElementById('satNewQCatWrap').style.display=this.value==='__new'?'':'none'">
-              ${allCats.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('')}
-              <option value="__new">+ Nouvelle catégorie…</option>
-            </select>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#6366f122;color:#6366f1">${_sa2Svg(SA2_IC.plus)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Référentiel</div><div class="dc-title">Ajouter une question</div></div>
           </div>
-          <div id="satNewQCatWrap" style="display:none">
-            <label class="v2-fld-l" for="satNewQCatCustom">Ou nouvelle catégorie</label>
-            <input type="text" id="satNewQCatCustom" class="v2-fld" placeholder="Nom de la catégorie"/>
+        </div>
+        <div class="dc-body">
+          <div class="sa2-qadd">
+            <input type="text" id="satNewQLabel" class="v2-fld" placeholder="Libellé de la question…"/>
+            <button type="button" class="v2-btn-pri" style="padding:0 18px" onclick="addCustomQuestion()">${_sa2Svg(SA2_IC.plus, 2.4)} Ajouter</button>
+          </div>
+          <div class="sa2-qgrid">
+            <div>
+              <label class="v2-fld-l" for="satNewQCatSelect">Catégorie existante</label>
+              <select id="satNewQCatSelect" class="v2-fld" onchange="document.getElementById('satNewQCatWrap').style.display=this.value==='__new'?'':'none'">
+                ${allCats.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('')}
+                <option value="__new">+ Nouvelle catégorie…</option>
+              </select>
+            </div>
+            <div id="satNewQCatWrap" style="display:none">
+              <label class="v2-fld-l" for="satNewQCatCustom">Ou nouvelle catégorie</label>
+              <input type="text" id="satNewQCatCustom" class="v2-fld" placeholder="Nom de la catégorie"/>
+            </div>
           </div>
         </div>
       </div>
-      <div class="v2-blk">${bloc(`Questions par défaut (${base.length}) — non modifiables`, base, false)}</div>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#8095b422;color:#8095b4">${_sa2Svg(SA2_IC.doc)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Non modifiables</div><div class="dc-title">Questions par défaut</div></div>
+          </div>
+          <span class="dc-pill dim">${base.length}</span>
+        </div>
+        <div class="dc-body">${bloc(base, false)}</div>
+      </div>
     </div>
     <div class="sa2-col">
-      <div class="v2-blk">${bloc(`Questions personnalisées (${custom.length})`, custom, true)}</div>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${_sa2Svg(SA2_IC.pen)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Sur mesure</div><div class="dc-title">Questions personnalisées</div></div>
+          </div>
+          <span class="dc-pill dim">${custom.length}</span>
+        </div>
+        <div class="dc-body">${bloc(custom, true)}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -331,7 +376,7 @@ function sat2QuestionsView() {
 function sat2ModalQ(allQ, s) {
   const cats = [...new Set(allQ.map(q => q.cat))];
   return cats.map(cat => `<div class="sa2-qblock">
-    <div class="sa2-md-cat">${escHtml(cat)}</div>
+    <div class="dc-eyebrow" style="margin-bottom:9px">${escHtml(cat)}</div>
     ${allQ.filter(q => q.cat === cat).map(q => {
       const val = s?.reponses?.[q.id];
       return `<div class="sa2-q">

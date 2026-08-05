@@ -1,0 +1,131 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — ACCUEIL : cartes de modules « carte-donnée »
+   Chaque tuile porte le chiffre qui correspond à son intitulé (24/26 présents,
+   3 transmissions non lues, prochain RDV à 14h30…). L'accueil cesse d'être un
+   menu pour devenir un tableau de bord.
+
+   Ces classes sont NEUVES (.v2-modb / .mb-*) : l'ancienne tuile .v2-mod reste
+   intacte, elle sert encore au tableau de bord RH (js/rh-dashboard-v2.js).
+   Seule la grille de l'accueil porte .v2-mods-b.
+   Chargé APRÈS css/v2.css, qui n'est pas modifié par cette page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 5 tuiles par ligne. css/v2.css repasse .v2-mods à 4 colonnes dès 1280 px puis
+   à 3 dès 1200 px : sur un portable classique on n'en voyait que 4. La tuile
+   « carte-donnée » tient dans ~190 px, on peut donc garder 5 colonnes bien plus
+   bas. Double classe (.v2-mods.v2-mods-b) pour passer devant ces media queries
+   quel que soit l'ordre de chargement. */
+.v2-mods.v2-mods-b { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1060px) { .v2-mods.v2-mods-b { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 900px)  { .v2-mods.v2-mods-b { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.v2-mods-b .v2-mod-wrap { min-height: 138px; }
+
+.v2-modb {
+  position: relative; flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  padding: 12px 14px 11px;
+  text-decoration: none; color: var(--v2-t2);
+  border-radius: var(--v2-r-card2);
+}
+
+/* ── En-tête : pastille d'icône + intitulé ───────────────────────────────── */
+.mb-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mb-ic {
+  width: 26px; height: 26px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--mc, #818cf8) 15%, transparent);
+  color: var(--mc, #818cf8);
+}
+.mb-ic svg { width: 14px; height: 14px; }
+.mb-t {
+  font-size: 12px; font-weight: 700; letter-spacing: .01em; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── Zone centrale : le chiffre et sa légende ────────────────────────────── */
+.mb-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 9px 0 7px; min-width: 0; }
+.mb-n {
+  font-family: var(--v2-display); font-size: 28px; font-weight: 800; line-height: 1;
+  color: var(--mc, #818cf8); letter-spacing: -.02em;
+}
+/* Unité / dénominateur (« /26 », « % ») : plus petit et neutre, pour que le
+   chiffre reste le point d'accroche. */
+.mb-n i { font-style: normal; font-size: 13px; font-weight: 700; margin-left: 4px; color: var(--v2-t6); }
+/* Thème clair : une couleur de module vive sur carte blanche tombe sous le
+   seuil de contraste (#22c55e ≈ 2,3:1) ; on la fonce sans perdre la teinte.
+   En thème sombre la carte est foncée, la couleur pure passe très bien. */
+html.clair .mb-n { color: color-mix(in srgb, var(--mc, #818cf8) 72%, #000); }
+/* Variante texte (prochain RDV, nom d'établissement…) : pas un nombre, donc
+   pas la fonte d'affichage ni la couleur du module. */
+.mb-txt {
+  font-size: 15px; font-weight: 700; color: var(--v2-t4); line-height: 1.15;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mb-l {
+  font-size: 10.5px; color: var(--v2-t7); margin-top: 5px; line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Attente de la donnée : barre grise à la place du chiffre, pour que la carte
+   ne saute pas quand la valeur arrive. */
+.mb-sk {
+  display: block; width: 38px; height: 21px; border-radius: 6px;
+  background: color-mix(in srgb, var(--mc, #818cf8) 16%, transparent);
+  animation: mbPulse 1.3s ease-in-out infinite;
+}
+@keyframes mbPulse { 0%, 100% { opacity: .45; } 50% { opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .mb-sk { animation: none; } }
+
+/* ── Pied : le sous-titre d'origine, en retrait ──────────────────────────── */
+.mb-foot {
+  display: flex; align-items: center; min-height: 20px;
+  padding-top: 8px; padding-right: 26px; /* place du raccourci « + » */
+  border-top: 1px solid var(--v2-b-soft);
+}
+.mb-sub { font-size: 10px; color: var(--v2-t7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Raccourci « + » : sibling du lien (pas d'ancre imbriquée), donc calé en
+      absolu dans le pied plutôt qu'en rangée sous la carte. ───────────────── */
+.v2-mods-b .v2-mod-racc {
+  position: absolute; right: 10px; bottom: 9px; z-index: 2;
+  padding: 0; justify-content: flex-end;
+}
+.v2-mods-b .v2-mod-r { width: 22px; height: 22px; border-radius: 7px; }
+.v2-mods-b .v2-mod-r svg { width: 12px; height: 12px; }
+
+/* ── Badge de notification : au-dessus de l'intitulé, à droite ───────────── */
+.v2-modb .notif-badge {
+  position: absolute; top: 9px; right: 10px; z-index: 2;
+  min-width: 18px; height: 18px; padding: 0 6px; border-radius: 10px;
+  background: var(--v2-danger); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.v2-modb .notif-badge.hidden { display: none; }
+/* Le badge et le titre se disputent la largeur : on réserve la place. */
+.v2-mod-wrap.mb-hasbadge .mb-top { padding-right: 26px; }
+
+/* ── État « il y a quelque chose à traiter » ─────────────────────────────── */
+/* Posé par le JS quand la métrique est non nulle sur un module d'alerte. */
+.v2-mod-wrap.mb-warn {
+  border-color: color-mix(in srgb, var(--mc, #ef4444) 42%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mc, #ef4444) 9%, transparent), transparent 62%), var(--v2-s-card);
+}
+
+/* ── Mobile : on retombe sur la grille d'icônes 4 colonnes, comme les autres
+      pages hub. Les règles de js/mobile-nav.js visent .v2-mod-* : elles ne
+      s'appliquent pas aux classes neuves, il faut les écrire ici. ─────────── */
+@media (max-width: 860px) {
+  .v2-mods-b { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 16px 8px; }
+  .v2-mods-b .v2-mod-wrap { background: none !important; border: none !important; min-height: 0; }
+  .v2-mods-b .v2-mod-wrap:hover { transform: none; background: none !important; border-color: transparent !important; }
+  .v2-modb { padding: 0; align-items: center; text-align: center; }
+  .mb-top { flex-direction: column; gap: 7px; width: 100%; }
+  .mb-ic { width: 54px; height: 54px; border-radius: 17px; border: 1px solid color-mix(in srgb, var(--mc, #818cf8) 30%, transparent); }
+  .mb-ic svg { width: 23px; height: 23px; }
+  .mb-t { width: 100%; padding: 0 4px; font-size: 9.5px; text-align: center; line-height: 1.2; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .mb-mid, .mb-foot { display: none; }
+  .v2-mods-b .v2-mod-racc { display: none; }
+  .v2-modb .notif-badge { top: -3px; right: calc(50% - 33px); }
+  .v2-mod-wrap.mb-warn { background: none !important; }
+}

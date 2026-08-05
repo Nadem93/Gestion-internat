@@ -142,14 +142,18 @@ function dg2RenderStats(all, docs) {
   const echus = docs.filter(dg2Overdue).length;
   const octets = all.reduce((s, d) => s + (Number(d.size) || 0), 0);
   const stats = [
-    { n: String(all.length),   l: 'Documents',    c: '#a78bfa', i: DG2_IC.folder },
-    { n: String(residents.size), l: 'Résidents',  c: '#818cf8', i: DG2_IC.users },
-    { n: String(echus),        l: 'À renouveler', c: '#ef4444', i: DG2_IC.alert },
-    { n: dg2Taille(octets),    l: 'Stockage',     c: '#22d3ee', i: DG2_IC.db }
+    { n: String(all.length),   l: 'Documents',    sub: 'Total GED',          c: '#a78bfa', i: DG2_IC.folder },
+    { n: String(residents.size), l: 'Résidents',  sub: 'Dossiers concernés',  c: '#818cf8', i: DG2_IC.users },
+    { n: String(echus),        l: 'À renouveler', sub: 'Échéances dépassées', c: '#ef4444', i: DG2_IC.alert },
+    { n: dg2Taille(octets),    l: 'Stockage',     sub: 'Espace occupé',       c: '#22d3ee', i: DG2_IC.db }
   ];
-  el.innerHTML = stats.map(s => `<div class="dg2-stat" style="--pc:${s.c}">
-      <span class="dg2-stat-ico">${dg2Svg(s.i)}</span>
-      <div><div class="dg2-stat-n">${escHtml(s.n)}</div><div class="dg2-stat-l">${escHtml(s.l)}</div></div>
+  el.innerHTML = stats.map(s => `<div class="dc-kpi" style="--dc-c:${s.c}">
+      <div class="dc-kpi-top">
+        <span class="dc-kpi-label">${escHtml(s.l)}</span>
+        <span class="dc-kpi-ico" style="color:${s.c}">${dg2Svg(s.i).replace('<svg', '<svg width="16" height="16"')}</span>
+      </div>
+      <div class="dc-kpi-val">${escHtml(s.n)}</div>
+      <div class="dc-kpi-sub">${escHtml(s.sub)}</div>
     </div>`).join('');
 }
 
@@ -190,9 +194,9 @@ function dg2Card(d) {
     <span class="dg2-card-ico">${dg2Svg(DG2_IC.file)}</span>
     <div class="dg2-card-n" title="${escHtml(d.name || '')}">${escHtml(d.name || 'Sans nom')}</div>
     <div class="dg2-card-r">${escHtml(isRes ? 'Ressource partagée' : (d.residentName || ''))}</div>
-    ${d.category ? `<span class="dg2-cat">${escHtml(cat.l)}</span>` : ''}
+    ${d.category ? `<span class="dc-badge" style="background:${cat.c}1f;color:${cat.c};border:1px solid ${cat.c}44"><span class="d" style="background:${cat.c}"></span>${escHtml(cat.l)}</span>` : ''}
     <div class="dg2-card-m">${escHtml(dg2Type(d))} · ${escHtml(dg2MoisAnnee(d.docDate))}</div>
-    ${od ? `<span class="dg2-echu">Échu ${escHtml(dg2JourMois(d.dueDate))}</span>` : ''}
+    ${od ? `<span class="dc-badge dc-b-red"><span class="d"></span>Échu ${escHtml(dg2JourMois(d.dueDate))}</span>` : ''}
     <div class="dg2-acts">${acts.join('')}</div>
   </div>`;
 }
@@ -207,7 +211,7 @@ function dg2RenderRecents(all) {
   el.innerHTML = recents.map(d => {
     const c = dg2Cat(d.category).c;
     const meta = [d.residentName, d.uploadedBy].filter(Boolean).join(' · ');
-    return `<div class="dg2-rec" style="--pc:${c}">
+    return `<div class="dg2-rec" style="--pc:${c};border-left:3px solid ${c};padding-left:11px">
       <span class="dg2-rec-ico">${dg2Svg(DG2_IC.file)}</span>
       <div style="flex:1;min-width:0">
         <div class="dg2-rec-n">${escHtml(d.name || 'Sans nom')}</div>
@@ -244,16 +248,20 @@ async function dg2RenderFamille(residentId) {
   let liens = [];
   try { liens = await sbGetFamilleLiensResident(residentId) || []; }
   catch (e) { console.warn('[documents-v2] comptes famille indisponibles', e); }
-  el.innerHTML = `<div class="v2-blk dg2-fam">
-    <div class="dg2-blk-h">
-      ${dg2Svg(DG2_IC.fam).replace('<svg', '<svg style="color:#22d3ee"')}
-      <span class="v2-blk-t">Comptes famille liés</span>
+  el.innerHTML = `<div class="dc-card dg2-fam">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${dg2Svg(DG2_IC.fam).replace('<svg', '<svg width="16" height="16"')}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Accès lecture</div><div class="dc-title">Comptes famille liés</div></div>
+      </div>
       <button type="button" class="dg2-fam-add" onclick="openFamModal('${escHtml(residentId)}')">+ Compte famille</button>
     </div>
+    <div class="dc-body">
     ${liens.length ? liens.map(l => `<div class="dg2-fam-r">
       <span class="dg2-fam-n">${escHtml((`${l.prenom || ''} ${l.nom || ''}`).trim() || 'Compte famille')}</span>
       <button type="button" class="dg2-fam-x" onclick="delierCompteFamille('${escHtml(l.lienId)}','${escHtml(residentId)}')">Délier</button>
     </div>`).join('') : '<div class="v2-blk-vide">Aucun compte famille lié à ce résident.</div>'}
+    </div>
   </div>`;
 }
 

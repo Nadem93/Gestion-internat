@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Alertes — FTR</title>
+  <title>Alertes — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -48,15 +48,24 @@
       <div class="v2-al-stats" id="alStats"></div>
       <div class="v2-chips" id="alFilters" style="margin-bottom:18px"></div>
 
+      <!-- Légende des boutons d'action de chaque alerte -->
+      <div class="al-legend">
+        <span class="al-legend-t">Boutons d'action</span>
+        <span class="al-lg"><span class="al-lg-i" style="color:#6366f1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Traiter</span>
+        <span class="al-lg"><span class="al-lg-i" style="color:#10b981"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg></span>Je m'en occupe</span>
+        <span class="al-lg"><span class="al-lg-i" style="color:#f59e0b"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 15 14"/></svg></span>Reporter</span>
+        <span class="al-lg"><span class="al-lg-i" style="color:#ef4444"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>Ignorer</span>
+      </div>
+
       <div class="v2-al-body">
-        <div id="alList" style="display:flex;flex-direction:column;gap:12px"></div>
+        <div id="alList" style="display:flex;flex-direction:column;gap:0"></div>
         <div style="display:flex;flex-direction:column;gap:16px">
-          <div class="v2-blk" id="alCats"></div>
-          <div class="v2-consignes" id="alEcheances"></div>
+          <div class="dc-card" id="alCats"></div>
+          <div class="dc-card" id="alEcheances"></div>
         </div>
       </div>
 
-      <div class="v2-blk" id="alTraitees" style="margin-top:18px"></div>
+      <div class="dc-card" id="alTraitees" style="margin-top:18px"></div>
     </div>
 
   </div>

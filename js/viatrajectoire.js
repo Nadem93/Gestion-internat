@@ -106,7 +106,7 @@ function openVTDemande(data) {
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Date d'envoi</label><input type="date" id="vtDate" class="form-input" value="${data ? data.date.split('T')[0] : new Date().toISOString().slice(0,10)}"/></div>
+          <div class="form-group"><label>Date d'envoi</label><input type="date" id="vtDate" class="form-input" value="${data ? data.date.split('T')[0] : today()}"/></div>
           <div class="form-group"><label>Statut</label><select id="vtStatut" class="form-input">${statutOpts}</select></div>
         </div>
         <div class="form-group"><label>Commentaire / observations</label>

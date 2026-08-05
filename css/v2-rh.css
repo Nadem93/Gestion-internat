@@ -18,11 +18,17 @@ body.v2 .rh-shell {
 /* min-height:0 : sans lui, dans la coque mobile `height:100dvh` en colonne,
    .rh-main grandit à son contenu et #rhHome ne défile plus (cf. vie-quotidienne). */
 .rh-main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+/* Alignée sur la barre « pilule flottante » des autres pages (.v2-top dans
+   css/v2.css) : sans ça, passer du portail RH à n'importe quelle autre page
+   changeait de barre au milieu de la navigation. */
 .rh-topbar {
-  height: 66px; flex-shrink: 0; border-bottom: 1px solid var(--v2-b);
-  display: flex; align-items: center; gap: 14px; padding: 0 30px;
+  flex-shrink: 0; border-bottom: none;
+  display: flex; align-items: center; gap: 12px;
+  margin: 14px 18px 0; padding: 8px 10px 8px 13px;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: 999px; box-shadow: 0 6px 20px rgba(15,38,70,.06);
 }
-.rh-topbar-t { font-size: 17px; font-weight: 700; color: #fff; }
+.rh-topbar-t { font-size: 14px; font-weight: 700; color: var(--v2-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rh-topbar-m { margin-left: auto; font-size: 12.5px; color: var(--v2-t7); }
 .rh-back {
   display: none; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
@@ -73,17 +79,23 @@ body.v2 .rh-shell {
   transition: transform .15s, box-shadow .3s, border-color .2s;
 }
 .rh-card:hover {
+  background: color-mix(in srgb, var(--rhc, #6366f1) 4%, var(--v2-s-card));
   transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--rhc, #6366f1) 40%, transparent);
   box-shadow: 0 14px 30px -14px var(--rhc-sh, rgba(99,102,241,.4));
 }
 .rh-card:focus-visible { box-shadow: 0 0 0 2.5px var(--rhc-sh, rgba(99,102,241,.4)); }
+/* Icône en pastille teintée — voir la note dans css/v2-pilotage.css. */
 .rh-card-ic {
   width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  background: var(--rhc, #6366f1); box-shadow: 0 6px 14px var(--rhc-sh, rgba(99,102,241,.33));
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--rhc, #6366f1) 14%, transparent);
+  color: var(--rhc, #6366f1);
 }
 .rh-card-ic svg { width: 20px; height: 20px; }
+/* Thème sombre : glyphe éclairci (cf. note dans css/v2-pilotage.css). */
+html:not(.clair) .rh-card-ic { color: color-mix(in srgb, var(--rhc, #6366f1) 65%, #fff);
+  background: color-mix(in srgb, var(--rhc, #6366f1) 20%, transparent); }
 .rh-card-l { font-size: 12.5px; font-weight: 600; color: var(--v2-t2); margin-top: 12px; }
 .rh-card-s { font-size: 10.5px; color: var(--v2-t6); margin-top: 3px; }
 .rh-card-b {
@@ -219,7 +231,7 @@ body.v2 .rh-shell {
   .rh-kpi { padding: 13px 14px; gap: 11px; }
   .rh-kpi-ic { width: 38px; height: 38px; border-radius: 11px; }
   .rh-kpi-n { font-size: 20px; }
-  .rh-topbar { padding-left: 18px; padding-right: 18px; }
+  .rh-topbar { margin: 10px 10px 0; padding: 8px 9px; border-radius: 18px; flex-wrap: wrap; }
   .rh-topbar-m { display: none; }
 }
 

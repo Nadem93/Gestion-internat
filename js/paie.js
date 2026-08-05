@@ -426,8 +426,12 @@ async function saveFichePaie() {
   try {
     let fichierPath = '', fichierNom = '';
     if (file) {
-      // Dépose le bulletin dans le dossier du salarié (pour qu'il puisse le consulter)
-      const folder = emp.profileId ? emp.profileId : session.userId;
+      // Le PREMIER dossier du chemin doit être auth.uid() — c'est ce qu'exige la
+      // policy du bucket justificatifs. Déposer dans le dossier du SALARIÉ
+      // destinataire faisait échouer l'upload en « violates row-level security
+      // policy » dès que sa fiche était reliée à un compte, et la saisie était
+      // perdue. Même correctif que employe.html:938.
+      const folder = (typeof sbAuthUid === 'function' && await sbAuthUid()) || session.userId;
       fichierPath = await sbUploadJustificatif(file, folder);
       fichierNom = file.name;
     }

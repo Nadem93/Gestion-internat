@@ -101,6 +101,17 @@
   };
   const svg = (p, w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' +
     (w || 2) + '" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  // Icône dimensionnée pour un chip « Console Data » (16px).
+  const svg16 = p => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+
+  // En-tête « Console Data » : chip coloré + micro-label + titre (+ contenu droite).
+  const dcHead = (color, eyebrow, title, iconPath, right) =>
+    '<div class="dc-head"><div class="dc-head-l">' +
+      '<span class="dc-chip" style="background:' + color + '22;color:' + color + '">' + svg16(iconPath) + '</span>' +
+      '<div style="min-width:0"><div class="dc-eyebrow">' + esc(eyebrow) + '</div>' +
+      '<div class="dc-title">' + esc(title) + '</div></div></div>' +
+    (right || '') + '</div>';
 
   const av = (nom, id, cls) => '<span class="cgv-av ' + (cls || '') + '" style="background:' +
     couleur(id) + '">' + esc(initiales(nom)) + '</span>';
@@ -323,7 +334,7 @@
     // La visibilité du panneau est pilotée par les onglets (renderTabs).
     if (!isAdmin) { cible.innerHTML = ''; return; }
     if (!enAttente.length) {
-      cible.innerHTML = '<div class="v2-blk"><div class="v2-blk-vide">Aucune demande en attente de validation. 🎉</div></div>';
+      cible.innerHTML = '<div class="dc-card"><div class="dc-body"><div class="v2-blk-vide">Aucune demande en attente de validation. 🎉</div></div></div>';
       return;
     }
 
@@ -336,7 +347,7 @@
           esc(conflits.map(dateCourte).join(', ')) + '">' + svg(ICO.warn, 2.2) + 'Sous-effectif</span>'
         : '';
       const jo = joursOuvres(d.debut, d.fin);
-      return '<div class="cgv-p">' +
+      return '<div class="cgv-p" style="border-left:3px solid ' + typeColor(d.type) + '">' +
         av(nom, d.employeId, 'lg') +
         '<div class="cgv-p-who"><div class="cgv-p-nom">' + esc(nom) + '</div>' +
           '<div class="cgv-p-fn">' + esc(e && e.poste ? e.poste : '—') + '</div></div>' +
@@ -376,19 +387,19 @@
     f = f.slice().sort((a, b) => (b.dateDemande || '').localeCompare(a.dateDemande || ''));
 
     const ST = {
-      en_attente: { l: 'En attente', c: '#f59e0b', i: ICO.hourglass },
-      accepte: { l: 'Validé', c: '#10b981', i: ICO.check },
-      refuse: { l: 'Refusé', c: '#ef4444', i: ICO.cross }
+      en_attente: { l: 'En attente', tone: 'amber' },
+      accepte: { l: 'Validé', tone: 'green' },
+      refuse: { l: 'Refusé', tone: 'red' }
     };
 
     if (!f.length) {
-      el.innerHTML = '<div class="v2-blk"><div class="v2-blk-vide">' +
+      el.innerHTML = '<div class="dc-card"><div class="dc-body"><div class="v2-blk-vide">' +
         (isAdmin ? 'Aucune demande traitée pour l\'instant — les demandes à valider sont dans l\'onglet « À valider ».'
-                 : 'Aucune demande à afficher.') + '</div></div>';
+                 : 'Aucune demande à afficher.') + '</div></div></div>';
       return;
     }
 
-    el.innerHTML = '<div class="v2-blk" style="padding:0;overflow:hidden"><div class="cgv-scroll">' +
+    el.innerHTML = '<div class="dc-card"><div class="cgv-scroll">' +
       '<table class="cgv-tbl"><tbody>' + f.map(d => {
         const nom = nomDe(d);
         const st = ST[d.statut] || ST.en_attente;
@@ -400,8 +411,8 @@
           '<td class="c-mid">' + esc(typeLabel(d.type)) + '</td>' +
           '<td class="c-dim">' + esc(periode(d)) + '</td>' +
           '<td class="c-dim">' + jo + ' j</td>' +
-          '<td><span class="v2-badge" style="color:' + st.c + ';background:' + st.c + '1c" ' +
-            (traite ? 'title="' + traite + '"' : '') + '>' + svg(st.i, 2.4) + esc(st.l) + '</span></td>' +
+          '<td><span class="dc-badge dc-b-' + st.tone + '" ' +
+            (traite ? 'title="' + traite + '"' : '') + '><span class="d"></span>' + esc(st.l) + '</span></td>' +
           '<td class="c-act">' + (isAdmin
             ? '<button type="button" class="cgv-ab del" title="Supprimer" onclick="supprimerConge(\'' + d.id + '\')">' + svg(ICO.trash, 2) + '</button>'
             : '') + '</td>' +
@@ -417,8 +428,8 @@
 
     /* Soldes d'équipe — données de paie : réservées aux admins. */
     if (isAdmin) {
-      html += '<div class="v2-blk v2-rail-blk"><div class="v2-blk-h">' +
-        '<span class="v2-blk-t">Soldes de congés (équipe)</span></div>';
+      html += '<div class="dc-card">' +
+        dcHead('#818cf8', 'Équipe', 'Soldes de congés', ICO.sun) + '<div class="dc-body">';
       if (!CGV.soldesDispo) {
         html += '<div class="v2-blk-vide">Soldes indisponibles — la table <code>conges_soldes</code> ' +
           "n'existe pas encore (migration-mes-conges.sql).</div>";
@@ -441,21 +452,22 @@
             '<div class="v2-prog"><span style="width:' + pct + '%;background:' + couleur(l.id) + '"></span></div></div>';
         }).join('') + '</div>';
       }
-      html += '</div>';
+      html += '</div></div>';
     }
 
     /* Absents actuellement — dérivé des demandes acceptées. */
     const absents = (parJour.get(AUJ) || []);
-    html += '<div class="v2-blk v2-rail-blk cgv-tint-cy"><div class="v2-blk-h">' +
-      '<span style="color:#22d3ee;display:flex">' + svg(ICO.cal, 2) + '</span>' +
-      '<span class="v2-blk-t">Absents actuellement</span></div>';
+    html += '<div class="dc-card cgv-tint-cy">' +
+      dcHead('#22d3ee', "Aujourd'hui", 'Absents actuellement', ICO.cal,
+        '<span class="dc-pill dim">' + absents.length + '</span>') + '<div class="dc-body">';
     html += absents.length
-      ? absents.map(d => '<div class="cgv-li">' + av(nomDe(d), d.employeId, 'md') +
+      ? absents.map(d => '<div class="cgv-li" style="border-left:3px solid #22d3ee;padding-left:11px">' +
+          av(nomDe(d), d.employeId, 'md') +
           '<div style="flex:1;min-width:0"><div class="cgv-li-t">' + esc(nomDe(d)) + '</div>' +
           '<div class="cgv-li-s">' + esc(typeLabel(d.type)) + '</div></div>' +
           '<span class="cgv-li-v" style="color:#67e8f9">→ ' + esc(dateCourte(d.fin)) + '</span></div>').join('')
       : '<div class="v2-blk-vide">Aucun salarié absent aujourd\'hui.</div>';
-    html += '</div>';
+    html += '</div></div>';
 
     /* Congés posés par mois (4 mois glissants) — dérivé. */
     const now = new Date();
@@ -475,13 +487,13 @@
       }
     });
     const maxB = Math.max(1, ...bornes.map(b => b.n));
-    html += '<div class="v2-blk v2-rail-blk"><div class="v2-blk-h">' +
-      '<span class="v2-blk-t">Congés posés — jours par mois</span></div>' +
-      '<div class="cgv-bars">' + bornes.map(b =>
+    html += '<div class="dc-card">' +
+      dcHead('#818cf8', '4 mois glissants', 'Congés posés — jours/mois', ICO.cal) +
+      '<div class="dc-body"><div class="cgv-bars">' + bornes.map(b =>
         '<div class="cgv-bar-c"><div class="cgv-bar-n">' + b.n + '</div>' +
         '<div class="cgv-bar" style="height:' + Math.round(b.n / maxB * 100) + '%"></div>' +
         '<div class="cgv-bar-l">' + MOIS_C[b.m].replace('.', '') + '</div></div>').join('') +
-      '</div></div>';
+      '</div></div></div>';
 
     rail.innerHTML = html;
   }
@@ -544,25 +556,25 @@
       '<span><i style="background:#f59e0b"></i>En attente</span>' +
       (maxAbsents != null ? '<span><i style="background:#ef4444"></i>Sous-effectif</span>' : '');
 
-    const entete = '<div class="v2-blk-h">' +
-      '<span style="color:#f59e0b;display:flex">' + svg(ICO.cal, 2) + '</span>' +
-      '<span class="v2-blk-t">Calendrier d\'équipe — ' + MOIS_L[m] + ' ' + y + '</span>' +
-      '<span class="cgv-nav" style="margin-left:12px">' +
+    const droite = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;min-width:0">' +
+      '<span class="dc-pill">' + MOIS_L[m] + ' ' + y + '</span>' +
+      '<span class="cgv-nav">' +
         '<button type="button" title="Mois précédent" onclick="CGV.moisSuivant(-1)">' +
           svg('<polyline points="15 18 9 12 15 6"/>', 2.2) + '</button>' +
         '<button type="button" title="Mois suivant" onclick="CGV.moisSuivant(1)">' +
           svg('<polyline points="9 18 15 12 9 6"/>', 2.2) + '</button></span>' +
       '<span class="cgv-legend">' + legende + '</span></div>';
+    const entete = dcHead('#f59e0b', 'Équipe', "Calendrier d'équipe", ICO.cal, droite);
 
     if (!parEmp.size) {
-      el.innerHTML = entete + '<div class="v2-blk-vide">Aucun congé sur ce mois.</div>';
+      el.innerHTML = entete + '<div class="dc-body"><div class="v2-blk-vide">Aucun congé sur ce mois.</div></div>';
       return;
     }
 
     const jours = Array.from({ length: nbJours }, (_, i) => i + 1);
     const we = j => { const d = new Date(y, m, j).getDay(); return d === 0 || d === 6; };
 
-    let html = entete + '<div class="cgv-scroll"><div class="cgv-cal" style="min-width:' +
+    let html = entete + '<div class="dc-body"><div class="cgv-scroll"><div class="cgv-cal" style="min-width:' +
       Math.max(420, 132 + nbJours * 16) + 'px">';
     html += '<div class="cgv-cal-row"><span class="cgv-cal-name"></span><span class="cgv-cal-cells">' +
       jours.map(j => '<span class="cgv-cal-d' + (we(j) ? ' we' : '') + '">' + j + '</span>').join('') +
@@ -582,7 +594,7 @@
           return '<span class="cgv-cal-c" style="background:' + bg + '" title="' + t + '"></span>';
         }).join('') + '</span></div>';
     });
-    el.innerHTML = html + '</div></div>';
+    el.innerHTML = html + '</div></div></div>';
   }
 
   /* Compteurs détaillés — données de paie : admins uniquement */
@@ -592,14 +604,14 @@
     if (!isAdmin) { el.innerHTML = ''; el.style.display = 'none'; return; }
     el.style.display = '';
 
-    const head = '<div class="v2-blk-t" style="padding:18px 20px 4px">Compteurs détaillés</div>';
+    const head = dcHead('#818cf8', 'Paie', 'Compteurs détaillés', ICO.file);
     if (!CGV.soldesDispo) {
-      el.innerHTML = head + '<div class="v2-blk-vide" style="padding:0 20px 18px">Compteurs indisponibles — ' +
-        "la table <code>conges_soldes</code> n'existe pas encore (migration-mes-conges.sql).</div>";
+      el.innerHTML = head + '<div class="dc-body"><div class="v2-blk-vide">Compteurs indisponibles — ' +
+        "la table <code>conges_soldes</code> n'existe pas encore (migration-mes-conges.sql).</div></div>";
       return;
     }
     if (!CGV.soldes.length) {
-      el.innerHTML = head + '<div class="v2-blk-vide" style="padding:0 20px 18px">Aucun compteur enregistré.</div>';
+      el.innerHTML = head + '<div class="dc-body"><div class="v2-blk-vide">Aucun compteur enregistré.</div></div>';
       return;
     }
     const cols = ['CP N-1', 'CP N', 'RTT', 'Récup', 'CET'];
@@ -624,24 +636,23 @@
   function renderQuotas() {
     const el = document.getElementById('cgQuotas');
     if (!el) return;
-    const head = '<div class="v2-blk-h"><span style="color:#fca5a5;display:flex">' + svg(ICO.shield, 2) +
-      '</span><span class="v2-blk-t">Règles &amp; quotas</span></div>';
+    const head = dcHead('#ef4444', 'Contraintes', 'Règles & quotas', ICO.shield);
     if (!CGV.reglesDispo) {
-      el.innerHTML = head + '<div class="v2-blk-vide">Règles indisponibles — la table ' +
-        "<code>conges_regles</code> n'existe pas encore (migration-conges.sql).</div>";
+      el.innerHTML = head + '<div class="dc-body"><div class="v2-blk-vide">Règles indisponibles — la table ' +
+        "<code>conges_regles</code> n'existe pas encore (migration-conges.sql).</div></div>";
       return;
     }
     if (!CGV.regles.length) {
-      el.innerHTML = head + '<div class="v2-blk-vide">Aucune règle enregistrée.</div>';
+      el.innerHTML = head + '<div class="dc-body"><div class="v2-blk-vide">Aucune règle enregistrée.</div></div>';
       return;
     }
-    el.innerHTML = head + CGV.regles.map(r => {
+    el.innerHTML = head + '<div class="dc-body">' + CGV.regles.map(r => {
       const val = r.valeur_texte || (r.valeur != null ? nbFr(r.valeur) : '—');
       return '<div class="cgv-li"><span class="cgv-li-dot" style="background:#f59e0b"></span>' +
         '<div style="flex:1;min-width:0"><div class="cgv-li-t">' + esc(r.libelle || r.code) + '</div>' +
         '<div class="cgv-li-s">' + esc(r.detail || '') + '</div></div>' +
         '<span class="cgv-li-v" style="color:#fbbf24">' + esc(val) + '</span></div>';
-    }).join('');
+    }).join('') + '</div>';
   }
 
   /* Ordre des départs — ancienneté (date d'embauche) */
@@ -651,16 +662,16 @@
     if (!isAdmin) { el.innerHTML = ''; el.style.display = 'none'; return; }
     el.style.display = '';
 
-    const head = '<div class="v2-blk-h"><span class="v2-blk-t">Ordre des départs</span></div>' +
-      '<div class="v2-blk-sub" style="margin-bottom:10px">Par ancienneté</div>';
+    const head = dcHead('#818cf8', 'Priorité', 'Ordre des départs', ICO.file,
+      '<span class="dc-pill dim">Ancienneté</span>');
     const avec = employes.filter(e => e.dateEmbauche)
       .sort((a, b) => a.dateEmbauche.localeCompare(b.dateEmbauche));
     if (!avec.length) {
-      el.innerHTML = head + "<div class=\"v2-blk-vide\">Aucune date d'embauche renseignée sur les fiches salariés.</div>";
+      el.innerHTML = head + "<div class=\"dc-body\"><div class=\"v2-blk-vide\">Aucune date d'embauche renseignée sur les fiches salariés.</div></div>";
       return;
     }
     const now = new Date();
-    el.innerHTML = head + avec.slice(0, 8).map((e, i) => {
+    el.innerHTML = head + '<div class="dc-body">' + avec.slice(0, 8).map((e, i) => {
       const nom = `${e.prenom || ''} ${e.nom || ''}`.trim();
       const an = Math.floor((now - new Date(e.dateEmbauche + 'T12:00:00')) / 31557600000);
       const crit = 'Ancienneté ' + an + ' an' + (an > 1 ? 's' : '') + (e.poste ? ' · ' + e.poste : '');
@@ -668,7 +679,7 @@
         av(nom, e.id, 'sm') +
         '<div style="flex:1;min-width:0"><div class="cgv-li-t">' + esc(nom) + '</div>' +
         '<div class="cgv-li-s">' + esc(crit) + '</div></div></div>';
-    }).join('');
+    }).join('') + '</div>';
   }
 
   /* Workflow de validation d'une demande */
@@ -680,9 +691,9 @@
       .sort((a, b) => (a.debut || '').localeCompare(b.debut || ''))[0];
     if (!d) d = list[0];
 
-    const head = '<div class="v2-blk-h"><span class="v2-blk-t">Workflow de validation</span></div>';
+    const head = dcHead('#10b981', 'Circuit', 'Workflow de validation', ICO.check);
     if (!d) {
-      el.innerHTML = head + '<div class="v2-blk-vide">Aucune demande à suivre.</div>';
+      el.innerHTML = head + '<div class="dc-body"><div class="v2-blk-vide">Aucune demande à suivre.</div></div>';
       return;
     }
     const sub = '<div class="v2-blk-sub" style="margin-bottom:12px">' +
@@ -704,12 +715,12 @@
         w: fmt(d.dateTraitement), bg: ok ? OK : KO, i: ok ? ICO.check : ICO.cross
       });
     }
-    el.innerHTML = head + sub + etapes.map((e, i) =>
+    el.innerHTML = head + '<div class="dc-body">' + sub + etapes.map((e, i) =>
       '<div class="cgv-wf"><div class="cgv-wf-col">' +
       '<span class="cgv-wf-dot" style="background:' + e.bg + '">' + svg(e.i, 2.6) + '</span>' +
       (i < etapes.length - 1 ? '<span class="cgv-wf-line"></span>' : '') + '</div>' +
       '<div class="cgv-wf-b"><div class="cgv-wf-t">' + esc(e.t) + '</div>' +
-      '<div class="cgv-wf-s">' + e.s + ' · ' + esc(e.w) + '</div></div></div>').join('');
+      '<div class="cgv-wf-s">' + e.s + ' · ' + esc(e.w) + '</div></div></div>').join('') + '</div>';
   }
 
   /* Acquisition & alertes */
@@ -719,8 +730,7 @@
     if (!isAdmin) { el.innerHTML = ''; el.style.display = 'none'; return; }
     el.style.display = '';
 
-    const head = '<div class="v2-blk-h"><span style="color:#34d399;display:flex">' + svg(ICO.spark, 2) +
-      '</span><span class="v2-blk-t">Acquisition &amp; alertes</span></div>';
+    const head = dcHead('#10b981', 'Compteurs', 'Acquisition & alertes', ICO.spark);
     const li = [];
 
     const rAcq = regle('cp_acquis_mois');
@@ -739,15 +749,15 @@
     }
 
     if (!li.length) {
-      el.innerHTML = head + '<div class="v2-blk-vide">Aucune donnée d\'acquisition — exécutez ' +
-        'migration-conges.sql (règles) et migration-mes-conges.sql (compteurs).</div>';
+      el.innerHTML = head + '<div class="dc-body"><div class="v2-blk-vide">Aucune donnée d\'acquisition — exécutez ' +
+        'migration-conges.sql (règles) et migration-mes-conges.sql (compteurs).</div></div>';
       return;
     }
-    el.innerHTML = head + li.map(x =>
+    el.innerHTML = head + '<div class="dc-body">' + li.map(x =>
       '<div class="cgv-li"><span class="cgv-li-dot" style="background:' + x.c + '"></span>' +
       '<div style="flex:1;min-width:0"><div class="cgv-li-t">' + esc(x.l) + '</div>' +
       '<div class="cgv-li-s">' + esc(x.d) + '</div></div>' +
-      '<span class="cgv-li-v" style="color:' + x.c + '">' + esc(x.v) + '</span></div>').join('');
+      '<span class="cgv-li-v" style="color:' + x.c + '">' + esc(x.v) + '</span></div>').join('') + '</div>';
   }
 
   /* ══ Modale : segments de type + note de durée ════════════════════ */

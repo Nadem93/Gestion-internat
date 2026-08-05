@@ -33,6 +33,16 @@ const VIS2_ST = {
 function _vis2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// SVG dimensionné (chip / icône KPI Console Data)
+function _vis2SvgSz(d, sz) {
+  return `<svg width="${sz || 16}" height="${sz || 16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+// Badge monospace Console Data teinté d'après le type de visite
+function _vis2Badge(t) {
+  return `<span class="dc-badge" style="background:${t.c}22;color:${t.c};border:1px solid ${t.c}55"><span class="d" style="background:${t.c}"></span>${t.l}</span>`;
+}
+// Ton dc-badge d'après le statut de la visite
+const VIS2_ST_TONE = { prevue: 'indigo', realisee: 'green', annulee: 'gray', absent: 'red' };
 function _vis2Ty(v) { return VIS2_TY[v.type] || VIS2_TY.libre; }
 function _vis2St(v) { return VIS2_ST[v.statut] || VIS2_ST.prevue; }
 function _vis2CanEdit() {
@@ -44,7 +54,7 @@ function _vis2Jour(d) {
   if (!d) return '—';
   const td = today();
   if (d === td) return 'Auj.';
-  const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const y = isoJour(new Date(Date.now() - 86400000));
   if (d === y) return 'Hier';
   const dt = new Date(d + 'T12:00:00');
   if (isNaN(dt)) return d;
@@ -100,9 +110,9 @@ function vis2Stats(list, td) {
     { n: med.length,    l: 'Médiatisées',     c: '#f59e0b', ic: VIS2_IC.shield },
     { n: heb.length,    l: 'Hébergements en cours', c: '#818cf8', ic: VIS2_IC.home }
   ];
-  box.innerHTML = cells.map(s => `<div class="vs2-kpi" style="--pc:${s.c}">
-      <span class="vs2-kpi-ico">${_vis2Svg(s.ic)}</span>
-      <div><div class="vs2-kpi-n">${s.n}</div><div class="vs2-kpi-l">${s.l}</div></div>
+  box.innerHTML = cells.map(s => `<div class="dc-kpi" style="--dc-c:${s.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${s.l}</span><span class="dc-kpi-ico" style="color:${s.c}">${_vis2SvgSz(s.ic, 16)}</span></div>
+      <div class="dc-kpi-val">${s.n}</div>
     </div>`).join('');
 }
 
@@ -150,24 +160,26 @@ function vis2Card(v) {
   const meta = [v.lieu ? escHtml(v.lieu) : '', v.notes ? escHtml(v.notes) : ''].filter(Boolean).join(' · ');
   const retour = v.type === 'hebergement' && v.dateRetour
     ? `retour ${formatDate(v.dateRetour)}${v.heureRetour ? ' à ' + v.heureRetour : ''}` : '';
-  return `<div class="vs2-card" style="--pc:${t.c};--sc:${st.c}">
-    <div class="vs2-card-in">
-      <span class="vs2-ico">${_vis2Svg(t.ic)}</span>
-      <div class="vs2-main">
-        <div class="vs2-head">
-          <a class="vs2-nom" href="resident.html?id=${encodeURIComponent(v.residentId)}">${escHtml(v.residentName || '—')}</a>
-          <span class="vs2-tag">${t.l}</span>
-          ${retard ? '<span class="vs2-tag" style="--tc:#ef4444">Retour dépassé</span>' : ''}
+  const stTone = VIS2_ST_TONE[v.statut] || 'indigo';
+  const when = `${_vis2Jour(v.date)}${v.heure ? ' · ' + v.heure : ''}`;
+  return `<div class="dc-card vs2-card" style="border-left:3px solid ${t.c}">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:${t.c}22;color:${t.c}">${_vis2SvgSz(t.ic, 16)}</span>
+        <div style="min-width:0">
+          <div class="dc-eyebrow">${t.l}</div>
+          <a class="dc-title" href="resident.html?id=${encodeURIComponent(v.residentId)}">${escHtml(v.residentName || '—')}</a>
         </div>
-        <div class="vs2-vis">${escHtml(v.personne || '?')}${v.lien ? ` <span class="lien">· ${escHtml(v.lien)}</span>` : ''}</div>
-        ${meta ? `<div class="vs2-note">${meta}</div>` : ''}
       </div>
-      <div class="vs2-right">
-        <div class="vs2-date">${_vis2Jour(v.date)}</div>
-        <div class="vs2-time">${v.heure || '—'}</div>
-        ${retour ? `<div class="vs2-time">${retour}</div>` : ''}
-        <div class="vs2-foot">
-        <span class="vs2-st">${st.l}</span>
+      <span class="dc-pill dim">${when}</span>
+    </div>
+    <div class="dc-body">
+      <div class="vs2-vis">${escHtml(v.personne || '?')}${v.lien ? ` <span class="lien">· ${escHtml(v.lien)}</span>` : ''}</div>
+      ${meta ? `<div class="vs2-note">${meta}</div>` : ''}
+      ${retour ? `<div class="vs2-note">${retour}</div>` : ''}
+      <div class="vs2-foot" style="margin-top:10px">
+        <span class="dc-badge dc-b-${stTone}"><span class="d"></span>${st.l}</span>
+        ${retard ? '<span class="dc-badge dc-b-red"><span class="d"></span>Retour dépassé</span>' : ''}
         ${canEdit ? `<div class="vs2-acts no-print">
           ${v.statut === 'prevue' ? `
             <button type="button" class="vs2-act ok" title="Marquer réalisée" onclick="setVisiteStatut('${v.id}','realisee')">✓</button>
@@ -176,7 +188,6 @@ function vis2Card(v) {
           <button type="button" class="vs2-act" title="Modifier" onclick="openVisiteModal('${v.id}')">✎</button>
           <button type="button" class="vs2-act danger" title="Supprimer" onclick="deleteVisite('${v.id}')">✕</button>
         </div>` : ''}
-        </div>
       </div>
     </div>
   </div>`;
@@ -196,11 +207,11 @@ function vis2Droits() {
   box.innerHTML = rows.slice(0, 8).map(({ r, d }) => {
     const t = VIS2_TY[d.type] || VIS2_TY.libre;
     const nom = `${r.prenom || ''} ${r.nom || ''}`.trim();
-    return `<div class="vs2-d" style="--pc:${t.c}">
+    return `<div class="vs2-d" style="--pc:${t.c};border-left:3px solid ${t.c}">
       <div class="vs2-d-h">
         <span class="vs2-d-av" style="background:${safeColor(r.color, '#818cf8')}">${initials(r.prenom, r.nom)}</span>
         <span class="vs2-d-res">${escHtml(nom || '—')}</span>
-        <span class="vs2-d-type">${t.l}</span>
+        ${_vis2Badge(t)}
       </div>
       <div class="vs2-d-p">${escHtml(d.personne || '')}${d.lien ? ` · ${escHtml(d.lien)}` : ''}</div>
       ${d.modalites ? `<div class="vs2-d-mod">${escHtml(d.modalites)}</div>` : ''}
@@ -383,7 +394,7 @@ function vis2Registre(all, td) {
         <td class="m">${escHtml(v.residentName || '—')}</td>
         <td>${escHtml(v.heure || '—')}</td>
         <td>${sortie}</td>
-        <td><span class="vs2-reg-b" style="--sc:${st.c}">${st.l}</span></td>
+        <td><span class="dc-badge dc-b-${VIS2_ST_TONE[v.statut] || 'indigo'}"><span class="d"></span>${st.l}</span></td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
@@ -440,10 +451,10 @@ function vis2DroitsList() {
   if (!droits.length) { box.innerHTML = '<div class="v2-blk-vide">Aucun droit défini.</div>'; return; }
   box.innerHTML = droits.map(d => {
     const t = VIS2_TY[d.type] || VIS2_TY.libre;
-    return `<div class="vs2-d" style="--pc:${t.c}">
+    return `<div class="vs2-d" style="--pc:${t.c};border-left:3px solid ${t.c}">
       <div class="vs2-d-h">
         <span class="vs2-d-res">${escHtml(d.personne || '')}${d.lien ? ` · ${escHtml(d.lien)}` : ''}</span>
-        <span class="vs2-d-type">${t.l}</span>
+        ${_vis2Badge(t)}
         <button type="button" class="vs2-act danger" title="Retirer" onclick="deleteDroit('${d.id}')">✕</button>
       </div>
       ${d.modalites ? `<div class="vs2-d-mod">${escHtml(d.modalites)}</div>` : ''}

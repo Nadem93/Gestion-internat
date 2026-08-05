@@ -27,6 +27,38 @@ const MED_STATUTS = {
   report: { label: 'Reporté', icon: '⏭️', color: '#d97706' }
 };
 
+// ── Décompte automatique du stock à la prise ──────────────────────────────
+// Un stock relié à un traitement (stock_medicaments.traitement_id) est
+// décrémenté quand la prise devient « consommée » — Donné ou Confié, car le
+// médicament quitte alors le stock — et ré-incrémenté si elle quitte cet état
+// (annulation, refus, absence…). Refusé/Absent/Reporté ne consomment rien.
+// Best-effort : le décompte n'interrompt jamais le pointage.
+const MED_STATUTS_CONSO = new Set(['donne', 'confie']);
+function medStockDelta(prevStatut, newStatut) {
+  const was = MED_STATUTS_CONSO.has(prevStatut);
+  const now = MED_STATUTS_CONSO.has(newStatut);
+  if (!was && now) return -1;   // devient consommée → retire 1 du stock
+  if (was && !now) return +1;   // n'est plus consommée → remet 1
+  return 0;                      // pas de changement de consommation (ex. donné→confié)
+}
+function medApplyStockDelta(residentId, traitementId, delta) {
+  if (!delta || !traitementId) return;
+  try {
+    if (typeof stockMedList !== 'function') return;   // panneau stock absent de cette page
+    const stock = stockMedList().find(s =>
+      s.traitementId && String(s.traitementId) === String(traitementId)
+      && String(s.residentId) === String(residentId));
+    if (!stock) return;                               // aucun stock relié à ce traitement
+    const before = Number(stock.quantite) || 0;
+    const after = Math.max(0, before + delta);
+    if (after === before) return;                     // déjà à 0, rien à retirer
+    stock.quantite = after;                           // maj optimiste du cache (rendu immédiat)
+    if (typeof sbSaveStockMed === 'function') {
+      Promise.resolve(sbSaveStockMed(stock)).catch(e => console.warn('[stock-med] persistance décompte', e));
+    }
+  } catch (e) { console.warn('[stock-med] décompte auto ignoré', e); }
+}
+
 // ── Pilulier : bandelette d'actions ouverte (une seule à la fois) ──
 let _medOpenChip = '';   // clé `${residentId}|${traitementId}|${moment}`
 function medToggleChip(key) { _medOpenChip = _medOpenChip === key ? '' : key; renderMedicaments(); }
@@ -146,6 +178,7 @@ async function medSaveDetail() {
   const list = getMedDistrib();
   const keyMatch = x => x.date === date && String(x.residentId) === String(residentId) && x.traitementId === traitementId && x.moment === moment;
   const i = list.findIndex(keyMatch);
+  const _prevStatut = i >= 0 ? list[i].statut : '';   // statut AVANT cette validation (décompte stock)
   const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
   const session = Auth.getSession();
   const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
@@ -163,6 +196,7 @@ async function medSaveDetail() {
     rec = { date, residentId, residentName: prevue.residentName, traitementId, medicament: prevue.medicament, posologie: prevue.posologie, moment, statut, heure: statut ? new Date().toISOString() : '', auteur, observation };
     op = 'save'; list.push(rec);
   } else { return; }
+  medApplyStockDelta(residentId, traitementId, medStockDelta(_prevStatut, op === 'delete' ? '' : statut));
   renderMedicaments();
   if (typeof auditLog === 'function' && prevue && statut) auditLog('med_distrib', `${prevue.medicament} (${MED_MOMENTS[moment]?.label || moment}) — ${prevue.residentName} → ${MED_STATUTS[statut]?.label || statut}`);
   await medQueueWrite(async () => {
@@ -420,6 +454,7 @@ async function setMedStatut(date, residentId, traitementId, moment, statut) {
   const auteur = [session?.prenom, session?.nom].filter(Boolean).join(' ') || session?.username || '';
   const prevue = medPrevues(date).find(p => String(p.residentId) === String(residentId) && p.traitementId === traitementId && p.moment === moment);
   const i = list.findIndex(keyMatch);
+  const _prevStatut = i >= 0 ? list[i].statut : '';   // statut AVANT ce tap (décompte stock)
 
   // Mise à jour optimiste (synchrone). On mute TOUJOURS le même objet et on
   // capture sa référence pour l'écriture : ainsi des taps rapides (insertion
@@ -438,6 +473,7 @@ async function setMedStatut(date, residentId, traitementId, moment, statut) {
   } else {
     return; // rien de prévu pour cette case
   }
+  medApplyStockDelta(residentId, traitementId, medStockDelta(_prevStatut, op === 'delete' ? '' : statut));
   renderMedicaments();
   if (typeof auditLog === 'function' && prevue) auditLog('med_distrib', `${prevue.medicament} (${MED_MOMENTS[moment]?.label || moment}) — ${prevue.residentName} → ${op === 'delete' ? 'réinitialisé' : (MED_STATUTS[statut]?.label || statut)}`);
 
@@ -549,7 +585,7 @@ async function initMedicaments() {
   if (typeof sbGetPresencesRange === 'function') {
     try {
       const d = new Date(); d.setDate(d.getDate() - 3);
-      const from = d.toISOString().slice(0, 10);
+      const from = isoJour(d);
       DB.set(DB.keys.presences, await sbGetPresencesRange(from, today()));
     } catch (e) { console.error(e); }
   }

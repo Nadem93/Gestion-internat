@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-  <title>Présences — FTR</title>
+  <title>Présences — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css?v=2"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -42,36 +42,45 @@
     <div class="v2-body">
 
       <!-- Compteurs du jour -->
-      <div class="v2-al-stats">
-        <div class="v2-al-stat" style="--pc:#10b981">
-          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
-          <div><div class="v2-al-stat-n" id="countPresent">0</div><div class="v2-al-stat-l">Présents</div></div>
+      <div class="dc-kpis">
+        <div class="dc-kpi" style="--dc-c:#10b981">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Présents</span><span class="dc-kpi-ico" style="color:#10b981"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span></div>
+          <div class="dc-kpi-val" id="countPresent">0</div>
+          <div class="dc-kpi-sub">Pointés présents</div>
         </div>
-        <div class="v2-al-stat" style="--pc:#ef4444">
-          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
-          <div><div class="v2-al-stat-n" id="countAbsent">0</div><div class="v2-al-stat-l">Absents</div></div>
+        <div class="dc-kpi" style="--dc-c:#ef4444">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Absents</span><span class="dc-kpi-ico" style="color:#ef4444"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span></div>
+          <div class="dc-kpi-val" id="countAbsent">0</div>
+          <div class="dc-kpi-sub">Pointés absents</div>
         </div>
-        <div class="v2-al-stat" style="--pc:#f59e0b">
-          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-          <div><div class="v2-al-stat-n" id="countSortie">0</div><div class="v2-al-stat-l">Sorties temp.</div></div>
+        <div class="dc-kpi" style="--dc-c:#f59e0b">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Sorties temp.</span><span class="dc-kpi-ico" style="color:#f59e0b"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span></div>
+          <div class="dc-kpi-val" id="countSortie">0</div>
+          <div class="dc-kpi-sub">Sorties du jour</div>
         </div>
-        <div class="v2-al-stat" style="--pc:#22d3ee">
-          <span class="v2-al-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
-          <div><div class="v2-al-stat-n" id="countUnknown">0</div><div class="v2-al-stat-l">Non renseigné</div></div>
+        <div class="dc-kpi" style="--dc-c:#22d3ee">
+          <div class="dc-kpi-top"><span class="dc-kpi-label">Non renseigné</span><span class="dc-kpi-ico" style="color:#22d3ee"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span></div>
+          <div class="dc-kpi-val" id="countUnknown">0</div>
+          <div class="dc-kpi-sub">Restent à pointer</div>
         </div>
       </div>
 
       <!-- Feuille de présence -->
       <div class="pr2-sheet" style="margin-top:16px">
-        <div class="pr2-sheet-h">
-          <span class="pr2-sheet-t">Feuille de présence</span>
-          <span class="pr2-sheet-d" id="presenceDateLabel"></span>
-          <span class="pr2-lg">
-            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#10b981"></span>Présent</span>
-            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#ef4444"></span>Absent</span>
-            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#f59e0b"></span>Sortie</span>
-            <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#7f93b3"></span>Non pointé</span>
-          </span>
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:rgba(16,185,129,.14);color:#10b981"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">Vie quotidienne</div><div class="dc-title">Feuille de présence</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end">
+            <span class="dc-pill dim" id="presenceDateLabel"></span>
+            <span class="pr2-lg">
+              <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#10b981"></span>Présent</span>
+              <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#ef4444"></span>Absent</span>
+              <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#f59e0b"></span>Sortie</span>
+              <span class="pr2-lg-i"><span class="pr2-lg-c" style="background:#7f93b3"></span>Non pointé</span>
+            </span>
+          </div>
         </div>
         <!-- Filtre par unité (déduit de la chambre du résident, catalogue `chambres`) -->
         <div class="pr2-bar pr2-bar-u" id="presUnitesBar" hidden>

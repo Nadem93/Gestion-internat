@@ -95,6 +95,15 @@
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
   }
 
+  // En-tête « Console Data » (classes .dc-* de css/v2.css) : chip coloré + micro-label + titre.
+  function dcHead(color, eyebrow, title, iconPath, right) {
+    return `<div class="dc-head"><div class="dc-head-l">`
+      + `<span class="dc-chip" style="background:${color}22;color:${color}">${svg(iconPath, 16)}</span>`
+      + `<div style="min-width:0"><div class="dc-eyebrow">${esc(eyebrow)}</div>`
+      + `<div class="dc-title">${esc(title)}</div></div></div>`
+      + (right || '') + `</div>`;
+  }
+
   // ── bandeau d'identité ─────────────────────────────────────────────────
   function ev2Hero(e) {
     const c = (window.getPosteColor ? window.getPosteColor(e.poste) : '#818cf8');
@@ -180,12 +189,13 @@
     const base = (typeof DB !== 'undefined') ? DB : null;
     const refs = ((base && base.get(base.keys.residents)) || [])
       .filter(r => r.referent === nom && r.statut !== 'sorti');
-    const journal = ((base && base.get(base.keys.auditLog)) || [])
-      .filter(l => l.user === nom || (l.details && l.details.includes(nom)));
-    const journalMois = journal.filter(l => {
-      const d = new Date(l.date);
-      return d.getFullYear() === new Date().getFullYear() && d.getMonth() === new Date().getMonth();
-    }).length;
+    // Journal d'activité : public.audit_log via le cache préchargé
+    // (js/audit-supabase.js), plus le localStorage du poste.
+    // Comptages exacts (le lot chargé est plafonné à 300 lignes).
+    const journalC = (typeof auditSalarieCompteurs === 'function')
+      ? auditSalarieCompteurs(nom) : { total: 0, mois: 0 };
+    const journal = { length: journalC.total };
+    const journalMois = journalC.mois;
     const alertesActives = alertes.filter(a => !a.done && a.date && (new Date(a.date).getTime() - now) < 30 * 86400000).length;
     const dernierEnt = entretiens.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
 
@@ -210,7 +220,13 @@
       { k: 'alertes',    ic: IC.bell,  c: alertesActives ? '#ef4444' : '#64748b', n: alertesActives || alertes.filter(a => !a.done).length,
         l: alertesActives ? 'Alertes' : 'Rappels', s: alertesActives ? 'Échéance proche' : 'Aucune urgence' },
       { k: 'journal',    ic: IC.clock, c: '#818cf8', n: journal.length, l: 'Journal', s: journalMois + ' ce mois' }
-    ];
+    ].filter(t => t.k !== 'journal' || (
+      (typeof _empJournalAutorise === 'undefined' || _empJournalAutorise)
+      // Lecture en échec : mieux vaut retirer la tuile que d'afficher « 0 ».
+      && (typeof auditSalarieOk !== 'function' || auditSalarieOk(nom))
+    ));
+    // La tuile Journal disparaît pour qui n'a pas le droit de la lire : afficher
+    // « 0 » laisserait croire que le collègue n'a rien fait.
 
     return `<div class="ev2-kgrid">${tuiles.map(t => `
       <button type="button" class="ev2-k" onclick="scrollToSection('${t.k}')">
@@ -242,9 +258,9 @@
 
     const kv = (k, v) => `<div class="v2-kv"><div class="v2-kv-k">${esc(k)}</div><div class="v2-kv-v">${esc(v || '—')}</div></div>`;
 
-    const identite = `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h"><div class="v2-blk-t">Fiche administrative</div></div>
-      <div style="display:flex;flex-direction:column;gap:10px">
+    const identite = `<div class="dc-card">
+      ${dcHead('#818cf8', 'ADMIN', 'Fiche administrative', IC.users)}
+      <div class="dc-body" style="display:flex;flex-direction:column;gap:10px">
         ${kv('Poste', e.poste)}
         ${kv('Statut', e.statut === 'inactif' ? 'Inactif' : 'Actif')}
         ${kv('Embauche', e.dateEmbauche ? fdate(e.dateEmbauche) : '')}
@@ -256,9 +272,9 @@
     </div>`;
 
     const MOIS = ['JANV', 'FÉVR', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
-    const creneaux = `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h"><div class="v2-blk-t">Prochains créneaux</div>
-        <a class="v2-blk-lien" href="planning-equipe.html">Planning</a></div>
+    const creneaux = `<div class="dc-card">
+      ${dcHead('#3b82f6', 'PLANNING', 'Prochains créneaux', IC.cal, '<a class="v2-blk-lien" href="planning-equipe.html">Planning</a>')}
+      <div class="dc-body">
       ${aVenir.length ? `<div style="display:flex;flex-direction:column;gap:10px">${aVenir.map(s => {
         const d = new Date(s.date + 'T00:00:00');
         const type = window.peShiftType ? window.peShiftType(s.debut, s.fin) : 'journee';
@@ -271,6 +287,7 @@
           </div>
         </div>`;
       }).join('')}</div>` : '<div class="v2-blk-vide">Aucun créneau à venir.</div>'}
+      </div>
     </div>`;
 
     const journalCard = (window.empJournalCounterHtml ? window.empJournalCounterHtml(e) : '');
@@ -302,10 +319,10 @@
         return g2(S('documents', window.docsHtml(docs)), S('paie', window.empFichePaieHtml()));
 
       case 'admin':
-        if (!admin) return '<div class="v2-blk"><div class="v2-blk-vide">Section réservée à l\'administration.</div></div>';
+        if (!admin) return '<div class="dc-card"><div class="dc-body"><div class="v2-blk-vide">Section réservée à l\'administration.</div></div></div>';
         return g2(S('messages', window.empMessagesHtml(e)),
-                  e.notes ? S('notes', `<div class="v2-blk"><div class="v2-blk-h"><div class="v2-blk-t">Notes</div></div>
-                    <div style="white-space:pre-wrap;line-height:1.7;font-size:12.5px;color:var(--v2-t4)">${esc(e.notes)}</div></div>`) : '')
+                  e.notes ? S('notes', `<div class="dc-card">${dcHead('#64748b', 'ADMIN', 'Notes', IC.book)}
+                    <div class="dc-body" style="white-space:pre-wrap;line-height:1.7;font-size:12.5px;color:var(--v2-t4)">${esc(e.notes)}</div></div>`) : '')
           + g2(S('sanctions', window.empSanctionsHtml()), S('notes-admin', window.empNotesAdminHtml()))
           + S('depart', window.empDepartHtml());
 
@@ -409,14 +426,19 @@
   // Remplace scrollToSection : la section visée peut vivre dans un autre onglet.
   function ev2ScrollToSection(id) {
     const cible = EV2_SECTION_TAB[id];
+    // loadEmploye() est devenue asynchrone (elle attend le journal d'activité) :
+    // sans ce Promise.resolve, le requestAnimationFrame partait AVANT le rendu
+    // et cherchait une section qui n'existait pas encore — le défilement d'un
+    // onglet à l'autre ne faisait plus rien.
+    let attendre = Promise.resolve();
     if (cible && cible !== EV2_TAB && ev2Tabs().some(t => t.k === cible)) {
       EV2_TAB = cible;
-      if (window.loadEmploye) window.loadEmploye();
+      if (window.loadEmploye) attendre = Promise.resolve(window.loadEmploye());
     }
-    requestAnimationFrame(() => {
+    attendre.then(() => requestAnimationFrame(() => {
       const el = document.getElementById('section-' + id);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    }));
   }
 
   // Les `const`/`let` de premier niveau ne créent pas de propriété sur window :

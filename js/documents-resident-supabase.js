@@ -69,7 +69,42 @@ async function sbSaveDocumentResident(d) {
   const { data, error } = await supabaseClient
     .from('documents_resident').insert(row).select();
   if (error) throw error;
-  return _docResFromRow(data[0]);
+  const saved = _docResFromRow(data[0]);
+  // Un nouveau document AVEC une date d'échéance crée automatiquement une échéance
+  // à suivre (nommée d'après le document → l'alerte remonte automatiquement).
+  // Passer _noEcheance:true pour désactiver (ex. le renouvellement gère déjà son
+  // échéance). Best-effort : n'interrompt jamais l'enregistrement du document.
+  if (!d._noEcheance && saved.residentId && saved.dueDate) {
+    try { await _docResCreerEcheance(saved, etablissementId); }
+    catch (e) { console.warn('[documents] création échéance auto ignorée', e); }
+  }
+  return saved;
+}
+
+// Crée une échéance directement (echeances-supabase.js n'est pas chargé sur toutes
+// les pages d'upload de document → insert direct dans la table echeances).
+async function _docResCreerEcheance(doc, etablissementId) {
+  let residentName = '';
+  try {
+    if (typeof sbResidents === 'function') {
+      const r = sbResidents().find(x => String(x.id) === String(doc.residentId));
+      if (r) residentName = `${r.prenom || ''} ${r.nom || ''}`.trim();
+    }
+  } catch (e) { /* nom facultatif */ }
+  const nom = doc.name || doc.fileName || 'Document';
+  const { error } = await supabaseClient.from('echeances').insert({
+    etablissement_id: etablissementId,
+    type: 'autre',
+    libelle: nom,
+    date: doc.dueDate,
+    resident_id: doc.residentId,
+    resident_name: residentName,
+    notes: 'Créé automatiquement à l\'ajout du document « ' + nom + ' »',
+    done: false,
+    author: '',
+    updated_at: new Date().toISOString()
+  });
+  if (error) throw error;
 }
 
 async function sbDeleteDocumentResident(id) {

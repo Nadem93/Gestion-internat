@@ -45,6 +45,17 @@ const PT2_IC = {
 function pt2Svg(p, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 }
+// Icône 16 px pour les chips « Console Data ».
+function pt2Ic(p) {
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+// En-tête « Console Data » : chip coloré + micro-label + titre + méta optionnelle.
+function pt2Head(icoPath, color, eyebrow, title, rightHtml) {
+  return `<div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:${color}22;color:${color}">${pt2Ic(icoPath)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">${eyebrow}</div><div class="dc-title">${title}</div></div>
+    </div>${rightHtml || ''}</div>`;
+}
 
 // ── État de la page ──────────────────────────────────────────────────────
 let _pt2Date = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
@@ -56,7 +67,7 @@ let _pt2Saisie = null;                  // { employeId, date }
 
 // ── Dates ────────────────────────────────────────────────────────────────
 function pt2Str(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return isoJour(d);
 }
 function pt2AddDays(dateStr, n) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -211,15 +222,16 @@ function pt2RenderStats(emps, jours) {
   });
   const anomalies = pt2Anomalies(emps, jours);
   const tiles = [
-    { n: `${presents} / ${emps.length}`, l: 'Présents en ce moment', c: '#2dd4bf', i: PT2_IC.users },
-    { n: pt2FmtH(heures),                l: 'Heures pointées ce jour', c: '#22d3ee', i: PT2_IC.clock },
-    { n: String(retards),                l: 'Retards du jour',        c: '#f59e0b', i: PT2_IC.alert },
-    { n: String(anomalies.length),       l: 'Anomalies de la semaine', c: '#fb7185', i: PT2_IC.alert }
+    { n: `${presents} / ${emps.length}`, k: 'Présents',  l: 'Présents en ce moment',   c: '#2dd4bf', i: PT2_IC.users },
+    { n: pt2FmtH(heures),                k: 'Heures jour', l: 'Heures pointées ce jour', c: '#22d3ee', i: PT2_IC.clock },
+    { n: String(retards),                k: 'Retards',    l: 'Retards du jour',          c: '#f59e0b', i: PT2_IC.alert },
+    { n: String(anomalies.length),       k: 'Anomalies',  l: 'Anomalies de la semaine',  c: '#fb7185', i: PT2_IC.alert }
   ];
   document.getElementById('ptStats').innerHTML = tiles.map(t => `
-    <div class="pt2-stat" style="--pc:${t.c}">
-      <span class="pt2-stat-ico">${pt2Svg(t.i)}</span>
-      <div><div class="pt2-stat-n">${escHtml(t.n)}</div><div class="pt2-stat-l">${escHtml(t.l)}</div></div>
+    <div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${escHtml(t.k)}</span><span class="dc-kpi-ico" style="color:${t.c}">${pt2Ic(t.i)}</span></div>
+      <div class="dc-kpi-val">${escHtml(t.n)}</div>
+      <div class="dc-kpi-sub">${escHtml(t.l)}</div>
     </div>`).join('');
 }
 
@@ -254,17 +266,19 @@ function pt2RenderTable(emps, jours) {
   }).join('');
 
   wrap.innerHTML = `
-    <div class="pt2-sec-h">
-      <span class="pt2-live"></span>
-      <span class="pt2-sec-t">Pointages du ${escHtml(pt2Long(d))}</span>
-      <span class="pt2-sec-m">${emps.length} salarié${emps.length > 1 ? 's' : ''}${canEdit ? ' · cliquez une ligne pour saisir' : ' · lecture seule'}</span>
-    </div>
-    <div class="pt2-card"><div class="pt2-scroll">
-      ${emps.length ? `<table class="pt2-t">
+    <div class="dc-card">
+      ${pt2Head(PT2_IC.clock, '#2dd4bf', 'Pointages du jour', escHtml(pt2Long(d)),
+        `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;min-width:0">
+           <span class="dc-pill dim">${emps.length} salarié${emps.length > 1 ? 's' : ''}</span>
+           <span class="dc-pill dim">${canEdit ? 'Cliquez une ligne' : 'Lecture seule'}</span>
+         </div>`)}
+      <div class="pt2-scroll">
+        ${emps.length ? `<table class="pt2-t">
         <thead><tr><th>Salarié</th><th>Arrivée</th><th>Départ</th><th>Total</th><th>Prévu</th><th>Statut</th><th></th></tr></thead>
         <tbody>${lignes}</tbody></table>`
       : `<div class="pt2-vide">Aucun salarié ne correspond à la recherche.</div>`}
-    </div></div>`;
+      </div>
+    </div>`;
 }
 
 function pt2WeekGrid(emps, jours) {
@@ -314,18 +328,18 @@ function pt2WeekGrid(emps, jours) {
   }).join('');
 
   return `
-    <div class="pt2-sec-h">
-      <span class="pt2-sec-t">Saisie de la semaine</span>
-      <span class="pt2-sec-m">${verrou ? 'Mois verrouillé — saisie en lecture seule' : (pt2CanEdit() ? 'Heures réelles · cliquez le créneau prévu pour le recopier' : 'Lecture seule')}</span>
-    </div>
-    <div class="pt2-card"><div class="pt2-scroll">
-      ${emps.length ? `<table class="pt2-wt">
+    <div class="dc-card">
+      ${pt2Head(PT2_IC.qr, '#818cf8', 'Saisie de la semaine', `Du ${pt2Court(jours[0])} au ${pt2Court(jours[6])}`,
+        `<span class="dc-pill dim">${verrou ? 'Mois verrouillé' : (pt2CanEdit() ? 'Saisie active' : 'Lecture seule')}</span>`)}
+      <div class="pt2-scroll">
+        ${emps.length ? `<table class="pt2-wt">
         <thead><tr><th class="j">Salarié</th>
           ${jours.map((d, i) => `<th class="${d === todayStr ? 'today' : ''}">${JOURS[i]}<br/><span style="font-weight:400">${new Date(d + 'T12:00:00').getDate()}</span></th>`).join('')}
           <th>Total</th><th>Prévu</th><th>Écart</th></tr></thead>
         <tbody>${corps}</tbody></table>`
       : `<div class="pt2-vide">Aucun salarié ne correspond à la recherche.</div>`}
-    </div></div>`;
+      </div>
+    </div>`;
 }
 
 // ── Anomalies de la semaine ──────────────────────────────────────────────
@@ -360,10 +374,11 @@ function pt2RenderAnomalies(emps, jours) {
   const anos = pt2Anomalies(emps, jours);
   const canEdit = pt2CanEdit();
   const vues = anos.slice(0, 8);
-  el.innerHTML = `<div class="pt2-anom">
-    <div class="pt2-blk-h" style="color:#fbbf24">${pt2Svg(PT2_IC.alert)}<span class="pt2-anom-t">Anomalies à traiter</span>
-      <span class="pt2-blk-m">${anos.length} sur la semaine</span></div>
-    ${anos.length ? vues.map(a => `<div class="pt2-row">
+  el.innerHTML = `<div class="dc-card">
+    ${pt2Head(PT2_IC.alert, '#f59e0b', 'Anomalies', 'À traiter',
+      `<span class="dc-pill dim">${anos.length} sur la semaine</span>`)}
+    <div class="dc-body">
+    ${anos.length ? vues.map(a => `<div class="pt2-row" style="border-left:3px solid ${a.c};padding-left:12px">
       <span class="pt2-av pt2-av-sm" style="background:${a.c}">${escHtml(a.ini)}</span>
       <div class="pt2-row-b">
         <div class="pt2-row-t">${escHtml(a.nom)} — ${escHtml(a.type)}</div>
@@ -372,6 +387,7 @@ function pt2RenderAnomalies(emps, jours) {
       ${canEdit ? `<button type="button" class="pt2-reg" onclick="pt2OpenSaisie('${a.employeId}','${a.date}')">Régulariser</button>` : ''}
     </div>`).join('') + (anos.length > vues.length ? `<div class="pt2-blk-vide">+ ${anos.length - vues.length} autre(s) anomalie(s) sur la semaine.</div>` : '')
     : `<div class="pt2-blk-vide">Aucune anomalie détectée sur la semaine.</div>`}
+    </div>
   </div>`;
 }
 
@@ -427,27 +443,31 @@ function pt2RenderRail(emps, jours) {
     .filter(c => c.sup > 0.05).sort((a, b) => b.sup - a.sup).slice(0, 6);
 
   el.innerHTML = `
-    <div class="pt2-blk">
-      <div class="pt2-blk-h"><span class="pt2-blk-t">Compteur d'heures</span>
-        <span class="pt2-blk-v" style="color:${total >= 0 ? '#2dd4bf' : '#fca5a5'}">${pt2FmtE(total)}</span></div>
+    <div class="dc-card">
+      ${pt2Head(PT2_IC.clock, '#22d3ee', 'Compteur', "Écart d'heures",
+        `<span class="dc-pill" style="color:${total >= 0 ? '#2dd4bf' : '#fca5a5'}">${pt2FmtE(total)}</span>`)}
+      <div class="dc-body">
       ${cpt.length ? `<div class="pt2-list">${compteurs}</div>
         <div class="pt2-blk-vide" style="margin-top:10px">Écart réalisé / prévu, jours écoulés de la semaine affichée.</div>`
       : `<div class="pt2-blk-vide">Aucune heure pointée ni planifiée cette semaine.</div>`}
+      </div>
     </div>
 
-    <div class="pt2-blk">
-      <div class="pt2-blk-h"><span class="pt2-blk-t">Heures / jour (semaine)</span>
-        <span class="pt2-blk-m">${pt2FmtH(parJour.reduce((s, v) => s + v, 0))}</span></div>
-      <div class="pt2-chart">${chart}</div>
+    <div class="dc-card">
+      ${pt2Head(PT2_IC.clock, '#2dd4bf', 'Activité', 'Heures / jour',
+        `<span class="dc-pill dim">${pt2FmtH(parJour.reduce((s, v) => s + v, 0))}</span>`)}
+      <div class="dc-body"><div class="pt2-chart">${chart}</div></div>
     </div>
 
-    <div class="pt2-blk pt2-tint-v">
-      <div class="pt2-blk-h" style="color:#c4b5fd">${pt2Svg(PT2_IC.bell)}<span class="pt2-blk-t">Heures supplémentaires</span></div>
+    <div class="dc-card">
+      ${pt2Head(PT2_IC.bell, '#8b5cf6', 'Suivi', 'Heures supplémentaires', '')}
+      <div class="dc-body">
       ${sup.length ? sup.map(c => `<div class="pt2-row">
         <span class="pt2-av pt2-av-xs" style="background:${pt2Couleur(c.i)}">${escHtml(pt2Ini(c.e))}</span>
         <span style="flex:1;min-width:0;font-size:11.5px;color:var(--v2-t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(pt2Nom(c.e))}</span>
         <span class="pt2-val">${pt2FmtE(c.sup)}</span></div>`).join('')
       : `<div class="pt2-blk-vide">Aucune heure au-delà du temps contractuel cette semaine.</div>`}
+      </div>
     </div>`;
 }
 
@@ -477,7 +497,7 @@ function pt2Bornes() {
     corps = _pt2Bornes.map(b => {
       const t = TYPES[b.type] || TYPES.badge;
       const actif = b.actif !== false;
-      return `<div class="pt2-row">
+      return `<div class="pt2-row" style="border-left:3px solid ${t.c};padding-left:12px">
         <span class="pt2-ico" style="--pc:${t.c}">${pt2Svg(t.ic)}</span>
         <div class="pt2-row-b">
           <div class="pt2-row-t">${escHtml(b.nom || 'Borne')}</div>
@@ -488,10 +508,12 @@ function pt2Bornes() {
       </div>`;
     }).join('');
   }
-  return `<div class="pt2-blk">
-    <div class="pt2-blk-h" style="color:#2dd4bf">${pt2Svg(PT2_IC.qr)}<span class="pt2-blk-t">Bornes de pointage</span></div>
+  return `<div class="dc-card">
+    ${pt2Head(PT2_IC.qr, '#22d3ee', 'Matériel', 'Bornes de pointage', '')}
+    <div class="dc-body">
     ${corps}
     ${canEdit && _pt2BornesOk ? `<button type="button" class="pt2-add" onclick="pt2OpenBorne('')">${pt2Svg(PT2_IC.plus)} Ajouter une borne</button>` : ''}
+    </div>
   </div>`;
 }
 
@@ -511,9 +533,10 @@ function pt2Annualisation(emps) {
     return { e, i, realise: Math.round(realise), cible, ecart: Math.round(realise) - cible };
   }).filter(l => l.realise > 0).sort((a, b) => b.realise - a.realise).slice(0, 6);
 
-  return `<div class="pt2-blk">
-    <div class="pt2-blk-h"><span class="pt2-blk-t">Annualisation / modulation</span>
-      <span class="pt2-blk-m">réf. 1 607 h/an · cumul ${escHtml(an)}</span></div>
+  return `<div class="dc-card">
+    ${pt2Head(PT2_IC.clock, '#2dd4bf', 'Annualisation', 'Modulation du temps',
+      `<span class="dc-pill dim">réf. 1 607 h · ${escHtml(an)}</span>`)}
+    <div class="dc-body">
     ${lignes.length ? `<div class="pt2-list">${lignes.map(l => `<div>
       <div class="pt2-ann-h">
         <span class="pt2-av pt2-av-xxs" style="background:${pt2Couleur(l.i)}">${escHtml(pt2Ini(l.e))}</span>
@@ -524,6 +547,7 @@ function pt2Annualisation(emps) {
       <div class="pt2-bar"><i style="left:0;width:${Math.min(100, l.realise / 1607 * 100).toFixed(1)}%;background:${pt2Couleur(l.i)}"></i></div>
     </div>`).join('')}</div>`
     : `<div class="pt2-blk-vide">Aucune heure pointée depuis le 1<sup>er</sup> janvier ${escHtml(an)}.</div>`}
+    </div>
   </div>`;
 }
 
@@ -548,14 +572,16 @@ function pt2Recup(emps, jours) {
     else if (nuit > 0.05) lignes.push({ e, i, detail: 'Heures de nuit (21 h–6 h)', val: nuit });
   });
   lignes.sort((a, b) => b.val - a.val);
-  return `<div class="pt2-blk pt2-tint-v">
-    <div class="pt2-blk-h" style="color:#c4b5fd">${pt2Svg(PT2_IC.sun)}<span class="pt2-blk-t">Récupération / RTT</span></div>
+  return `<div class="dc-card">
+    ${pt2Head(PT2_IC.sun, '#8b5cf6', 'Droits', 'Récupération / RTT', '')}
+    <div class="dc-body">
     ${lignes.length ? lignes.slice(0, 5).map(l => `<div class="pt2-row">
       <span class="pt2-av pt2-av-xs" style="background:${pt2Couleur(l.i)}">${escHtml(pt2Ini(l.e))}</span>
       <div class="pt2-row-b"><div class="pt2-row-t">${escHtml(pt2Nom(l.e))}</div>
         <div class="pt2-row-d">${escHtml(l.detail)}</div></div>
       <span class="pt2-val">${pt2FmtE(l.val)}</span></div>`).join('')
     : `<div class="pt2-blk-vide">Aucun droit à récupération généré cette semaine.</div>`}
+    </div>
   </div>`;
 }
 
@@ -602,8 +628,9 @@ function pt2Repos(emps, jours) {
     { l: 'Pause 20 min / 6 h',   ko: pauses, ok: 'Pauses saisies',     ic: warnI },
     { l: 'Repos hebdo 35 h',     ko: hebdo,  ok: semaineClose ? 'Respecté pour tous' : 'Semaine en cours', ic: warnI, attente: !semaineClose }
   ];
-  return `<div class="pt2-blk">
-    <div class="pt2-blk-h" style="color:#f59e0b">${pt2Svg(PT2_IC.alert)}<span class="pt2-blk-t">Temps de repos</span></div>
+  return `<div class="dc-card">
+    ${pt2Head(PT2_IC.alert, '#f59e0b', 'Conformité', 'Temps de repos', '')}
+    <div class="dc-body">
     ${items.map(it => {
       const ko = it.ko.length;
       const c = ko ? (it.l.startsWith('Repos hebdo') ? '#ef4444' : '#f59e0b') : (it.attente ? '#5f7a9c' : '#34d399');
@@ -612,10 +639,11 @@ function pt2Repos(emps, jours) {
         <span style="color:${c};display:flex">${pt2Svg(ko ? it.ic : okI, 2.2)}</span>
         <div class="pt2-row-b"><div class="pt2-row-t">${escHtml(it.l)}</div>
           <div class="pt2-row-d">${ko ? escHtml(it.ko.slice(0, 2).join(', ')) + (ko > 2 ? ` +${ko - 2}` : '') : escHtml(it.ok)}</div></div>
-        <span class="pt2-tag" style="--sc:${c}">${tag}</span>
+        <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${tag}</span>
       </div>`;
     }).join('')}
     <div class="pt2-blk-vide">Contrôles calculés sur la semaine affichée.</div>
+    </div>
   </div>`;
 }
 
@@ -631,8 +659,10 @@ function pt2Validation(emps) {
   });
   const verrou = pt2EstVerrouille(mois);
   const canEdit = pt2CanEdit();
-  return `<div class="pt2-blk pt2-tint-g">
-    <div class="pt2-blk-t" style="margin-bottom:6px">Validation mensuelle</div>
+  return `<div class="dc-card">
+    ${pt2Head(PT2_IC.lock, '#10b981', 'Paie', 'Validation mensuelle',
+      `<span class="dc-pill dim">${verrou ? 'Verrouillé' : 'Ouvert'}</span>`)}
+    <div class="dc-body">
     <div style="font-size:10.5px;color:var(--v2-t6);margin-bottom:14px">${escHtml(pt2MoisLabel(mois))} · feuilles de temps${verrou ? ' · verrouillé' : ''}</div>
     <div class="pt2-vnums">
       <div class="pt2-vnum" style="--pc:#34d399"><b>${validees}</b><span>Validées</span></div>
@@ -642,6 +672,7 @@ function pt2Validation(emps) {
       ${pt2Svg(PT2_IC.lock, 2.4)}${verrou ? 'Déverrouiller le mois' : 'Verrouiller le mois'}</button>
     <button type="button" class="pt2-vbtn2" onclick="pt2ExportPaie()">${pt2Svg(PT2_IC.down, 2.2)}Export paie (CSV)</button>`
     : `<div class="pt2-blk-vide">Le verrouillage et l'export paie sont réservés aux gestionnaires RH.</div>`}
+    </div>
   </div>`;
 }
 

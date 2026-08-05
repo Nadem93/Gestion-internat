@@ -42,6 +42,36 @@ const AL2_IC = {
   check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'
 };
 function _al2Svg(d, w) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`; }
+function _al2SvgN(d, px, w) { return `<svg viewBox="0 0 24 24" width="${px}" height="${px}" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`; }
+
+// Icônes des actions rapides (file de triage)
+const AL2_ACT_IC = {
+  traiter:  '<polyline points="20 6 9 17 4 12"/>',
+  occupe:   '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/>',
+  reporter: '<circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 15 14"/>',
+  ignorer:  '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+};
+
+// Ton de badge Console (dc-b-*) par gravité.
+function _al2Tone(prio) { return prio === 'critique' ? 'red' : prio === 'urgent' ? 'amber' : 'cyan'; }
+
+// En-tête « Console Data » pour les cartes du rail.
+function _al2Head(svgIcon, color, eyebrow, title, right) {
+  return `<div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:${color}22;color:${color}">${svgIcon}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">${escHtml(eyebrow)}</div><div class="dc-title">${escHtml(title)}</div></div>
+    </div>${right || ''}</div>`;
+}
+
+// Sections de la file de triage (ordre = priorité de traitement).
+const AL2_TRIAGE = [
+  { id: 'critique', l: 'Critiques',    c: '#ef4444', bg: 'rgba(239,68,68,.06)',  sub: 'À traiter en priorité', vide: 'Aucune alerte critique|rien à traiter en urgence.' },
+  { id: 'urgent',   l: 'Urgentes',     c: '#f59e0b', bg: 'rgba(245,158,11,.07)', sub: 'À planifier',           vide: 'File dégagée|aucune alerte urgente.' },
+  { id: 'info',     l: 'Informations', c: '#0891b2', bg: 'rgba(34,211,238,.08)', sub: 'Pour information',      vide: 'Rien à signaler|aucune information en attente.' }
+];
+
+let _al2InfoMax = 8;   // nb d'informations montrées avant « voir plus »
+function al2VoirPlusInfo() { _al2InfoMax = (_al2InfoMax >= 9999) ? 8 : 9999; al2Render(); }
 
 // ── RENDU PRINCIPAL ──────────────────────────────────────────────────
 
@@ -118,15 +148,28 @@ async function al2Lacher(id) {
 function al2RenderStats(actives) {
   const el = document.getElementById('alStats');
   if (!el) return;
+  el.style.display = 'block';                 // neutralise la grille .v2-al-stats
   const n = p => actives.filter(a => a.prio === p).length;
-  const carte = (ico, c, val, lbl) => `<div class="v2-al-stat" style="--pc:${c}">
-    <span class="v2-al-stat-ico">${_al2Svg(ico)}</span>
-    <div><div class="v2-al-stat-n">${val}</div><div class="v2-al-stat-l">${lbl}</div></div>
+  const total = actives.length;
+  const kpi = (c, ico, label, val) => `<div class="dc-kpi" style="--dc-c:${c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${label}</span><span class="dc-kpi-ico" style="color:${c}">${_al2SvgN(ico, 16)}</span></div>
+      <div class="dc-kpi-val">${val}</div></div>`;
+  const traitees = (typeof _alDismissed !== 'undefined' && Array.isArray(_alDismissed)) ? _alDismissed.length : 0;
+  const grand = total + traitees;
+  const pct = grand ? Math.round(traitees / grand * 100) : 0;
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div class="dc-kpis">
+      ${kpi('#ef4444', AL2_IC.warn,  'Critiques',    n('critique'))}
+      ${kpi('#f59e0b', AL2_IC.clock, 'Urgentes',     n('urgent'))}
+      ${kpi('#0891b2', AL2_IC.bell,  'Informations', n('info'))}
+      ${kpi('#6366f1', AL2_IC.check, 'Au total',     total)}
+    </div>
+    <div class="al-prog">
+      <span class="al-prog-txt">Progression du triage</span>
+      <div class="al-prog-bar"><span style="width:${pct}%"></span></div>
+      <span class="al-prog-num">${traitees} / ${grand} traité${traitees > 1 ? 's' : ''}</span>
+    </div>
   </div>`;
-  el.innerHTML = carte(AL2_IC.warn, '#ef4444', n('critique'), 'Critiques')
-    + carte(AL2_IC.clock, '#f59e0b', n('urgent'), 'Urgentes')
-    + carte(AL2_IC.bell, '#0ea5e9', n('info'), 'Informations')
-    + carte(AL2_IC.check, '#818cf8', actives.length, 'Au total');
 }
 
 // ── CHIPS DE GRAVITÉ ─────────────────────────────────────────────────
@@ -154,86 +197,111 @@ try { if (localStorage.getItem('al_group') === '1') AL2_GROUP = true; } catch (_
 function al2RenderListe(liste) {
   const el = document.getElementById('alList');
   if (!el) return;
-  if (!liste.length) {
-    el.innerHTML = `<div class="v2-blk" style="text-align:center;padding:48px 24px">
-      <div style="color:var(--v2-ok);margin-bottom:12px">${_al2Svg(AL2_IC.check, 2)}</div>
-      <div style="font-size:15px;font-weight:700;color:var(--v2-t2)">Tout est à jour</div>
-      <div style="font-size:12.5px;color:var(--v2-t7);margin-top:4px">Aucune alerte ne correspond à ce filtre.</div>
-    </div>`;
-    return;
-  }
-
   const ordre = { critique: 0, urgent: 1, info: 2 };
   const triees = [...liste].sort((a, b) =>
     (ordre[a.prio] ?? 3) - (ordre[b.prio] ?? 3) || (a.date || '').localeCompare(b.date || ''));
 
-  if (!AL2_GROUP) { el.innerHTML = triees.map(al2Card).join(''); return; }
+  // ── Vue « Par résident » (regroupement alternatif) ──
+  if (AL2_GROUP) {
+    if (!triees.length) { el.innerHTML = _al2Vide(); return; }
+    const groupes = {};
+    triees.forEach(a => {
+      const cle = a.residentId ? String(a.residentId) : '__etab';
+      (groupes[cle] = groupes[cle] || { nom: a.resName || (a.residentId ? 'Résident' : 'Établissement'), items: [] }).items.push(a);
+    });
+    const cles = Object.keys(groupes).sort((x, y) => {
+      const gx = groupes[x].items, gy = groupes[y].items;
+      const mx = Math.min(...gx.map(a => ordre[a.prio] ?? 3)), my = Math.min(...gy.map(a => ordre[a.prio] ?? 3));
+      return mx - my || gy.length - gx.length;
+    });
+    el.innerHTML = cles.map(k => {
+      const g = groupes[k];
+      const mx = Math.min(...g.items.map(a => ordre[a.prio] ?? 3));
+      const c = mx === 0 ? '#ef4444' : mx === 1 ? '#f59e0b' : '#0891b2';
+      return `<div class="al-grp">
+        <div class="al-grp-h" style="--al-c:${c};--al-bg:var(--v2-s-sub)">
+          <span class="al-grp-dot"></span><span class="al-grp-t">${escHtml(g.nom)}</span>
+          <span class="al-grp-n">${g.items.length}</span><span class="al-grp-sub">alerte${g.items.length > 1 ? 's' : ''}</span>
+        </div>
+        <div class="al-grp-body">${g.items.map(al2Row).join('')}</div>
+      </div>`;
+    }).join('');
+    return;
+  }
 
-  // Regroupement par résident : un résident cumulant plusieurs alertes saute
-  // aux yeux. Les alertes sans résident vont dans « Établissement ».
-  const groupes = {};
-  triees.forEach(a => {
-    const cle = a.residentId ? String(a.residentId) : '__etab';
-    (groupes[cle] = groupes[cle] || { nom: a.resName || (a.residentId ? 'Résident' : 'Établissement'), items: [] }).items.push(a);
-  });
-  // groupes triés par gravité max puis nombre d'alertes décroissant
-  const cles = Object.keys(groupes).sort((x, y) => {
-    const gx = groupes[x].items, gy = groupes[y].items;
-    const mx = Math.min(...gx.map(a => ordre[a.prio] ?? 3)), my = Math.min(...gy.map(a => ordre[a.prio] ?? 3));
-    return mx - my || gy.length - gx.length;
-  });
-  el.innerHTML = cles.map(k => {
-    const g = groupes[k];
-    const ini = g.nom.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '—';
-    return `<div class="v2-al-grp">
-      <div class="v2-al-grp-h">
-        <span class="v2-al-grp-av">${escHtml(ini)}</span>
-        <span class="v2-al-grp-n">${escHtml(g.nom)}</span>
-        <span class="v2-al-grp-c">${g.items.length} alerte${g.items.length > 1 ? 's' : ''}</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">${g.items.map(al2Card).join('')}</div>
-    </div>`;
-  }).join('');
+  // ── Vue TRIAGE : une section par gravité (ordre = priorité de traitement) ──
+  el.innerHTML = AL2_TRIAGE
+    .filter(g => AL2_SEV === 'all' || AL2_SEV === g.id)
+    .map(g => {
+      const all = triees.filter(a => a.prio === g.id);
+      const total = all.length;
+      let items = all, more = '';
+      if (g.id === 'info' && total > _al2InfoMax) {
+        items = all.slice(0, _al2InfoMax);
+        more = `<button type="button" class="al-more" onclick="al2VoirPlusInfo()">Afficher les ${total - _al2InfoMax} restantes ↓</button>`;
+      } else if (g.id === 'info' && _al2InfoMax >= 9999 && total > 8) {
+        more = `<button type="button" class="al-more" onclick="al2VoirPlusInfo()">Réduire ↑</button>`;
+      }
+      const sub = total ? (items.length < total ? `${items.length} sur ${total}` : g.sub) : 'File dégagée';
+      const body = total
+        ? items.map(al2Row).join('') + more
+        : `<div class="al-empty"><span class="al-empty-ico">${_al2SvgN('<polyline points="20 6 9 17 4 12"/>', 15, 2.4)}</span><div><b>${g.vide.split('|')[0]}</b> — ${g.vide.split('|')[1]}</div></div>`;
+      return `<div class="al-grp">
+        <div class="al-grp-h" style="--al-c:${g.c};--al-bg:${g.bg}">
+          <span class="al-grp-dot"></span><span class="al-grp-t">${g.l}</span><span class="al-grp-n">${total}</span>
+          <span class="al-grp-sub">${escHtml(sub)}</span>
+        </div>
+        <div class="al-grp-body">${body}</div>
+      </div>`;
+    }).join('');
 }
 
-// Carte d'une alerte, avec prise en charge et menu « Reporter ».
-function al2Card(a) {
+function _al2Vide() {
+  return `<div class="dc-card"><div class="al-empty" style="padding:40px 24px;justify-content:center">
+    <span class="al-empty-ico">${_al2SvgN('<polyline points="20 6 9 17 4 12"/>', 15, 2.4)}</span>
+    <div><b>Tout est à jour</b> — aucune alerte ne correspond à ce filtre.</div></div></div>`;
+}
+
+// Ligne compacte d'une alerte (file de triage) avec actions-icônes.
+function al2Row(a) {
   const t = AL_TYPES[a.type] || AL_TYPES.echeance;
-  const sc = AL2_SEV_C[a.prio] || '#64748b';
+  const c = AL2_SEV_C[a.prio] || '#64748b';
   const prise = _al2Prises[a.id];
   const s = (typeof Auth !== 'undefined' && Auth.getSession) ? (Auth.getSession() || {}) : {};
   const peutLacher = prise && (String(prise.prisPar) === String(s.userId) || s.role === 'admin');
+  const reste = a.date ? al2Reste(a.date) : '';
+  const enRetard = reste.indexOf('retard') !== -1;
 
-  const actions = (_al2SnoozeOpen === a.id)
-    ? `<span style="font-size:11.5px;color:var(--v2-t6);align-self:center">Reporter à :</span>
-       <button type="button" class="v2-al-snz" onclick="al2Snooze('${a.id}',1)">Demain</button>
-       <button type="button" class="v2-al-snz" onclick="al2Snooze('${a.id}',3)">3 jours</button>
-       <button type="button" class="v2-al-snz" onclick="al2Snooze('${a.id}',7)">1 semaine</button>
-       <button type="button" class="v2-al-ign" onclick="al2ToggleSnoozeMenu('${a.id}')">Annuler</button>`
-    : `${a.link ? `<a class="v2-al-cta" href="${sanitizeUrl(a.link)}">Traiter</a>` : ''}
+  const acts = (_al2SnoozeOpen === a.id)
+    ? `<span class="al-snz-lbl">Reporter à</span>
+       <button type="button" class="al-snz" onclick="al2Snooze('${a.id}',1)">demain</button>
+       <button type="button" class="al-snz" onclick="al2Snooze('${a.id}',3)">3 j</button>
+       <button type="button" class="al-snz" onclick="al2Snooze('${a.id}',7)">1 sem.</button>
+       <button type="button" class="al-act danger" title="Annuler" onclick="al2ToggleSnoozeMenu('${a.id}')">${_al2SvgN(AL2_ACT_IC.ignorer, 16, 2.2)}</button>`
+    : `${a.link ? `<a class="al-act primary" href="${sanitizeUrl(a.link)}" title="Traiter">${_al2SvgN(AL2_ACT_IC.traiter, 16, 2.4)}</a>` : ''}
        ${prise
-          ? (peutLacher ? `<button type="button" class="v2-al-ign" onclick="al2Lacher('${a.id}')">Me retirer</button>` : '')
-          : `<button type="button" class="v2-al-prendre" onclick="al2Prendre('${a.id}')">Je m'en occupe</button>`}
-       <button type="button" class="v2-al-ign" onclick="al2ToggleSnoozeMenu('${a.id}')">Reporter</button>
-       <button type="button" class="v2-al-ign" onclick="dismissAl('${a.id}')">Ignorer</button>`;
+          ? (peutLacher ? `<button type="button" class="al-act occupe on" title="Pris en charge — me retirer" onclick="al2Lacher('${a.id}')">${_al2SvgN(AL2_ACT_IC.occupe, 16)}</button>` : '')
+          : `<button type="button" class="al-act occupe" title="Je m'en occupe" onclick="al2Prendre('${a.id}')">${_al2SvgN(AL2_ACT_IC.occupe, 16)}</button>`}
+       <button type="button" class="al-act" title="Reporter" onclick="al2ToggleSnoozeMenu('${a.id}')">${_al2SvgN(AL2_ACT_IC.reporter, 16)}</button>
+       <button type="button" class="al-act danger" title="Ignorer" onclick="dismissAl('${a.id}')">${_al2SvgN(AL2_ACT_IC.ignorer, 16, 2.2)}</button>`;
 
-  return `<article class="v2-al" style="--sc:${sc};--pc:${t.color}">
-    <span class="v2-al-ico">${t.icon}</span>
-    <div style="flex:1;min-width:0">
-      <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap">
-        <span class="v2-al-t">${escHtml(a.titre)}</span>
-        <span class="v2-al-sev">${AL2_SEV_L[a.prio] || a.prio}</span>
-        ${prise ? `<span class="v2-al-pris" title="Pris en charge par ${escHtml(prise.prisParNom || '')}">✋ ${escHtml(prise.prisParNom || 'Pris en charge')}</span>` : ''}
+  return `<div class="al-row" style="--al-c:${c}">
+    <span class="al-row-ico">${t.icon}</span>
+    <div class="al-row-main">
+      <div class="al-row-top">
+        <span class="al-row-title">${escHtml(a.titre)}</span>
+        <span class="dc-badge dc-b-${_al2Tone(a.prio)}">${escHtml(AL2_SEV_L[a.prio] || a.prio)}</span>
+        <span class="dc-badge dc-b-gray">${escHtml(t.label)}</span>
+        ${prise ? `<span class="al-pris" title="Pris en charge par ${escHtml(prise.prisParNom || '')}">✋ ${escHtml(prise.prisParNom || 'pris')}</span>` : ''}
       </div>
-      <div class="v2-al-d">${escHtml(a.msg || '')}</div>
-      <div class="v2-al-meta">
-        <span class="v2-al-type">${escHtml(t.label)}</span>
-        ${a.date ? `<span class="v2-al-ctx">${escHtml(_alFormatDate(a.date))}</span>` : ''}
-        ${a.date ? `<span class="v2-al-ctx" style="margin-left:auto">${escHtml(al2Reste(a.date))}</span>` : ''}
+      <div class="al-row-meta">
+        ${a.msg ? `<span>${escHtml(a.msg)}</span>` : ''}
+        ${a.date ? `<span class="al-row-date">${escHtml(_alFormatDate(a.date))}</span>` : ''}
+        ${reste ? `<span class="al-row-late"${enRetard ? '' : ' style="color:var(--v2-t5)"'}>${escHtml(reste)}</span>` : ''}
       </div>
     </div>
-    <div class="v2-al-act">${actions}</div>
-  </article>`;
+    <div class="al-acts">${acts}</div>
+  </div>`;
 }
 
 // « dans 3 j », « aujourd'hui », « en retard de 2 j »
@@ -256,24 +324,19 @@ function al2RenderCategories(actives) {
   actives.forEach(a => { n[a.type] = (n[a.type] || 0) + 1; });
   const cles = Object.keys(n).sort((a, b) => n[b] - n[a]);
   const max = Math.max(1, ...Object.values(n));
-
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:18px">
-      <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-      <span class="v2-blk-t">Par catégorie</span>
-      ${AL2_TYPE ? `<button type="button" class="v2-tr-act" style="margin-left:auto" onclick="al2SetType('')">Tout voir</button>` : ''}
-    </div>
-    ${cles.length ? `<div style="display:flex;flex-direction:column;gap:13px">${cles.map(k => {
-      const t = AL_TYPES[k] || { label: k, color: '#64748b' };
-      return `<div class="v2-al-cat${AL2_TYPE === k ? ' on' : ''}" onclick="al2SetType('${k}')" title="Filtrer sur cette catégorie">
-        <div style="display:flex;align-items:baseline;margin-bottom:5px">
-          <span class="v2-al-cat-l" style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--v2-t3)">
-            <span style="width:8px;height:8px;border-radius:50%;background:${t.color}"></span>${escHtml(t.label)}</span>
-          <span style="margin-left:auto;font-size:11.5px;font-weight:700;color:#fff">${n[k]}</span>
-        </div>
-        <div class="v2-prog"><span style="width:${Math.round(n[k] / max * 100)}%;background:${t.color}"></span></div>
-      </div>`;
-    }).join('')}</div>` : '<div class="v2-blk-vide">Aucune alerte active.</div>'}`;
+  const right = AL2_TYPE ? `<button type="button" class="dc-pill dim" style="cursor:pointer" onclick="al2SetType('')">Tout voir</button>` : '';
+  const body = cles.length ? cles.map(k => {
+    const t = AL_TYPES[k] || { label: k, color: '#64748b' };
+    return `<div onclick="al2SetType('${k}')" title="Filtrer sur cette catégorie" style="cursor:pointer;margin-bottom:13px;${AL2_TYPE && AL2_TYPE !== k ? 'opacity:.45' : ''}">
+      <div style="display:flex;align-items:center;margin-bottom:6px">
+        <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--v2-t3)"><span style="width:8px;height:8px;border-radius:50%;background:${t.color}"></span>${escHtml(t.label)}</span>
+        <span class="dc-dl-num" style="margin-left:auto">${n[k]}</span>
+      </div>
+      <div class="al-prog-bar" style="height:7px"><span style="width:${Math.round(n[k] / max * 100)}%;background:${t.color}"></span></div>
+    </div>`;
+  }).join('') : '<div class="dc-empty" style="padding:4px 0">Aucune alerte active.</div>';
+  el.innerHTML = _al2Head(_al2SvgN('<circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 3.7"/>', 15), '#6366f1', 'Répartition', 'Par catégorie', right)
+    + `<div class="dc-body">${body}</div>`;
 }
 
 // ── RAIL : ÉCHÉANCES IMMINENTES ──────────────────────────────────────
@@ -289,27 +352,25 @@ function al2RenderEcheances(actives) {
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))
     .slice(0, 5);
 
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
-      <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span class="v2-blk-t" style="color:var(--v2-warn-text)">Échéances imminentes</span>
-    </div>
-    ${proches.length ? proches.map(a => {
-      const d = new Date(String(a.date).slice(0, 10) + 'T00:00:00');
-      const c = AL2_SEV_C[a.prio] || '#f59e0b';
-      const t = AL_TYPES[a.type] || { label: a.type };
-      return `<div class="v2-al-ech" style="--pc:${c}">
-        <div class="v2-al-ech-d">
-          <span class="v2-al-ech-j">${d.getDate()}</span>
-          <span class="v2-al-ech-m">${AL2_MOIS[d.getMonth()]}</span>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:600;color:var(--v2-t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.titre)}</div>
-          <div style="font-size:10.5px;color:var(--v2-t6)">${escHtml(t.label)}</div>
-        </div>
-        <span style="font-size:10.5px;font-weight:700;color:${c};white-space:nowrap">${escHtml(al2Reste(a.date))}</span>
-      </div>`;
-    }).join('') : '<div class="v2-blk-vide">Aucune échéance à venir.</div>'}`;
+  const M = 'var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace)';
+  const body = proches.length ? proches.map((a, i) => {
+    const d = new Date(String(a.date).slice(0, 10) + 'T00:00:00');
+    const c = AL2_SEV_C[a.prio] || '#f59e0b';
+    const t = AL_TYPES[a.type] || { label: a.type };
+    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0${i ? ';border-top:1px solid var(--v2-b-soft)' : ''}">
+      <div style="text-align:center;flex:none;width:36px">
+        <div style="font-family:${M};font-size:16px;font-weight:700;color:var(--v2-t3);line-height:1">${d.getDate()}</div>
+        <div style="font-family:${M};font-size:9px;letter-spacing:.08em;color:var(--v2-t7)">${AL2_MOIS[d.getMonth()]}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:600;color:var(--v2-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.titre)}</div>
+        <div style="font-size:11px;color:var(--v2-t7)">${escHtml(t.label)}</div>
+      </div>
+      <span style="font-family:${M};font-size:11px;font-weight:700;color:${c};white-space:nowrap">${escHtml(al2Reste(a.date))}</span>
+    </div>`;
+  }).join('') : '<div class="dc-empty" style="padding:4px 0">Aucune échéance à venir.</div>';
+  el.innerHTML = _al2Head(_al2SvgN('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>', 15), '#f59e0b', 'À venir', 'Échéances imminentes')
+    + `<div class="dc-body" style="padding-top:6px;padding-bottom:8px">${body}</div>`;
 }
 
 // ── RÉCEMMENT TRAITÉES ───────────────────────────────────────────────
@@ -321,22 +382,17 @@ function al2RenderTraitees(toutes) {
   if (!el) return;
   const traitees = toutes.filter(a => _alDismissed.includes(a.id)).slice(0, 8);
 
-  el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
-      <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <span class="v2-blk-t">Récemment traitées</span>
-      ${traitees.length ? `<button type="button" class="v2-tr-act" style="margin-left:auto" onclick="resetAlDismissed()">Tout réafficher</button>` : ''}
-    </div>
-    ${traitees.length ? `<div class="v2-al-res">${traitees.map(a => {
-      const t = AL_TYPES[a.type] || { label: a.type };
-      return `<div class="v2-al-res-i">
-        <span class="v2-al-res-c">${_al2Svg('<polyline points="20 6 9 17 4 12"/>', 2.5)}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12.5px;color:var(--v2-t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(a.titre)}</div>
-        </div>
-        <span style="font-size:11px;color:var(--v2-t7);white-space:nowrap">${escHtml(t.label)}</span>
-      </div>`;
-    }).join('')}</div>` : '<div class="v2-blk-vide">Aucune alerte traitée pour le moment.</div>'}`;
+  const right = traitees.length ? `<button type="button" class="dc-pill dim" style="cursor:pointer" onclick="resetAlDismissed()">Tout réafficher</button>` : '';
+  const body = traitees.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px">${traitees.map(a => {
+    const t = AL_TYPES[a.type] || { label: a.type };
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--v2-s-sub);border:1px solid var(--v2-b);border-radius:10px;min-width:0">
+      <span style="color:#10b981;flex:none;display:flex">${_al2SvgN('<polyline points="20 6 9 17 4 12"/>', 14, 2.6)}</span>
+      <span style="font-size:12.5px;color:var(--v2-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">${escHtml(a.titre)}</span>
+      <span class="dc-badge dc-b-gray">${escHtml(t.label)}</span>
+    </div>`;
+  }).join('')}</div>` : '<div class="dc-empty" style="padding:4px 0">Aucune alerte traitée pour le moment.</div>';
+  el.innerHTML = _al2Head(_al2SvgN('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', 15), '#10b981', 'Historique', 'Récemment traitées', right)
+    + `<div class="dc-body">${body}</div>`;
 }
 
 // ── TOUT MARQUER COMME LU ────────────────────────────────────────────

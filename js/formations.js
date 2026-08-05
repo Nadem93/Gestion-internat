@@ -216,7 +216,7 @@ function formationItemHtml(f, isAdmin, employesMap) {
   let inscriptionBtn = '';
   if (!isAdmin && f.statut === 'planifiee') {
     const dateRef = f.dateFin || f.dateDebut;
-    const datePassed = dateRef && dateRef < new Date().toISOString().slice(0, 10);
+    const datePassed = dateRef && dateRef < today();
     const empId = frmCurrentEmployeId();
     const alreadyIn = empId && parts.includes(empId);
     const full = f.maxParticipants && parts.length >= f.maxParticipants && !alreadyIn;

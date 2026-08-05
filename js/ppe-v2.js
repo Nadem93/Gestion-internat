@@ -10,9 +10,9 @@
 // Aucune couche Supabase n'est réécrite ici.
 
 const PP2_STATUTS = {
-  brouillon: { l: 'Brouillon', c: '#f59e0b' },
-  actif:     { l: 'Actif',     c: '#10b981' },
-  termine:   { l: 'Terminé',   c: '#94a3b8' }
+  brouillon: { l: 'Brouillon', c: '#f59e0b', t: 'amber' },
+  actif:     { l: 'Actif',     c: '#10b981', t: 'green' },
+  termine:   { l: 'Terminé',   c: '#94a3b8', t: 'gray' }
 };
 
 // Palette de repli quand le résident n'a pas de couleur enregistrée
@@ -30,6 +30,11 @@ function pp2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
 
+// Variante 16px pour les chips / icônes de tuiles KPI du langage « Console Data »
+function pp2Svg16(d) {
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+
 function pp2Ini(nom) {
   return String(nom || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2)
     .map(w => w[0] || '').join('').toUpperCase() || '?';
@@ -45,7 +50,7 @@ function pp2Color(p, r) {
   return PP2_PAL[h % PP2_PAL.length];
 }
 
-function pp2Statut(s) { return PP2_STATUTS[s] || { l: s || '—', c: '#94a3b8' }; }
+function pp2Statut(s) { return PP2_STATUTS[s] || { l: s || '—', c: '#94a3b8', t: 'gray' }; }
 
 // Révision dépassée : date passée sur un avenant qui n'est pas terminé
 function pp2RevEnRetard(p) {
@@ -106,14 +111,15 @@ function pp2RenderStats(all) {
   const el = document.getElementById('ppeStats');
   if (!el) return;
   const stats = [
-    { n: all.length, l: 'Avenants', c: '#818cf8', ic: PP2_IC.file },
-    { n: all.filter(p => p.statut === 'actif').length, l: 'Actifs', c: '#10b981', ic: PP2_IC.check },
-    { n: all.filter(p => p.statut === 'brouillon').length, l: 'Brouillons', c: '#f59e0b', ic: PP2_IC.edit },
-    { n: all.filter(pp2RevEnRetard).length, l: 'Révision en retard', c: '#ef4444', ic: PP2_IC.alert }
+    { n: all.length, l: 'Avenants', c: '#818cf8', ic: PP2_IC.file, sub: 'Total des dossiers' },
+    { n: all.filter(p => p.statut === 'actif').length, l: 'Actifs', c: '#10b981', ic: PP2_IC.check, sub: 'En cours de suivi' },
+    { n: all.filter(p => p.statut === 'brouillon').length, l: 'Brouillons', c: '#f59e0b', ic: PP2_IC.edit, sub: 'À finaliser' },
+    { n: all.filter(pp2RevEnRetard).length, l: 'Révision en retard', c: '#ef4444', ic: PP2_IC.alert, sub: 'À replanifier' }
   ];
-  el.innerHTML = stats.map(s => `<div class="pp2-stat" style="--sc:${s.c}">
-    <span class="pp2-stat-ico">${pp2Svg(s.ic)}</span>
-    <div><div class="pp2-stat-n">${s.n}</div><div class="pp2-stat-l">${s.l}</div></div>
+  el.innerHTML = stats.map(s => `<div class="dc-kpi" style="--dc-c:${s.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${s.l}</span><span class="dc-kpi-ico" style="color:${s.c}">${pp2Svg16(s.ic)}</span></div>
+    <div class="dc-kpi-val">${s.n}</div>
+    <div class="dc-kpi-sub">${s.sub}</div>
   </div>`).join('');
 }
 
@@ -165,8 +171,8 @@ function pp2Card(p, residents) {
   const nbObj = pp2NbObjectifs(p);
   const fd = d => (typeof formatDate === 'function' ? formatDate(d) : (d || '—'));
   const av = r && r.photo
-    ? `<img class="pp2-av" src="${escAttr(r.photo)}" alt=""/>`
-    : `<span class="pp2-av" style="background:${col}">${pp2Ini(p.residentName)}</span>`;
+    ? `<span class="dc-chip" style="padding:0;overflow:hidden;background:${col}22"><img src="${escAttr(r.photo)}" alt="" style="width:100%;height:100%;object-fit:cover"/></span>`
+    : `<span class="dc-chip" style="background:${col}22;color:${col};font-weight:700">${pp2Ini(p.residentName)}</span>`;
 
   // Action contextuelle du cycle du PPA (bilan à 6 mois / réévaluation en retard)
   let ctx = '';
@@ -179,17 +185,22 @@ function pp2Card(p, residents) {
     }
   }
 
-  return `<div class="pp2-card" style="--ac:${col}">
-    <div class="pp2-card-h">
-      ${av}
-      <div class="pp2-card-id">
-        <div class="pp2-name" title="${escAttr(p.residentName || '—')}">${escHtml(p.residentName || '—')}</div>
-        <span class="pp2-st" style="color:${st.c};background:${st.c}22">${st.l}</span>
+  return `<div class="pp2-card dc-card" style="--ac:${col};display:flex;flex-direction:column">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        ${av}
+        <div style="min-width:0">
+          <div class="dc-eyebrow">Avenant PPA</div>
+          <div class="dc-title" title="${escAttr(p.residentName || '—')}">${escHtml(p.residentName || '—')}</div>
+        </div>
       </div>
-      <button type="button" class="pp2-del" title="Supprimer l'avenant" aria-label="Supprimer l'avenant"
-        onclick="event.stopPropagation();deleteAvenant('${p.id}')">${pp2Svg(PP2_IC.trash, 2)}</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="dc-badge dc-b-${st.t}"><span class="d"></span>${st.l}</span>
+        <button type="button" class="pp2-del" title="Supprimer l'avenant" aria-label="Supprimer l'avenant"
+          onclick="event.stopPropagation();deleteAvenant('${p.id}')">${pp2Svg(PP2_IC.trash, 2)}</button>
+      </div>
     </div>
-    <div class="pp2-rows">
+    <div class="pp2-rows" style="border-left:3px solid ${col}">
       <div class="pp2-r"><span class="pp2-r-l">Rédaction</span><span class="pp2-r-v">${fd(p.dateRedaction)}</span></div>
       <div class="pp2-r"><span class="pp2-r-l">Révision</span><span class="pp2-r-v${late ? ' late' : ''}">${p.dateRevision ? fd(p.dateRevision) : '—'}${late ? ' · en retard' : ''}</span></div>
       <div class="pp2-r"><span class="pp2-r-l">Référent</span><span class="pp2-r-v">${escHtml(p.referent || '—')}</span></div>

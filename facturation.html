@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Facturation — FTR</title>
+  <title>Facturation — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -38,30 +38,35 @@
 
     <!-- Bandeau de statistiques -->
     <div class="fc2-stats">
-      <div class="fc2-stat" style="--pc:#22d3ee">
-        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        <div class="fc2-stat-n" id="factStatTotal">0 €</div>
-        <div class="fc2-stat-l">Total facturé (filtre actif)</div>
+      <div class="dc-kpi" style="--dc-c:#22d3ee">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Total facturé</span>
+          <span class="dc-kpi-ico" style="color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span></div>
+        <div class="dc-kpi-val" id="factStatTotal">0 €</div>
+        <div class="dc-kpi-sub">Filtre actif</div>
       </div>
-      <div class="fc2-stat" style="--pc:#4ade80">
-        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
-        <div class="fc2-stat-n" id="fc2StatEncaisse">0 €</div>
-        <div class="fc2-stat-l">Encaissé (factures payées)</div>
+      <div class="dc-kpi" style="--dc-c:#4ade80">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Encaissé</span>
+          <span class="dc-kpi-ico" style="color:#4ade80"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span></div>
+        <div class="dc-kpi-val" id="fc2StatEncaisse">0 €</div>
+        <div class="dc-kpi-sub">Factures payées</div>
       </div>
-      <div class="fc2-stat" style="--pc:#8095b4">
-        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-        <div class="fc2-stat-n" id="factStatBrouillon">0</div>
-        <div class="fc2-stat-l">Brouillons</div>
+      <div class="dc-kpi" style="--dc-c:#8095b4">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Brouillons</span>
+          <span class="dc-kpi-ico" style="color:#8095b4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span></div>
+        <div class="dc-kpi-val" id="factStatBrouillon">0</div>
+        <div class="dc-kpi-sub">En attente d'envoi</div>
       </div>
-      <div class="fc2-stat" style="--pc:#818cf8">
-        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
-        <div class="fc2-stat-n" id="factStatEnvoyee">0</div>
-        <div class="fc2-stat-l">Envoyées</div>
+      <div class="dc-kpi" style="--dc-c:#818cf8">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Envoyées</span>
+          <span class="dc-kpi-ico" style="color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span></div>
+        <div class="dc-kpi-val" id="factStatEnvoyee">0</div>
+        <div class="dc-kpi-sub">En attente de paiement</div>
       </div>
-      <div class="fc2-stat" style="--pc:#10b981">
-        <span class="fc2-stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-        <div class="fc2-stat-n" id="factStatPayee">0</div>
-        <div class="fc2-stat-l">Payées</div>
+      <div class="dc-kpi" style="--dc-c:#10b981">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">Payées</span>
+          <span class="dc-kpi-ico" style="color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+        <div class="dc-kpi-val" id="factStatPayee">0</div>
+        <div class="dc-kpi-sub">Recouvrées</div>
       </div>
     </div>
 
@@ -79,46 +84,57 @@
           <div class="fc2-gauge-x" id="fc2GaugeX">—</div>
         </div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Répartition par statut</span></div>
-        <div class="fc2-recap" id="fc2Recap"></div>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">VENTILATION</div><div class="dc-title">Répartition par statut</div></div>
+        </div></div>
+        <div class="dc-body"><div class="fc2-recap" id="fc2Recap"></div></div>
       </div>
     </div>
 
     <!-- Tendance -->
-    <div class="v2-blk fc2-blk">
-      <div class="v2-blk-h">
-        <span class="v2-blk-t">Tendance de facturation — 12 dernières périodes</span>
-        <span class="fc2-leg">
-          <span><i style="background:#4ade80"></i>Facturé</span>
-          <span><i style="background:#818cf8"></i>Encaissé</span>
-        </span>
+    <div class="dc-card fc2-blk">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#4ade8022;color:#4ade80"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        <div style="min-width:0"><div class="dc-eyebrow">12 DERNIÈRES PÉRIODES</div><div class="dc-title">Tendance de facturation</div></div>
       </div>
-      <div id="fc2Trend"></div>
+      <span class="fc2-leg">
+        <span><i style="background:#4ade80"></i>Facturé</span>
+        <span><i style="background:#818cf8"></i>Encaissé</span>
+      </span></div>
+      <div class="dc-body"><div id="fc2Trend"></div></div>
     </div>
 
     <!-- Organismes payeurs + tarifs -->
     <div class="fc2-g2">
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Facturation par organisme payeur</span></div>
-        <div class="fc2-orgs" id="fc2Organismes"></div>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">PAYEURS</div><div class="dc-title">Facturation par organisme payeur</div></div>
+        </div></div>
+        <div class="dc-body"><div class="fc2-orgs" id="fc2Organismes"></div></div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t">Tarifs (catégories de prise en charge)</span>
-          <button type="button" class="fc2-mini admin-only" style="margin-left:auto" onclick="openTarifModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Ajouter
-          </button>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">CATÉGORIES</div><div class="dc-title">Tarifs (catégories de prise en charge)</div></div>
         </div>
-        <div id="tarifsList"></div>
+        <button type="button" class="fc2-mini admin-only" onclick="openTarifModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </button></div>
+        <div class="dc-body"><div id="tarifsList"></div></div>
       </div>
     </div>
 
     <!-- Génération des factures -->
-    <div class="v2-blk fc2-blk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Générer les factures du mois</span></div>
-      <div class="fc2-gen">
+    <div class="dc-card fc2-blk">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#4ade8022;color:#4ade80"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        <div style="min-width:0"><div class="dc-eyebrow">TRAITEMENT PAR LOT</div><div class="dc-title">Générer les factures du mois</div></div>
+      </div></div>
+      <div class="dc-body"><div class="fc2-gen">
         <div>
           <label class="fc2-f-lbl" for="factPeriode">Période</label>
           <input type="month" id="factPeriode" class="v2-fld fc2-f"/>
@@ -128,19 +144,25 @@
           Générer les factures
         </button>
         <span class="fc2-gen-x">Calcule le nombre de jours de présence de chaque résident affecté et crée/actualise une facture brouillon par résident pour la période choisie.</span>
-      </div>
+      </div></div>
     </div>
 
     <!-- Classement + tableau des factures -->
     <div class="fc2-g-top">
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Top résidents facturés</span></div>
-        <div id="fc2Top"></div>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">CLASSEMENT</div><div class="dc-title">Top résidents facturés</div></div>
+        </div></div>
+        <div class="dc-body"><div id="fc2Top"></div></div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="v2-blk-t">Factures</span>
-          <span class="v2-blk-sub" id="fc2TableCount" style="margin:0 0 0 6px"></span>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">REGISTRE</div><div class="dc-title">Factures</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto">
+          <span class="dc-pill dim" id="fc2TableCount"></span>
           <span class="fc2-filters">
             <select id="factFiltrePeriode" class="v2-fld fc2-f" onchange="renderFactures()"><option value="">Toutes les périodes</option></select>
             <select id="factFiltreStatut" class="v2-fld fc2-f" onchange="renderFactures()">
@@ -151,18 +173,19 @@
             </select>
             <select id="factFiltreOrganisme" class="v2-fld fc2-f" onchange="renderFactures()"><option value="">Tous les organismes</option></select>
           </span>
-        </div>
-        <div id="factList"><div class="v2-blk-vide">Aucune facture</div></div>
+        </div></div>
+        <div class="dc-body"><div id="factList"><div class="v2-blk-vide">Aucune facture</div></div></div>
       </div>
     </div>
 
     <!-- Affectation des résidents -->
-    <div class="v2-blk fc2-blk">
-      <div class="v2-blk-h">
-        <span class="v2-blk-t">Affectation des résidents</span>
-        <span class="v2-blk-sub" id="fc2AffCount" style="margin:0 0 0 6px"></span>
+    <div class="dc-card fc2-blk">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#a855f722;color:#a855f7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+        <div style="min-width:0"><div class="dc-eyebrow">RÉSIDENTS</div><div class="dc-title">Affectation des résidents</div></div>
       </div>
-      <div class="fc2-affs" id="affectationsList"></div>
+      <span class="dc-pill dim" id="fc2AffCount"></span></div>
+      <div class="dc-body"><div class="fc2-affs" id="affectationsList"></div></div>
     </div>
 
   </div>

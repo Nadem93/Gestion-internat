@@ -49,70 +49,72 @@
       <div class="ma2-main">
         <div id="mesAbsList"></div>
 
-        <div class="ma2-tint" style="--tc:#ef4444">
-          <div class="ma2-tint-h">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span class="ma2-tint-t">Accidents du travail — mon registre</span>
-          </div>
-          <div id="maRegistre"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:#ef444422;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">REGISTRE</div><div class="dc-title">Accidents du travail</div></div>
+          </div></div>
+          <div class="dc-body"><div id="maRegistre"></div></div>
         </div>
       </div>
 
       <div class="ma2-rail">
-        <div class="v2-blk v2-rail-blk">
-          <div class="ma2-rail-h">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            <span class="v2-blk-t">Jours d'absence / mois</span>
-            <span class="ma2-rail-v" id="maChartTotal">—</span>
-          </div>
-          <div id="maChart" class="ma2-chart"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:#f8717122;color:#f87171"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">SUR 6 MOIS</div><div class="dc-title">Jours d'absence / mois</div></div>
+          </div><span class="dc-pill dim" id="maChartTotal">—</span></div>
+          <div class="dc-body"><div id="maChart" class="ma2-chart"></div></div>
         </div>
 
-        <div class="v2-blk v2-rail-blk">
-          <div class="ma2-rail-h">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-            <span class="v2-blk-t">Par motif (jours)</span>
-          </div>
-          <div id="maMotifs"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">RÉPARTITION</div><div class="dc-title">Jours par motif</div></div>
+          </div></div>
+          <div class="dc-body"><div id="maMotifs"></div></div>
         </div>
 
-        <div class="ma2-tint" style="--tc:#f59e0b">
-          <div class="ma2-tint-h">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span class="ma2-tint-t">Reprises prévues</span>
-          </div>
-          <div id="maRetours"></div>
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">À PRÉVOIR</div><div class="dc-title">Reprises prévues</div></div>
+          </div></div>
+          <div class="dc-body"><div id="maRetours"></div></div>
         </div>
       </div>
     </div>
 
     <!-- Suivi AT · visites médicales · Bradford -->
     <div id="maFeat" class="ma2-feat">
-      <div class="ma2-tint" style="--tc:#ef4444">
-        <div class="ma2-tint-h">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span class="ma2-tint-t" id="maSuiviAtTitre">Déclaration AT</span>
-          <span class="ma2-tint-tag" id="maSuiviAtTag" style="display:none">Délai 48 h</span>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#ef444422;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">PROCÉDURE</div><div class="dc-title" id="maSuiviAtTitre">Déclaration AT</div></div>
+        </div><span class="dc-badge dc-b-amber" id="maSuiviAtTag" style="display:none">Délai 48 h</span></div>
+        <div class="dc-body">
+          <div id="maSuiviAt"></div>
+          <button type="button" class="ma2-cta" id="maSuiviAtCta" style="display:none"></button>
         </div>
-        <div id="maSuiviAt"></div>
-        <button type="button" class="ma2-cta" id="maSuiviAtCta" style="display:none"></button>
       </div>
 
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <span class="v2-blk-t">Visites médicales de reprise</span>
-        </div>
-        <div id="maVisites"></div>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">SANTÉ AU TRAVAIL</div><div class="dc-title">Visites de reprise</div></div>
+        </div></div>
+        <div class="dc-body"><div id="maVisites"></div></div>
       </div>
 
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <svg class="v2-blk-ico" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <span class="v2-blk-t">Facteur Bradford</span>
+      <div class="dc-card">
+        <div class="dc-head"><div class="dc-head-l">
+          <span class="dc-chip" style="background:#fb718522;color:#fb7185"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">12 DERNIERS MOIS</div><div class="dc-title">Facteur Bradford</div></div>
+        </div></div>
+        <div class="dc-body">
+          <div style="font-size:11.5px;color:var(--v2-t6);margin:0 0 12px">Absences courtes &amp; répétées</div>
+          <div id="maBradford"></div>
         </div>
-        <div class="ma2-blk-s">Absences courtes &amp; répétées, 12 derniers mois</div>
-        <div id="maBradford"></div>
       </div>
     </div>
 
@@ -237,7 +239,7 @@ function openMesAbsModal(id) {
   const a = id ? _maCache.find(x => x.id === id) : null;
   document.getElementById('maModalTitle').textContent = a ? 'Modifier l\'absence' : 'Déclarer une absence';
   document.getElementById('maType').value = a ? a.type : 'maladie';
-  document.getElementById('maDebut').value = a ? a.debut : new Date().toISOString().slice(0, 10);
+  document.getElementById('maDebut').value = a ? a.debut : today();
   document.getElementById('maFin').value = a ? (a.fin || '') : '';
   document.getElementById('maNotes').value = a ? (a.notes || '') : '';
   document.getElementById('maFichier').value = '';

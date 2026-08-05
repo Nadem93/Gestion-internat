@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <meta name="theme-color" content="#0a1728"/>
-  <title>SERAFIN-PH — FTR</title>
+  <title>SERAFIN-PH — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -50,25 +50,25 @@
 
     <!-- Tuiles KPI -->
     <div class="sp2-kpis">
-      <div class="sp2-kpi" style="--pc:#8b5cf6;--pc2:#a78bfa">
+      <div class="sp2-kpi" style="--pc:#8b5cf6;--pc2:#a78bfa;border-left:3px solid #8b5cf6;padding-left:15px">
         <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M2 12h20"/></svg></span>
         <div class="sp2-kpi-n" id="spStatGmps">—</div>
         <div class="sp2-kpi-l">GMPS moyen</div>
         <div class="sp2-kpi-s" id="spStatGmpsSub">—</div>
       </div>
-      <div class="sp2-kpi" style="--pc:#16a34a;--pc2:#4ade80">
+      <div class="sp2-kpi" style="--pc:#16a34a;--pc2:#4ade80;border-left:3px solid #16a34a;padding-left:15px">
         <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
         <div class="sp2-kpi-n" id="spStatTotal">—</div>
         <div class="sp2-kpi-l">Score total</div>
         <div class="sp2-kpi-s" id="spStatTotalSub">—</div>
       </div>
-      <div class="sp2-kpi" style="--pc:#0891b2;--pc2:#22d3ee">
+      <div class="sp2-kpi" style="--pc:#0891b2;--pc2:#22d3ee;border-left:3px solid #0891b2;padding-left:15px">
         <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
         <div class="sp2-kpi-n" id="spStatEvalues">—</div>
         <div class="sp2-kpi-l">Résidents évalués</div>
         <div class="sp2-kpi-s" id="spStatEvaluesSub">—</div>
       </div>
-      <div class="sp2-kpi" style="--pc:#ef4444;--pc2:#f87171">
+      <div class="sp2-kpi" style="--pc:#ef4444;--pc2:#f87171;border-left:3px solid #ef4444;padding-left:15px">
         <span class="sp2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
         <div class="sp2-kpi-n" id="spStatEleves">—</div>
         <div class="sp2-kpi-l">Besoins élevés (≥ 3)</div>
@@ -78,19 +78,23 @@
 
     <!-- Entrées journal liées -->
     <div class="v2-blk sp2-blk">
-      <div class="v2-blk-h">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span class="v2-blk-t">Entrées journal liées</span>
+      <div class="dc-head nb" style="padding:0;margin-bottom:16px">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(129,140,248,.14);color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">Transmissions</div><div class="dc-title v2-blk-t">Entrées journal liées</div></div>
+        </div>
       </div>
       <div id="spJournalStats"><div class="v2-blk-vide">Chargement…</div></div>
     </div>
 
     <!-- Vue par prestation -->
     <div class="v2-blk sp2-blk">
-      <div class="v2-blk-h">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
-        <span class="v2-blk-t">Vue par prestation</span>
-        <span class="v2-card-meta">Cliquez une ligne pour voir les résidents concernés</span>
+      <div class="dc-head nb" style="padding:0;margin-bottom:14px;flex-wrap:wrap">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(167,139,250,.14);color:#a78bfa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">Nomenclature</div><div class="dc-title v2-blk-t">Vue par prestation</div></div>
+        </div>
+        <span class="dc-pill dim">Cliquez une ligne pour voir les résidents concernés</span>
       </div>
       <div class="v2-chips" style="margin-bottom:14px">
         <button type="button" class="v2-chip-f on" data-sp-cat="toutes"><span class="dot" style="background:#818cf8"></span>Toutes <span class="n" id="spCatToutesN"></span></button>
@@ -102,17 +106,21 @@
 
     <!-- Détail par résident -->
     <div class="v2-blk sp2-blk">
-      <div class="v2-blk-h sp2-res-head" onclick="toggleSpResidentsCard()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        <span class="v2-blk-t">Détail par résident</span>
-        <span class="v2-card-meta" id="spResidentsCount"></span>
-        <span class="sp2-leg" id="spResidentsLegend"></span>
-        <input type="search" class="sp2-search" id="spResidentsSearch" placeholder="Rechercher un résident…" aria-label="Rechercher un résident"/>
-        <button type="button" class="sp2-fold" id="spResidentsToggle" aria-expanded="false"
-          aria-controls="spResidentsBody" aria-label="Afficher le détail par résident"
-          onclick="event.stopPropagation();toggleSpResidentsCard()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
+      <div class="dc-head nb sp2-res-head" style="padding:0;margin-bottom:14px;flex-wrap:wrap" onclick="toggleSpResidentsCard()">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+          <div style="min-width:0"><div class="dc-eyebrow">Évaluations</div><div class="dc-title v2-blk-t">Détail par résident</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto">
+          <span class="dc-pill dim" id="spResidentsCount"></span>
+          <span class="sp2-leg" id="spResidentsLegend"></span>
+          <input type="search" class="sp2-search" id="spResidentsSearch" placeholder="Rechercher un résident…" aria-label="Rechercher un résident"/>
+          <button type="button" class="sp2-fold" id="spResidentsToggle" aria-expanded="false"
+            aria-controls="spResidentsBody" aria-label="Afficher le détail par résident"
+            onclick="event.stopPropagation();toggleSpResidentsCard()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>
       <div id="spResidentsBody" style="display:none"><div id="spResidentsList"></div></div>
     </div>

@@ -235,6 +235,11 @@ function iv2Filtres() {
 function iv2Set(el, html) { const n = document.getElementById(el); if (n) n.innerHTML = html; }
 function iv2Txt(el, txt) { const n = document.getElementById(el); if (n) n.textContent = txt; }
 function iv2Vide(msg) { return '<div class="v2-blk-vide">' + msg + '</div>'; }
+// Badge monospace « Console Data » teinté à la couleur passée (label déjà échappé).
+function iv2Badge(c, label) {
+  return '<span class="dc-badge" style="background:' + c + '22;color:' + c + ';border:1px solid ' + c + '55">'
+    + '<span class="d" style="background:' + c + '"></span>' + label + '</span>';
+}
 
 // ══ RENDU PRINCIPAL (remplace celui de js/inventaire.js) ══════════════
 function renderInventaire() {
@@ -321,11 +326,11 @@ function iv2RenderTable() {
       const n = iv2Niveau(i);
       const etatC = IV2_ETAT_C[i.etat] || IV2_ETAT_C.bon;
       const badges = n
-        ? '<span class="v2-pill" style="--pc:' + n.c + '">' + n.label + '</span>'
-          + (i.etat && i.etat !== 'bon' ? ' <span class="v2-pill" style="--pc:' + etatC + '">' + escHtml(iv2EtatLabel(i.etat)) + '</span>' : '')
-        : '<span class="v2-pill" style="--pc:' + etatC + '">' + escHtml(iv2EtatLabel(i.etat)) + '</span>';
+        ? iv2Badge(n.c, escHtml(n.label))
+          + (i.etat && i.etat !== 'bon' ? ' ' + iv2Badge(etatC, escHtml(iv2EtatLabel(i.etat))) : '')
+        : iv2Badge(etatC, escHtml(iv2EtatLabel(i.etat)));
       return '<tr>'
-        + '<td><div class="iv2-art" style="--pc:' + th.c + '">'
+        + '<td style="border-left:3px solid ' + th.c + '"><div class="iv2-art" style="--pc:' + th.c + '">'
         +   '<span class="iv2-art-ico">' + iv2Svg(th.icon) + '</span>'
         +   '<div style="min-width:0"><div class="iv2-art-n">' + escHtml(i.nom || '—') + '</div>'
         +   '<div class="iv2-art-c">' + escHtml(iv2CatLabel(i.cat)) + (i.ref ? ' · ' + escHtml(i.ref) : '') + '</div></div>'
@@ -336,7 +341,7 @@ function iv2RenderTable() {
             ? '<span class="v2-prog iv2-lvl" title="' + escAttr('Seuil d\'alerte : ' + n.seuil) + '" style="height:6px">'
               + '<span style="width:' + n.pct + '%;background:' + n.c + '"></span></span>'
             : '<span class="iv2-lvl-na">Pas de seuil</span>') + '</td>'
-        + '<td>' + badges + (iv2MaintDepassee(i) ? ' <span class="v2-pill" style="--pc:#ef4444">Maintenance</span>' : '') + '</td>'
+        + '<td>' + badges + (iv2MaintDepassee(i) ? ' ' + iv2Badge('#ef4444', 'Maintenance') : '') + '</td>'
         + '<td class="iv2-r"><div class="iv2-acts">'
         +   '<button type="button" class="iv2-ib" title="Mouvement de stock" onclick="inv2OpenMouvement(\'' + i.id + '\')">' + iv2Svg(IV2_IC.swap) + '</button>'
         +   '<button type="button" class="iv2-ib" title="Modifier" onclick="openInvModal(\'' + i.id + '\')">' + iv2Svg(IV2_IC.pen) + '</button>'
@@ -358,7 +363,7 @@ function iv2RenderReappro() {
   }
   iv2Set('invReappro', list.map(i => {
     const n = iv2Niveau(i), th = iv2Theme(i.cat);
-    return '<div class="iv2-rline" style="--pc:' + n.c + '">'
+    return '<div class="iv2-rline" style="--pc:' + n.c + ';border-left:3px solid ' + n.c + ';padding-left:10px">'
       + '<span class="iv2-art-ico" style="--pc:' + n.c + '">' + iv2Svg(th.icon) + '</span>'
       + '<div class="iv2-grow"><div class="iv2-art-n">' + escHtml(i.nom || '—') + '</div>'
       + '<div class="iv2-art-c">Stock ' + iv2Qte(i) + ' · seuil ' + n.seuil + '</div></div>'
@@ -570,7 +575,7 @@ function iv2RenderGaranties() {
   iv2Set('invGaranties', items.slice(0, 6).map(g =>
     '<div class="iv2-gline"><div class="iv2-grow"><div class="iv2-gline-t">' + escHtml(g.nom || '—') + '</div>'
     + '<div class="iv2-gline-d">' + escHtml(g.detail) + '</div></div>'
-    + '<span class="v2-pill" style="--pc:' + g.c + '">' + escHtml(g.tag) + '</span></div>').join(''));
+    + iv2Badge(g.c, escHtml(g.tag)) + '</div>').join(''));
 }
 
 // ══ MODALE ARTICLE ════════════════════════════════════════════════════

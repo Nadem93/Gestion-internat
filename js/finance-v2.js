@@ -34,6 +34,10 @@ const FIN2_IC = {
 function fin2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+function fin2Ico(d, px) {
+  const s = px || 16;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function fin2Eur(n) { return Math.round(Number(n) || 0).toLocaleString('fr-FR') + ' €'; }
@@ -196,10 +200,12 @@ function renderFinance() {
     { n: String(enAttente.length), l: 'Demandes à valider',          c: '#f59e0b', i: FIN2_IC.alert }
   ];
   document.getElementById('finStats').innerHTML = stats.map(s => `
-    <div class="fin2-stat" style="--sc:${s.c}">
-      <span class="fin2-stat-ico">${fin2Svg(s.i)}</span>
-      <div class="fin2-stat-n">${s.n}</div>
-      <div class="fin2-stat-l">${fin2Esc(s.l)}</div>
+    <div class="dc-kpi" style="--dc-c:${s.c}">
+      <div class="dc-kpi-top">
+        <span class="dc-kpi-label">${fin2Esc(s.l)}</span>
+        <span class="dc-kpi-ico" style="color:${s.c}">${fin2Ico(s.i, 15)}</span>
+      </div>
+      <div class="dc-kpi-val" style="color:${s.c}">${s.n}</div>
     </div>`).join('');
 
   // ── Demandes en attente ─────────────────────────────────────────────
@@ -233,7 +239,7 @@ function renderFinance() {
   const gc = ecart > 10 ? '#ef4444' : ecart > 0 ? '#f59e0b' : '#22d3ee';
   const verdict = ecart > 10 ? 'Rythme de dépense trop rapide'
     : ecart > 0 ? 'Rythme à surveiller' : 'Rythme maîtrisé';
-  const badgeCls = ecart > 10 ? 'v2-b-danger' : ecart > 0 ? 'v2-b-warn' : 'v2-b-ok';
+  const badgeCls = ecart > 10 ? 'dc-b-red' : ecart > 0 ? 'dc-b-amber' : 'dc-b-cyan';
   document.getElementById('finGauge').innerHTML = `
     <div class="fin2-gauge">
       <div class="fin2-ring" style="--gc:${gc};--gp:${(pctBudget / 100).toFixed(3)}turn">
@@ -245,7 +251,7 @@ function renderFinance() {
       <div class="fin2-gauge-x">
         <b>${fin2Eur(depAnnee)}</b> engagés sur <b>${fin2Eur(budgetTotal)}</b>.<br>
         Reste <b>${fin2Eur(Math.max(0, budgetTotal - depAnnee))}</b> · année écoulée à <b>${pctAnnee}%</b>.
-        <div style="margin-top:10px"><span class="v2-badge v2-badge-lg ${badgeCls}">${verdict} (${ecart > 0 ? '+' : ''}${ecart} pts)</span></div>
+        <div style="margin-top:10px"><span class="dc-badge ${badgeCls}"><span class="d"></span>${verdict} (${ecart > 0 ? '+' : ''}${ecart} pts)</span></div>
       </div>
     </div>`;
 
@@ -318,7 +324,8 @@ function renderFinance() {
     const spent = envSpent[i];
     const pct = Number(env.montant) > 0 ? Math.min(100, Math.round(spent / env.montant * 100)) : 0;
     const over = spent > Number(env.montant || 0);
-    return `<div class="fin2-env">
+    const envC = over ? '#ef4444' : fin2BarC(pct);
+    return `<div class="fin2-env" style="border-left:3px solid ${envC};padding-left:11px">
       <div class="fin2-env-h">
         <span class="fin2-env-l">${fin2Esc(env.nom)}</span>
         <span class="fin2-env-v" style="${over ? 'color:var(--v2-danger-text)' : ''}">${fin2Eur(spent)} / ${fin2Eur(env.montant)}</span>
@@ -423,20 +430,20 @@ function renderFinance() {
   ops.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   const stTypes = {
-    accepte:    { cls: 'v2-b-info',    l: 'Justif. attendu' },
-    justifie:   { cls: 'v2-b-ok',      l: 'Justifié' },
-    en_attente: { cls: 'v2-b-warn',    l: 'En attente' },
-    refuse:     { cls: 'v2-b-danger',  l: 'Refusé' }
+    accepte:    { cls: 'dc-b-cyan',   l: 'Justif. attendu' },
+    justifie:   { cls: 'dc-b-green',  l: 'Justifié' },
+    en_attente: { cls: 'dc-b-amber',  l: 'En attente' },
+    refuse:     { cls: 'dc-b-red',    l: 'Refusé' }
   };
-  const typeBadge = { 'Dépense': 'v2-b-danger', 'Paie': 'v2-b-info', 'Recette': 'v2-b-ok' };
+  const typeBadge = { 'Dépense': 'dc-b-red', 'Paie': 'dc-b-indigo', 'Recette': 'dc-b-green' };
   document.getElementById('finOpsBody').innerHTML = ops.slice(0, 20).map(o => {
     const st = stTypes[o.statut] || stTypes.accepte;
     return `<tr>
       <td style="color:var(--v2-t6);white-space:nowrap">${o.date ? fin2Date(o.date) : '—'}</td>
-      <td><span class="v2-badge ${typeBadge[o.type] || 'v2-b-neutral'}">${o.type}</span></td>
+      <td><span class="dc-badge ${typeBadge[o.type] || 'dc-b-gray'}"><span class="d"></span>${o.type}</span></td>
       <td style="color:var(--v2-t2)">${fin2Esc(o.label)}</td>
       <td class="num" style="color:${o.montant < 0 ? 'var(--v2-danger-text)' : '#34d399'}">${o.montant < 0 ? '−' : '+'}${fin2Eur(Math.abs(o.montant))}</td>
-      <td><span class="v2-badge ${st.cls}">${st.l}</span></td>
+      <td><span class="dc-badge ${st.cls}"><span class="d"></span>${st.l}</span></td>
     </tr>`;
   }).join('') || `<tr><td colspan="5" class="fin2-vide">Aucune opération enregistrée.</td></tr>`;
 

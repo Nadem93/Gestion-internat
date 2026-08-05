@@ -56,7 +56,10 @@ const _adSvg = (d, sz) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 const ADM_NAV = [
   { grp: 'Pilotage',       items: [['stats', 'Statistiques'], ['segur', 'Ségur / Conformité']] },
   { grp: 'Configuration',  items: [['etablissement', 'Établissement'], ['fonctions', 'Catégories & objectifs']] },
-  { grp: 'Comptes',        items: [['employes', 'Utilisateurs'], ['permissions', 'Permissions']] },
+  // « Utilisateurs / Employés » a été déplacé dans le portail RH (carte « Employés »
+  // → admin.html?tab=employes). On le retire du menu Administration, mais la section
+  // #tab-employes et le lien profond ?tab=employes restent fonctionnels (utilisés par RH).
+  { grp: 'Comptes',        items: [['permissions', 'Permissions']] },
   { grp: 'Système',        items: [['donnees', 'Données'], ['compte', 'Mon compte']] }
 ];
 
@@ -201,7 +204,7 @@ function adminV2OnTab(name) {
       const n = (typeof getFonctions === 'function' ? getFonctions() : []).length;
       txt = n ? n + ' rôle' + (n > 1 ? 's' : '') : '';
     }
-    if (txt) { badge.hidden = false; badge.className = 'v2-badge v2-b-info'; badge.textContent = txt; }
+    if (txt) { badge.hidden = false; badge.className = 'dc-pill dim'; badge.textContent = txt; }
     else { badge.hidden = true; badge.textContent = ''; }
   }
 
@@ -273,7 +276,7 @@ function admHero(d) {
   if (perso) perso.textContent = _admNum(emps.filter(e => (e.statut || 'actif') === 'actif').length);
 
   // Entrées du mois courant
-  const mois = new Date().toISOString().slice(0, 7);
+  const mois = isoMois(new Date());
   const entrees = residents.filter(r => String(r.dateEntree || '').slice(0, 7) === mois).length;
   const en = document.getElementById('admHeroEntrees');
   if (en) en.textContent = '+' + entrees;
@@ -288,7 +291,7 @@ function admConnexions() {
   const jours = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
-    const iso = d.toISOString().slice(0, 10);
+    const iso = isoJour(d);
     const n = log.filter(e => e.action === 'login' && String(e.date || '').slice(0, 10) === iso).length;
     jours.push({ l: ADM_JOURS[d.getDay()], n });
   }
@@ -313,7 +316,7 @@ function admRepartition() {
   const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   el.innerHTML = rows.map(([nom, n]) => {
     const c = (typeof getPosteColor === 'function') ? getPosteColor(nom) : '#818cf8';
-    return '<div class="adm-leg">'
+    return '<div class="adm-leg" style="border-left:3px solid ' + _adAttr(c) + ';padding-left:10px">'
       + '<span class="adm-leg-sq" style="background:' + _adAttr(c) + '"></span>'
       + '<span class="adm-leg-l">' + _ad(nom) + '</span>'
       + '<span class="adm-leg-n">' + n + '</span></div>';
@@ -326,7 +329,7 @@ function admKpis(d) {
   const residents = (d.residents || []).filter(r => !r.dateSortie && (r.statut || 'present') !== 'sorti');
   const emps = (typeof getEmployes === 'function') ? getEmployes() : [];
   const incidents = (d.incidents || []).filter(i => (i.statut || '') !== 'clos' && (i.statut || '') !== 'traite');
-  const semaine = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const semaine = isoJour(new Date(Date.now() - 7 * 86400000));
   const journal = (d.journal || []).filter(e => String(e.date || '').slice(0, 10) >= semaine);
 
   const k = [
@@ -336,10 +339,10 @@ function admKpis(d) {
     { ic: ADM_IC.alert, c: '#f59e0b', n: incidents.length, l: 'Incidents à traiter' }
   ];
   el.innerHTML = k.map(x =>
-    '<div class="adm-k">'
-    + '<span class="adm-k-ico" style="color:' + x.c + ';background:' + x.c + '1f">' + _adSvg(x.ic) + '</span>'
-    + '<div class="adm-k-n">' + _admNum(x.n) + '</div>'
-    + '<div class="adm-k-l">' + _ad(x.l) + '</div></div>').join('');
+    '<div class="dc-kpi" style="--dc-c:' + x.c + '">'
+    + '<div class="dc-kpi-top"><span class="dc-kpi-label">' + _ad(x.l) + '</span>'
+    + '<span class="dc-kpi-ico" style="color:' + x.c + '">' + _adSvg(x.ic, 16) + '</span></div>'
+    + '<div class="dc-kpi-val">' + _admNum(x.n) + '</div></div>').join('');
 }
 
 // Activité de la plateforme sur 6 mois (journal + incidents)
@@ -350,7 +353,7 @@ function admActivite(d) {
   const mois = [];
   for (let i = 5; i >= 0; i--) {
     const dt = new Date(); dt.setDate(1); dt.setMonth(dt.getMonth() - i);
-    const key = dt.toISOString().slice(0, 7);
+    const key = isoMois(dt);
     mois.push({ key, l: ADM_MOIS[dt.getMonth()], n: src.filter(e => String(e.date || '').slice(0, 7) === key).length });
   }
   const max = Math.max(1, ...mois.map(m => m.n));
@@ -382,27 +385,34 @@ function admModules(d) {
     '<div><div class="adm-use-h">'
     + '<span class="adm-use-l">' + _ad(m.l) + '</span>'
     + '<span class="adm-use-n">' + m.n + '</span></div>'
-    + '<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden">'
-    + '<div style="height:100%;border-radius:99px;width:' + Math.round((m.n / max) * 100) + '%;background:' + m.c + '"></div>'
+    + '<div class="al-prog-bar">'
+    + '<span style="width:' + Math.round((m.n / max) * 100) + '%;background:' + m.c + '"></span>'
     + '</div></div>').join('');
 }
 
-// Journal d'audit — 6 dernières actions, dans la maquette V2
-function admRenderAuditRecent() {
+// Journal d'audit — 6 dernières actions, dans la maquette V2.
+// Source : public.audit_log (et non le localStorage de ce poste).
+async function admRenderAuditRecent() {
   const el = document.getElementById('admAudit');
   if (!el) return;
-  let log = [];
-  try { log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]'); } catch (_) { log = []; }
+  let log;
+  try {
+    log = await sbGetAuditLog(6);
+  } catch (e) {
+    console.error('[audit] aperçu', e);
+    el.innerHTML = _admVide('Journal indisponible');
+    return;
+  }
   if (!log.length) { el.innerHTML = _admVide('Aucune action enregistrée'); return; }
-  el.innerHTML = log.slice(0, 6).map(e => {
+  el.innerHTML = log.map(e => {
     const d = new Date(e.date);
     const quand = isNaN(d) ? '—'
       : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
         + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const label = (typeof ACTION_LABELS !== 'undefined' && ACTION_LABELS[e.action]) || e.action || '—';
+    const label = (typeof connu === 'function' && connu(e.action)) ? ACTION_LABELS[e.action] : (e.action || '—');
     const color = (typeof ACTION_COLORS !== 'undefined' && ACTION_COLORS[e.action]) || '#818cf8';
     const ini = String(e.user || '?').trim().slice(0, 1).toUpperCase();
-    return '<div class="adm-li">'
+    return '<div class="adm-li" style="border-left:3px solid ' + color + ';padding-left:11px">'
       + '<span class="adm-li-av" style="background:' + color + '26;color:' + color + '">' + _ad(ini) + '</span>'
       + '<span class="adm-li-b"><span class="adm-li-t" style="display:block">' + _ad(label) + '</span>'
       + '<span class="adm-li-s" style="display:block">' + _ad(e.user || '—') + ' · ' + _ad(e.details || '—') + '</span></span>'
@@ -426,11 +436,11 @@ function admSysteme(d) {
     { t: 'Données chargées',         ok: true,  s: (d.residents || []).length + ' résidents · ' + (d.journal || []).length + ' entrées' }
   ];
   el.innerHTML = lignes.map(l =>
-    '<div class="adm-li">'
+    '<div class="adm-li" style="border-left:3px solid ' + (l.ok ? '#34d399' : '#f59e0b') + ';padding-left:11px">'
     + '<span class="adm-li-dot" style="--pc:' + (l.ok ? '#34d399' : '#f59e0b') + '"></span>'
     + '<span class="adm-li-b"><span class="adm-li-t" style="display:block">' + _ad(l.t) + '</span>'
     + '<span class="adm-li-s" style="display:block">' + _ad(l.s) + '</span></span>'
-    + '<span class="adm-li-tag" style="--pc:' + (l.ok ? '#34d399' : '#f59e0b') + '">'
+    + '<span class="dc-badge ' + (l.ok ? 'dc-b-green' : 'dc-b-amber') + '"><span class="d"></span>'
     + (l.ok ? 'OK' : 'À vérifier') + '</span></div>').join('');
 }
 
@@ -463,10 +473,10 @@ function admRenderUsers() {
       { ic: ADM_IC.alert,  c: '#f59e0b', n: sansCompte,    l: 'Sans compte de connexion' }
     ];
     kpis.innerHTML = k.map(x =>
-      '<div class="adm-k">'
-      + '<span class="adm-k-ico" style="color:' + x.c + ';background:' + x.c + '1f">' + _adSvg(x.ic) + '</span>'
-      + '<div class="adm-k-n">' + _admNum(x.n) + '</div>'
-      + '<div class="adm-k-l">' + _ad(x.l) + '</div></div>').join('');
+      '<div class="dc-kpi" style="--dc-c:' + x.c + '">'
+      + '<div class="dc-kpi-top"><span class="dc-kpi-label">' + _ad(x.l) + '</span>'
+      + '<span class="dc-kpi-ico" style="color:' + x.c + '">' + _adSvg(x.ic, 16) + '</span></div>'
+      + '<div class="dc-kpi-val">' + _admNum(x.n) + '</div></div>').join('');
   }
 
   // ── Pastilles de filtre par fonction ───────────────────────────────────
@@ -482,7 +492,7 @@ function admRenderUsers() {
       '<button type="button" class="v2-chip-f' + ((window._admPosteFilter || '') === val ? ' on active' : '') + '"'
       + ' aria-pressed="' + (((window._admPosteFilter || '') === val) ? 'true' : 'false') + '"'
       + (color ? ' style="--pc:' + _adAttr(color) + '"' : '')
-      + ' onclick="admFilterPoste(' + JSON.stringify(val) + ')">'
+      + ' onclick="admFilterPoste(' + JSON.stringify(val).replace(/"/g, '&quot;') + ')">'
       + _ad(label) + (n != null ? ' <b style="opacity:.65">' + n + '</b>' : '') + '</button>';
     box.innerHTML = chip('', 'Tous', emps.length)
       + postes.map(p => chip(p, p, counts[p],
@@ -505,47 +515,68 @@ window.admFilterPoste = admFilterPoste;
 // La source de vérité reste getFonctions()/setFonctions() de js/admin.js :
 // on réutilise permToggle() en basculant d'abord la sélection courante, ce
 // qui garantit une seule logique d'écriture (et donc de contrôle).
+// Vue « par permission » : une carte par groupe d'accès ; chaque accès liste
+// les rôles sous forme de badges (allumés = autorisés, éteints = cliquables
+// pour accorder). L'écriture passe toujours par admPermCell → permToggle.
 function admRenderPermMatrix() {
-  const table = document.getElementById('admPermMatrix');
-  if (!table) return;
+  const cont = document.getElementById('admPermMatrix');
+  if (!cont) return;
   if (typeof renderPermissionsPage === 'function') renderPermissionsPage(); // garde la vue héritée à jour
   const roles = (typeof getFonctions === 'function') ? getFonctions() : [];
-  if (!roles.length) { table.innerHTML = '<tr><td class="adm-perm-c1">Aucun rôle défini</td></tr>'; return; }
+  if (!roles.length) { cont.innerHTML = '<div class="adm-p3-empty">Aucun rôle défini</div>'; return; }
   const labels = (typeof PERMISSION_LABELS !== 'undefined') ? PERMISSION_LABELS : {};
   const groupes = (typeof PERM_GROUPS !== 'undefined') ? PERM_GROUPS : [];
 
-  const thead = '<thead><tr><th class="adm-perm-h1">Accès</th>'
-    + roles.map(r => '<th title="' + _adAttr(r.fonction) + '">' + _ad(r.fonction) + '</th>').join('')
-    + '</tr></thead>';
-
   const vus = new Set();
-  let corps = groupes.map(g => {
+  let cartes = groupes.map(g => {
     const keys = (g.keys || []).filter(k => labels[k]);
     keys.forEach(k => vus.add(k));
     if (!keys.length) return '';
-    const entete = '<tr class="adm-perm-grp"><td colspan="' + (roles.length + 1) + '">' + _ad(g.label) + '</td></tr>';
-    return entete + keys.map(k => admPermRow(k, labels[k], roles)).join('');
+    return admPermCard(g.label, keys, labels, roles);
   }).join('');
   const autres = Object.keys(labels).filter(k => !vus.has(k));
-  if (autres.length) {
-    corps += '<tr class="adm-perm-grp"><td colspan="' + (roles.length + 1) + '">Autres</td></tr>'
-      + autres.map(k => admPermRow(k, labels[k], roles)).join('');
+  if (autres.length) cartes += admPermCard('Autres', autres, labels, roles);
+
+  cont.innerHTML = cartes;
+  // Délégation posée une seule fois : le conteneur survit aux re-rendus, donc
+  // un seul écouteur suffit et couvre tous les badges (ré)générés.
+  if (!cont._p3Bound) {
+    cont._p3Bound = true;
+    cont.addEventListener('click', function (e) {
+      const b = e.target.closest('.adm-p3-b');
+      if (b && cont.contains(b)) admPermCell(b.dataset.role, b.dataset.key);
+    });
   }
-  table.innerHTML = thead + '<tbody>' + corps + '</tbody>';
   admGuards();
 }
 window.admRenderPermMatrix = admRenderPermMatrix;
 
+function admPermCard(groupLabel, keys, labels, roles) {
+  return '<div class="adm-p3-card"><div class="adm-p3-gtitle">' + _ad(groupLabel) + '</div>'
+    + keys.map(k => admPermRow(k, labels[k], roles)).join('') + '</div>';
+}
+
 function admPermRow(key, label, roles) {
-  return '<tr><td class="adm-perm-c1">' + _ad(label || key) + '</td>'
-    + roles.map(r => {
-      const on = (r.permissions || []).indexOf(key) >= 0;
-      const c = (typeof safeColor === 'function') ? safeColor(r.color, '#818cf8') : (r.color || '#818cf8');
-      return '<td><button type="button" class="adm-sw' + (on ? ' on' : '') + '" style="--rc:' + _adAttr(c) + '"'
-        + ' role="switch" aria-checked="' + (on ? 'true' : 'false') + '"'
-        + ' aria-label="' + _adAttr((label || key) + ' — ' + r.fonction) + '"'
-        + ' onclick="admPermCell(' + JSON.stringify(String(r.id)) + ',' + JSON.stringify(String(key)) + ')"><i></i></button></td>';
-    }).join('') + '</tr>';
+  const actifs = roles.filter(r => (r.permissions || []).indexOf(key) >= 0).length;
+  const badges = roles.map(r => {
+    const on = (r.permissions || []).indexOf(key) >= 0;
+    const c = (typeof safeColor === 'function') ? safeColor(r.color, '#818cf8') : (r.color || '#818cf8');
+    const style = on
+      ? ' style="background:' + _adAttr(c) + '22;border-color:' + _adAttr(c) + ';color:' + _adAttr(c) + '"'
+      : '';
+    // Bascule via délégation (voir admRenderPermMatrix) : data-* plutôt qu'un
+    // onclick inline — les guillemets d'un id/clé casseraient l'attribut.
+    return '<button type="button" class="adm-p3-b' + (on ? ' on' : '') + '"' + style
+      + ' role="switch" aria-checked="' + (on ? 'true' : 'false') + '"'
+      + ' aria-label="' + _adAttr((label || key) + ' — ' + r.fonction) + '"'
+      + ' title="' + _adAttr(r.fonction) + '"'
+      + ' data-role="' + _adAttr(String(r.id)) + '" data-key="' + _adAttr(String(key)) + '">'
+      + _ad(r.fonction) + '</button>';
+  }).join('');
+  return '<div class="adm-p3-perm"><div class="adm-p3-top">'
+    + '<span class="adm-p3-name">' + _ad(label || key) + '</span>'
+    + '<span class="adm-p3-cnt">' + actifs + '/' + roles.length + '</span></div>'
+    + '<div class="adm-p3-badges">' + badges + '</div></div>';
 }
 
 // Bascule une case de la matrice en passant par la logique existante
@@ -588,14 +619,14 @@ function admAgrementsList() {
     const et = ADM_AGR_ETAT[a.etat] || ADM_AGR_ETAT.valide;
     const ech = a.echeance ? new Date(a.echeance).toLocaleDateString('fr-FR') : '';
     const sous = [a.detail, ech && ('échéance ' + ech)].filter(Boolean).join(' · ');
-    return '<div class="adm-li">'
+    return '<div class="adm-li" style="border-left:3px solid ' + et.c + ';padding-left:11px">'
       + '<span class="adm-li-ico" style="color:' + et.c + ';background:' + et.c + '1f">' + _adSvg(ADM_IC.shield) + '</span>'
       + '<span class="adm-li-b"><span class="adm-li-t" style="display:block">' + _ad(a.libelle) + '</span>'
       + (sous ? '<span class="adm-li-s" style="display:block">' + _ad(sous) + '</span>' : '') + '</span>'
-      + '<span class="adm-li-pill" style="background:' + et.c + '1f;color:' + et.c + '">'
-      + _ad(a.tag || et.l) + '</span>'
+      + '<span class="dc-badge" style="background:' + et.c + '1f;color:' + et.c + ';border:1px solid ' + et.c + '44">'
+      + '<span class="d" style="background:' + et.c + '"></span>' + _ad(a.tag || et.l) + '</span>'
       + '<span class="adm-li-act"><button type="button" class="v2-btn v2-btn-sm" aria-label="Modifier"'
-      + ' onclick="admOpenAgrement(' + JSON.stringify(String(a.id)) + ')">' + _adSvg(ADM_IC.edit, 14) + '</button></span>'
+      + ' onclick="admOpenAgrement(' + JSON.stringify(String(a.id)).replace(/"/g, '&quot;') + ')">' + _adSvg(ADM_IC.edit, 14) + '</button></span>'
       + '</div>';
   }).join('');
 }
@@ -733,18 +764,19 @@ async function admRenderDonnees() {
     b.innerHTML = sav.length ? sav.slice(0, 8).map(s => {
       const st = { ok: ['#34d399', 'OK'], partielle: ['#f59e0b', 'Partielle'], echec: ['#f87171', 'Échec'] }[s.statut] || ['#34d399', 'OK'];
       const d = s.date ? new Date(s.date).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
-      return '<div class="adm-li">'
+      return '<div class="adm-li" style="border-left:3px solid ' + st[0] + ';padding-left:11px">'
         + '<span class="adm-li-ico" style="color:' + st[0] + ';background:' + st[0] + '1f">' + _adSvg(ADM_IC.save) + '</span>'
         + '<span class="adm-li-b"><span class="adm-li-t" style="display:block">' + _ad(s.libelle || 'Sauvegarde') + '</span>'
         + '<span class="adm-li-s" style="display:block">' + _ad(d) + (s.taille ? ' · ' + _ad(s.taille) : '') + '</span></span>'
-        + '<span class="adm-li-pill" style="background:' + st[0] + '1f;color:' + st[0] + '">' + st[1] + '</span></div>';
+        + '<span class="dc-badge" style="background:' + st[0] + '1f;color:' + st[0] + ';border:1px solid ' + st[0] + '44">'
+        + '<span class="d" style="background:' + st[0] + '"></span>' + st[1] + '</span></div>';
     }).join('') : _admVide('Aucune sauvegarde enregistrée', 'admin_sauvegardes');
   }
 
   const r = document.getElementById('admRgpd');
   if (r) {
     r.innerHTML = rgpd.length ? rgpd.map(x =>
-      '<div class="adm-li">'
+      '<div class="adm-li" style="border-left:3px solid #94a3b8;padding-left:11px">'
       + '<span class="adm-li-ico" style="color:#94a3b8;background:rgba(148,163,184,.14)">' + _adSvg(ADM_IC.file) + '</span>'
       + '<span class="adm-li-b"><span class="adm-li-t" style="display:block">' + _ad(x.traitement || '—') + '</span>'
       + '<span class="adm-li-s" style="display:block">' + _ad(x.base_legale || '') + '</span></span>'

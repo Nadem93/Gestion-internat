@@ -16,10 +16,17 @@ const MED2_IC = {
   alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
   search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
   edit:  '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
-  note:  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'
+  note:  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  dots:  '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  tickAll: '<polyline points="9 11 12.5 14.5 20 6"/><polyline points="2 13 5 16 12 8"/>'
 };
 function _med2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+// Icône dimensionnée (16px par défaut) pour les chips/KPI « Console Data ».
+function _med2Ico(d, px) {
+  const s = px || 16;
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
 
 // Couleurs sombres + icônes vectorielles des statuts (MED_STATUTS reste la
@@ -32,6 +39,11 @@ const MED2_ST = {
   report: { c: '#f59e0b', ic: MED2_IC.clock }
 };
 const MED2_MOM_C = { matin: '#f59e0b', midi: '#fbbf24', soir: '#818cf8', coucher: '#6366f1' };
+// Statuts secondaires : sortis de la ligne, ils vivent dans le menu « ⋯ ».
+const MED2_AUTRES = ['confie', 'refuse', 'absent', 'report'];
+// Prises visibles et non enregistrées, par résident — cible de « Tout donné ».
+// Réécrit à chaque rendu des cartes, donc toujours aligné sur les filtres actifs.
+let _med2Restants = {};
 
 // Filtre de moment : '' = tous les moments (la maquette liste tout le jour).
 let MED2_MOMENT = '';
@@ -44,7 +56,7 @@ function med2ShiftDay(n) {
   const d = new Date((el.value || today()) + 'T00:00:00');
   d.setDate(d.getDate() + n);
   // Formatage local : toISOString() décalerait d'un jour aux fuseaux positifs.
-  el.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  el.value = isoJour(d);
   med2Render();
 }
 function med2Today() {
@@ -89,15 +101,16 @@ function med2Stats(enriched) {
   const confie = enriched.filter(e => e.record?.statut === 'confie').length;
   const incident = enriched.filter(e => ['refuse', 'absent', 'report'].includes(e.record?.statut)).length;
   const attente = enriched.filter(e => !e.record?.statut).length;
-  const carte = (c, ic, n, l) => `<div class="v2-med-stat" style="--pc:${c}">
-    <span class="v2-med-stat-i">${_med2Svg(ic)}</span>
-    <div><div class="v2-med-stat-n">${n}</div><div class="v2-med-stat-l">${l}</div></div>
+  const carte = (c, ic, lbl, n, sub) => `<div class="dc-kpi" style="--dc-c:${c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${lbl}</span><span class="dc-kpi-ico" style="color:${c}">${_med2Ico(ic)}</span></div>
+    <div class="dc-kpi-val">${n}</div>
+    <div class="dc-kpi-sub">${sub}</div>
   </div>`;
   el.innerHTML =
-    carte('#818cf8', MED2_IC.pill, enriched.length, 'Prises prévues') +
-    carte('#10b981', MED2_IC.tick, donne + confie, 'Données ou confiées') +
-    carte('#ef4444', MED2_IC.x, incident, 'Refus · absences · reports') +
-    carte('#f59e0b', MED2_IC.clock, attente, 'En attente');
+    carte('#818cf8', MED2_IC.pill, 'Prévues', enriched.length, 'Prises prévues') +
+    carte('#10b981', MED2_IC.tick, 'Données', donne + confie, 'Données ou confiées') +
+    carte('#ef4444', MED2_IC.x, 'Incidents', incident, 'Refus · absences · reports') +
+    carte('#f59e0b', MED2_IC.clock, 'En attente', attente, 'Prises non enregistrées');
 }
 
 // ── PANNEAUX : stock & renouvellements + prochaines prises ───────────
@@ -108,15 +121,28 @@ function med2Panels(date, enriched) {
     ? `<button type="button" class="v2-med-pan-add" onclick="stockMedOpen('')" title="Ajouter un stock">+ Stock</button>`
     : '';
   el.innerHTML =
-    `<div class="v2-med-pan v2-med-pan-warn">
-      <div class="v2-med-pan-h"><span style="color:var(--v2-warn-icon)">${_med2Svg(MED2_IC.box)}</span><span class="v2-med-pan-t">Stock &amp; renouvellements</span>${ajout}</div>
-      <div class="v2-med-pan-c">${med2Stock()}</div>
-      <div class="v2-med-sub-h">Fins de traitement</div>
-      <div class="v2-med-pan-c">${med2Renouvellements(date)}</div>
+    `<div class="dc-card">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${_med2Ico(MED2_IC.box)}</span>
+          <div style="min-width:0"><div class="dc-eyebrow">Pharmacie</div><div class="dc-title">Stock &amp; renouvellements</div></div>
+        </div>
+        ${ajout}
+      </div>
+      <div class="dc-body">
+        <div class="med-scroll">${med2Stock()}</div>
+        <div class="dc-eyebrow" style="margin:16px 0 10px">Fins de traitement</div>
+        ${med2Renouvellements(date)}
+      </div>
     </div>
-    <div class="v2-med-pan">
-      <div class="v2-med-pan-h"><span style="color:var(--v2-cyan)">${_med2Svg(MED2_IC.clock)}</span><span class="v2-med-pan-t">Prochaines prises</span></div>
-      <div class="v2-med-pan-c">${med2Prochaines(date, enriched)}</div>
+    <div class="dc-card">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${_med2Ico(MED2_IC.clock)}</span>
+          <div style="min-width:0"><div class="dc-eyebrow">À venir</div><div class="dc-title">Prochaines prises</div></div>
+        </div>
+      </div>
+      <div class="dc-body"><div class="med-scroll">${med2Prochaines(date, enriched)}</div></div>
     </div>`;
 }
 
@@ -162,7 +188,7 @@ function med2Stock() {
     || (stockMedPct(a) ?? 101) - (stockMedPct(b) ?? 101)
     || (a.libelle || '').localeCompare(b.libelle || '', 'fr'));
 
-  return tri.slice(0, 6).map(s => {
+  return tri.map(s => {
     const niv = stockMedNiveau(s);
     const pct = stockMedPct(s);
     const c = niv ? niv.c : '#818cf8';
@@ -176,18 +202,19 @@ function med2Stock() {
     ].filter(Boolean).join(' · ');
 
     const barre = pct == null ? ''
-      : `<div class="v2-med-li-bar" title="${pct}% restant"><div class="v2-prog"><span style="width:${pct}%;background:${c}"></span></div></div>`;
-    const tag = niv
-      ? `<span class="v2-med-li-tag">${niv.label}${pct == null ? '' : ' · ' + pct + '%'}</span>`
-      : (pct == null ? '' : `<span class="v2-med-li-tag">${pct}%</span>`);
+      : `<div class="al-prog-bar" style="flex:0 0 64px" title="${pct}% restant"><span style="width:${pct}%;background:${c}"></span></div>`;
+    const label = niv ? niv.label + (pct == null ? '' : ' · ' + pct + '%') : (pct == null ? '' : pct + '%');
+    const tag = label
+      ? `<span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${label}</span>`
+      : '';
     const edit = medCanEdit
       ? `<button type="button" class="v2-med-li-edit" onclick="stockMedOpen('${escAttr(s.id)}')" title="Modifier ce stock" aria-label="Modifier le stock ${escAttr(s.libelle)}">${_med2Svg(MED2_IC.edit, 2.4)}</button>`
       : '';
 
-    return `<div class="v2-med-li" style="--pc:${c}">
+    return `<div class="dc-line" style="display:flex;align-items:center;gap:11px;padding:9px 12px;margin-bottom:8px;border-left:3px solid ${c};border-radius:8px;background:var(--v2-s-sub)">
       <div style="flex:1;min-width:0">
-        <div class="v2-med-li-n">${escHtml(s.libelle || '—')}</div>
-        <div class="v2-med-li-s">${escHtml(sub)}</div>
+        <div class="dc-title" style="font-size:13px">${escHtml(s.libelle || '—')}</div>
+        <div style="font-size:11.5px;color:var(--v2-t5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(sub)}</div>
       </div>
       ${barre}${tag}${edit}
     </div>`;
@@ -204,13 +231,15 @@ function stockMedOpen(id) {
   const set = (el, v) => { const n = document.getElementById(el); if (n) n.value = v; };
 
   // Liste des résidents pour un stock nominatif (vide = stock collectif)
-  const sel = document.getElementById('stkResident');
-  if (sel) {
-    const res = (typeof medResidents === 'function' ? medResidents() : []);
-    sel.innerHTML = `<option value="">Stock collectif (pharmacie de l'internat)</option>` +
-      res.map(r => `<option value="${escAttr(r.id)}">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</option>`).join('');
-    sel.value = s.residentId || '';
-  }
+  // Barre de recherche résident (datalist) ; l'id sélectionné vit dans le champ caché #stkResident.
+  const res = (typeof medResidents === 'function' ? medResidents() : []);
+  const dl = document.getElementById('stkResidents');
+  if (dl) dl.innerHTML = res.map(r => `<option value="${escAttr(stkResDisplay(r))}"></option>`).join('');
+  const hid = document.getElementById('stkResident');
+  if (hid) hid.value = s.residentId || '';
+  const search = document.getElementById('stkResSearch');
+  if (search) { const cur = res.find(r => String(r.id) === String(s.residentId || '')); search.value = cur ? stkResDisplay(cur) : ''; }
+  stkFillTraitements(s.traitementId || '');
   set('stkLibelle', s.libelle || '');
   set('stkQuantite', s.quantite ?? '');
   set('stkInitiale', s.quantiteInitiale ?? '');
@@ -227,10 +256,63 @@ function stockMedOpen(id) {
   openModal('modalStockMed');
 }
 
+// Libellé d'un résident dans la barre de recherche (chambre incluse pour lever les homonymies).
+function stkResDisplay(r) {
+  return `${r.prenom || ''} ${r.nom || ''}`.trim() + (r.chambre ? ' · Ch. ' + r.chambre : '');
+}
+// Barre de recherche « Rattachement » : résout le texte saisi en id de résident (champ caché
+// #stkResident) ; vide ou non trouvé = stock collectif. Ne réinitialise le traitement que si le
+// résident change réellement (évite de tout réinitialiser à chaque frappe).
+function stkResPick() {
+  const q = (document.getElementById('stkResSearch').value || '').trim();
+  const r = (typeof medResidents === 'function' ? medResidents() : []).find(x => stkResDisplay(x) === q);
+  const id = r ? String(r.id) : '';
+  const hid = document.getElementById('stkResident');
+  if (!hid || hid.value === id) return;
+  hid.value = id;
+  stkFillTraitements();
+}
+
+// Remplit « Traitement lié » d'après le résident choisi (stock nominatif).
+// Un stock collectif (sans résident) ne peut pas être relié à un traitement précis.
+function stkFillTraitements(selTid) {
+  const resSel = document.getElementById('stkResident');
+  const tSel = document.getElementById('stkTraitement');
+  const wrap = document.getElementById('stkTraitementWrap');
+  if (!tSel) return;
+  const rid = resSel ? resSel.value : '';
+  const res = (typeof medResidents === 'function' ? medResidents() : []);
+  const r = res.find(x => String(x.id) === String(rid));
+  const traits = (r && r.sante && Array.isArray(r.sante.traitements)) ? r.sante.traitements : [];
+  if (wrap) wrap.style.display = rid ? '' : 'none';
+  tSel.innerHTML = `<option value="">Aucun — pas de décompte auto</option>` +
+    traits.map(t => `<option value="${escAttr(t.id)}">${escHtml(t.nom || 'Traitement')}${t.posologie ? ' — ' + escHtml(t.posologie) : ''}</option>`).join('');
+  tSel.value = (selTid != null) ? selTid : '';
+  stkToggleLibelle();
+}
+
+// Masque le champ texte « Médicament » quand un traitement est lié (le nom du
+// médicament vient alors du traitement) ; le laisse visible pour un stock sans
+// traitement (collectif, ou nominatif non relié).
+function stkToggleLibelle() {
+  const tSel = document.getElementById('stkTraitement');
+  const wrap = document.getElementById('stkLibelleWrap');
+  if (!wrap) return;
+  wrap.style.display = (tSel && tSel.value) ? 'none' : '';
+}
+
 async function stockMedSave() {
   const val = id => (document.getElementById(id) || {}).value || '';
-  const libelle = val('stkLibelle').trim();
-  if (!libelle) { toast('Indiquez le libellé du médicament', 'error'); return; }
+  const residentId = val('stkResident');
+  const traitementId = residentId ? val('stkTraitement') : '';
+  // Libellé : repris du traitement lié s'il y en a un, sinon saisi à la main (stock collectif).
+  let libelle = val('stkLibelle').trim();
+  if (traitementId) {
+    const r = (typeof medResidents === 'function' ? medResidents() : []).find(x => String(x.id) === String(residentId));
+    const t = ((r && r.sante && r.sante.traitements) || []).find(x => String(x.id) === String(traitementId));
+    if (t && t.nom) libelle = t.nom;
+  }
+  if (!libelle) { toast('Indiquez le médicament (ou reliez un traitement)', 'error'); return; }
   const initiale = Number(val('stkInitiale'));
   if (!Number.isFinite(initiale) || initiale <= 0) { toast('Indiquez une quantité initiale supérieure à 0', 'error'); return; }
   const quantite = Number(val('stkQuantite'));
@@ -238,7 +320,8 @@ async function stockMedSave() {
 
   const s = {
     id: _stkEditId || undefined,
-    residentId: val('stkResident'),
+    residentId,
+    traitementId,
     libelle,
     quantite,
     quantiteInitiale: initiale,
@@ -290,15 +373,29 @@ function med2Renouvellements(date) {
     const c = l.j <= 3 ? '#ef4444' : l.j <= 10 ? '#f59e0b' : '#10b981';
     const tag = l.j <= 3 ? 'Critique' : l.j <= 10 ? 'Bientôt' : 'OK';
     const pct = Math.max(4, Math.min(100, Math.round(l.j / 60 * 100)));
-    return `<div class="v2-med-li" style="--pc:${c}">
+    return `<div class="dc-line" style="display:flex;align-items:center;gap:11px;padding:9px 12px;margin-bottom:8px;border-left:3px solid ${c};border-radius:8px;background:var(--v2-s-sub)">
       <div style="flex:1;min-width:0">
-        <div class="v2-med-li-n">${escHtml(l.nom)}</div>
-        <div class="v2-med-li-s">${escHtml(l.res)} · fin le ${formatDate(l.fin)}</div>
+        <div class="dc-title" style="font-size:13px">${escHtml(l.nom)}</div>
+        <div style="font-size:11.5px;color:var(--v2-t5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.res)} · fin le ${formatDate(l.fin)}</div>
       </div>
-      <div class="v2-med-li-bar"><div class="v2-prog"><span style="width:${pct}%;background:${c}"></span></div></div>
-      <span class="v2-med-li-tag">${tag} · ${l.j} j</span>
+      <div class="al-prog-bar" style="flex:0 0 64px"><span style="width:${pct}%;background:${c}"></span></div>
+      <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${tag} · ${l.j} j</span>
     </div>`;
   }).join('');
+}
+
+// Initiales + couleur d'avatar (stables par nom) pour la grille « Prochaines prises ».
+const MED2_AVPAL = ['#6366f1', '#0891b2', '#059669', '#d97706', '#db2777', '#7c3aed', '#0ea5e9', '#16a34a'];
+function _med2Initiales(nom) {
+  const p = (nom || '').trim().split(/\s+/).filter(Boolean);
+  const a = (p[0] || '')[0] || '';
+  const b = (p[1] || '')[0] || '';
+  return (a + b).toUpperCase() || '·';
+}
+function _med2Avatar(nom) {
+  let h = 0; const s = nom || '';
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return MED2_AVPAL[h % MED2_AVPAL.length];
 }
 
 function med2Prochaines(date, enriched) {
@@ -312,19 +409,19 @@ function med2Prochaines(date, enriched) {
     const rb = (ordre.indexOf(b.moment) - iNow + ordre.length) % ordre.length;
     return ra - rb || (a.residentName || '').localeCompare(b.residentName || '', 'fr');
   });
-  return tri.slice(0, 5).map(e => {
+  return `<div class="med-pp-grid">` + tri.map(e => {
     const mom = MED_MOMENTS[e.moment] || { label: e.moment, icon: '' };
     const c = MED2_MOM_C[e.moment] || '#818cf8';
-    const lim = MED_HEURE_LIMITE[e.moment];
-    return `<div class="v2-med-li" style="--pc:${c}">
-      <span class="v2-med-li-h">${mom.icon} ${escHtml(mom.label)}</span>
-      <div style="flex:1;min-width:0">
-        <div class="v2-med-li-n">${escHtml(e.residentName || '—')}</div>
-        <div class="v2-med-li-s">${escHtml(e.medicament || '')}${e.posologie ? ' · ' + escHtml(e.posologie) : ''}</div>
+    const nom = e.residentName || '—';
+    return `<div class="med-pp-tile" title="${escHtml(nom)} · ${escHtml(e.medicament || '')}">
+      <div class="med-pp-av" style="background:${_med2Avatar(nom)}">${escHtml(_med2Initiales(nom))}</div>
+      <div class="med-pp-info">
+        <div class="med-pp-res">${escHtml(nom)}</div>
+        <div class="med-pp-med">${escHtml(e.medicament || '')}${e.posologie ? ' · ' + escHtml(e.posologie) : ''}</div>
+        <span class="med-pp-mom" style="background:${c}1f;color:${c}">${mom.icon} ${escHtml(mom.label)}</span>
       </div>
-      <span class="v2-med-li-k">${lim != null ? 'avant ' + lim + 'h' : ''}</span>
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
 }
 
 // ── FILTRES (recherche, moment, présents) ────────────────────────────
@@ -340,6 +437,12 @@ function med2Filtres(enriched) {
     ${c ? `<span class="dot" style="background:${c}"></span>` : ''}${lbl}<span class="n">${n}</span></button>`;
   const moments = Object.entries(MED_MOMENTS).map(([k, v]) =>
     chip(k, `${v.icon} ${escHtml(v.label)}`, enriched.filter(e => e.moment === k).length, MED2_MOM_C[k])).join('');
+  // Légende des statuts affichés sur les cartes (utile avec les icônes du Design B).
+  const legende = `<div class="v2-med-legend"><span class="lg-t">Statuts</span>` +
+    Object.entries(MED_STATUTS).map(([k, v]) => {
+      const c = MED2_ST[k]?.c || v.color;
+      return `<span class="v2-med-lg"><span class="v2-med-lg-i" style="color:${c}">${_med2Svg(MED2_ST[k]?.ic || MED2_IC.tick, 2.4)}</span>${escHtml(v.label)}</span>`;
+    }).join('') + `</div>`;
   el.innerHTML = `
     <div class="v2-med-search">${_med2Svg(MED2_IC.search)}
       <input id="medSearchInput" type="text" placeholder="Rechercher un résident…" value="${escAttr(medSearch)}" oninput="medSetSearch(this.value)"/>
@@ -347,7 +450,8 @@ function med2Filtres(enriched) {
     <button type="button" class="v2-chip-f${MED2_MOMENT === '' ? ' on' : ''}" onclick="med2SetMoment('')" aria-pressed="${MED2_MOMENT === ''}">Tous les moments<span class="n">${enriched.length}</span></button>
     ${moments}
     <button type="button" class="v2-chip-f${medFilterPresent ? ' on' : ''}" onclick="medTogglePresent()" aria-pressed="${medFilterPresent}">
-      <span class="dot" style="background:${medFilterPresent ? '#10b981' : '#5f7a9c'}"></span>Présents seulement</button>`;
+      <span class="dot" style="background:${medFilterPresent ? '#10b981' : '#5f7a9c'}"></span>Présents seulement</button>
+    ${legende}`;
   if (avaitFocus) {
     const neuf = document.getElementById('medSearchInput');
     if (neuf) { neuf.focus(); try { neuf.setSelectionRange(caret, caret); } catch (e) { /* ignore */ } }
@@ -386,7 +490,7 @@ function med2Liste(date, enriched) {
   if (medFilterPresent) visibles = visibles.filter(e => present(e.residentId));
 
   const aide = medCanEdit
-    ? `<div class="v2-med-hint">${_med2Svg(MED2_IC.edit)} Un clic sur un statut l'enregistre · re-clic = annule · <b>✎</b> ou clic droit = note et statut détaillé</div>`
+    ? `<div class="v2-med-hint">${_med2Svg(MED2_IC.edit)} <b>Donné</b> enregistre la prise (re-clic = annule) · <b>⋯</b> pour refus, absence, report ou note · <b>Tout donné</b> passe toutes les prises du résident sur Donné</div>`
     : '';
 
   if (!visibles.length) {
@@ -408,6 +512,17 @@ function med2Liste(date, enriched) {
     ordreMoments.indexOf(a.moment) - ordreMoments.indexOf(b.moment) ||
     (a.medicament || '').localeCompare(b.medicament || '', 'fr')));
 
+  // Ce que « Tout donné » va basculer : les prises VISIBLES (filtres moment /
+  // recherche / présents compris) qui ne sont pas déjà « Donné ». Recalculer
+  // depuis medPrevues() enregistrerait des prises que l'utilisateur ne voit pas ;
+  // inclure celles déjà « Donné » les annulerait (setMedStatut est une bascule).
+  _med2Restants = {};
+  groupes.forEach(g => {
+    _med2Restants[g.id] = g.items
+      .filter(e => e.record?.statut !== 'donne')
+      .map(e => ({ residentId: e.residentId, residentName: e.residentName, traitementId: e.traitementId, moment: e.moment, medicament: e.medicament }));
+  });
+
   const nowH = new Date().getHours();
   el.innerHTML = aide + `<div class="v2-med-cards">${groupes.map(g => {
     const r = resMap[g.id] || {};
@@ -421,22 +536,47 @@ function med2Liste(date, enriched) {
     if ((r.allergies || '').trim()) alertes.push(`Allergie / CI : ${r.allergies}`);
     if ((reg.allergiesAlim || '').trim()) alertes.push(`Allergie alim. : ${reg.allergiesAlim}`);
     if (reg.texture && reg.texture !== 'normale') alertes.push(`Texture ${reg.texture}`);
+    // En 4 colonnes, l'alerte ne tient plus dans l'en-tête à côté du compteur :
+    // elle prend sa propre ligne pleine largeur sous le nom du résident.
     const badgeAl = alertes.length
-      ? `<span class="v2-med-alrt" title="${escAttr(alertes.join(' · '))}">${_med2Svg(MED2_IC.alert, 2.6)}${escHtml(alertes.join(' · '))}</span>`
+      ? `<div class="v2-med-alrt" title="${escAttr(alertes.join(' · '))}">${_med2Svg(MED2_IC.alert, 2.4)}<span>${escHtml(alertes.join(' · '))}</span></div>`
       : '';
 
     const faits = g.items.filter(e => e.record?.statut).length;
+    const complet = faits === g.items.length;
+    // « Tout donné » : passe TOUTES les prises du résident sur « Donné », y
+    // compris celles déjà marquées refusées/absentes (chaque bascule reste
+    // tracée dans le journal d'audit). Rien à faire si tout est déjà donné.
+    const restants = g.items.filter(e => e.record?.statut !== 'donne').length;
+    // Prises portant DÉJÀ un autre statut (refusé, absent, confié, reporté) :
+    // les écraser est demandé, mais ça remplace une observation clinique — le
+    // bouton doit le dire, et demander confirmation dans ce cas précis.
+    const ecrases = g.items.filter(e => e.record?.statut && e.record.statut !== 'donne')
+      .map(e => `${MED_MOMENTS[e.moment]?.label || e.moment} · ${e.medicament || '—'} (${MED_STATUTS[e.record.statut]?.label || e.record.statut})`);
+    const titre = ecrases.length
+      ? `Passer les ${restants} prise${restants > 1 ? 's' : ''} restante${restants > 1 ? 's' : ''} sur « Donné » — dont ${ecrases.length} déjà renseignée${ecrases.length > 1 ? 's' : ''} qui ${ecrases.length > 1 ? 'seront remplacées' : 'sera remplacée'}`
+      : `Enregistrer « Donné » sur les ${restants} prise${restants > 1 ? 's' : ''} non renseignée${restants > 1 ? 's' : ''}`;
+    const btnTout = (medCanEdit && restants)
+      ? `<button type="button" class="v2-med-all${ecrases.length ? ' av' : ''}" onclick="med2ToutDonne('${escAttr(String(g.id))}')"
+          title="${escAttr(titre)}">
+          ${_med2Svg(MED2_IC.tickAll, 2.4)}Tout donné</button>`
+      : '';
 
-    return `<div class="v2-med-card">
-      <div class="v2-med-card-h">
-        ${av}
-        <div style="flex:1;min-width:0">
-          <div class="v2-med-nom">${escHtml(g.nom || '—')}</div>
-          <div class="v2-med-ch">${r.chambre ? 'Ch. ' + escHtml(r.chambre) : 'Chambre non renseignée'}</div>
+    return `<div class="dc-card v2-med-card">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          ${av}
+          <div style="min-width:0">
+            <div class="dc-eyebrow">${r.chambre ? 'Chambre ' + escHtml(r.chambre) : 'Chambre non renseignée'}</div>
+            <div class="dc-title">${escHtml(g.nom || '—')}</div>
+          </div>
         </div>
-        ${badgeAl}
-        <span class="v2-med-tag" style="--pc:${faits === g.items.length ? '#10b981' : '#818cf8'}">${faits}/${g.items.length} enregistrée(s)</span>
+        <div class="v2-med-hd-r">
+          ${btnTout}
+          <span class="dc-badge ${complet ? 'dc-b-green' : 'dc-b-indigo'}"><span class="d"></span>${faits}/${g.items.length}</span>
+        </div>
       </div>
+      ${badgeAl}
       <div class="v2-med-rows">${g.items.map(e => med2Row(date, e, nowH)).join('')}</div>
     </div>`;
   }).join('')}</div>`;
@@ -450,17 +590,21 @@ function med2Row(date, e, nowH) {
   const enRetard = !statut && lim != null && (date < today() || (date === today() && nowH >= lim));
   const args = `'${e.residentId}','${e.traitementId}','${e.moment}'`;
 
-  const opts = Object.entries(MED_STATUTS).map(([k, v]) => {
-    const on = statut === k;
-    const c = MED2_ST[k]?.c || v.color;
-    return `<button type="button" class="v2-med-opt${on ? ' on' : ''}" style="--oc:${c}" aria-pressed="${on}"
-      ${medCanEdit ? `onclick="med2Set(${args},'${k}')"` : 'disabled'} title="${escAttr(v.label)}">
-      ${_med2Svg(MED2_ST[k]?.ic || MED2_IC.tick, 2.6)}${escHtml(v.label)}</button>`;
-  }).join('');
-
-  const detail = medCanEdit
-    ? `<button type="button" class="v2-med-opt" onclick="med2Detail(${args})" title="Statut détaillé / observation" aria-label="Options pour ${escAttr(e.medicament || '')}">${_med2Svg(MED2_IC.edit, 2.4)}</button>`
-    : '';
+  // « Donné » (≈ 90 % des enregistrements) garde son libellé ; les 4 autres
+  // statuts passent derrière « ⋯ » pour que la ligne tienne sur 4 colonnes.
+  const donneOn = statut === 'donne';
+  const primary = `<button type="button" class="v2-med-primary${donneOn ? ' on' : ''}" aria-pressed="${donneOn}"
+    ${medCanEdit ? `onclick="med2Set(${args},'donne')"` : 'disabled'} title="Donné">
+    ${_med2Svg(MED2_ST.donne.ic, 2.6)}${escHtml(MED_STATUTS.donne.label)}</button>`;
+  // Un statut secondaire déjà posé remonte SUR le bouton « ⋯ » (icône + couleur) :
+  // sinon « Refusé » serait indiscernable d'une prise non enregistrée.
+  const autre = MED2_AUTRES.includes(statut) ? statut : '';
+  const aC = autre ? (MED2_ST[autre]?.c || MED_STATUTS[autre].color) : '';
+  const aLab = autre ? MED_STATUTS[autre].label : 'Autre statut';
+  const more = `<button type="button" class="v2-med-more${autre ? ' on' : ''}"${autre ? ` style="--oc:${aC}"` : ''}
+    ${medCanEdit ? `onclick="med2Menu(this,${args})"` : 'disabled'} aria-haspopup="menu" aria-expanded="false"
+    title="${escAttr(aLab)}" aria-label="${escAttr(aLab)}">${autre ? _med2Svg(MED2_ST[autre].ic, 2.4) : _med2Svg(MED2_IC.dots, 2.4)}</button>`;
+  const opts = `${primary}${more}`;
 
   const meta = [
     e.posologie || '',
@@ -469,16 +613,133 @@ function med2Row(date, e, nowH) {
     enRetard ? 'en retard' : ''
   ].filter(Boolean).join(' · ');
 
-  return `<div class="v2-med-row${enRetard ? ' late' : ''}"
+  const momC = MED2_MOM_C[e.moment] || '#818cf8';
+  // Le moment n'a plus sa colonne de 78 px : il devient l'emoji devant le nom
+  // (le libellé « Matin » reste en infobulle et dans le liseré de gauche).
+  const momT = escAttr(mom.label) + (lim != null ? ' — avant ' + lim + 'h' : '');
+  return `<div class="v2-med-row${enRetard ? ' late' : ''}" style="border-left:3px solid ${enRetard ? '#ef4444' : momC};padding-left:10px"
       oncontextmenu="event.preventDefault();${medCanEdit ? `med2Detail(${args})` : ''}">
-    <span class="v2-med-mom" title="${escAttr(mom.label)}${lim != null ? ' — avant ' + lim + 'h' : ''}">${mom.icon} ${escHtml(mom.label)}</span>
-    <div style="flex:1;min-width:120px">
-      <div class="v2-med-nm">${escHtml(e.medicament || '—')}</div>
+    <div class="v2-med-txt">
+      <div class="v2-med-nm"><span class="v2-med-mom" title="${momT}" aria-label="${momT}">${mom.icon}</span>${escHtml(e.medicament || '—')}</div>
       <div class="v2-med-dose">${escHtml(meta) || '—'}</div>
     </div>
-    <div class="v2-med-opts">${opts}${detail}</div>
+    <div class="v2-med-opts">${opts}</div>
     ${rec?.observation ? `<div class="v2-med-note">${_med2Svg(MED2_IC.note, 2)} ${escHtml(rec.observation)}</div>` : ''}
   </div>`;
+}
+
+// ── « Tout donné » : passe d'un geste toutes les prises du résident sur Donné ──
+// Sans confirmation : le geste est immédiat, comme un clic sur « Donné ».
+// On écarte les prises DÉJÀ « Donné » — setMedStatut est une bascule, les
+// rejouer les annulerait. Les autres statuts (refus, absence…) sont bien
+// remplacés, et chaque bascule reste tracée dans le journal d'audit.
+// Les écritures passent par setMedStatut, donc par la file medQueueWrite —
+// elles partent en base dans l'ordre, comme des clics successifs.
+async function med2ToutDonne(residentId) {
+  if (!medCanEdit) return;
+  const date = document.getElementById('medDate')?.value || today();
+  const restants = (_med2Restants[String(residentId)] || [])
+    .filter(p => medRecord(date, p.residentId, p.traitementId, p.moment)?.statut !== 'donne');
+  if (!restants.length) return;
+
+  // Confirmation UNIQUEMENT si des statuts cliniques vont être remplacés. Sans
+  // écrasement, le geste reste immédiat, comme demandé.
+  const aEcraser = restants.filter(p => {
+    const st = medRecord(date, p.residentId, p.traitementId, p.moment)?.statut;
+    return st && st !== 'donne';
+  });
+  if (aEcraser.length) {
+    const msg = `${aEcraser.length} prise${aEcraser.length > 1 ? 's' : ''} déjà renseignée${aEcraser.length > 1 ? 's' : ''} ${aEcraser.length > 1 ? 'seront remplacées' : 'sera remplacée'} par « Donné » :\n\n`
+      + aEcraser.map(p => {
+          const st = medRecord(date, p.residentId, p.traitementId, p.moment)?.statut;
+          return `• ${MED_MOMENTS[p.moment]?.label || p.moment} — ${p.medicament} (actuellement « ${MED_STATUTS[st]?.label || st} »)`;
+        }).join('\n')
+      + `\n\nL'observation éventuellement associée reste attachée à la prise. Continuer ?`;
+    if (!confirm(msg)) return;
+  }
+
+  const n = restants.length;
+  for (const p of restants) {
+    await setMedStatut(date, p.residentId, p.traitementId, p.moment, 'donne');
+  }
+  if (typeof toast === 'function') toast(`${n} prise${n > 1 ? 's' : ''} enregistrée${n > 1 ? 's' : ''}`, 'success');
+}
+
+// ── Menu « ⋯ » : les 4 statuts secondaires + l'accès au détail ────────────
+// Un seul élément partagé, rattaché à <body> en position:fixed — comme le menu
+// utilisateur de la barre V2, pour échapper au overflow:hidden de .v2-shell.
+let _med2MenuCtx = null;
+function _med2MenuEl() {
+  let el = document.getElementById('med2Menu');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'med2Menu';
+  el.className = 'v2-med-menu';
+  el.setAttribute('role', 'menu');
+  document.body.appendChild(el);
+  // Fermeture : clic ailleurs, Échap, défilement ou redimensionnement (le menu
+  // est en position:fixe, il ne suivrait pas son bouton).
+  document.addEventListener('click', e => {
+    if (!_med2MenuCtx) return;
+    if (e.target.closest('#med2Menu') || e.target.closest('.v2-med-more')) return;
+    med2MenuClose();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') med2MenuClose(); });
+  window.addEventListener('resize', med2MenuClose);
+  window.addEventListener('scroll', med2MenuClose, true);
+  return el;
+}
+function med2MenuClose() {
+  const el = document.getElementById('med2Menu');
+  if (el) el.classList.remove('open');
+  document.querySelectorAll('.v2-med-more[aria-expanded="true"]')
+    .forEach(b => b.setAttribute('aria-expanded', 'false'));
+  _med2MenuCtx = null;
+}
+function med2Menu(btn, residentId, traitementId, moment) {
+  const ouvert = _med2MenuCtx
+    && _med2MenuCtx.residentId === residentId
+    && _med2MenuCtx.traitementId === traitementId
+    && _med2MenuCtx.moment === moment;
+  med2MenuClose();
+  if (ouvert) return; // re-clic sur le même bouton = referme
+
+  const date = document.getElementById('medDate')?.value || today();
+  const rec = typeof medRecord === 'function' ? medRecord(date, residentId, traitementId, moment) : null;
+  const statut = rec?.statut || '';
+  const el = _med2MenuEl();
+  el.innerHTML = MED2_AUTRES.map(k => {
+    const v = MED_STATUTS[k];
+    const c = MED2_ST[k]?.c || v.color;
+    const on = statut === k;
+    return `<button type="button" class="v2-med-menu-o${on ? ' on' : ''}" style="--oc:${c}" role="menuitem" aria-checked="${on}"
+      onclick="med2MenuPick('${k}')">${_med2Svg(MED2_ST[k]?.ic || MED2_IC.tick, 2.4)}<span>${escHtml(v.label)}</span></button>`;
+  }).join('') +
+    `<div class="v2-med-menu-sep"></div>
+     <button type="button" class="v2-med-menu-o" role="menuitem" onclick="med2MenuPick('__detail')">
+       ${_med2Svg(MED2_IC.note, 2.2)}<span>Note et détail…</span></button>`;
+
+  _med2MenuCtx = { residentId, traitementId, moment };
+  el.classList.add('open');
+  btn.setAttribute('aria-expanded', 'true');
+
+  // Placement sous le bouton, replié au-dessus / recalé si ça déborde.
+  const r = btn.getBoundingClientRect();
+  const w = el.offsetWidth, h = el.offsetHeight;
+  let left = r.right - w;
+  if (left < 8) left = 8;
+  if (left + w > window.innerWidth - 8) left = window.innerWidth - 8 - w;
+  let top = r.bottom + 6;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - 6 - h);
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+}
+function med2MenuPick(k) {
+  const ctx = _med2MenuCtx;
+  med2MenuClose();
+  if (!ctx) return;
+  if (k === '__detail') med2Detail(ctx.residentId, ctx.traitementId, ctx.moment);
+  else med2Set(ctx.residentId, ctx.traitementId, ctx.moment, k);
 }
 
 // Passerelles vers les actions existantes (la date vient toujours de #medDate)

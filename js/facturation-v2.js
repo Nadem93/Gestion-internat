@@ -250,7 +250,7 @@ function fc2RenderOrganismes(filtered) {
     const c = fc2OrgC(o);
     return '<div><div class="fc2-org-h"><span class="fc2-org-l">' + fc2Esc(o) + '</span>'
       + '<span class="fc2-org-v">' + fc2EurC(by[o]) + ' · ' + pct + ' %</span></div>'
-      + '<div class="v2-prog"><span style="width:' + pct + '%;background:' + c + '"></span></div></div>';
+      + '<div class="al-prog-bar"><span style="width:' + pct + '%;background:' + c + '"></span></div></div>';
   }).join(''));
 }
 
@@ -279,6 +279,7 @@ function fc2RenderTable(filtered, isAdmin) {
     el.innerHTML = '<div class="v2-blk-vide" style="padding:26px 0;text-align:center">Aucune facture pour ces critères.</div>';
     return;
   }
+  const stCls = { brouillon: 'dc-b-gray', envoyee: 'dc-b-cyan', payee: 'dc-b-green' };
   const rows = filtered.slice().sort((a, b) =>
     String(b.periode).localeCompare(String(a.periode)) || String(a.residentNom).localeCompare(String(b.residentNom)));
   el.innerHTML = '<div class="fc2-tablewrap"><table class="v2-table"><thead><tr>'
@@ -298,7 +299,7 @@ function fc2RenderTable(filtered, isAdmin) {
         + '<td><span class="fc2-tag" style="--pc:' + fc2OrgC(f.organisme || 'Non renseigné') + '">' + fc2Esc(f.organisme || 'Non renseigné') + '</span></td>'
         + '<td style="white-space:nowrap">' + (Number(f.nbJours) || 0) + ' j × ' + fc2Esc(fc2Eur(f.prixJour)) + '</td>'
         + '<td class="fc2-t-num">' + fc2Esc(fc2Eur(f.montant)) + '</td>'
-        + '<td><span class="fc2-tag" style="--pc:' + st.c + '">' + fc2Esc(st.l) + '</span></td>'
+        + '<td><span class="dc-badge ' + (stCls[f.statut] || 'dc-b-gray') + '"><span class="d"></span>' + fc2Esc(st.l) + '</span></td>'
         + (isAdmin
           ? '<td><div class="fc2-acts">'
             + (f.statut === 'brouillon'

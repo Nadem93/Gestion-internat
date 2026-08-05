@@ -505,6 +505,12 @@ html.clair .ps2-empty { border-color: rgba(15,38,70,.12); }
 html.clair .pe2-nav button:hover { color: var(--v2-t1); }
 html.clair .pe2-seg button.on { color: var(--v2-t1); background: rgba(15,38,70,.14); }
 html.clair .pe2-table thead th { background: rgba(15,38,70,.03); }
+/* Colonne employé figée : son fond est codé en dur bleu foncé
+   (#0d1a2d / #0e1c30 dans v2-planning-equipe.css) et restait sombre en thème
+   clair → cellules illisibles. On repasse un fond OPAQUE clair (la colonne est
+   sticky : elle doit masquer les cellules qui défilent dessous). */
+html.clair .pe2-table th.pe2-h-emp,
+html.clair .pe2-table td.pe2-c-emp { background: #eef2f8; }
 html.clair .pe2-h-day.today .pe2-h-num { color: var(--v2-t1); }
 html.clair .pe2-table td.pe2-cell.clic:hover { background: rgba(15,38,70,.045); }
 html.clair .pe2-sh-e { color: #270b8e; }

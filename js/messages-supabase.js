@@ -31,10 +31,13 @@ function _msgFromRow(r) {
 }
 
 async function sbGetMessages() {
-  const { data, error } = await supabaseClient
-    .from('messages').select('*').order('date', { ascending: true });
-  if (error) { console.error(error); toast('Erreur chargement messages', 'error'); return []; }
-  return data.map(_msgFromRow);
+  // sbFetchAll : PostgREST tronque à 1000 lignes en silence — au-delà, les
+  // messages les plus récents (tri ascendant) disparaîtraient.
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('messages').select('*').order('date', { ascending: true }));
+    return data.map(_msgFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement messages', 'error'); return []; }
 }
 async function sbSaveMessage(m) {
   const etablissementId = await sbGetEtablissementId();

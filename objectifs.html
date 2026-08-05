@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Objectifs &amp; grilles d'évaluation — FTR</title>
+  <title>Objectifs &amp; Stratégies — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -22,7 +22,7 @@
       </a>
       <div style="line-height:1.15;min-width:0">
         <div class="v2-eyebrow">INTERNALIS · Dossiers &amp; suivi</div>
-        <div class="v2-top-title" id="ob2Title">Objectifs &amp; axes</div>
+        <div class="v2-top-title" id="ob2Title">Objectifs &amp; Stratégies</div>
       </div>
       <div class="ob2-topact">
         <span id="ob2ActObj">
@@ -46,7 +46,7 @@
         <!-- ONGLETS -->
         <div class="v2-chips ob2-tabs" role="tablist" aria-label="Sections">
           <button type="button" id="obTabBtnObjectifs" class="v2-chip-f on" role="tab" aria-selected="true" onclick="obSwitchTab('objectifs')">
-            <span class="dot" style="background:#818cf8"></span>Objectifs &amp; axes
+            <span class="dot" style="background:#818cf8"></span>Objectifs &amp; Stratégies
           </button>
           <button type="button" id="obTabBtnEvals" class="v2-chip-f" role="tab" aria-selected="false" onclick="obSwitchTab('evaluations')">
             <span class="dot" style="background:#22d3ee"></span>Grilles d'évaluation
@@ -57,21 +57,21 @@
         <section id="obTabObjectifs">
 
           <div class="ob2-kpis">
-            <div class="ob2-kpi" style="--c:#a5b4fc">
-              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
-              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatObjectifs">—</div><div class="ob2-kpi-l">Objectifs suivis</div></div>
+            <div class="dc-kpi" style="--dc-c:#a5b4fc">
+              <div class="dc-kpi-top"><span class="dc-kpi-label">Objectifs suivis</span><span class="dc-kpi-ico" style="color:#a5b4fc"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span></div>
+              <div class="dc-kpi-val" id="obStatObjectifs" style="color:#a5b4fc">—</div>
             </div>
-            <div class="ob2-kpi" style="--c:#818cf8">
-              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatProgression">—</div><div class="ob2-kpi-l">Progression moyenne</div></div>
+            <div class="dc-kpi" style="--dc-c:#818cf8">
+              <div class="dc-kpi-top"><span class="dc-kpi-label">Progression moyenne</span><span class="dc-kpi-ico" style="color:#818cf8"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span></div>
+              <div class="dc-kpi-val" id="obStatProgression" style="color:#818cf8">—</div>
             </div>
-            <div class="ob2-kpi" style="--c:#f59e0b">
-              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
-              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatAxes">—</div><div class="ob2-kpi-l">Axes de travail</div></div>
+            <div class="dc-kpi" style="--dc-c:#f59e0b">
+              <div class="dc-kpi-top"><span class="dc-kpi-label">Axes de travail</span><span class="dc-kpi-ico" style="color:#f59e0b"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span></div>
+              <div class="dc-kpi-val" id="obStatAxes" style="color:#f59e0b">—</div>
             </div>
-            <div class="ob2-kpi" style="--c:#10b981">
-              <span class="ob2-kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0z"/><line x1="12" y1="15" x2="12" y2="19"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
-              <div style="min-width:0"><div class="ob2-kpi-n" id="obStatAtteints">—</div><div class="ob2-kpi-l">Objectifs atteints</div></div>
+            <div class="dc-kpi" style="--dc-c:#10b981">
+              <div class="dc-kpi-top"><span class="dc-kpi-label">Objectifs atteints</span><span class="dc-kpi-ico" style="color:#10b981"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 4h12v5a6 6 0 0 1-12 0z"/><line x1="12" y1="15" x2="12" y2="19"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span></div>
+              <div class="dc-kpi-val" id="obStatAtteints" style="color:#10b981">—</div>
             </div>
           </div>
 

@@ -350,9 +350,9 @@ function ce2RenderStats(all) {
     { n: nb('mission'), l: 'En mission',   c: '#f59e0b', i: CE2_IC.swap },
     { n: aCouvrir,      l: 'Postes à couvrir', c: '#ef4444', i: CE2_IC.warn }
   ];
-  el.innerHTML = stats.map(s => `<div class="ce2-stat" style="--sc:${s.c}">
-      <span class="ce2-stat-i">${_ce2Svg(s.i)}</span>
-      <div><div class="ce2-stat-n">${s.n}</div><div class="ce2-stat-l">${s.l}</div></div>
+  el.innerHTML = stats.map(s => `<div class="dc-kpi" style="--dc-c:${s.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${s.l}</span><span class="dc-kpi-ico" style="color:${s.c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">${s.i}</svg></span></div>
+      <div class="dc-kpi-val">${s.n}</div>
     </div>`).join('');
 }
 
@@ -494,13 +494,13 @@ function ce2RenderMissions() {
     const nom = c ? ce2Nom(c) : 'Contact supprimé';
     const ini = c ? ce2Ini(c) : '?';
     const meta = [m.poste || 'poste non renseigné', ce2Periode(m.date_debut, m.date_fin)].filter(Boolean).join(' · ');
-    return `<div class="ce2-row">
+    return `<div class="ce2-row" style="border-left:3px solid ${st.c};padding-left:11px">
       <span class="ce2-av ce2-av-xs" style="--ac:${c ? ce2Couleur(c, i) : '#64748b'}">${escHtml(ini)}</span>
       <div style="flex:1;min-width:0">
         <div class="ce2-row-n">${escHtml(nom)}</div>
         <div class="ce2-row-m">${escHtml(meta)}</div>
       </div>
-      <span class="ce2-tag" style="--tc:${st.c}">${st.l}</span>
+      <span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${st.l}</span>
     </div>`;
   }).join('');
 }
@@ -611,7 +611,7 @@ function ce2RenderMatching(all) {
   }
   el.innerHTML = notes.map(x => {
     const col = x.score >= 90 ? '#34d399' : x.score >= 60 ? '#fbbf24' : '#fca5a5';
-    return `<div class="ce2-row">
+    return `<div class="ce2-row" style="border-left:3px solid ${col};padding-left:11px">
       <span class="ce2-av ce2-av-sm" style="--ac:${ce2Couleur(x.c, x.i)}">${escHtml(ce2Ini(x.c))}</span>
       <div style="flex:1;min-width:0">
         <div class="ce2-row-n">${escHtml(ce2Nom(x.c))}</div>
@@ -760,8 +760,12 @@ async function ce2CyclePiece(contactId, piece) {
 function ce2RenderCout() {
   const el = document.getElementById('ceCout');
   if (!el) return;
+  const head = `<div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:rgba(245,158,11,.14);color:#fdba74"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+      <div style="min-width:0"><div class="dc-eyebrow">Budget</div><div class="dc-title">Coût des remplacements</div></div>
+    </div></div>`;
   if (!CE2_OK.missions) {
-    el.innerHTML = `<div class="ce2-cout-t">Coût des remplacements</div><div class="v2-blk-vide">Indisponible : le fichier ${CE2_SQL} n'a pas encore été exécuté.</div>`;
+    el.innerHTML = head + `<div class="dc-body"><div class="v2-blk-vide">Indisponible : le fichier ${CE2_SQL} n'a pas encore été exécuté.</div></div>`;
     return;
   }
   const an = new Date().getFullYear();
@@ -781,7 +785,7 @@ function ce2RenderCout() {
   }
   const max = Math.max(...mois.map(m => m.v), 1);
 
-  el.innerHTML = `<div class="ce2-cout-t">Coût des remplacements</div>
+  el.innerHTML = head + `<div class="dc-body">
     <div class="ce2-cout-n">${anCour.length ? ce2Euro(total) : '—'}</div>
     <div class="ce2-cout-s">${anCour.length
       ? `cumul ${an} · coût moyen ${ce2Euro(moyen)}/mission (${anCour.length} mission${anCour.length > 1 ? 's' : ''} chiffrée${anCour.length > 1 ? 's' : ''})`
@@ -789,7 +793,7 @@ function ce2RenderCout() {
     <div class="ce2-bars">${mois.map(m => `<div class="ce2-bar-c" title="${escHtml(m.l)} : ${ce2Euro(m.v)}">
         <div class="ce2-bar" style="height:${Math.round(m.v / max * 100)}%"></div>
         <div class="ce2-bar-l">${escHtml(m.l)}</div>
-      </div>`).join('')}</div>`;
+      </div>`).join('')}</div></div>`;
 }
 
 // ── Contrat de vacation ───────────────────────────────────────────────
@@ -844,7 +848,7 @@ function ce2RenderEvaluations() {
         </div>
         ${e.commentaire ? `<div class="ce2-ev-c">« ${escHtml(e.commentaire)} »</div>` : ''}
       </div>
-      ${f ? `<span class="ce2-ev-f" style="--fc:${f.c}">${f.l}</span>` : ''}
+      ${f ? `<span class="dc-badge" style="background:${f.c}1f;color:${f.c};border:1px solid ${f.c}44"><span class="d" style="background:${f.c}"></span>${f.l}</span>` : ''}
     </div>`;
   }).join('');
 }

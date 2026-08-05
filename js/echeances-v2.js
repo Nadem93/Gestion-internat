@@ -25,18 +25,37 @@ const EC2_TC = {
 };
 // Couleur d'urgence (mêmes clés que ecUrgency())
 const EC2_UC = { late: '#ef4444', soon: '#f59e0b', watch: '#22d3ee', ok: '#10b981', done: '#8095b4' };
+// Ton du badge « Console Data » par urgence (classes dc-b-* de css/v2.css)
+const EC2_UT = { late: 'dc-b-red', soon: 'dc-b-amber', watch: 'dc-b-cyan', ok: 'dc-b-green', done: 'dc-b-gray' };
 
 const EC2_MOIS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
 
 function _ec2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Variante 16px pour les emplacements Console Data (chip d'en-tête, icône KPI)
+function _ec2Svg16(d, w) {
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
 function _ec2Tc(e) { return EC2_TC[e.type] || EC2_TC.autre; }
 function _ec2Ty(e) { return (typeof EC_TYPES === 'object' && EC_TYPES[e.type]) || { label: 'Autre', icon: '📌' }; }
 function _ec2CanEdit() {
   const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+  // Même règle que le reste du site : les admins peuvent toujours éditer,
+  // sinon on s'appuie sur la permission edit_residents.
+  if (typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin()) return true;
   if (typeof canEditResidents === 'function') return canEditResidents(s && s.userId);
-  return (typeof Auth !== 'undefined' && Auth.isAdmin) ? Auth.isAdmin() : false;
+  return false;
+}
+
+// « Marquer comme traité » (clôture d'une échéance) est réservé à la DIRECTION :
+// admins/superadmins, ou fonction de direction (directeur/directrice, chef·fe de service).
+function _ec2EstDirection() {
+  if (typeof Auth === 'undefined') return false;
+  if (Auth.isAdmin && Auth.isAdmin()) return true;
+  const s = Auth.getSession ? (Auth.getSession() || {}) : {};
+  const f = (s.fonction || '').toLowerCase();
+  return f.includes('direct') || (f.includes('chef') && f.includes('service'));
 }
 // Nombre de jours entre aujourd'hui et l'échéance (négatif = retard)
 function _ec2Diff(e) {
@@ -93,14 +112,15 @@ function ec2Stats(all) {
   const traitees = all.filter(e => e.done && String(e.doneAt || e.date || '').slice(0, 4) === annee);
 
   const cells = [
-    { n: actives.length,  l: 'Échéances à venir', c: '#38bdf8', ic: EC2_IC.cal },
-    { n: urgentes.length, l: 'Urgentes (< 7 j)',  c: '#ef4444', ic: EC2_IC.alert },
-    { n: mdph.length,     l: 'MDPH',              c: '#818cf8', ic: EC2_IC.file },
-    { n: traitees.length, l: 'Traitées (année)',  c: '#10b981', ic: EC2_IC.check }
+    { n: actives.length,  l: 'À venir',  s: 'Échéances actives', c: '#38bdf8', ic: EC2_IC.cal },
+    { n: urgentes.length, l: 'Urgentes', s: 'Sous 7 jours',      c: '#ef4444', ic: EC2_IC.alert },
+    { n: mdph.length,     l: 'MDPH',     s: 'Notifications',     c: '#818cf8', ic: EC2_IC.file },
+    { n: traitees.length, l: 'Traitées', s: annee,              c: '#10b981', ic: EC2_IC.check }
   ];
-  box.innerHTML = cells.map(c => `<div class="ec2-stat" style="--pc:${c.c}">
-    <span class="ec2-stat-ico">${_ec2Svg(c.ic)}</span>
-    <div><div class="ec2-stat-n">${c.n}</div><div class="ec2-stat-l">${c.l}</div></div>
+  box.innerHTML = cells.map(c => `<div class="dc-kpi" style="--dc-c:${c.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${c.l}</span><span class="dc-kpi-ico" style="color:${c.c}">${_ec2Svg16(c.ic)}</span></div>
+    <div class="dc-kpi-val">${c.n}</div>
+    <div class="dc-kpi-sub">${c.s}</div>
   </div>`).join('');
 }
 
@@ -143,6 +163,9 @@ function ec2List(list) {
   if (!el) return;
   const canEdit = _ec2CanEdit();
 
+  const cnt = document.getElementById('ecCount');
+  if (cnt) cnt.textContent = list.length + (list.length > 1 ? ' entrées' : ' entrée');
+
   if (!list.length) {
     el.innerHTML = `<div class="ec2-empty">
       ${_ec2Svg(EC2_IC.cal)}
@@ -168,11 +191,23 @@ function ec2List(list) {
     if (e.notes) meta.push(escHtml(e.notes));
     if (e.documentPath) meta.push(`<a onclick="openEcheanceDoc('${escAttr(e.id)}');return false" title="Ouvrir le dernier document joint">document joint</a>`);
 
+    // Direction : marquer traité + modifier + supprimer.  Éducatifs : uniquement
+    // le renouvellement (joindre une pièce jointe + reporter la date).
+    const _dir = _ec2EstDirection();
+    const btnTraite = _dir
+      ? `<button type="button" class="ec2-act" style="--ac:${e.done ? '#8095b4' : '#34d399'}" title="${e.done ? 'Réactiver' : 'Marquer comme traité'}" onclick="toggleEcheanceDone('${escAttr(e.id)}')">${_ec2Svg(e.done ? EC2_IC.undo : EC2_IC.check, 2.6)}</button>`
+      : '';
+    const btnMod = _dir
+      ? `<button type="button" class="ec2-act" style="--ac:#818cf8" title="Modifier" onclick="openEcheanceModal('${escAttr(e.id)}')">${_ec2Svg(EC2_IC.pen)}</button>`
+      : '';
+    const btnDel = _dir
+      ? `<button type="button" class="ec2-act" style="--ac:#ef4444" title="Supprimer" onclick="deleteEcheance('${escAttr(e.id)}')">${_ec2Svg(EC2_IC.trash)}</button>`
+      : '';
     const acts = canEdit ? `<div class="ec2-acts">
-      <button type="button" class="ec2-act" style="--ac:${e.done ? '#8095b4' : '#34d399'}" title="${e.done ? 'Réactiver' : 'Marquer comme traité'}" onclick="toggleEcheanceDone('${escAttr(e.id)}')">${_ec2Svg(e.done ? EC2_IC.undo : EC2_IC.check, 2.6)}</button>
+      ${btnTraite}
       <button type="button" class="ec2-act" style="--ac:#38bdf8" title="Renouveler : joindre le nouveau document et reporter la date" onclick="openRenouvelerModal('${escAttr(e.id)}')">${_ec2Svg(EC2_IC.clip)}</button>
-      <button type="button" class="ec2-act" style="--ac:#818cf8" title="Modifier" onclick="openEcheanceModal('${escAttr(e.id)}')">${_ec2Svg(EC2_IC.pen)}</button>
-      <button type="button" class="ec2-act" style="--ac:#ef4444" title="Supprimer" onclick="deleteEcheance('${escAttr(e.id)}')">${_ec2Svg(EC2_IC.trash)}</button>
+      ${btnMod}
+      ${btnDel}
     </div>` : '';
 
     return `<div class="ec2-row${e.done ? ' done' : ''}" style="--uc:${uc};--tc:${tc}">
@@ -180,11 +215,11 @@ function ec2List(list) {
       <div class="ec2-mid">
         <div class="ec2-h">
           <span class="ec2-t">${escHtml(e.libelle || t.label)}</span>
-          <span class="ec2-ty">${escHtml(t.label)}</span>
+          <span class="dc-badge" style="background:${tc}1f;color:${tc};border:1px solid ${tc}44"><span class="d" style="background:${tc}"></span>${escHtml(t.label)}</span>
         </div>
         <div class="ec2-sub">${meta.join(' · ')}</div>
       </div>
-      <span class="ec2-left">${escHtml(_ec2Left(e))}</span>
+      <span class="dc-badge ${EC2_UT[u] || 'dc-b-green'}" style="flex-shrink:0;white-space:nowrap">${e.done ? '' : '<span class="d"></span>'}${escHtml(_ec2Left(e))}</span>
       ${acts}
     </div>`;
   }).join('');

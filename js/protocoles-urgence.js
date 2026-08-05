@@ -47,7 +47,7 @@ function protocolesUrgenceCard(r) {
   }
 
   const quickBtn = list.some(p => p.actif)
-    ? `<button class="btn btn-sm no-print" style="margin-left:.5rem;background:#ef4444;color:#fff" onclick="showProtocolesUrgence('${currentResidentId}', '${escHtml((getResident() ? (getResident().prenom + ' ' + getResident().nom) : '')).replace(/'/g, '')}')">🚨 Vue rapide</button>`
+    ? `<button class="btn btn-sm no-print" style="margin-left:.5rem;background:#ef4444;color:#fff" onclick="showProtocolesUrgence('${currentResidentId}')">🚨 Vue rapide</button>`
     : '';
 
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #ef4444 12%, #fff)">
@@ -130,7 +130,18 @@ async function deleteProtocole(id) {
 // ── VUE RAPIDE (lecture seule, plein écran) — accès 1 clic mobile ─────────
 // Utilisable depuis n'importe quelle page où le cache est chargé
 // (fiche résident, tournée, plan de soins).
+// nom est FACULTATIF : sans lui, on le retrouve depuis le cache résidents.
+// Ne jamais interpoler un nom dans la chaîne JS d'un onclick — escHtml() rend
+// &#39; pour l'apostrophe, que le parseur HTML redécode AVANT le parseur JS :
+// « N'Diaye » cassait la chaîne et rendait le bouton inerte (cf. js/app.js:1085).
 function showProtocolesUrgence(rid, nom) {
+  if (!nom) {
+    const src = (typeof sbResidents === 'function' ? sbResidents() : null)
+      || (typeof _residentsCache !== 'undefined' ? _residentsCache : null) || [];
+    const r = src.find(x => String(x.id) === String(rid))
+      || ((typeof getResident === 'function') ? getResident() : null);
+    if (r) nom = [r.prenom, r.nom].filter(Boolean).join(' ');
+  }
   const list = (typeof protocolesActifsByResident === 'function') ? protocolesActifsByResident(rid) : [];
   const esc = (typeof escHtml === 'function') ? escHtml : (s => String(s == null ? '' : s));
   const seg = (label, val) => val ? `<div style="margin-top:9px"><div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8">${label}</div><div style="font-size:14.5px;line-height:1.55;color:#0f172a;white-space:pre-wrap">${esc(val)}</div></div>` : '';

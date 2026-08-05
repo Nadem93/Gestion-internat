@@ -56,13 +56,30 @@ function _trFromRow(r) {
   };
 }
 
+// Lecture BORNÉE dans le temps. sbGetTransmissions() rapatrie toute la table —
+// tout le contenu clinique de l'établissement — alors que l'annuaire n'affiche
+// qu'une seule phrase par résident. Le temps d'ouverture grandissait
+// indéfiniment avec l'âge de l'établissement.
+async function sbGetTransmissionsDepuis(dateIso) {
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('transmissions').select('*')
+      .gte('date', dateIso)
+      .order('created_at', { ascending: false }));
+    return data.map(_trFromRow);
+  } catch (error) { console.error('[transmissions] lecture bornée', error); return null; }
+}
+
 async function sbGetTransmissions() {
-  const { data, error } = await supabaseClient
-    .from('transmissions')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) { console.error(error); toast('Erreur chargement transmissions', 'error'); return []; }
-  return data.map(_trFromRow);
+  // sbFetchAll : sans lui, les transmissions au-delà de 1000 (suivis anciens
+  // encore « à faire ») disparaîtraient en silence.
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('transmissions')
+      .select('*')
+      .order('created_at', { ascending: false }));
+    return data.map(_trFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement transmissions', 'error'); return []; }
 }
 
 // Écriture DÉFENSIVE : les colonnes ajoutées par migration (accompagnement, puis

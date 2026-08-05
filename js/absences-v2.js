@@ -59,6 +59,20 @@
   };
   const svg = (p, w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' +
     (w || 2) + '" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  /* SVG dimensionné pour la pastille .dc-chip / .dc-kpi-ico du langage « Console Data ». */
+  const svgC = p => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  /* En-tête « Console Data » : pastille colorée + micro-label + titre + pill mono optionnelle. */
+  const dcHead = (color, ico, eyebrow, title, pill) =>
+    '<div class="dc-head"><div class="dc-head-l">' +
+      '<span class="dc-chip" style="background:' + color + '22;color:' + color + '">' + svgC(ico) + '</span>' +
+      '<div style="min-width:0"><div class="dc-eyebrow">' + esc(eyebrow) + '</div>' +
+      '<div class="dc-title">' + title + '</div></div></div>' +
+      (pill != null && pill !== '' ? '<span class="dc-pill dim">' + esc(pill) + '</span>' : '') +
+    '</div>';
+  /* Badge monospace « Console Data » à couleur libre, avec pastille. */
+  const dcb = (c, l) => '<span class="dc-badge" style="background:' + c + '1f;color:' + c +
+    ';border:1px solid ' + c + '44"><span class="d" style="background:' + c + '"></span>' + esc(l) + '</span>';
 
   /* ── Utilitaires ────────────────────────────────────────────────────── */
   /* escHtml() renvoie '' pour toute valeur falsy : on force la chaîne d'abord,
@@ -211,9 +225,9 @@
       { n: sansJustif.length, l: 'Justificatif manquant', c: '#8095b4', i: IC.file }
     ];
     box.innerHTML = cards.map(k => `
-      <div class="v2-k">
-        <span class="v2-k-ico" style="background:${k.c}22;color:${k.c}">${svg(k.i)}</span>
-        <div><span class="v2-k-n" style="color:${k.c}">${esc(k.n)}</span><span class="v2-k-l">${esc(k.l)}</span></div>
+      <div class="dc-kpi" style="--dc-c:${k.c}">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">${esc(k.l)}</span><span class="dc-kpi-ico" style="color:${k.c}">${svgC(k.i)}</span></div>
+        <div class="dc-kpi-val" style="color:${k.c}">${esc(k.n)}</div>
       </div>`).join('');
   }
 
@@ -250,7 +264,9 @@
     const cols = ['Salarié', 'Motif', 'Période', 'Durée', 'Justificatif', 'Statut'];
 
     if (!list.length) {
-      box.innerHTML = `<div class="abv-tblwrap"><div class="abv-vide">Aucune absence pour ce filtre.</div></div>`;
+      box.innerHTML = `<div class="dc-card">
+        ${dcHead('#818cf8', IC.cal, 'Suivi', 'Absences déclarées', 0)}
+        <div class="abv-tblwrap"><div class="abv-vide">Aucune absence pour ce filtre.</div></div></div>`;
       return;
     }
 
@@ -284,14 +300,16 @@
         <td class="abv-per">${esc(periode(a))}</td>
         <td class="abv-dur">${oc && !a.fin ? 'en cours' : jours(a) + ' j'}</td>
         <td>${justCell}</td>
-        <td><span class="abv-st" style="--sc:${st.c}">${st.l}</span></td>
+        <td>${dcb(st.c, st.l)}</td>
         <td><div class="abv-acts">${acts.join('')}</div></td>
       </tr>${sub}`;
     }).join('');
 
-    box.innerHTML = `<div class="abv-tblwrap"><div class="abv-scroll"><table class="abv-tbl">
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#818cf8', IC.cal, 'Suivi', 'Absences déclarées', list.length)}
+      <div class="abv-tblwrap"><div class="abv-scroll"><table class="abv-tbl">
       <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${rows}</tbody></table></div></div>`;
+      <tbody>${rows}</tbody></table></div></div></div>`;
   }
 
   /* ══ REGISTRE DES AT ═══════════════════════════════════════════════════ */
@@ -305,21 +323,19 @@
       const det = [];
       det.push(a.declareeCpam ? 'DAT transmise · CPAM' : 'DAT à transmettre');
       if (a.fin) det.push('reprise le ' + fdate(a.fin));
-      return `<div class="abv-line">
+      return `<div class="abv-line" style="border-left:3px solid ${t(a).c};padding-left:12px">
         <span class="abv-av abv-av-sm" style="background:${colorOf(a)}">${esc(iniOf(a))}</span>
         <div class="abv-line-b">
           <div class="abv-line-t">${esc(nomOf(a))} — ${esc(t(a).l)}</div>
           <div class="abv-line-s">${esc(fdate(a.debut))} · ${esc(det.join(' · '))}</div>
         </div>
-        <span class="abv-line-tag" style="--sc:${st.c}">${st.l}</span>
+        ${dcb(st.c, st.l)}
       </div>`;
     }).join('') : `<div class="v2-blk-vide">Aucun accident du travail enregistré.</div>`;
 
-    box.innerHTML = `<div class="abv-tint-red">
-      <div class="abv-h"><span style="color:#fca5a5">${svg(IC.injury)}</span>
-        <span class="abv-h-t red">Accidents du travail — registre</span>
-        <span class="abv-h-x">${ats.length}</span></div>
-      ${body}</div>`;
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#ef4444', IC.injury, 'Registre', 'Accidents du travail', ats.length)}
+      <div class="dc-body">${body}</div></div>`;
   }
 
   /* ══ RAIL ══════════════════════════════════════════════════════════════ */
@@ -333,18 +349,16 @@
     const vals = mois.map(m => ({ l: m.l, v: tauxMois(all, m.ym) }));
     const max = Math.max(1, ...vals.map(v => v.v || 0));
     const cur = vals[vals.length - 1].v;
-    box.innerHTML = `<div class="v2-blk v2-rail-blk">
-      <div class="abv-h" style="margin-bottom:14px">
-        <span class="abv-h-t">Taux d'absentéisme</span>
-        <span class="abv-rail-val">${cur == null ? '—' : cur.toFixed(1).replace('.', ',') + ' %'}</span>
-      </div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#fb7185', IC.alert, 'Mensuel', 'Taux d\'absentéisme', cur == null ? '—' : cur.toFixed(1).replace('.', ',') + ' %')}
+      <div class="dc-body">
       <div class="abv-chart">${vals.map(v => `
         <div class="abv-chart-c">
           <div class="abv-chart-b" style="height:${Math.round(((v.v || 0) / max) * 100)}%" title="${v.v == null ? '—' : v.v.toFixed(1) + ' %'}"></div>
           <div class="abv-chart-l">${v.l}</div>
         </div>`).join('')}</div>
       <div class="abv-hint" style="margin:10px 0 0">Jours d'absence rapportés à l'effectif actif.</div>
-    </div>`;
+    </div></div>`;
   }
 
   function renderMotifs(all) {
@@ -353,14 +367,15 @@
     all.forEach(a => { par[a.type] = (par[a.type] || 0) + jours(a); });
     const rows = TYPE_ORDER.filter(k => par[k]).map(k => ({ k, n: par[k] }));
     const max = Math.max(1, ...rows.map(r => r.n));
-    box.innerHTML = `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-t" style="margin-bottom:16px">Par motif (jours)</div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#818cf8', IC.med, 'Répartition', 'Par motif (jours)', '')}
+      <div class="dc-body">
       ${rows.length ? rows.map(r => `
-        <div class="abv-motif">
+        <div class="abv-motif" style="border-left:3px solid ${TYPE[r.k].c};padding-left:12px">
           <div class="abv-motif-h"><span class="abv-motif-l">${esc(TYPE[r.k].l)}</span><span class="abv-motif-n">${r.n} j</span></div>
           <div class="v2-prog"><span style="width:${Math.round((r.n / max) * 100)}%;background:${TYPE[r.k].c}"></span></div>
         </div>`).join('') : '<div class="v2-blk-vide">Aucune absence enregistrée.</div>'}
-    </div>`;
+    </div></div>`;
   }
 
   function renderRetours(all) {
@@ -369,16 +384,16 @@
     const avecFin = ouverts.filter(a => a.fin).sort((a, b) => a.fin.localeCompare(b.fin));
     const sansFin = ouverts.filter(a => !a.fin);
     const list = avecFin.concat(sansFin).slice(0, 6);
-    box.innerHTML = `<div class="abv-tint-amber">
-      <div class="abv-h" style="margin-bottom:12px"><span style="color:#fbbf24">${svg(IC.cal)}</span>
-        <span class="abv-h-t amber">Retours prévus</span></div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#f59e0b', IC.cal, 'Planning', 'Retours prévus', list.length || '')}
+      <div class="dc-body">
       ${list.length ? list.map(a => `
-        <div class="abv-line" style="padding:8px 0">
+        <div class="abv-line" style="padding:8px 0 8px 12px;border-left:3px solid #f59e0b">
           <span class="abv-av abv-av-xs" style="background:${colorOf(a)}">${esc(iniOf(a))}</span>
           <span class="abv-line-b" style="font-size:11.5px;color:var(--v2-t3)">${esc(nomOf(a))}</span>
-          <span class="abv-line-plain" style="--sc:#fbbf24;font-size:11px">${a.fin ? esc(fdate(a.fin)) : 'à définir'}</span>
+          ${dcb('#f59e0b', a.fin ? fdate(a.fin) : 'à définir')}
         </div>`).join('') : '<div class="v2-blk-vide">Aucun retour attendu.</div>'}
-    </div>`;
+    </div></div>`;
   }
 
   /* ══ DÉCLARATION AT (absences_at_etapes) ═══════════════════════════════ */
@@ -410,10 +425,9 @@
     const box = el('abDeclAT'); if (!box) return;
     const a = atCourant(all);
     if (!a) {
-      box.innerHTML = `<div class="abv-tint-red">
-        <div class="abv-h"><span style="color:#fca5a5">${svg(IC.file)}</span>
-          <span class="abv-h-t red">Déclaration AT</span></div>
-        <div class="v2-blk-vide">Aucun accident du travail en cours.</div></div>`;
+      box.innerHTML = `<div class="dc-card">
+        ${dcHead('#ef4444', IC.file, 'Procédure', 'Déclaration AT', '')}
+        <div class="dc-body"><div class="v2-blk-vide">Aucun accident du travail en cours.</div></div></div>`;
       return;
     }
     const heures = Math.floor((Date.now() - new Date(a.debut + 'T00:00:00')) / 3600000);
@@ -424,21 +438,20 @@
       const clic = ed && s.code !== 'cerfa'
         ? ` role="button" tabindex="0" style="cursor:pointer" onclick="ABV.cycleEtape('${a.id}','${s.code}')" title="Changer l'état"`
         : '';
-      return `<div class="abv-line" style="padding:9px 0"${clic}>
+      return `<div class="abv-line" style="padding:9px 0 9px 12px;border-left:3px solid ${st.c}"${clic}>
         <span class="abv-step-ico" style="--sc:${st.c}">${svg(st.i, 2.4)}</span>
         <span class="abv-line-b" style="font-size:12px;color:var(--v2-t3)">${esc(s.l)}</span>
-        <span class="abv-line-plain" style="--sc:${st.c}">${st.l}</span>
+        ${dcb(st.c, st.l)}
       </div>`;
     }).join('');
 
-    box.innerHTML = `<div class="abv-tint-red">
-      <div class="abv-h"><span style="color:#fca5a5">${svg(IC.file)}</span>
-        <span class="abv-h-t red">Déclaration AT — ${esc(nomOf(a))}</span>
-        <span class="abv-h-x">${esc(delai)}</span></div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#ef4444', IC.file, 'Procédure', 'Déclaration AT — ' + esc(nomOf(a)), delai)}
+      <div class="dc-body">
       ${steps}
       ${ed ? `<button type="button" class="abv-cta" onclick="ABV.transmettreDAT('${a.id}')" ${a.declareeCpam ? 'disabled style="opacity:.55;cursor:default"' : ''}>
         ${svg(IC.send, 2.2)}${a.declareeCpam ? 'DAT déjà transmise à la CPAM' : 'Transmettre la DAT à la CPAM'}</button>` : ''}
-    </div>`;
+    </div></div>`;
   }
 
   ABV.cycleEtape = async function (absenceId, code) {
@@ -489,10 +502,9 @@
     const box = el('abVisites'); if (!box) return;
     const list = visitesAFaire(all).concat(all.filter(a => enCours(a) && a.visiteDate && !a.visiteFaite));
     const seen = {}, uniq = list.filter(a => (seen[a.id] ? false : (seen[a.id] = true)));
-    box.innerHTML = `<div class="v2-blk">
-      <div class="abv-h"><span style="color:#22d3ee">${svg(IC.med)}</span>
-        <span class="abv-h-t">Visites médicales à planifier</span>
-        <span class="abv-h-x">${uniq.length}</span></div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#22d3ee', IC.med, 'Santé au travail', 'Visites médicales à planifier', uniq.length)}
+      <div class="dc-body">
       ${uniq.length ? uniq.map(a => {
         let tag, c;
         if (!a.visiteDate) { tag = 'À prévoir'; c = '#22d3ee'; }
@@ -502,14 +514,14 @@
           : a.type === 'maternite' ? 'Reprise après maternité'
           : a.type === 'maladie_pro' ? 'Reprise après maladie professionnelle'
           : jours(a) >= 30 ? 'Arrêt de ' + jours(a) + ' jours' : 'Visite de reprise';
-        return `<div class="abv-line">
+        return `<div class="abv-line" style="border-left:3px solid ${c};padding-left:12px">
           <span class="abv-av abv-av-sm" style="background:${colorOf(a)}">${esc(iniOf(a))}</span>
           <div class="abv-line-b"><div class="abv-line-t">${esc(nomOf(a))}</div>
             <div class="abv-line-s">${esc(motif)}</div></div>
-          <span class="abv-line-tag" style="--sc:${c}">${esc(tag)}</span>
+          ${dcb(c, tag)}
         </div>`;
       }).join('') : '<div class="v2-blk-vide">Aucune visite de reprise à planifier.</div>'}
-    </div>`;
+    </div></div>`;
   }
 
   /* ══ IMPACT PLANNING (absences_impact) ═════════════════════════════════ */
@@ -528,22 +540,21 @@
       .map(r => ({ r, a: byId[String(r.absence_id)] }))
       .filter(x => enCours(x.a));
     const manque = EXTRA.missing['absences_impact'];
-    box.innerHTML = `<div class="v2-blk">
-      <div class="abv-h"><span style="color:#f59e0b">${svg(IC.cal)}</span>
-        <span class="abv-h-t">Impact planning</span></div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#f59e0b', IC.cal, 'Continuité', 'Impact planning', rows.length || '')}
+      <div class="dc-body">
       ${rows.length ? rows.map(x => {
         const cv = COUV[x.r.couverture] || COUV.non_couvert;
-        return `<div class="abv-line" style="padding:9px 0">
-          <span class="abv-dot" style="--sc:${cv.c}"></span>
+        return `<div class="abv-line" style="padding:9px 0 9px 12px;border-left:3px solid ${cv.c}">
           <div class="abv-line-b"><div class="abv-line-t">${esc(x.r.poste || '—')}</div>
             <div class="abv-line-s">${esc(periode(x.a))} (${esc(nomOf(x.a))})${x.r.detail ? ' · ' + esc(x.r.detail) : ''}</div></div>
-          <span class="abv-line-plain" style="--sc:${cv.c}">${cv.l}</span>
+          ${dcb(cv.c, cv.l)}
         </div>`;
       }).join('') : `<div class="v2-blk-vide">${manque
         ? 'Postes impactés non disponibles — exécutez ' + SQL_FILE + '.'
         : 'Aucun poste impacté renseigné.'}</div>`}
       <a class="abv-cta abv-cta-rose" href="planning-equipe.html">${svg(IC.swap, 2.2)}Chercher un remplaçant</a>
-    </div>`;
+    </div></div>`;
   }
 
   /* ══ COÛT DES ABSENCES (absences_couts) ════════════════════════════════ */
@@ -561,24 +572,25 @@
     const total = POSTES.reduce((s, p) => s + (sum[p.code] || 0), 0);
     const vide = !rows.length;
     const manque = EXTRA.missing['absences_couts'];
-    box.innerHTML = `<div class="abv-tint-orange">
-      <div class="v2-blk-t abv-h-t orange" style="margin-bottom:6px">Coût des absences</div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#f59e0b', IC.factory, 'Budget', 'Coût des absences', 'cumul ' + annee)}
+      <div class="dc-body">
       <div class="abv-cout-n">${vide ? '—' : eur(total)}</div>
       <div class="abv-cout-s">cumul ${annee}</div>
       ${POSTES.map(p => `
-        <div class="abv-cout-r"><span class="abv-cout-l">${p.l}</span>
+        <div class="abv-cout-r" style="border-left:3px solid ${p.c};padding-left:12px"><span class="abv-cout-l">${p.l}</span>
           <span class="abv-cout-v" style="--sc:${p.c}">${sum[p.code] == null ? '—' : eur(sum[p.code])}</span></div>`).join('')}
       ${vide ? `<div class="abv-hint" style="margin:14px 0 0">${manque
         ? 'Montants non disponibles — exécutez ' + SQL_FILE + '.'
         : 'Aucun montant saisi pour ' + annee + '.'}</div>` : ''}
-    </div>`;
+    </div></div>`;
   }
 
   /* ══ FACTEUR BRADFORD ══════════════════════════════════════════════════ */
   function renderBradford(all) {
     const box = el('abBradford'); if (!box) return;
     const limite = new Date(); limite.setFullYear(limite.getFullYear() - 1);
-    const lim = limite.toISOString().slice(0, 10);
+    const lim = isoJour(limite);
     const par = {};
     all.filter(a => a.debut >= lim).forEach(a => {
       const k = String(a.employeId || a.employeNom);
@@ -588,20 +600,20 @@
     const list = Object.values(par)
       .map(x => ({ ...x, score: x.s * x.s * x.d }))
       .sort((x, y) => y.score - x.score).slice(0, 4);
-    box.innerHTML = `<div class="v2-blk">
-      <div class="abv-h" style="margin-bottom:6px"><span style="color:#fb7185">${svg(IC.med)}</span>
-        <span class="abv-h-t">Facteur Bradford</span></div>
+    box.innerHTML = `<div class="dc-card">
+      ${dcHead('#fb7185', IC.med, 'Récurrence', 'Facteur Bradford', '')}
+      <div class="dc-body">
       <div class="abv-hint">Absences courtes &amp; répétées · 12 derniers mois (S² × D)</div>
       ${list.length ? list.map(x => {
         const c = x.score >= 200 ? '#ef4444' : x.score >= 50 ? '#f59e0b' : '#34d399';
-        return `<div class="abv-line" style="padding:9px 0">
+        return `<div class="abv-line" style="padding:9px 0 9px 12px;border-left:3px solid ${c}">
           <span class="abv-av abv-av-xs" style="background:${colorOf(x.a)};width:28px;height:28px">${esc(iniOf(x.a))}</span>
           <div class="abv-line-b"><div class="abv-line-t">${esc(nomOf(x.a))}</div>
             <div class="abv-line-s">${x.s} absence${x.s > 1 ? 's' : ''} · ${x.d} jour${x.d > 1 ? 's' : ''}</div></div>
-          <span class="abv-score" style="--sc:${c}">${x.score}</span>
+          ${dcb(c, x.score)}
         </div>`;
       }).join('') : '<div class="v2-blk-vide">Aucune absence sur 12 mois.</div>'}
-    </div>`;
+    </div></div>`;
   }
 
   /* ══ RENDU GLOBAL ══════════════════════════════════════════════════════ */

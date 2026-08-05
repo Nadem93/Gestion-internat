@@ -110,18 +110,86 @@ body.v2 .v2-shell {
 }
 
 /* ── Top bar ──────────────────────────────────────────────────────────── */
-.v2-top { display: flex; align-items: center; gap: 18px; padding: 22px 30px 18px; flex-wrap: wrap; }
+/* ── BARRE SUPÉRIEURE « pilule flottante » ────────────────────────────────
+   La barre ne court plus bord à bord : elle se détache en pilule posée sur le
+   fond de .v2-shell, avec une ombre douce — même famille visuelle que les
+   cartes de modules et les bandeaux KPI.
+
+   Tout se fait en CSS sur le balisage existant : les 62 pages qui portent
+   .v2-top gardent leur HTML, y compris les deux variantes (accueil = logo +
+   .v2-brand ; pages internes = logo + .v2-eyebrow/.v2-top-title). */
+.v2-top {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 14px 18px 0; padding: 8px 10px 8px 13px;
+  background: var(--v2-s-alt); border: 1px solid var(--v2-b);
+  border-radius: 999px; box-shadow: 0 6px 20px rgba(15,38,70,.06);
+}
 .v2-logo {
-  width: 42px; height: 42px; border-radius: var(--v2-r-ctrl); flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, var(--v2-steel), var(--v2-indigo));
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--v2-display); font-weight: 700; font-size: 18px; color: #fff;
+  font-family: var(--v2-display); font-weight: 700; font-size: 14px; color: #fff;
 }
+/* Sur-titre et titre se resserrent : dans une pilule de 48 px, le titre à
+   19 px et l'eyebrow à 11 px ne tenaient pas sans faire enfler la barre. */
 .v2-eyebrow {
-  font-family: var(--v2-display); font-size: 11px; font-weight: 700;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--v2-t8);
+  font-family: var(--v2-display); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--v2-t8);
 }
-.v2-top-title { font-size: 19px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.v2-top-title { font-size: 14px; font-weight: 700; color: var(--v2-t2); letter-spacing: -.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Contrôles de la barre : ronds, même gabarit de 32 px. */
+.v2-top .v2-btn-ico, .v2-top .acc-bell, .v2-top .theme-toggle, .v2-top .v2-btn-sm.v2-btn-ico {
+  width: 32px !important; height: 32px !important; border-radius: 50% !important; padding: 0 !important;
+}
+.v2-top .acc-bell svg { width: 16px; height: 16px; }
+/* Le champ de recherche adopte la forme de la pilule. */
+.v2-top .v2-search, .v2-top .search-box {
+  height: 32px !important; border-radius: 999px !important;
+  background: var(--v2-s-card); border: 1px solid var(--v2-b-soft);
+}
+/* Compte : l'avatar suffit dans une pilule — le nom est déjà dans le menu qui
+   s'ouvre au clic, et il faisait doublon avec le bloc utilisateur de l'accueil. */
+.v2-top .v2-user-chip { padding: 0; border: none; background: none; gap: 0; }
+.v2-top .v2-user-chip .v2-user-name, .v2-top .v2-user-chip .v2-user-cv { display: none; }
+.v2-top .v2-user-av { width: 30px; height: 30px; }
+/* Menu utilisateur (barre V2) : avatar + nom, clic → « Se déconnecter ».
+   Injecté sur toutes les pages .v2-top par js/app.js (injectV2UserMenu). */
+.v2-user-chip { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px;
+  border-radius: 999px; background: var(--v2-s-card); border: 1px solid var(--v2-b);
+  cursor: pointer; position: relative; user-select: none; flex-shrink: 0; transition: background .13s ease; }
+.v2-user-chip:hover { background: var(--v2-s-active, rgba(255,255,255,.09)); }
+.v2-user-chip:focus-visible { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
+.v2-user-av { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--v2-steel, #7c6fcd), var(--v2-indigo, #a78bfa)); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+.v2-user-name { font-size: 12.5px; font-weight: 600; color: var(--v2-t2);
+  max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v2-user-chip .v2-user-cv { width: 14px; height: 14px; color: var(--v2-t6); flex-shrink: 0; }
+/* position: fixed + rattaché à <body> par le JS : le menu échappe au
+   overflow:hidden de .v2-shell (sinon il serait coupé sur une page courte).
+   Coordonnées (top/right) posées dynamiquement dans injectV2UserMenu. */
+.v2-user-menu { display: none; position: fixed; min-width: 196px; z-index: 2000;
+  background-color: var(--v2-bg); background-image: linear-gradient(var(--v2-s-alt), var(--v2-s-alt));
+  border: 1px solid var(--v2-b); border-radius: 12px; box-shadow: 0 14px 36px rgba(0,0,0,.42); padding: 6px; }
+.v2-user-menu.open { display: block; }
+.v2-user-menu-h { padding: 9px 12px 8px; border-bottom: 1px solid var(--v2-b); margin-bottom: 4px; }
+.v2-user-menu-h b { display: block; font-size: 12.5px; color: var(--v2-t1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v2-user-menu-h span { font-size: 11px; color: var(--v2-t6); }
+.v2-logout-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 12px;
+  border: 0; background: transparent; border-radius: 8px; color: #f87171; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; text-align: left; transition: background .13s ease; font-family: inherit; }
+.v2-logout-item:hover { background: rgba(248,113,113,.12); }
+/* Entrée neutre du menu utilisateur (« Mon espace »), même gabarit que la
+   déconnexion mais sans la teinte d'alerte. */
+.v2-menu-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 12px;
+  border-radius: 9px; border: none; background: none; cursor: pointer; text-decoration: none;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--v2-t3); text-align: left; }
+.v2-menu-item:hover { background: var(--v2-s-hover); color: var(--v2-t2); }
+.v2-menu-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.v2-logout-item svg { width: 16px; height: 16px; }
+@media (max-width: 600px) { .v2-user-name, .v2-user-chip .v2-user-cv { display: none; } }
 .v2-sys {
   display: flex; align-items: center; gap: 9px; padding: 7px 13px; border-radius: 999px;
   background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
@@ -241,6 +309,304 @@ body.v2 .v2-shell {
 .at-pill-warn   { background: rgba(245,158,11,.16); color: #fcd34d; }
 .at-pill-muted  { background: var(--v2-s-sub); color: var(--v2-t7); }
 .at-empty { padding: 16px 20px 20px; font-size: 13px; color: var(--v2-t7); }
+
+/* ── Tableau de bord — direction « Console Data » (dc-*) ───────────────── */
+.dc-card { background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card); overflow: hidden; }
+.dc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 15px 18px; border-bottom: 1px solid var(--v2-b-soft); }
+.dc-head.nb { border-bottom: none; }
+.dc-head-l { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.dc-chip { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.dc-chip.indigo { background: rgba(99,102,241,.14); color: #6366f1; }
+.dc-chip.red    { background: rgba(239,68,68,.12);  color: #ef4444; }
+.dc-chip.cyan   { background: rgba(34,211,238,.16);  color: #22d3ee; }
+.dc-chip.violet { background: rgba(139,92,246,.14);  color: #8b5cf6; }
+.dc-chip.green  { background: rgba(16,185,129,.14);  color: #10b981; }
+.dc-eyebrow { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--v2-t7); line-height: 1; margin-bottom: 5px; }
+.dc-title { font-size: 14px; font-weight: 700; letter-spacing: -.1px; color: var(--v2-t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-pill { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 600; background: var(--v2-s-sub); color: var(--v2-t5); border: 1px solid var(--v2-b); padding: 5px 10px; border-radius: 8px; letter-spacing: .02em; white-space: nowrap; }
+.dc-pill.dim { color: var(--v2-t7); }
+
+/* Présences — barres */
+.dc-bars-wrap { padding: 20px 20px 16px; }
+.dc-bars { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 12px; align-items: end; height: 140px; }
+.dc-bcol { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 8px; }
+.dc-bval { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 600; color: var(--v2-t5); }
+.dc-bar { width: 100%; max-width: 36px; border-radius: 7px 7px 3px 3px; background: linear-gradient(180deg, #6366f1, #4f46e5); }
+.dc-bar.we { background: linear-gradient(180deg, #67e8f9, #22d3ee); }
+.dc-blbl { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; color: var(--v2-t7); font-weight: 600; }
+.dc-bars-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--v2-b-soft); }
+.dc-legend { display: flex; gap: 16px; }
+.dc-legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--v2-t5); }
+.dc-sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.dc-foot-note { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; color: var(--v2-t7); }
+
+/* Incidents — donut */
+.dc-donut-body { padding: 20px; display: flex; align-items: center; gap: 20px; }
+.dc-donut { width: 112px; height: 112px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; position: relative; }
+.dc-donut::after { content: ""; position: absolute; inset: 15px; border-radius: 50%; background: var(--v2-s-card); box-shadow: inset 0 0 0 1px var(--v2-b-soft); }
+.dc-donut-c { position: relative; z-index: 1; text-align: center; }
+.dc-donut-c b { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 28px; font-weight: 700; color: var(--v2-t3); line-height: 1; display: block; }
+.dc-donut-c small { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: var(--v2-t7); }
+.dc-dleg { display: flex; flex-direction: column; flex: 1; }
+.dc-dl { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--v2-b-soft); }
+.dc-dl:last-child { border-bottom: none; }
+.dc-dl-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.dc-dl-name { font-size: 12.5px; color: var(--v2-t5); flex: 1; }
+.dc-dl-num { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 13px; font-weight: 700; color: var(--v2-t3); }
+
+/* Accès rapides */
+.dc-qa { padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dc-qa-btn { display: flex; align-items: center; gap: 10px; background: var(--v2-s-sub); border: 1px solid var(--v2-b); border-radius: 11px; padding: 11px 12px; text-decoration: none; transition: border-color .15s, background .15s; }
+.dc-qa-btn:hover { border-color: rgba(99,102,241,.4); }
+.dc-qa-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--v2-s-card); border: 1px solid var(--v2-b); display: flex; align-items: center; justify-content: center; font-size: 14px; flex: none; }
+.dc-qa-txt { font-size: 12px; font-weight: 600; color: var(--v2-t3); line-height: 1.2; }
+
+/* Équipe présente */
+.dc-team { padding: 6px 0; }
+.dc-trow { display: flex; align-items: center; gap: 11px; padding: 9px 18px; border-bottom: 1px solid var(--v2-b-soft); }
+.dc-trow:last-child { border-bottom: none; }
+.dc-av { width: 30px; height: 30px; border-radius: 9px; flex: none; display: flex; align-items: center; justify-content: center; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+.dc-team-name { font-size: 12.5px; font-weight: 550; color: var(--v2-t3); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-presence { display: inline-flex; align-items: center; gap: 6px; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; color: var(--v2-t5); text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+.dc-presence .pd { width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.14); }
+.dc-count { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 700; background: rgba(16,185,129,.14); color: #10b981; border: 1px solid rgba(16,185,129,.28); padding: 3px 9px; border-radius: 7px; }
+
+/* Tuiles KPI à liseré */
+.dc-kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+/* Responsive : 4 KPI ne tiennent pas sous ~900px (utilisé par dashboard, RH,
+   médicaments #medStats, notes… — les classes dédiées v2-med-stats/nt-kpis
+   ne sont plus posées par le rendu). */
+@media (max-width: 900px) { .dc-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; } }
+@media (max-width: 380px) { .dc-kpis { grid-template-columns: minmax(0,1fr); } }
+.dc-kpi { background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card); padding: 15px 17px; position: relative; overflow: hidden; }
+.dc-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--dc-c, #6366f1); }
+.dc-kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.dc-kpi-label { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--v2-t7); }
+.dc-kpi-ico { font-size: 15px; opacity: .85; }
+.dc-kpi-val { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 30px; font-weight: 700; line-height: 1; color: var(--v2-t3); letter-spacing: -.5px; }
+.dc-kpi-sub { font-size: 11.5px; color: var(--v2-t5); margin-top: 7px; }
+
+/* ── KPI EN BANDEAU SEGMENTÉ ──────────────────────────────────────────────
+   Les tuiles fusionnent en UN seul panneau découpé par de fins filets, au lieu
+   de N cartes séparées. Le liseré coloré de gauche cède la place à une pastille
+   devant le libellé, et la valeur passe dans la couleur de l'indicateur.
+
+   Le conteneur n'a pas de nom commun (chaque page a le sien : .dc-kpis,
+   .pl-stats, .vq-kpis, .ds-kpis, #medStats…) : on le désigne par son contenu
+   avec :has(). Tout est conditionné à ce sélecteur, y compris les règles qui
+   dépouillent la tuile — un navigateur qui ne connaît pas :has() ignore le bloc
+   ENTIER et retombe sur les cartes individuelles ci-dessus, intactes.
+
+   Les filets sont dessinés en box-shadow sur chaque tuile (bord gauche + bord
+   haut) et non en gap coloré : avec un gap, une grille de 4 colonnes contenant
+   3 tuiles laisserait la 4ᵉ cellule vide peinte en gris. L'overflow:hidden du
+   panneau rogne les filets des tuiles de bord. Marche pour n'importe quel
+   nombre de colonnes et de lignes, sans nth-child. */
+div:has(> .dc-kpi) {
+  background: var(--v2-s-card);
+  border: 1px solid var(--v2-b);
+  border-radius: var(--v2-r-card);
+  overflow: hidden;
+  gap: 0;
+}
+div:has(> .dc-kpi) > .dc-kpi {
+  background: none; border: none; border-radius: 0;
+  padding: 15px 18px; min-width: 0;
+  box-shadow: -1px 0 0 var(--v2-b-soft), 0 -1px 0 var(--v2-b-soft);
+}
+div:has(> .dc-kpi) > .dc-kpi::before { display: none; }
+div:has(> .dc-kpi) > .dc-kpi:hover { transform: none; box-shadow: -1px 0 0 var(--v2-b-soft), 0 -1px 0 var(--v2-b-soft); }
+/* Pastille de couleur devant le libellé, à la place du liseré. */
+div:has(> .dc-kpi) > .dc-kpi .dc-kpi-label { display: inline-flex; align-items: center; gap: 7px; }
+div:has(> .dc-kpi) > .dc-kpi .dc-kpi-label::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--dc-c, #6366f1);
+}
+div:has(> .dc-kpi) > .dc-kpi .dc-kpi-ico { opacity: .5; }
+div:has(> .dc-kpi) > .dc-kpi .dc-kpi-val {
+  font-family: var(--v2-display); font-size: 30px; font-weight: 800; letter-spacing: -.02em;
+}
+/* La valeur est parfois coloriée en style inline par les pages de rendu
+   (style="color:#16a34a"). En thème clair ces teintes vives tombent à ~2:1 sur
+   fond blanc, en thème sombre les teintes foncées (#1e3a5f) disparaissent.
+   !important est le seul moyen de les rattraper sans toucher les ~45 fichiers
+   de rendu concernés — même correctif que .cdn-n et .mb-n. */
+html.clair div:has(> .dc-kpi) > .dc-kpi .dc-kpi-val {
+  color: color-mix(in srgb, var(--dc-c, #6366f1) 72%, #000) !important;
+}
+html:not(.clair) div:has(> .dc-kpi) > .dc-kpi .dc-kpi-val {
+  color: color-mix(in srgb, var(--dc-c, #6366f1) 62%, #fff) !important;
+}
+/* Seuls les KPI cliquables (pilotage) réagissent au survol. */
+div:has(> .dc-kpi) > button.dc-kpi { cursor: pointer; text-align: left; font: inherit; transition: background .15s; }
+div:has(> .dc-kpi) > button.dc-kpi:hover { background: color-mix(in srgb, var(--dc-c, #6366f1) 7%, transparent); }
+div:has(> .dc-kpi) > button.dc-kpi:focus-visible { outline: 2px solid var(--dc-c, #6366f1); outline-offset: -2px; }
+
+/* Tableau incidents — liserés + badges mono */
+.dc-thead, .dc-trow2 { display: grid; grid-template-columns: 118px minmax(0,1.4fr) minmax(0,1fr) 116px 118px; }
+/* Mobile : les 3 colonnes fixes (352px) rognaient le tableau — on garde
+   Date · Résident · Gravité et on masque Type et Statut. */
+@media (max-width: 700px) {
+  .dc-thead, .dc-trow2 { grid-template-columns: 84px minmax(0,1.5fr) 100px; }
+  .dc-thead > :nth-child(3), .dc-thead > :nth-child(5),
+  .dc-trow2 > :nth-child(3), .dc-trow2 > :nth-child(5) { display: none; }
+}
+.dc-thead { padding: 11px 20px 11px 22px; border-bottom: 1px solid var(--v2-b); }
+.dc-th { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--v2-t7); font-weight: 600; }
+.dc-trow2 { align-items: center; padding: 13px 20px 13px 22px; border-bottom: 1px solid var(--v2-b-soft); position: relative; }
+.dc-trow2:last-child { border-bottom: none; }
+.dc-trow2::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--dc-c, transparent); }
+.dc-trow2:hover { background: var(--v2-s-sub); }
+.dc-td-date { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 12px; color: var(--v2-t5); }
+.dc-td-res { font-size: 13px; font-weight: 600; color: var(--v2-t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
+.dc-td-type { font-size: 12.5px; color: var(--v2-t5); text-transform: capitalize; }
+.dc-badge { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 7px; letter-spacing: .03em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
+.dc-badge .d { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.dc-b-red    { background: rgba(239,68,68,.16);  color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
+.dc-b-amber  { background: rgba(245,158,11,.16); color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
+.dc-b-green  { background: rgba(16,185,129,.16); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); }
+.dc-b-indigo { background: rgba(99,102,241,.16); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
+.dc-b-gray   { background: var(--v2-s-sub); color: var(--v2-t5); border: 1px solid var(--v2-b); }
+.dc-b-cyan   { background: rgba(34,211,238,.16); color: #67e8f9; border: 1px solid rgba(34,211,238,.3); }
+.dc-b-red .d { background: #ef4444; } .dc-b-amber .d { background: #f59e0b; } .dc-b-green .d { background: #10b981; } .dc-b-indigo .d { background: #6366f1; } .dc-b-gray .d { background: var(--v2-t7); } .dc-b-cyan .d { background: #22d3ee; }
+.dc-table-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 12px 22px; border-top: 1px solid var(--v2-b-soft); }
+.dc-table-foot .l { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; color: var(--v2-t7); }
+.dc-empty { padding: 18px 20px; font-size: 13px; color: var(--v2-t7); }
+.dc-body { padding: 16px 18px; }
+.dc-body > :first-child { margin-top: 0; }
+
+/* ── Alertes & notifications — file de triage (habillage Console Data) ─── */
+/* Barre de progression du triage */
+.al-prog { display: flex; align-items: center; gap: 14px; background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: var(--v2-r-card); box-shadow: 0 1px 2px rgba(15,38,70,.04); padding: 13px 18px; margin-bottom: 16px; }
+.al-prog-txt { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--v2-t7); white-space: nowrap; }
+.al-prog-bar { flex: 1; height: 8px; border-radius: 6px; background: var(--v2-s-sub); overflow: hidden; }
+.al-prog-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #6366f1, #4f46e5); border-radius: 6px; }
+.al-prog-num { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 13px; font-weight: 700; color: var(--v2-t3); white-space: nowrap; }
+
+/* Section de gravité */
+.al-grp { margin-bottom: 16px; }
+.al-grp-h { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 12px 12px 0 0; background: var(--al-bg, var(--v2-s-sub)); border: 1px solid var(--v2-b); border-bottom: none; }
+.al-grp-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--al-c, #64748b); flex: none; }
+.al-grp-t { font-size: 13px; font-weight: 700; color: var(--v2-t3); }
+.al-grp-n { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 12px; font-weight: 700; color: var(--al-c, #64748b); }
+.al-grp-sub { margin-left: auto; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--v2-t7); }
+.al-grp-body { border: 1px solid var(--v2-b); border-radius: 0 0 12px 12px; overflow: hidden; background: var(--v2-s-card); }
+
+/* Ligne d'alerte compacte */
+.al-row { position: relative; display: flex; align-items: center; gap: 13px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--v2-b-soft); }
+.al-row:last-child { border-bottom: none; }
+.al-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--al-c, #64748b); }
+.al-row:hover { background: var(--v2-s-sub); }
+.al-row-ico { width: 34px; height: 34px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 15px; background: color-mix(in srgb, var(--al-c, #64748b) 14%, transparent); color: var(--al-c, #64748b); }
+.al-row-ico svg { width: 17px; height: 17px; }
+.al-row-main { flex: 1; min-width: 0; }
+.al-row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.al-row-title { font-size: 13.5px; font-weight: 600; color: var(--v2-t3); }
+.al-row-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--v2-t5); margin-top: 3px; flex-wrap: wrap; }
+.al-row-res { font-weight: 600; color: var(--v2-t3); }
+.al-row-date { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11.5px; color: var(--v2-t5); }
+.al-row-late { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 700; color: var(--al-c, #64748b); }
+.al-pris { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #059669; background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.26); padding: 2px 7px; border-radius: 6px; }
+
+/* Actions rapides (boutons-icônes) */
+.al-acts { display: flex; align-items: center; gap: 6px; flex: none; }
+.al-act { width: 33px; height: 33px; border-radius: 9px; border: 1px solid var(--v2-b); background: var(--v2-s-card); color: var(--v2-t5); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s, border-color .15s, color .15s; text-decoration: none; padding: 0; }
+.al-act svg { width: 16px; height: 16px; }
+.al-act:hover { background: var(--v2-s-sub); color: var(--v2-t3); }
+.al-act.primary { background: linear-gradient(135deg, #4f46e5, #6366f1); border-color: transparent; color: #fff; box-shadow: 0 3px 9px rgba(79,70,229,.25); }
+.al-act.primary:hover { color: #fff; }
+.al-act.occupe:hover { color: #059669; border-color: rgba(16,185,129,.4); }
+.al-act.occupe.on { color: #059669; background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); }
+.al-act.danger:hover { color: #dc2626; border-color: rgba(239,68,68,.4); }
+/* Légende des boutons d'action (au-dessus de la liste d'alertes) */
+.al-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; padding: 10px 15px; border-radius: 12px; background: var(--v2-s-card); border: 1px solid var(--v2-b); font-size: 12px; color: var(--v2-t5); }
+.al-legend-t { font-weight: 700; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--v2-t7); }
+.al-lg { display: inline-flex; align-items: center; gap: 6px; }
+.al-lg-i { display: inline-flex; }
+.al-lg-i svg { width: 14px; height: 14px; }
+
+/* Snooze inline */
+.al-snz-lbl { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--v2-t7); align-self: center; }
+.al-snz { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 600; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--v2-b); background: var(--v2-s-sub); color: var(--v2-t3); cursor: pointer; white-space: nowrap; }
+.al-snz:hover { border-color: rgba(99,102,241,.4); }
+
+/* État vide d'une section */
+.al-empty { display: flex; align-items: center; gap: 11px; padding: 15px 18px; font-size: 13px; color: var(--v2-t5); }
+.al-empty-ico { width: 26px; height: 26px; border-radius: 8px; flex: none; display: flex; align-items: center; justify-content: center; background: rgba(16,185,129,.12); color: #10b981; }
+.al-empty-ico svg { width: 15px; height: 15px; }
+.al-empty b { color: var(--v2-t3); font-weight: 600; }
+
+/* Voir plus */
+.al-more { display: block; width: 100%; text-align: center; padding: 11px; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 600; letter-spacing: .05em; color: #6366f1; background: none; border: none; border-top: 1px solid var(--v2-b-soft); cursor: pointer; }
+.al-more:hover { background: var(--v2-s-sub); }
+
+/* ── Transmissions — habillage Console Data ───────────────────────────── */
+.tc-col { display: flex; flex-direction: column; }
+.tc-col-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.tc-add { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 11px; border: 1px dashed var(--v2-b); border-radius: 11px; background: none; color: var(--v2-t7); font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.tc-add:hover { border-color: rgba(99,102,241,.45); color: #6366f1; background: var(--v2-s-sub); }
+.tc-add svg { width: 15px; height: 15px; }
+
+.tc { position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b); border-radius: 12px; padding: 12px 13px 8px; overflow: hidden; }
+.tc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--tc-c, transparent); }
+.tc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.tc-av { width: 32px; height: 32px; border-radius: 9px; flex: none; display: flex; align-items: center; justify-content: center; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 700; color: #fff; overflow: hidden; }
+.tc-av img { width: 100%; height: 100%; object-fit: cover; }
+.tc-name { font-size: 13px; font-weight: 600; color: var(--v2-t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-sub { font-size: 11px; color: var(--v2-t7); }
+.tc-time { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; color: var(--v2-t7); white-space: nowrap; }
+.tc-unread { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; flex: none; }
+.tc-body { font-size: 12.5px; color: var(--v2-t3); line-height: 1.5; margin-bottom: 9px; white-space: pre-wrap; word-break: break-word; }
+.tc-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 9px; }
+.tc-rep { background: var(--v2-s-sub); border: 1px solid var(--v2-b-soft); border-radius: 9px; padding: 8px 10px; margin-bottom: 9px; }
+.tc-foot { display: flex; align-items: center; gap: 3px; padding-top: 8px; border-top: 1px solid var(--v2-b-soft); }
+.tc-author { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10.5px; color: var(--v2-t7); font-weight: 600; }
+.tc-act { min-width: 30px; height: 30px; padding: 0 7px; border-radius: 8px; border: 1px solid transparent; background: none; color: var(--v2-t6); display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 600; transition: background .15s, color .15s; }
+.tc-act:hover { background: var(--v2-s-sub); color: var(--v2-t3); }
+.tc-act svg { width: 15px; height: 15px; }
+
+/* Bandeau prise de poste + bloc todos, en Console */
+.tc-banner { display: flex; align-items: center; gap: 13px; background: var(--v2-s-card); border: 1px solid var(--v2-b); border-left: 3px solid #6366f1; border-radius: var(--v2-r-card); box-shadow: 0 1px 2px rgba(15,38,70,.04); padding: 14px 18px; margin-bottom: 16px; }
+.tc-banner-ic { width: 38px; height: 38px; border-radius: 11px; flex: none; display: flex; align-items: center; justify-content: center; background: rgba(99,102,241,.12); color: #6366f1; }
+.tc-banner-ic svg { width: 19px; height: 19px; }
+.tc-banner-t { font-size: 14px; font-weight: 700; color: var(--v2-t3); }
+.tc-banner-s { font-size: 12px; color: var(--v2-t6); margin-top: 1px; }
+.tc-banner-b { margin-left: auto; flex: none; height: 38px; padding: 0 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,.25); }
+.tc-todo-row { display: flex; align-items: flex-start; gap: 11px; padding: 11px 16px; border-bottom: 1px solid var(--v2-b-soft); }
+.tc-todo-row:last-child { border-bottom: none; }
+.tc-todo-chk { width: 26px; height: 26px; border-radius: 8px; flex: none; border: 1.5px solid var(--v2-b); background: var(--v2-s-card); color: var(--v2-t7); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .15s; }
+.tc-todo-chk:hover { border-color: #10b981; color: #10b981; background: rgba(16,185,129,.08); }
+.tc-todo-chk svg { width: 14px; height: 14px; }
+.tc-todo-txt { font-size: 13px; color: var(--v2-t3); line-height: 1.45; }
+.tc-todo-m { font-size: 11px; color: var(--v2-t7); margin-top: 2px; }
+.tc-todo-m .old { color: #d97706; font-weight: 600; }
+/* Ligne d'historique (jours précédents) */
+.tc-histo { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--v2-b-soft); cursor: pointer; }
+.tc-histo:last-child { border-bottom: none; }
+.tc-histo:hover { background: var(--v2-s-sub); }
+.tc-histo-d { font-size: 12.5px; font-weight: 600; color: var(--v2-t3); width: 118px; flex: none; text-transform: capitalize; }
+.tc-histo-p { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; font-weight: 600; color: var(--v2-t5); padding: 3px 8px; border-radius: 6px; background: var(--v2-s-sub); }
+.tc-histo-n { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 12px; font-weight: 700; color: var(--v2-t3); width: 74px; text-align: right; flex: none; }
+
+/* ═══ Évolution « Console Data » du système V2 partagé (toutes les pages) ═══
+   Les chiffres, compteurs et badges adoptent le monospace — signature Console.
+   Placé en fin de fichier : gagne par ordre de cascade sur les définitions
+   d'origine, sans les réécrire (donc réversible et sans risque de casse). */
+.v2-num, .v2-kpi-val, .v2-tile .v2-num, .v2-stat b, .v2-col-c, .v2-tr-t,
+.v2-card-meta, .v2-chip-f .n, .v2-histo-p, .v2-gauge-val, .v2-tl-h {
+  font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: -.01em;
+}
+.v2-badge {
+  font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: .02em; font-weight: 700;
+}
+/* Titres de bloc/carte : petit micro-label mono (eyebrow) devant le picto, façon Console */
+.v2-blk-t, .v2-card-title { letter-spacing: -.1px; }
+/* Accueil : liseré Console sur les tuiles de modules et d'actions rapides */
+.v2-mod::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--mc, transparent); z-index: 1; }
+.v2-q { position: relative; overflow: hidden; }
+.v2-q::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--qc, transparent); }
 
 /* ── Boutons & contrôles ──────────────────────────────────────────────── */
 .v2-btn {
@@ -507,7 +873,10 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
 @media (max-width: 860px) {
   .v2-g2, .v2-g3 { grid-template-columns: minmax(0, 1fr); }
   .v2-body { padding: 18px 14px; }
-  .v2-top { padding: 16px 14px 12px; }
+  /* Sur deux lignes, un rayon de 999px donne une forme de gélule difforme :
+     on repasse à un rectangle très arrondi. */
+  .v2-top { margin: 10px 10px 0; padding: 8px 9px; border-radius: 18px; gap: 9px; }
+  .v2-top .v2-search, .v2-top .search-box { flex: 1 1 100%; max-width: 100% !important; }
   /* Le passage bord à bord de .v2-shell est plus bas, collé à la règle de
      largeur de page : à specificité égale c'est l'ordre qui tranche. */
 }
@@ -520,7 +889,7 @@ body.v2 [style*="#a5f3fc"] { border-color: rgba(34,211,238,.3) !important; }
 /* ══════════════════════════════════════════════════════════════════════════
    ACCUEIL V2 — d'après la maquette « Accueil - refonte (bento) »
    ══════════════════════════════════════════════════════════════════════════ */
-.v2-brand { font-family: var(--v2-display); font-size: 20px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #fff; }
+.v2-brand { font-family: var(--v2-display); font-size: 13.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--v2-t2); white-space: nowrap; }
 .v2-hero-eyebrow { font-family: var(--v2-display); font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--v2-t8); }
 .v2-hero-h1 { font-family: var(--v2-display); font-size: 34px; font-weight: 700; letter-spacing: -.02em; color: #fff; margin: 6px 0 0; }
 
@@ -615,7 +984,18 @@ body.v2 .v2-body > .content { padding: 0; max-width: none; margin: 0; }
 /* minmax(0, 1fr) et NON 1fr : le minimum implicite de `1fr` est min-content ;
    une carte au contenu large empêchait alors la grille de rétrécir, elle
    débordait de sa colonne et le rail de détail passait par-dessus les cartes. */
-body.v2 .res-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+/* Cartes résidents : le nombre de colonnes s'ADAPTE à la largeur de la fenêtre
+   (autant de cartes que possible, chacune ≥ 210px → jamais tassées). */
+/* 2 cartes par ligne : la carte sélectionnée déplie la fiche détaillée en son
+   sein (accordéon), il faut donc de la largeur — le rail latéral est retiré. */
+/* 3 cartes par ligne. align-items: start est essentiel : sans lui, une carte
+   dépliée étirerait toute sa ligne à sa hauteur. minmax(0,1fr) et NON 1fr :
+   le plancher implicite `auto` = max-content laisserait un nom long ou la fiche
+   dépliée ÉLARGIR la colonne — c'est exactement ce qu'on ne veut pas ici. */
+body.v2 .res-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: none; margin: 0; align-items: start; }
+/* Sous 1180 px le rail est passé sous la liste : la grille récupère la largeur
+   entière, elle peut donc rester à 3 colonnes un peu plus longtemps. */
+@media (max-width: 900px)  { body.v2 .res-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .v2-res {
   position: relative; background: var(--v2-s-card); border: 1px solid var(--v2-b-ctrl);
   border-radius: var(--v2-r-card2); padding: 16px; cursor: pointer;
@@ -638,11 +1018,112 @@ body.v2 .res-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1f
 .v2-res-obj-h { display: flex; align-items: baseline; justify-content: space-between;
   font-size: 10.5px; color: var(--v2-t6); margin-bottom: 5px; }
 .v2-res-ico { display: flex; gap: 8px; list-style: none; margin: 0; padding: 0; }
-@media (max-width: 1100px) { body.v2 .res-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-/* minmax(0,1fr) et NON 1fr : sinon le plancher implicite `auto` = max-content
+/* (la règle 620px « 2 colonnes » a été retirée : c'est désormais le défaut.)
+   minmax(0,1fr) et NON 1fr : sinon le plancher implicite `auto` = max-content
    d'une carte au nom/référent long fait grossir la colonne au-delà de l'écran
    (la carte débordait du téléphone). Voir la note plus haut (l.563). */
-@media (max-width: 700px)  { body.v2 .res-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px)  { body.v2 .res-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Carte résident « Halo coloré » (.rc-*) — thème-aware ─────────────────
+   Plus de bandeau plein : la couleur du résident devient un HALO diffus dans
+   l'angle haut-droit et une OMBRE COLORÉE sous la carte. Conséquence utile :
+   tout le texte est désormais sur le fond de la carte — plus rien n'est écrit
+   en blanc sur une couleur, ce qui supprime les cas illisibles des teintes
+   claires (#22d3ee, #22c55e, #f59e0b) qu'imposait le bandeau.
+
+   Le balisage n'a PAS changé : .rc-head n'est plus qu'une rangée d'en-tête.
+   js/residents.js et la fiche dépliée (.rc-inline) sont inchangés. */
+.rc {
+  position: relative; isolation: isolate;
+  background: var(--v2-s-card);
+  border: 1px solid color-mix(in srgb, var(--rc, #6366f1) 26%, var(--v2-b));
+  border-radius: 18px; overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: column;
+  box-shadow: 0 14px 34px -16px color-mix(in srgb, var(--rc, #6366f1) 40%, transparent),
+              0 1px 2px rgba(15,38,70,.05);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+/* Halo. z-index -1 + isolation: isolate sur .rc → le disque se peint AU-DESSUS
+   du fond de la carte mais SOUS son contenu, sans avoir à repositionner les
+   enfants (un `.rc > * { position: relative }` casserait tout enfant en
+   position: absolute — la leçon de la barre KPI). */
+.rc::before {
+  content: ''; position: absolute; top: -46px; right: -46px; z-index: -1;
+  width: 132px; height: 132px; border-radius: 50%;
+  background: var(--rc, #6366f1); opacity: .13; filter: blur(28px);
+  pointer-events: none;
+}
+.rc:hover { transform: translateY(-5px);
+  box-shadow: 0 26px 52px -18px color-mix(in srgb, var(--rc, #6366f1) 56%, transparent),
+              0 2px 4px rgba(15,38,70,.06); }
+.rc:focus-visible { outline: 2px solid var(--rc, #6366f1); outline-offset: 3px; }
+.rc.on { border-color: var(--rc, #6366f1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rc, #6366f1) 34%, transparent),
+              0 18px 40px -18px color-mix(in srgb, var(--rc, #6366f1) 48%, transparent); }
+/* ── En-tête (plus de bandeau) ── */
+.rc-head { display: flex; align-items: center; gap: 12px; padding: 15px 15px 0; background: none; }
+.rc-av { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; overflow: hidden;
+  color: var(--rc, #6366f1);
+  background: color-mix(in srgb, var(--rc, #6366f1) 14%, transparent);
+  border: 2px solid color-mix(in srgb, var(--rc, #6366f1) 38%, transparent); }
+.rc-av img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.rc-who { min-width: 0; flex: 1; }
+.rc-name { font-size: 15px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; color: var(--v2-t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-meta { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11px; color: var(--v2-t6); margin-top: 2px; }
+.rc-hbs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.rc-hb { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  background: color-mix(in srgb, var(--rc, #6366f1) 13%, transparent); color: var(--rc, #6366f1); }
+.rc-hb.cake { background: color-mix(in srgb, var(--rc, #6366f1) 22%, transparent); }
+/* Contraste : la couleur du résident sert maintenant d'ENCRE, plus de fond.
+   Une teinte vive serait illisible sur la carte claire : on la fonce en clair,
+   on l'éclaircit en sombre.
+   Le mélange est plus marqué ici (56 %) que sur .cdn-n / .mb-n / .dc-kpi-val
+   (72 %) : là-bas ce sont de GRANDS chiffres (26-30 px gras), seuil AA 3:1 ;
+   ici l'initiale de l'avatar fait 15 px et le badge 10 px — texte normal, seuil
+   4,5:1. Mesuré sur les 11 couleurs de résident : à 72 % quatre échouaient
+   (#22d3ee 3,07 · #84cc16 3,32 · #f59e0b 3,53 · #22c55e 3,68) ; à 56 % la pire
+   remonte à 4,74:1. */
+html.clair .rc-av, html.clair .rc-hb { color: color-mix(in srgb, var(--rc, #6366f1) 56%, #000); }
+html:not(.clair) .rc-av, html:not(.clair) .rc-hb { color: color-mix(in srgb, var(--rc, #6366f1) 62%, #fff); }
+/* ── Corps ── */
+.rc-body { display: flex; flex-direction: column; gap: 11px; padding: 14px 15px 15px; min-width: 0; }
+/* Fiche dépliée dans la carte : elle allonge la carte vers le bas, jamais sur
+   les côtés. min-width: 0 + overflow-wrap : un contenu large (adresse, e-mail,
+   n° de téléphone) se replie au lieu de pousser la colonne de la grille. */
+.rc-inline {
+  min-width: 0; overflow-wrap: anywhere;
+  margin-top: 2px; padding-top: 13px; border-top: 1px solid var(--v2-b-soft);
+  cursor: default;
+}
+.rc-inline > * { min-width: 0; max-width: 100%; }
+/* le corps espace déjà ses blocs (gap) : on neutralise la marge héritée de
+   l'ancienne carte, sinon l'encart d'échéance se décollait deux fois. */
+.rc-body .v2-res-ech { margin-top: 0; }
+.rc-ref { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--v2-t5); min-width: 0; }
+/* Initiales du référent : elles étaient en blanc sur la couleur brute du
+   résident, libre au point d'être jaune ou cyan (1,8:1). Aucun assombrissement
+   ne tient sur toute la plage de teintes ; on passe donc à une pastille neutre
+   cerclée de la couleur — la teinte reste lisible sur le cercle, le texte sur
+   le fond du thème. */
+.rc-ref-av { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700;
+  color: var(--v2-t2); background: var(--v2-s-active);
+  border: 1.5px solid color-mix(in srgb, var(--rc, #6366f1) 55%, transparent); }
+.rc-ref .lbl { color: var(--v2-t7); }
+.rc-ref b { color: var(--v2-t3); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.rc-obj-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--v2-t6); margin-bottom: 6px; }
+.rc-obj-h b { font-family: var(--v2-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 11.5px; font-weight: 700; color: var(--v2-t3); }
+.rc-bar { height: 6px; border-radius: 999px; background: var(--v2-b-soft); overflow: hidden; }
+.rc-bar > i { display: block; height: 100%; border-radius: 999px; }
+.rc-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+/* Pastilles régime / allergie / protection : la teinte vive (--tc) servait
+   telle quelle en texte. Le slate des mesures de protection tombait à 2,3:1 et
+   le cyan des textures encore plus bas. On assombrit en clair, on éclaircit en
+   sombre — la teinte reste reconnaissable, le texte devient lisible. */
+.rc-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 5px 10px; border-radius: 999px; line-height: 1.1; white-space: nowrap;
+  background: color-mix(in srgb, var(--tc, #6366f1) 13%, transparent);
+  color: color-mix(in srgb, var(--tc, #6366f1) 60%, #fff); }
+html.clair .rc-tag { color: color-mix(in srgb, var(--tc, #6366f1) 60%, #000); }
 body.v2 .v2-res-ico a {
   width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
   background: color-mix(in srgb, var(--bc, #818cf8) 18%, transparent) !important;
@@ -807,10 +1288,31 @@ body.v2 .itab.active { color: var(--v2-t2); }
 /* minmax(0, 1fr) et NON 1fr : le minimum implicite de `1fr` est min-content,
    donc une carte au contenu large empêchait la colonne de rétrécir et poussait
    le rail de détail par-dessus les cartes. minmax(0,…) autorise le rétrécissement. */
-.v2-list { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 20px; align-items: start; }
+/* Liste + rail de détail. La fiche du résident sélectionné s'affiche à DROITE
+   de la grille, pas dans la carte : les cartes ne changent donc ni de taille ni
+   de place quand on clique.
+
+   Rail à 300 px : c'est la largeur qu'occupait la fiche quand elle était dépliée
+   dans une carte, donc son contenu garde la même échelle. Le reste va aux
+   cartes — 3 colonnes d'environ 270 px à 1280 px de fenêtre, soit la taille
+   qu'elles avaient déjà.
+
+   Utilisé seulement par residents.html. */
+.v2-list { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
 .v2-list > * { min-width: 0; }
+/* Rail NON collant, volontairement. Une tentative de position:sticky reste
+   sans effet ici : .v2-shell porte overflow:hidden (pour que le halo épouse
+   ses coins arrondis), et un ancêtre en overflow != visible devient le
+   scrollport de référence du sticky — comme il ne défile pas lui-même, le rail
+   repartait avec la page. Le rendre collant demanderait de lever ce clipping
+   sur la coquille, ce qui touche toutes les pages : à faire séparément si le
+   besoin se confirme. */
 .v2-det { width: 100%; max-width: 100%; }
-@media (max-width: 1180px) { .v2-list { grid-template-columns: minmax(0, 1fr); } }
+/* Sous 1180 px le rail passe sous la liste : à cette largeur, lui garder une
+   colonne rendrait les cartes illisibles. */
+@media (max-width: 1180px) {
+  .v2-list { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* Carte sélectionnée */
 .v2-res.on { background: var(--v2-s-sel);
@@ -1172,18 +1674,48 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 /* ── JOURNAL DE BORD ──────────────────────────────────────────────── */
 .v2-jr-body { display: grid; grid-template-columns: minmax(0, 1fr) 358px; gap: 20px; align-items: start; }
 @media (max-width: 1100px) { .v2-jr-body { grid-template-columns: minmax(0, 1fr); } }
-/* Séparation de jour : filet pleine largeur + pastille datée, collée en haut
-   pendant le défilement pour qu'on sache toujours quel jour on lit. */
+/* Séparation de jour : bloc calendrier + libellé + compteur (voir plus bas). */
 .v2-jr-grp + .v2-jr-grp { border-top: 1px solid var(--v2-b); padding-top: 20px; }
-.v2-jr-day { display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-  position: sticky; top: 0; z-index: 3; padding: 6px 0;
-  background: linear-gradient(var(--v2-bg) 78%, transparent); }
-.v2-jr-day-l { font-family: var(--v2-display); font-size: 12px; font-weight: 700;
-  color: var(--v2-t2); text-transform: capitalize;
-  padding: 5px 12px; border-radius: 999px;
-  background: var(--v2-s-sel); border: 1px solid var(--v2-b-ctrl); }
+/* Séparation de dates « ancre de calendrier » : bloc calendrier + libellé +
+   compteur, souligné d'un filet à la couleur du jour (aujourd'hui / hier /
+   plus ancien).
+
+   position: sticky est CONSERVÉ mais sans effet aujourd'hui : .v2-shell porte
+   overflow:hidden, et un ancêtre en overflow != visible devient le scrollport
+   de référence du sticky — comme il ne défile pas lui-même, la séparation part
+   avec la page. Mesuré sur residents.html, même coquille.
+
+   FOND TRANSPARENT. Il portait un dégradé opaque en var(--v2-bg) — soit
+   #e8edf5 en thème clair, un gris franc qui dessinait une bande sur toute la
+   largeur alors que le journal est posé sur un fond plus clair. Ce fond ne
+   servait qu'à masquer les entrées passant SOUS une séparation collée ; comme
+   le sticky est inopérant, il ne masquait rien et ne faisait que salir. À
+   remettre le jour où le clipping de la coquille sera levé. */
+.v2-jr-day { display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  position: sticky; top: 0; z-index: 3; padding: 8px 0 11px;
+  border-bottom: 2px solid color-mix(in srgb, var(--dc, #6366f1) 30%, transparent);
+  background: none; }
+.v2-jr-cal { width: 44px; flex-shrink: 0; border-radius: 11px; overflow: hidden; text-align: center;
+  border: 1px solid var(--v2-b); background: var(--v2-s-card); box-shadow: 0 2px 8px rgba(15,38,70,.06); }
+.v2-jr-cal-m { font-size: 8.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  /* Le blanc sur la teinte brute (slate-400 pour les jours anciens) tombait à
+     2,2:1 ; assombrie à 70 % elle repasse au-dessus de 4,5:1 dans les 2 thèmes. */
+  color: #fff; background: color-mix(in srgb, var(--dc, #6366f1) 70%, #000); padding: 3px 0; }
+.v2-jr-cal-j { font-family: var(--v2-display); font-size: 19px; font-weight: 800;
+  color: var(--v2-t2); line-height: 1; padding: 5px 0 6px; }
+.v2-jr-day-w { min-width: 0; }
+.v2-jr-day-s2 { font-size: 11px; color: var(--v2-t7); margin-top: 3px; text-transform: capitalize; }
+.v2-jr-day-b { margin-left: auto; flex-shrink: 0; font-size: 10.5px; font-weight: 700;
+  color: var(--dc, #6366f1); background: color-mix(in srgb, var(--dc, #6366f1) 13%, transparent);
+  border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+/* Date en texte simple (plus de puce/fond) : le fond var(--v2-s-sel) + bordure
+   ressortait en gris lourd, surtout en thème clair. L'en-tête reste lisible au
+   défilement grâce au fond sticky de .v2-jr-day (var(--v2-bg)). */
+.v2-jr-day-l { font-family: var(--v2-display); font-size: 14px; font-weight: 800;
+  color: var(--v2-t2); text-transform: capitalize; line-height: 1.15; }
 .v2-jr-day-n { font-size: 11px; color: var(--v2-t7); }
-.v2-jr-day-s { flex: 1; height: 1px; background: var(--v2-b); }
+/* .v2-jr-day-s (ancien trait extensible) n'est plus émis : le filet coloré
+   sous la séparation le remplace. */
 .v2-jr-row { display: flex; gap: 14px; }
 .v2-jr-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 44px; }
 .v2-jr-av { width: 44px; height: 44px; border-radius: 13px; overflow: hidden;
@@ -1193,6 +1725,20 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 .v2-jr-line { flex: 1; width: 2px; background: rgba(255,255,255,.08); margin-top: 6px; }
 .v2-jr-card { flex: 1; min-width: 0; padding: 15px 17px; border-radius: var(--v2-r-kpi);
   background: var(--v2-s-card); border: 1px solid var(--v2-b); }
+/* Entrée non lue : contenu flouté + invite « Cliquer pour lire ». Le clic
+   révèle l'entrée en place et la marque comme lue (js/journal-v2.js → jr2Reveal).
+   La bordure gauche colorée (résident) reste visible : ::after est à l'intérieur. */
+.v2-jr-card.v2-jr-locked { position: relative; cursor: pointer; }
+.v2-jr-locked .v2-jr-inner { filter: blur(6px); opacity: .5; user-select: none;
+  pointer-events: none; transition: filter .18s ease, opacity .18s ease; }
+.v2-jr-locked::after {
+  content: "🔒  Cliquer pour lire"; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12.5px; font-weight: 700; letter-spacing: .01em; color: var(--v2-t3);
+  background: color-mix(in srgb, var(--v2-s-card) 60%, transparent);
+  border-radius: var(--v2-r-kpi); transition: color .15s ease; }
+.v2-jr-locked:hover::after, .v2-jr-locked:focus-visible::after { color: var(--v2-t1); }
+.v2-jr-locked:focus-visible { outline: 2px solid var(--v2-indigo-light); outline-offset: 2px; }
 .v2-jr-res { font-size: 13.5px; font-weight: 700; color: var(--v2-t2); }
 .v2-jr-ch { font-size: 11px; color: var(--v2-t6); }
 .v2-jr-vis { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px;
@@ -1202,6 +1748,9 @@ body.v2 .v2-fld:focus { border-color: color-mix(in srgb, var(--mc, #818cf8) 55%,
 .v2-jr-obj { display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
   color: var(--v2-indigo-pale); background: rgba(129,140,248,.14); padding: 3px 10px; border-radius: 7px; }
 .v2-jr-obj svg { width: 12px; height: 12px; }
+/* « Vu par N » : lecteurs de l'entrée — texte discret (sans fond), icône œil. */
+.v2-jr-vu { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--v2-t6); cursor: default; }
+.v2-jr-vu svg { width: 12px; height: 12px; opacity: .75; }
 .v2-jr-top { display: flex; align-items: center; gap: 12px; }
 .v2-jr-top-av { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;

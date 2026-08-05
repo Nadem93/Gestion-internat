@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Messages — FTR</title>
+  <title>Messages — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -37,8 +37,13 @@
       <!-- ── COLONNE CONVERSATIONS ── -->
       <aside class="ms-side msg-left">
         <div class="ms-side-h">
-          <div class="ms-side-t">
-            <span>Conversations</span>
+          <div class="dc-head nb" style="padding:0;margin-bottom:13px">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:rgba(2,132,199,.16);color:#38bdf8">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <div style="min-width:0"><div class="dc-eyebrow">Messagerie</div><div class="dc-title">Conversations</div></div>
+            </div>
             <button type="button" class="ms-new" onclick="openCompose(null)" title="Nouveau message" aria-label="Nouveau message">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
@@ -61,6 +66,7 @@
           </button>
           <div class="ms-th-av" id="chatMainAvatar">?</div>
           <div style="min-width:0">
+            <div class="dc-eyebrow">Conversation</div>
             <div class="ms-th-n" id="chatMainName">—</div>
             <div class="ms-th-s" id="chatMainStatus"></div>
           </div>

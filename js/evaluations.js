@@ -325,7 +325,7 @@ function openEvModal(id, presetRid) {
   const grilleEl = document.getElementById('evModalGrille');
   if (grilleEl) { grilleEl.value = grille; grilleEl.addEventListener('change', () => _renderEvForm()); }
 
-  document.getElementById('evModalDate').value  = ev?.date || new Date().toISOString().slice(0,10);
+  document.getElementById('evModalDate').value  = ev?.date || today();
   document.getElementById('evModalNote').value  = ev?.note || '';
 
   _renderEvForm(ev?.scores);

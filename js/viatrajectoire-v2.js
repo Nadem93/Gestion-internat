@@ -191,7 +191,8 @@ function vt2Liste(all) {
           (d.date ? escHtml(formatDate(d.date)) : 'date inconnue') + escHtml(anciennete) + '</div>' +
         (d.commentaire ? '<div class="vt2-row-c">' + escHtml(d.commentaire) + '</div>' : '') +
       '</div>' +
-      '<span class="vt2-pill">' + escHtml(st.label) + '</span>' +
+      '<span class="dc-badge vt2-pill" style="background:' + st.color + '1f;color:' + st.color + ';border:1px solid ' + st.color + '44">' +
+        '<span class="d" style="background:' + st.color + '"></span>' + escHtml(st.label) + '</span>' +
       '<div class="vt2-acts">' +
         '<button type="button" class="vt2-act" title="Modifier" aria-label="Modifier la demande" onclick="editVTDemande(\'' + d.id + '\')">' + vt2Svg(VT2_IC.pen, 2.2) + '</button>' +
         '<button type="button" class="vt2-act vt2-act-x" title="Supprimer" aria-label="Supprimer la demande" onclick="deleteVTDemande(\'' + d.id + '\')">' + vt2Svg(VT2_IC.trash, 2.2) + '</button>' +
@@ -285,7 +286,7 @@ function vt2Open(data) {
   selSt.value = (data && data.statut) || 'brouillon';
 
   document.getElementById('vtMdph').value = (data && data.mdph) || 'mape';
-  document.getElementById('vtDate').value = (data && data.date) ? String(data.date).split('T')[0] : new Date().toISOString().slice(0, 10);
+  document.getElementById('vtDate').value = (data && data.date) ? String(data.date).split('T')[0] : today();
   document.getElementById('vtCommentaire').value = (data && data.commentaire) || '';
   vt2SetType((data && data.type) || 'orientation');
 

@@ -47,6 +47,13 @@ function ch2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
 
+// Variante dimensionnée pour le langage « Console Data » (chip 16px, ico KPI…)
+// où la taille de l'icône vient de l'attribut et non d'une règle CSS dédiée.
+function ch2SvgS(d, px, w) {
+  px = px || 16;
+  return `<svg viewBox="0 0 24 24" width="${px}" height="${px}" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+
 function ch2CanEdit() {
   const s = (typeof Auth !== 'undefined') ? Auth.getSession() : null;
   return Auth.isAdmin() || ['admin', 'moderator', 'superadmin'].includes(s?.role)
@@ -94,16 +101,19 @@ function ch2RenderStats(infos) {
   const lits = infos.reduce((a, i) => a + i.cap, 0);
   const occ = infos.reduce((a, i) => a + i.occ.length, 0);
   const pmr = infos.filter(i => ch2IsPmr(i.c)).length;
+  const roomsOcc = infos.filter(i => !i.libre).length;
+  const pctLibre = lits ? Math.round((lits - occ) / lits * 100) : 0;
   const tiles = [
-    { n: infos.length, l: 'Chambres', c: '#f472b6', ic: CH2_IC.bed },
-    { n: occ, l: 'Lits occupés', c: '#10b981', ic: CH2_IC.check },
-    { n: Math.max(lits - occ, 0), l: 'Lits libres', c: '#22d3ee', ic: CH2_IC.key },
-    { n: pmr, l: 'Chambres PMR', c: '#818cf8', ic: CH2_IC.home }
+    { n: infos.length, l: 'Chambres', c: '#f472b6', ic: CH2_IC.bed, sub: `${roomsOcc} occupée(s)` },
+    { n: occ, l: 'Lits occupés', c: '#10b981', ic: CH2_IC.check, sub: `sur ${lits} lit(s)` },
+    { n: Math.max(lits - occ, 0), l: 'Lits libres', c: '#22d3ee', ic: CH2_IC.key, sub: `${pctLibre}% disponibles` },
+    { n: pmr, l: 'Chambres PMR', c: '#818cf8', ic: CH2_IC.home, sub: 'accessibles' }
   ];
   el.innerHTML = tiles.map(t => `
-    <div class="ch2-stat" style="--pc:${t.c}">
-      <span class="ch2-stat-ico">${ch2Svg(t.ic)}</span>
-      <div><div class="ch2-stat-n">${t.n}</div><div class="ch2-stat-l">${t.l}</div></div>
+    <div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${t.l}</span><span class="dc-kpi-ico" style="color:${t.c}">${ch2SvgS(t.ic, 16)}</span></div>
+      <div class="dc-kpi-val">${t.n}</div>
+      <div class="dc-kpi-sub">${t.sub}</div>
     </div>`).join('');
 }
 
@@ -131,7 +141,7 @@ function ch2RoomCard(i, canEdit) {
   const since = ch2Since(c);
   const occRows = i.occ.map(r => {
     const rc = safeColor(r.color, '#22d3ee');
-    return `<div class="ch2-occ" onclick="location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche">
+    return `<div class="ch2-occ" style="border-left:3px solid ${rc};padding-left:10px" onclick="location.href='resident.html?id=${r.id}'" title="Ouvrir la fiche">
       <span class="ch2-occ-av" style="background:${rc}">${initials(r.prenom, r.nom)}</span>
       <div style="min-width:0">
         <div class="ch2-occ-n">${escHtml(`${r.prenom || ''} ${r.nom || ''}`.trim())}</div>
@@ -147,17 +157,22 @@ function ch2RoomCard(i, canEdit) {
       <button type="button" class="ch2-act" style="margin-left:auto" onclick="openChambreModal('${c.id}')" title="Modifier">${ch2Svg(CH2_IC.pen)}</button>
       <button type="button" class="ch2-act danger" onclick="deleteChambre('${c.id}')" title="Supprimer">${ch2Svg(CH2_IC.trash)}</button>
     </div>` : '';
-  const sel = String(edlChambreId || '') === String(c.id) ? ' sel' : '';
-  return `<div class="ch2-room${i.libre ? ' libre' : ''}${sel}" style="--pc:${color}">
-    <div class="ch2-room-h">
-      <span class="ch2-room-n">${escHtml(c.nom)}</span>
-      <span class="ch2-room-u">${escHtml((c.unite || '').trim() || 'Sans unité')}</span>
-      <span class="ch2-room-st">${statut}</span>
+  const sel = String(edlChambreId || '') === String(c.id);
+  const unite = (c.unite || '').trim() || 'Sans unité';
+  return `<div class="dc-card" style="border-left:3px solid ${color}${sel ? `;box-shadow:inset 0 0 0 1px ${color}` : ''}">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:${color}22;color:${color}">${ch2SvgS(CH2_IC.bed, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">${escHtml(unite)}</div><div class="dc-title">${escHtml(c.nom)}</div></div>
+      </div>
+      <span class="dc-badge" style="background:${color}1f;color:${color};border:1px solid ${color}44"><span class="d" style="background:${color}"></span>${statut}</span>
     </div>
-    ${occRows}
-    ${libreBtn}
-    ${c.notes ? `<div class="ch2-note">${escHtml(c.notes)}</div>` : ''}
-    ${acts}
+    <div class="dc-body" style="display:flex;flex-direction:column;gap:10px">
+      ${occRows}
+      ${libreBtn}
+      ${c.notes ? `<div class="ch2-note">${escHtml(c.notes)}</div>` : ''}
+      ${acts}
+    </div>
   </div>`;
 }
 
@@ -200,8 +215,8 @@ function ch2RenderOccupation(infos) {
     const pct = cap ? Math.round(occ / cap * 100) : 0;
     const c = occ >= cap ? '#f59e0b' : '#10b981';
     return `<div>
-      <div class="ch2-occ-h"><span class="ch2-occ-l">${escHtml(u)}</span><span class="ch2-occ-v">${occ} / ${cap}</span></div>
-      <div class="ch2-occ-bar"><span style="width:${Math.min(pct, 100)}%;background:${c}"></span></div>
+      <div class="ch2-occ-h"><span class="ch2-occ-l">${escHtml(u)}</span><span class="dc-pill dim" style="margin-left:auto">${occ} / ${cap}</span></div>
+      <div class="al-prog-bar"><span style="width:${Math.min(pct, 100)}%;background:${c}"></span></div>
     </div>`;
   }).join('');
 }
@@ -223,9 +238,9 @@ function ch2RenderEdlHistory() {
     const postes = EDL_ITEMS.map(([k, label]) => {
       const niv = edlNiveau(e, k);
       const nc = (CH2_NIV[niv] || CH2_NIV['Non évalué']).c;
-      return `<div class="ch2-edl-p"><span>${escHtml(label)}</span><b style="color:${nc}">${escHtml(niv)}</b></div>`;
+      return `<div class="ch2-edl-p"><span>${escHtml(label)}</span><span class="dc-badge" style="margin-left:auto;background:${nc}1f;color:${nc};border:1px solid ${nc}44"><span class="d" style="background:${nc}"></span>${escHtml(niv)}</span></div>`;
     }).join('');
-    return `<details class="ch2-edl-d" style="--pc:${c}">
+    return `<details class="ch2-edl-d" style="--pc:${c};border-left:3px solid ${c};padding-left:10px">
       <summary class="ch2-edl-r">
         <span class="ch2-edl-ico">${ch2Svg(entree ? CH2_IC.in : CH2_IC.out, 2.4)}</span>
         <div style="flex:1;min-width:0">
@@ -281,7 +296,7 @@ function ch2RenderPanel(roomsArg, canEditArg) {
       <span class="ch2-item-ico">${ch2Svg(CH2_IC[CH2_ITEM_IC[k]] || CH2_IC.box)}</span>
       <span style="min-width:0;flex:1">
         <span class="ch2-item-l" style="display:block">${escHtml(label)}</span>
-        <span class="ch2-item-s">${niv}</span>
+        <span class="dc-badge" style="margin-top:4px;background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${niv}</span>
       </span>
     </button>`;
   }).join('');
@@ -300,8 +315,10 @@ function ch2RenderPanel(roomsArg, canEditArg) {
 
   el.innerHTML = `
     <div class="ch2-panel-h">
-      ${ch2Svg(CH2_IC.file)}
-      <span class="ch2-panel-t">État des lieux — Chambre ${escHtml(cur.nom)}</span>
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:#a3e63522;color:#a3e635">${ch2SvgS(CH2_IC.file, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">État des lieux</div><div class="dc-title">Chambre ${escHtml(cur.nom)}</div></div>
+      </div>
       <div class="ch2-seg">
         <button type="button" class="ch2-seg-o${CH2_EDL.type === 'entree' ? ' on' : ''}" onclick="ch2SetEdlType('entree')">Entrée</button>
         <button type="button" class="ch2-seg-o${CH2_EDL.type === 'sortie' ? ' on' : ''}" onclick="ch2SetEdlType('sortie')">Sortie</button>

@@ -52,6 +52,15 @@ const CV2_IDEE_STATUTS = {
 function _cv2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// SVG dimensionné (16px) pour les chips / icônes « Console Data » : les
+// classes dc-chip / dc-kpi-ico ne fixent pas la taille du <svg>.
+function _cv2SvgDc(d, px) {
+  return `<svg viewBox="0 0 24 24" width="${px || 16}" height="${px || 16}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+// Badge monospace « Console Data » teinté d'une couleur libre.
+function _cv2Badge(label, c) {
+  return `<span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${_cv2Esc(label)}</span>`;
+}
 function _cv2Esc(s) { return typeof escHtml === 'function' ? escHtml(s == null ? '' : s) : String(s == null ? '' : s); }
 function _cv2Attr(s) { return typeof escAttr === 'function' ? escAttr(s == null ? '' : s) : _cv2Esc(s); }
 
@@ -259,10 +268,9 @@ function cv2RenderStats() {
     { c: '#818cf8', ic: CV2_IC.target, n: themOuverts,          l: 'Thématiques ouvertes' },
     { c: '#fbbf24', ic: CV2_IC.star,   n: sat === null ? '—' : sat + '%', l: 'Satisfaction' }
   ];
-  el.innerHTML = tiles.map(t => `<div class="cv2-stat" style="--pc:${t.c}">
-    <span class="cv2-stat-ico">${_cv2Svg(t.ic)}</span>
-    <div class="cv2-stat-n">${t.n}</div>
-    <div class="cv2-stat-l">${_cv2Esc(t.l)}</div>
+  el.innerHTML = tiles.map(t => `<div class="dc-kpi" style="--dc-c:${t.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${_cv2Esc(t.l)}</span><span class="dc-kpi-ico" style="color:${t.c}">${_cv2SvgDc(t.ic)}</span></div>
+    <div class="dc-kpi-val">${t.n}</div>
   </div>`).join('');
 }
 
@@ -286,21 +294,24 @@ function cv2RenderMembres() {
   const count = document.getElementById('cvsMembresCount');
   if (count) count.textContent = membres.length + ' membre' + (membres.length !== 1 ? 's' : '') + ' actif' + (membres.length !== 1 ? 's' : '');
 
-  const head = `<div class="v2-blk-h">
-    <span class="cv2-blk-ico" style="color:#22d3ee">${_cv2Svg(CV2_IC.users)}</span>
-    <span class="v2-blk-t">Membres du conseil</span>
-    <span class="cv2-meta">${mandat ? _cv2Esc(mandat) : (membres.length ? membres.length + ' membre' + (membres.length > 1 ? 's' : '') : '')}</span>
+  const metaTxt = mandat ? mandat : (membres.length ? membres.length + ' membre' + (membres.length > 1 ? 's' : '') : '');
+  const head = `<div class="dc-head">
+    <div class="dc-head-l">
+      <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${_cv2SvgDc(CV2_IC.users)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Conseil</div><div class="dc-title">Membres du conseil</div></div>
+    </div>
+    ${metaTxt ? `<span class="dc-pill dim">${_cv2Esc(metaTxt)}</span>` : ''}
   </div>`;
 
   if (!membres.length) {
-    el.innerHTML = `<div class="v2-blk">${head}
-      <div class="v2-blk-vide">Aucun membre enregistré. Composez le conseil : résidents, familles, personnel et direction.</div>
+    el.innerHTML = `<div class="dc-card">${head}
+      <div class="dc-body"><div class="v2-blk-vide">Aucun membre enregistré. Composez le conseil : résidents, familles, personnel et direction.</div></div>
     </div>`;
     return;
   }
 
-  el.innerHTML = `<div class="v2-blk">${head}
-    <div class="cv2-membres">${membres.map(m => {
+  el.innerHTML = `<div class="dc-card">${head}
+    <div class="dc-body"><div class="cv2-membres">${membres.map(m => {
       const col = CVS_COLLEGES[m.college] || CVS_COLLEGES.exterieur;
       let r = m.residentId ? allRes.find(x => String(x.id) === String(m.residentId)) : null;
       if (!r && m.college === 'residents' && m.nom) {
@@ -329,7 +340,7 @@ function cv2RenderMembres() {
         </div>
         <span class="cv2-m-c" title="${_cv2Attr(col.label)}">${_cv2Esc(_cv2CollegeCourt(col.label))}</span>
       </div>`;
-    }).join('')}</div>
+    }).join('')}</div></div>
   </div>`;
 }
 
@@ -416,7 +427,7 @@ function cv2RenderThematiques() {
         ${meta.length ? `<div class="cv2-them-c">${_cv2Esc(meta.join(' — '))}</div>` : ''}
       </div>
       ${score !== null ? `<span class="cv2-them-s" style="color:${cv2Col(score)}">${score}%</span>` : ''}
-      ${cvsCanEdit ? '' : `<span class="cv2-pill" style="--pc:${stc}">${_cv2Esc(st.label)}</span>`}
+      ${cvsCanEdit ? '' : _cv2Badge(st.label, stc)}
       ${acts}
     </div>`;
   }).join('')}</div>`;
@@ -453,7 +464,7 @@ function cv2RenderSeances() {
         <div class="cv2-seance-t">Séance du ${_cv2Esc(formatDate(s.date))}</div>
         <div class="cv2-seance-s">${_cv2Esc(sub.join(' · '))}</div>
       </div>
-      <span class="cv2-pill" style="--pc:${st.c}">${st.l}</span>
+      ${_cv2Badge(st.l, st.c)}
       <div class="cv2-acts">
         <button type="button" class="cv2-act" style="--ac:#22d3ee" title="Résolutions de la séance" onclick="openResolutionsModal('${_cv2Attr(s.id)}')">${_cv2Svg(CV2_IC.list, 2.2)}</button>
         <button type="button" class="cv2-act" style="--ac:#a5b4fc" title="Imprimer le compte-rendu" onclick="printCR('${_cv2Attr(s.id)}')">${_cv2Svg(CV2_IC.print, 2.2)}</button>
@@ -517,10 +528,18 @@ function cv2RenderProchaine() {
   const el = document.getElementById('cvsProchaine');
   if (!el) return;
   const s = cvsProchaineSeance();
+  const nextHead = (right) => `<div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:#a5b4fc22;color:#a5b4fc">${_cv2SvgDc(CV2_IC.cal)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">À venir</div><div class="dc-title">Prochaine séance</div></div>
+      </div>
+      ${right || ''}
+    </div>`;
+
   if (!s) {
-    el.innerHTML = `<div class="v2-blk">
-      <div class="v2-blk-h"><span class="cv2-blk-ico" style="color:#a5b4fc">${_cv2Svg(CV2_IC.cal)}</span><span class="v2-blk-t">Prochaine séance</span></div>
-      <div class="v2-blk-vide">Aucune séance programmée.${cvsCanEdit ? ' Utilisez « Nouvelle séance » pour en planifier une.' : ''}</div>
+    el.innerHTML = `<div class="dc-card">
+      ${nextHead('')}
+      <div class="dc-body"><div class="v2-blk-vide">Aucune séance programmée.${cvsCanEdit ? ' Utilisez « Nouvelle séance » pour en planifier une.' : ''}</div></div>
     </div>`;
     return;
   }
@@ -529,22 +548,24 @@ function cv2RenderProchaine() {
   const meta = [];
   if (s.heure) meta.push(s.heure.slice(0, 5));
   if (s.lieu) meta.push(s.lieu);
-  if (j !== null) meta.push(j === 0 ? "aujourd'hui" : j === 1 ? 'demain' : `dans ${j} jours`);
   const points = _cv2OdjPoints(s.ordreDuJour);
+  const countdown = j === null ? '' : (j === 0 ? "aujourd'hui" : j === 1 ? 'demain' : `dans ${j} jours`);
 
-  el.innerHTML = `<div class="cv2-next">
-    <div class="cv2-next-h">
-      <div class="cv2-next-d"><span class="cv2-next-j">${p.j}</span><span class="cv2-next-m">${p.m}</span></div>
-      <div style="min-width:0">
-        <div class="cv2-next-k">Prochaine séance</div>
-        <div class="cv2-next-t">Séance du ${_cv2Esc(formatDate(s.date))}</div>
-        <div class="cv2-next-s">${_cv2Esc(meta.join(' · '))}</div>
+  el.innerHTML = `<div class="dc-card">
+    ${nextHead(countdown ? `<span class="dc-pill dim">${_cv2Esc(countdown)}</span>` : '')}
+    <div class="dc-body"><div class="cv2-next">
+      <div class="cv2-next-h">
+        <div class="cv2-next-d"><span class="cv2-next-j">${p.j}</span><span class="cv2-next-m">${p.m}</span></div>
+        <div style="min-width:0">
+          <div class="cv2-next-t">Séance du ${_cv2Esc(formatDate(s.date))}</div>
+          <div class="cv2-next-s">${_cv2Esc(meta.join(' · '))}</div>
+        </div>
       </div>
-    </div>
-    <div class="v2-blk-sub">Ordre du jour prévisionnel</div>
-    ${points.length
-      ? `<div class="cv2-odj">${points.map((t, i) => `<div class="cv2-odj-i"><span class="cv2-odj-n">${i + 1}</span><span class="cv2-odj-t">${_cv2Esc(t)}</span></div>`).join('')}</div>`
-      : `<div class="v2-blk-vide">Ordre du jour non renseigné.${cvsCanEdit ? ` <button type="button" class="cv2-add" style="margin:0;color:var(--v2-indigo-light)" onclick="openSeanceModal('${_cv2Attr(s.id)}')">Le saisir →</button>` : ''}</div>`}
+      <div class="v2-blk-sub">Ordre du jour prévisionnel</div>
+      ${points.length
+        ? `<div class="cv2-odj">${points.map((t, i) => `<div class="cv2-odj-i"><span class="cv2-odj-n">${i + 1}</span><span class="cv2-odj-t">${_cv2Esc(t)}</span></div>`).join('')}</div>`
+        : `<div class="v2-blk-vide">Ordre du jour non renseigné.${cvsCanEdit ? ` <button type="button" class="cv2-add" style="margin:0;color:var(--v2-indigo-light)" onclick="openSeanceModal('${_cv2Attr(s.id)}')">Le saisir →</button>` : ''}</div>`}
+    </div></div>
   </div>`;
 }
 
@@ -613,7 +634,7 @@ function cv2RenderIdees() {
         <div class="cv2-idee-t">${_cv2Esc(i.texte)}</div>
         ${i.auteur ? `<div class="cv2-idee-a">Proposé par ${_cv2Esc(i.auteur)}</div>` : ''}
       </div>
-      <span class="cv2-pill" style="--pc:${st.color}">${_cv2Esc(st.label)}</span>
+      ${_cv2Badge(st.label, st.color)}
       ${cvsCanEdit ? `<div class="cv2-acts">
         <button type="button" class="cv2-act" style="--ac:#818cf8" title="Modifier" onclick="cv2OpenIdeeModal('${_cv2Attr(i.id)}')">${_cv2Svg(CV2_IC.pen, 2.2)}</button>
         <button type="button" class="cv2-act" style="--ac:#ef4444" title="Supprimer" onclick="cv2DeleteIdee('${_cv2Attr(i.id)}')">${_cv2Svg(CV2_IC.trash, 2.2)}</button>
@@ -674,7 +695,7 @@ function cv2RenderResolutionsList(s) {
                  ${Object.entries(CVS_RESOLUTION_STATUTS).map(([k, v]) => `<option value="${k}"${r.statut === k ? ' selected' : ''}>${_cv2Esc(v.label)}</option>`).join('')}
                </select>
                <button type="button" class="cv2-act" style="--ac:#ef4444" title="Supprimer" onclick="deleteResolution('${_cv2Attr(s.id)}','${_cv2Attr(r.id)}')">${_cv2Svg(CV2_IC.trash, 2.2)}</button>`
-            : `<span class="cv2-pill" style="--pc:${c}">${_cv2Esc(st.label)}</span>`}
+            : _cv2Badge(st.label, c)}
         </span>
       </div>
     </div>`;

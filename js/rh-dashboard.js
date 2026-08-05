@@ -38,7 +38,7 @@ async function initRhDashboard() {
   }
 
   const todayStr = today();
-  const in30 = (() => { const d = new Date(todayStr+'T00:00:00'); d.setDate(d.getDate()+30); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const in30 = (() => { const d = new Date(todayStr+'T00:00:00'); d.setDate(d.getDate()+30); return isoJour(d); })();
 
   const contratsActifs = contrats.filter(c => (c.statut||'actif') === 'actif');
   const cddEcheance = contratsActifs.filter(c => c.type === 'cdd' && c.fin && c.fin >= todayStr && c.fin <= in30);

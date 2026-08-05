@@ -183,7 +183,7 @@ function ps2Card(s, residents) {
   const isTodayView = _psDate === _psToday();
 
   const faitBtn = !actif
-    ? `<span class="ps2-susp">Suspendu</span>`
+    ? `<span class="dc-badge dc-b-gray"><span class="d"></span>Suspendu</span>`
     : isTodayView
       ? `<button type="button" class="ps2-fait${done ? ' on' : ''}" onclick="togglePsFait('${s.id}')"
            title="${done ? 'Fait — cliquer pour annuler' : 'Marquer comme fait'}"><span class="ck">${done ? '✓' : ''}</span>${done ? 'Fait' : 'Fait ?'}</button>`
@@ -199,9 +199,9 @@ function ps2Card(s, residents) {
       <span class="ps2-card-ico">${ps2Svg(PS2_IC[cat.ic])}</span>
       <div style="flex:1;min-width:0">
         <div class="ps2-card-t">${escHtml(s.libelle || '—')}</div>
-        <div class="ps2-card-c">${escHtml(catL)}</div>
+        <div class="dc-eyebrow" style="margin-top:4px">${escHtml(catL)}</div>
       </div>
-      <span class="ps2-freq" style="--fc:${fr.c}">${escHtml(fr.l)}</span>
+      <span class="dc-badge" style="background:${fr.c}1f;color:${fr.c};border:1px solid ${fr.c}44"><span class="d" style="background:${fr.c}"></span>${escHtml(fr.l)}</span>
     </div>
     ${s.detail ? `<div class="ps2-card-d">${escHtml(s.detail)}</div>` : ''}
     <div class="ps2-card-f">
@@ -222,13 +222,19 @@ function ps2Bottom(list, residents) {
   const box = document.getElementById('psBottom');
   if (!box) return;
   box.innerHTML = `
-    <div class="v2-blk">
-      <div class="ps2-blk-h">${ps2Svg(PS2_IC.target).replace('<svg', '<svg style="color:#22d3ee"')}<span class="ps2-blk-t">Objectifs de soins</span></div>
-      ${ps2Objectifs(list, residents)}
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:rgba(34,211,238,.16);color:#22d3ee">${ps2Svg(PS2_IC.target).replace('<svg', '<svg width="16" height="16"')}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Suivi projet</div><div class="dc-title">Objectifs de soins</div></div>
+      </div></div>
+      <div class="dc-body">${ps2Objectifs(list, residents)}</div>
     </div>
-    <div class="ps2-reeval">
-      <div class="ps2-blk-h">${ps2Svg(PS2_IC.cal).replace('<svg', '<svg style="color:#fbbf24"')}<span class="ps2-blk-t">Réévaluations à prévoir</span></div>
-      ${ps2Reeval(list, residents)}
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:rgba(245,158,11,.16);color:#fbbf24">${ps2Svg(PS2_IC.cal).replace('<svg', '<svg width="16" height="16"')}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Échéances</div><div class="dc-title">Réévaluations à prévoir</div></div>
+      </div></div>
+      <div class="dc-body">${ps2Reeval(list, residents)}</div>
     </div>`;
 }
 
@@ -269,13 +275,13 @@ function ps2Objectifs(list, residents) {
   out.sort((a, b) => b.pct - a.pct);
   return `<div class="ps2-objs">${out.slice(0, 6).map(o => {
     const c = ps2PctColor(o.pct);
-    return `<div>
+    return `<div style="border-left:3px solid ${ps2ResColor(o.res)};padding-left:11px">
       <div class="ps2-obj-h">
         <span class="ps2-obj-av" style="background:${ps2ResColor(o.res)}">${escHtml(ps2Ini(ps2ResNom(o.res)))}</span>
         <span class="ps2-obj-l">${escHtml(o.label)}</span>
         <span class="ps2-obj-p" style="color:${c}">${o.pct}%</span>
       </div>
-      <div class="v2-prog" style="height:6px"><span style="width:${o.pct}%;background:${c}"></span></div>
+      <div class="al-prog-bar" style="height:6px"><span style="width:${o.pct}%;background:${c}"></span></div>
     </div>`;
   }).join('')}</div>`;
 }
@@ -300,7 +306,7 @@ function ps2Reeval(list, residents) {
   return items.map(x => {
     const c = x.j < 0 ? '#ef4444' : x.j <= 7 ? '#f59e0b' : x.j <= 30 ? '#22d3ee' : '#818cf8';
     const lft = x.j < 0 ? 'En retard' : x.j === 0 ? "Aujourd'hui" : 'J-' + x.j;
-    return `<div class="ps2-re" style="--pc:${c}">
+    return `<div class="ps2-re" style="--pc:${c};border-left:3px solid ${c};padding-left:11px">
       <div class="ps2-re-d">
         <span class="ps2-re-j">${String(x.d.getDate()).padStart(2, '0')}</span>
         <span class="ps2-re-m">${PS2_MOIS[x.d.getMonth()]}</span>
@@ -309,7 +315,7 @@ function ps2Reeval(list, residents) {
         <div class="ps2-re-n">${escHtml(ps2ResCourt(x.r) || x.p.residentName || '—')}</div>
         <div class="ps2-re-w">Révision du projet personnalisé</div>
       </div>
-      <span class="ps2-re-l">${lft}</span>
+      <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${lft}</span>
     </div>`;
   }).join('');
 }

@@ -27,32 +27,59 @@
       cols: ['nom', 'prenom'], sel: 'id,nom,prenom,statut',
       titre: function (r) { return ((r.prenom || '') + ' ' + (r.nom || '')).trim(); },
       sous: function (r) { return r.statut === 'sorti' ? 'Sorti·e' : 'Résident·e'; },
-      lien: function (r) { return 'resident.html?id=' + r.id; } },
+      lien: function (r) { return 'resident.html?id=' + r.id; }, perm: 'view_residents' },
 
     { cle: 'transmissions', table: 'transmissions', icone: '💬', label: 'Transmissions',
+      perm: 'access_journal',
       cols: ['content', 'resident_name'], sel: 'id,content,resident_name,date',
       ordre: 'date', titre: function (r) { return r.content || ''; },
       sous: function (r) { return [r.resident_name, _dateFr(r.date)].filter(Boolean).join(' · '); },
       lien: function () { return 'transmissions.html'; } },
 
     { cle: 'journal', table: 'journal_entries', icone: '📓', label: 'Journal de bord',
-      cols: ['contenu', 'objectif'], sel: 'id,contenu,objectif,resident,date',
+      perm: 'access_journal',
+      // visibilite et author_id sont indispensables au filtre ci-dessous : sans
+      // eux, la palette affichait le contenu des entrées CONFIDENTIELLES à tout
+      // le monde, alors que la page Journal les réserve à l'auteur et à l'admin.
+      cols: ['contenu', 'objectif'], sel: 'id,contenu,objectif,resident,date,visibilite,author_id',
+      visible: function (r) {
+        if (r.visibilite !== 'confidentiel') return true;
+        var se = _sess();
+        return !!se && (se.role === 'admin' || String(r.author_id) === String(se.userId));
+      },
       ordre: 'date', titre: function (r) { return r.contenu || r.objectif || ''; },
       sous: function (r) { return [r.resident, _dateFr(r.date)].filter(Boolean).join(' · '); },
       lien: function () { return 'journal.html'; } },
 
     { cle: 'documents', table: 'documents_resident', icone: '📎', label: 'Documents',
+      perm: 'access_documents',
       cols: ['name'], sel: 'id,name,category,resident_id',
       titre: function (r) { return r.name || ''; },
       sous: function (r) { return r.category || 'Document'; },
       lien: function () { return 'documents.html'; } },
 
     { cle: 'echeances', table: 'echeances', icone: '⏰', label: 'Échéances',
+      perm: 'view_residents',
       cols: ['libelle', 'notes'], sel: 'id,libelle,resident_name,date,type',
       ordre: 'date', titre: function (r) { return r.libelle || ''; },
       sous: function (r) { return [r.resident_name, _dateFr(r.date)].filter(Boolean).join(' · '); },
       lien: function () { return 'echeances.html'; } }
   ];
+
+  function _sess() {
+    try { return (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null; }
+    catch (e) { return null; }
+  }
+  // Une source n'est interrogée que si l'utilisateur a le droit d'ouvrir le
+  // module correspondant. Sans ce garde, ⌘K contournait tout le cloisonnement
+  // par rôle : un compte privé d'accès au journal y lisait quand même son contenu.
+  function _autorise(src) {
+    if (!src.perm) return true;
+    var se = _sess();
+    if (!se) return false;
+    if (se.role === 'admin' || (typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin())) return true;
+    return (typeof hasPermission === 'function') ? hasPermission(se.userId, src.perm) : false;
+  }
 
   function _dateFr(d) {
     if (!d) return '';
@@ -65,19 +92,25 @@
     if (typeof supabaseClient === 'undefined') return Promise.resolve([]);
     var motif = '%' + q.replace(/[%_]/g, function (c) { return '\\' + c; }) + '%';
     var ou = src.cols.map(function (c) { return c + '.ilike.' + motif; }).join(',');
-    var req = supabaseClient.from(src.table).select(src.sel).or(ou).limit(6);
+    // On demande 30 lignes pour n'en garder que 6 APRÈS filtrage : avec une
+    // limite à 6 en base, six entrées confidentielles auraient masqué tous les
+    // résultats légitimes.
+    var req = supabaseClient.from(src.table).select(src.sel).or(ou).limit(src.visible ? 30 : 6);
     if (src.ordre) req = req.order(src.ordre, { ascending: false });
     return req.then(function (r) {
       if (r.error) { console.warn('[recherche]', src.table, r.error.message); return []; }
-      return (r.data || []).map(function (row) {
-        return { icone: src.icone, groupe: src.label,
-          titre: src.titre(row), sous: src.sous(row), lien: src.lien(row) };
-      }).filter(function (x) { return x.titre; });
+      return (r.data || [])
+        .filter(function (row) { return src.visible ? src.visible(row) : true; })
+        .slice(0, 6)
+        .map(function (row) {
+          return { icone: src.icone, groupe: src.label,
+            titre: src.titre(row), sous: src.sous(row), lien: src.lien(row) };
+        }).filter(function (x) { return x.titre; });
     }, function () { return []; });
   }
 
   function chercher(q) {
-    return Promise.all(SOURCES.map(function (s) { return chercherSource(s, q); }))
+    return Promise.all(SOURCES.filter(_autorise).map(function (s) { return chercherSource(s, q); }))
       .then(function (parSource) {
         var out = [];
         parSource.forEach(function (l) { out = out.concat(l); });

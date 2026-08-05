@@ -16,7 +16,7 @@ function _dv2Today() { return (typeof today === 'function') ? today() : new Date
 function _dv2Esc(s) { return (typeof escHtml === 'function') ? escHtml(s) : String(s == null ? '' : s); }
 function _dv2Date(d) { return (typeof formatDate === 'function') ? formatDate(d) : (d || ''); }
 function _dv2Days(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
-function _dv2Shift(n) { const d = new Date(_dv2Today()); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function _dv2Shift(n) { const d = new Date(_dv2Today()); d.setDate(d.getDate() + n); return isoJour(d); }
 function _dv2Nom(r) { return `${r?.prenom || ''} ${r?.nom || ''}`.trim() || 'Résident'; }
 
 // Périmètre référent : mêmes règles de rapprochement que l'ancien _dashScope
@@ -36,20 +36,37 @@ function _dv2MesReferes(list) {
 }
 function _dv2Ini(r) { return ((r?.prenom || '')[0] || '') + ((r?.nom || '')[0] || ''); }
 
-// Enveloppe de carte bento
+// Micro-label (eyebrow) « Console Data » par titre de carte — évite d'éditer chaque appelant.
+const _DC_EYEBROW = {
+  'Agenda du jour': 'Aujourd’hui', 'Satisfaction résidents': 'Ressenti', 'Plan de médication': 'Soins du jour',
+  'Régimes & allergies': 'Cuisine', 'Occupation par unité': 'Hébergement', 'Météo du foyer — 7 jours': 'Ambiance',
+  'Congés à valider': 'RH', 'Formations à venir': 'RH', 'Échéances': 'Administratif', 'Stocks': 'Logistique',
+  'Maintenance': 'Technique', 'Activités & sorties': 'Animation', 'Annonces internes': 'Communication',
+  'Flotte véhicules': 'Logistique', 'RDV médicaux — 7 jours': 'Santé', 'Planning de la semaine': 'Équipe',
+  'Dépenses du mois': 'Budget', 'Journal de bord — dernières transmissions': 'Terrain'
+};
+
+// Enveloppe de carte — direction « Console Data » (chip + eyebrow mono + titre + pill mono).
 function _dv2Card(opts) {
-  const { title, icon, color = '#818cf8', meta = '', body = '', tint = null, span = '' } = opts;
-  const head = `<div class="v2-card-head">
-      ${icon ? `<span class="v2-ico" style="background:${color}22;color:${color}">${icon}</span>` : ''}
-      <span class="v2-card-title"${tint ? ` style="color:${tint}"` : ''}>${_dv2Esc(title)}</span>
-      ${meta ? `<span class="v2-card-meta">${meta}</span>` : ''}
-    </div>`;
-  const cls = tint ? 'v2-card-tint' : 'v2-card';
-  const style = tint ? `--v2-tint-a:${color}24;--v2-tint-b:${color}38;` : '';
-  return `<div class="${cls}" style="${style}${span}">${head}${body}</div>`;
+  const { title, icon, color = '#818cf8', meta = '', body = '', span = '', flush = false } = opts;
+  const eyebrow = opts.eyebrow || _DC_EYEBROW[title] || '';
+  const chip = icon ? `<span class="dc-chip" style="background:${color}22;color:${color}">${icon}</span>` : '';
+  const head = `<div class="dc-head${flush ? ' nb' : ''}">
+      <div class="dc-head-l">${chip}
+        <div style="min-width:0">${eyebrow ? `<div class="dc-eyebrow">${_dv2Esc(eyebrow)}</div>` : ''}<div class="dc-title">${_dv2Esc(title)}</div></div>
+      </div>${meta ? `<span class="dc-pill dim">${_dv2Esc(meta)}</span>` : ''}</div>`;
+  return `<div class="dc-card" style="${span}">${head}<div class="dc-body">${body}</div></div>`;
 }
 
 function _dv2Empty(txt) { return `<div style="font-size:12px;color:var(--v2-t7);padding:6px 0">${_dv2Esc(txt)}</div>`; }
+
+// En-tête « Console Data » : chip d'icône + eyebrow (label mono) + titre + zone droite.
+function _dcHead(icon, chip, eyebrow, title, right, noborder) {
+  return `<div class="dc-head${noborder ? ' nb' : ''}">
+      <div class="dc-head-l"><span class="dc-chip ${chip}">${icon}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">${_dv2Esc(eyebrow)}</div><div class="dc-title">${_dv2Esc(title)}</div></div>
+      </div>${right || ''}</div>`;
+}
 
 // ─── Chargement ───────────────────────────────────────────────────────────
 async function initDashboardV2() {
@@ -117,7 +134,7 @@ function renderDashboardV2() {
     </div>
 
     <div class="v2-sep"><span class="v2-sep-txt">Résidents</span><span class="v2-sep-line"></span></div>
-    ${safe(_dv2Residents, 'Résidents')}
+    ${_dv2CacheApercuResidents() ? '' : safe(_dv2Residents, 'Résidents')}
     <div class="v2-g v2-g2" style="margin-top:14px">
       ${safe(_dv2Occupation, 'Occupation')}
       ${safe(_dv2Echeances, 'Échéances')}
@@ -158,10 +175,9 @@ function renderDashboardV2() {
 
 // ─── Cartes ───────────────────────────────────────────────────────────────
 function _dv2Greeting() {
-  const s = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
   const nb = DV2.data.residents.filter(r => r.statut !== 'sorti').length;
   const dateTxt = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  return `<div><h1 class="v2-h1">Bonjour ${_dv2Esc(s?.prenom || s?.username || '')}</h1>
+  return `<div>
     <div class="v2-sub">${dateTxt.charAt(0).toUpperCase() + dateTxt.slice(1)} · ${nb} résident${nb > 1 ? 's' : ''} accompagné${nb > 1 ? 's' : ''}</div></div>`;
 }
 
@@ -171,12 +187,14 @@ function _dv2Kpis() {
   const incOuverts = DV2.data.incidents.filter(i => i.statut && i.statut !== 'resolu' && i.statut !== 'clos').length;
   const congesAtt = DV2.data.conges.filter(c => c.statut === 'en_attente').length;
   const ech30 = DV2.data.echeances.filter(e => !e.done && e.date && _dv2Days(t, e.date) <= 30).length;
-  const k = (v, l, c) => `<div class="v2-kpi"><div class="v2-kpi-val"${c ? ` style="color:${c}"` : ''}>${v}</div><div class="v2-kpi-lbl">${l}</div></div>`;
-  return `<div class="v2-kpis" style="margin-top:18px">
-    ${k(presents, 'Résidents présents')}
-    ${k(incOuverts, 'Incidents ouverts', incOuverts ? '#fca5a5' : '')}
-    ${k(congesAtt, 'Congés en attente', congesAtt ? '#fcd34d' : '')}
-    ${k(ech30, 'Échéances < 30 j', ech30 ? '#fde68a' : '')}
+  const k = (c, ico, label, val, sub) => `<div class="dc-kpi" style="--dc-c:${c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${label}</span><span class="dc-kpi-ico">${ico}</span></div>
+      <div class="dc-kpi-val">${val}</div><div class="dc-kpi-sub">${sub}</div></div>`;
+  return `<div class="dc-kpis" style="margin-top:16px">
+    ${k('#6366f1', '🏠', 'Résidents présents', presents, 'aujourd’hui')}
+    ${k('#ef4444', '⚠', 'Incidents ouverts', incOuverts, 'à suivre')}
+    ${k('#f59e0b', '🗓', 'Congés en attente', congesAtt, 'à valider')}
+    ${k('#8b5cf6', '⏳', 'Échéances < 30 j', ech30, 'sous 30 jours')}
   </div>`;
 }
 
@@ -232,13 +250,23 @@ function _dv2Presences() {
   const max = Math.max(1, ...counts);
   const moy = counts.reduce((a, b) => a + b, 0) / (counts.length || 1);
   const L = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-  const body = `<div class="v2-chart">${days.map((d, i) => {
-    const wk = new Date(d).getDay();
-    return `<div class="v2-chart-col" title="${_dv2Date(d)} — ${counts[i]}">
-      <div class="v2-chart-bar" style="height:${Math.round(counts[i] / max * 100)}%${(wk === 0 || wk === 6) ? ';background:#22d3ee' : ''}"></div>
-      <div class="v2-chart-lbl">${L[wk]}</div></div>`;
-  }).join('')}</div>`;
-  return _dv2Card({ title: 'Présences — 7 jours', icon: '📊', color: '#6366f1', meta: `moy. ${moy.toFixed(1)}`, body });
+  let peakI = 0; counts.forEach((c, i) => { if (c > counts[peakI]) peakI = i; });
+  const bars = days.map((d, i) => {
+    const wk = new Date(d).getDay(); const we = (wk === 0 || wk === 6);
+    return `<div class="dc-bcol" title="${_dv2Date(d)} — ${counts[i]}">
+        <span class="dc-bval">${counts[i]}</span>
+        <div class="dc-bar${we ? ' we' : ''}" style="height:${Math.max(4, Math.round(counts[i] / max * 100))}%"></div>
+        <span class="dc-blbl">${L[wk]}</span></div>`;
+  }).join('');
+  return `<div class="dc-card">
+      ${_dcHead('▤', 'indigo', 'Effectif présent', 'Présences — 7 jours', `<span class="dc-pill">moy. ${moy.toFixed(1)}</span>`)}
+      <div class="dc-bars-wrap">
+        <div class="dc-bars">${bars}</div>
+        <div class="dc-bars-foot">
+          <div class="dc-legend"><span><i class="dc-sw" style="background:#6366f1"></i>Semaine</span><span><i class="dc-sw" style="background:#22d3ee"></i>Week-end</span></div>
+          <span class="dc-foot-note">pic ${L[new Date(days[peakI]).getDay()]} · ${counts[peakI]}</span>
+        </div>
+      </div></div>`;
 }
 
 function _dv2Incidents() {
@@ -248,16 +276,19 @@ function _dv2Incidents() {
   const encours = list.filter(i => i.statut === 'en_cours').length;
   const resolus = list.length - ouverts - encours;
   const tot = list.length || 1;
-  const p1 = ouverts / tot * 100, p2 = p1 + encours / tot * 100;
-  const lg = (c, l, n) => `<div><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${c};margin-right:7px"></span>${l} <b style="color:#fff;float:right">${n}</b></div>`;
-  const body = `<div style="display:flex;align-items:center;gap:16px">
-      <div style="width:96px;height:96px;border-radius:50%;flex-shrink:0;background:conic-gradient(#ef4444 0 ${p1}%,#f59e0b ${p1}% ${p2}%,#10b981 ${p2}% 100%);display:flex;align-items:center;justify-content:center">
-        <div style="width:62px;height:62px;border-radius:50%;background:var(--v2-inset);display:flex;align-items:center;justify-content:center">
-          <span class="v2-num" style="font-size:22px;color:#fff">${list.length}</span></div></div>
-      <div style="font-size:11.5px;color:var(--v2-t5);line-height:2;flex:1">
-        ${lg('#ef4444', 'Ouverts', ouverts)}${lg('#f59e0b', 'En cours', encours)}${lg('#10b981', 'Résolus', resolus)}
-      </div></div>`;
-  return _dv2Card({ title: 'Incidents du mois', icon: '◑', color: '#ef4444', body });
+  const aG = resolus / tot * 360, aA = encours / tot * 360;
+  const s1 = aG, s2 = aG + aA;
+  const grad = list.length
+    ? `conic-gradient(#10b981 0 ${s1}deg, #f59e0b ${s1}deg ${s2}deg, #ef4444 ${s2}deg 360deg)`
+    : 'conic-gradient(var(--v2-s-sub) 0 360deg)';
+  const MOIS = ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
+  const moisLbl = MOIS[parseInt(m.slice(5, 7), 10) - 1] || '';
+  const dl = (c, name, n) => `<div class="dc-dl"><span class="dc-dl-dot" style="background:${c}"></span><span class="dc-dl-name">${name}</span><span class="dc-dl-num">${n}</span></div>`;
+  const body = `<div class="dc-donut-body">
+      <div class="dc-donut" style="background:${grad}"><div class="dc-donut-c"><b>${list.length}</b><small>total</small></div></div>
+      <div class="dc-dleg">${dl('#ef4444', 'Ouverts', ouverts)}${dl('#f59e0b', 'En cours', encours)}${dl('#10b981', 'Résolus', resolus)}</div>
+    </div>`;
+  return `<div class="dc-card">${_dcHead('⚠', 'red', 'Suivi mensuel', 'Incidents du mois', `<span class="dc-pill dim">${moisLbl}</span>`)}${body}</div>`;
 }
 
 function _dv2Tiles() {
@@ -267,30 +298,43 @@ function _dv2Tiles() {
   const md = t.slice(5);
   const annivs = DV2.data.residents.filter(r => r.dob && r.dob.slice(5) === md);
   const rdv = DV2.data.residents.reduce((n, r) => n + ((r.sante?.rdv) || []).filter(v => v.date >= t && v.date <= _dv2Shift(7) && !v.fait).length, 0);
-  const tile = (lbl, val, sub, col) => `<div class="v2-tile"><div class="v2-card-meta" style="margin:0">${lbl}</div>
-    <div class="v2-num" style="font-size:22px;color:${col || '#fff'}">${val}</div><div class="v2-row-meta">${sub}</div></div>`;
-  return `<div class="v2-g v2-g4">
-    ${tile('Véhicules', veh, 'sorties du jour')}
-    ${tile('Repas midi', midi, 'couverts')}
-    ${tile('Anniversaires', annivs.length, annivs.length ? _dv2Esc(_dv2Nom(annivs[0])) : '—', annivs.length ? '#5eead4' : '')}
-    ${tile('RDV médicaux', rdv, 'sous 7 jours')}
+  const kpi = (c, ico, label, val, sub) => `<div class="dc-kpi" style="--dc-c:${c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${_dv2Esc(label)}</span><span class="dc-kpi-ico">${ico}</span></div>
+      <div class="dc-kpi-val">${val}</div><div class="dc-kpi-sub">${_dv2Esc(sub)}</div></div>`;
+  return `<div class="dc-kpis">
+    ${kpi('#6366f1', '🚐', 'Véhicules', veh, 'sorties du jour')}
+    ${kpi('#10b981', '🍽️', 'Repas midi', midi, 'couverts')}
+    ${kpi('#8b5cf6', '🎂', 'Anniversaires', annivs.length, annivs.length ? _dv2Nom(annivs[0]) : '—')}
+    ${kpi('#22d3ee', '🩺', 'RDV médicaux', rdv, 'sous 7 jours')}
   </div>`;
 }
 
 function _dv2IncidentsTable() {
   const list = [...DV2.data.incidents].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
-  if (!list.length) return _dv2Card({ title: 'Incidents récents', icon: '⚑', color: '#ef4444', body: _dv2Empty('Aucun incident enregistré.') });
-  const grav = g => ({ faible: 'v2-b-ok', moderee: 'v2-b-warn', elevee: 'v2-b-danger', critique: 'v2-b-danger' })[g] || 'v2-b-neutral';
-  const stat = s => (s === 'resolu' || s === 'clos') ? 'v2-b-ok' : (s === 'en_cours' ? 'v2-b-warn' : 'v2-b-danger');
-  const rows = list.map(i => `<tr>
-      <td>${_dv2Date(i.date)}</td>
-      <td style="color:var(--v2-t2)">${_dv2Esc(i.residentName || '—')}</td>
-      <td>${_dv2Esc(i.type || i.titre || '—')}</td>
-      <td><span class="v2-badge ${grav(i.gravite)}">${_dv2Esc(DV2_GRAVITE[i.gravite] || i.gravite || '—')}</span></td>
-      <td><span class="v2-badge ${stat(i.statut)}">${_dv2Esc(DV2_STATUT[i.statut] || i.statut || 'Ouvert')}</span></td></tr>`).join('');
-  return `<div class="v2-card pad0"><table class="v2-table">
-      <thead><tr><th>Date</th><th>Résident</th><th>Type</th><th>Gravité</th><th>Statut</th></tr></thead>
-      <tbody>${rows}</tbody></table></div>`;
+  const head = _dcHead('▦', 'red', 'Registre', 'Incidents récents', list.length ? `<span class="dc-pill dim">${list.length} entrée${list.length > 1 ? 's' : ''}</span>` : '');
+  if (!list.length) return `<div class="dc-card">${head}<div class="dc-empty">Aucun incident enregistré.</div></div>`;
+  // Gravité réelle (faible/moderee/elevee/critique) → liseré + tonalité de badge.
+  const GRAV = { critique: { c: '#dc2626', t: 'red' }, elevee: { c: '#ef4444', t: 'red' }, moderee: { c: '#f59e0b', t: 'amber' }, faible: { c: '#10b981', t: 'green' } };
+  const STAT = { ouvert: 'indigo', en_cours: 'amber', resolu: 'green', clos: 'gray' };
+  let nGrave = 0, nEnCours = 0;
+  const rows = list.map(i => {
+    const g = GRAV[i.gravite] || { c: 'transparent', t: 'gray' };
+    if (i.gravite === 'elevee' || i.gravite === 'critique') nGrave++;
+    if (i.statut === 'en_cours') nEnCours++;
+    const stTone = STAT[i.statut] || 'indigo';
+    const gLabel = DV2_GRAVITE[i.gravite] || i.gravite || '—';
+    const sLabel = DV2_STATUT[i.statut] || i.statut || 'Ouvert';
+    return `<div class="dc-trow2" style="--dc-c:${g.c}">
+        <span class="dc-td-date">${_dv2Date(i.date)}</span>
+        <span class="dc-td-res">${_dv2Esc(i.residentName || '—')}</span>
+        <span class="dc-td-type">${_dv2Esc(i.type || i.titre || '—')}</span>
+        <span><span class="dc-badge dc-b-${g.t}"><span class="d"></span>${_dv2Esc(gLabel)}</span></span>
+        <span><span class="dc-badge dc-b-${stTone}">${_dv2Esc(sLabel)}</span></span></div>`;
+  }).join('');
+  const foot = `<div class="dc-table-foot"><span class="l">${nGrave} grave${nGrave > 1 ? 's' : ''} · ${nEnCours} en cours</span><a class="dc-pill dim" href="eig.html" style="text-decoration:none">Voir tout →</a></div>`;
+  return `<div class="dc-card">${head}
+      <div class="dc-thead"><span class="dc-th">Date</span><span class="dc-th">Résident</span><span class="dc-th">Type</span><span class="dc-th">Gravité</span><span class="dc-th">Statut</span></div>
+      ${rows}${foot}</div>`;
 }
 
 function _dv2Agenda() {
@@ -322,27 +366,32 @@ function _dv2Satisfaction() {
 }
 
 function _dv2Actions() {
-  const a = (href, label) => `<a class="v2-qa" href="${href}">${label}</a>`;
-  const body = `<div class="v2-g v2-g2" style="gap:10px">
-      ${a('journal.html', '📝 Nouvelle entrée')}${a('presences.html', '✓ Saisir présences')}
-      ${a('planning.html', '📅 Ajouter événement')}${a('residents.html', '👤 Résidents')}</div>`;
-  return _dv2Card({ title: 'Accès rapides', icon: '⚡', color: '#6366f1', body });
+  const b = (href, ico, label) => `<a class="dc-qa-btn" href="${href}"><span class="dc-qa-ico">${ico}</span><span class="dc-qa-txt">${_dv2Esc(label)}</span></a>`;
+  const body = `<div class="dc-qa">
+      ${b('journal.html', '📝', 'Nouvelle entrée')}${b('presences.html', '✓', 'Saisir présences')}
+      ${b('planning.html', '📅', 'Ajouter événement')}${b('residents.html', '👤', 'Résidents')}</div>`;
+  return `<div class="dc-card">${_dcHead('⚡', 'violet', 'Raccourcis', 'Accès rapides', '', true)}${body}</div>`;
 }
 
+const _DC_AV_GRADS = [
+  'linear-gradient(145deg,#6366f1,#4f46e5)', 'linear-gradient(145deg,#22d3ee,#0891b2)',
+  'linear-gradient(145deg,#8b5cf6,#7c3aed)', 'linear-gradient(145deg,#f59e0b,#d97706)',
+  'linear-gradient(145deg,#10b981,#059669)', 'linear-gradient(145deg,#ef4444,#dc2626)'
+];
 function _dv2Equipe() {
   const t = _dv2Today();
   const list = (DV2.data.shifts || []).filter(s => s.date === t).slice(0, 6);
   const emp = id => DV2.data.employes.find(e => String(e.id) === String(id));
-  const body = list.length ? list.map(s => {
+  const head = _dcHead('◍', 'cyan', 'Sur site', 'Équipe présente', list.length ? `<span class="dc-count">${list.length}</span>` : '');
+  if (!list.length) return `<div class="dc-card">${head}<div class="dc-empty">Aucun poste planifié aujourd'hui.</div></div>`;
+  const rows = list.map((s, idx) => {
     const e = emp(s.employeId || s.employe_id);
     const nom = e ? `${e.prenom || ''} ${e.nom || ''}`.trim() : (s.employeNom || 'Salarié');
-    return `<div class="v2-row">
-      <span class="v2-av v2-av-sm" style="background:#818cf8">${_dv2Esc((nom[0] || '?').toUpperCase())}</span>
-      <div style="flex:1;min-width:0"><div class="v2-row-title">${_dv2Esc(nom)}</div>
-        <div class="v2-row-meta">${_dv2Esc(e?.fonction || '')}</div></div>
-      <span class="v2-badge v2-b-neutral">${_dv2Esc(s.creneau || s.type || '')}</span></div>`;
-  }).join('') : _dv2Empty('Aucun poste planifié aujourd\'hui.');
-  return _dv2Card({ title: 'Équipe présente', icon: '👥', color: '#10b981', meta: list.length ? `${list.length}` : '', body });
+    const ini = (((e && e.prenom) || nom || '?')[0] || '?').toUpperCase() + (((e && e.nom) || '')[0] || '').toUpperCase();
+    return `<div class="dc-trow"><span class="dc-av" style="background:${_DC_AV_GRADS[idx % _DC_AV_GRADS.length]}">${_dv2Esc(ini || '?')}</span>
+        <span class="dc-team-name">${_dv2Esc(nom)}</span><span class="dc-presence"><span class="pd"></span>présent</span></div>`;
+  }).join('');
+  return `<div class="dc-card">${head}<div class="dc-team">${rows}</div></div>`;
 }
 
 function _dv2Medication() {
@@ -365,11 +414,25 @@ function _dv2Medication() {
   return _dv2Card({ title: 'Plan de médication', icon: '💊', color: '#ec4899', meta: prevus ? `${faits}/${prevus}` : '', body });
 }
 
+// Miroir de RV2_REGIMES (js/resident-v2.js), que cette page ne charge pas.
+const DV2_REGIMES = {
+  vegetarien: 'Végétarien', sansporc: 'Sans porc', halal: 'Halal', casher: 'Casher',
+  diabetique: 'Diabétique', hyposode: 'Hyposodé', hypocalorique: 'Hypocalorique', autre: 'Autre'
+};
+
 function _dv2Regimes() {
   const alg = [], reg = {};
   DV2.data.residents.forEach(r => { if (r.statut === 'sorti') return;
     if ((r.allergies || '').trim()) alg.push(_dv2Nom(r));
-    const g = (r.regime || r.sante?.regime || '').trim(); if (g) reg[g] = (reg[g] || 0) + 1; });
+    // r.regime est un OBJET { type, autreLabel, texture, allergiesAlim, notes }
+    // (voir saveRegime, js/repas.js:600). Le traiter comme du texte levait un
+    // TypeError dès le premier résident : toute la carte basculait en
+    // « Indisponible », ce qui ressemblait à un manque de données.
+    const rg = r.regime || {};
+    const g = rg.type && rg.type !== 'normal'
+      ? (rg.type === 'autre' && rg.autreLabel ? rg.autreLabel : (DV2_REGIMES[rg.type] || rg.type))
+      : '';
+    if (g) reg[g] = (reg[g] || 0) + 1; });
   const chips = Object.entries(reg).map(([k, v]) => `<span class="v2-badge v2-b-warn">${_dv2Esc(k)} · ${v}</span>`).join(' ');
   const body = (chips || alg.length) ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${chips}
       ${alg.length ? `<span class="v2-badge v2-b-danger">Allergies · ${alg.length}</span>` : ''}</div>
@@ -496,6 +559,20 @@ function _dv2Annonces() {
   return _dv2Card({ title: 'Annonces internes', icon: '📣', color: '#6366f1', body });
 }
 
+// L'aperçu « Résidents » est masqué pour l'encadrement (admin, RH, chef de service) :
+// cette carte sert surtout aux référents. Les éducateurs référents gardent « Mes référés ».
+function _dv2CacheApercuResidents() {
+  try {
+    if (typeof Auth === 'undefined') return false;
+    if (Auth.isRH && Auth.isRH()) return true;        // couvre admin + rh
+    if (Auth.isAdmin && Auth.isAdmin()) return true;
+    const s = Auth.getSession ? (Auth.getSession() || {}) : {};
+    const f = (s.fonction || '').toLowerCase();
+    if (f.includes('chef') && f.includes('service')) return true;   // « Chef de service » (fonction)
+    return false;
+  } catch (e) { return false; }
+}
+
 function _dv2Residents() {
   const actifs = DV2.data.residents.filter(r => r.statut !== 'sorti');
   const mine = _dv2MesReferes(actifs);          // null = compte voyant tout l'établissement
@@ -561,7 +638,7 @@ function _dv2PlanningSemaine() {
       return `<div style="text-align:center">
         <div style="font-size:10.5px;color:var(--v2-t8);margin-bottom:6px">${L[new Date(d).getDay()]} ${d.slice(8)}</div>
         <div class="v2-sub-card" style="padding:10px 4px;${n ? '' : 'border-color:rgba(239,68,68,.3)'}">
-          <div class="v2-num" style="font-size:17px;color:${n ? '#fff' : '#fca5a5'}">${n}</div>
+          <div class="v2-num" style="font-size:17px;color:${n ? 'var(--v2-t1)' : '#fca5a5'}">${n}</div>
           <div style="font-size:10px;color:var(--v2-t7);margin-top:2px">${n ? 'poste' + (n > 1 ? 's' : '') : 'découvert'}</div>
         </div></div>`; }).join('')}</div>`;
   return _dv2Card({ title: 'Planning de la semaine', icon: '📆', color: '#818cf8', body });

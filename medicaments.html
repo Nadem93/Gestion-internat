@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Distribution des médicaments — FTR</title>
+  <title>Distribution des médicaments — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -39,7 +39,7 @@
     </div>
 
     <div class="v2-body">
-      <div class="v2-med-stats" id="medStats"></div>
+      <div class="dc-kpis" id="medStats" style="margin-bottom:16px"></div>
       <div class="v2-med-panels" id="medPanels"></div>
       <div class="v2-chips" id="medFilters" style="margin-bottom:16px"></div>
       <div id="medList"></div>
@@ -105,12 +105,18 @@
     </div>
     <div class="v2-md-b">
       <div>
+        <label class="v2-fld-l" for="stkResSearch">Rattachement</label>
+        <input class="v2-fld" id="stkResSearch" type="text" list="stkResidents" autocomplete="off" placeholder="Stock collectif — ou rechercher un résident…" oninput="stkResPick()"/>
+        <datalist id="stkResidents"></datalist>
+        <input type="hidden" id="stkResident"/>
+      </div>
+      <div id="stkTraitementWrap" style="display:none">
+        <label class="v2-fld-l" for="stkTraitement">Traitement lié <span style="font-weight:400;color:var(--v2-t6,#94a3b8)">— décompte auto à chaque prise « donnée »</span></label>
+        <select class="v2-fld" id="stkTraitement" onchange="stkToggleLibelle()"></select>
+      </div>
+      <div id="stkLibelleWrap">
         <label class="v2-fld-l" for="stkLibelle">Médicament</label>
         <input class="v2-fld" id="stkLibelle" type="text" placeholder="Ex : Antihypertenseur 5 mg"/>
-      </div>
-      <div>
-        <label class="v2-fld-l" for="stkResident">Rattachement</label>
-        <select class="v2-fld" id="stkResident"></select>
       </div>
       <div class="v2-grid2">
         <div>

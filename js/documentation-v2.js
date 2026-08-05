@@ -30,6 +30,10 @@ const DC2_IC = {
 function dc2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône dimensionnée (les chips/kpi « Console Data » ne fixent pas la taille du SVG).
+function dc2Ico(d, px) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:${px || 16}px;height:${px || 16}px">${d}</svg>`;
+}
 
 // Une couleur + une icône par catégorie réellement gérée par l'app
 // (mêmes clés que DOCU_CATEGORIE_ICONS de js/documentation.js).
@@ -118,14 +122,14 @@ function dc2Render() {
 
   const shown = dc2Filtered(all);
   if (!shown.length) {
-    el.innerHTML = `<div class="v2-blk" style="text-align:center;padding:34px 22px">
+    el.innerHTML = `<div class="dc-card"><div class="dc-body" style="text-align:center;padding:34px 22px">
       <div class="v2-blk-vide" style="margin-bottom:${isAdmin ? '12px' : '0'}">${all.length
         ? 'Aucun document ne correspond à cette recherche.'
         : 'Aucun document dans la documentation de l’établissement.'}</div>
       ${isAdmin ? `<button type="button" class="dc2-new" style="margin:0 auto" onclick="openDocumentationModal()">
         ${dc2Svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 2.4)}Ajouter un document
       </button>` : ''}
-    </div>`;
+    </div></div>`;
     return;
   }
 
@@ -134,26 +138,34 @@ function dc2Render() {
       .sort((a, b) => String(b.dateAjout || '').localeCompare(String(a.dateAjout || '')));
     if (!items.length) return '';
     const m = dc2Cat(cat);
-    return `<div class="v2-blk dc2-grp" style="--pc:${m.c}">
-      <div class="dc2-grp-h">
-        <span class="dc2-grp-ico">${dc2Svg(m.i)}</span>
-        <span class="v2-blk-t">${escHtml(cat)}</span>
-        <span class="dc2-grp-n">${items.length}</span>
+    return `<div class="dc-card" style="--pc:${m.c};margin-bottom:16px">
+      <div class="dc-head">
+        <div class="dc-head-l">
+          <span class="dc-chip" style="background:${m.c}22;color:${m.c}">${dc2Ico(m.i, 16)}</span>
+          <div style="min-width:0">
+            <div class="dc-eyebrow">Catégorie</div>
+            <div class="dc-title">${escHtml(cat)}</div>
+          </div>
+        </div>
+        <span class="dc-pill dim">${items.length} doc${items.length > 1 ? 's' : ''}</span>
       </div>
-      <div class="dc2-docs">${items.map(d => dc2Doc(d, isAdmin)).join('')}</div>
+      <div class="dc-body">
+        <div class="dc2-docs">${items.map(d => dc2Doc(d, isAdmin)).join('')}</div>
+      </div>
     </div>`;
   }).join('');
 }
 
 function dc2Doc(d, isAdmin) {
   const m = dc2Cat(d.categorie);
-  const meta = [dc2Type(d), dc2Taille(d.fichierTaille), dc2Date(d.dateAjout), d.ajoutePar ? 'par ' + d.ajoutePar : '']
+  const typ = dc2Type(d);
+  const meta = [dc2Taille(d.fichierTaille), dc2Date(d.dateAjout), d.ajoutePar ? 'par ' + d.ajoutePar : '']
     .filter(Boolean).join(' · ');
-  return `<div class="dc2-doc" style="--pc:${m.c}">
+  return `<div class="dc2-doc" style="--pc:${m.c};border-left:3px solid ${m.c}">
     <span class="dc2-doc-ico">${dc2Svg(DC2_IC.file)}</span>
     <div style="flex:1;min-width:0">
       <div class="dc2-doc-n" title="${escHtml(d.titre || '')}">${escHtml(d.titre || 'Sans titre')}</div>
-      <div class="dc2-doc-m">${escHtml(meta)}</div>
+      <div class="dc2-doc-m">${typ !== '—' ? `<span class="dc-badge dc-b-gray" style="margin-right:6px;text-transform:none">${escHtml(typ)}</span>` : ''}${escHtml(meta)}</div>
     </div>
     <div class="dc2-acts">
       <button type="button" class="dc2-act dl" title="Télécharger ${escHtml(d.fichierNom || '')}"
@@ -177,9 +189,12 @@ function dc2RenderStats(all) {
     { n: String(recents),      l: 'Ajoutés (30 j)',  c: '#10b981', i: DC2_IC.clock },
     { n: dc2Taille(octets),    l: 'Stockage',        c: '#22d3ee', i: DC2_IC.db }
   ];
-  el.innerHTML = stats.map(s => `<div class="dc2-stat" style="--pc:${s.c}">
-    <span class="dc2-stat-ico">${dc2Svg(s.i)}</span>
-    <div><div class="dc2-stat-n">${escHtml(s.n)}</div><div class="dc2-stat-l">${escHtml(s.l)}</div></div>
+  el.innerHTML = stats.map(s => `<div class="dc-kpi" style="--dc-c:${s.c}">
+    <div class="dc-kpi-top">
+      <span class="dc-kpi-label">${escHtml(s.l)}</span>
+      <span class="dc-kpi-ico" style="color:${s.c}">${dc2Ico(s.i, 16)}</span>
+    </div>
+    <div class="dc-kpi-val">${escHtml(s.n)}</div>
   </div>`).join('');
 }
 
@@ -207,14 +222,14 @@ function dc2RenderRecents(all) {
   el.innerHTML = recents.map(d => {
     const m = dc2Cat(d.categorie);
     const sous = [d.categorie, d.ajoutePar].filter(Boolean).join(' · ');
-    return `<button type="button" class="dc2-rec" style="--pc:${m.c}"
+    return `<button type="button" class="dc2-rec" style="--pc:${m.c};border-left:3px solid ${m.c};padding-left:11px"
       title="Télécharger ${escHtml(d.fichierNom || '')}" onclick="voirDocumentation('${escHtml(d.id)}')">
       <span class="dc2-rec-ico">${dc2Svg(m.i)}</span>
       <span style="flex:1;min-width:0;text-align:left">
         <span class="dc2-rec-n">${escHtml(d.titre || 'Sans titre')}</span>
         ${sous ? `<span class="dc2-rec-m">${escHtml(sous)}</span>` : ''}
       </span>
-      <span class="dc2-rec-w">${escHtml(dc2Depuis(d.dateAjout))}</span>
+      <span class="dc-pill dim">${escHtml(dc2Depuis(d.dateAjout))}</span>
     </button>`;
   }).join('');
 }
@@ -234,7 +249,7 @@ function dc2RenderRepartition(all) {
         <span class="dc2-rep-l">${escHtml(c)}</span>
         <span class="dc2-rep-v" style="color:${col}">${counts[c]}</span>
       </div>
-      <div class="v2-prog"><span style="width:${pct}%;background:${col}"></span></div>
+      <div class="al-prog-bar"><span style="width:${pct}%;background:${col}"></span></div>
     </div>`;
   }).join('');
 }

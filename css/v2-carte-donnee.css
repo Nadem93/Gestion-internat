@@ -1,0 +1,112 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERNALIS — CARTES « ACCÈS RAPIDES » AU FORMAT CARTE-DONNÉE
+   Même design que les tuiles de l'accueil (css/v2-accueil.css) : en-tête
+   icône + intitulé, puis le chiffre qui correspond à l'intitulé et sa légende.
+
+   Partagé par pilotage.html, vie-quotidienne.html, dossiers.html et rh.html.
+   Les cartes gardent leur classe de page (.pl-card / .vq-card / .ds-card /
+   .rh-card) — elle porte le fond, la bordure, le survol, le focus et surtout
+   les gestionnaires de clic (data-page). On n'ajoute que .cdn et --cdc.
+
+   À CHARGER EN DERNIER dans le <head> : les règles ci-dessous ont la même
+   spécificité que celles des feuilles de page qu'elles remplacent, c'est
+   l'ordre qui tranche. Les grilles, elles, sont préfixées body.v2 pour passer
+   devant les media queries des feuilles de page quel que soit l'ordre.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Grille : 5 par ligne, même paliers que l'accueil ────────────────────── */
+body.v2 .pl-cards,
+body.v2 .vq-cards,
+body.v2 .ds-cards,
+body.v2 .rh-cards { grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; }
+@media (max-width: 1060px) {
+  body.v2 .pl-cards, body.v2 .vq-cards, body.v2 .ds-cards, body.v2 .rh-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  body.v2 .pl-cards, body.v2 .vq-cards, body.v2 .ds-cards, body.v2 .rh-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  body.v2 .pl-cards, body.v2 .vq-cards, body.v2 .ds-cards, body.v2 .rh-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  body.v2 .pl-cards, body.v2 .vq-cards, body.v2 .ds-cards, body.v2 .rh-cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── La carte ────────────────────────────────────────────────────────────── */
+.cdn {
+  display: flex; flex-direction: column; align-items: stretch;
+  text-align: left; padding: 12px 14px 12px; min-height: 122px;
+}
+
+/* En-tête : la pastille d'icône passe de 44 px à 26 px et remonte à côté du
+   titre. On garde la classe .xx-card-ic de la page : elle porte la teinte du
+   module et l'éclaircissement en thème sombre. */
+.cdn-top { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.cdn .cdn-ic { width: 26px; height: 26px; border-radius: 9px; margin: 0; flex-shrink: 0; }
+.cdn .cdn-ic svg { width: 14px; height: 14px; }
+.cdn-t {
+  font-size: 12px; font-weight: 700; color: var(--v2-t2); letter-spacing: .01em;
+  min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── Le chiffre et sa légende ────────────────────────────────────────────── */
+.cdn-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 10px 0 2px; min-width: 0; }
+.cdn-n {
+  font-family: var(--v2-display); font-size: 26px; font-weight: 800; line-height: 1;
+  color: var(--cdc, #6366f1); letter-spacing: -.02em;
+}
+/* Dénominateur / unité (« /12 », « % ») : plus petit et neutre, pour que le
+   chiffre reste le point d'accroche. */
+.cdn-n i { font-style: normal; font-size: 12.5px; font-weight: 700; margin-left: 4px; color: var(--v2-t6); }
+/* Variante texte : la carte n'a pas de chiffre pertinent (« Tournée »,
+   « Temps réel »…). Ni la fonte d'affichage ni la couleur du module, pour
+   qu'on ne la confonde pas avec une mesure. */
+.cdn-txt {
+  font-size: 14.5px; font-weight: 700; color: var(--v2-t4); line-height: 1.15;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cdn-l {
+  font-size: 10.5px; color: var(--v2-t7); margin-top: 5px; line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Thème sombre : le chiffre reprend une teinte plus claire du module, sinon
+   une couleur foncée (ex. #1e3a5f) devient illisible — même correctif que
+   celui appliqué aux pastilles d'icônes. */
+html:not(.clair) .cdn-n { color: color-mix(in srgb, var(--cdc, #6366f1) 62%, #fff); }
+/* Thème clair : symétrique. Une couleur vive sur carte blanche tombe sous le
+   seuil de contraste (#22c55e ≈ 2,3:1, #f59e0b ≈ 2,1:1) ; on la fonce pour
+   repasser au-dessus de 4:1 sans perdre l'identité du module. */
+html.clair .cdn-n { color: color-mix(in srgb, var(--cdc, #6366f1) 72%, #000); }
+
+/* ── « Il y a quelque chose à traiter » ──────────────────────────────────── */
+/* Posé par le rendu quand la valeur signale une action attendue (congés en
+   attente, entretiens en retard, projets à réviser…).
+   Teinte posée en background-image et NON en ::before : un pseudo-élément
+   absolu se peindrait au-dessus du contenu statique, et le neutraliser avec
+   `.cdn > * { position: relative }` écrasait le position:absolute du bouton
+   « ? » et du badge — ils repassaient dans le flux et déformaient la carte.
+   La règle :hover est répétée car les feuilles de page redéfinissent
+   `background` en raccourci au survol, ce qui effacerait l'image. */
+.cdn.cdn-warn { border-color: color-mix(in srgb, var(--cdc, #ef4444) 42%, transparent); }
+.cdn.cdn-warn,
+.cdn.cdn-warn:hover {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--cdc, #ef4444) 11%, transparent), transparent 62%);
+}
+
+/* ── Bouton « ? » (mode d'emploi) et badge : replacés dans le nouvel angle ── */
+/* Les quatre côtés sont forcés : les feuilles de page ne posent parfois que
+   `bottom` (rh) ou que `top` (pilotage), et un côté résiduel étire l'élément. */
+.cdn .pl-card-i, .cdn .vq-card-i, .cdn .ds-card-i, .cdn .rh-card-i {
+  top: auto; bottom: 9px; right: 9px; left: auto;
+}
+.cdn .rh-card-b { top: 9px; bottom: auto; right: 9px; left: auto; }
+/* On réserve la place : le badge au-dessus du titre, le « ? » sous la légende. */
+.cdn.cdn-hasb .cdn-top { padding-right: 26px; }
+.cdn.cdn-hasi .cdn-mid { padding-right: 30px; }
+
+/* ── Mobile : on resserre, le chiffre reste l'information utile ──────────── */
+@media (max-width: 720px) {
+  .cdn { min-height: 106px; padding: 11px 12px; }
+  .cdn-n { font-size: 22px; }
+  .cdn-txt { font-size: 13px; }
+}

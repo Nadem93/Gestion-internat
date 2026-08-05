@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Fiche résident — FTR</title>
+  <title>Fiche résident — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -507,6 +507,10 @@
 <script src="js/medicaments-supabase.js"></script>
 <script src="js/plan-soins-supabase.js"></script>
 <script src="js/chambres-supabase.js"></script>
+<!-- echeances-supabase AVANT mesures-protection : la synchro d'échéance des
+     mesures (_mpSyncEcheance) a besoin de sbSaveEcheance, sinon elle est
+     silencieusement sautée (garde typeof) et aucune échéance n'est créée. -->
+<script src="js/echeances-supabase.js"></script>
 <script src="js/mesures-protection-supabase.js"></script>
 <script src="js/mesures-protection.js"></script>
 <script src="js/protocoles-urgence-supabase.js"></script>
@@ -654,8 +658,8 @@ function renderViewMode(r) {
     projet:     () => projetV2 + paire(objectifsCard(r), evaluationsCard(r)),
     medical:    () => medicalV2 + (typeof protocolesUrgenceCard === 'function' ? protocolesUrgenceCard(r) : '') + paire(santeCard(r), planSoinsCard(r)),
     quotidien:  () => planningResidentCard(r) + planningHebdoCard(r)
-                    + paire(sortiesCard(r), activitesCard(r))
-                    + paire(trousseauCard(r), budgetCard(r)),
+                    + paire(budgetCard(r), activitesCard(r))
+                    + paire(sortiesCard(r), trousseauCard(r)),
     historique: () => transV2 + filDeVieCard(r) + autonomieCard(r),
     admin:      () => paire(sejour, adulte || enfant) + (adulte && enfant ? enfant : '')
                     + (typeof mesuresProtectionCard === 'function' ? mesuresProtectionCard(r) : '')
@@ -2218,7 +2222,7 @@ function docCatTabsHtml(docs) {
   const bdg = n => `<span class="badge badge-gray" style="margin-left:.35rem">${n}</span>`;
   const all = `<button class="docnav active" onclick="filterDocCat(this,'')">📎 Tous${docs && docs.length ? bdg(docs.length) : ''}</button>`;
   if (cats.length <= 1) return all; // une seule catégorie → pas besoin d'onglets
-  return all + cats.map(c => `<button class="docnav" onclick="filterDocCat(this,'${escHtml(c)}')">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => normDocCat(d.category) === c).length)}</button>`).join('');
+  return all + cats.map(c => `<button class="docnav" data-cat="${escAttr(c)}" onclick="filterDocCat(this, this.dataset.cat)">${escHtml(docCatLabel(c))}${bdg(docs.filter(d => normDocCat(d.category) === c).length)}</button>`).join('');
 }
 function filterDocCat(btn, cat) {
   const bar = btn.closest('#docCatTabs');
@@ -2604,7 +2608,7 @@ function bilanOfflineTemplate(r) {
   const cats = DB.get(DB.keys.categories)||[];
   let out = '';
   out += `## 1. Contexte et parcours\n`;
-  out += `${name}${r.dob?`, ${age(r.dob)} ans`:''}, accueilli(e) ${r.entree?`depuis le ${formatDate(r.entree)}`:'dans l\'établissement'}${r.referent?`, suivi(e) par ${r.referent}`:''}. Statut : ${r.statut||'—'}.\n\n`;
+  out += `${name}${r.dob?`, ${age(r.dob)}`:''}, accueilli(e) ${r.entree?`depuis le ${formatDate(r.entree)}`:'dans l\'établissement'}${r.referent?`, suivi(e) par ${r.referent}`:''}. Statut : ${r.statut||'—'}.\n\n`;
   out += `## 2. Évolution par domaine\n`;
   if (evals.length >= 1) {
     const first = evals[0], last = evals[evals.length-1];
@@ -2901,7 +2905,7 @@ function residentTransmissionsCard(r) {
   const byDate = {};
   shown.forEach(t => { if (!byDate[t.date]) byDate[t.date] = []; byDate[t.date].push(t); });
   const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
-  const todayStr     = new Date().toISOString().slice(0,10);
+  const todayStr     = today();
   const yesterdayStr = new Date(Date.now()-86400000).toISOString().slice(0,10);
 
   const rows = dates.map(date => {
@@ -3030,29 +3034,47 @@ function planningHebdoCard(r) {
   const canEdit = canEditResident();
   const actifs = PH_JOURS.filter(j => phDayAbsences(ph[j]).length);
 
-  // Bande horizontale : chaque jour est une colonne ; les absences s'affichent sous leur jour
-  // (plusieurs possibles le même jour : ex. Sport après le Travail).
+  // Activités éducatives récurrentes où le résident est inscrit : on les place dans la
+  // semaine type, sur leur jour (comme le « Planning individuel »), à côté des absences.
+  const _actInscritIds = new Set((r.activites || []).filter(i => i.statut === 'active').map(i => String(i.activiteId)));
+  const _catActs = (typeof actCatalogue === 'function') ? actCatalogue() : [];
+  const _mesActs = _catActs.filter(a => _actInscritIds.has(String(a.id)));
+  const actParJour = {};
+  PH_JOURS.forEach(j => { actParJour[j] = []; });
+  _mesActs.forEach(a => {
+    const j = (a.jour || '').trim().toLowerCase();
+    if (actParJour[j]) actParJour[j].push(a);
+  });
+  PH_JOURS.forEach(j => actParJour[j].sort((x, y) => (x.heureDebut || '').localeCompare(y.heureDebut || '')));
+  const nbJoursAct = PH_JOURS.filter(j => actParJour[j].length).length;
+
+  // Bande horizontale : chaque jour est une colonne ; absences et activités s'affichent
+  // sous leur jour (plusieurs possibles le même jour : ex. Sport après le Travail).
   const cols = PH_JOURS.map(j => {
     const list = phDayAbsences(ph[j]).slice().sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+    const acts = actParJour[j];
     const on = list.length > 0;
     const head = `<div style="text-align:center;padding:.3rem 0;border-radius:8px;font-size:.7rem;font-weight:700;${on ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd' : 'background:var(--g50, #f8fafc);color:var(--g400);border:1px solid var(--border)'}">${PH_JOURS_COURT[j]}</div>`;
-    const body = on
-      ? list.map(d => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;text-align:center">
+    const absBody = list.map(d => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f8fbff;border:1px solid #dbeafe;border-radius:8px;text-align:center">
           <div style="font-weight:600;font-size:.7rem;line-height:1.2;color:#0369a1">📅 ${escHtml(d.label || 'Absence')}</div>
           ${d.debut ? `<div style="font-size:.63rem;color:var(--muted);margin-top:2px">départ ${d.debut}</div>` : ''}
           ${d.fin ? `<div style="font-size:.63rem;color:var(--muted)">retour ${d.fin}</div>` : ''}
-        </div>`).join('')
-      : `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:var(--g300, #cbd5e1)">·</div>`;
-    return `<div style="min-width:0">${head}${body}</div>`;
+        </div>`).join('');
+    const actBody = acts.map(a => `<div style="margin-top:.35rem;padding:.4rem .45rem;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;text-align:center">
+          <div style="font-weight:600;font-size:.7rem;line-height:1.2;color:#7c3aed">🎨 ${escHtml(a.nom || 'Activité')}</div>
+          ${a.heureDebut ? `<div style="font-size:.63rem;color:var(--muted);margin-top:2px">${escHtml(a.heureDebut)}${a.heureFin ? '–' + escHtml(a.heureFin) : ''}</div>` : ''}
+        </div>`).join('');
+    const inner = absBody + actBody;
+    return `<div style="min-width:0">${head}${inner || `<div style="margin-top:.35rem;text-align:center;font-size:.8rem;color:var(--g300, #cbd5e1)">·</div>`}</div>`;
   }).join('');
 
   return `<div class="card" style="overflow:hidden"><div class="card-header" style="background:color-mix(in srgb, #0369a1 12%, #fff)">
-      <span class="card-title" style="color:#0369a1">🗓 Semaine type${actifs.length ? ` <span class="badge" style="margin-left:.3rem;background:#e0f2fe;color:#0369a1">${actifs.length} jour${actifs.length > 1 ? 's' : ''} d'absence</span>` : ''}</span>
+      <span class="card-title" style="color:#0369a1">🗓 Semaine type${actifs.length ? ` <span class="badge" style="margin-left:.3rem;background:#e0f2fe;color:#0369a1">${actifs.length} jour${actifs.length > 1 ? 's' : ''} d'absence</span>` : ''}${_mesActs.length ? ` <span class="badge" style="margin-left:.3rem;background:#f5f3ff;color:#7c3aed">${_mesActs.length} activité${_mesActs.length > 1 ? 's' : ''}</span>` : ''}</span>
       ${canEdit ? `<button class="btn btn-ghost btn-sm no-print" style="margin-left:auto;color:var(--accent)" onclick="openPlanningHebdoModal()">✎ Modifier</button>` : ''}
     </div><div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-    <div style="font-size:.73rem;color:var(--muted)">Absences récurrentes (retour en famille, travail, activité extérieure…). Les jours cochés sont présumés « sortie » au pointage et filtrables dans Médicaments.</div>
+    <div style="font-size:.73rem;color:var(--muted)"><span style="color:#0369a1;font-weight:600">📅 Absences</span> récurrentes (retour en famille, travail…) et <span style="color:#7c3aed;font-weight:600">🎨 activités éducatives</span> auxquelles le résident est inscrit. Les jours d'absence sont présumés « sortie » au pointage.</div>
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;min-width:0;align-items:start">${cols}</div>
-    ${!actifs.length ? '<div style="font-size:.78rem;color:var(--g400);text-align:center">Aucune absence récurrente — le résident est attendu chaque jour.</div>' : ''}
+    ${(!actifs.length && !nbJoursAct) ? '<div style="font-size:.78rem;color:var(--g400);text-align:center">Aucune absence ni activité récurrente — le résident est attendu chaque jour.</div>' : ''}
   </div></div>`;
 }
 

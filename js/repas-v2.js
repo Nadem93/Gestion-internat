@@ -32,6 +32,15 @@ const RP2_MOIS = ['jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep
 function rp2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+function rp2SvgN(d, n, w) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round" width="${n}" height="${n}">${d}</svg>`;
+}
+// Icônes pour les tuiles KPI (Console Data).
+const RP2_KPIIC = {
+  utens:  '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/>',
+  leaf:   '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
+};
 function rp2CanEdit() {
   return Auth.isAdmin() || ((typeof canEditResidents === 'function') && canEditResidents(Auth.getSession()?.userId));
 }
@@ -81,7 +90,7 @@ function rp2DateStrip() {
   for (let i = 0; i < 35; i++) {
     const d = new Date(todayS + 'T12:00');
     d.setDate(d.getDate() + i);
-    const ds = d.toISOString().slice(0, 10);
+    const ds = isoJour(d);
     const dd = all[ds];
     const hasMenu = !!(dd && dd.menus && Object.values(dd.menus).some(m => m && (m['1'] || m['2'])));
     const cls = 'rp2-day' + (ds === todayS ? ' today' : '') + (ds === repasDate ? ' on' : '');
@@ -114,17 +123,16 @@ function rp2Stats(residents, day) {
   const textures = residents.filter(r => { const g = rgOf(r); return g.texture && g.texture !== 'normale'; }).length;
   const allergies = residents.filter(r => rp2Allerg(r)).length;
   const tiles = [
-    { n: n('matin'), l: 'Couverts matin', c: '#22d3ee' },
-    { n: n('midi'),  l: 'Couverts midi',  c: '#fb923c' },
-    { n: n('soir'),  l: 'Couverts soir',  c: '#818cf8' },
-    { n: regimes,    l: 'Régimes spéciaux', c: '#ec4899' },
-    { n: textures,   l: 'Textures adaptées', c: '#22d3ee' },
-    { n: allergies,  l: 'Allergies', c: '#ef4444' }
+    { n: n('matin'), l: 'Couverts matin', c: '#22d3ee', ico: RP2_KPIIC.utens },
+    { n: n('midi'),  l: 'Couverts midi',  c: '#fb923c', ico: RP2_KPIIC.utens },
+    { n: n('soir'),  l: 'Couverts soir',  c: '#818cf8', ico: RP2_KPIIC.utens },
+    { n: regimes,    l: 'Régimes spéciaux', c: '#ec4899', ico: RP2_KPIIC.leaf },
+    { n: textures,   l: 'Textures adaptées', c: '#22d3ee', ico: RP2_KPIIC.layers },
+    { n: allergies,  l: 'Allergies', c: '#ef4444', ico: RP2_IC.warn }
   ];
-  el.innerHTML = tiles.map(t => `<div class="rp2-stat">
-    <div class="rp2-stat-b" style="background:${t.c}"></div>
-    <div class="rp2-stat-n">${t.n}</div>
-    <div class="rp2-stat-l">${t.l}</div>
+  el.innerHTML = tiles.map(t => `<div class="dc-kpi" style="--dc-c:${t.c}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${t.l}</span><span class="dc-kpi-ico" style="color:${t.c}">${rp2SvgN(t.ico, 16, 1.9)}</span></div>
+    <div class="dc-kpi-val">${t.n}</div>
   </div>`).join('');
 }
 
@@ -145,10 +153,10 @@ function rp2Menus(residents, day) {
       <span class="rp2-mn" title="Résidents ayant choisi ce menu">${cnt(c)}</span>
     </div>`;
     const sans = inscrits.length - cnt('1') - cnt('2');
-    return `<div class="rp2-menu" style="--mc:${m.c}">
+    return `<div class="rp2-menu" style="--mc:${m.c};border-left:3px solid ${m.c}">
       <div class="rp2-menu-h">
         <span class="rp2-menu-t">${m.label}</span>
-        <span class="rp2-menu-c">${inscrits.length} couvert${inscrits.length > 1 ? 's' : ''}</span>
+        <span class="dc-pill dim" style="margin-left:auto">${inscrits.length} couvert${inscrits.length > 1 ? 's' : ''}</span>
       </div>
       ${ligne('1')}${ligne('2')}
       ${sans > 0 ? `<div class="rp2-msans">Sans choix · ${sans}</div>` : ''}
@@ -175,7 +183,7 @@ function rp2Cuisine(residents, day) {
     || '<span style="flex:1;background:rgba(255,255,255,.08)"></span>';
   const leg = entries.map(([k, n]) => `<span><i style="background:${rp2RegColor(k)}"></i>${label(k)} <b>${n}</b></span>`).join('')
     || '<span>Aucun inscrit</span>';
-  el.innerHTML = `<div class="rp2-cui-t">Répartition des régimes · ${total}</div>
+  el.innerHTML = `<div class="dc-eyebrow" style="margin-bottom:8px">Répartition des régimes · ${total}</div>
     <div class="rp2-bar">${bar}</div>
     <div class="rp2-leg">${leg}</div>`;
 }
@@ -189,13 +197,13 @@ function rp2Tags(r, canEdit) {
   const c = rp2RegColor(type);
   const lbl = t.label + (type === 'autre' && g.autreLabel ? ' : ' + g.autreLabel : '');
   let out = canEdit
-    ? `<button type="button" class="rp2-tag" style="--pc:${c}" onclick="openRegimeModal('${r.id}')" title="Modifier le régime alimentaire">${escHtml(lbl)}</button>`
-    : `<span class="rp2-tag" style="--pc:${c}">${escHtml(lbl)}</span>`;
+    ? `<button type="button" class="dc-badge" style="background:${c}22;color:${c};border:1px solid ${c}55;cursor:pointer" onclick="openRegimeModal('${r.id}')" title="Modifier le régime alimentaire"><span class="d" style="background:${c}"></span>${escHtml(lbl)}</button>`
+    : `<span class="dc-badge" style="background:${c}22;color:${c};border:1px solid ${c}55"><span class="d" style="background:${c}"></span>${escHtml(lbl)}</span>`;
   if (g.texture && g.texture !== 'normale') {
-    out += `<span class="rp2-tag" style="--pc:#22d3ee">${TEXTURES[g.texture] || g.texture}</span>`;
+    out += `<span class="dc-badge dc-b-cyan"><span class="d"></span>${TEXTURES[g.texture] || g.texture}</span>`;
   }
   const a = rp2Allerg(r);
-  if (a) out += `<span class="rp2-tag" style="--pc:#fca5a5" title="${escAttr(a)}">${rp2Svg(RP2_IC.warn, 2.6)}${escHtml(a)}</span>`;
+  if (a) out += `<span class="dc-badge dc-b-red" title="${escAttr(a)}">${rp2SvgN(RP2_IC.warn, 12, 2.4)}${escHtml(a)}</span>`;
   return out;
 }
 
@@ -253,7 +261,7 @@ function rp2List(residents, day, canEdit) {
   if (!list.length) { el.innerHTML = '<div class="rp2-vide">Aucun résident trouvé.</div>'; return; }
 
   if (rpView === 'cartes') {
-    el.innerHTML = `<div class="rp2-cards">${list.map(r => `<div class="rp2-card">
+    el.innerHTML = `<div class="rp2-cards">${list.map(r => `<div class="rp2-card" style="border-left:3px solid ${rp2RegColor(rgOf(r).type || 'normal')}">
       <div class="rp2-card-h">${rp2Avatar(r)}<div class="rp2-id">
         <div class="rp2-nom">${escHtml(rp2Nom(r))}</div>
         <div class="rp2-ch">Ch. ${escHtml(r.chambre || '—')}</div></div></div>
@@ -263,7 +271,7 @@ function rp2List(residents, day, canEdit) {
     return;
   }
 
-  el.innerHTML = list.map(r => `<div class="rp2-row">
+  el.innerHTML = list.map(r => `<div class="rp2-row" style="border-left:3px solid ${rp2RegColor(rgOf(r).type || 'normal')}">
     ${rp2Avatar(r)}
     <div class="rp2-id">
       <div class="rp2-nom">${escHtml(rp2Nom(r))}</div>
@@ -304,7 +312,7 @@ function rp2Semaine(list, canEdit) {
     </td>`).join('')}
   </tr>`).join('');
 
-  const next = (() => { const d = new Date(days[0] + 'T12:00'); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); })();
+  const next = (() => { const d = new Date(days[0] + 'T12:00'); d.setDate(d.getDate() + 7); return isoJour(d); })();
   const copy = canEdit
     ? `<button type="button" class="v2-btn v2-btn-sm rp2-copy" onclick="rpCopyWeek('${days[0]}','${next}')">Copier vers la semaine suivante</button>`
     : '';

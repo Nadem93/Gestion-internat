@@ -408,7 +408,24 @@ h1,h2,h3,.header-title,.page-title h1,.stat-num,.modal-title,.panel-title,.card-
 .btn-sm{padding:.3rem .65rem;font-size:.78rem}
 .btn-lg{padding:.72rem 1.4rem;font-size:.95rem}
 .btn-full{width:100%;justify-content:center}
-.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+/* Désactivé : un aplat neutre LISIBLE, pas un fantôme du bouton coloré.
+   L'ancien `opacity:.45` délavait le dégradé ET le texte blanc posé dessus :
+   sur « Insérer au journal » (indigo foncé, libellé blanc) le texte tombait
+   sous 1,5:1 — le bouton paraissait gris et vide. On neutralise le fond et on
+   garde un gris franc pour le libellé. */
+.btn:disabled,.btn[disabled]{
+  cursor:not-allowed;opacity:1;
+  transform:none!important;box-shadow:none!important;
+  background:#e6ebf3!important;background-image:none!important;
+  color:#55637a!important;border:1px solid rgba(15,43,74,.10)!important;
+}
+/* Pas de balayage lumineux sur un bouton inactif. */
+.btn:disabled::after,.btn[disabled]::after{display:none!important}
+/* Thème sombre : même principe, teintes inversées. */
+html:not(.clair) .btn:disabled,html:not(.clair) .btn[disabled]{
+  background:rgba(255,255,255,.07)!important;
+  color:#8fa3bf!important;border-color:rgba(255,255,255,.10)!important;
+}
 .btn-icon{padding:.45rem;border-radius:var(--r-sm)}
 
 /* ══════════════════════════════════════════
@@ -1549,3 +1566,7 @@ body.etab-dark-bg textarea{
 .mdx-section{ border:1px solid var(--border); border-radius:12px; padding:.85rem .9rem; display:flex; flex-direction:column; gap:.7rem; background:#fcfcfd; }
 .mdx-sec-head{ display:flex; align-items:center; gap:.4rem; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--mc,#7c3aed); }
 .mdx-sec-head span{ font-size:1rem; }
+
+/* PPE : l'en-tête 4 colonnes des objectifs (inline) se désaligne des lignes
+   sur petit écran — on le masque, les lignes portent leurs propres libellés. */
+@media (max-width: 700px) { .ppe-objhead { display: none !important; } }

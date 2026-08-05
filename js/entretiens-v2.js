@@ -255,19 +255,20 @@ function et2RenderStats() {
   const taux = effectif ? Math.round(realises / effectif * 100) : null;
 
   const tiles = [
-    { n: realises, l: `Réalisés (${an})`, c: '#10b981', i: ET2_IC.check },
-    { n: planifies, l: 'Planifiés', c: '#22d3ee', i: ET2_IC.cal },
-    { n: retard, l: 'En retard', c: '#ef4444', i: ET2_IC.alert },
+    { n: realises, l: `Réalisés (${an})`, c: '#10b981', i: ET2_IC.check, s: 'entretiens menés cette année' },
+    { n: planifies, l: 'Planifiés', c: '#22d3ee', i: ET2_IC.cal, s: 'à venir dans l’agenda' },
+    { n: retard, l: 'En retard', c: '#ef4444', i: ET2_IC.alert, s: 'date dépassée, à reprogrammer' },
     // Un taux d'établissement n'a pas de sens dans la vue d'un salarié :
     // on lui montre le volume de ses propres entretiens.
     et2IsRH()
-      ? { n: taux === null ? '—' : taux + ' %', l: 'Taux de réalisation', c: '#db2777', i: ET2_IC.chat }
-      : { n: list.length, l: 'Mes entretiens', c: '#db2777', i: ET2_IC.chat }
+      ? { n: taux === null ? '—' : taux + ' %', l: 'Taux de réalisation', c: '#db2777', i: ET2_IC.chat, s: 'sur l’effectif actif' }
+      : { n: list.length, l: 'Mes entretiens', c: '#db2777', i: ET2_IC.chat, s: 'total, tous statuts' }
   ];
   el.innerHTML = tiles.map(t => `
-    <div class="et2-stat" style="--pc:${t.c}">
-      <span class="et2-stat-ico">${et2Svg(t.i)}</span>
-      <div><div class="et2-stat-n">${et2Esc(t.n)}</div><div class="et2-stat-l">${et2Esc(t.l)}</div></div>
+    <div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${et2Esc(t.l)}</span><span class="dc-kpi-ico" style="color:${t.c}">${et2Svg(t.i, 16)}</span></div>
+      <div class="dc-kpi-val">${et2Esc(t.n)}</div>
+      <div class="dc-kpi-sub">${et2Esc(t.s)}</div>
     </div>`).join('');
 }
 
@@ -317,13 +318,13 @@ function et2RenderTable() {
     const st = ET2_ST[et2Statut(e)];
     const prec = et2Precedent(e);
     return `<tr class="${e.id === ET2_SEL ? 'on' : ''}" onclick="et2Selectionner('${et2EscAttr(e.id)}')">
-      <td><div class="et2-emp">${et2Avatar(e.employeId, nom)}
+      <td style="border-left:3px solid ${ti.c}"><div class="et2-emp">${et2Avatar(e.employeId, nom)}
         <div style="min-width:0"><div class="et2-emp-n">${et2Esc(nom)}</div>
         <div class="et2-emp-f">${et2Esc((emp && emp.poste) || '—')}</div></div></div></td>
-      <td><span class="et2-tag" style="--pc:${ti.c}">${et2Esc(ti.l)}</span></td>
+      <td><span class="dc-badge" style="background:${ti.c}1f;color:${ti.c};border:1px solid ${ti.c}44">${et2Esc(ti.l)}</span></td>
       <td>${et2Esc(et2Date(e.date))}</td>
       <td style="color:var(--v2-t6)">${et2Esc(prec ? et2Date(prec.date) : '—')}</td>
-      <td><span class="et2-st" style="--pc:${st.c}"><span class="dot"></span>${et2Esc(st.l)}</span></td>
+      <td><span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${et2Esc(st.l)}</span></td>
       ${rh ? `<td><div class="et2-acts" onclick="event.stopPropagation()">
         <button type="button" class="et2-ib" title="Export PDF" onclick="exportEntretienPdf('${et2EscAttr(e.id)}')">${et2Svg(ET2_IC.print)}</button>
         ${e.statut !== 'realise' ? `<button type="button" class="et2-ib" title="Modifier" onclick="openEntretienModal('${et2EscAttr(e.id)}')">${et2Svg(ET2_IC.pen)}</button>` : ''}
@@ -332,11 +333,16 @@ function et2RenderTable() {
     </tr>`;
   }).join('');
 
-  el.innerHTML = `<div class="et2-tw"><div class="et2-tscroll"><table>
+  el.innerHTML = `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#db277722;color:#db2777">${et2Svg(ET2_IC.chat, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Suivi RH</div><div class="dc-title">Entretiens</div></div>
+    </div><span class="dc-pill dim">${rows.length} ligne${rows.length > 1 ? 's' : ''}</span></div>
+    <div class="et2-tw" style="border:none;border-radius:0"><div class="et2-tscroll"><table>
     <thead><tr>
       <th>Salarié</th><th>Type</th><th>Date entretien</th><th>Précédent</th><th>Statut</th>${rh ? '<th></th>' : ''}
     </tr></thead>
-    <tbody>${corps}</tbody></table></div></div>`;
+    <tbody>${corps}</tbody></table></div></div></div>`;
 }
 
 // Entretien précédent du même salarié (date antérieure la plus proche)
@@ -390,18 +396,20 @@ function et2RenderEcheances() {
   if (!el) return;
   if (!et2IsRH()) { el.innerHTML = ''; return; }
   const list = et2Echeances();
-  el.innerHTML = `<div class="et2-tint" style="--ta:rgba(239,68,68,.12);--tb:rgba(239,68,68,.2)">
-    <div class="et2-tint-h" style="color:#fca5a5">${et2Svg(ET2_IC.alert)}
-      <span class="et2-tint-t" style="color:#fecaca">Échéances légales (obligation 2 ans / bilan 6 ans)</span>
-      <span style="margin-left:auto;font-size:11px;color:var(--v2-t6)">${list.length} salarié${list.length > 1 ? 's' : ''} concerné${list.length > 1 ? 's' : ''}</span>
-    </div>
+  el.innerHTML = `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:rgba(239,68,68,.12);color:#ef4444">${et2Svg(ET2_IC.alert, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Obligation 2 ans / bilan 6 ans</div><div class="dc-title">Échéances légales</div></div>
+    </div><span class="dc-pill dim">${list.length} salarié${list.length > 1 ? 's' : ''}</span></div>
+    <div class="dc-body">
     ${list.length ? list.slice(0, 8).map(x => `
-      <div class="et2-li">${et2Avatar(x.emp.id, et2EmpNom(x.emp), 'et2-av-sm')}
+      <div class="et2-li" style="border-left:3px solid ${x.tc};padding-left:11px">${et2Avatar(x.emp.id, et2EmpNom(x.emp), 'et2-av-sm')}
         <div class="et2-li-b"><div class="et2-li-t">${et2Esc(et2EmpNom(x.emp))}</div>
         <div class="et2-li-s">${et2Esc(x.detail)}</div></div>
-        <span class="et2-tag" style="--pc:${x.tc}">${et2Esc(x.tag)}</span>
+        <span class="dc-badge" style="background:${x.tc}1f;color:${x.tc};border:1px solid ${x.tc}44"><span class="d" style="background:${x.tc}"></span>${et2Esc(x.tag)}</span>
       </div>`).join('')
       : `<div class="v2-blk-vide">Aucune échéance dépassée : tous les salariés actifs sont à jour.</div>`}
+    </div>
   </div>`;
 }
 
@@ -429,47 +437,65 @@ function et2RenderRail() {
       { l: 'Planifiés', v: mesPlanifies, c: '#22d3ee' },
       { l: 'En retard', v: mesRetard, c: '#fb7185' }
     ];
-    el.innerHTML = `<div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Mes entretiens</span></div>
-      ${lignes.map(x => `<div class="et2-li"><span class="et2-dot" style="--pc:${x.c}"></span>
+    el.innerHTML = `<div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#db277722;color:#db2777">${et2Svg(ET2_IC.chat, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Mon suivi</div><div class="dc-title">Mes entretiens</div></div>
+      </div></div>
+      <div class="dc-body">
+      ${lignes.map(x => `<div class="et2-li" style="border-left:3px solid ${x.c};padding-left:11px">
         <span class="et2-li-x">${et2Esc(x.l)}</span>
-        <span style="font-size:11px;font-weight:700;color:${x.c}">${x.v}</span></div>`).join('')}
+        <span class="v2-num" style="font-size:12px;font-weight:700;color:${x.c}">${x.v}</span></div>`).join('')}
       <div style="font-size:11px;color:var(--v2-t6);margin-top:12px">Vos comptes rendus d’entretien sont consultables et imprimables ci-dessous.</div>
+      </div>
     </div>`;
     return;
   }
 
   el.innerHTML = `
-    <div class="v2-blk v2-rail-blk">
-      <div class="et2-rate-h"><span class="v2-blk-t">Taux de réalisation</span>
-        <span class="et2-rate-v">${effectif ? taux + ' %' : '—'}</span></div>
-      <div class="v2-prog" style="margin-bottom:10px"><span style="width:${taux}%;background:linear-gradient(90deg,#db2777,#f472b6)"></span></div>
-      <div style="font-size:11px;color:var(--v2-t6)">${realises} entretien${realises > 1 ? 's' : ''} réalisé${realises > 1 ? 's' : ''} sur ${effectif} salarié${effectif > 1 ? 's actifs' : ' actif'} en ${an}.</div>
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#db277722;color:#db2777">${et2Svg(ET2_IC.check, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Campagne ${an}</div><div class="dc-title">Taux de réalisation</div></div>
+      </div><span class="dc-pill">${effectif ? taux + ' %' : '—'}</span></div>
+      <div class="dc-body">
+        <div class="al-prog-bar" style="margin-bottom:10px"><span style="width:${taux}%;background:linear-gradient(90deg,#db2777,#f472b6)"></span></div>
+        <div style="font-size:11px;color:var(--v2-t6)">${realises} entretien${realises > 1 ? 's' : ''} réalisé${realises > 1 ? 's' : ''} sur ${effectif} salarié${effectif > 1 ? 's actifs' : ' actif'} en ${an}.</div>
+      </div>
     </div>
 
-    <div class="v2-blk v2-rail-blk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Souhaits d’évolution exprimés</span></div>
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#818cf822;color:#818cf8">${et2Svg(ET2_IC.users, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Registre RH</div><div class="dc-title">Souhaits d’évolution exprimés</div></div>
+      </div><span class="dc-pill dim">${ET2_SOUH.length}</span></div>
+      <div class="dc-body">
       ${souhaits.length ? souhaits.map(s => {
         const emp = et2Emp(s.employe_id);
-        return `<div class="et2-li">${et2Avatar(s.employe_id, '', 'et2-av-xs')}
+        return `<div class="et2-li" style="border-left:3px solid #818cf8;padding-left:11px">${et2Avatar(s.employe_id, '', 'et2-av-xs')}
           <div class="et2-li-b"><div class="et2-li-t" style="font-size:12px">${et2Esc(et2EmpNom(emp) || 'Salarié')}</div>
           <div class="et2-li-s">${et2Esc(s.souhait)}${s.horizon ? ' · ' + et2Esc(s.horizon) : ''}</div></div>
           ${rh ? `<button type="button" class="et2-ib del" title="Supprimer" onclick="et2SupprSouhait('${et2EscAttr(s.id)}')">${et2Svg(ET2_IC.x)}</button>` : ''}
         </div>`;
       }).join('') : `<div class="v2-blk-vide">${et2VideMsg(ET2_T_SOUH, 'Aucun souhait enregistré.')}</div>`}
       ${rh ? `<button type="button" class="et2-add" onclick="et2OpenModal('souhait')">${et2Svg(ET2_IC.plus)}Ajouter un souhait</button>` : ''}
+      </div>
     </div>
 
-    <div class="et2-tint" style="--ta:rgba(22,163,74,.13);--tb:rgba(22,163,74,.22)">
-      <div class="et2-tint-h" style="color:#4ade80">${et2Svg(ET2_IC.book)}
-        <span class="et2-tint-t" style="color:#86efac">Actions de formation décidées</span></div>
+    <div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:rgba(16,185,129,.14);color:#10b981">${et2Svg(ET2_IC.book, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Plan de formation</div><div class="dc-title">Actions de formation décidées</div></div>
+      </div><span class="dc-pill dim">${ET2_ACT.length}</span></div>
+      <div class="dc-body">
       ${actions.length ? actions.map(a => `
-        <div class="et2-li"><span class="et2-dot" style="--pc:#4ade80"></span>
+        <div class="et2-li" style="border-left:3px solid #4ade80;padding-left:11px">
           <span class="et2-li-x">${et2Esc(a.libelle)}</span>
           <span style="font-size:10.5px;color:var(--v2-t6)">${et2Esc(a.beneficiaire || '—')}</span>
           ${rh ? `<button type="button" class="et2-ib del" title="Supprimer" onclick="et2SupprAction('${et2EscAttr(a.id)}')">${et2Svg(ET2_IC.x)}</button>` : ''}
         </div>`).join('') : `<div class="v2-blk-vide">${et2VideMsg(ET2_T_ACT, 'Aucune action de formation décidée.')}</div>`}
       ${rh ? `<button type="button" class="et2-add" onclick="et2OpenModal('action')">${et2Svg(ET2_IC.plus)}Ajouter une action</button>` : ''}
+      </div>
     </div>`;
 }
 
@@ -508,15 +534,20 @@ function et2BlocTrame(e, nom) {
   ];
   const done = items.filter(i => i.ok).length;
   const complete = done === items.length;
-  return `<div class="v2-blk">
-    <div class="v2-blk-h">${et2Svg(ET2_IC.file, 15)}<span class="v2-blk-t">Trame d’entretien — ${et2Esc(nom)}</span>
-      <span class="et2-tag" style="--pc:${complete ? '#34d399' : '#f59e0b'};margin-left:auto">${complete ? 'Complétée' : done + '/' + items.length + ' rubriques'}</span></div>
+  const cc = complete ? '#34d399' : '#f59e0b';
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${et2Svg(ET2_IC.file, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Trame d’entretien</div><div class="dc-title">${et2Esc(nom)}</div></div>
+    </div><span class="dc-badge" style="background:${cc}1f;color:${cc};border:1px solid ${cc}44"><span class="d" style="background:${cc}"></span>${complete ? 'Complétée' : done + '/' + items.length}</span></div>
+    <div class="dc-body">
     ${items.map(i => `<div class="et2-li" style="gap:12px">
       <span class="et2-tr-ico" style="--pc:${i.ok ? '#34d399' : '#f59e0b'}">${et2Svg(i.ok ? ET2_IC.check : ET2_IC.pen)}</span>
       <span class="et2-li-x">${et2Esc(i.l)}${i.n ? ` <span style="color:var(--v2-t7);font-size:11px">· ${et2Esc(i.n)}</span>` : ''}</span>
-      <span class="et2-tr-tag" style="--pc:${i.ok ? '#34d399' : '#f59e0b'}">${i.ok ? 'Rempli' : 'À compléter'}</span>
+      <span class="dc-badge" style="background:${i.ok ? '#34d3991f' : '#f59e0b1f'};color:${i.ok ? '#34d399' : '#f59e0b'};border:1px solid ${i.ok ? '#34d39944' : '#f59e0b44'}">${i.ok ? 'Rempli' : 'À compléter'}</span>
     </div>`).join('')}
     ${et2IsRH() && e.statut !== 'realise' ? `<button type="button" class="et2-add" onclick="openEntretienModal('${et2EscAttr(e.id)}')">${et2Svg(ET2_IC.pen)}Ouvrir la trame</button>` : ''}
+    </div>
   </div>`;
 }
 
@@ -526,19 +557,23 @@ function et2BlocObjectifs(e, nom) {
   const objs = ET2_OBJ.filter(o => String(o.employe_id) === String(e.employeId))
     .sort((a, b) => (b.annee || 0) - (a.annee || 0));
   const anRef = objs.length ? objs[0].annee : ((et2Annee(e.date) || new Date().getFullYear()) - 1);
-  return `<div class="v2-blk">
-    <div class="v2-blk-h"><span class="v2-blk-t">Objectifs ${anRef ? 'N-1 (' + anRef + ')' : 'N-1'} · atteinte</span></div>
-    <div style="font-size:11px;color:var(--v2-t7);margin:-8px 0 10px">Positionnement qualitatif partagé avec le salarié — sans note ni classement.</div>
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${et2Svg(ET2_IC.check, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Atteinte qualitative</div><div class="dc-title">Objectifs ${anRef ? 'N-1 (' + anRef + ')' : 'N-1'}</div></div>
+    </div>${objs.length ? `<span class="dc-pill dim">${objs.length}</span>` : ''}</div>
+    <div class="dc-body">
+    <div style="font-size:11px;color:var(--v2-t7);margin:0 0 10px">Positionnement qualitatif partagé avec le salarié — sans note ni classement.</div>
     ${objs.length ? objs.map(o => {
       const a = ET2_ATT[o.atteinte] || ET2_ATT.encours;
-      return `<div class="et2-obj">
-        <span class="et2-dot" style="--pc:${a.c}"></span>
+      return `<div class="et2-obj" style="border-left:3px solid ${a.c};padding-left:11px">
         <span class="et2-obj-l">${et2Esc(o.libelle)}</span>
         <button type="button" class="et2-obj-b" style="--pc:${a.c}" ${rh ? `onclick="et2CycleObjectif('${et2EscAttr(o.id)}')" title="Changer le positionnement"` : 'disabled'}>${et2Esc(a.l)}</button>
         ${rh ? `<button type="button" class="et2-ib del" title="Supprimer" onclick="et2SupprObjectif('${et2EscAttr(o.id)}')">${et2Svg(ET2_IC.x)}</button>` : ''}
       </div>`;
     }).join('') : `<div class="v2-blk-vide">${et2VideMsg(ET2_T_OBJ, 'Aucun objectif enregistré pour ' + et2Esc(nom) + '.')}</div>`}
     ${rh ? `<button type="button" class="et2-add" onclick="et2OpenModal('objectif')">${et2Svg(ET2_IC.plus)}Ajouter un objectif</button>` : ''}
+    </div>
   </div>`;
 }
 
@@ -559,19 +594,24 @@ function et2BlocRecap6(e, nom) {
     { l: 'Certification / VAE ou progression', tag: r6 ? (r6.progression ? 'Oui' : 'Non') : '—', c: r6 ? (r6.progression ? '#34d399' : '#fca5a5') : '#8095b4', ok: !!(r6 && r6.progression), ico: r6 ? (r6.progression ? ET2_IC.check : ET2_IC.x) : ET2_IC.clock, champ: 'progression' }
   ];
   const conforme = items.every(i => i.ok);
-  return `<div class="et2-tint" style="--ta:rgba(168,85,247,.14);--tb:rgba(168,85,247,.22)">
-    <div class="et2-tint-h" style="color:#c084fc">${et2Svg(ET2_IC.shield)}
-      <span class="et2-tint-t" style="color:#e9d5ff">État récapitulatif 6 ans</span></div>
-    <div class="et2-tint-s">${et2Esc(nom)} · contrôle des 3 obligations</div>
-    ${items.map(i => `<div class="et2-li">
+  const cc = conforme ? '#34d399' : '#f59e0b';
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:rgba(168,85,247,.14);color:#a855f7">${et2Svg(ET2_IC.shield, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Contrôle des 3 obligations</div><div class="dc-title">État récapitulatif 6 ans</div></div>
+    </div><span class="dc-badge" style="background:${cc}1f;color:${cc};border:1px solid ${cc}44"><span class="d" style="background:${cc}"></span>${conforme ? 'Conforme' : 'À vérifier'}</span></div>
+    <div class="dc-body">
+    <div class="et2-tint-s" style="margin:0 0 12px">${et2Esc(nom)}</div>
+    ${items.map(i => `<div class="et2-li" style="border-left:3px solid ${i.c};padding-left:11px">
       <span style="color:${i.c};display:flex">${et2Svg(i.ico, 15)}</span>
       <span class="et2-li-x">${et2Esc(i.l)}</span>
       ${i.champ && rh
         ? `<button type="button" class="et2-obj-b" style="--pc:${i.c}" onclick="et2ToggleRecap6('${et2EscAttr(e.employeId)}','${i.champ}')" title="Basculer">${et2Esc(i.tag)}</button>`
-        : `<span class="et2-tr-tag" style="--pc:${i.c}">${et2Esc(i.tag)}</span>`}
+        : `<span class="dc-badge" style="background:${i.c}1f;color:${i.c};border:1px solid ${i.c}44">${et2Esc(i.tag)}</span>`}
     </div>`).join('')}
     ${!r6 && rh ? `<div class="v2-blk-vide" style="margin-top:8px">${et2VideMsg(ET2_T_R6, 'Les deux dernières obligations ne sont pas encore renseignées.')}</div>` : ''}
     ${conforme ? '' : `<div class="et2-note">${et2Svg(ET2_IC.alert)}Risque d’abondement correctif du CPF si l’état récapitulatif n’est pas conforme.</div>`}
+    </div>
   </div>`;
 }
 
@@ -580,22 +620,27 @@ function et2BlocSignature(e, nom) {
   const rh = et2IsRH();
   const sigs = ET2_SIG.filter(s => String(s.entretien_id) === String(e.id));
   const ROLES = { salarie: 'Salarié', manager: 'Manager / évaluateur' };
-  return `<div class="v2-blk">
-    <div class="v2-blk-h"><span class="v2-blk-t">Compte rendu &amp; signature</span></div>
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#db277722;color:#db2777">${et2Svg(ET2_IC.pen, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Circuit de signature</div><div class="dc-title">Compte rendu &amp; signature</div></div>
+    </div>${sigs.length ? `<span class="dc-pill dim">${sigs.length}</span>` : ''}</div>
+    <div class="dc-body">
     ${sigs.length ? sigs.map(s => {
       const signe = s.statut === 'signe';
       const c = signe ? '#34d399' : '#f59e0b';
-      return `<div class="et2-li">
+      return `<div class="et2-li" style="border-left:3px solid ${c};padding-left:11px">
         <span class="et2-av et2-av-xs" style="background:${signe ? '#34d399' : '#f59e0b'}">${et2Esc(et2Ini(...(String(s.nom || '?').split(' '))))}</span>
         <div class="et2-li-b"><div class="et2-li-t" style="font-size:12px">${et2Esc(ROLES[s.role] || s.role)}</div>
           <div class="et2-li-s">${et2Esc(s.nom || '—')}${signe && s.signe_le ? ' · ' + et2Esc(et2Date(String(s.signe_le).slice(0, 10))) : ''}</div></div>
         ${rh ? `<button type="button" class="et2-obj-b" style="--pc:${c}" onclick="et2ToggleSignature('${et2EscAttr(s.id)}')">${signe ? 'Signé' : 'En attente'}</button>`
-             : `<span class="et2-tr-tag" style="--pc:${c}">${signe ? 'Signé' : 'En attente'}</span>`}
+             : `<span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${signe ? 'Signé' : 'En attente'}</span>`}
       </div>`;
     }).join('') : `<div class="v2-blk-vide">${et2VideMsg(ET2_T_SIG, 'Aucun circuit de signature ouvert pour cet entretien.')}</div>`}
     ${rh ? `<button type="button" class="et2-cta" style="--cc:#db2777" onclick="et2OuvrirSignature('${et2EscAttr(e.id)}')">
       ${et2Svg(ET2_IC.pen)}${sigs.length ? 'Réinitialiser le circuit' : 'Envoyer pour signature'}</button>` : ''}
     <button type="button" class="et2-add" onclick="exportEntretienPdf('${et2EscAttr(e.id)}')">${et2Svg(ET2_IC.print)}Compte rendu (PDF)</button>
+    </div>
   </div>`;
 }
 
@@ -614,14 +659,18 @@ function et2BlocCampagne() {
     { l: 'Planifiés', v: planifies, c: '#22d3ee' },
     { l: 'Retardataires', v: retard, c: '#fb7185' }
   ];
-  return `<div class="et2-tint" style="--ta:rgba(34,211,238,.12);--tb:rgba(34,211,238,.22)">
-    <div class="et2-camp-h"><span class="et2-tint-t" style="color:#a5f3fc">Campagne ${an}</span>
-      <span class="et2-camp-v">${effectif ? pct + ' %' : '—'}</span></div>
-    <div class="et2-camp-bar"><span style="width:${pct}%"></span></div>
-    ${lignes.map(l => `<div class="et2-li"><span class="et2-dot" style="--pc:${l.c}"></span>
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${et2Svg(ET2_IC.cal, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Campagne ${an}</div><div class="dc-title">Suivi de campagne</div></div>
+    </div><span class="dc-pill">${effectif ? pct + ' %' : '—'}</span></div>
+    <div class="dc-body">
+    <div class="al-prog-bar" style="margin-bottom:12px"><span style="width:${pct}%;background:linear-gradient(90deg,#22d3ee,#0ea5e9)"></span></div>
+    ${lignes.map(l => `<div class="et2-li" style="border-left:3px solid ${l.c};padding-left:11px">
       <span class="et2-li-x">${et2Esc(l.l)}</span>
-      <span style="font-size:11px;font-weight:700;color:${l.c}">${l.v}</span></div>`).join('')}
+      <span class="v2-num" style="font-size:12px;font-weight:700;color:${l.c}">${l.v}</span></div>`).join('')}
     <button type="button" class="et2-cta" style="--cc:#22d3ee" onclick="et2OpenModal('relance')">${et2Svg(ET2_IC.bell)}Relancer les retardataires</button>
+    </div>
   </div>`;
 }
 

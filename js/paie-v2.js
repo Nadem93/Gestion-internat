@@ -51,6 +51,16 @@
     right: '<polyline points="9 18 15 12 9 6"/>'
   };
   const svg = (d, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const svg16 = (d, w) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+
+  // ── Habillage « Console Data » ────────────────────────────────────────
+  // En-tête de carte : chip coloré + micro-label mono + titre (+ pill à droite)
+  const dcHead = (color, icoD, eyebrow, title, right) => `<div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:${color}22;color:${color}">${svg16(icoD)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">${esc(eyebrow)}</div><div class="dc-title">${esc(title)}</div></div>
+    </div>${right || ''}</div>`;
+  // Badge monospace teinté sur mesure (préserve la couleur d'origine du statut)
+  const dcBadge = (txt, color) => `<span class="dc-badge" style="background:${color}22;color:${color};border:1px solid ${color}55"><span class="d" style="background:${color}"></span>${esc(txt)}</span>`;
 
   const CLR = ['#22d3ee', '#818cf8', '#ec4899', '#f59e0b', '#10b981', '#a855f7', '#0ea5e9', '#fb7185'];
 
@@ -192,9 +202,9 @@
       tiles.push({ n: eur(mien.reduce((s, f) => s + netOf(f), 0)), l: `Cumul net ${an}`, c: '#818cf8', i: IC.euro });
     }
     setHtml('pvStats', tiles.map(t => `
-      <div class="pv-stat" style="--pc:${t.c}">
-        <span class="pv-stat-ico">${svg(t.i)}</span>
-        <div><div class="pv-stat-n">${esc(t.n)}</div><div class="pv-stat-l">${esc(t.l)}</div></div>
+      <div class="dc-kpi" style="--dc-c:${t.c}">
+        <div class="dc-kpi-top"><span class="dc-kpi-label">${esc(t.l)}</span><span class="dc-kpi-ico" style="color:${t.c}">${svg16(t.i)}</span></div>
+        <div class="dc-kpi-val">${esc(t.n)}</div>
       </div>`).join(''));
   }
 
@@ -249,8 +259,10 @@
   }
 
   function renderTable(mois, isAdmin) {
+    const head = dcHead('#ea580c', IC.file, 'Paie', `Bulletins — ${fmtPeriode(S.periode)}`,
+      `<span class="dc-pill dim">${mois.length} salarié${mois.length > 1 ? 's' : ''}</span>`);
     if (!mois.length) {
-      setHtml('pieList', `<div class="pv-empty">Aucun bulletin pour ${esc(fmtPeriode(S.periode))}.</div>`);
+      setHtml('pieList', `${head}<div class="dc-empty">Aucun bulletin pour ${esc(fmtPeriode(S.periode))}.</div>`);
       return;
     }
     const rows = mois.slice().sort((a, b) => (a.employeNom || '').localeCompare(b.employeNom || '')).map((f, i) => {
@@ -261,8 +273,8 @@
       const st = S.statuts.get(String(f.id));
       const meta = st ? ST_META[st.statut] : null;
       const stHtml = meta
-        ? `<span class="pv-st" style="--sc:${meta.c}"><span class="dot"></span>${meta.l}</span>`
-        : `<span class="pv-st"><span class="dot"></span>Non renseigné</span>`;
+        ? dcBadge(meta.l, meta.c)
+        : dcBadge('Non renseigné', '#64748b');
       const stCell = isAdmin
         ? `<button type="button" class="pv-step" style="min-width:0" title="Changer le statut" onclick="PaieV2.cycleStatut('${esc(f.id)}')">${stHtml}</button>`
         : stHtml;
@@ -290,7 +302,7 @@
       </tr>${det}`;
     }).join('');
 
-    setHtml('pieList', `<div class="pv-scroll"><table class="pv-table">
+    setHtml('pieList', `${head}<div class="pv-scroll"><table class="pv-table">
       <thead><tr>
         <th>Salarié</th><th class="r">Brut</th><th class="r">Charges</th>
         <th class="r">Net à payer</th><th>Statut</th><th class="c">Bulletin</th>
@@ -355,16 +367,17 @@
     add('Prévoyance / mutuelle', c.prevoyance_montant);
 
     setHtml('pvDsn', lignes.map(l => `
-      <div class="pv-li" style="--pc:${l.c}">
+      <div class="pv-li" style="--pc:${l.c};border-left:3px solid ${l.c};padding-left:11px">
         <span class="pv-li-mark">${svg(l.i, 2.4)}</span>
         <div class="pv-li-b"><div class="pv-li-t">${esc(l.label)}</div><div class="pv-li-s">${esc(l.detail)}</div></div>
-        <span class="pv-li-tag">${esc(l.tag)}</span>
+        ${dcBadge(l.tag, l.c)}
       </div>`).join(''));
   }
 
   // ── Masse salariale + ventilation ─────────────────────────────────────
   function renderMasse(mois) {
-    if (!mois.length) { setHtml('pvMasse', vide('Aucun bulletin sur ce mois.')); return; }
+    const head = dcHead('#ea580c', IC.euro, 'Masse salariale', `Masse salariale — ${fmtPeriode(S.periode)}`);
+    if (!mois.length) { setHtml('pvMasse', `${head}<div class="dc-body">${vide('Aucun bulletin sur ce mois.')}</div>`); return; }
     const brut = mois.reduce((s, f) => s + brutTotal(f), 0);
     const net = mois.reduce((s, f) => s + netOf(f), 0);
     const cotis = mois.reduce((s, f) => s + chargesOf(f), 0);
@@ -385,11 +398,10 @@
         <div class="pv-vent-bar"><span style="width:${total ? Math.min(100, Math.round(l.val / total * 100)) : 0}%;background:${l.c}"></span></div>
       </div>`).join('');
 
-    setHtml('pvMasse', `
-      <div class="pv-blk-h"><span class="v2-blk-t pv-t-orange">Masse salariale — ${esc(fmtPeriode(S.periode))}</span></div>
+    setHtml('pvMasse', `${head}<div class="dc-body">
       <div class="pv-mass-v">${eur(total)}</div>
       <div class="pv-mass-s">${patronales != null ? 'chargé' : 'brut salarial'} · net à payer ${eur(net)}${patronales == null ? ' · part patronale non renseignée' : ''}</div>
-      <div class="pv-vent">${bars || vide('Aucun montant saisi.')}</div>`);
+      <div class="pv-vent">${bars || vide('Aucun montant saisi.')}</div></div>`);
   }
 
   // ── Variables à intégrer (calculées sur les pointages validés) ────────
@@ -426,7 +438,7 @@
     if (mai1 > 0) lignes.push({ label: '1er mai (payé double)', detail: `${mai1.toFixed(1)} h travaillées`, val: mai1Eur > 0 ? eur2(mai1Eur) : 'salaire de base manquant', c: '#ef4444', i: IC.plus });
 
     setHtml('pvVariables', lignes.length
-      ? lignes.map(l => `<div class="pv-li" style="--pc:${l.c}">
+      ? lignes.map(l => `<div class="pv-li" style="--pc:${l.c};border-left:3px solid ${l.c};padding-left:11px">
           <span class="pv-li-ico">${svg(l.i)}</span>
           <div class="pv-li-b"><div class="pv-li-t">${esc(l.label)}</div><div class="pv-li-s">${esc(l.detail)}</div></div>
           <span class="pv-li-v">${esc(l.val)}</span>
@@ -443,7 +455,7 @@
     if (!items.length) { setHtml('pvEcheances', vide('Aucune échéance enregistrée pour ce mois.')); return; }
     setHtml('pvEcheances', items.sort((a, b) => a.d.localeCompare(b.d)).map(e => {
       const dt = new Date(e.d);
-      return `<div class="pv-li" style="--pc:${e.c}">
+      return `<div class="pv-li" style="--pc:${e.c};border-left:3px solid ${e.c};padding-left:11px">
         <div class="pv-ech-d"><div class="pv-ech-j">${String(dt.getDate()).padStart(2, '0')}</div><div class="pv-ech-m">${MOIS_C[dt.getMonth()]}</div></div>
         <div class="pv-li-b"><div class="pv-li-t">${esc(e.label)}</div><div class="pv-li-s">${esc(e.info)}</div></div>
       </div>`;
@@ -524,15 +536,15 @@
     const ctrl = [
       { l: 'Montants saisis sur tous les bulletins', ko: sansMontant.length, tagKo: `${sansMontant.length} sans montant` },
       { l: 'Fichier du bulletin joint', ko: sansFichier.length, tagKo: `${sansFichier.length} sans fichier` },
-      { l: 'Écart > 10 % vs mois précédent', ko: ecarts.length, tagKo: ecarts.slice(0, 2).map(f => esc(f.employeNom)).join(', ') },
+      { l: 'Écart > 10 % vs mois précédent', ko: ecarts.length, tagKo: ecarts.slice(0, 2).map(f => f.employeNom).join(', ') },
       { l: 'Bulletin présent pour chaque salarié actif', ko: manquants.length, tagKo: `${manquants.length} manquant${manquants.length > 1 ? 's' : ''}` }
     ];
     setHtml('pvControles', ctrl.map(c => {
       const col = c.ko ? '#f59e0b' : '#34d399';
-      return `<div class="pv-li" style="--pc:${col}">
+      return `<div class="pv-li" style="--pc:${col};border-left:3px solid ${col};padding-left:11px">
         <span class="pv-li-mark">${svg(c.ko ? IC.alert : IC.check, 2.4)}</span>
         <span class="pv-pas-n">${esc(c.l)}</span>
-        <span class="pv-li-tag">${c.ko ? c.tagKo : 'OK'}</span>
+        ${dcBadge(c.ko ? c.tagKo : 'OK', col)}
       </div>`;
     }).join(''));
   }
@@ -571,10 +583,10 @@
       c: s.documents_generes_le ? '#34d399' : '#f59e0b'
     }));
     setHtml('pvCoffre', lignes.length
-      ? lignes.map(l => `<div class="pv-li" style="--pc:${l.c}">
+      ? lignes.map(l => `<div class="pv-li" style="--pc:${l.c};border-left:3px solid ${l.c};padding-left:11px">
           <span class="pv-li-ico">${svg(IC.file)}</span>
           <div class="pv-li-b"><div class="pv-li-t">${esc(l.label)}</div><div class="pv-li-s">${esc(l.detail)}</div></div>
-          <span class="pv-li-tag">${esc(l.tag)}</span>
+          ${dcBadge(l.tag, l.c)}
         </div>`).join('')
       : vide('Aucun document à mettre à disposition.'));
   }

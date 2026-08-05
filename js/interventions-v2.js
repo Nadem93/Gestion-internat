@@ -42,6 +42,10 @@ const int2State = { statut: 'ouverte', urgence: 'toutes', q: '' };
 function _int2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône calibrée 16px pour les chips / puces du langage « Console Data »
+function _int2Ico16(d) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="width:16px;height:16px">${d}</svg>`;
+}
 function _int2Esc(s) {
   return (typeof escHtml === 'function') ? escHtml(s == null ? '' : String(s)) : String(s == null ? '' : s);
 }
@@ -78,7 +82,7 @@ function int2Render() {
       qui reste attachée au dossier comme preuve de réalisation.
     </div>
 
-    <div class="int2-stats">
+    <div class="dc-kpis">
       ${_int2Stat(INT2_IC.clock,  '#f59e0b', '#fbbf24', ouvertes.length,  'En attente', 'à planifier')}
       ${_int2Stat(INT2_IC.checkC, '#16a34a', '#4ade80', traitees.length,  'Traitées',   'clôturées avec suivi')}
       ${_int2Stat(INT2_IC.alert,  '#ef4444', '#f87171', critiques.length, 'Critiques',  'à traiter en priorité')}
@@ -101,13 +105,19 @@ function int2Render() {
     <div class="int2-grid">
       <div><div id="int2List"></div></div>
       <div class="int2-side">
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Répartition par urgence</span></div>
-          ${_int2Repartition(ouvertes)}
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${_int2Ico16(INT2_IC.alert)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Priorisation</div><div class="dc-title">Répartition par urgence</div></div>
+          </div><span class="dc-pill dim">${ouvertes.length} ouv.</span></div>
+          <div class="dc-body">${_int2Repartition(ouvertes)}</div>
         </div>
-        <div class="v2-blk">
-          <div class="v2-blk-h"><span class="v2-blk-t">Lieux les plus signalés</span></div>
-          ${_int2Lieux(all)}
+        <div class="dc-card">
+          <div class="dc-head"><div class="dc-head-l">
+            <span class="dc-chip" style="background:#0d948822;color:#0d9488">${_int2Ico16(INT2_IC.pin)}</span>
+            <div style="min-width:0"><div class="dc-eyebrow">Cartographie</div><div class="dc-title">Lieux les plus signalés</div></div>
+          </div><span class="dc-pill dim">Top 5</span></div>
+          <div class="dc-body">${_int2Lieux(all)}</div>
         </div>
       </div>
     </div>`;
@@ -123,11 +133,13 @@ function int2Render() {
 }
 
 function _int2Stat(ic, c, c2, n, label, sub) {
-  return `<div class="int2-stat">
-    <span class="int2-stat-i" style="--pc:${c};--pc2:${c2}">${_int2Svg(ic, 2)}</span>
-    <div class="int2-stat-n">${n}</div>
-    <div class="int2-stat-l">${_int2Esc(label)}</div>
-    <div class="int2-stat-s">${_int2Esc(sub)}</div>
+  return `<div class="dc-kpi" style="--dc-c:${c}">
+    <div class="dc-kpi-top">
+      <span class="dc-kpi-label">${_int2Esc(label)}</span>
+      <span class="dc-kpi-ico" style="color:${c}">${_int2Ico16(ic)}</span>
+    </div>
+    <div class="dc-kpi-val">${n}</div>
+    <div class="dc-kpi-sub">${_int2Esc(sub)}</div>
   </div>`;
 }
 
@@ -183,7 +195,10 @@ function _int2Liste(isAdmin) {
   const ic = int2State.statut === 'traitee' ? INT2_IC.checkC : INT2_IC.wrench;
 
   wrap.innerHTML = `
-    <div class="int2-sec">${_int2Svg(ic)} ${_int2Esc(titre)} <span class="n">${rows.length}</span></div>
+    <div class="dc-eyebrow" style="display:flex;align-items:center;gap:8px;margin:2px 0 12px">
+      <span style="display:inline-flex;color:var(--v2-teal,#0d9488)">${_int2Ico16(ic)}</span>${_int2Esc(titre)}
+      <span class="dc-pill dim" style="margin-left:2px">${rows.length}</span>
+    </div>
     ${rows.length
       ? `<div class="int2-list">${rows.map(i => _int2Card(i, isAdmin)).join('')}</div>`
       : `<div class="int2-vide">${_int2Svg(INT2_IC.checkC)}<div>Aucune intervention ne correspond à ces filtres.</div></div>`}`;
@@ -196,39 +211,44 @@ function _int2Card(i, isAdmin) {
   if (i.date) meta.push(`${_int2Svg(INT2_IC.cal)} ${_int2Esc(_int2DateStr(i.date))}`);
   if (i.demandePar) meta.push(`${_int2Svg(INT2_IC.user)} ${_int2Esc(i.demandePar)}`);
 
-  return `<div class="int2-card${done ? ' done' : ''}" style="--pc:${u.c}">
-    <div class="int2-card-h">
-      <span class="int2-card-i">${_int2Svg(u.ic, 2.2)}</span>
-      <div style="flex:1;min-width:0">
-        <div class="int2-tt">
-          <span class="int2-lieu">${_int2Esc(i.lieu || '—')}</span>
-          <span class="v2-badge" style="background:${u.c}22;color:${u.c}">${_int2Esc(u.l)}</span>
-          ${done
-            ? '<span class="v2-badge v2-b-ok">Fait</span>'
-            : '<span class="v2-badge v2-b-warn">En attente</span>'}
+  const urgBadge = `<span class="dc-badge" style="background:${u.c}1f;color:${u.c};border:1px solid ${u.c}44"><span class="d" style="background:${u.c}"></span>${_int2Esc(u.l)}</span>`;
+  const statusBadge = done
+    ? '<span class="dc-badge dc-b-green"><span class="d"></span>Fait</span>'
+    : '<span class="dc-badge dc-b-amber"><span class="d"></span>En attente</span>';
+
+  return `<div class="dc-card${done ? ' done' : ''}" style="border-left:3px solid ${u.c}${done ? ';opacity:.86' : ''}">
+    <div class="dc-head">
+      <div class="dc-head-l">
+        <span class="dc-chip" style="background:${u.c}22;color:${u.c}">${_int2Ico16(u.ic)}</span>
+        <div style="min-width:0">
+          <div class="dc-eyebrow">Signalement · urgence ${_int2Esc(u.l)}</div>
+          <div class="dc-title">${_int2Esc(i.lieu || '—')}</div>
         </div>
-        <div class="int2-desc">${_int2Esc(i.desc || '')}</div>
-        ${meta.length ? `<div class="int2-meta">${meta.join('<span class="sep">·</span>')}</div>` : ''}
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${urgBadge}${statusBadge}</div>
     </div>
-    ${i.photoTravaux ? `
-      <div class="int2-photo">
-        <div class="int2-photo-l">Photo des travaux</div>
-        <img src="${_int2Esc(i.photoTravaux)}" alt="Photo des travaux réalisés"/>
-        ${i.commentaireTravaux ? `<div class="int2-photo-c">« ${_int2Esc(i.commentaireTravaux)} »</div>` : ''}
-        ${i.traitePar ? `<div class="int2-photo-by">${_int2Svg(INT2_IC.check)} Clôturé par ${_int2Esc(i.traitePar)}</div>` : ''}
-      </div>` : (done && i.traitePar
-        ? `<div class="int2-photo-by">${_int2Svg(INT2_IC.check)} Clôturé par ${_int2Esc(i.traitePar)}${i.commentaireTravaux ? ' — « ' + _int2Esc(i.commentaireTravaux) + ' »' : ''}</div>`
-        : '')}
-    ${!done ? `
-      <div class="int2-act">
-        <button type="button" class="v2-btn v2-btn-sm" onclick="openPhotoModal('${_int2Esc(i.id)}')">
-          ${_int2Svg(INT2_IC.cam)} Joindre une photo
-        </button>
-        ${isAdmin ? `<button type="button" class="int2-btn-ok" onclick="marquerFaitSansPhoto('${_int2Esc(i.id)}')">
-          ${_int2Svg(INT2_IC.check, 2.4)} Marquer comme fait
-        </button>` : ''}
-      </div>` : ''}
+    <div class="dc-body">
+      ${i.desc ? `<div class="int2-desc">${_int2Esc(i.desc)}</div>` : ''}
+      ${meta.length ? `<div class="int2-meta">${meta.join('<span class="sep">·</span>')}</div>` : ''}
+      ${i.photoTravaux ? `
+        <div class="int2-photo">
+          <div class="int2-photo-l">Photo des travaux</div>
+          <img src="${_int2Esc(i.photoTravaux)}" alt="Photo des travaux réalisés"/>
+          ${i.commentaireTravaux ? `<div class="int2-photo-c">« ${_int2Esc(i.commentaireTravaux)} »</div>` : ''}
+          ${i.traitePar ? `<div class="int2-photo-by">${_int2Svg(INT2_IC.check)} Clôturé par ${_int2Esc(i.traitePar)}</div>` : ''}
+        </div>` : (done && i.traitePar
+          ? `<div class="int2-photo-by">${_int2Svg(INT2_IC.check)} Clôturé par ${_int2Esc(i.traitePar)}${i.commentaireTravaux ? ' — « ' + _int2Esc(i.commentaireTravaux) + ' »' : ''}</div>`
+          : '')}
+      ${!done ? `
+        <div class="int2-act">
+          <button type="button" class="v2-btn v2-btn-sm" onclick="openPhotoModal('${_int2Esc(i.id)}')">
+            ${_int2Svg(INT2_IC.cam)} Joindre une photo
+          </button>
+          ${isAdmin ? `<button type="button" class="int2-btn-ok" onclick="marquerFaitSansPhoto('${_int2Esc(i.id)}')">
+            ${_int2Svg(INT2_IC.check, 2.4)} Marquer comme fait
+          </button>` : ''}
+        </div>` : ''}
+    </div>
   </div>`;
 }
 

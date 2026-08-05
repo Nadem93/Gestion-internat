@@ -36,12 +36,14 @@ function _nuitFromRow(r) {
 }
 
 async function sbGetNuits() {
-  const { data, error } = await supabaseClient
-    .from('nuits')
-    .select('*')
-    .order('date', { ascending: false });
-  if (error) { console.error(error); toast('Erreur chargement cahier de nuit', 'error'); return []; }
-  return data.map(_nuitFromRow);
+  // sbFetchAll : l'historique du cahier de nuit dépasse 1000 lignes en ~3 ans.
+  try {
+    const data = await sbFetchAll(() => supabaseClient
+      .from('nuits')
+      .select('*')
+      .order('date', { ascending: false }));
+    return data.map(_nuitFromRow);
+  } catch (error) { console.error(error); toast('Erreur chargement cahier de nuit', 'error'); return []; }
 }
 
 async function sbSaveNuit(n) {

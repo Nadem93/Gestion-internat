@@ -72,7 +72,7 @@ function renderSatResultats() {
   if (!container) return;
 
   document.getElementById('satStatTotal').textContent = list.length;
-  document.getElementById('satStatMois').textContent  = list.filter(s => s.date >= new Date(Date.now()-30*86400000).toISOString().slice(0,10)).length;
+  document.getElementById('satStatMois').textContent  = list.filter(s => s.date >= isoJour(new Date(Date.now()-30*86400000))).length;
 
   if (!list.length) {
     container.innerHTML = `<div class="empty" style="padding:4rem;text-align:center">
@@ -171,7 +171,7 @@ function renderSatFormulaires() {
   if (!container) return;
 
   document.getElementById('satStatTotal').textContent = list.length;
-  document.getElementById('satStatMois').textContent  = list.filter(s => s.date >= new Date(Date.now()-30*86400000).toISOString().slice(0,10)).length;
+  document.getElementById('satStatMois').textContent  = list.filter(s => s.date >= isoJour(new Date(Date.now()-30*86400000))).length;
 
   if (!list.length) {
     container.innerHTML = '<div class="empty" style="padding:3rem;text-align:center"><p>Aucun questionnaire</p></div>';
@@ -312,14 +312,14 @@ function openSatModal(id) {
   document.getElementById('satModalTitle').textContent = s ? 'Modifier le questionnaire' : 'Nouveau questionnaire';
   document.getElementById('satModalRepondant').value = s?.repondant || '';
   document.getElementById('satModalLien').value = s?.lienResident || '';
-  document.getElementById('satModalDate').value  = s?.date || new Date().toISOString().slice(0,10);
+  document.getElementById('satModalDate').value  = s?.date || today();
   document.getElementById('satModalCommentaire').value = s?.commentaire || '';
 
   // Peupler le sélecteur de résident
   const resSelect = document.getElementById('satModalResidentId');
   if (resSelect) {
     const residents = sbResidents()
-      .filter(r => !r.dateSortie || r.dateSortie >= new Date().toISOString().slice(0,10))
+      .filter(r => !r.dateSortie || r.dateSortie >= today())
       .sort((a,b) => (a.nom||'').localeCompare(b.nom||'', 'fr'));
     resSelect.innerHTML = '<option value="">— Non spécifié —</option>'
       + residents.map(r => `<option value="${r.id}"${s?.residentId===r.id?' selected':''}>${escHtml(((r.nom||'')+' '+(r.prenom||'')).trim())}</option>`).join('');

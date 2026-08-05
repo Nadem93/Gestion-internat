@@ -111,17 +111,27 @@ body.v2 .pl-bellbox .nb-foot button:hover { background: rgba(99,102,241,.16); }
   transition: transform .15s, box-shadow .3s, border-color .2s;
 }
 .pl-card:hover {
+  background: color-mix(in srgb, var(--plc, #818cf8) 4%, var(--v2-s-card));
   transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--plc, #818cf8) 40%, transparent);
   box-shadow: 0 14px 30px -14px var(--plc-sh, rgba(129,140,248,.4));
 }
 .pl-card:focus-visible { box-shadow: 0 0 0 2.5px var(--plc-sh, rgba(129,140,248,.4)); }
+/* Icône en pastille teintée (fond léger + glyphe coloré) plutôt qu'un bloc
+   plein avec halo : sur une grille de 8 à 15 cartes, la couleur identifie le
+   module sans saturer la page. Même traitement sur les 4 portails. */
 .pl-card-ic {
-  width: 46px; height: 46px; border-radius: 13px;
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  background: var(--plc, #818cf8); box-shadow: 0 6px 14px var(--plc-sh, rgba(129,140,248,.33));
+  width: 44px; height: 44px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--plc, #818cf8) 14%, transparent);
+  color: var(--plc, #818cf8);
 }
 .pl-card-ic svg { width: 22px; height: 22px; }
+/* Thème sombre : on éclaircit le glyphe, sinon une couleur de module très
+   foncée (ex. #1e3a5f) devient illisible sur la carte sombre. Le thème
+   clair garde la couleur pure. */
+html:not(.clair) .pl-card-ic { color: color-mix(in srgb, var(--plc, #818cf8) 65%, #fff); }
+html:not(.clair) .pl-card-ic { background: color-mix(in srgb, var(--plc, #818cf8) 20%, transparent); }
 .pl-card-l { font-size: 13px; font-weight: 600; color: var(--v2-t2); margin-top: 14px; }
 .pl-card-s { font-size: 11px; color: var(--v2-t6); margin-top: 3px; }
 /* Bouton « à quoi ça sert ? » — ouvre le mode d'emploi du module */

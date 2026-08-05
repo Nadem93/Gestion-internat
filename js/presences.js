@@ -297,7 +297,7 @@ function updateDateLabel() {
 // qui est la veille quand il est minuit en France — toute la période de
 // l'export serait décalée d'un jour.
 function presDateLocale(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return isoJour(d);
 }
 
 function openExportModal() {
@@ -443,13 +443,13 @@ async function initPresences() {
   await refreshPresenceDay();
   document.getElementById('prevDay').addEventListener('click', () => {
     const d = new Date(getDateStr()); d.setDate(d.getDate()-1);
-    dateInput.value = d.toISOString().slice(0,10);
+    dateInput.value = isoJour(d);
     refreshPresenceDay();
   });
   document.getElementById('nextDay').addEventListener('click', () => {
     if (getDateStr() >= today()) return;
     const d = new Date(getDateStr()); d.setDate(d.getDate()+1);
-    dateInput.value = d.toISOString().slice(0,10);
+    dateInput.value = isoJour(d);
     refreshPresenceDay();
   });
   document.getElementById('todayBtn').addEventListener('click', () => {

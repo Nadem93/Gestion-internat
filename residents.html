@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><meta name="theme-color" content="#0f2b4a"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Résidents — FTR</title>
+  <title>Résidents — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -10,8 +10,9 @@
   <script src="js/theme.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
-    /* ── Cartes résidents : hauteur uniforme ── */
-    .res-grid{grid-auto-rows:1fr}
+    /* ── Cartes résidents : chaque carte prend sa propre hauteur.
+       (Avant : grid-auto-rows:1fr forçait toutes les rangées à la hauteur de la
+       carte la plus haute de la grille → grand vide sous les cartes courtes.) ── */
     .res-card{position:relative;isolation:isolate}
     .res-card-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     /* ── Effet lueur qui suit le curseur (glow cursor-tracking) ── */
@@ -111,6 +112,51 @@
     .rp-table td{padding:6px 9px;border:1px solid #ddd}
     .rp-table tr:nth-child(even) td{background:#fafafa}
     .rp-foot{margin-top:14px;font-size:10px;color:#888;font-style:italic}
+
+    /* ── Rail de détail : bandeau d'alertes, tuiles du jour, bloc administratif ── */
+    .rd-alerte{display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;padding:9px 12px;border-radius:10px;
+      font-size:12px;font-weight:700;line-height:1.4;
+      color:var(--v2-danger-text,#dc2626);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.32)}
+    .rd-alerte svg{flex-shrink:0;margin-top:1px}
+    .rd-jour{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:16px}
+    .rd-tuile{padding:9px 11px;border-radius:10px;background:var(--v2-s-sub-soft,rgba(15,43,74,.04));
+      border:1px solid var(--v2-b-soft,rgba(15,43,74,.08));min-width:0}
+    .rd-tuile-k{display:block;font-family:var(--v2-mono,ui-monospace,Menlo,monospace);font-size:9px;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--v2-t7);margin-bottom:6px}
+    /* Contraste du compteur de médicaments : l'ambre et le vert vifs tombaient
+       sous 2,5:1 sur la tuile claire. Teintes foncées en clair, claires en sombre. */
+    .rd-med-ok{color:#047857}
+    .rd-med-att{color:#b45309}
+    .rd-med-neutre{color:var(--v2-t6)}
+    html:not(.clair) .rd-med-ok{color:#34d399}
+    html:not(.clair) .rd-med-att{color:#fbbf24}
+    .rd-tuile-v{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--v2-t3);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* Section repliable : les champs administratifs sont utiles mais rarement
+       consultés — les laisser dépliés doublerait la hauteur du rail. */
+    .rd-adm{margin:0 18px 4px;border-top:1px solid var(--v2-b-soft,rgba(15,43,74,.08));padding-top:10px}
+    .rd-adm summary{cursor:pointer;font-family:var(--v2-mono,ui-monospace,Menlo,monospace);font-size:9.5px;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--v2-t7);padding:4px 0;list-style:none}
+    .rd-adm summary::-webkit-details-marker{display:none}
+    .rd-adm summary::before{content:'▸ ';display:inline-block;transition:transform .15s}
+    .rd-adm[open] summary::before{content:'▾ '}
+    .rd-adm summary:hover{color:var(--v2-t4)}
+    .rd-adm-c{padding:6px 0 4px;display:flex;flex-direction:column;gap:9px}
+    .rd-adm-l{display:flex;align-items:baseline;gap:10px;min-width:0}
+    .rd-adm-k{flex:0 0 96px;font-size:10.5px;color:var(--v2-t7)}
+    .rd-adm-v{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--v2-t3);overflow-wrap:anywhere}
+    /* Contact appelable : le numéro suffit rarement, on garde le nom au-dessus. */
+    .rd-tel{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--v2-t3);text-decoration:none;overflow-wrap:anywhere}
+    .rd-tel span{display:block;font-size:11px;font-weight:600;color:var(--v2-indigo-light,#6366f1);margin-top:2px}
+    .rd-tel:hover span{text-decoration:underline}
+
+    /* ── Fiche détaillée : dans le rail #resDetail, à droite de la grille ──
+       Cliquer une carte la sélectionne (.rc.on) et remplit le rail. La grille
+       reste à 3 colonnes et les cartes ne changent NI de taille NI de place :
+       c'est le rail qui affiche la fiche, pas la carte qui s'allonge. */
+    #resDetail .dc-card{padding:0}
+    /* la carte sélectionnée ne se soulève pas au survol (elle est déjà active) */
+    .rc.on:hover{transform:none}
   </style>
 </head>
 <body class="v2">
@@ -432,6 +478,7 @@
 <script src="js/chambres-supabase.js"></script>
 <script src="js/transmissions-supabase.js"></script>
 <script src="js/echeances-supabase.js"></script>
+<script src="js/medicaments-supabase.js"></script>
 <script src="js/residents.js"></script>
 <script src="js/resident-v2.js"></script>
 <script src="js/residents-v2.js"></script>

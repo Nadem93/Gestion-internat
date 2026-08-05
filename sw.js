@@ -1,7 +1,10 @@
-const CACHE = 'internalis-v82';
+const CACHE = 'internalis-v155';
 const ASSETS = [
   './',
   './accueil.html',
+  './residents.html',
+  './transmissions.html',
+  './planning.html',
   './dashboard.html',
   './aide.html',
   './notes.html',
@@ -16,12 +19,15 @@ const ASSETS = [
   './medicaments.html',
   './vie-quotidienne.html',
   './dossiers.html',
+  './observations.html',
   './index.html',
   './css/style.css',
   './css/v2.css',
   './css/v2-clair.css',
   './css/v2-clair-pages.css',
   './css/v2-mobile.css',
+  './css/v2-accueil.css',
+  './css/v2-carte-donnee.css',
   './js/mobile-shell.js',
   './js/app.js',
   './js/theme.js',

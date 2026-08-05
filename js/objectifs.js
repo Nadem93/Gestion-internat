@@ -60,7 +60,10 @@ function residentsActifs() {
   return _obResidents.filter(r => r.statut !== 'sorti')
     .sort((a, b) => `${a.nom || ''}`.localeCompare(`${b.nom || ''}`, 'fr'));
 }
-function residentsAvecObjectifs() { return residentsActifs().filter(r => (r.objectifs || []).length); }
+function residentsAvecObjectifs() {
+  return residentsActifs().filter(r => (r.objectifs || []).length
+    || Object.values(r.objectifsSuivi || {}).some(sv => sv && sv.source === 'ppe'));
+}
 function getSuivi(r, objId) { return (r.objectifsSuivi || {})[objId] || {}; }
 function axesOf(sv) { return Array.isArray(sv.axes) ? sv.axes : []; }
 function resNom(r) { return `${r.prenom || ''} ${r.nom || ''}`.trim(); }

@@ -26,7 +26,8 @@ const TR_PRIORITIES = [
 
 let _trCache            = [];
 let _trResidentsCache   = [];
-let _trCurrentDate      = new Date().toISOString().slice(0,10);
+let _trChambresCache    = [];
+let _trCurrentDate      = today();
 let _trFilterShift      = '';
 let _trFilterResident   = '';
 let _trFilterCat        = '';
@@ -77,9 +78,10 @@ async function initTransmissions() {
   if (!session) return;
 
   try {
-    [_trCache, _trResidentsCache] = await Promise.all([
+    [_trCache, _trResidentsCache, _trChambresCache] = await Promise.all([
       sbGetTransmissions(),
-      sbGetResidents()
+      sbGetResidents(),
+      (typeof sbGetChambres === 'function') ? sbGetChambres() : []
     ]);
   } catch(e) {
     console.error(e);
@@ -87,6 +89,7 @@ async function initTransmissions() {
   }
 
   _populateTrResidents();
+  _populateTrClimatUnites();
   _renderTrDateNav();
   _renderTransmissions();
   _updateTrUnreadBadge();
@@ -103,6 +106,12 @@ async function initTransmissions() {
   document.getElementById('trUnreadOnly')?.addEventListener('change', e => {
     _trShowUnread = e.target.checked;
     _renderTransmissions();
+  });
+
+  // Choisir un résident pré-remplit l'unité pour le climat (sans écraser un choix manuel).
+  document.getElementById('trResident')?.addEventListener('change', e => {
+    const sel = document.getElementById('trClimatUnite');
+    if (sel && !sel.value) { const u = _trUniteDuResident(e.target.value); if (u) sel.value = u; }
   });
 
   const h = new Date().getHours();
@@ -127,12 +136,33 @@ function _populateTrResidents() {
   });
 }
 
+// Unités distinctes (depuis les chambres) pour la saisie du climat dans la modale.
+function _populateTrClimatUnites() {
+  const sel = document.getElementById('trClimatUnite');
+  const block = document.getElementById('trClimatBlock');
+  const unites = [...new Set((_trChambresCache || []).map(c => c.unite).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b)));
+  if (!sel) return;
+  if (!unites.length) { if (block) block.style.display = 'none'; return; }   // pas d'unités → on masque la saisie
+  if (block) block.style.display = '';
+  sel.innerHTML = '<option value="">— Unité —</option>' +
+    unites.map(u => `<option value="${escHtml(u)}">${escHtml(u)}</option>`).join('');
+}
+
+// Unité du résident concerné (via sa chambre) — pour pré-sélection facultative.
+function _trUniteDuResident(residentId) {
+  const r = _trResidentsCache.find(x => String(x.id) === String(residentId));
+  if (!r || !r.chambre) return '';
+  const ch = _trChambresCache.find(c => String(c.nom) === String(r.chambre));
+  return (ch && ch.unite) || '';
+}
+
 // ─── Navigation date ──────────────────────────────────────────────────────────
 function _renderTrDateNav() {
   const el = document.getElementById('trDateLabel');
   const d = new Date(_trCurrentDate + 'T12:00:00');
-  const today = new Date().toISOString().slice(0,10);
-  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const today = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+  const yesterday = isoJour(new Date(Date.now()-86400000));
   const fullDate = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   let shortLabel;
   if (_trCurrentDate === today) shortLabel = "Aujourd'hui";
@@ -150,16 +180,16 @@ function _renderTrDateNav() {
 function trPrevDay() {
   const d = new Date(_trCurrentDate + 'T12:00:00');
   d.setDate(d.getDate() - 1);
-  _trCurrentDate = d.toISOString().slice(0,10);
+  _trCurrentDate = isoJour(d);
   _renderTrDateNav();
   _renderTransmissions();
 }
 
 function trNextDay() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
   const d = new Date(_trCurrentDate + 'T12:00:00');
   d.setDate(d.getDate() + 1);
-  const next = d.toISOString().slice(0,10);
+  const next = isoJour(d);
   if (next > today) return;
   _trCurrentDate = next;
   _renderTrDateNav();
@@ -167,7 +197,7 @@ function trNextDay() {
 }
 
 function trGoToday() {
-  _trCurrentDate = new Date().toISOString().slice(0,10);
+  _trCurrentDate = today();
   _renderTrDateNav();
   _renderTransmissions();
 }
@@ -337,7 +367,7 @@ function _renderTrHisto() {
     el.innerHTML = '<div style="font-size:.78rem;color:var(--muted);padding:.5rem 0">Aucune transmission dans l\'historique</div>';
     return;
   }
-  const yesterday  = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const yesterday  = isoJour(new Date(Date.now() - 86400000));
   const SHIFT_ICONS = { matin:'🌅', aprem:'☀️', nuit:'🌙' };
   el.innerHTML = dates.map(date => {
     const list = byDate[date];
@@ -401,7 +431,7 @@ async function markAllTrRead() {
 }
 
 function _updateTrUnreadBadge() {
-  const today  = new Date().toISOString().slice(0,10);
+  const today  = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
   const userId = String(Auth.getSession()?.userId || '');
   const count  = _trCache.filter(t => t.date === today && !_trIsRead(t, userId)).length;
   document.querySelectorAll('.tr-badge').forEach(el => {
@@ -489,6 +519,17 @@ async function saveTr_Modal() {
     console.error(e);
     return;
   }
+
+  // Climat de l'unité (facultatif) → alimente la « Météo du foyer » du tableau de bord.
+  try {
+    const cUnite  = document.getElementById('trClimatUnite')?.value  || '';
+    const cNiveau = document.getElementById('trClimatNiveau')?.value || '';
+    if (cUnite && cNiveau && typeof sbSaveClimat === 'function') {
+      await sbSaveClimat({ date: _trCurrentDate, unite: cUnite, niveau: cNiveau, saisiPar: sess.name });
+      toast('Climat de l’unité enregistré');
+    }
+  } catch(e) { console.warn('[climat]', e); }
+
   closeModal('modalTr');
   resetTrModal();
   _renderTransmissions();
@@ -507,6 +548,9 @@ function editTr(id) {
   const _sEl = document.getElementById('trSoutien');       if (_sEl) _sEl.value = t.soutien || '';
   const _snEl = document.getElementById('trSoutienNiveau'); if (_snEl) _snEl.value = t.soutienNiveau || '';
   const _afEl = document.getElementById('trAFaire');       if (_afEl) _afEl.checked = !!t.aFaire;
+  const _cuEl = document.getElementById('trClimatUnite');  if (_cuEl) _cuEl.value = '';
+  const _cnEl = document.getElementById('trClimatNiveau'); if (_cnEl) _cnEl.value = '';
+  const _cbEl = document.getElementById('trClimatBlock');  if (_cbEl) _cbEl.style.display = 'none';
   document.getElementById('modalTrTitle').textContent = 'Modifier la transmission';
   openModal('modalTr');
 }
@@ -620,6 +664,10 @@ function resetTrModal() {
   trDicteeStop();
   document.getElementById('trCat').value       = 'administratif';
   trSetPriority('normal');
+  const _cuEl = document.getElementById('trClimatUnite');  if (_cuEl) _cuEl.value = '';
+  const _cnEl = document.getElementById('trClimatNiveau'); if (_cnEl) _cnEl.value = '';
+  const _cbEl = document.getElementById('trClimatBlock');
+  if (_cbEl) _cbEl.style.display = (_cuEl && _cuEl.options.length > 1) ? '' : 'none';
   document.getElementById('modalTrTitle').textContent = 'Nouvelle transmission';
   const h = new Date().getHours();
   const autoShift = (h >= 7 && (h < 13 || (h === 13 && new Date().getMinutes() < 30))) ? 'matin' : (h >= 13 && h < 22) ? 'aprem' : 'nuit';

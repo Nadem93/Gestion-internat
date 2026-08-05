@@ -83,7 +83,7 @@ let _iaAbort = null, _iaEnCours = false, _iaResident = null, _iaInsere = false;
 function _iaEl(id) { return document.getElementById(id); }
 function _iaDateMoins(jours) {
   const d = new Date(); d.setDate(d.getDate() - jours);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return isoJour(d);
 }
 
 function iaBuildPanel() {

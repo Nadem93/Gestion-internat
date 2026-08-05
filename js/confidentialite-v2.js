@@ -70,13 +70,17 @@
     var nbCat = document.querySelectorAll('.cf2-cat').length;
     var nbDroits = document.querySelectorAll('.cf2-droits-g .cf2-droit').length;
     var kpis = [
-      { v: String(nbSec), l: 'sections' },
-      { v: String(nbCat), l: 'catégories de données' },
-      { v: String(nbDroits), l: 'droits RGPD' },
-      { v: '0', l: 'tiers destinataire' }
+      { v: String(nbSec),    label: 'Sections',    sub: 'de la politique',   c: '#22d3ee' },
+      { v: String(nbCat),    label: 'Catégories',  sub: 'de données',        c: '#6366f1' },
+      { v: String(nbDroits), label: 'Droits',      sub: 'RGPD exerçables',   c: '#16a34a' },
+      { v: '0',              label: 'Tiers',       sub: 'destinataire',      c: '#8b5cf6' }
     ];
     box.innerHTML = kpis.map(function (k) {
-      return '<div class="v2-kpi"><div class="v2-kpi-val">' + k.v + '</div><div class="v2-kpi-lbl">' + k.l + '</div></div>';
+      return '<div class="dc-kpi" style="--dc-c:' + k.c + '">' +
+               '<div class="dc-kpi-top"><span class="dc-kpi-label">' + k.label + '</span></div>' +
+               '<div class="dc-kpi-val">' + k.v + '</div>' +
+               '<div class="dc-kpi-sub">' + k.sub + '</div>' +
+             '</div>';
     }).join('');
   }
 

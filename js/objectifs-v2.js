@@ -43,6 +43,11 @@ const OB2_IC = {
 function ob2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône dimensionnée (16px par défaut) pour les chips / entêtes « Console Data »
+function ob2SvgSz(d, px) {
+  const s = px || 16;
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
 
 // Palette de repli quand le résident n'a pas de couleur enregistrée
 const OB2_PAL = ['#22d3ee', '#818cf8', '#ec4899', '#10b981', '#f59e0b', '#a78bfa', '#38bdf8', '#f87171'];
@@ -63,9 +68,9 @@ function ob2Clamp(v) { return Math.max(0, Math.min(100, +v || 0)); }
 function ob2Esc(s) { return typeof escHtml === 'function' ? escHtml(s) : String(s == null ? '' : s); }
 
 function ob2Kpi(n, label, color, icon) {
-  return `<div class="ob2-kpi" style="--c:${color}">
-    <span class="ob2-kpi-ico">${ob2Svg(icon)}</span>
-    <div style="min-width:0"><div class="ob2-kpi-n">${n}</div><div class="ob2-kpi-l">${ob2Esc(label)}</div></div>
+  return `<div class="dc-kpi" style="--dc-c:${color}">
+    <div class="dc-kpi-top"><span class="dc-kpi-label">${ob2Esc(label)}</span><span class="dc-kpi-ico" style="color:${color}">${ob2SvgSz(icon, 16)}</span></div>
+    <div class="dc-kpi-val" style="color:${color}">${n}</div>
   </div>`;
 }
 
@@ -211,17 +216,18 @@ function ob2BlocDomaines(e, residents) {
   const nom = r ? `${r.prenom || ''} ${r.nom || ''}`.trim() : 'Résident inconnu';
   const doms = ob2Domaines(e);
   const score = ob2Score(e), max = g?.scoreMax || 100;
-  return `<div class="v2-blk">
-    <div class="v2-blk-h">
-      <span class="v2-blk-t">${ob2Esc(g?.short || e.grille)} — ${ob2Esc(nom)} · détail par domaine</span>
-      <span class="ob2-blk-val">${score} / ${max}</span>
-    </div>
-    ${doms.length ? `<div class="ob2-dom">${doms.map(d => `<div>
+  const gc = g?.color || '#818cf8';
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:${gc}22;color:${gc}">${ob2SvgSz(OB2_IC.grid, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Détail par domaine</div><div class="dc-title">${ob2Esc(g?.short || e.grille)} — ${ob2Esc(nom)}</div></div>
+    </div><span class="dc-pill dim">${score} / ${max}</span></div>
+    ${doms.length ? `<div class="dc-body"><div class="ob2-dom">${doms.map(d => `<div>
       <div class="ob2-dom-h"><span class="ob2-dom-l">${ob2Esc(d.label)}</span>
         <span class="ob2-dom-v" style="color:${d.c}">${d.val}/${d.max}</span></div>
       <div class="v2-prog v2-bar-sm"><span style="width:${d.pct}%;background:${d.c}"></span></div>
-    </div>`).join('')}</div>`
-      : '<div class="v2-blk-vide">Aucun item renseigné sur cette évaluation.</div>'}
+    </div>`).join('')}</div></div>`
+      : '<div class="dc-empty">Aucun item renseigné sur cette évaluation.</div>'}
   </div>`;
 }
 
@@ -231,9 +237,12 @@ function ob2BlocProgression(e, all) {
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
     .slice(-5);
   if (serie.length < 2) {
-    return `<div class="v2-blk">
-      <div class="v2-blk-h"><span class="v2-blk-t">Progression</span></div>
-      <div class="v2-blk-vide">Il faut au moins deux évaluations de la même grille pour tracer une progression.</div>
+    return `<div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${ob2SvgSz(OB2_IC.chart, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Suivi</div><div class="dc-title">Progression</div></div>
+      </div></div>
+      <div class="dc-empty">Il faut au moins deux évaluations de la même grille pour tracer une progression.</div>
     </div>`;
   }
   const vals = serie.map(ob2Score);
@@ -243,8 +252,12 @@ function ob2BlocProgression(e, all) {
   const d1 = new Date(serie[0].date), d2 = new Date(serie[serie.length - 1].date);
   const mois = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
   const lbl = d => new Date(d).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
-  return `<div class="v2-blk">
-    <div class="v2-blk-h"><span class="v2-blk-t">Progression (${serie.length} évaluation${serie.length > 1 ? 's' : ''})</span></div>
+  return `<div class="dc-card">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${ob2SvgSz(OB2_IC.chart, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Suivi</div><div class="dc-title">Progression</div></div>
+    </div><span class="dc-pill dim">${serie.length} éval${serie.length > 1 ? 's' : ''}</span></div>
+    <div class="dc-body">
     <div class="ob2-chart">
       ${serie.map((s, i) => {
         const h = mx === mn ? 70 : Math.round(28 + (vals[i] - mn) / (mx - mn) * 72);
@@ -256,6 +269,7 @@ function ob2BlocProgression(e, all) {
       }).join('')}
     </div>
     <div class="ob2-chart-note">Tendance : ${delta > 0 ? '+' : ''}${delta} point${Math.abs(delta) > 1 ? 's' : ''}${mois > 0 ? ` sur ${mois} mois` : ' sur la période'}.</div>
+    </div>
   </div>`;
 }
 
@@ -274,8 +288,12 @@ function ob2RenderEv() {
     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 
   if (!list.length) {
-    container.innerHTML = `<div class="v2-blk"><div class="v2-blk-h"><span class="v2-blk-t">Évaluations</span></div>
-      <div class="v2-blk-vide">${rid || gf ? 'Aucune évaluation ne correspond à ce filtre.' : 'Aucune évaluation enregistrée. Créez une évaluation MIF, Barthel ou SERAFIN-PH pour suivre l’autonomie des résidents.'}</div></div>`;
+    container.innerHTML = `<div class="dc-card">
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#818cf822;color:#818cf8">${ob2SvgSz(OB2_IC.grid, 16)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Grilles</div><div class="dc-title">Évaluations</div></div>
+      </div></div>
+      <div class="dc-empty">${rid || gf ? 'Aucune évaluation ne correspond à ce filtre.' : 'Aucune évaluation enregistrée. Créez une évaluation MIF, Barthel ou SERAFIN-PH pour suivre l’autonomie des résidents.'}</div></div>`;
     return;
   }
 
@@ -339,9 +357,8 @@ function ob2Render() {
 
   // Statistiques du périmètre affiché
   let tot = 0, atteints = 0, axesTot = 0, pctSum = 0, pctN = 0;
-  scope.forEach(r => (r.objectifs || []).forEach(id => {
-    if (!tpl.find(t => String(t.id) === String(id))) return;
-    const sv = ob2Suivi(r, id);
+  scope.forEach(r => ob2ResObjs(r, tpl).forEach(o => {
+    const sv = ob2Suivi(r, o.id);
     tot++;
     if (sv.statut === 'atteint') atteints++;
     axesTot += ob2Axes(sv).length;
@@ -364,7 +381,7 @@ function ob2Render() {
   const r = scope[0];
   if (!r) { el.innerHTML = ob2Vide('Résident introuvable.'); return; }
 
-  const resObjs = (r.objectifs || []).map(id => tpl.find(o => String(o.id) === String(id))).filter(Boolean);
+  const resObjs = ob2ResObjs(r, tpl);
   const collapsed = typeof _obCollapsed !== 'undefined' ? _obCollapsed : new Set();
   const allCollapsed = resObjs.length && resObjs.every(o => collapsed.has(String(o.id)));
   const barre = `<div class="ob2-resbar">
@@ -392,9 +409,9 @@ function ob2Render() {
 }
 
 function ob2Vide(html) {
-  return `<div class="v2-blk" style="text-align:center;padding:34px 20px">
+  return `<div class="dc-card"><div class="dc-body" style="text-align:center;padding:34px 20px">
     <span style="display:inline-flex;color:var(--v2-t8);width:30px;height:30px">${ob2Svg(OB2_IC.target)}</span>
-    <div class="v2-blk-vide" style="margin-top:10px">${html}</div></div>`;
+    <div class="dc-empty" style="margin-top:10px;padding:0">${html}</div></div></div>`;
 }
 
 /* ── Vue d'ensemble ──────────────────────────────────────────────────── */
@@ -404,7 +421,7 @@ function ob2Overview(residents, tpl) {
   }
   const rangOfSafe = p => typeof rangOf === 'function' ? rangOf(p) : '—';
   const cards = residents.map(r => {
-    const objs = (r.objectifs || []).map(id => tpl.find(o => String(o.id) === String(id))).filter(Boolean);
+    const objs = ob2ResObjs(r, tpl);
     if (!objs.length) return '';
     let pctSum = 0, pctN = 0, atteints = 0, axesActifs = 0, lastMaj = '';
     const badges = objs.map(o => {
@@ -418,12 +435,12 @@ function ob2Overview(residents, tpl) {
       if (sv.dateMaj && sv.dateMaj > lastMaj) lastMaj = sv.dateMaj;
       if (sv.statut === 'atteint') {
         atteints++;
-        return `<span class="v2-badge v2-b-ok" title="${ob2Esc(o.name)} — atteint">${ob2Esc(o.name)}</span>`;
+        return `<span class="dc-badge dc-b-green" title="${ob2Esc(o.name)} — atteint"><span class="d"></span>${ob2Esc(o.name)}</span>`;
       }
       if (sv.statut === 'en_cours') {
-        return `<span class="v2-badge v2-b-warn" title="${ob2Esc(o.name)} — en cours">${ob2Esc(o.name)}${p != null ? ` · ${p}%` : ''}</span>`;
+        return `<span class="dc-badge dc-b-amber" title="${ob2Esc(o.name)} — en cours"><span class="d"></span>${ob2Esc(o.name)}${p != null ? ` · ${p}%` : ''}</span>`;
       }
-      return `<span class="v2-badge v2-b-neutral" title="${ob2Esc(o.name)}">${ob2Esc(o.name)}</span>`;
+      return `<span class="dc-badge dc-b-gray" title="${ob2Esc(o.name)}"><span class="d"></span>${ob2Esc(o.name)}</span>`;
     }).join('');
     const global = pctN ? Math.round(pctSum / pctN) : null;
     let gauge = '';
@@ -456,33 +473,112 @@ function ob2Overview(residents, tpl) {
     <div class="ob2-resgrid">${cards}</div>`;
 }
 
+/* ── Objectifs personnalisés issus du PPE ─────────────────────────────────
+   Un objectif du projet personnalisé « suivi » est stocké de façon autonome
+   dans r.objectifsSuivi[persoId] : { source:'ppe', name, echeance, serafin,
+   ppeRef, statut, axes, dateMaj }. Il apparaît alors comme une carte à part
+   entière (avec axes), à côté des objectifs du catalogue. Aucune migration,
+   aucune entrée parasite dans le catalogue partagé. */
+function _obPersoId(domId, text) {
+  const s = String(domId) + '|' + String(text || '');
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return 'ppe-' + domId + '-' + h.toString(36);
+}
+function _obCurrentRes() {
+  const sel = document.getElementById('obResident');
+  const rid = sel ? sel.value : '';
+  const tous = (typeof _obResidents !== 'undefined' ? _obResidents : []) || [];
+  return tous.find(r => String(r.id) === String(rid)) || null;
+}
+// Objectifs d'un résident = perso (issus du PPE) d'abord, puis ceux du catalogue.
+function ob2ResObjs(r, tpl) {
+  const perso = Object.entries((r && r.objectifsSuivi) || {})
+    .filter(([id, sv]) => sv && sv.source === 'ppe')
+    .map(([id, sv]) => ({ id, name: sv.name || 'Objectif du projet personnalisé', description: '', _perso: true, _ppeRef: sv.ppeRef || null }));
+  const cat = ((r && r.objectifs) || []).map(id => tpl.find(o => String(o.id) === String(id))).filter(Boolean);
+  return perso.concat(cat);
+}
+// Crée une carte de suivi à partir d'un objectif de l'avenant (copie + référence).
+async function obPersoFromPpe(domId, oi) {
+  if (typeof ob2Edit === 'function' && !ob2Edit()) return;
+  const r = _obCurrentRes();
+  if (!r) return;
+  const p = typeof obPpaOf === 'function' ? obPpaOf(r) : null;
+  const o = ((p && p.sections && p.sections[domId] && p.sections[domId].objectifs) || [])[oi];
+  if (!o || !(o.objectif || '').trim()) return;
+  const persoId = _obPersoId(domId, o.objectif);
+  const suivi = { ...((r.objectifsSuivi) || {}) };
+  if (suivi[persoId]) { if (typeof toast === 'function') toast('Cet objectif est déjà suivi'); return; }
+  suivi[persoId] = {
+    source: 'ppe',
+    name: (o.objectif || '').trim(),
+    echeance: o.echeance || '',
+    serafin: Array.isArray(o.serafin) ? o.serafin : [],
+    ppeRef: { domId: domId, avenantDate: (p && p.dateRedaction) || '' },
+    statut: '', axes: [], dateMaj: (typeof today === 'function' ? today() : '')
+  };
+  try {
+    await persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
+    if (typeof toast === 'function') toast('Objectif ajouté au suivi', 'success');
+    renderObjectifs();
+  } catch (e) { console.error('[obPersoFromPpe]', e); if (typeof toast === 'function') toast('Enregistrement impossible', 'error'); }
+}
+// Retire une carte perso du suivi (n'altère pas l'avenant PPE).
+async function obPersoRemove(persoId) {
+  if (typeof ob2Edit === 'function' && !ob2Edit()) return;
+  const r = _obCurrentRes();
+  if (!r) return;
+  const doRemove = async () => {
+    const suivi = { ...((r.objectifsSuivi) || {}) };
+    delete suivi[persoId];
+    try {
+      await persistResident({ ...r, objectifsSuivi: suivi, updatedAt: new Date().toISOString() });
+      if (typeof toast === 'function') toast('Objectif retiré du suivi', 'success');
+      renderObjectifs();
+    } catch (e) { console.error('[obPersoRemove]', e); if (typeof toast === 'function') toast('Suppression impossible', 'error'); }
+  };
+  if (typeof confirmDialog === 'function') confirmDialog('Retirer cet objectif du suivi ? L\'avenant du projet personnalisé n\'est pas modifié.', doRemove);
+  else if (confirm('Retirer cet objectif du suivi ?')) doRemove();
+}
+
 /* ── Objectifs du projet personnalisé (avenant PPE), lecture seule ───── */
 function ob2Ppa(r) {
   const p = typeof obPpaOf === 'function' ? obPpaOf(r) : null;
   if (!p) return '';
   const rows = [];
   Object.entries(p.sections || {}).forEach(([domId, s]) =>
-    (s.objectifs || []).forEach(o => { if ((o.objectif || '').trim()) rows.push({ domId, o }); }));
+    (s.objectifs || []).forEach((o, oi) => { if ((o.objectif || '').trim()) rows.push({ domId, oi, o }); }));
   if (!rows.length) return '';
   const doms = typeof OB_PPA_DOMAINES !== 'undefined' ? OB_PPA_DOMAINES : {};
-  const st = { brouillon: ['Brouillon', 'v2-b-warn'], actif: ['Actif', 'v2-b-ok'], termine: ['Terminé', 'v2-b-neutral'] }[p.statut]
-    || [p.statut || '—', 'v2-b-neutral'];
+  const st = { brouillon: ['Brouillon', 'dc-b-amber'], actif: ['Actif', 'dc-b-green'], termine: ['Terminé', 'dc-b-gray'] }[p.statut]
+    || [p.statut || '—', 'dc-b-gray'];
   const dateAv = p.dateRedaction ? (typeof formatDate === 'function' ? formatDate(p.dateRedaction) : p.dateRedaction) : '';
-  return `<div class="v2-blk ob2-ppa">
-    <div class="v2-blk-h">
-      <span class="v2-blk-t">Objectifs du projet personnalisé</span>
-      <span class="v2-badge ${st[1]}">${ob2Esc(st[0])}</span>
-      <span style="font-size:11.5px;color:var(--v2-t7)">avenant${dateAv ? ' du ' + dateAv : ''} · ${rows.length} objectif${rows.length > 1 ? 's' : ''}</span>
-      <a class="v2-blk-lien" href="ppe.html">Ouvrir l'avenant →</a>
+  return `<div class="dc-card ob2-ppa">
+    <div class="dc-head"><div class="dc-head-l">
+      <span class="dc-chip" style="background:#f59e0b22;color:#f59e0b">${ob2SvgSz(OB2_IC.target, 16)}</span>
+      <div style="min-width:0"><div class="dc-eyebrow">Projet personnalisé</div><div class="dc-title">Objectifs du projet personnalisé</div></div>
+      <span class="dc-badge ${st[1]}"><span class="d"></span>${ob2Esc(st[0])}</span>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${rows.map(({ domId, o }) => {
+    <span class="dc-head-l" style="gap:12px">
+      <span class="dc-pill dim">avenant${dateAv ? ' du ' + dateAv : ''} · ${rows.length} obj.</span>
+      <a class="v2-blk-lien" href="ppe.html">Ouvrir l'avenant →</a>
+    </span></div>
+    <div class="dc-body" style="display:flex;flex-direction:column;gap:8px">
+      ${rows.map(({ domId, oi, o }) => {
         const d = doms[domId] || { label: domId };
+        const persoId = _obPersoId(domId, o.objectif);
+        const dejaSuivi = !!(((r.objectifsSuivi) || {})[persoId]);
+        const btn = (typeof ob2Edit === 'function' && ob2Edit())
+          ? (dejaSuivi
+              ? `<span class="ob2-ppa-done" title="Déjà dans le suivi ci-dessous">✓ Suivi</span>`
+              : `<button type="button" class="ob2-ppa-add" onclick="obPersoFromPpe('${domId}',${oi})" title="Créer une carte de suivi avec des axes de travail">${ob2Svg(OB2_IC.plus, 2.4)}En faire un objectif suivi</button>`)
+          : '';
         return `<div class="ob2-ppa-row">
           <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
             <span class="ob2-ppa-dom">${ob2Esc(d.label)}</span>
             <span class="ob2-ppa-txt">${ob2Esc(o.objectif)}</span>
             ${o.echeance ? `<span style="font-size:11px;color:var(--v2-t7);white-space:nowrap">${typeof formatDate === 'function' ? formatDate(o.echeance) : ob2Esc(o.echeance)}</span>` : ''}
+            ${btn}
           </div>
           ${(o.moyens || '').trim() ? `<div class="ob2-ppa-meta">Moyens : ${ob2Esc(o.moyens)}</div>` : ''}
           ${ob2SpChips(o)}
@@ -498,7 +594,7 @@ function ob2SpChips(o) {
   return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">${codes.map(c => {
     const besoin = typeof spEstBesoin === 'function' ? spEstBesoin(c) : String(c).charAt(0) === '1';
     const label = typeof spLabel === 'function' ? spLabel(c) : c;
-    return `<span class="v2-badge ${besoin ? 'v2-b-info' : 'v2-b-ok'}" title="${ob2Esc(label)}">${ob2Esc(c)}</span>`;
+    return `<span class="dc-badge ${besoin ? 'dc-b-cyan' : 'dc-b-green'}" title="${ob2Esc(label)}"><span class="d"></span>${ob2Esc(c)}</span>`;
   }).join('')}</div>`;
 }
 
@@ -518,11 +614,11 @@ function ob2ObjCard(r, o) {
         aria-label="Statut de l'objectif ${ob2Esc(o.name)}" style="border-color:${stC};color:${stC}">
         ${Object.entries(statuts).map(([k, v]) => `<option value="${k}"${stKey === k ? ' selected' : ''}>${ob2Esc(v.label)}</option>`).join('')}
       </select>`
-    : `<span class="v2-badge" style="color:${stC};background:${stC}22">${ob2Esc((statuts[stKey] || {}).label || stKey)}</span>`;
+    : `<span class="dc-badge" style="background:${stC}22;color:${stC};border:1px solid ${stC}44"><span class="d" style="background:${stC}"></span>${ob2Esc((statuts[stKey] || {}).label || stKey)}</span>`;
 
   const echBdg = typeof echBadge === 'function' ? echBadge(sv.echeance, sv.statut) : '';
-  const echBdgV2 = echBdg.includes('badge-red') ? '<span class="v2-badge v2-b-danger">En retard</span>'
-    : echBdg.includes('badge-amber') ? `<span class="v2-badge v2-b-warn">${(echBdg.match(/J−\d+/) || [''])[0]}</span>` : '';
+  const echBdgV2 = echBdg.includes('badge-red') ? '<span class="dc-badge dc-b-red"><span class="d"></span>En retard</span>'
+    : echBdg.includes('badge-amber') ? `<span class="dc-badge dc-b-amber"><span class="d"></span>${(echBdg.match(/J−\d+/) || [''])[0]}</span>` : '';
   const ech = ob2Edit()
     ? `<span style="display:inline-flex;align-items:center;gap:7px">Échéance
         <input type="date" class="ob2-date" value="${sv.echeance || ''}" onchange="setObjEcheance('${o.id}', this.value)"
@@ -543,11 +639,13 @@ function ob2ObjCard(r, o) {
         <div class="v2-prog"><span id="ringbar-${o.id}" style="width:${pct || 0}%;background:${col}"></span></div>
       </div>
       <div class="ob2-obj-main">
-        <div class="ob2-obj-eyebrow">Objectif personnalisé</div>
+        <div class="ob2-obj-eyebrow">${o._perso ? 'Issu du projet personnalisé' : 'Objectif personnalisé'}</div>
         <div class="ob2-obj-t">
           <span class="ob2-obj-nom">${ob2Esc(o.name)}</span>
+          ${o._perso ? `<a class="ob2-perso-link" href="ppe.html" title="Voir l'avenant du projet personnalisé">avenant ↗</a>` : ''}
           ${statutUi}
           <span class="ob2-rang" id="rang-${o.id}">${ob2Esc(rangTxt)}</span>
+          ${(o._perso && ob2Edit()) ? `<button type="button" class="ob2-perso-del" onclick="obPersoRemove('${o.id}')" title="Retirer du suivi" aria-label="Retirer du suivi">✕</button>` : ''}
         </div>
         ${o.description ? `<div class="ob2-obj-desc">${ob2Esc(o.description)}</div>` : ''}
         <div class="ob2-obj-meta">${ech}</div>
@@ -582,7 +680,7 @@ function ob2AxeRow(o, a, idx) {
     <div class="ob2-axe-eyebrow">Module ${String(idx + 1).padStart(2, '0')}${a.echeance ? ` · Échéance ${fd(a.echeance)}` : ''}${a.responsable ? ` · ${ob2Esc(a.responsable)}` : ''}</div>
     <div class="ob2-axe-top">
       <span class="ob2-axe-nom">${ob2Esc(a.nom)}</span>
-      ${late ? '<span class="v2-badge v2-b-danger">En retard</span>' : ''}
+      ${late ? '<span class="dc-badge dc-b-red"><span class="d"></span>En retard</span>' : ''}
       ${ob2Spark(a.histo)}
       <span class="ob2-axe-pct" id="axpct-${o.id}-${a.id}" style="color:${col}">${p}%</span>
       ${ob2Edit() ? `<button type="button" class="ob2-ico-btn" title="Modifier l'axe" aria-label="Modifier l'axe"
@@ -705,14 +803,14 @@ function ob2EvalObjRow(o, ev, prec, axes) {
     const niv = niveaux.find(n => n.v === +note) || niveaux[0] || { v: note, label: '', color: '#94a3b8' };
     return `<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
       <span style="flex:1;min-width:140px">${axe ? ob2Esc(axe.nom) : '<em>(axe supprimé)</em>'}</span>
-      <span class="v2-badge" style="color:${niv.color};background:${niv.color}22">${niv.v} · ${ob2Esc(niv.label)}</span>
+      <span class="dc-badge" style="background:${niv.color}22;color:${niv.color};border:1px solid ${niv.color}44"><span class="d" style="background:${niv.color}"></span>${niv.v} · ${ob2Esc(niv.label)}</span>
     </div>`;
   }).join('');
   return `<details class="ob2-histo">
     <summary>
       <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0" aria-hidden="true"></span>
       <span style="font-weight:700;color:var(--v2-t2)">${typeof formatDate === 'function' ? formatDate(ev.date) : ob2Esc(ev.date)}</span>
-      <span class="v2-badge" style="color:${col};background:${col}22">${ev.score}%</span>
+      <span class="dc-badge" style="background:${col}22;color:${col};border:1px solid ${col}44"><span class="d" style="background:${col}"></span>${ev.score}%</span>
       ${delta ? `<span style="font-size:11px;font-weight:700;color:${delta > 0 ? '#34d399' : '#fca5a5'}">${delta > 0 ? '+' : ''}${delta}</span>` : ''}
       ${ev.auteur ? `<span style="font-size:11px;color:var(--v2-t8)">par ${ob2Esc(ev.auteur)}</span>` : ''}
       <span style="margin-left:auto;font-size:11px;color:var(--v2-t8)">détail</span>
@@ -760,7 +858,7 @@ function ob2AxStepPick(level) {
 }
 
 /* ══ ONGLETS ═════════════════════════════════════════════════════════ */
-const OB2_TAB_TITRES = { objectifs: 'Objectifs & axes', evaluations: 'Grilles d\'évaluation' };
+const OB2_TAB_TITRES = { objectifs: 'Objectifs & Stratégies', evaluations: 'Grilles d\'évaluation' };
 
 function ob2SwitchTab(tab) {
   const isEv = tab === 'evaluations';

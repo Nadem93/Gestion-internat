@@ -471,9 +471,9 @@ function voirJustificatif(demandeId, idx) {
   document.getElementById('bgJustifTitle').textContent = j.name;
   const body = document.getElementById('bgJustifBody');
   if ((j.mimeType || '').startsWith('image/')) {
-    body.innerHTML = `<img src="${j.data}" alt="${escHtml(j.name)}" style="max-width:100%;border-radius:8px"/>`;
+    body.innerHTML = `<img src="${sanitizeUrl(j.data)}" alt="${escHtml(j.name)}" style="max-width:100%;border-radius:8px"/>`;
   } else {
-    body.innerHTML = `<div style="padding:1.5rem"><div style="font-size:2.2rem;margin-bottom:.5rem">📎</div><p>${escHtml(j.name)}</p><a href="${j.data}" download="${escHtml(j.name)}" class="btn btn-primary">⬇ Télécharger</a></div>`;
+    body.innerHTML = `<div style="padding:1.5rem"><div style="font-size:2.2rem;margin-bottom:.5rem">📎</div><p>${escHtml(j.name)}</p><a href="${sanitizeUrl(j.data)}" download="${escHtml(j.name)}" class="btn btn-primary">⬇ Télécharger</a></div>`;
   }
   openModal('modalBudgetJustif');
 }

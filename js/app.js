@@ -17,7 +17,7 @@ const DB = {
     users:'ftr_users', session:'ftr_session', vehicules:'ftr_vehicules',
     documents:'ftr_documents', onboarded:'ftr_onboarded', messages:'ftr_messages',
     repertoire:'ftr_repertoire', incidents:'ftr_incidents', ppe:'ftr_ppe',
-    loginHistory:'ftr_login_history', auditLog:'ftr_audit_log', fonctionColors:'ftr_fonction_colors',
+    loginHistory:'ftr_login_history', fonctionColors:'ftr_fonction_colors',
     interventions:'ftr_interventions', employes:'ftr_employes',
     chambres:'ftr_chambres', edl:'ftr_edl', echeances:'ftr_echeances', releves:'ftr_releves',
     repas:'ftr_repas', visites:'ftr_visites', nuits:'ftr_nuits', activites:'ftr_activites', cvs:'ftr_cvs', medicaments:'ftr_medicaments',
@@ -313,7 +313,8 @@ const DEFAULTS = {
     { id: 11, fonction: 'Responsable hébergement', color: '#d97706', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','edit_residents','access_journal','access_presences','access_repertoire','access_documents','view_incidents','access_activites','access_medicaments','access_ppe','access_vehicules','access_sante','validate_incidents','edit_planning_equipe','access_interventions','access_entretiens','access_admissions','access_budget','access_cvs','access_facturation'] },
     { id: 12, fonction: 'Secrétaire / Assistant administratif', color: '#78716c', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_formations','access_planning_equipe','view_residents','access_presences','access_repertoire','access_documents','access_admissions','access_facturation'] },
     { id: 13, fonction: 'Directeur d\'établissement', color: '#dc2626', permissions: ['view_dashboard','view_residents','edit_residents','access_journal','access_presences','access_ppe','access_sante','access_medicaments','access_repertoire','access_documents','access_vehicules','access_interventions','view_incidents','validate_incidents','access_viatrajectoire','access_serafinph','access_planning_equipe','edit_planning_equipe','access_conges','access_notes','access_messages','access_budget','access_paie','access_entretiens','access_annuaire','access_documentation','access_admissions','access_facturation','access_formations','access_activites','access_cvs','access_admin','access_employes','manage_users'] },
-    { id: 14, fonction: 'Comptable', color: '#0d9488', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_paie','access_budget','access_facturation'] }
+    { id: 14, fonction: 'Comptable', color: '#0d9488', permissions: ['view_dashboard','access_notes','access_messages','access_annuaire','access_documentation','access_conges','access_paie','access_budget','access_facturation'] },
+    { id: 15, fonction: 'Stagiaire', color: '#22c55e', permissions: ['view_dashboard','view_residents','access_journal','access_presences','access_activites','access_annuaire','access_documentation','access_planning_equipe','access_messages'] }
   ],
 };
 
@@ -385,34 +386,29 @@ function requireModule(perm) {
 // ── AUDIT LOG ──
 // 3e argument facultatif : residentId, pour rattacher l'entrée à un dossier
 // (traçabilité RGPD « qui a consulté/modifié ce résident »).
+//
+// Écriture UNIQUEMENT dans public.audit_log (js/audit-supabase.js). La copie
+// localStorage a été retirée en août 2026 : elle laissait sur chaque poste,
+// sans aucune expiration, la trace de qui avait consulté quel dossier — et
+// comme les écrans la lisaient ELLE plutôt que la base, l'administrateur ne
+// voyait que l'activité de son propre navigateur.
 function auditLog(action, details, residentId) {
   try {
     const session = Auth?.getSession?.();
     if (!session) return;
     const user = [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username;
-
-    // 1) Trace locale — conservée telle quelle (la vue admin actuelle la lit).
-    const log = JSON.parse(localStorage.getItem('ftr_audit_log') || '[]');
-    log.unshift({
-      id: genId(),
-      date: new Date().toISOString(),
-      userId: session.userId,
-      user,
-      role: session.role,
-      action,
-      details: details || ''
-    });
-    if (log.length > 1000) log.length = 1000;
-    localStorage.setItem('ftr_audit_log', JSON.stringify(log));
-
-    // 2) Trace centralisée — durable et partagée (audit-supabase.js). « Au
-    //    mieux » : jamais bloquante, et si le module ou la table manquent,
-    //    la trace locale reste. Passe par la file hors-ligne au besoin.
+    // « Au mieux » : jamais bloquante. Passe par la file hors-ligne au besoin,
+    // donc un geste fait sans réseau est tracé au retour de la connexion.
     if (typeof sbLogAudit === 'function') {
       sbLogAudit({ action, details, residentId, userId: session.userId, userName: user, role: session.role });
     }
   } catch {}
 }
+
+// Efface la copie locale héritée sur les postes qui en ont déjà une. Sans ça,
+// l'ancien journal resterait indéfiniment dans le navigateur de chaque agent :
+// la suppression du code d'écriture ne suffit pas à effacer l'existant.
+try { localStorage.removeItem('ftr_audit_log'); } catch {}
 
 // ── LOGIN HISTORY ──
 function logConnexion(action, user) {
@@ -657,7 +653,24 @@ function shortName(fullName) {
 }
 
 // ── DATE HELPERS ──
-function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// RÈGLE : ne JAMAIS écrire d.toISOString().slice(0,10) pour obtenir une date.
+// toISOString() convertit en UTC ; en France (UTC+1/+2) minuit local devient
+// 22 h ou 23 h la veille, donc la chaîne obtenue est celle du JOUR PRÉCÉDENT.
+// isoJour / isoMois / isoMinute lisent les composantes locales de la date.
+function isoJour(d) {
+  const x = (d instanceof Date) ? d : new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+}
+function isoMois(d) {
+  const x = (d instanceof Date) ? d : new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`;
+}
+// Format attendu par <input type="datetime-local"> : AAAA-MM-JJTHH:MM, heure locale.
+function isoMinute(d) {
+  const x = (d instanceof Date) ? d : new Date(d);
+  return `${isoJour(x)}T${String(x.getHours()).padStart(2, '0')}:${String(x.getMinutes()).padStart(2, '0')}`;
+}
+function today() { return isoJour(new Date()); }
 // SERAFIN-PH — un niveau de soutien avec intervention active de l'accompagnant
 // (incitation/guidance verbale, aide partielle, aide totale) = prestation DIRECTE ;
 // présence simple (autonomie) et supervision/veille = INDIRECTE ; non renseigné = indirecte.
@@ -692,6 +705,18 @@ function safeColor(c, fallback) {
   return /^#[0-9a-fA-F]{3,8}$/.test(c || '') ? c : (fallback || '');
 }
 
+// ── CARTE-DONNÉE ──
+// Bloc central des cartes « accès rapides » de pilotage / vie-quotidienne /
+// dossiers / rh : soit un chiffre + unité, soit un mot-clé, puis la légende.
+// d = { n, u, lb } ou { txt, lb }. Style dans css/v2-carte-donnee.css.
+function _cdnMid(d, esc) {
+  const e = esc || (x => x);
+  const val = (d.txt != null)
+    ? `<div class="cdn-txt">${e(d.txt)}</div>`
+    : `<div class="cdn-n">${e(String(d.n))}${d.u ? `<i>${e(d.u)}</i>` : ''}</div>`;
+  return `<div class="cdn-mid">${val}<div class="cdn-l">${e(d.lb || '')}</div></div>`;
+}
+
 // ── CONFIRM DIALOG ──
 function confirmDialog(msg, cb) {
   if (confirm(msg)) cb();
@@ -705,6 +730,112 @@ function renderUserInfo() {
   const name = session ? [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username : 'Utilisateur';
   if (nameEl) nameEl.textContent = name;
   if (avEl) avEl.textContent = session ? (initials(session.prenom || '', session.nom || '') || session.username?.[0]?.toUpperCase() || '?') : '?';
+}
+
+// ── MASQUAGE PAR RÔLE / PERMISSION APRÈS RENDU DYNAMIQUE ──
+// accueil-v2.js et rh-dashboard-v2.js régénèrent leurs tuiles par innerHTML
+// APRÈS le masquage initial de DOMContentLoaded, puis appellent cette fonction
+// (jusqu'ici inexistante : les tuiles [data-perm] restaient visibles à tous).
+// Uniquement du masquage — jamais de ré-affichage.
+function applyPermissions(root) {
+  try {
+    const scope = root || document;
+    if (typeof Auth === 'undefined') return;
+    if (!Auth.isAdmin || !Auth.isAdmin()) scope.querySelectorAll('.admin-only').forEach(el => { el.style.display = 'none'; });
+    if (typeof Auth.isRH === 'function' && !Auth.isRH()) scope.querySelectorAll('.rh-only').forEach(el => { el.style.display = 'none'; });
+    if (typeof Auth.isSuperAdmin === 'function' && !Auth.isSuperAdmin()) scope.querySelectorAll('.superadmin-only').forEach(el => { el.style.display = 'none'; });
+    const s = Auth.getSession && Auth.getSession();
+    scope.querySelectorAll('[data-perm]').forEach(el => {
+      const perms = (el.dataset.perm || '').split(',').filter(Boolean);
+      const ok = s && (s.role === 'admin' || s.role === 'superadmin'
+        || (typeof hasPermission === 'function' && perms.some(p => hasPermission(s.userId, p))));
+      if (!ok) el.style.display = 'none';
+    });
+  } catch (e) { console.warn('[applyPermissions]', e); }
+}
+
+// ── MENU UTILISATEUR — pages V2 (.v2-top) ──
+// initMenuPopup() ci-dessous ne gère que les pages legacy (.header). Les pages
+// V2 (barre .v2-top : journal, résidents, médicaments, échéances…) n'avaient
+// AUCUN bouton de déconnexion. On injecte ici un chip « avatar + nom » qui ouvre
+// un menu « Se déconnecter », visible sur toutes ces pages. Stylé via variables
+// --v2-* → s'adapte automatiquement aux thèmes sombre et clair.
+function injectV2UserMenu() {
+  // Page embarquée dans un portail (iframe ?embed=1) : c'est la coquille du
+  // portail (rh.html → .rh-topbar) qui porte le menu — on n'en met pas un 2e.
+  if (document.documentElement.classList.contains('is-embedded')) return;
+  // Barre du haut : .v2-top (pages V2) ou .rh-topbar (portail RH).
+  const top = document.querySelector('.v2-top') || document.querySelector('.rh-topbar');
+  if (!top || document.getElementById('v2UserChip')) return;
+  const session = Auth.getSession();
+  if (!session) return;
+  const name = [session.prenom, nomMaj(session.nom)].filter(Boolean).join(' ') || session.username || 'Utilisateur';
+  const ini = (initials(session.prenom || '', session.nom || '') || (session.username || '?')[0] || '?').toUpperCase();
+
+  const chip = document.createElement('div');
+  chip.id = 'v2UserChip';
+  chip.className = 'v2-user-chip';
+  chip.setAttribute('role', 'button');
+  chip.setAttribute('tabindex', '0');
+  chip.setAttribute('aria-haspopup', 'true');
+  chip.setAttribute('aria-expanded', 'false');
+  chip.title = 'Compte — déconnexion';
+  // Si aucune zone d'actions ne pousse déjà les éléments à droite, on prend
+  // nous-mêmes l'espace pour se caler à l'extrémité droite de la barre.
+  const dejaADroite = Array.prototype.some.call(top.children,
+    c => ((c.getAttribute && c.getAttribute('style')) || '').replace(/\s/g, '').includes('margin-left:auto'));
+  if (!dejaADroite) chip.style.marginLeft = 'auto';
+
+  chip.innerHTML =
+    '<span class="v2-user-av">' + escHtml(ini) + '</span>'
+    + '<span class="v2-user-name">' + escHtml(name) + '</span>'
+    + '<svg class="v2-user-cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+  top.appendChild(chip);
+
+  // Menu rattaché à <body> (position: fixed) pour échapper au overflow:hidden
+  // de .v2-shell — sinon il serait coupé sur les pages peu hautes.
+  const menu = document.createElement('div');
+  menu.className = 'v2-user-menu';
+  menu.id = 'v2UserMenu';
+  menu.innerHTML =
+    '<div class="v2-user-menu-h"><b>' + escHtml(name) + '</b><span>' + escHtml(session.username || '') + '</span></div>'
+    // « Mon espace » : la barre de l'accueil portait un lien vers employe.html
+    // à côté de son propre avatar. La barre-pilule n'affiche plus qu'un avatar,
+    // donc le lien remonte ici — et devient accessible depuis TOUTES les pages,
+    // au lieu de la seule page d'accueil.
+    + '<a class="v2-menu-item" href="employe.html">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+    + 'Mon espace</a>'
+    + '<button type="button" class="v2-logout-item" id="v2LogoutBtn">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+    + 'Se déconnecter</button>';
+  document.body.appendChild(menu);
+
+  const place = () => {
+    const r = chip.getBoundingClientRect();
+    menu.style.top = (r.bottom + 6) + 'px';
+    menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+  };
+  const setOpen = o => {
+    if (o) place();
+    menu.classList.toggle('open', o);
+    chip.setAttribute('aria-expanded', o ? 'true' : 'false');
+  };
+  chip.addEventListener('click', e => { e.stopPropagation(); setOpen(!menu.classList.contains('open')); });
+  chip.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!menu.classList.contains('open')); }
+    else if (e.key === 'Escape') setOpen(false);
+  });
+  menu.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => setOpen(false));
+  window.addEventListener('resize', () => setOpen(false));
+  window.addEventListener('scroll', () => setOpen(false), true);
+  menu.querySelector('#v2LogoutBtn').addEventListener('click', () => {
+    try { Auth.logout(); } catch (_) {}
+    // Rompt l'iframe si la page est affichée dans un panneau (portail RH).
+    const nav = (window.top !== window.self) ? window.top : window;
+    nav.location.href = 'index.html';
+  });
 }
 
 // ── MENU 9 POINTS ──
@@ -1148,6 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyBranding();
   setActiveNav();
   initMenuPopup();
+  injectV2UserMenu();
   initModals();
   renderUserInfo();
   if (!Auth.isAdmin()) {
@@ -1182,8 +1314,15 @@ let _idleTimer = null;
 const IDLE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
 function initAutoLock() {
   if (!Auth.getSession()) return;
-  const lock = () => {
+  const lock = async () => {
     try { logConnexion('logout', Auth.getSession()); } catch {}
+    // Fermer AUSSI la session Supabase. Sans ce signOut, seule la navigation
+    // était bloquée : le jeton d'accès restait dans le navigateur et continuait
+    // d'être renouvelé, donc l'identité de l'agent restait utilisable sur un
+    // poste partagé (console, extension, script). Le await est indispensable,
+    // sinon la redirection coupe la requête de déconnexion.
+    try { if (typeof supabaseClient !== 'undefined') await supabaseClient.auth.signOut(); }
+    catch (e) { console.warn('[autolock] signOut', e); }
     DB.remove(DB.keys.session);
     try { sessionStorage.setItem('ftr_lock_reason', 'idle'); } catch {}
     window.location.href = 'index.html';

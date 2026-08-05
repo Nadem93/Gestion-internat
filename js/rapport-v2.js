@@ -41,6 +41,15 @@ const RAP2_IC = {
 function _rap2Svg(d, w) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
+// Icône dimensionnée (pour les puces .dc-chip / .dc-kpi-ico du langage Console Data)
+function _rap2Ico(d, px) {
+  const s = px || 16;
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+// Badge monospace Console Data à couleur libre
+function _rap2Badge(label, c) {
+  return `<span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${escHtml(label)}</span>`;
+}
 const RAP2_MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 const RAP2_SQL = 'migration-rapport.sql';
 
@@ -84,7 +93,7 @@ function rap2Periode() {
   const type = tEl ? tEl.value : 'annee';
   const now = new Date();
   if (type === 'mois') {
-    const m = (document.getElementById('rapportMois') || {}).value || now.toISOString().slice(0, 7);
+    const m = (document.getElementById('rapportMois') || {}).value || isoMois(now);
     const [yy, mm] = m.split('-').map(Number);
     const end = `${m}-${String(new Date(yy, mm, 0).getDate()).padStart(2, '0')}`;
     return {
@@ -135,7 +144,7 @@ async function rap2Load() {
   };
   // 12 mois glissants se terminant à la fin de période
   const d12 = new Date(per.end + 'T00:00:00'); d12.setDate(1); d12.setMonth(d12.getMonth() - 11);
-  const start12 = d12.toISOString().slice(0, 10);
+  const start12 = isoJour(d12);
   const minStart = [start12, per.prevStart].sort()[0];
 
   const R = await Promise.all([
@@ -170,18 +179,22 @@ function rap2RenderKpis() {
   const sat = _rap2SatPct(d.satisfaction, per.start, per.end);
   const N = v => (v === null || v === undefined) ? '—' : v;
 
-  const cell = (pc, ico, n, l) => `<div class="rap2-k" style="--pc:${pc}">
-      <span class="rap2-k-ico">${_rap2Svg(ico)}</span>
-      <div><div class="rap2-k-n">${escHtml(String(n))}</div><div class="rap2-k-l">${escHtml(l)}</div></div>
+  const cell = (c, ico, label, val, sub) => `<div class="dc-kpi" style="--dc-c:${c}">
+      <div class="dc-kpi-top">
+        <span class="dc-kpi-label">${escHtml(label)}</span>
+        <span class="dc-kpi-ico" style="color:${c}">${_rap2Ico(ico)}</span>
+      </div>
+      <div class="dc-kpi-val">${escHtml(String(val))}</div>
+      <div class="dc-kpi-sub">${escHtml(sub)}</div>
     </div>`;
   const el = document.getElementById('rap2Kpis');
   if (!el) return;
   el.innerHTML =
-    cell('#4ade80', RAP2_IC.building, occ === null ? '—' : occ + ' %', "Taux d'occupation") +
-    cell('#22d3ee', RAP2_IC.swap, entrees + sorties,
-      `Mouvements (${entrees} entrée${entrees > 1 ? 's' : ''} · ${sorties} sortie${sorties > 1 ? 's' : ''})`) +
-    cell('#ef4444', RAP2_IC.alert, N(eig), 'EIG / incidents graves') +
-    cell('#f59e0b', RAP2_IC.star, sat === null ? '—' : sat + ' %', 'Satisfaction');
+    cell('#4ade80', RAP2_IC.building, 'Occupation', occ === null ? '—' : occ + ' %', 'Taux moyen sur la période') +
+    cell('#22d3ee', RAP2_IC.swap, 'Mouvements', entrees + sorties,
+      `${entrees} entrée${entrees > 1 ? 's' : ''} · ${sorties} sortie${sorties > 1 ? 's' : ''}`) +
+    cell('#ef4444', RAP2_IC.alert, 'EIG / Incidents', N(eig), 'Événements graves') +
+    cell('#f59e0b', RAP2_IC.star, 'Satisfaction', sat === null ? '—' : sat + ' %', 'Note moyenne résidents');
 }
 
 function rap2Sections() {
@@ -207,13 +220,17 @@ function rap2Sections() {
 function rap2RenderSections() {
   const el = document.getElementById('rap2Sections');
   if (!el || _rap2.chargement) return;
-  el.innerHTML = rap2Sections().map(s => `<div class="rap2-sec" style="--pc:${s.c}">
-      <span class="rap2-sec-ico">${_rap2Svg(s.ico)}</span>
-      <div style="flex:1;min-width:0">
-        <div class="rap2-sec-t">${escHtml(s.label)}</div>
-        <div class="rap2-sec-d">${escHtml(s.detail)}</div>
+  el.innerHTML = rap2Sections().map(s => `<div class="dc-card" style="border-left:3px solid ${s.c}">
+      <div class="dc-body" style="display:flex;align-items:center;gap:12px;padding:14px 16px">
+        <span class="dc-chip" style="background:${s.c}22;color:${s.c}">${_rap2Ico(s.ico)}</span>
+        <div style="flex:1;min-width:0">
+          <div class="dc-title" style="font-size:12.5px">${escHtml(s.label)}</div>
+          <div class="dc-kpi-sub" style="margin-top:3px">${escHtml(s.detail)}</div>
+        </div>
+        ${s.ok
+          ? '<span class="dc-badge dc-b-green"><span class="d"></span>OK</span>'
+          : '<span class="dc-badge dc-b-amber"><span class="d"></span>À VENIR</span>'}
       </div>
-      <span class="rap2-sec-ok" style="color:${s.ok ? '#34d399' : '#f59e0b'}">${_rap2Svg(s.ok ? RAP2_IC.check : RAP2_IC.clock, 2.4)}</span>
     </div>`).join('');
 }
 
@@ -312,7 +329,7 @@ function rap2RenderComparaison() {
   el.innerHTML = lignes.map(l => `<div class="rap2-cmp" style="--pc:${l.c}">
       <span class="rap2-cmp-l">${escHtml(l.label)}</span>
       <span class="rap2-cmp-v">${escHtml(l.val)}</span>
-      <span class="rap2-cmp-d">${_rap2Svg(l.ico, 2.4)}${escHtml(l.delta)}</span>
+      <span class="dc-badge" style="margin-left:auto;background:${l.c}1f;color:${l.c};border:1px solid ${l.c}44">${_rap2Ico(l.ico, 13)}${escHtml(l.delta)}</span>
     </div>`).join('');
 }
 
@@ -344,7 +361,7 @@ function rap2RenderSerafin() {
   el.innerHTML = lignes.map(l => `<div>
       <div style="display:flex;align-items:baseline;margin-bottom:4px;gap:10px">
         <span style="font-size:11.5px;color:var(--v2-t3)">${escHtml(l.label)}</span>
-        <span style="margin-left:auto;font-size:11px;font-weight:700;color:#fff">${escHtml(l.val || (l.pct + ' %'))}</span>
+        <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--v2-t1)">${escHtml(l.val || (l.pct + ' %'))}</span>
       </div>
       <div class="v2-prog" style="height:6px"><span style="width:${l.pct}%;background:${l.c}"></span></div>
     </div>`).join('');
@@ -355,7 +372,7 @@ function rap2RenderContributions() {
   const el = document.getElementById('rcList');
   if (!el) return;
   const mEl = document.getElementById('rcMois');
-  if (mEl && !mEl.value) mEl.value = new Date().toISOString().slice(0, 7);
+  if (mEl && !mEl.value) mEl.value = isoMois(new Date());
   const session = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
   const isAdmin = (typeof Auth !== 'undefined' && typeof Auth.isAdmin === 'function') ? Auth.isAdmin() : false;
   const list = (typeof getRapportContributions === 'function' ? getRapportContributions() : [])
@@ -373,7 +390,7 @@ function rap2RenderContributions() {
     const emo = CATE[c.categorie] || '📌';
     const moisLabel = c.mois ? new Date(c.mois + '-01T12:00').toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : '';
     const canDelete = isAdmin || String(c.authorId) === String(session?.userId);
-    return `<div class="rap2-contrib" style="--pc:${col}">
+    return `<div class="rap2-contrib" style="--pc:${col};border-left:2px solid ${col};padding-left:11px">
       <span class="rap2-contrib-e">${emo}</span>
       <div style="flex:1;min-width:0">
         <div class="rap2-contrib-t">${escHtml(c.texte)}</div>
@@ -407,10 +424,10 @@ function rap2RenderObligatoires() {
   el.innerHTML = list.map(s => {
     const st = RAP2_STATUTS[s.statut] || { label: s.statut || '—', c: '#8095b4' };
     const fait = s.statut === 'fait';
-    return `<div class="rap2-row" style="--pc:${st.c}">
+    return `<div class="rap2-row" style="--pc:${st.c};border-left:2px solid ${st.c};padding-left:12px">
       <span class="rap2-mini">${_rap2Svg(fait ? RAP2_IC.check : RAP2_IC.clock, 2.4)}</span>
       <span class="rap2-row-l">${escHtml(s.libelle || '')}</span>
-      <span class="rap2-row-tag">${escHtml(st.label)}</span>
+      ${_rap2Badge(st.label, st.c)}
       <button type="button" class="rap2-x" title="Supprimer" onclick="rap2SupprimerSuivi('${escHtml(String(s.id))}')">✕</button>
     </div>`;
   }).join('');
@@ -422,10 +439,10 @@ function rap2RenderDiffusion() {
   if (!list.length) { el.innerHTML = `<p class="v2-blk-vide" style="margin:0">Aucun destinataire suivi. Ajoutez-en un avec « + ».</p>`; return; }
   el.innerHTML = list.map(s => {
     const st = RAP2_STATUTS[s.statut] || { label: s.statut || '—', c: '#8095b4' };
-    return `<div class="rap2-row" style="--pc:${st.c}">
+    return `<div class="rap2-row" style="--pc:${st.c};border-left:2px solid ${st.c};padding-left:12px">
       <span class="rap2-dot"></span>
       <span class="rap2-row-l">${escHtml(s.libelle || '')}</span>
-      <span class="rap2-row-tag">${escHtml(st.label)}</span>
+      ${_rap2Badge(st.label, st.c)}
       <button type="button" class="rap2-x" title="Supprimer" onclick="rap2SupprimerSuivi('${escHtml(String(s.id))}')">✕</button>
     </div>`;
   }).join('');
@@ -434,7 +451,7 @@ function rap2RenderEcheance() {
   const el = document.getElementById('rap2Ech');
   if (!el || _rap2.chargement) return;
   const list = _rap2SuiviDe('echeance').filter(s => s.echeance).sort((a, b) => String(a.echeance).localeCompare(String(b.echeance)));
-  const prochaine = list.find(s => String(s.echeance) >= new Date().toISOString().slice(0, 10)) || list[0];
+  const prochaine = list.find(s => String(s.echeance) >= today()) || list[0];
   if (!prochaine) {
     el.innerHTML = `<p class="v2-blk-vide" style="margin:0">Aucune échéance enregistrée. Ajoutez-en une avec « + ».</p>`;
     return;
@@ -462,10 +479,10 @@ function rap2RenderHistorique() {
   }
   el.innerHTML = list.map(h => {
     const d = h.genere_le ? new Date(h.genere_le).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : '';
-    return `<div class="rap2-row" style="--pc:#c4b5fd">
+    return `<div class="rap2-row" style="--pc:#c4b5fd;border-left:2px solid #c4b5fd;padding-left:12px">
       <span class="rap2-row-ico" style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.16)">${_rap2Svg(RAP2_IC.file)}</span>
       <span class="rap2-row-l">${escHtml(h.libelle || '')}</span>
-      <span class="rap2-row-tag" style="--pc:var(--v2-t6);font-weight:600">${escHtml(d)}</span>
+      <span class="dc-pill dim" style="margin-left:auto">${escHtml(d)}</span>
     </div>`;
   }).join('');
 }

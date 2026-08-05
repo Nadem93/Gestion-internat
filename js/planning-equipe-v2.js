@@ -352,9 +352,12 @@ function pe2Render() {
   ];
   const elStats = document.getElementById('pe2Stats');
   if (elStats) elStats.innerHTML = stats.map(s => `
-    <div class="pe2-stat" style="--pc:${s.c}">
-      <span class="pe2-stat-ico">${pe2Svg(s.i)}</span>
-      <div><div class="pe2-stat-n">${escHtml(s.n)}</div><div class="pe2-stat-l">${escHtml(s.l)}</div></div>
+    <div class="dc-kpi" style="--dc-c:${s.c}">
+      <div class="dc-kpi-top">
+        <span class="dc-kpi-label">${escHtml(s.l)}</span>
+        <span class="dc-kpi-ico" style="color:${s.c};width:16px;height:16px;display:inline-flex">${pe2Svg(s.i)}</span>
+      </div>
+      <div class="dc-kpi-val">${escHtml(s.n)}</div>
     </div>`).join('');
 
   // ── Grille ───────────────────────────────────────────────────────────
@@ -547,7 +550,7 @@ function pe2RenderBas(days, employes, byEmp, conf) {
     <div class="pe2-regle" style="--pc:${r.c}">
       <div class="pe2-regle-h">
         <span class="pe2-regle-ico">${pe2Svg(r.ico, 2.4)}</span>
-        <span class="pe2-regle-tag">${escHtml(r.tag)}</span>
+        <span class="dc-badge" style="background:${r.c}1f;color:${r.c};border:1px solid ${r.c}44"><span class="d" style="background:${r.c}"></span>${escHtml(r.tag)}</span>
       </div>
       <div class="pe2-regle-l">${escHtml(r.label)}</div>
       <div class="pe2-regle-d">${escHtml(r.detail)}</div>
@@ -563,7 +566,7 @@ function pe2RenderBas(days, employes, byEmp, conf) {
           <div class="pe2-alerte-t">${escHtml(a.titre)}</div>
           <div class="pe2-alerte-r">${escHtml(a.regle)}</div>
         </div>
-        <span class="pe2-alerte-lv">${escHtml(a.niveau)}</span>
+        <span class="dc-badge" style="background:${a.c}1f;color:${a.c};border:1px solid ${a.c}44"><span class="d" style="background:${a.c}"></span>${escHtml(a.niveau)}</span>
       </div>`).join('')
     : `<div class="v2-note v2-note-ok">${pe2Svg(PE2_ICO.check)}Aucune anomalie détectée sur la période contrôlée.</div>`;
 }

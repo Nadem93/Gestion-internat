@@ -293,9 +293,9 @@ function rc2RenderStats() {
     { n: delai, l: 'Délai moyen de décision', c: '#10b981', i: RC2_IC.clock }
   ];
   el.innerHTML = tuiles.map(t => `
-    <div class="rc2-stat" style="--pc:${t.c}">
-      <span class="rc2-stat-ico">${rc2Svg(t.i)}</span>
-      <div><div class="rc2-stat-n">${rc2Esc(t.n)}</div><div class="rc2-stat-l">${rc2Esc(t.l)}</div></div>
+    <div class="dc-kpi" style="--dc-c:${t.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${rc2Esc(t.l)}</span><span class="dc-kpi-ico" style="color:${t.c}">${rc2Svg(t.i, 16)}</span></div>
+      <div class="dc-kpi-val">${rc2Esc(t.n)}</div>
     </div>`).join('');
 }
 
@@ -345,7 +345,7 @@ function rc2Card(c, col, peut) {
     } else if (typeof Auth !== 'undefined' && Auth.isAdmin && Auth.isAdmin()) {
       compte = `<button type="button" class="rc2-card-cta" onclick="event.stopPropagation();rcCreateCompte('${rc2Attr(c.id)}')">${rc2Svg(RC2_IC.key, 13)} Créer son compte</button>`;
     } else {
-      compte = `<div class="rc2-card-ok">${rc2Svg(RC2_IC.check, 13)} Fiche à créer depuis <a href="admin.html">Administration → Utilisateurs</a></div>`;
+      compte = `<div class="rc2-card-ok">${rc2Svg(RC2_IC.check, 13)} Fiche à créer depuis <a href="admin.html?tab=employes">RH → Employés</a></div>`;
     }
   }
 
@@ -382,13 +382,13 @@ function rc2RenderOffres() {
     const st = RC2_OFFRE_ST[o.statut] || RC2_OFFRE_ST.ouverte;
     const nb = RC2_META.filter(m => String(m.offre_id) === String(o.id)).length;
     const c = rc2Color(o.id);
-    return `<div class="rc2-line" onclick="rc2OpenOffre('${rc2Attr(o.id)}')" title="Modifier l’offre">
+    return `<div class="rc2-line" style="border-left:3px solid ${st.c};padding-left:12px" onclick="rc2OpenOffre('${rc2Attr(o.id)}')" title="Modifier l’offre">
       <span class="rc2-line-ico" style="--pc:${c}">${rc2Svg(RC2_IC.brief, 15)}</span>
       <div style="flex:1;min-width:0">
         <div class="rc2-line-t">${rc2Esc(o.titre || 'Offre sans titre')}</div>
         <div class="rc2-line-s">${rc2Esc(o.contrat || '—')} · ${nb} cand.${Number(o.cout) > 0 ? ' · ' + rc2Esc(rc2Num(o.cout)) + ' €' : ''}</div>
       </div>
-      <span class="rc2-tag" style="--pc:${st.c}">${rc2Esc(st.l)}</span>
+      <span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${rc2Esc(st.l)}</span>
     </div>`;
   }).join('');
 }
@@ -401,8 +401,9 @@ function rc2RenderEntretiens() {
   if (!list.length) { el.innerHTML = '<div class="v2-blk-vide">Aucun entretien programmé.</div>'; return; }
   el.innerHTML = list.slice(0, 6).map(c => {
     const d = rc2MoisCourt(c.dateEntretien);
+    const sc = rc2Statut(c.statut || 'recu').color || '#22d3ee';
     const nom = `${c.prenom || ''} ${typeof nomMaj === 'function' ? nomMaj(c.nom) : (c.nom || '')}`.trim();
-    return `<div class="rc2-line" onclick="rc2Selectionner('${rc2Attr(c.id)}')">
+    return `<div class="rc2-line" style="border-left:3px solid ${sc};padding-left:12px" onclick="rc2Selectionner('${rc2Attr(c.id)}')">
       <div class="rc2-line-d"><div class="rc2-line-dj">${rc2Esc(d.j)}</div><div class="rc2-line-dm">${rc2Esc(d.m)}</div></div>
       <div style="flex:1;min-width:0">
         <div class="rc2-line-t">${rc2Esc(nom)}</div>
@@ -448,7 +449,7 @@ function rc2RenderKpis() {
     { l: 'Sourcing principal', v: sourcing, c: '#22d3ee', i: RC2_IC.trend },
     { l: 'Candidatures traitées', v: reponse, c: '#10b981', i: RC2_IC.check }
   ];
-  el.innerHTML = kpis.map(k => `<div class="rc2-kpi">
+  el.innerHTML = kpis.map(k => `<div class="rc2-kpi" style="border-left:3px solid ${k.c};padding-left:12px">
       <span class="rc2-kpi-ico" style="--pc:${k.c}">${rc2Svg(k.i, 16)}</span>
       <span class="rc2-kpi-l">${rc2Esc(k.l)}</span>
       <span class="rc2-kpi-v">${rc2Esc(k.v)}</span>
@@ -581,7 +582,7 @@ function rc2RenderCanaux() {
   el.innerHTML = entries.map(([k, n], i) => {
     const c = RC2_PALETTE[i % RC2_PALETTE.length];
     return `<div class="rc2-canal">
-      <div class="rc2-score-h"><span class="rc2-score-l">${rc2Esc(k)}</span><span class="rc2-score-n" style="color:#fff">${n}</span></div>
+      <div class="rc2-score-h"><span class="rc2-score-l">${rc2Esc(k)}</span><span class="rc2-score-n" style="color:var(--v2-t1)">${n}</span></div>
       <div class="v2-prog"><span style="width:${Math.round(100 * n / max)}%;background:${c}"></span></div>
     </div>`;
   }).join('');
@@ -605,13 +606,13 @@ function rc2RenderVivier() {
   el.innerHTML = list.slice(0, 8).map(c => {
     const m = rc2MetaDe(c.id);
     const nom = `${c.prenom || ''} ${typeof nomMaj === 'function' ? nomMaj(c.nom) : (c.nom || '')}`.trim();
-    return `<div class="rc2-line" onclick="openCandidatModal('${rc2Attr(c.id)}')" title="Ouvrir la fiche candidat">
+    return `<div class="rc2-line" style="border-left:3px solid #818cf8;padding-left:12px" onclick="openCandidatModal('${rc2Attr(c.id)}')" title="Ouvrir la fiche candidat">
       <span class="rc2-card-av" style="background:${rc2Color(c.id)}">${rc2Esc(rc2Ini(c.prenom, c.nom))}</span>
       <div style="flex:1;min-width:0">
         <div class="rc2-line-t">${rc2Esc(nom)}</div>
         <div class="rc2-line-s">${rc2Esc(c.poste || '—')}${m && m.dispo ? ' · ' + rc2Esc(m.dispo) : ''}</div>
       </div>
-      <span class="rc2-tag" style="--pc:#a5b4fc">Vivier</span>
+      <span class="dc-badge dc-b-indigo"><span class="d"></span>Vivier</span>
     </div>`;
   }).join('');
 }
@@ -636,10 +637,10 @@ function rc2RenderDiffusion() {
     ${RC2_CANAUX_DIFF.map(canal => {
       const r = rows.find(x => x.canal === canal);
       const st = RC2_DIFF_ST[(r && r.statut) || 'a_publier'];
-      return `<button type="button" class="rc2-diff" onclick="rc2CycleDiff('${rc2Attr(canal)}')" title="Changer le statut de diffusion">
+      return `<button type="button" class="rc2-diff" style="border-left:3px solid ${st.c};padding-left:10px" onclick="rc2CycleDiff('${rc2Attr(canal)}')" title="Changer le statut de diffusion">
         <span class="rc2-diff-ico" style="color:${st.c}">${rc2Svg(st.c === '#34d399' ? RC2_IC.check : RC2_IC.globe, 15)}</span>
         <span class="rc2-diff-l">${rc2Esc(canal)}</span>
-        <span class="rc2-tag" style="--pc:${st.c}">${rc2Esc(st.l)}</span>
+        <span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${rc2Esc(st.l)}</span>
       </button>`;
     }).join('')}`;
 }

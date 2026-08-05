@@ -351,9 +351,9 @@ function dd2RenderScore() {
     { n: t.non_conforme,  l: 'Non conformes',         c: '#ef4444', ic: 'shield' }
   ];
   st.innerHTML = tuiles.map(x => `
-    <div class="dd2-stat">
-      <span class="dd2-stat-ic" style="--pc:${x.c}">${dd2Svg(x.ic, 21)}</span>
-      <div><div class="dd2-stat-n" style="color:${x.c}">${x.n}</div><div class="dd2-stat-l">${x.l}</div></div>
+    <div class="dc-kpi" style="--dc-c:${x.c}">
+      <div class="dc-kpi-top"><span class="dc-kpi-label">${x.l}</span><span class="dc-kpi-ico" style="color:${x.c}">${dd2Svg(x.ic, 15)}</span></div>
+      <div class="dc-kpi-val" style="color:${x.c}">${x.n}</div>
     </div>`).join('');
 }
 
@@ -367,6 +367,7 @@ function dd2RenderDomaines() {
     const pct = s ? s.pct + '%' : '—';
     return `
       <button type="button" class="dd2-dom${DD2_DOM === d.id ? ' on' : ''}" data-dom="${d.id}"
+              style="border-left:3px solid ${d.c}"
               onclick="dd2ChoisirDomaine('${d.id}')" aria-pressed="${DD2_DOM === d.id}">
         <span class="dd2-dom-ic" style="--pc:${d.c}">${dd2Svg(d.ic, 19)}</span>
         <span class="dd2-dom-txt">
@@ -375,7 +376,7 @@ function dd2RenderDomaines() {
         </span>
         <span class="dd2-dom-bar"><span class="v2-prog"><span style="width:${s ? s.pct : 0}%;background:${n.c}"></span></span></span>
         <span class="dd2-dom-pct" style="color:${n.c}">${pct}</span>
-        <span class="dd2-dom-tag" style="color:${n.tc};background:${n.tc}1c">${n.tag}</span>
+        <span class="dc-badge" style="background:${n.tc}1f;color:${n.tc};border:1px solid ${n.tc}44"><span class="d" style="background:${n.tc}"></span>${dd2Esc(n.tag)}</span>
       </button>`;
   }).join('');
 }
@@ -399,7 +400,7 @@ function dd2RenderVigilance() {
         <div class="dd2-vig-l">${dd2Esc(v.label)}</div>
         <div class="dd2-vig-d">${dd2Esc(v.detail)}</div>
       </div>
-      <span class="dd2-vig-tag" style="color:${v.c}">${v.tag}</span>
+      <span class="dc-badge" style="background:${v.c}1f;color:${v.c};border:1px solid ${v.c}44"><span class="d" style="background:${v.c}"></span>${dd2Esc(v.tag)}</span>
     </div>`).join('')
     + (list.length > MAX ? `<div class="dd2-vig-plus">+ ${list.length - MAX} autre${list.length - MAX > 1 ? 's' : ''}</div>` : '');
 }
@@ -492,7 +493,7 @@ async function dd2Repondre(code, statut) {
     if (!await dd2Delete(DD2_T_OBL, existant.id)) return;
     DD2_OBL = DD2_OBL.filter(o => o.id !== existant.id);
   } else {
-    const row = { code, statut, evalue_le: new Date().toISOString().slice(0, 10) };
+    const row = { code, statut, evalue_le: today() };
     // Identifiant Supabase Auth (jamais Auth.getSession().userId, qui est un
     // identifiant applicatif et serait rejeté par la RLS).
     try { if (typeof sbAuthUid === 'function') row.evalue_par = await sbAuthUid(); }
@@ -546,7 +547,7 @@ async function dd2Releve() {
   const per = dd2Periode();
   const existant = DD2_SCO.find(s => s.periode === per);
   const saved = await dd2Upsert(DD2_T_SCO,
-    { periode: per, valeur: g.pct, date_releve: new Date().toISOString().slice(0, 10) },
+    { periode: per, valeur: g.pct, date_releve: today() },
     existant ? existant.id : null);
   if (!saved) return;
   DD2_SCO = DD2_SCO.filter(s => s.id !== saved.id).concat(saved);
@@ -573,7 +574,7 @@ function dd2RenderRisques() {
     }
     return `<div class="dd2-risq">
         <div class="dd2-risq-b"><div class="dd2-risq-l">${dd2Esc(r.label)}</div><div class="dd2-risq-d">${dd2Esc(detail)}</div></div>
-        <span class="dd2-risq-t" style="color:${c};background:${c}1c">${tag}</span>
+        <span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44"><span class="d" style="background:${c}"></span>${tag}</span>
       </div>`;
   }).join('');
 }
@@ -590,7 +591,7 @@ function dd2RenderEcheancier() {
     .sort((a, b) => String(a.echeance).localeCompare(String(b.echeance)))
     .slice(0, 6);
   if (!list.length) { el.innerHTML = `<div class="v2-blk-vide">Aucune échéance planifiée.</div>`; return; }
-  const auj = new Date().toISOString().slice(0, 10);
+  const auj = today();
   el.innerHTML = list.map(a => {
     const x = dd2JM(a.echeance);
     const c = a.echeance < auj ? '#ef4444' : (a.priorite === 'urgente' ? '#f59e0b' : '#22d3ee');
@@ -739,7 +740,7 @@ async function dd2ToggleAction(id) {
   if (!a) return;
   const fait = !a.fait;
   const saved = await dd2Upsert(DD2_T_ACT,
-    { fait, fait_le: fait ? new Date().toISOString().slice(0, 10) : null }, id);
+    { fait, fait_le: fait ? today() : null }, id);
   if (!saved) return;
   DD2_ACT = DD2_ACT.filter(x => String(x.id) !== String(saved.id)).concat(saved);
   dd2Render();

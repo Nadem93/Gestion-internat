@@ -45,7 +45,10 @@ let MF2_EVAL_NOTE = null;
 
 // ── Utilitaires ──────────────────────────────────────────────────────────
 function mf2Svg(d, w) {
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  // width/height=16 par défaut (contexte Console Data) ; les conteneurs qui
+  // fixent une taille en CSS (.mf2-f-ico, .mf2-vide-ico, .mf2-blk-ico…) la
+  // conservent, l'attribut n'agissant que là où aucune règle CSS ne prime.
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 }
 function mf2Color(s) {
   const k = String(s || '');
@@ -212,12 +215,12 @@ function mf2RenderStats() {
     { n: aVenir.length, l: 'Inscriptions à venir', c: '#818cf8', ic: MF2_IC.cal },
     { n: ouvertes.length, l: 'Places ouvertes', c: '#f59e0b', ic: MF2_IC.book }
   ];
-  el.innerHTML = tiles.map(t => `<div class="mf2-stat">
-    <span class="mf2-stat-ico" style="--pc:${t.c}">${mf2Svg(t.ic)}</span>
-    <div class="mf2-stat-txt">
-      <div class="mf2-stat-n" style="color:${t.c}">${escHtml(String(t.n))}</div>
-      <div class="mf2-stat-l">${escHtml(t.l)}</div>
+  el.innerHTML = tiles.map(t => `<div class="dc-kpi" style="--dc-c:${t.c}">
+    <div class="dc-kpi-top">
+      <span class="dc-kpi-label">${escHtml(t.l)}</span>
+      <span class="dc-kpi-ico" style="color:${t.c}">${mf2Svg(t.ic)}</span>
     </div>
+    <div class="dc-kpi-val" style="color:${t.c}">${escHtml(String(t.n))}</div>
   </div>`).join('');
 }
 
@@ -302,10 +305,10 @@ function mf2RenderTable(filtre) {
           </div>
         </div>
       </td>
-      <td class="mf2-col-dom">${f.domaine ? `<span class="mf2-pill" style="--pc:${c}">${escHtml(f.domaine)}</span>` : '<span class="mf2-dash">—</span>'}</td>
+      <td class="mf2-col-dom">${f.domaine ? `<span class="dc-badge" style="background:${c}1f;color:${c};border:1px solid ${c}44">${escHtml(f.domaine)}</span>` : '<span class="mf2-dash">—</span>'}</td>
       <td class="mf2-col-date">${escHtml(mf2Dates(f))}</td>
       <td class="mf2-col-places" title="${escAttr(noms.join(', '))}">${places}</td>
-      <td class="mf2-col-st"><span class="mf2-st" style="color:${st.c}"><span class="mf2-st-d" style="background:${st.c}"></span>${escHtml(st.l)}</span></td>
+      <td class="mf2-col-st"><span class="dc-badge" style="background:${st.c}1f;color:${st.c};border:1px solid ${st.c}44"><span class="d" style="background:${st.c}"></span>${escHtml(st.l)}</span></td>
       <td class="mf2-col-act">${act}</td>
     </tr>`;
   }).join('');
@@ -336,11 +339,16 @@ function mf2RenderRail() {
   const parc = document.getElementById('mfParcours');
   if (parc) {
     parc.innerHTML = `
-      <div class="mf2-rail-t vert">Mon parcours de formation</div>
-      <div class="mf2-big">${hSuivies} h</div>
-      <div class="mf2-rail-s">${hTotal ? `suivies sur ${hTotal} h engagées` : 'aucune heure engagée pour le moment'}</div>
-      <div class="v2-prog mf2-gauge"><span style="width:${pct}%;background:linear-gradient(90deg,#16a34a,#4ade80)"></span></div>
-      <div class="mf2-rail-f">${hVenir ? `${hVenir} h encore à suivre` : 'Aucune session programmée'}</div>`;
+      <div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#16a34a22;color:#16a34a">${mf2Svg(MF2_IC.grad)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Mon parcours</div><div class="dc-title">Parcours de formation</div></div>
+      </div><span class="dc-pill dim">${pct}%</span></div>
+      <div class="dc-body">
+        <div class="dc-kpi-val mf2-heures">${hSuivies} h</div>
+        <div class="mf2-rail-s">${hTotal ? `suivies sur ${hTotal} h engagées` : 'aucune heure engagée pour le moment'}</div>
+        <div class="al-prog-bar"><span style="width:${pct}%;background:linear-gradient(90deg,#16a34a,#4ade80)"></span></div>
+        <div class="mf2-rail-f" style="margin-top:8px">${hVenir ? `${hVenir} h encore à suivre` : 'Aucune session programmée'}</div>
+      </div>`;
   }
 
   // 2) Par domaine (heures) — uniquement mes formations
@@ -353,32 +361,35 @@ function mf2RenderRail() {
     });
     const arr = [...map.entries()].filter(([, h]) => h > 0).sort((a, b) => b[1] - a[1]).slice(0, 6);
     const max = arr.length ? arr[0][1] : 0;
-    dom.innerHTML = `<div class="v2-blk-h">
-        <span class="mf2-blk-ico" style="--pc:#818cf8">${mf2Svg(MF2_IC.chart)}</span>
-        <span class="v2-blk-t">Par domaine (heures)</span>
-      </div>` + (arr.length
+    dom.innerHTML = `<div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#818cf822;color:#818cf8">${mf2Svg(MF2_IC.chart)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Répartition</div><div class="dc-title">Par domaine (heures)</div></div>
+      </div></div>
+      <div class="dc-body">` + (arr.length
       ? `<div class="mf2-doms">` + arr.map(([k, h]) => {
           const c = mf2Color(k);
-          return `<div class="mf2-dom">
+          return `<div class="mf2-dom" style="border-left:3px solid ${c};padding-left:11px">
             <div class="mf2-dom-h"><span class="mf2-dom-l">${escHtml(k)}</span><span class="mf2-dom-n">${h} h</span></div>
             <div class="v2-prog v2-prog-sm"><span style="width:${max ? Math.round(h / max * 100) : 0}%;background:${c}"></span></div>
           </div>`;
         }).join('') + `</div>`
-      : `<div class="v2-blk-vide">Aucune heure enregistrée sur vos formations.</div>`);
+      : `<div class="v2-blk-vide">Aucune heure enregistrée sur vos formations.</div>`) + `</div>`;
   }
 
   // 3) Prochaines sessions — mes inscriptions à venir
   const ses = document.getElementById('mfSessions');
   if (ses) {
     const next = aVenir.slice().sort((a, b) => (a.dateDebut || '').localeCompare(b.dateDebut || '')).slice(0, 4);
-    ses.innerHTML = `<div class="v2-blk-h">
-        <span class="mf2-blk-ico" style="--pc:#22d3ee">${mf2Svg(MF2_IC.cal)}</span>
-        <span class="v2-blk-t">Prochaines sessions</span>
-      </div>` + (next.length
+    ses.innerHTML = `<div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee">${mf2Svg(MF2_IC.cal)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">À venir</div><div class="dc-title">Prochaines sessions</div></div>
+      </div>${next.length ? `<span class="dc-pill dim">${next.length}</span>` : ''}</div>
+      <div class="dc-body">` + (next.length
       ? next.map(f => {
           const p = mf2Pastille(f.dateDebut);
+          const c = mf2Color(f.domaine || f.organisme || f.titre);
           const info = [f.organisme, (f.participants || []).length + ' inscrit' + ((f.participants || []).length > 1 ? 's' : '')].filter(Boolean).join(' · ');
-          return `<div class="mf2-ses">
+          return `<div class="mf2-ses" style="border-left:3px solid ${c};padding-left:11px">
             <div class="mf2-ses-d"><div class="mf2-ses-j">${escHtml(p.j)}</div><div class="mf2-ses-m">${escHtml(p.m)}</div></div>
             <div class="mf2-ses-x">
               <div class="mf2-ses-t">${escHtml(f.titre || '')}</div>
@@ -386,7 +397,7 @@ function mf2RenderRail() {
             </div>
           </div>`;
         }).join('')
-      : `<div class="v2-blk-vide">Aucune session programmée. Inscrivez-vous depuis la liste « À venir ».</div>`);
+      : `<div class="v2-blk-vide">Aucune session programmée. Inscrivez-vous depuis la liste « À venir ».</div>`) + `</div>`;
   }
 
   // 4) Mes évaluations — retour d'expérience sur les formations suivies
@@ -403,17 +414,18 @@ function mf2RenderRail() {
             <span class="mf2-ev-t">${escHtml(f.titre || '')}</span>
             <span class="mf2-ev-s">${e ? escHtml([e.chaud ? 'à chaud renseigné' : '', e.froid ? 'à froid renseigné' : ''].filter(Boolean).join(' · ') || 'noté') : 'Non évaluée'}</span>
           </span>
-          <span class="mf2-ev-n${e ? '' : ' vide'}">${e ? e.note + '/5' : 'Évaluer'}</span>
+          <span class="dc-badge ${e ? 'dc-b-amber' : 'dc-b-gray'}">${e ? escHtml(e.note + '/5') : 'Évaluer'}</span>
         </button>`;
       }).join('');
       if (!MF2_EVAL_OK) {
         corps += `<div class="mf2-warn">Enregistrement indisponible : la table <code>formation_evaluations</code> n'existe pas encore (voir ${escHtml(MF2_SQL_FILE)}).</div>`;
       }
     }
-    ev.innerHTML = `<div class="v2-blk-h">
-        <span class="mf2-blk-ico" style="--pc:#fbbf24">${mf2Svg(MF2_IC.star)}</span>
-        <span class="v2-blk-t">Mes évaluations</span>
-      </div>${corps}`;
+    ev.innerHTML = `<div class="dc-head"><div class="dc-head-l">
+        <span class="dc-chip" style="background:#fbbf2422;color:#fbbf24">${mf2Svg(MF2_IC.star)}</span>
+        <div style="min-width:0"><div class="dc-eyebrow">Retours</div><div class="dc-title">Mes évaluations</div></div>
+      </div></div>
+      <div class="dc-body">${corps}</div>`;
   }
 }
 

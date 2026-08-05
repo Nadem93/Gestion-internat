@@ -118,7 +118,7 @@ function residentHeroV2(r) {
     : `<div class="v2-hero-av" style="background:${color}">${initials(r.prenom, r.nom)}</div>`;
 
   const meta = [];
-  if (r.dob) meta.push(`${age(r.dob)} ans`, `né${r.genre === 'F' ? 'e' : ''} le ${formatDate(r.dob)}`);
+  if (r.dob) meta.push(`${age(r.dob)}`, `né${r.genre === 'F' ? 'e' : ''} le ${formatDate(r.dob)}`);
   const dossier = r.dossier || r.dossierA;
   if (dossier) meta.push(`dossier ${dossier}`);
 
@@ -150,6 +150,9 @@ function rv2TabBar() {
 
 function rv2SetTab(k) {
   RV2_TAB = k;
+  // Gardes typeof : ce fichier est aussi chargé par residents.html, où
+  // getResident/renderViewMode (définis dans resident.html) n'existent pas.
+  if (typeof getResident !== 'function' || typeof renderViewMode !== 'function') return;
   const r = getResident();
   if (r) renderViewMode(r);
   const c = document.getElementById('residentContent');
@@ -330,7 +333,7 @@ function rv2EtatCivil(r) {
   const kv = [];
   const push = (k, v) => { if (v) kv.push({ k, v }); };
 
-  push('Né(e) le', r.dob ? `${formatDate(r.dob)} · ${age(r.dob)} ans` : '');
+  push('Né(e) le', r.dob ? `${formatDate(r.dob)} · ${age(r.dob)}` : '');
   push('Genre', r.genre === 'M' ? 'Masculin' : r.genre === 'F' ? 'Féminin' : '');
   push('N° Sécu', r.nss);
   push('INS', r.ins);

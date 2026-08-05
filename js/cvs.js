@@ -386,7 +386,7 @@ function cvsSeanceCard(s) {
       ${s.compteRendu ? `<div style="font-size:.78rem;color:var(--muted)">${escHtml(s.compteRendu).slice(0, 220)}${s.compteRendu.length > 220 ? '…' : ''}</div>` : ''}
       ${futur ? (() => {
         const satCvs = _cvsSatCache;
-        const recent = satCvs.filter(x => x.date >= (new Date(Date.now()-90*86400000).toISOString().slice(0,10)));
+        const recent = satCvs.filter(x => x.date >= (isoJour(new Date(Date.now()-90*86400000))));
         if (!recent.length) return `<div style="font-size:.74rem;color:var(--muted);font-style:italic">⭐ Aucun questionnaire de satisfaction récent — <a href="satisfaction.html">en saisir un</a> avant la séance.</div>`;
         let st=0, sc=0;
         recent.forEach(x => { Object.values(x.reponses||{}).forEach(v => { if(v!=null){st+=Number(v);sc++;} }); });

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/><link rel="manifest" href="manifest.json"/><meta name="theme-color" content="#0a1728"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Conseil de la Vie Sociale — FTR</title>
+  <title>Conseil de la Vie Sociale — INTERNALIS</title>
   <link rel="stylesheet" href="css/style.css"/>
   <link rel="stylesheet" href="css/v2.css"/>
   <link rel="stylesheet" href="css/v2-clair.css"/>
@@ -52,45 +52,53 @@
 
       <div class="cv2-col">
         <!-- Satisfaction résidents -->
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="cv2-blk-ico" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-            <span class="v2-blk-t">Satisfaction résidents</span>
-            <a class="v2-blk-lien" href="satisfaction.html">Voir le détail →</a>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#fbbf2422;color:#fbbf24"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Qualité</div><div class="dc-title">Satisfaction résidents</div></div>
+            </div>
+            <a class="dc-pill dim" href="satisfaction.html" style="text-decoration:none">Voir le détail →</a>
           </div>
-          <div id="cvsSatAnalysis"></div>
+          <div class="dc-body"><div id="cvsSatAnalysis"></div></div>
         </div>
 
         <!-- Thématiques -->
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="cv2-blk-ico" style="color:#818cf8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
-            <span class="v2-blk-t">Thématiques</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#818cf822;color:#818cf8"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Sujets</div><div class="dc-title">Thématiques</div></div>
+            </div>
             <button type="button" class="cv2-add no-cvs-edit" onclick="openThematiqueModal()">+ Ajouter</button>
           </div>
-          <div id="cvsThematiquesList"></div>
+          <div class="dc-body"><div id="cvsThematiquesList"></div></div>
         </div>
       </div>
 
       <div class="cv2-col">
         <!-- Séances -->
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="cv2-blk-ico" style="color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-            <span class="v2-blk-t">Séances &amp; comptes-rendus</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#10b98122;color:#10b981"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Agenda</div><div class="dc-title">Séances &amp; comptes-rendus</div></div>
+            </div>
             <button type="button" class="cv2-add no-cvs-edit" onclick="openSeanceModal()">+ Ajouter</button>
           </div>
-          <div id="cvsSeancesList"></div>
+          <div class="dc-body"><div id="cvsSeancesList"></div></div>
         </div>
 
         <!-- Résolutions -->
-        <div class="v2-blk">
-          <div class="v2-blk-h">
-            <span class="cv2-blk-ico" style="color:#22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
-            <span class="v2-blk-t">Résolutions en cours</span>
+        <div class="dc-card">
+          <div class="dc-head">
+            <div class="dc-head-l">
+              <span class="dc-chip" style="background:#22c55e22;color:#22c55e"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              <div style="min-width:0"><div class="dc-eyebrow">Suivi</div><div class="dc-title">Résolutions en cours</div></div>
+            </div>
             <button type="button" class="cv2-add" id="cvsResAllBtn" onclick="cvsToggleAllResolutions()" style="display:none">Voir tout</button>
           </div>
-          <div id="cvsResolutionsList"></div>
+          <div class="dc-body"><div id="cvsResolutionsList"></div></div>
         </div>
       </div>
     </div>
@@ -98,29 +106,40 @@
     <!-- ── PROCHAINE SÉANCE + PARTICIPATION ──────────────────────────── -->
     <div class="cv2-g14">
       <div id="cvsProchaine"></div>
-      <div class="v2-blk">
-        <div class="v2-blk-h"><span class="v2-blk-t">Participation aux séances</span></div>
-        <div id="cvsParticipation"></div>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">Présence</div><div class="dc-title">Participation aux séances</div></div>
+          </div>
+        </div>
+        <div class="dc-body"><div id="cvsParticipation"></div></div>
       </div>
     </div>
 
     <!-- ── BOÎTE À IDÉES + COMPTES-RENDUS ────────────────────────────── -->
     <div class="cv2-g14">
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="cv2-blk-ico" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
-          <span class="v2-blk-t">Boîte à idées des résidents</span>
-          <span class="cv2-meta" id="cvsIdeesCount"></span>
-          <button type="button" class="cv2-add" style="margin-left:12px" onclick="cv2OpenIdeeModal()">+ Proposer</button>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#fbbf2422;color:#fbbf24"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">Propositions</div><div class="dc-title">Boîte à idées des résidents</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="cv2-meta" id="cvsIdeesCount"></span>
+            <button type="button" class="cv2-add" onclick="cv2OpenIdeeModal()">+ Proposer</button>
+          </div>
         </div>
-        <div id="cvsIdeesList"></div>
+        <div class="dc-body"><div id="cvsIdeesList"></div></div>
       </div>
-      <div class="v2-blk">
-        <div class="v2-blk-h">
-          <span class="cv2-blk-ico" style="color:#22d3ee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-          <span class="v2-blk-t">Comptes-rendus</span>
+      <div class="dc-card">
+        <div class="dc-head">
+          <div class="dc-head-l">
+            <span class="dc-chip" style="background:#22d3ee22;color:#22d3ee"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+            <div style="min-width:0"><div class="dc-eyebrow">Archives</div><div class="dc-title">Comptes-rendus</div></div>
+          </div>
         </div>
-        <div id="cvsDocsList"></div>
+        <div class="dc-body"><div id="cvsDocsList"></div></div>
       </div>
     </div>
 

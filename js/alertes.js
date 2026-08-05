@@ -40,7 +40,15 @@ function _alId(type, ref) {
 // ─── Génération des alertes ───────────────────────────────────────────────────
 function generateAlertes() {
   const today = new Date(); today.setHours(0,0,0,0);
-  const todayStr = today.toISOString().slice(0,10);
+  // Date LOCALE, pas UTC. toISOString() rend la date en heure de Greenwich :
+  // à Paris, minuit local vaut 22 h ou 23 h UTC la VEILLE, donc todayStr valait
+  // toujours la veille, toute l'année. La comparaison avec les prises
+  // enregistrées (qui portent la date locale de today(), js/app.js) ne pouvait
+  // jamais être vraie → chaque prise du jour remontait en alerte critique
+  // « non enregistré ». Le filtre debut/fin des traitements était décalé de la
+  // même façon. On ne peut pas appeler today() ici : la variable locale `today`
+  // ci-dessus masque la fonction.
+  const todayStr = isoJour(today);
   const alerts = [];
 
   const residents = sbResidents();
@@ -62,7 +70,7 @@ function generateAlertes() {
     if (diffJ < 0)       { prio = 'critique'; msg = `Révision en retard de ${-diffJ} jour${-diffJ>1?'s':''}`; }
     else if (diffJ <= 7) { prio = 'urgent';   msg = `Révision dans ${diffJ} jour${diffJ>1?'s':''}` }
     else                 { prio = 'info';     msg = `Révision dans ${diffJ} jours`; }
-    alerts.push({ id, type:'ppe_revision', prio, residentId:p.residentId, resName, titre:`Avenant — ${resName}`, msg, date:p.dateRevision, link:`ppe.html?id=${p.residentId}`, diffJ });
+    alerts.push({ id, type:'ppe_revision', prio, residentId:p.residentId, resName, titre:`Avenant — ${resName}`, msg, date:p.dateRevision, link:`ppe.html?residentId=${p.residentId}`, diffJ });
   });
 
   // ── 2. Échéances ── dépassées ou dans les 14 jours ─────────────────────────
@@ -80,7 +88,7 @@ function generateAlertes() {
     if (diffJ < 0)       prio = 'critique';
     else if (diffJ <= 3) prio = 'urgent';
     const label = diffJ < 0 ? `En retard de ${-diffJ}j` : diffJ === 0 ? 'Aujourd\'hui' : `Dans ${diffJ}j`;
-    alerts.push({ id, type:'echeance', prio, residentId:e.residentId||null, resName, titre: e.libelle||'Échéance', msg:`${label}${resName?' — '+resName:''}`, date:e.date, link:'echeances.html', diffJ });
+    alerts.push({ id, type:'echeance', prio, residentId:e.residentId||null, resName, titre: e.libelle||'Échéance', msg:`${label}${resName?' — '+resName:''}`, date:e.date, link:'echeances.html?renouveler=' + e.id, diffJ });
   });
 
   // ── 3. Planning — événements aujourd'hui ou demain ────────────────────────
@@ -134,7 +142,7 @@ function generateAlertes() {
       const r = resMap[rid];
       const resName = r ? `${r.prenom||''} ${r.nom||''}`.trim() : '';
       const id = _alId('plan_soins', rid + '_' + todayStr);
-      alerts.push({ id, type:'plan_soins', prio:'info', residentId:rid==='__'?null:rid, resName, titre:`Plan de soins${resName?' — '+resName:''}`, msg:`${list.length} soin${list.length>1?'s':''} à réaliser aujourd'hui`, date:todayStr, link:'plan-soins.html?residentId='+rid, diffJ:0 });
+      alerts.push({ id, type:'plan_soins', prio:'info', residentId:rid==='__'?null:rid, resName, titre:`Plan de soins${resName?' — '+resName:''}`, msg:`${list.length} soin${list.length>1?'s':''} à réaliser aujourd'hui`, date:todayStr, link:'plan-soins.html'+(rid==='__'?'':'?residentId='+rid), diffJ:0 });
     });
   }
 
